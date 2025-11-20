@@ -10,9 +10,9 @@
 import {
   createErrorUnionType,
   createTypeGuardFunctions,
-} from '../../../utils/code-generation/error-template-utils.js';
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { DataAccessTemplateOptions } from '../../../utils/shared/types.js';
+} from '../../../utils/code-generation/error-template-utils';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate errors.ts file for data-access library

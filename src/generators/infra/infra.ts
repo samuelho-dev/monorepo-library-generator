@@ -197,8 +197,8 @@ function normalizeOptions(
   // Use shared normalization utility for common fields
   return normalizeBaseOptions(tree, {
     name: schema.name,
-    directory: schema.directory,
-    description: schema.description,
+    ...(schema.directory !== undefined && { directory: schema.directory }),
+    ...(schema.description !== undefined && { description: schema.description }),
     libraryType: 'infra',
     additionalTags: ['platform:node'], // Infra is primarily server-side
   });

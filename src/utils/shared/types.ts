@@ -7,10 +7,13 @@
  * @module monorepo-library-generator/shared-types
  */
 
+import type { LibraryType } from '../build-config-utils';
+
 /**
  * Library types supported by the generator
+ * Re-exported from build-config-utils for convenience
  */
-export type LibraryType = 'contract' | 'data-access' | 'feature' | 'provider' | 'infra' | 'util';
+export type { LibraryType };
 
 /**
  * Runtime platforms supported by libraries
@@ -107,7 +110,7 @@ export interface BaseTemplateOptions extends NamingVariants {
  * A function that generates file content from options
  */
 export type TemplateFunction<TOptions = BaseTemplateOptions> = (
-  options: TOptions
+  options: TOptions,
 ) => string;
 
 /**
@@ -258,7 +261,15 @@ export interface InfrastructureTemplateOptions extends BaseTemplateOptions {
   /**
    * Type of infrastructure service
    */
-  readonly infraType: 'cache' | 'logging' | 'metrics' | 'auth' | 'config' | 'storage' | 'messaging' | 'custom';
+  readonly infraType:
+    | 'cache'
+    | 'logging'
+    | 'metrics'
+    | 'auth'
+    | 'config'
+    | 'storage'
+    | 'messaging'
+    | 'custom';
 
   /**
    * Platforms this infrastructure service supports
@@ -383,7 +394,7 @@ export interface GeneratorHooks<TOptions = BaseTemplateOptions> {
    */
   readonly afterGenerate?: (
     options: TOptions,
-    result: FileGenerationResult
+    result: FileGenerationResult,
   ) => void | Promise<void>;
 
   /**
@@ -391,7 +402,7 @@ export interface GeneratorHooks<TOptions = BaseTemplateOptions> {
    */
   readonly beforeFileWrite?: (
     filePath: string,
-    content: string
+    content: string,
   ) => string | Promise<string>;
 
   /**

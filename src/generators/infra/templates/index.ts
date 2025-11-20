@@ -7,15 +7,15 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-export { generateErrorsFile } from './errors.template.js';
-export { generateInterfaceFile } from './interface.template.js';
-export { generateConfigFile } from './config.template.js';
-export { generateMemoryProviderFile } from './memory-provider.template.js';
-export { generateServerLayersFile } from './server-layers.template.js';
-export { generateClientLayersFile } from './client-layers.template.js';
-export { generateEdgeLayersFile } from './edge-layers.template.js';
-export { generateUseHookFile } from './use-hook.template.js';
-export { generateIndexFile } from './index.template.js';
-export { generateServerFile } from './server.template.js';
-export { generateClientFile } from './client.template.js';
-export { generateEdgeFile } from './edge.template.js';
+export { generateErrorsFile } from './errors.template';
+export { generateInterfaceFile } from './interface.template';
+export { generateConfigFile } from './config.template';
+export { generateMemoryProviderFile } from './memory-provider.template';
+export { generateServerLayersFile } from './server-layers.template';
+export { generateClientLayersFile } from './client-layers.template';
+export { generateEdgeLayersFile } from './edge-layers.template';
+export { generateUseHookFile } from './use-hook.template';
+export { generateIndexFile } from './index.template';
+export { generateServerFile } from './server.template';
+export { generateClientFile } from './client.template';
+export { generateEdgeFile } from './edge.template';

@@ -6,14 +6,14 @@
  */
 
 import type { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { generateLibraryFiles } from './library-generator-utils.js';
+import { createTree } from '@nx/devkit/testing';
+import { generateLibraryFiles } from './library-generator-utils';
 
 describe('library-generator-utils', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTree();
   });
 
   describe('Entry Point Generation', () => {
@@ -438,7 +438,8 @@ describe('library-generator-utils', () => {
       });
 
       const packageJson = tree.read('libs/feature/auth/package.json', 'utf-8');
-      const pkg = JSON.parse(packageJson);
+      expect(packageJson).not.toBeNull();
+      const pkg = JSON.parse(packageJson!);
 
       expect(pkg.name).toBe('@custom-repo/feature-auth');
       expect(pkg.exports).toBeDefined();

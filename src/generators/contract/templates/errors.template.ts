@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/errors-template
  */
 
-import { EffectPatterns } from '../../../utils/code-generation/effect-patterns.js';
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { ContractTemplateOptions } from '../../../utils/shared/types.js';
+import { EffectPatterns } from '../../../utils/code-generation/effect-patterns';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { ContractTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate errors.ts file for contract library

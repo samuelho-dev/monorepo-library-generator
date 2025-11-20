@@ -13,7 +13,7 @@ import {
   names,
   offsetFromRoot as computeOffsetFromRoot,
 } from '@nx/devkit';
-import type { LibraryType } from './shared/types.js';
+import type { LibraryType } from './shared/types';
 
 /**
  * Input for base normalization

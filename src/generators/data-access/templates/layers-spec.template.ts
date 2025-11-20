@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/data-access/layers-spec-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { DataAccessTemplateOptions } from '../../../utils/shared/types.js';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate layers.spec.ts file for data-access library

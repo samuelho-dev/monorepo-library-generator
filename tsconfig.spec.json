@@ -2,8 +2,10 @@
   "extends": "./tsconfig.base.json",
   "include": ["src"],
   "compilerOptions": {
+    // Explicitly include types needed for spec files
     "types": ["vitest/globals", "node"],
     "tsBuildInfoFile": ".tsbuildinfo/spec.tsbuildinfo",
-    "noEmit": true
+    "noEmit": true,
+    "rootDir": "."
   }
 }

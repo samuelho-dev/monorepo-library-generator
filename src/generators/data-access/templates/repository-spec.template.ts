@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/data-access/repository-spec-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { DataAccessTemplateOptions } from '../../../utils/shared/types.js';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate repository.spec.ts file for data-access library

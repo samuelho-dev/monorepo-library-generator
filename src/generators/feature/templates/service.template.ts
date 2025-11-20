@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/feature/service-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { FeatureTemplateOptions } from '../../../utils/shared/types.js';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { FeatureTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate server/service.ts file for feature library

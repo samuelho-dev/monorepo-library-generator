@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/queries-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { ContractTemplateOptions } from '../../../utils/shared/types.js';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { ContractTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate queries.ts file for contract library

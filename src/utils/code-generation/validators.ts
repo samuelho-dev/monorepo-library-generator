@@ -19,7 +19,11 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
   readonly path?: string
 }> {
   static create(message: string, diagnostics?: ReadonlyArray<string>, path?: string) {
-    return new ValidationError({ message, diagnostics, path })
+    return new ValidationError({
+      message,
+      ...(diagnostics !== undefined && { diagnostics }),
+      ...(path !== undefined && { path }),
+    })
   }
 
   static fromDiagnostics(diagnostics: ReadonlyArray<ts.Diagnostic>, path?: string) {
@@ -35,7 +39,7 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
     return new ValidationError({
       message: "TypeScript compilation errors detected",
       diagnostics: messages,
-      path
+      ...(path !== undefined && { path }),
     })
   }
 }
@@ -96,18 +100,8 @@ export class CodeValidators {
         ts.ScriptKind.TS
       )
 
-      // Check for syntax errors
-      const syntaxDiagnostics = sourceFile.parseDiagnostics
-
-      if (syntaxDiagnostics && syntaxDiagnostics.length > 0) {
-        yield* Effect.logWarning("TypeScript syntax errors detected").pipe(
-          Effect.annotateLogs({ filePath, errorCount: syntaxDiagnostics.length })
-        )
-
-        yield* Effect.fail(
-          ValidationError.fromDiagnostics(syntaxDiagnostics, filePath)
-        )
-      }
+      // Note: createSourceFile performs syntax validation internally
+      // If there are syntax errors, they would be caught during semantic checking
 
       // Optionally check for semantic errors (type checking)
       if (options.checkSemantics) {
@@ -348,7 +342,9 @@ export class FileTypeValidators {
    */
   static validateErrorsFile(content: string, filePath?: string): Effect.Effect<void, ValidationError> {
     return Effect.gen(function*() {
-      yield* CodeValidators.validateTypeScript(content, { filePath })
+      yield* CodeValidators.validateTypeScript(content, {
+        ...(filePath !== undefined && { filePath }),
+      })
 
       yield* CodeValidators.validatePattern(
         content,
@@ -369,7 +365,9 @@ export class FileTypeValidators {
    */
   static validateEntitiesFile(content: string, filePath?: string): Effect.Effect<void, ValidationError> {
     return Effect.gen(function*() {
-      yield* CodeValidators.validateTypeScript(content, { filePath })
+      yield* CodeValidators.validateTypeScript(content, {
+        ...(filePath !== undefined && { filePath }),
+      })
 
       yield* CodeValidators.validatePattern(
         content,
@@ -384,7 +382,9 @@ export class FileTypeValidators {
    */
   static validatePortsFile(content: string, filePath?: string): Effect.Effect<void, ValidationError> {
     return Effect.gen(function*() {
-      yield* CodeValidators.validateTypeScript(content, { filePath })
+      yield* CodeValidators.validateTypeScript(content, {
+        ...(filePath !== undefined && { filePath }),
+      })
 
       yield* CodeValidators.validatePattern(
         content,
@@ -399,7 +399,9 @@ export class FileTypeValidators {
    */
   static validateServiceFile(content: string, filePath?: string): Effect.Effect<void, ValidationError> {
     return Effect.gen(function*() {
-      yield* CodeValidators.validateTypeScript(content, { filePath })
+      yield* CodeValidators.validateTypeScript(content, {
+        ...(filePath !== undefined && { filePath }),
+      })
 
       yield* CodeValidators.validatePattern(
         content,

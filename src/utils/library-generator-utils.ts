@@ -22,9 +22,9 @@ import {
   createStandardTargets,
   type LibraryType,
   type PlatformType,
-} from './build-config-utils.js';
-import { determinePlatformExports } from './platform-utils.js';
-import { addTsConfigFiles, type TsConfigOptions } from './tsconfig-utils.js';
+} from './build-config-utils';
+import { determinePlatformExports } from './platform-utils';
+import { addTsConfigFiles, type TsConfigOptions } from './tsconfig-utils';
 
 // __dirname is available in CommonJS mode (Node.js global)
 declare const __dirname: string;
@@ -174,7 +174,9 @@ function shouldGeneratePlatformExports(options: LibraryGeneratorOptions): {
   return determinePlatformExports({
     libraryType: options.libraryType,
     platform: options.platform,
-    includeClientServer: options.includeClientServer,
+    ...(options.includeClientServer !== undefined && {
+      includeClientServer: options.includeClientServer,
+    }),
   });
 }
 
@@ -284,7 +286,6 @@ function generatePackageJson(
   tree: Tree,
   options: LibraryGeneratorOptions,
 ): PackageJsonConfiguration {
-  const _nameVars = names(options.name);
   const scopedName = `@custom-repo/${options.projectName}`;
 
   // Build exports map

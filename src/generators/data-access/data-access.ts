@@ -6,22 +6,22 @@
  */
 
 import { Tree, formatFiles } from '@nx/devkit';
-import { generateLibraryFiles } from '../../utils/library-generator-utils.js';
+import { generateLibraryFiles } from '../../utils/library-generator-utils';
 import {
   normalizeBaseOptions,
   type NormalizedBaseOptions,
-} from '../../utils/normalization-utils.js';
-import type { DataAccessGeneratorSchema } from './schema.d.js';
-import { generateErrorsFile } from './templates/errors.template.js';
-import { generateTypesFile } from './templates/types.template.js';
-import { generateValidationFile } from './templates/validation.template.js';
-import { generateQueriesFile } from './templates/queries.template.js';
-import { generateRepositoryFile } from './templates/repository.template.js';
-import { generateLayersFile } from './templates/layers.template.js';
-import { generateIndexFile } from './templates/index.template.js';
-import { generateRepositorySpecFile } from './templates/repository-spec.template.js';
-import { generateLayersSpecFile } from './templates/layers-spec.template.js';
-import type { DataAccessTemplateOptions } from '../../utils/shared/types.js';
+} from '../../utils/normalization-utils';
+import type { DataAccessGeneratorSchema } from './schema.d';
+import { generateErrorsFile } from './templates/errors.template';
+import { generateTypesFile } from './templates/types.template';
+import { generateValidationFile } from './templates/validation.template';
+import { generateQueriesFile } from './templates/queries.template';
+import { generateRepositoryFile } from './templates/repository.template';
+import { generateLayersFile } from './templates/layers.template';
+import { generateIndexFile } from './templates/index.template';
+import { generateRepositorySpecFile } from './templates/repository-spec.template';
+import { generateLayersSpecFile } from './templates/layers-spec.template';
+import type { DataAccessTemplateOptions } from '../../utils/shared/types';
 
 // __dirname is available in CommonJS mode (Node.js global)
 declare const __dirname: string;
@@ -103,6 +103,10 @@ See: /libs/ARCHITECTURE.md for Contract-First Architecture details
     offsetFromRoot: options.offsetFromRoot,
     description: options.description,
     tags: options.tags.split(','),
+
+    // Data-access specific options
+    includeCache: false, // Default to no caching layer
+    contractLibrary: `@custom-repo/contract-${options.fileName}`, // Expected contract library
   };
 
   const sourceLibPath = `${options.sourceRoot}/lib`;
@@ -226,8 +230,10 @@ function normalizeOptions(
   // Use shared normalization utility for common fields
   return normalizeBaseOptions(tree, {
     name: schema.name,
-    directory: schema.directory,
-    description: schema.description,
+    ...(schema.directory !== undefined && { directory: schema.directory }),
+    ...(schema.description !== undefined && {
+      description: schema.description,
+    }),
     libraryType: 'data-access',
     additionalTags: ['platform:server'], // Data-access is server-only (Kysely, database)
   });

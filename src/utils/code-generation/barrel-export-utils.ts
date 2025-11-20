@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/barrel-export-utils
  */
 
-import type { TypeScriptBuilder } from '../template-utils.js';
+import type { TypeScriptBuilder } from '../template-utils';
 
 /**
  * Configuration for standard error exports
@@ -91,7 +91,7 @@ export interface ExportSectionItem {
 
   /**
    * The export statement
-   * @example "export * from './lib/errors.js';"
+   * @example "export * from './lib/errors';"
    */
   readonly exports: string;
 }

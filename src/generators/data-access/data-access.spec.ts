@@ -10,11 +10,10 @@
  * - Phase 5: File Structure Validation (directory structure, exports)
  */
 
-import { Tree, readProjectConfiguration } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as path from 'path';
-import dataAccessGenerator from './data-access.js';
-import type { DataAccessGeneratorSchema } from './schema.d.js';
+import dataAccessGenerator from './data-access';
+import type { DataAccessGeneratorSchema } from './schema.d';
 
 describe('Data Access Library Generator', () => {
   let tree: Tree;

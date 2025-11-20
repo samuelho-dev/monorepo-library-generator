@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/index-template
  */
 
-import { generateStandardErrorExports } from '../../../utils/code-generation/barrel-export-utils.js';
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { DataAccessTemplateOptions } from '../../../utils/shared/types.js';
+import { generateStandardErrorExports } from '../../../utils/code-generation/barrel-export-utils';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate index.ts file for data-access library

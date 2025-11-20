@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/data-access/queries-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { DataAccessTemplateOptions } from '../../../utils/shared/types.js';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate queries.ts file for data-access library

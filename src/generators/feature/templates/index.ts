@@ -6,32 +6,34 @@
  * @module monorepo-library-generator/feature/templates
  */
 
-import type { FeatureTemplateOptions } from '../../utils/shared/types.js';
-import type { TemplateFunction } from '../../utils/shared/types.js';
+import type {
+  FeatureTemplateOptions,
+  TemplateFunction,
+} from '../../../utils/shared/types';
 
 // Shared layer templates
-import { generateErrorsFile } from './errors.template.js';
-import { generateTypesFile } from './types.template.js';
-import { generateSchemasFile } from './schemas.template.js';
+import { generateErrorsFile } from './errors.template';
+import { generateTypesFile } from './types.template';
+import { generateSchemasFile } from './schemas.template';
 
 // Server layer templates
-import { generateServiceFile } from './service.template.js';
-import { generateLayersFile } from './layers.template.js';
-import { generateServiceSpecFile } from './service-spec.template.js';
+import { generateServiceFile } from './service.template';
+import { generateLayersFile } from './layers.template';
+import { generateServiceSpecFile } from './service-spec.template';
 
 // RPC layer templates
-import { generateRpcFile } from './rpc.template.js';
-import { generateRpcHandlersFile } from './rpc-handlers.template.js';
-import { generateRpcErrorsFile } from './rpc-errors.template.js';
+import { generateRpcFile } from './rpc.template';
+import { generateRpcHandlersFile } from './rpc-handlers.template';
+import { generateRpcErrorsFile } from './rpc-errors.template';
 
 // Client layer templates
-import { generateHooksFile } from './hooks.template.js';
-import { generateHooksIndexFile } from './hooks-index.template.js';
-import { generateAtomsFile } from './atoms.template.js';
-import { generateAtomsIndexFile } from './atoms-index.template.js';
+import { generateHooksFile } from './hooks.template';
+import { generateHooksIndexFile } from './hooks-index.template';
+import { generateAtomsFile } from './atoms.template';
+import { generateAtomsIndexFile } from './atoms-index.template';
 
 // Edge layer templates
-import { generateMiddlewareFile } from './middleware.template.js';
+import { generateMiddlewareFile } from './middleware.template';
 
 // Re-export all template functions
 export {
@@ -58,7 +60,10 @@ export {
  * Used by the file generation system to create files conditionally.
  */
 
-export const featureTemplates: Record<string, TemplateFunction<FeatureTemplateOptions>> = {
+export const featureTemplates: Record<
+  string,
+  TemplateFunction<FeatureTemplateOptions>
+> = {
   // Shared layer (always generated)
   'shared/errors': generateErrorsFile,
   'shared/types': generateTypesFile,
@@ -97,20 +102,12 @@ export function getFeatureFiles(options: FeatureTemplateOptions): string[] {
 
   // Server layer
   if (options.includeServer) {
-    files.push(
-      'server/service',
-      'server/layers',
-      'server/service.spec'
-    );
+    files.push('server/service', 'server/layers', 'server/service.spec');
   }
 
   // RPC layer
   if (options.includeRPC) {
-    files.push(
-      'rpc/rpc',
-      'rpc/handlers',
-      'rpc/errors'
-    );
+    files.push('rpc/rpc', 'rpc/handlers', 'rpc/errors');
   }
 
   // Client layer
@@ -119,7 +116,7 @@ export function getFeatureFiles(options: FeatureTemplateOptions): string[] {
       'client/hooks/use-feature',
       'client/hooks/index',
       'client/atoms/feature-atoms',
-      'client/atoms/index'
+      'client/atoms/index',
     );
   }
 
@@ -146,6 +143,4 @@ export const cqrsDirectories = [
  * Directory placeholders for client components
  * These directories are created with .gitkeep files when includeClient is true
  */
-export const clientDirectories = [
-  'client/components',
-] as const;
+export const clientDirectories = ['client/components'] as const;

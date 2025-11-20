@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { InfraTemplateOptions } from '../../../utils/shared/types.js';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { InfraTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate server layers file for infrastructure service

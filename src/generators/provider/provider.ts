@@ -17,22 +17,22 @@ import {
 import type {
   ProviderGeneratorSchema,
   NormalizedProviderOptions,
-} from './schema.js';
+} from './schema';
 import {
   parseTags,
   validateLibraryDoesNotExist,
-} from '../../utils/generator-utils.js';
+} from '../../utils/generator-utils';
 import {
   generateLibraryFiles,
   type LibraryGeneratorOptions,
-} from '../../utils/library-generator-utils.js';
-import { generateErrorsFile } from './templates/errors.template.js';
-import { generateTypesFile } from './templates/types.template.js';
-import { generateValidationFile } from './templates/validation.template.js';
-import { generateServiceFile } from './templates/service.template.js';
-import { generateLayersFile } from './templates/layers.template.js';
-import { generateServiceSpecFile } from './templates/service-spec.template.js';
-import type { ProviderTemplateOptions } from '../../utils/shared/types.js';
+} from '../../utils/library-generator-utils';
+import { generateErrorsFile } from './templates/errors.template';
+import { generateTypesFile } from './templates/types.template';
+import { generateValidationFile } from './templates/validation.template';
+import { generateServiceFile } from './templates/service.template';
+import { generateLayersFile } from './templates/layers.template';
+import { generateServiceSpecFile } from './templates/service-spec.template';
+import type { ProviderTemplateOptions } from '../../utils/shared/types';
 
 /**
  * Normalize and validate generator options
@@ -63,7 +63,8 @@ function normalizeOptions(
   // Platform determination
   const platform = options.platform || 'node';
   // Only set includeClientServer when explicitly provided or when platform requires it
-  // For node platform, leave as undefined to use platform default in library generator
+  // For universal platform, always generate both client and server
+  // For other platforms, use explicit option or undefined (let platform defaults apply)
   const includeClientServer =
     platform === 'universal' ? true : options.includeClientServer;
 
@@ -127,8 +128,7 @@ function addDomainFiles(tree: Tree, options: NormalizedProviderOptions) {
 
     // Provider-specific
     externalService: options.externalService,
-    platform: options.platform,
-    includeClientServer: options.includeClientServer,
+    platforms: [options.platform],
   };
 
   const sourceLibPath = `${templateOptions.sourceRoot}/lib`;

@@ -17,7 +17,7 @@ export interface ImportSpec {
 export interface FileHeaderOptions {
   title: string
   description: string
-  module: string
+  module?: string
   since?: string
   see?: Array<string>
 }
@@ -120,7 +120,10 @@ export class TypeScriptBuilder {
     this.lines.push(" *")
     this.lines.push(` * ${options.description}`)
     this.lines.push(" *")
-    this.lines.push(` * @module ${options.module}`)
+
+    if (options.module) {
+      this.lines.push(` * @module ${options.module}`)
+    }
 
     if (options.since) {
       this.lines.push(` * @since ${options.since}`)
@@ -202,7 +205,7 @@ export class TypeScriptBuilder {
   /**
    * Add JSDoc comment
    */
-  private addJSDoc(jsdoc: string): void {
+  public addJSDoc(jsdoc: string): void {
     this.lines.push("/**")
     const docLines = jsdoc.split("\n")
     for (const line of docLines) {

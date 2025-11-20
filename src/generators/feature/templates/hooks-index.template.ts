@@ -20,7 +20,8 @@ export function generateHooksIndexFile(options: FeatureTemplateOptions): string 
 
   // Add file header
   builder.addFileHeader({
-    title: "Client Hooks Barrel Export"
+    title: "Client Hooks Barrel Export",
+    description: "Barrel export for client-side hooks"
   })
 
   // Add export

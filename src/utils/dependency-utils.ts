@@ -10,7 +10,7 @@
 import type { Tree } from '@nx/devkit';
 import { names } from '@nx/devkit';
 import * as path from 'path';
-import type { LibraryType } from './shared/types.js';
+import type { LibraryType } from './shared/types';
 
 /**
  * Dependency information for TypeScript project references and package.json

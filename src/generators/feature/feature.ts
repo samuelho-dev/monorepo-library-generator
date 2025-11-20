@@ -97,11 +97,11 @@ export default async function featureGenerator(
     projectName: options.projectName,
     projectRoot: options.projectRoot,
     offsetFromRoot: options.offsetFromRoot,
-    libraryType: 'feature' as const,
-    platform: platform as 'node' | 'universal' | 'browser' | 'edge',
+    libraryType: 'feature',
+    platform,
     description: options.description,
     tags: tags,
-    includeClientServer: includeClientServer,
+    ...(includeClientServer !== undefined && { includeClientServer }),
     includeEdgeExports: includeEdge,
     includeRPC: includeRPC,
   };
@@ -234,8 +234,8 @@ function normalizeOptions(
   // Use shared normalization utility for common fields
   return normalizeBaseOptions(tree, {
     name: schema.name,
-    directory: schema.directory,
-    description: schema.description,
+    ...(schema.directory !== undefined && { directory: schema.directory }),
+    ...(schema.description !== undefined && { description: schema.description }),
     libraryType: 'feature',
     additionalTags: ['platform:universal'], // Features default to universal
   });

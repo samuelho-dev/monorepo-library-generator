@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/rpc-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { ContractTemplateOptions } from '../../../utils/shared/types.js';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { ContractTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate rpc.ts file for contract library

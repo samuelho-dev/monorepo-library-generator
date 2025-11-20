@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/provider/templates
  */
 
-export { generateErrorsFile } from './errors.template.js';
-export { generateTypesFile } from './types.template.js';
-export { generateValidationFile } from './validation.template.js';
-export { generateServiceFile } from './service.template.js';
-export { generateLayersFile } from './layers.template.js';
-export { generateServiceSpecFile } from './service-spec.template.js';
+export { generateErrorsFile } from './errors.template';
+export { generateTypesFile } from './types.template';
+export { generateValidationFile } from './validation.template';
+export { generateServiceFile } from './service.template';
+export { generateLayersFile } from './layers.template';
+export { generateServiceSpecFile } from './service-spec.template';

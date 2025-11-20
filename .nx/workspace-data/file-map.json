@@ -43,12 +43,16 @@
         "hash": "11573417813174646934"
       },
       {
+        "file": "CLAUDE.md",
+        "hash": "13339868169871076938"
+      },
+      {
         "file": "LICENSE",
         "hash": "15773211985747942655"
       },
       {
         "file": "README.md",
-        "hash": "8838715048066078172"
+        "hash": "786748154590765919"
       },
       {
         "file": "TESTING.md",
@@ -88,15 +92,15 @@
       },
       {
         "file": "src/generators/contract/config.ts",
-        "hash": "14349294898296034792"
+        "hash": "13202910531445615137"
       },
       {
         "file": "src/generators/contract/contract.spec.ts",
-        "hash": "8141652674682346267"
+        "hash": "7576312602343532923"
       },
       {
         "file": "src/generators/contract/contract.ts",
-        "hash": "14792312917640648620"
+        "hash": "552306875609735456"
       },
       {
         "file": "src/generators/contract/schema.d.ts",
@@ -108,19 +112,19 @@
       },
       {
         "file": "src/generators/contract/templates/commands.template.ts",
-        "hash": "10529429373870201620"
+        "hash": "11069609876733644473"
       },
       {
         "file": "src/generators/contract/templates/entities.template.ts",
-        "hash": "18427785866269786439"
+        "hash": "238954313611489080"
       },
       {
         "file": "src/generators/contract/templates/errors.template.ts",
-        "hash": "8664346585591393273"
+        "hash": "16318615778761026243"
       },
       {
         "file": "src/generators/contract/templates/events.template.ts",
-        "hash": "5083821754589399217"
+        "hash": "12624951132004748985"
       },
       {
         "file": "src/generators/contract/templates/index.template.ts",
@@ -128,31 +132,31 @@
       },
       {
         "file": "src/generators/contract/templates/ports.template.ts",
-        "hash": "590186507417556781"
+        "hash": "5500793986470482267"
       },
       {
         "file": "src/generators/contract/templates/projections.template.ts",
-        "hash": "16443798996516855911"
+        "hash": "8305542262825721689"
       },
       {
         "file": "src/generators/contract/templates/queries.template.ts",
-        "hash": "15594198095782027958"
+        "hash": "401345635548287072"
       },
       {
         "file": "src/generators/contract/templates/rpc.template.ts",
-        "hash": "3989316875958806325"
+        "hash": "512040865042481707"
       },
       {
         "file": "src/generators/data-access/data-access.spec.ts",
-        "hash": "6312909958000071759"
+        "hash": "9426046916803221773"
       },
       {
         "file": "src/generators/data-access/data-access.ts",
-        "hash": "12476810147750696773"
+        "hash": "8893175292557812502"
       },
       {
         "file": "src/generators/data-access/schema.d.ts",
-        "hash": "12894626587229915318"
+        "hash": "17258733013423232982"
       },
       {
         "file": "src/generators/data-access/schema.json",
@@ -160,51 +164,51 @@
       },
       {
         "file": "src/generators/data-access/templates/errors.template.ts",
-        "hash": "8725882984964399689"
+        "hash": "13030085118301926675"
       },
       {
         "file": "src/generators/data-access/templates/index.template.ts",
-        "hash": "3047037309722174295"
+        "hash": "11737041333941301437"
       },
       {
         "file": "src/generators/data-access/templates/index.ts",
-        "hash": "2022692020419456278"
+        "hash": "8576142051761176139"
       },
       {
         "file": "src/generators/data-access/templates/layers-spec.template.ts",
-        "hash": "16535667491454470293"
+        "hash": "6940345006514544116"
       },
       {
         "file": "src/generators/data-access/templates/layers.template.ts",
-        "hash": "11816713962050351340"
+        "hash": "2036016113052132423"
       },
       {
         "file": "src/generators/data-access/templates/queries.template.ts",
-        "hash": "4465218386561917731"
+        "hash": "4192550378322649081"
       },
       {
         "file": "src/generators/data-access/templates/repository-spec.template.ts",
-        "hash": "8685186981495690751"
+        "hash": "15703300430083912250"
       },
       {
         "file": "src/generators/data-access/templates/repository.template.ts",
-        "hash": "17813990326555807443"
+        "hash": "11213546631787200334"
       },
       {
         "file": "src/generators/data-access/templates/types.template.ts",
-        "hash": "10499899885410632016"
+        "hash": "15375590940619416227"
       },
       {
         "file": "src/generators/data-access/templates/validation.template.ts",
-        "hash": "3674580917593432973"
+        "hash": "10531857623801350675"
       },
       {
         "file": "src/generators/feature/feature.spec.ts",
-        "hash": "15677232934853505330"
+        "hash": "10213060919811841913"
       },
       {
         "file": "src/generators/feature/feature.ts",
-        "hash": "17537921722530007872"
+        "hash": "5457091435685040528"
       },
       {
         "file": "src/generators/feature/schema.d.ts",
@@ -216,19 +220,19 @@
       },
       {
         "file": "src/generators/feature/templates/atoms-index.template.ts",
-        "hash": "18389830281666345546"
+        "hash": "2167344690175024016"
       },
       {
         "file": "src/generators/feature/templates/atoms.template.ts",
-        "hash": "6007448280160575469"
+        "hash": "17284728526409156727"
       },
       {
         "file": "src/generators/feature/templates/errors.template.ts",
-        "hash": "2420871075148432986"
+        "hash": "6374947225072186646"
       },
       {
         "file": "src/generators/feature/templates/hooks-index.template.ts",
-        "hash": "14460913801184123730"
+        "hash": "10470227306588127772"
       },
       {
         "file": "src/generators/feature/templates/hooks.template.ts",
@@ -236,7 +240,7 @@
       },
       {
         "file": "src/generators/feature/templates/index.ts",
-        "hash": "16337225886813274997"
+        "hash": "18307038746087271925"
       },
       {
         "file": "src/generators/feature/templates/layers.template.ts",
@@ -268,19 +272,19 @@
       },
       {
         "file": "src/generators/feature/templates/service.template.ts",
-        "hash": "8882147672617385084"
+        "hash": "16388158535022376893"
       },
       {
         "file": "src/generators/feature/templates/types.template.ts",
-        "hash": "12541162220817437031"
+        "hash": "14928117000782926011"
       },
       {
         "file": "src/generators/infra/infra.spec.ts",
-        "hash": "10713526728909304428"
+        "hash": "14583119049249395931"
       },
       {
         "file": "src/generators/infra/infra.ts",
-        "hash": "13885915792691006243"
+        "hash": "434564667940350198"
       },
       {
         "file": "src/generators/infra/schema.d.ts",
@@ -292,63 +296,63 @@
       },
       {
         "file": "src/generators/infra/templates/client-layers.template.ts",
-        "hash": "15679184299218466923"
+        "hash": "9270785147840991043"
       },
       {
         "file": "src/generators/infra/templates/client.template.ts",
-        "hash": "11083312471752068744"
+        "hash": "15430401565215930456"
       },
       {
         "file": "src/generators/infra/templates/config.template.ts",
-        "hash": "8128999299938363304"
+        "hash": "1056824287116520045"
       },
       {
         "file": "src/generators/infra/templates/edge-layers.template.ts",
-        "hash": "17429468035305919184"
+        "hash": "1690379867290331910"
       },
       {
         "file": "src/generators/infra/templates/edge.template.ts",
-        "hash": "676454174279264736"
+        "hash": "9955994359912784131"
       },
       {
         "file": "src/generators/infra/templates/errors.template.ts",
-        "hash": "299004846769224369"
+        "hash": "11862250817666401953"
       },
       {
         "file": "src/generators/infra/templates/index.template.ts",
-        "hash": "11895318317130712908"
+        "hash": "10810064382038003866"
       },
       {
         "file": "src/generators/infra/templates/index.ts",
-        "hash": "3859162775013023197"
+        "hash": "5876268936465455987"
       },
       {
         "file": "src/generators/infra/templates/interface.template.ts",
-        "hash": "3581103950084711483"
+        "hash": "4288445741674368175"
       },
       {
         "file": "src/generators/infra/templates/memory-provider.template.ts",
-        "hash": "10194944343600155465"
+        "hash": "18237449917239448933"
       },
       {
         "file": "src/generators/infra/templates/server-layers.template.ts",
-        "hash": "7590584843639428079"
+        "hash": "14188960509066530660"
       },
       {
         "file": "src/generators/infra/templates/server.template.ts",
-        "hash": "6008955017419384980"
+        "hash": "16551557340613897"
       },
       {
         "file": "src/generators/infra/templates/use-hook.template.ts",
-        "hash": "9863705340695995817"
+        "hash": "10938160482371607530"
       },
       {
         "file": "src/generators/provider/provider.spec.ts",
-        "hash": "17078546180721661987"
+        "hash": "13948181795525628950"
       },
       {
         "file": "src/generators/provider/provider.ts",
-        "hash": "18223707870640548669"
+        "hash": "2103174451159738732"
       },
       {
         "file": "src/generators/provider/schema.json",
@@ -364,11 +368,11 @@
       },
       {
         "file": "src/generators/provider/templates/index.ts",
-        "hash": "8844747537718691196"
+        "hash": "2254023624065841516"
       },
       {
         "file": "src/generators/provider/templates/layers.template.ts",
-        "hash": "17998910316793837510"
+        "hash": "8832465054863454989"
       },
       {
         "file": "src/generators/provider/templates/service-spec.template.ts",
@@ -396,27 +400,19 @@
       },
       {
         "file": "src/utils/build-config-utils.ts",
-        "hash": "12796390098106937857"
+        "hash": "4151436286447044761"
       },
       {
         "file": "src/utils/code-generation/barrel-export-utils.ts",
-        "hash": "13086761406959365692"
+        "hash": "2988965262903839194"
       },
       {
         "file": "src/utils/code-generation/effect-patterns.ts",
-        "hash": "10077418297632753647"
+        "hash": "16118337987451385703"
       },
       {
         "file": "src/utils/code-generation/error-template-utils.ts",
         "hash": "8666513531779111506"
-      },
-      {
-        "file": "src/utils/code-generation/file-writer.ts",
-        "hash": "1500793527381625301"
-      },
-      {
-        "file": "src/utils/code-generation/nx-tree-filesystem.ts",
-        "hash": "6343401587721969683"
       },
       {
         "file": "src/utils/code-generation/type-template-utils.ts",
@@ -424,15 +420,15 @@
       },
       {
         "file": "src/utils/code-generation/typescript-builder.ts",
-        "hash": "16696766128407860933"
+        "hash": "432453821097622295"
       },
       {
         "file": "src/utils/code-generation/validators.ts",
-        "hash": "3416679097520970472"
+        "hash": "1535135438444908707"
       },
       {
         "file": "src/utils/dependency-utils.ts",
-        "hash": "8177509925370701285"
+        "hash": "12140428598175124523"
       },
       {
         "file": "src/utils/esm-utils.ts",
@@ -444,19 +440,19 @@
       },
       {
         "file": "src/utils/index.ts",
-        "hash": "14787852401203069107"
+        "hash": "14839197485103928809"
       },
       {
         "file": "src/utils/library-generator-utils.spec.ts",
-        "hash": "16445524655912108585"
+        "hash": "18441094894130282464"
       },
       {
         "file": "src/utils/library-generator-utils.ts",
-        "hash": "9763878417340015427"
+        "hash": "16141182714682568176"
       },
       {
         "file": "src/utils/normalization-utils.ts",
-        "hash": "4558742600172259713"
+        "hash": "17819390052623448044"
       },
       {
         "file": "src/utils/platform-utils.ts",
@@ -468,23 +464,19 @@
       },
       {
         "file": "src/utils/shared/types.ts",
-        "hash": "2190715280359638237"
+        "hash": "17648304964344442857"
       },
       {
         "file": "src/utils/template-utils.ts",
-        "hash": "4957293761902303847"
+        "hash": "10927420367970192825"
       },
       {
         "file": "src/utils/tsconfig-utils.ts",
         "hash": "14928634025932666867"
       },
       {
-        "file": "test/Dummy.test.ts",
-        "hash": "841869990072511608"
-      },
-      {
         "file": "tsconfig.base.json",
-        "hash": "7936025615018695068"
+        "hash": "12718503837968948715"
       },
       {
         "file": "tsconfig.build.json",
@@ -496,7 +488,7 @@
       },
       {
         "file": "tsconfig.spec.json",
-        "hash": "17596558643026656220"
+        "hash": "5276639005343751933"
       },
       {
         "file": "tsconfig.src.json",

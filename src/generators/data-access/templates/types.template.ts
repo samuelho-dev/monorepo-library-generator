@@ -10,9 +10,9 @@ import {
   addPaginatedResponse,
   addPaginationOptions,
   addSortDirection,
-} from '../../../utils/code-generation/type-template-utils.js';
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { DataAccessTemplateOptions } from '../../../utils/shared/types.js';
+} from '../../../utils/code-generation/type-template-utils';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate types.ts file for data-access library

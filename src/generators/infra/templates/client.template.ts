@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { generateStandardErrorExports } from '../../../utils/code-generation/barrel-export-utils.js';
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { InfraTemplateOptions } from '../../../utils/shared/types.js';
+import { generateStandardErrorExports } from '../../../utils/code-generation/barrel-export-utils';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { InfraTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate client.ts file for infrastructure service

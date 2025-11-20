@@ -173,8 +173,8 @@ function normalizeOptions(
   // Use shared normalization utility for common fields
   const baseOptions = normalizeBaseOptions(tree, {
     name: schema.name,
-    directory: schema.directory,
-    description: schema.description,
+    ...(schema.directory !== undefined && { directory: schema.directory }),
+    ...(schema.description !== undefined && { description: schema.description }),
     libraryType: 'contract',
     additionalTags: ['platform:universal'], // Contracts are platform-agnostic
   });

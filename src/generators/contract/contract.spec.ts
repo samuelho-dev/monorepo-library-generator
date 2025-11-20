@@ -2,7 +2,6 @@ import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing";
 import { Tree, readProjectConfiguration } from "@nx/devkit";
 
 import contractGenerator from "./contract.js";
-import { ContractGeneratorSchema } from "./schema.js";
 
 // ============================================================================
 // PHASE 1: Foundation Tests (Schema & Base Files)

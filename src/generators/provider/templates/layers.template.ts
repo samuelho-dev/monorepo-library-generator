@@ -13,8 +13,8 @@
  * @module monorepo-library-generator/provider/templates/layers
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder.js';
-import type { ProviderTemplateOptions } from '../../../utils/shared/types.js';
+import { TypeScriptBuilder } from '../../../utils/code-generation/typescript-builder';
+import type { ProviderTemplateOptions } from '../../../utils/shared/types';
 
 /**
  * Generate layers.ts file for provider library

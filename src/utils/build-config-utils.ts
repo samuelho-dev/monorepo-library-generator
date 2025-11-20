@@ -6,9 +6,9 @@
  */
 
 import type { TargetConfiguration } from '@nx/devkit';
-import { determinePlatformExports } from './platform-utils.js';
+import { determinePlatformExports, type PlatformType } from './platform-utils';
 
-export type PlatformType = 'node' | 'universal' | 'browser' | 'edge';
+export type { PlatformType };
 export type LibraryType =
   | 'contract'
   | 'data-access'
@@ -23,78 +23,6 @@ export interface BuildConfigOptions {
   libraryType: LibraryType;
   includeClientServer?: boolean;
   additionalEntryPoints?: Array<string>;
-}
-
-/**
- * Get platform-specific build configuration
- */
-function _getPlatformConfig(platform: PlatformType) {
-  switch (platform) {
-    case 'node':
-      return {
-        platform: 'node' as const,
-        target: 'node20',
-        format: ['cjs'] as const,
-      };
-    case 'browser':
-      return {
-        platform: 'browser' as const,
-        target: 'es2022',
-        format: ['esm'] as const,
-      };
-    case 'edge':
-      return {
-        platform: 'neutral' as const,
-        target: 'es2022',
-        format: ['esm'] as const,
-      };
-    case 'universal':
-    default:
-      return {
-        platform: 'neutral' as const,
-        target: 'es2022',
-        format: ['cjs', 'esm'] as const,
-      };
-  }
-}
-
-/**
- * Get library-type specific external dependencies
- */
-function _getLibraryExternals(libraryType: LibraryType) {
-  const baseExternals = ['effect', '@effect', '@custom-repo/*'];
-
-  switch (libraryType) {
-    case 'contract':
-      // Contract libraries are pure type/schema definitions
-      return baseExternals;
-    case 'data-access':
-      return [
-        ...baseExternals,
-        'db',
-        '@prisma/client',
-        'kysely',
-        '@supabase/supabase-js',
-      ];
-    case 'infra':
-      return [
-        ...baseExternals,
-        'redis',
-        'aws-sdk',
-        '@supabase/supabase-js',
-        'fastify',
-      ];
-    case 'provider':
-      return [
-        ...baseExternals,
-        // Provider libs will have their own SDK dependencies
-        // but we keep it minimal for the template
-      ];
-    case 'feature':
-      return [...baseExternals, 'react', 'react-dom', 'next'];
-    default:
-      return baseExternals;
-  }
 }
 
 /**
@@ -116,7 +44,7 @@ function getAdditionalEntryPoints(options: BuildConfigOptions) {
     determinePlatformExports({
       libraryType,
       platform,
-      includeClientServer,
+      ...(includeClientServer !== undefined && { includeClientServer }),
     });
 
   if (shouldGenerateServer) {

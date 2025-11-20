@@ -23,3 +23,6 @@ export * from "./platform-utils.js"
 export * from "./code-generation/barrel-export-utils.js"
 export * from "./code-generation/error-template-utils.js"
 export * from "./code-generation/type-template-utils.js"
+
+// Shared types
+export * from "./shared/types.js"

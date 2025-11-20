@@ -101,7 +101,7 @@ export class EffectPatterns {
       className: config.className,
       extends: `Data.TaggedError("${config.tagName}")<{\n${fieldTypes}\n  }>`,
       exported: true,
-      jsdoc: config.jsdoc,
+      ...(config.jsdoc !== undefined && { jsdoc: config.jsdoc }),
       staticMethods: config.staticMethods || []
     }
   }

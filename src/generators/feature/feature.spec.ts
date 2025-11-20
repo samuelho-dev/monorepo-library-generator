@@ -7,7 +7,7 @@
 
 import { Tree, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import featureGenerator from './feature.js';
+import featureGenerator from './feature';
 
 describe('feature generator', () => {
   let tree: Tree;

@@ -7,7 +7,7 @@
 
 import { Tree, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import providerGenerator from './provider.js';
+import providerGenerator from './provider';
 
 describe('provider generator', () => {
   let tree: Tree;
