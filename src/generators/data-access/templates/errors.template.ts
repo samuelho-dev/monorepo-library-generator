@@ -175,7 +175,7 @@ export class ${className}ConflictError extends Data.TaggedError(
       message: conflictingId
         ? \`Resource already exists: \${conflictingId}\`
         : "Resource already exists",
-      conflictingId,
+      ...(conflictingId !== undefined && { conflictingId }),
     });
   }
 }`);

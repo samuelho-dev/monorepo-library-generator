@@ -28,7 +28,8 @@ describe('provider generator', () => {
 
       // Core files
       expect(tree.exists(`${projectRoot}/src/index.ts`)).toBeTruthy();
-      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBeTruthy();
+      // server.ts is only generated when includeClientServer is explicitly true
+      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBeFalsy();
       expect(tree.exists(`${projectRoot}/package.json`)).toBeTruthy();
       expect(tree.exists(`${projectRoot}/project.json`)).toBeTruthy();
       expect(tree.exists(`${projectRoot}/README.md`)).toBeTruthy();
@@ -181,7 +182,8 @@ describe('provider generator', () => {
 
       // Exports configuration
       expect(packageJson.exports?.['.']?.import).toBeDefined();
-      expect(packageJson.exports?.['./server']?.import).toBeDefined();
+      // server.ts is only generated when includeClientServer is explicitly true
+      expect(packageJson.exports?.['./server']).toBeUndefined();
     });
   });
 

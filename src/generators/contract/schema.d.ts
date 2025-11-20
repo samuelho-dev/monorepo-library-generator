@@ -5,4 +5,5 @@ export interface ContractGeneratorSchema {
   dependencies?: string[];
   includeCQRS?: boolean;
   includeRPC?: boolean;
+  tags?: string;
 }

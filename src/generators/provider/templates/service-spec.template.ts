@@ -71,6 +71,7 @@ export function generateServiceSpecFile(options: ProviderTemplateOptions) {
   builder.addImport('vitest', 'expect');
   builder.addImport('@effect/vitest', 'it');
   builder.addImport('./service', className);
+  builder.addImport('./layers', `${className}Live`);
   builder.addImport('./errors', `${className}Error`, true);
   builder.addBlankLine();
 
@@ -90,7 +91,7 @@ export function generateServiceSpecFile(options: ProviderTemplateOptions) {
     '   *     const result = yield* service.createResource({ data: "test" });',
   );
   builder.addRaw('   *     expect(result.id).toBeDefined();');
-  builder.addRaw(`   *   }).pipe(Effect.provide(${className}.Live))`);
+  builder.addRaw(`   *   }).pipe(Effect.provide(${className}Live))`);
   builder.addRaw('   * );');
   builder.addRaw('   *');
   builder.addRaw('   * it.effect("handles SDK errors correctly", () =>');
@@ -108,7 +109,7 @@ export function generateServiceSpecFile(options: ProviderTemplateOptions) {
   builder.addRaw('    Effect.gen(function* () {');
   builder.addRaw(`      const service = yield* ${className};`);
   builder.addRaw('      expect(service).toBeDefined();');
-  builder.addRaw(`    }).pipe(Effect.provide(${className}.Live))`);
+  builder.addRaw(`    }).pipe(Effect.provide(${className}Live))`);
   builder.addRaw('  );');
   builder.addRaw('});');
   builder.addBlankLine();

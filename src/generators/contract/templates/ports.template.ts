@@ -32,14 +32,23 @@ export function generatePortsFile(options: ContractTemplateOptions) {
     { from: 'effect', imports: ['Context', 'Effect', 'Option'] },
   ]);
 
+  // TODO: Uncomment when types-database library is available
+  // builder.addImports([
+  //   {
+  //     from: '@custom-repo/types-database',
+  //     imports: [
+  //       `${className}`,
+  //       `Partial<${className}>`,
+  //       `Partial<${className}>`,
+  //     ],
+  //     isTypeOnly: true,
+  //   },
+  // ]);
+
   builder.addImports([
     {
-      from: '@custom-repo/types-database',
-      imports: [
-        `${className}Select`,
-        `${className}Insert`,
-        `${className}Update`,
-      ],
+      from: './entities',
+      imports: [`${className}`],
       isTypeOnly: true,
     },
   ]);
@@ -264,7 +273,7 @@ export class ${className}Repository extends Context.Tag(
     readonly findById: (
       id: string
     ) => Effect.Effect<
-      Option.Option<${className}Select>,
+      Option.Option<${className}>,
       ${className}RepositoryError,
       never
     >;
@@ -276,7 +285,7 @@ export class ${className}Repository extends Context.Tag(
       filters?: ${className}Filters,
       pagination?: PaginationParams,
       sort?: SortOptions
-    ) => Effect.Effect<PaginatedResult<${className}Select>, ${className}RepositoryError>;
+    ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError>;
 
     /**
      * Count ${domainName}s matching filters
@@ -289,16 +298,16 @@ export class ${className}Repository extends Context.Tag(
      * Create a new ${domainName}
      */
     readonly create: (
-      input: ${className}Insert
-    ) => Effect.Effect<${className}Select, ${className}RepositoryError>;
+      input: Partial<${className}>
+    ) => Effect.Effect<${className}, ${className}RepositoryError>;
 
     /**
      * Update an existing ${domainName}
      */
     readonly update: (
       id: string,
-      input: ${className}Update
-    ) => Effect.Effect<${className}Select, ${className}RepositoryError>;
+      input: Partial<${className}>
+    ) => Effect.Effect<${className}, ${className}RepositoryError>;
 
     /**
      * Delete a ${domainName} permanently
@@ -354,7 +363,7 @@ export class ${className}Service extends Context.Tag(
      */
     readonly get: (
       id: string
-    ) => Effect.Effect<${className}Select, ${className}RepositoryError>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError>;
 
     /**
      * List ${domainName}s with filters and pagination
@@ -363,22 +372,22 @@ export class ${className}Service extends Context.Tag(
       filters?: ${className}Filters,
       pagination?: PaginationParams,
       sort?: SortOptions
-    ) => Effect.Effect<PaginatedResult<${className}Select>, ${className}RepositoryError>;
+    ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError>;
 
     /**
      * Create a new ${domainName}
      */
     readonly create: (
-      input: ${className}Insert
-    ) => Effect.Effect<${className}Select, ${className}RepositoryError>;
+      input: Partial<${className}>
+    ) => Effect.Effect<${className}, ${className}RepositoryError>;
 
     /**
      * Update an existing ${domainName}
      */
     readonly update: (
       id: string,
-      input: ${className}Update
-    ) => Effect.Effect<${className}Select, ${className}RepositoryError>;
+      input: Partial<${className}>
+    ) => Effect.Effect<${className}, ${className}RepositoryError>;
 
     /**
      * Delete a ${domainName}

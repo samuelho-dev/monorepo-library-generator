@@ -1,14 +1,31 @@
 {
-  "name": "@template/basic",
-  "version": "0.0.0",
+  "name": "@samuelho-dev/monorepo-library-generator",
+  "version": "1.0.0",
   "type": "module",
   "packageManager": "pnpm@10.14.0",
   "license": "MIT",
-  "description": "A basic Effect package",
+  "description": "Effect-based monorepo library generator with Nx integration. Generate contract, data-access, feature, infra, and provider libraries following Effect best practices.",
+  "keywords": [
+    "effect",
+    "nx",
+    "generator",
+    "monorepo",
+    "scaffold",
+    "typescript",
+    "effect-ts",
+    "library-generator",
+    "code-generator",
+    "nx-generator"
+  ],
   "repository": {
     "type": "git",
-    "url": "<PLACEHOLDER>"
+    "url": "https://github.com/samuelho-dev/monorepo-library-generator"
   },
+  "bugs": {
+    "url": "https://github.com/samuelho-dev/monorepo-library-generator/issues"
+  },
+  "homepage": "https://github.com/samuelho-dev/monorepo-library-generator#readme",
+  "author": "Samuel Ho <samuelho-dev>",
   "bin": {
     "mlg": "./bin/cli.js"
   },

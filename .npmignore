@@ -1,0 +1,48 @@
+# Source files (only dist is published)
+src/
+libs/
+packages/
+
+# Test files
+**/*.spec.ts
+**/*.test.ts
+test-nx-method.ts
+generate-test-libs.ts
+TESTING_REPORT.md
+
+# Config files
+tsconfig*.json
+vitest.config*.ts
+eslint.config.mjs
+.eslintrc*
+
+# CI/CD
+.github/
+.nx/
+.changeset/
+
+# Build artifacts
+build/
+
+# Development
+*.md
+!README.md
+!CHANGELOG.md
+!PUBLISHING.md
+.vscode/
+.idea/
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Package manager
+node_modules/
+pnpm-lock.yaml
+.pnpm/
+
+# Testing
+coverage/
+.vitest/

@@ -21,6 +21,7 @@ import {
   computeDependencies,
   type DependencyInfo,
 } from "../../utils/dependency-utils.js";
+import { parseTags } from "../../utils/generator-utils.js";
 import type { ContractGeneratorSchema } from "./schema.js";
 import { generateErrorsFile } from "./templates/errors.template.js";
 import { generateEntitiesFile } from "./templates/entities.template.js";
@@ -42,6 +43,7 @@ declare const __dirname: string;
 interface NormalizedContractOptions extends NormalizedBaseOptions {
   // Contract-specific fields
   readonly dependencies: DependencyInfo[];
+  readonly parsedTags: string[];
 }
 
 /**
@@ -68,7 +70,7 @@ export default async function contractGenerator(
     // libraryType to skip platform-specific types regardless of this setting.
     platform: 'node',
     description: options.description,
-    tags: options.tags.split(','),
+    tags: options.parsedTags,
     includeClientServer: false, // Contracts are type-only
     includeEdgeExports: false,
   };
@@ -92,7 +94,7 @@ export default async function contractGenerator(
     sourceRoot: options.sourceRoot,
     offsetFromRoot: options.offsetFromRoot,
     description: options.description,
-    tags: options.tags.split(','),
+    tags: options.parsedTags,
 
     // Feature flags
     includeCQRS,
@@ -179,6 +181,14 @@ function normalizeOptions(
     additionalTags: ['platform:universal'], // Contracts are platform-agnostic
   });
 
+  // Parse tags with defaults
+  const defaultTags = [
+    'type:contract',
+    `domain:${baseOptions.name}`,
+    'platform:universal',
+  ];
+  const parsedTags = parseTags(schema.tags, defaultTags);
+
   // Compute contract-specific dependencies
   const dependencies = computeDependencies({
     dependencyNames: schema.dependencies || [],
@@ -190,6 +200,7 @@ function normalizeOptions(
   return {
     ...baseOptions,
     dependencies,
+    parsedTags,
   };
 }
 

@@ -57,7 +57,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addImport('effect', 'Schedule');
   builder.addImport('effect', 'Duration');
   builder.addImport('./errors', `map${className}Error`);
-  builder.addImport('./errors', `${className}Error`);
+  builder.addImport('./errors', `${className}ServiceError`);
   builder.addBlankLine();
 
   // Context.Tag with inline interface
@@ -86,7 +86,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw('     * Health check - verifies service connectivity');
   builder.addRaw('     */');
   builder.addRaw(
-    `    readonly healthCheck: Effect.Effect<HealthCheckResult, ${className}Error>;`,
+    `    readonly healthCheck: Effect.Effect<HealthCheckResult, ${className}ServiceError>;`,
   );
   builder.addBlankLine();
   builder.addRaw('    /**');
@@ -113,7 +113,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw('    readonly list: (');
   builder.addRaw('      params?: ListParams');
   builder.addRaw(
-    `    ) => Effect.Effect<PaginatedResult<Resource>, ${className}Error>;`,
+    `    ) => Effect.Effect<PaginatedResult<Resource>, ${className}ServiceError>;`,
   );
   builder.addBlankLine();
   builder.addRaw('    /**');
@@ -129,7 +129,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw('     */');
   builder.addRaw('    readonly get: (');
   builder.addRaw('      id: string');
-  builder.addRaw(`    ) => Effect.Effect<Resource, ${className}Error>;`);
+  builder.addRaw(`    ) => Effect.Effect<Resource, ${className}ServiceError>;`);
   builder.addBlankLine();
   builder.addRaw('    /**');
   builder.addRaw('     * Create new resource');
@@ -146,7 +146,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw('     */');
   builder.addRaw('    readonly create: (');
   builder.addRaw('      data: CreateResourceData');
-  builder.addRaw(`    ) => Effect.Effect<Resource, ${className}Error>;`);
+  builder.addRaw(`    ) => Effect.Effect<Resource, ${className}ServiceError>;`);
   builder.addBlankLine();
   builder.addRaw('    /**');
   builder.addRaw('     * Update existing resource');
@@ -165,7 +165,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw('    readonly update: (');
   builder.addRaw('      id: string,');
   builder.addRaw('      data: UpdateResourceData');
-  builder.addRaw(`    ) => Effect.Effect<Resource, ${className}Error>;`);
+  builder.addRaw(`    ) => Effect.Effect<Resource, ${className}ServiceError>;`);
   builder.addBlankLine();
   builder.addRaw('    /**');
   builder.addRaw('     * Delete resource by ID');
@@ -180,7 +180,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw('     */');
   builder.addRaw('    readonly delete: (');
   builder.addRaw('      id: string');
-  builder.addRaw(`    ) => Effect.Effect<void, ${className}Error>;`);
+  builder.addRaw(`    ) => Effect.Effect<void, ${className}ServiceError>;`);
   builder.addBlankLine();
   builder.addRaw('    /**');
   builder.addRaw('     * Search resources with filters');
@@ -200,7 +200,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw('      query: string,');
   builder.addRaw('      filters?: Record<string, unknown>');
   builder.addRaw(
-    `    ) => Effect.Effect<readonly Resource[], ${className}Error>;`,
+    `    ) => Effect.Effect<readonly Resource[], ${className}ServiceError>;`,
   );
   builder.addRaw('  }');
   builder.addRaw('>() {');
@@ -231,10 +231,10 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addBlankLine();
   builder.addRaw('    // Retry policy: exponential backoff with max attempts');
   builder.addRaw(
-    '    const retryPolicy = Schedule.exponential(Duration.millis(serviceConfig.retryDelay))',
+    '    const retryPolicy = Schedule.exponential(Duration.millis(serviceConfig.retryDelay!))',
   );
   builder.addRaw(
-    '      .pipe(Schedule.compose(Schedule.recurs(serviceConfig.retryAttempts)));',
+    '      .pipe(Schedule.compose(Schedule.recurs(serviceConfig.retryAttempts!)));',
   );
   builder.addBlankLine();
   builder.addRaw('    // Health check implementation');

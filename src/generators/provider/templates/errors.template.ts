@@ -133,6 +133,22 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw('}> {}');
   builder.addBlankLine();
 
+  // Service Error Union Type
+  builder.addRaw('/**');
+  builder.addRaw(` * Union of all ${className} service errors`);
+  builder.addRaw(' */');
+  builder.addRaw(
+    `export type ${className}ServiceError =`,
+  );
+  builder.addRaw(`  | ${className}Error`);
+  builder.addRaw(`  | ${className}ApiError`);
+  builder.addRaw(`  | ${className}AuthenticationError`);
+  builder.addRaw(`  | ${className}RateLimitError`);
+  builder.addRaw(`  | ${className}TimeoutError`);
+  builder.addRaw(`  | ${className}ConnectionError`);
+  builder.addRaw(`  | ${className}ValidationError;`);
+  builder.addBlankLine();
+
   // Error Mapping Function
   builder.addRaw('/**');
   builder.addRaw(' * Error Mapping Function');
@@ -141,7 +157,7 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw(' * NO type coercion or assertions');
   builder.addRaw(' */');
   builder.addRaw(
-    `export function map${className}Error(error: unknown): ${className}Error {`,
+    `export function map${className}Error(error: unknown): ${className}ServiceError {`,
   );
   builder.addRaw('  // Safe property access with type guard');
   builder.addRaw('  const errorObj = typeof error === "object" && error !== null ? error : {};');
@@ -167,7 +183,7 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
     '      message: typeof message === "string" ? message : "Rate limit exceeded",',
   );
   builder.addRaw(
-    '      retryAfter: typeof retryAfter === "number" ? retryAfter : undefined,',
+    '      ...(typeof retryAfter === "number" && { retryAfter }),',
   );
   builder.addRaw('    });');
   builder.addRaw('  }');
@@ -202,7 +218,7 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   );
   builder.addRaw('      statusCode,');
   builder.addRaw(
-    '      errorCode: typeof code === "string" ? code : undefined,',
+    '      ...(typeof code === "string" && { errorCode: code }),',
   );
   builder.addRaw('      cause: error,');
   builder.addRaw('    });');
@@ -226,7 +242,7 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw(' */');
   builder.addRaw(`export function run${className}Operation<A>(`);
   builder.addRaw('  operation: () => Promise<A>,');
-  builder.addRaw(`): Effect.Effect<A, ${className}Error> {`);
+  builder.addRaw(`): Effect.Effect<A, ${className}ServiceError> {`);
   builder.addRaw('  return Effect.tryPromise({');
   builder.addRaw('    try: operation,');
   builder.addRaw(`    catch: map${className}Error,`);

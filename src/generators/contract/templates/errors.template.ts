@@ -158,36 +158,70 @@ export function generateErrorsFile(options: ContractTemplateOptions) {
   );
 
   // PermissionError
+  // Note: Only include userId field if entity is not already User (to avoid duplicate fields)
+  const permissionErrorFields: Array<{
+    name: string;
+    type: string;
+    readonly: boolean;
+    optional?: boolean;
+  }> = [
+    { name: 'message', type: 'string', readonly: true },
+    { name: 'operation', type: 'string', readonly: true },
+    { name: `${propertyName}Id`, type: 'string', readonly: true },
+  ];
+
+  // Only add userId if the entity itself isn't User (avoid duplicate userId field)
+  if (propertyName !== 'user') {
+    permissionErrorFields.push({
+      name: 'userId',
+      type: 'string',
+      readonly: true,
+      optional: true,
+    });
+  }
+
+  const permissionErrorParamType =
+    propertyName !== 'user'
+      ? `{
+    operation: string;
+    ${propertyName}Id: string;
+    userId?: string;
+  }`
+      : `{
+    operation: string;
+    ${propertyName}Id: string;
+  }`;
+
+  const permissionErrorBody =
+    propertyName !== 'user'
+      ? `return new ${className}PermissionError({
+  message: \`Operation '\${params.operation}' not permitted on ${domainName} \${params.${propertyName}Id}\`,
+  operation: params.operation,
+  ${propertyName}Id: params.${propertyName}Id,
+  ...(params.userId !== undefined && { userId: params.userId }),
+});`
+      : `return new ${className}PermissionError({
+  message: \`Operation '\${params.operation}' not permitted on ${domainName} \${params.${propertyName}Id}\`,
+  operation: params.operation,
+  ${propertyName}Id: params.${propertyName}Id,
+});`;
+
   builder.addClass(
     EffectPatterns.createTaggedError({
       className: `${className}PermissionError`,
       tagName: `${className}PermissionError`,
-      fields: [
-        { name: 'message', type: 'string', readonly: true },
-        { name: 'operation', type: 'string', readonly: true },
-        { name: `${propertyName}Id`, type: 'string', readonly: true },
-        { name: 'userId', type: 'string', readonly: true, optional: true },
-      ],
+      fields: permissionErrorFields,
       staticMethods: [
         {
           name: 'create',
           params: [
             {
               name: 'params',
-              type: `{
-    operation: string;
-    ${propertyName}Id: string;
-    userId?: string;
-  }`,
+              type: permissionErrorParamType,
             },
           ],
           returnType: `${className}PermissionError`,
-          body: `return new ${className}PermissionError({
-  message: \`Operation '\${params.operation}' not permitted on ${domainName} \${params.${propertyName}Id}\`,
-  operation: params.operation,
-  ${propertyName}Id: params.${propertyName}Id,
-  ...(params.userId !== undefined && { userId: params.userId }),
-});`,
+          body: permissionErrorBody,
         },
       ],
       jsdoc: `Error thrown when ${domainName} operation is not permitted`,

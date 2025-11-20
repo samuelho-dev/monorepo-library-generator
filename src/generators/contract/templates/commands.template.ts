@@ -182,7 +182,7 @@ export class Update${className}Command extends Schema.Class<Update${className}Co
   updates: Schema.Record({
     key: Schema.String,
     value: Schema.Unknown,
-  }).pipe(Schema.minProperties(1)),
+  }),
 
   // TODO: Add domain-specific update fields
   // Example fields:
