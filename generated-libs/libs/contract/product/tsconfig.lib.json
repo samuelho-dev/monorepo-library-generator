@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "../../../dist/libs/contract/product",
+    "tsBuildInfoFile": "../../../dist/libs/contract/product/tsconfig.lib.tsbuildinfo",
+    "noEmit": false,
+    "typeRoots": []
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "vitest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/__tests__/**/*"
+  ]
+}
