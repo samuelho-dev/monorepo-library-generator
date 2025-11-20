@@ -80,7 +80,7 @@ What to Test:
    *         }),
    *       }),
    *     }),
-   *   } as any,
+   *   },
    * });
    *
    * Example: Test repository method with it.scoped
@@ -111,7 +111,7 @@ What to Test:
    *             }),
    *           }),
    *         }),
-   *       } as any,
+   *       },
    *     });
    *
    *     const repo = yield* ${className}Repository;

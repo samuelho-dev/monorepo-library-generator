@@ -241,8 +241,8 @@ export function generateLibTsConfig(
     composite: true,
     declaration: true,
     declarationMap: true,
-    outDir: `${offsetFromRoot}/dist/${projectRoot}`,
-    tsBuildInfoFile: `${offsetFromRoot}/dist/${projectRoot}/tsconfig.lib.tsbuildinfo`,
+    outDir: `${offsetFromRoot}dist/${projectRoot}`,
+    tsBuildInfoFile: `${offsetFromRoot}dist/${projectRoot}/tsconfig.lib.tsbuildinfo`,
     noEmit: false,
     ...(types.length > 0 && { types }),
     ...(libraryType === 'contract' && { typeRoots: [] }),
@@ -254,7 +254,7 @@ export function generateLibTsConfig(
     include: ['src/**/*.ts'],
     exclude: [
       'vitest.config.ts',
-      'jest.config.ts',
+
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
       'src/**/__tests__/**/*',

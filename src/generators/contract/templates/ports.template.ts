@@ -121,28 +121,19 @@ export function generatePortsFile(options: ContractTemplateOptions) {
     ],
   });
 
-  // PaginatedResult interface
-  builder.addInterface({
-    name: 'PaginatedResult',
-    exported: true,
-    jsdoc: 'Paginated result',
-    properties: [
-      { name: 'items', type: 'readonly T[]', readonly: true },
-      { name: 'total', type: 'number', readonly: true },
-      { name: 'limit', type: 'number', readonly: true },
-      { name: 'offset', type: 'number', readonly: true },
-      { name: 'hasMore', type: 'boolean', readonly: true },
-    ],
-  });
-
-  // Change PaginatedResult to generic
-  builder.addRaw(`\n// Make PaginatedResult generic\nexport interface PaginatedResult<T> {
+  // PaginatedResult interface (generic)
+  builder.addRaw(`
+/**
+ * Paginated result with generic item type
+ */
+export interface PaginatedResult<T> {
   readonly items: readonly T[];
   readonly total: number;
   readonly limit: number;
   readonly offset: number;
   readonly hasMore: boolean;
-}\n`);
+}
+`);
 
   // ============================================================================
   // SECTION 2: Repository Port

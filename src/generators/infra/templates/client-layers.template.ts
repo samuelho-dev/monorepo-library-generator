@@ -57,7 +57,7 @@ export const ${className}ServiceClientLayers = Layer.effect(
     return {
       get: (id: string) => {
         // TODO: Implement browser-safe get operation
-        return Effect.succeed(undefined as any);
+        return Effect.succeed(Option.none());
       },
       // TODO: Implement client methods
     };

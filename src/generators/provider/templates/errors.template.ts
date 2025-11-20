@@ -143,12 +143,11 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw(
     `export function map${className}Error(error: unknown): ${className}Error {`,
   );
-  builder.addRaw('  // Safe property access');
-  builder.addRaw('  const message = Reflect.get(error as object, "message");');
-  builder.addRaw(
-    '  const statusCode = Reflect.get(error as object, "statusCode");',
-  );
-  builder.addRaw('  const code = Reflect.get(error as object, "code");');
+  builder.addRaw('  // Safe property access with type guard');
+  builder.addRaw('  const errorObj = typeof error === "object" && error !== null ? error : {};');
+  builder.addRaw('  const message = Reflect.get(errorObj, "message");');
+  builder.addRaw('  const statusCode = Reflect.get(errorObj, "statusCode");');
+  builder.addRaw('  const code = Reflect.get(errorObj, "code");');
   builder.addBlankLine();
   builder.addRaw('  // Authentication errors');
   builder.addRaw('  if (statusCode === 401 || statusCode === 403) {');
@@ -162,9 +161,7 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addBlankLine();
   builder.addRaw('  // Rate limit errors');
   builder.addRaw('  if (statusCode === 429) {');
-  builder.addRaw(
-    '    const retryAfter = Reflect.get(error as object, "retryAfter");',
-  );
+  builder.addRaw('    const retryAfter = Reflect.get(errorObj, "retryAfter");');
   builder.addRaw(`    return new ${className}RateLimitError({`);
   builder.addRaw(
     '      message: typeof message === "string" ? message : "Rate limit exceeded",',

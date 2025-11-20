@@ -8,6 +8,6 @@ export interface FeatureGeneratorSchema {
   includeRPC?: boolean;
   includeCQRS?: boolean;
   includeEdge?: boolean;
-  testRunner?: 'vitest' | 'jest';
+  testRunner?: 'vitest';
   tags?: string;
 }

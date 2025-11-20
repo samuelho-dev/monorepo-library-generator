@@ -2,7 +2,7 @@
  * ESM Utilities
  *
  * Utilities for ES Module compatibility, handling both ESM and CommonJS loader contexts.
- * This is necessary because Nx generators may be loaded via the pirate loader (ts-jest)
+ * This is necessary because Nx generators may be loaded via the pirate loader
  * which doesn't fully support import.meta.url in TypeScript files.
  */
 

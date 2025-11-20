@@ -82,7 +82,7 @@
     },
     "testRunner": {
       "type": "string",
-      "enum": ["vitest", "jest"],
+      "enum": ["vitest"],
       "default": "vitest",
       "description": "Test runner to use (vitest recommended for new projects)"
     },

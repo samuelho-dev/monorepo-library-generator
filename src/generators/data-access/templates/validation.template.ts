@@ -94,9 +94,8 @@ TODO: Customize this file:
 export function validate${className}CreateInput(
   input: unknown,
 ): ${className}CreateInput {
-  // TODO: Implement schema validation
-  // Currently accepts any input - replace with actual validation
-  return input as ${className}CreateInput;
+  // TODO: Implement schema validation with your preferred library (Zod, Effect Schema, etc.)
+  throw new Error("Validation not implemented. Please implement schema validation.");
 }`);
   builder.addBlankLine();
 
@@ -132,9 +131,8 @@ export function validate${className}CreateInput(
 export function validate${className}UpdateInput(
   input: unknown,
 ): ${className}UpdateInput {
-  // TODO: Implement schema validation
-  // Currently accepts any input - replace with actual validation
-  return input as ${className}UpdateInput;
+  // TODO: Implement schema validation with your preferred library (Zod, Effect Schema, etc.)
+  throw new Error("Validation not implemented. Please implement schema validation.");
 }`);
   builder.addBlankLine();
 
@@ -172,9 +170,8 @@ export function validate${className}UpdateInput(
 export function validate${className}Filter(
   input: unknown,
 ): ${className}Filter {
-  // TODO: Implement schema validation
-  // Currently accepts any input - replace with actual validation
-  return input as ${className}Filter;
+  // TODO: Implement schema validation with your preferred library (Zod, Effect Schema, etc.)
+  throw new Error("Validation not implemented. Please implement schema validation.");
 }`);
   builder.addBlankLine();
 

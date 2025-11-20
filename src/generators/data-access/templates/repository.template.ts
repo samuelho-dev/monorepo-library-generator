@@ -130,17 +130,17 @@ TODO: Customize this file:
 
   builder.addImports([
     {
-      from: './shared/types.js',
+      from: './shared/types',
       imports: [`${className}CreateInput`, `${className}UpdateInput`],
       isTypeOnly: true,
     },
     {
-      from: './shared/errors.js',
+      from: './shared/errors',
       imports: [`${className}RepositoryError`],
       isTypeOnly: true,
     },
     {
-      from: './shared/errors.js',
+      from: './shared/errors',
       imports: [
         `${className}InternalError`,
         `${className}NotFoundError`,
@@ -214,9 +214,15 @@ export class ${className}Repository extends Context.Tag(
       // import { LoggingService } from "@custom-repo/infra-logging/server";
       // const logger = yield* LoggingService;
 
-      // For now, create repository without dependencies (update when ready)
-      // Replace this with: return create${className}Repository(database, logger);
-      return create${className}Repository(undefined as any, undefined);
+      // For now, create repository with placeholder database
+      // TODO: Replace with actual KyselyService once provider-kysely is configured
+      const placeholderDb: DatabaseService = {
+        query: <T>(_fn: (db: KyselyDatabase) => Promise<T>): Effect.Effect<T, never, never> =>
+          Effect.dieMessage(
+            "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
+          ),
+      };
+      return create${className}Repository(placeholderDb, undefined);
     })
   );`);
   builder.addBlankLine();
@@ -238,7 +244,10 @@ export class ${className}Repository extends Context.Tag(
           Effect.succeed(
             store.has(id) ? Option.some(store.get(id)) : Option.none(),
           ),
-        findAll: (filters?: any, pagination?: any) =>
+        findAll: (
+          _filters?: Record<string, unknown>,
+          pagination?: { limit: number; offset: number },
+        ) =>
           Effect.succeed({
             items: Array.from(store.values()),
             total: store.size,
@@ -247,7 +256,7 @@ export class ${className}Repository extends Context.Tag(
             hasMore: false,
           }),
         count: () => Effect.succeed(store.size),
-        create: (entity: any) =>
+        create: (entity: ${className}CreateInput) =>
           Effect.succeed(
             (() => {
               const id = String(++idCounter);
@@ -257,14 +266,17 @@ export class ${className}Repository extends Context.Tag(
               return saved;
             })(),
           ),
-        update: (id: string, updates: any) =>
+        update: (id: string, updates: ${className}UpdateInput) =>
           Effect.gen(function* () {
             if (!store.has(id)) {
-              // TODO: Import error class
-              return yield* Effect.fail(new Error(\`Not found: \${id}\`));
+              return yield* Effect.fail(${className}NotFoundError.create(id));
             }
-            const existing = store.get(id) as any;
-            const updated = { ...existing, ...updates, updatedAt: new Date() };
+            const existing = store.get(id);
+            const updated = {
+              ...(typeof existing === "object" && existing !== null ? existing : {}),
+              ...updates,
+              updatedAt: new Date()
+            };
             store.set(id, updated);
             return updated;
           }),
@@ -289,8 +301,13 @@ export class ${className}Repository extends Context.Tag(
     Effect.gen(function* () {
       // TODO: Import and yield actual dependencies
       // Same as Live layer but with console logging wrapper
-      // For now, create repository without dependencies (update when ready)
-      const repo = create${className}Repository(undefined as any, undefined);
+      const placeholderDb: DatabaseService = {
+        query: <T>(_fn: (db: KyselyDatabase) => Promise<T>): Effect.Effect<T, never, never> =>
+          Effect.dieMessage(
+            "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
+          ),
+      };
+      const repo = create${className}Repository(placeholderDb, undefined);
 
       // Wrap with logging
       return {
@@ -373,7 +390,70 @@ export class ${className}Repository extends Context.Tag(
   builder.addBlankLine();
 
   // Create repository factory function
-  builder.addRaw(`/**
+  builder.addRaw(`// TODO: Import actual types when dependencies are configured:
+// import type { KyselyService } from "@custom-repo/provider-kysely/server";
+// import type { LoggingService } from "@custom-repo/infra-logging/server";
+
+/**
+ * Kysely database query builder interface
+ * Replace with actual Kysely.Selectable<DB['${fileName}']> from your schema
+ */
+interface KyselyDatabase {
+  selectFrom: <T extends string>(table: T) => {
+    selectAll: () => QueryBuilder;
+    select: <R>(fn: (eb: ExpressionBuilder) => R) => QueryBuilder;
+  };
+  insertInto: <T extends string>(table: T) => {
+    values: (data: Record<string, unknown>) => {
+      returningAll: () => { executeTakeFirstOrThrow: () => Promise<Record<string, unknown>> };
+    };
+  };
+  updateTable: <T extends string>(table: T) => {
+    set: (data: Record<string, unknown>) => {
+      where: (col: string, op: string, val: unknown) => {
+        returningAll: () => { executeTakeFirstOrThrow: () => Promise<Record<string, unknown>> };
+      };
+    };
+  };
+  deleteFrom: <T extends string>(table: T) => {
+    where: (col: string, op: string, val: unknown) => {
+      executeTakeFirst: () => Promise<{ numDeletedRows: bigint }>;
+    };
+  };
+}
+
+interface QueryBuilder {
+  where: (col: string, op: string, val: unknown) => QueryBuilder;
+  orderBy: (field: string, direction: "asc" | "desc") => QueryBuilder;
+  limit: (n: number) => QueryBuilder;
+  offset: (n: number) => QueryBuilder;
+  execute: () => Promise<readonly unknown[]>;
+  executeTakeFirst: () => Promise<unknown | undefined>;
+  executeTakeFirstOrThrow: () => Promise<Record<string, unknown>>;
+}
+
+interface ExpressionBuilder {
+  fn: {
+    countAll: <T>() => { as: (alias: string) => T };
+  };
+}
+
+/**
+ * Database service interface for Effect-based queries
+ */
+interface DatabaseService {
+  query: <T>(fn: (db: KyselyDatabase) => Promise<T>) => Effect.Effect<T, never, never>;
+}
+
+/**
+ * Logging service interface
+ */
+interface LoggingService {
+  debug: (message: string, context?: Record<string, unknown>) => Effect.Effect<void, never, never>;
+  info: (message: string, context?: Record<string, unknown>) => Effect.Effect<void, never, never>;
+}
+
+/**
  * Create ${className} Repository with Kysely Integration
  *
  * This factory creates a repository implementation using Kysely for type-safe queries.
@@ -384,9 +464,9 @@ export class ${className}Repository extends Context.Tag(
  * @returns Repository implementation with Kysely queries
  */
 function create${className}Repository(
-  database: any, // TODO: Import KyselyService type
-  logger?: any,  // TODO: Import LoggingService type
-): ${className}Repository {
+  database: DatabaseService,
+  logger?: LoggingService,
+) {
   return {
     findAll: (
       filters?: Record<string, unknown>,
@@ -399,10 +479,10 @@ function create${className}Repository(
           const offset = pagination?.offset ?? 0;
 
           // Get total count first
-          const countResult = yield* database.query((db: any) => {
+          const countResult = yield* database.query((db) => {
             let queryBuilder = db
               .selectFrom('${fileName}')
-              .select((eb: any) => eb.fn.countAll<number>().as('count'));
+              .select((eb) => eb.fn.countAll<number>().as('count'));
 
             // TODO: Apply filters from filters object
             // Example:
@@ -416,7 +496,7 @@ function create${className}Repository(
           const total = Number(countResult.count);
 
           // Get paginated results
-          const results = yield* database.query((db: any) => {
+          const results = yield* database.query((db) => {
             // Build type-safe query with Kysely
             let queryBuilder = db
               .selectFrom('${fileName}')
@@ -451,7 +531,7 @@ function create${className}Repository(
           }
 
           return {
-            items: results as readonly unknown[],
+            items: results,
             total,
             limit,
             offset,
@@ -471,7 +551,7 @@ function create${className}Repository(
       Effect.gen(function* () {
         try {
           // ✅ KYSELY PATTERN: Query single row with executeTakeFirst()
-          const result = yield* database.query((db: any) =>
+          const result = yield* database.query((db) =>
             db
               .selectFrom('${fileName}')
               .selectAll()
@@ -498,7 +578,7 @@ function create${className}Repository(
           // const validated = yield* validate${className}CreateInput(input);
 
           // ✅ KYSELY PATTERN: Insert with returningAll() to get created entity
-          const result = yield* database.query((db: any) =>
+          const result = yield* database.query((db) =>
             db
               .insertInto('${fileName}')
               .values({
@@ -514,7 +594,7 @@ function create${className}Repository(
             yield* logger.info("${className} created", { id: result.id });
           }
 
-          return result as unknown;
+          return result;
         } catch (error) {
           // Handle unique constraint violations
           if (
@@ -537,7 +617,7 @@ function create${className}Repository(
       Effect.gen(function* () {
         try {
           // Check if entity exists first
-          const existing = yield* database.query((db: any) =>
+          const existing = yield* database.query((db) =>
             db
               .selectFrom('${fileName}')
               .select('id')
@@ -553,7 +633,7 @@ function create${className}Repository(
           // const validated = yield* validate${className}UpdateInput(updates);
 
           // ✅ KYSELY PATTERN: Update with returningAll() to get updated entity
-          const result = yield* database.query((db: any) =>
+          const result = yield* database.query((db) =>
             db
               .updateTable('${fileName}')
               .set({
@@ -569,7 +649,7 @@ function create${className}Repository(
             yield* logger.info("${className} updated", { id });
           }
 
-          return result as unknown;
+          return result;
         } catch (error) {
           return yield* Effect.fail(
             ${className}InternalError.create(
@@ -584,7 +664,7 @@ function create${className}Repository(
       Effect.gen(function* () {
         try {
           // ✅ KYSELY PATTERN: Delete with executeTakeFirst() to check affected rows
-          const result = yield* database.query((db: any) =>
+          const result = yield* database.query((db) =>
             db
               .deleteFrom('${fileName}')
               .where('id', '=', id)
@@ -613,10 +693,10 @@ function create${className}Repository(
       Effect.gen(function* () {
         try {
           // ✅ KYSELY PATTERN: Count with type-safe aggregate function
-          const result = yield* database.query((db: any) => {
+          const result = yield* database.query((db) => {
             let queryBuilder = db
               .selectFrom('${fileName}')
-              .select((eb: any) => eb.fn.countAll<number>().as('count'));
+              .select((eb) => eb.fn.countAll<number>().as('count'));
 
             // Apply filters from filters object
             // TODO: Customize filters based on your domain
@@ -646,10 +726,10 @@ function create${className}Repository(
       Effect.gen(function* () {
         try {
           // ✅ KYSELY PATTERN: Check existence with COUNT
-          const result = yield* database.query((db: any) =>
+          const result = yield* database.query((db) =>
             db
               .selectFrom('${fileName}')
-              .select((eb: any) => eb.fn.countAll<number>().as('count'))
+              .select((eb) => eb.fn.countAll<number>().as('count'))
               .where('id', '=', id)
               .executeTakeFirstOrThrow()
           );

@@ -215,12 +215,12 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw('    client: unknown,');
   builder.addRaw(`    config?: Partial<${className}Config>,`);
   builder.addRaw('  ) {');
-  builder.addRaw(`    // Cast client to ${externalService} SDK type`);
-  builder.addRaw("    // TODO: Replace 'unknown' with actual SDK type");
+  builder.addRaw(`    // TODO: Define ${externalService} SDK type interface`);
   builder.addRaw(
-    `    // Example: const sdkClient = client as ${className}SDK;`,
+    `    // Example: interface ${className}SDK { methodName: () => Promise<Result> }`,
   );
-  builder.addRaw('    const sdkClient = client as any;');
+  builder.addRaw(`    // Then use: const sdkClient: ${className}SDK = client;`);
+  builder.addRaw('    const sdkClient = client;');
   builder.addBlankLine();
   builder.addRaw(`    const serviceConfig: ${className}Config = {`);
   builder.addRaw('      apiKey: config?.apiKey || "",');

@@ -122,7 +122,7 @@ export function buildFindAllQuery(
   //   query = query.limit(pagination.limit).offset(pagination.skip);
   // }
 
-  return query as ${className}QueryBuilder;
+  return query;
 }`);
   builder.addBlankLine();
 
@@ -142,7 +142,7 @@ export function buildFindByIdQuery(
 ): ${className}QueryBuilder {
   return db
     .selectFrom("${fileName}")
-    .where("id", "=", id) as ${className}QueryBuilder;
+    .where("id", "=", id);
 }`);
   builder.addBlankLine();
 

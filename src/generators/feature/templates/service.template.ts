@@ -226,154 +226,154 @@ TODO: Uncomment and customize these imports based on your needs:`,
   builder.addBlankLine();
 
   // Add comprehensive error handling reference
-  builder.addSectionComment(`Error Transformation Reference
-
+  builder.addSectionComment('Error Transformation Reference');
+  builder.addRaw(`//
 // COMPREHENSIVE ERROR HANDLING PATTERNS:
-
+//
 // 1. Basic Error Transformation with mapError
 // ---------------------------------------------
-Transform any lower-layer error into a feature-specific error:
-
-const user = yield* userRepo.findById(userId).pipe(
-  Effect.mapError((repoError) =>
-    new ${className}Error({
-      message: \`Failed to retrieve user \${userId}\`,
-      cause: repoError  // Preserve original error for debugging
-    })
-  )
-);
-
+// Transform any lower-layer error into a feature-specific error:
+//
+// const user = yield* userRepo.findById(userId).pipe(
+//   Effect.mapError((repoError) =>
+//     new ${className}Error({
+//       message: \`Failed to retrieve user \${userId}\`,
+//       cause: repoError  // Preserve original error for debugging
+//     })
+//   )
+// );
+//
 // 2. Catch Specific Error Types with catchTag
 // ---------------------------------------------
-Handle specific error types differently:
-
-const item = yield* repo.findById(id).pipe(
-  Effect.catchTag("NotFoundError", (error) =>
-    Effect.fail(new ${className}Error({
-      message: \`Resource \${id} does not exist\`,
-      cause: error
-    }))
-  ),
-  Effect.catchTag("ValidationError", (error) =>
-    Effect.fail(new ${className}Error({
-      message: "Invalid resource data",
-      cause: error
-    }))
-  )
-);
-
+// Handle specific error types differently:
+//
+// const item = yield* repo.findById(id).pipe(
+//   Effect.catchTag("NotFoundError", (error) =>
+//     Effect.fail(new ${className}Error({
+//       message: \`Resource \${id} does not exist\`,
+//       cause: error
+//     }))
+//   ),
+//   Effect.catchTag("ValidationError", (error) =>
+//     Effect.fail(new ${className}Error({
+//       message: "Invalid resource data",
+//       cause: error
+//     }))
+//   )
+// );
+//
 // 3. Catch All Errors with catchAll
 // ---------------------------------------------
-Provide fallback for any error:
-
-const cachedData = yield* cache.get("key").pipe(
-  Effect.catchAll((error) => {
-    // Log error but don't fail
-    yield* logger.warn("Cache miss", { error });
-    return Effect.succeed(Option.none());
-  })
-);
-
+// Provide fallback for any error:
+//
+// const cachedData = yield* cache.get("key").pipe(
+//   Effect.catchAll((error) => {
+//     // Log error but don't fail
+//     yield* logger.warn("Cache miss", { error });
+//     return Effect.succeed(Option.none());
+//   })
+// );
+//
 // 4. Transform External API Errors with tryPromise
 // ---------------------------------------------
-Wrap external API calls with proper error handling:
-
-const apiResult = yield* Effect.tryPromise({
-  try: async () => {
-    const response = await fetch("https://api.example.com/data");
-    if (!response.ok) throw new Error(\`HTTP \${response.status}\`);
-    return response.json();
-  },
-  catch: (error) => new ${className}Error({
-    message: "External API call failed",
-    cause: error
-  })
-});
-
+// Wrap external API calls with proper error handling:
+//
+// const apiResult = yield* Effect.tryPromise({
+//   try: async () => {
+//     const response = await fetch("https://api.example.com/data");
+//     if (!response.ok) throw new Error(\`HTTP \${response.status}\`);
+//     return response.json();
+//   },
+//   catch: (error) => new ${className}Error({
+//     message: "External API call failed",
+//     cause: error
+//   })
+// });
+//
 // 5. Chain Multiple Operations with Error Transformation
 // ---------------------------------------------
-Each operation can have its own error transformation:
-
-const result = yield* Effect.gen(function* () {
-  const user = yield* userRepo.findById(userId).pipe(
-    Effect.mapError(err => new ${className}Error({ message: "User lookup failed", cause: err }))
-  );
-
-  const settings = yield* settingsRepo.findByUser(user.id).pipe(
-    Effect.mapError(err => new ${className}Error({ message: "Settings lookup failed", cause: err }))
-  );
-
-  const notification = yield* notificationService.send(user.email, "Welcome").pipe(
-    Effect.catchAll(err => {
-      // Don't fail entire operation if notification fails
-      yield* logger.warn("Notification failed", { error: err });
-      return Effect.succeed(null);
-    })
-  );
-
-  return { user, settings, notification };
-});
-
+// Each operation can have its own error transformation:
+//
+// const result = yield* Effect.gen(function* () {
+//   const user = yield* userRepo.findById(userId).pipe(
+//     Effect.mapError(err => new ${className}Error({ message: "User lookup failed", cause: err }))
+//   );
+//
+//   const settings = yield* settingsRepo.findByUser(user.id).pipe(
+//     Effect.mapError(err => new ${className}Error({ message: "Settings lookup failed", cause: err }))
+//   );
+//
+//   const notification = yield* notificationService.send(user.email, "Welcome").pipe(
+//     Effect.catchAll(err => {
+//       // Don't fail entire operation if notification fails
+//       yield* logger.warn("Notification failed", { error: err });
+//       return Effect.succeed(null);
+//     })
+//   );
+//
+//   return { user, settings, notification };
+// });
+//
 // 6. Retry Failed Operations Before Transforming Error
 // ---------------------------------------------
-Add retry logic before error transformation:
-
-const data = yield* externalService.fetchData().pipe(
-  Effect.retry(Schedule.exponential("100 millis").pipe(
-    Schedule.compose(Schedule.recurs(3))
-  )),
-  Effect.mapError((err) => new ${className}Error({
-    message: "Failed after 3 retry attempts",
-    cause: err
-  }))
-);
-
+// Add retry logic before error transformation:
+//
+// const data = yield* externalService.fetchData().pipe(
+//   Effect.retry(Schedule.exponential("100 millis").pipe(
+//     Schedule.compose(Schedule.recurs(3))
+//   )),
+//   Effect.mapError((err) => new ${className}Error({
+//     message: "Failed after 3 retry attempts",
+//     cause: err
+//   }))
+// );
+//
 // 7. Error Recovery with orElse
 // ---------------------------------------------
-Try alternative approach on failure:
-
-const data = yield* primarySource.fetchData().pipe(
-  Effect.orElse(() => backupSource.fetchData()),
-  Effect.mapError((err) => new ${className}Error({
-    message: "Both primary and backup sources failed",
-    cause: err
-  }))
-);`);
+// Try alternative approach on failure:
+//
+// const data = yield* primarySource.fetchData().pipe(
+//   Effect.orElse(() => backupSource.fetchData()),
+//   Effect.mapError((err) => new ${className}Error({
+//     message: "Both primary and backup sources failed",
+//     cause: err
+//   }))
+// );`);
   builder.addBlankLine();
 
   // Add layer composition examples
-  builder.addSectionComment(`Layer Composition Examples
-
-IMPORTANT: These examples show how to provide dependencies to this service.
-Actual composition should be done at the application level.
-
-Example 1: Compose with single dependency
-export const ${className}ServiceWithLogging = ${className}Service.Live.pipe(
-  Layer.provide(LoggingServiceLive)
-);
-
-Example 2: Compose with multiple dependencies
-export const ${className}ServiceComplete = ${className}Service.Live.pipe(
-  Layer.provideMerge(Layer.mergeAll(
-    LoggingServiceLive,
-    UserRepositoryLive,
-    CacheServiceLive
-  ))
-);
-
-Example 3: Use in application
-const program = Effect.gen(function* () {
-  const service = yield* ${className}Service;
-  yield* service.exampleOperation();
-});
-
-await Effect.runPromise(
-  program.pipe(
-    Effect.provide(${className}Service.Live),
-    Effect.provide(LoggingServiceLive),
-    Effect.provide(UserRepositoryLive)
-  )
-);`);
+  builder.addSectionComment('Layer Composition Examples');
+  builder.addRaw(`//
+// IMPORTANT: These examples show how to provide dependencies to this service.
+// Actual composition should be done at the application level.
+//
+// Example 1: Compose with single dependency
+// export const ${className}ServiceWithLogging = ${className}Service.Live.pipe(
+//   Layer.provide(LoggingServiceLive)
+// );
+//
+// Example 2: Compose with multiple dependencies
+// export const ${className}ServiceComplete = ${className}Service.Live.pipe(
+//   Layer.provideMerge(Layer.mergeAll(
+//     LoggingServiceLive,
+//     UserRepositoryLive,
+//     CacheServiceLive
+//   ))
+// );
+//
+// Example 3: Use in application
+// const program = Effect.gen(function* () {
+//   const service = yield* ${className}Service;
+//   yield* service.exampleOperation();
+// });
+//
+// await Effect.runPromise(
+//   program.pipe(
+//     Effect.provide(${className}Service.Live),
+//     Effect.provide(LoggingServiceLive),
+//     Effect.provide(UserRepositoryLive)
+//   )
+// );`);
   builder.addBlankLine();
 
   return builder.toString();

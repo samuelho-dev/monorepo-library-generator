@@ -45,7 +45,7 @@ TODO: Customize this file:
   // Add imports
   builder.addImports([
     {
-      from: 'jest',
+      from: 'vitest',
       imports: ['describe', 'it', 'expect', 'beforeEach', 'afterEach'],
     },
     { from: 'effect', imports: ['Effect', 'Layer', 'Exit'] },
