@@ -1,5 +1,25 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.0.1
+
+### Patch Changes
+
+- Fix CLI bin command - the `mlg` command now works correctly
+
+  - Fixed publishConfig.directory compatibility with npm/pnpm
+  - Removed bin field from root package.json
+  - Added bin field to dist/package.json via post-build script
+  - CLI command `mlg` now works as expected
+
+  Users can now use:
+
+  ```bash
+  npx @samuelho-dev/monorepo-library-generator contract product
+  # or install globally
+  npm install -g @samuelho-dev/monorepo-library-generator
+  mlg contract product
+  ```
+
 ## 1.0.0
 
 ### Major Changes
