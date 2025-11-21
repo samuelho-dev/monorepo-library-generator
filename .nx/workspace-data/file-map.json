@@ -4,216 +4,7 @@
   "pathMappings": {},
   "nxJsonPlugins": [],
   "fileMap": {
-    "projectFileMap": {
-      "provider-sendgrid": [
-        {
-          "file": "libs/provider/sendgrid/CLAUDE.md",
-          "hash": "14775443233817468899"
-        },
-        {
-          "file": "libs/provider/sendgrid/README.md",
-          "hash": "9857916742019979133"
-        },
-        {
-          "file": "libs/provider/sendgrid/package.json",
-          "hash": "12808750498041892277",
-          "deps": [
-            "npm:effect",
-            "npm:@effect/vitest"
-          ]
-        },
-        {
-          "file": "libs/provider/sendgrid/project.json",
-          "hash": "11695678505700178185"
-        },
-        {
-          "file": "libs/provider/sendgrid/src/index.ts",
-          "hash": "209644508849046604"
-        },
-        {
-          "file": "libs/provider/sendgrid/src/lib/errors.ts",
-          "hash": "7313054091326356126"
-        },
-        {
-          "file": "libs/provider/sendgrid/src/lib/layers.ts",
-          "hash": "7431829327626773017"
-        },
-        {
-          "file": "libs/provider/sendgrid/src/lib/service.spec.ts",
-          "hash": "17009176074012677604"
-        },
-        {
-          "file": "libs/provider/sendgrid/src/lib/service.ts",
-          "hash": "10893868862235026903"
-        },
-        {
-          "file": "libs/provider/sendgrid/src/lib/types.ts",
-          "hash": "2092501587780793017"
-        },
-        {
-          "file": "libs/provider/sendgrid/src/lib/validation.ts",
-          "hash": "11072928414694253834"
-        },
-        {
-          "file": "libs/provider/sendgrid/tsconfig.json",
-          "hash": "152374770152693663"
-        },
-        {
-          "file": "libs/provider/sendgrid/tsconfig.lib.json",
-          "hash": "8496474391750141023"
-        },
-        {
-          "file": "libs/provider/sendgrid/tsconfig.spec.json",
-          "hash": "6028748744872457042"
-        },
-        {
-          "file": "libs/provider/sendgrid/vitest.config.ts",
-          "hash": "17182440357526955284"
-        }
-      ],
-      "data-access-order": [
-        {
-          "file": "libs/data-access/order/CLAUDE.md",
-          "hash": "14694412748895838182"
-        },
-        {
-          "file": "libs/data-access/order/README.md",
-          "hash": "1032342843597102492"
-        },
-        {
-          "file": "libs/data-access/order/package.json",
-          "hash": "12015371678869553671",
-          "deps": [
-            "npm:effect"
-          ]
-        },
-        {
-          "file": "libs/data-access/order/project.json",
-          "hash": "9250251335702575964"
-        },
-        {
-          "file": "libs/data-access/order/src/index.ts",
-          "hash": "9316727292706970454"
-        },
-        {
-          "file": "libs/data-access/order/src/lib/layers.spec.ts",
-          "hash": "13163494351049882021"
-        },
-        {
-          "file": "libs/data-access/order/src/lib/queries.ts",
-          "hash": "10752215801591868566"
-        },
-        {
-          "file": "libs/data-access/order/src/lib/repository.spec.ts",
-          "hash": "15943674755000868523"
-        },
-        {
-          "file": "libs/data-access/order/src/lib/repository.ts",
-          "hash": "10978019162638169535"
-        },
-        {
-          "file": "libs/data-access/order/src/lib/server/layers.ts",
-          "hash": "2284627291271370757"
-        },
-        {
-          "file": "libs/data-access/order/src/lib/shared/errors.ts",
-          "hash": "7998156519641844641"
-        },
-        {
-          "file": "libs/data-access/order/src/lib/shared/types.ts",
-          "hash": "11039761169969825995"
-        },
-        {
-          "file": "libs/data-access/order/src/lib/shared/validation.ts",
-          "hash": "17701918875369700742"
-        },
-        {
-          "file": "libs/data-access/order/tsconfig.json",
-          "hash": "152374770152693663"
-        },
-        {
-          "file": "libs/data-access/order/tsconfig.lib.json",
-          "hash": "4561273353464930171"
-        },
-        {
-          "file": "libs/data-access/order/tsconfig.spec.json",
-          "hash": "10543661092608412644"
-        },
-        {
-          "file": "libs/data-access/order/vitest.config.ts",
-          "hash": "14377862310267270167"
-        }
-      ],
-      "contract-order": [
-        {
-          "file": "libs/contract/order/CLAUDE.md",
-          "hash": "1344919766552825661"
-        },
-        {
-          "file": "libs/contract/order/README.md",
-          "hash": "9524183622361125545"
-        },
-        {
-          "file": "libs/contract/order/package.json",
-          "hash": "1861069513166752763",
-          "deps": [
-            "npm:effect"
-          ]
-        },
-        {
-          "file": "libs/contract/order/project.json",
-          "hash": "9794201981097375075"
-        },
-        {
-          "file": "libs/contract/order/src/index.ts",
-          "hash": "1453923923097075755"
-        },
-        {
-          "file": "libs/contract/order/src/lib/commands.ts",
-          "hash": "8341021835069935617"
-        },
-        {
-          "file": "libs/contract/order/src/lib/entities.ts",
-          "hash": "3408055712482095590"
-        },
-        {
-          "file": "libs/contract/order/src/lib/errors.ts",
-          "hash": "18128633146145195929"
-        },
-        {
-          "file": "libs/contract/order/src/lib/events.ts",
-          "hash": "11938608654131412718"
-        },
-        {
-          "file": "libs/contract/order/src/lib/ports.ts",
-          "hash": "17899555882515898055"
-        },
-        {
-          "file": "libs/contract/order/src/lib/projections.ts",
-          "hash": "9016237453363964249"
-        },
-        {
-          "file": "libs/contract/order/src/lib/queries.ts",
-          "hash": "16044904512905159660"
-        },
-        {
-          "file": "libs/contract/order/tsconfig.json",
-          "hash": "152374770152693663"
-        },
-        {
-          "file": "libs/contract/order/tsconfig.lib.json",
-          "hash": "3866492283526863554"
-        },
-        {
-          "file": "libs/contract/order/tsconfig.spec.json",
-          "hash": "12110411073507589471"
-        },
-        {
-          "file": "libs/contract/order/vitest.config.ts",
-          "hash": "18410909804858317589"
-        }
-      ]
-    },
+    "projectFileMap": {},
     "nonProjectFiles": [
       {
         "file": ".changeset/config.json",
@@ -222,6 +13,18 @@
       {
         "file": ".envrc",
         "hash": "7934611523180163109"
+      },
+      {
+        "file": ".github/ISSUE_TEMPLATE/bug_report.md",
+        "hash": "13058841707655608181"
+      },
+      {
+        "file": ".github/ISSUE_TEMPLATE/feature_request.md",
+        "hash": "6024196300014871803"
+      },
+      {
+        "file": ".github/PULL_REQUEST_TEMPLATE.md",
+        "hash": "6956224550859045057"
       },
       {
         "file": ".github/actions/setup/action.yml",
@@ -241,7 +44,7 @@
       },
       {
         "file": ".gitignore",
-        "hash": "16363795985499352185"
+        "hash": "17175343287782097970"
       },
       {
         "file": ".npmignore",
@@ -256,32 +59,56 @@
         "hash": "11573417813174646934"
       },
       {
-        "file": "AGENTS.md",
-        "hash": "17968709236518741058"
+        "file": "CHANGELOG.md",
+        "hash": "9334103387507149429"
       },
       {
-        "file": "CLAUDE.md",
-        "hash": "10110485341222757135"
+        "file": "CONTRIBUTING.md",
+        "hash": "12366967569866495295"
       },
       {
         "file": "LICENSE",
         "hash": "15773211985747942655"
       },
       {
-        "file": "PUBLISHING.md",
-        "hash": "11466775636261445642"
-      },
-      {
-        "file": "PUBLISH_CHECKLIST.md",
-        "hash": "1554432190839203883"
-      },
-      {
         "file": "README.md",
         "hash": "11100159956856256744"
       },
       {
-        "file": "bin/cli.js",
-        "hash": "584817201341939121"
+        "file": "docs/ARCHITECTURE_OVERVIEW.md",
+        "hash": "10484394541286147949"
+      },
+      {
+        "file": "docs/EFFECT_PATTERNS.md",
+        "hash": "11547755741673883651"
+      },
+      {
+        "file": "docs/NX_STANDARDS.md",
+        "hash": "2560548494010109154"
+      },
+      {
+        "file": "docs/README.md",
+        "hash": "15889543899696581171"
+      },
+      {
+        "file": "docs/contract.md",
+        "hash": "12711875058229896228"
+      },
+      {
+        "file": "docs/dataaccess.md",
+        "hash": "6418087906528844118"
+      },
+      {
+        "file": "docs/feature.md",
+        "hash": "13954737101182082138"
+      },
+      {
+        "file": "docs/infra.md",
+        "hash": "200422727980258068"
+      },
+      {
+        "file": "docs/provider.md",
+        "hash": "2620280409638909466"
       },
       {
         "file": "eslint.config.mjs",
@@ -296,12 +123,8 @@
         "hash": "5278872866010000124"
       },
       {
-        "file": "generate-test-libs.ts",
-        "hash": "9670893061616666739"
-      },
-      {
         "file": "package.json",
-        "hash": "3411521139741308883"
+        "hash": "1258048573220268255"
       },
       {
         "file": "patches/@changesets__get-github-info@0.6.0.patch",
@@ -312,24 +135,28 @@
         "hash": "5704991527461098335"
       },
       {
-        "file": "scratchpad/tsconfig.json",
-        "hash": "18011926357105955388"
+        "file": "scripts/post-build.mjs",
+        "hash": "13492229242471937805"
       },
       {
         "file": "setupTests.ts",
-        "hash": "10096724375262012329"
+        "hash": "6861378792137487503"
       },
       {
         "file": "src/cli/generators/contract.ts",
-        "hash": "10752810427502527201"
+        "hash": "14658849310914899386"
+      },
+      {
+        "file": "src/cli/generators/data-access.ts",
+        "hash": "108000194446193879"
       },
       {
         "file": "src/cli/index.ts",
-        "hash": "1655211397586761408"
+        "hash": "666668371789326859"
       },
       {
         "file": "src/generators.json",
-        "hash": "15581587775536462014"
+        "hash": "17289767070987101918"
       },
       {
         "file": "src/generators/contract/README.md",
@@ -341,11 +168,11 @@
       },
       {
         "file": "src/generators/contract/contract.spec.ts",
-        "hash": "7576312602343532923"
+        "hash": "9578198607529481758"
       },
       {
         "file": "src/generators/contract/contract.ts",
-        "hash": "15259924252634915164"
+        "hash": "3629054735636523548"
       },
       {
         "file": "src/generators/contract/schema.d.ts",
@@ -392,6 +219,14 @@
         "hash": "6174839397364082392"
       },
       {
+        "file": "src/generators/core/contract-generator-core.ts",
+        "hash": "8143970988208981857"
+      },
+      {
+        "file": "src/generators/core/data-access-generator-core.ts",
+        "hash": "5761506804578216398"
+      },
+      {
         "file": "src/generators/data-access/README.md",
         "hash": "6467607471890917592"
       },
@@ -401,7 +236,7 @@
       },
       {
         "file": "src/generators/data-access/data-access.ts",
-        "hash": "8893175292557812502"
+        "hash": "4875933106234586314"
       },
       {
         "file": "src/generators/data-access/schema.d.ts",
@@ -693,7 +528,7 @@
       },
       {
         "file": "src/utils/effect-fs-adapter.ts",
-        "hash": "12931449270021728174"
+        "hash": "1407848264657690597"
       },
       {
         "file": "src/utils/esm-utils.ts",
@@ -741,7 +576,7 @@
       },
       {
         "file": "src/utils/tree-adapter.ts",
-        "hash": "4594146191043165535"
+        "hash": "13177671031771771082"
       },
       {
         "file": "src/utils/tsconfig-utils.ts",
@@ -750,14 +585,6 @@
       {
         "file": "src/utils/workspace-detection.ts",
         "hash": "15125742293051900861"
-      },
-      {
-        "file": "test-generator.ts",
-        "hash": "17984888539109370568"
-      },
-      {
-        "file": "test-nx-method.ts",
-        "hash": "4842698843077703987"
       },
       {
         "file": "tsconfig.base.json",

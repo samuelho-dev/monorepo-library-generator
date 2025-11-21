@@ -10,7 +10,8 @@
 import { Args, Command, Options } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Console, Effect, Option } from 'effect';
-import { generateContract } from './generators/contract.js';
+import { generateContract } from './generators/contract';
+import { generateDataAccess } from './generators/data-access';
 
 /**
  * Common arguments used across all generate commands
@@ -50,10 +51,11 @@ const includeRPCOption = Options.boolean('includeRPC').pipe(
 const contractCommand = Command.make(
   'contract',
   { name: nameArg, description: descriptionOption, tags: tagsOption, includeCQRS: includeCQRSOption, includeRPC: includeRPCOption },
-  ({ name, description, tags, includeCQRS, includeRPC }) =>
-    generateContract({
+  ({ name, description, tags, includeCQRS, includeRPC }) => {
+    const desc = Option.getOrUndefined(description);
+    return generateContract({
       name,
-      description: Option.getOrUndefined(description),
+      ...(desc && { description: desc }),
       tags,
       includeCQRS,
       includeRPC,
@@ -63,7 +65,8 @@ const contractCommand = Command.make(
           Effect.flatMap(() => Effect.fail(error)),
         ),
       ),
-    ),
+    );
+  }
 ).pipe(
   Command.withDescription('Generate a contract library with domain types and interfaces'),
 );
@@ -76,16 +79,20 @@ const contractCommand = Command.make(
 const dataAccessCommand = Command.make(
   'data-access',
   { name: nameArg, description: descriptionOption, tags: tagsOption },
-  ({ name, description, tags }) =>
-    Effect.gen(function* () {
-      const desc = Option.getOrUndefined(description);
-      yield* Console.log(`Generating data-access library: ${name}`);
-      yield* Console.log(`  Description: ${desc ?? 'N/A'}`);
-      yield* Console.log(`  Tags: ${tags}`);
-
-      // TODO: Implement actual data-access generation logic
-      yield* Console.log('Data-access generation not yet implemented');
-    }),
+  ({ name, description, tags }) => {
+    const desc = Option.getOrUndefined(description);
+    return generateDataAccess({
+      name,
+      ...(desc && { description: desc }),
+      tags,
+    }).pipe(
+      Effect.catchAll((error) =>
+        Console.error(`Error generating data-access: ${error}`).pipe(
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    );
+  }
 ).pipe(
   Command.withDescription('Generate a data-access library with repositories and database operations'),
 );
@@ -98,19 +105,20 @@ const dataAccessCommand = Command.make(
 const featureCommand = Command.make(
   'feature',
   { name: nameArg, description: descriptionOption, tags: tagsOption, includeRPC: includeRPCOption },
-  ({ name, description, tags, includeRPC }) =>
+  ({ name }) =>
     Effect.gen(function* () {
-      const desc = Option.getOrUndefined(description);
-      yield* Console.log(`Generating feature library: ${name}`);
-      yield* Console.log(`  Description: ${desc ?? 'N/A'}`);
-      yield* Console.log(`  Tags: ${tags}`);
-      yield* Console.log(`  Include RPC: ${includeRPC}`);
+      yield* Console.log(`
+⚠️  Feature generator is currently available via Nx only.
 
-      // TODO: Implement actual feature generation logic
-      yield* Console.log('Feature generation not yet implemented');
+To generate a feature library, use:
+  pnpm exec nx g @samuelho-dev/monorepo-library-generator:feature ${name}
+
+The standalone CLI version will be available in a future release.
+See: https://github.com/samuelho-dev/monorepo-library-generator
+      `);
     }),
 ).pipe(
-  Command.withDescription('Generate a feature library with server, client, and edge implementations'),
+  Command.withDescription('Generate a feature library (Nx only - use: nx g @package:feature)'),
 );
 
 /**
@@ -121,18 +129,20 @@ const featureCommand = Command.make(
 const infraCommand = Command.make(
   'infra',
   { name: nameArg, description: descriptionOption, tags: tagsOption },
-  ({ name, description, tags }) =>
+  ({ name }) =>
     Effect.gen(function* () {
-      const desc = Option.getOrUndefined(description);
-      yield* Console.log(`Generating infra library: ${name}`);
-      yield* Console.log(`  Description: ${desc ?? 'N/A'}`);
-      yield* Console.log(`  Tags: ${tags}`);
+      yield* Console.log(`
+⚠️  Infra generator is currently available via Nx only.
 
-      // TODO: Implement actual infra generation logic
-      yield* Console.log('Infra generation not yet implemented');
+To generate an infrastructure library, use:
+  pnpm exec nx g @samuelho-dev/monorepo-library-generator:infra ${name}
+
+The standalone CLI version will be available in a future release.
+See: https://github.com/samuelho-dev/monorepo-library-generator
+      `);
     }),
 ).pipe(
-  Command.withDescription('Generate an infrastructure library with services and implementations'),
+  Command.withDescription('Generate an infrastructure library (Nx only - use: nx g @package:infra)'),
 );
 
 /**
@@ -148,20 +158,20 @@ const externalServiceOption = Options.text('externalService').pipe(
 const providerCommand = Command.make(
   'provider',
   { name: nameArg, description: descriptionOption, tags: tagsOption, externalService: externalServiceOption },
-  ({ name, description, tags, externalService }) =>
+  ({ name }) =>
     Effect.gen(function* () {
-      const desc = Option.getOrUndefined(description);
-      const extService = Option.getOrUndefined(externalService);
-      yield* Console.log(`Generating provider library: ${name}`);
-      yield* Console.log(`  Description: ${desc ?? 'N/A'}`);
-      yield* Console.log(`  Tags: ${tags}`);
-      yield* Console.log(`  External Service: ${extService ?? 'N/A'}`);
+      yield* Console.log(`
+⚠️  Provider generator is currently available via Nx only.
 
-      // TODO: Implement actual provider generation logic
-      yield* Console.log('Provider generation not yet implemented');
+To generate a provider library, use:
+  pnpm exec nx g @samuelho-dev/monorepo-library-generator:provider ${name}
+
+The standalone CLI version will be available in a future release.
+See: https://github.com/samuelho-dev/monorepo-library-generator
+      `);
     }),
 ).pipe(
-  Command.withDescription('Generate a provider library for external service integration'),
+  Command.withDescription('Generate a provider library (Nx only - use: nx g @package:provider)'),
 );
 
 /**

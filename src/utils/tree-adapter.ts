@@ -10,13 +10,13 @@
 
 import type { Tree } from '@nx/devkit';
 import { Effect } from 'effect';
-import type { FileSystemAdapter } from './filesystem-adapter.js';
+import type { FileSystemAdapter } from './filesystem-adapter';
 import {
   DirectoryCreationError,
   FileReadError,
   FileSystemError,
   FileWriteError,
-} from './filesystem-adapter.js';
+} from './filesystem-adapter';
 
 /**
  * Tree Adapter Implementation
@@ -40,7 +40,10 @@ export class TreeAdapter implements FileSystemAdapter {
   ): Effect.Effect<void, FileWriteError | DirectoryCreationError> {
     return Effect.try({
       try: () => {
-        this.tree.write(path, content);
+        // Tree API expects paths relative to workspace root
+        // Strip workspace root prefix if present
+        const relativePath = this.toRelativePath(path);
+        this.tree.write(relativePath, content);
       },
       catch: (error) =>
         new FileWriteError({
@@ -59,7 +62,8 @@ export class TreeAdapter implements FileSystemAdapter {
   readFile(path: string): Effect.Effect<string, FileReadError> {
     return Effect.try({
       try: () => {
-        const content = this.tree.read(path);
+        const relativePath = this.toRelativePath(path);
+        const content = this.tree.read(relativePath);
         if (content === null) {
           throw new Error(`File not found: ${path}`);
         }
@@ -79,7 +83,10 @@ export class TreeAdapter implements FileSystemAdapter {
    */
   exists(path: string): Effect.Effect<boolean, FileSystemError> {
     return Effect.try({
-      try: () => this.tree.exists(path),
+      try: () => {
+        const relativePath = this.toRelativePath(path);
+        return this.tree.exists(relativePath);
+      },
       catch: (error) =>
         new FileSystemError({
           message: `Failed to check existence of: ${path}`,
@@ -118,7 +125,8 @@ export class TreeAdapter implements FileSystemAdapter {
   ): Effect.Effect<readonly string[], FileSystemError> {
     return Effect.try({
       try: () => {
-        const children = this.tree.children(path);
+        const relativePath = this.toRelativePath(path);
+        const children = this.tree.children(relativePath);
         return children as readonly string[];
       },
       catch: (error) =>
@@ -139,7 +147,8 @@ export class TreeAdapter implements FileSystemAdapter {
   ): Effect.Effect<void, FileSystemError> {
     return Effect.try({
       try: () => {
-        this.tree.delete(path);
+        const relativePath = this.toRelativePath(path);
+        this.tree.delete(relativePath);
       },
       catch: (error) =>
         new FileSystemError({
@@ -162,6 +171,23 @@ export class TreeAdapter implements FileSystemAdapter {
    */
   getMode(): 'nx' | 'effect' {
     return this.mode;
+  }
+
+  /**
+   * Convert absolute path to relative path for Tree API
+   *
+   * Tree API expects paths relative to workspace root.
+   * If path starts with workspace root, strip it.
+   */
+  private toRelativePath(path: string): string {
+    const workspaceRoot = this.tree.root;
+    if (path.startsWith(workspaceRoot + '/')) {
+      return path.slice(workspaceRoot.length + 1);
+    }
+    if (path.startsWith(workspaceRoot)) {
+      return path.slice(workspaceRoot.length);
+    }
+    return path;
   }
 }
 
