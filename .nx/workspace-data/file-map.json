@@ -136,11 +136,11 @@
       },
       {
         "file": "scripts/bundle-cli.mjs",
-        "hash": "7853287316359369201"
+        "hash": "7454325815398853051"
       },
       {
         "file": "scripts/post-build.mjs",
-        "hash": "16246132353061669582"
+        "hash": "9920795719535779340"
       },
       {
         "file": "setupTests.ts",
@@ -148,11 +148,11 @@
       },
       {
         "file": "src/cli/generators/contract.ts",
-        "hash": "15356459547434880537"
+        "hash": "11553364006267382473"
       },
       {
         "file": "src/cli/generators/data-access.ts",
-        "hash": "12086373515126703280"
+        "hash": "589924214352719029"
       },
       {
         "file": "src/cli/index.ts",
@@ -168,11 +168,11 @@
       },
       {
         "file": "src/generators/contract/config.ts",
-        "hash": "273794187173868714"
+        "hash": "7987743701880184430"
       },
       {
         "file": "src/generators/contract/contract.spec.ts",
-        "hash": "18159895085375544743"
+        "hash": "12716414057600661244"
       },
       {
         "file": "src/generators/contract/contract.ts",
@@ -300,7 +300,7 @@
       },
       {
         "file": "src/generators/feature/feature.ts",
-        "hash": "1962831214855953928"
+        "hash": "7337501463177702961"
       },
       {
         "file": "src/generators/feature/schema.d.ts",
@@ -376,11 +376,11 @@
       },
       {
         "file": "src/generators/infra/infra.spec.ts",
-        "hash": "10106017030157336638"
+        "hash": "8233194234326734555"
       },
       {
         "file": "src/generators/infra/infra.ts",
-        "hash": "15449865232831610504"
+        "hash": "1944778447493024110"
       },
       {
         "file": "src/generators/infra/schema.d.ts",
@@ -500,7 +500,7 @@
       },
       {
         "file": "src/utils/build-config-utils.ts",
-        "hash": "7861367659167095476"
+        "hash": "8102326124175409182"
       },
       {
         "file": "src/utils/code-generation/barrel-export-utils.ts",
@@ -540,7 +540,7 @@
       },
       {
         "file": "src/utils/filesystem-adapter.ts",
-        "hash": "15666256140069025694"
+        "hash": "17976054568352272187"
       },
       {
         "file": "src/utils/generator-utils.ts",

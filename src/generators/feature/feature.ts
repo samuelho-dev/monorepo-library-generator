@@ -67,7 +67,7 @@ export default async function featureGenerator(
     platform === "universal"
 
   // Build tags with corrected scope logic
-  const tags = [
+  let tags = [
     "type:feature",
     `scope:${schema.scope || schema.name}`
   ]

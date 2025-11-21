@@ -59,7 +59,7 @@ export const ContractGeneratorConfig: GeneratorConfig<ContractTemplateOptions> =
  * Get list of files to generate based on options
  */
 export function getFilesToGenerate(options: ContractTemplateOptions): Array<string> {
-  const files = [...ContractGeneratorConfig.defaultFiles]
+  let files = [...ContractGeneratorConfig.defaultFiles]
 
   // Add CQRS files if requested
   if (
