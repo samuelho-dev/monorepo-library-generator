@@ -203,6 +203,59 @@ function generateDomainFiles(
     const sourceServerPath = `${sourceLibPath}/server`;
     const files: string[] = [];
 
+    // Generate CLAUDE.md
+    const claudeDoc = `# ${templateOptions.packageName}
+
+${templateOptions.description}
+
+## AI Agent Reference
+
+This is a data-access library following Effect-based repository patterns.
+
+### Structure
+
+- **lib/shared/**: Shared types, errors, and validation
+  - \`errors.ts\`: Data.TaggedError-based error types
+  - \`types.ts\`: Entity types, filters, pagination
+  - \`validation.ts\`: Input validation helpers
+
+- **lib/repository.ts**: Repository implementation with CRUD operations
+- **lib/queries.ts**: Kysely query builders
+- **lib/server/layers.ts**: Server-side Layer compositions (Live, Test, Dev, Auto)
+
+### Customization Guide
+
+1. **Update Entity Types** (\`lib/shared/types.ts\`):
+   - Modify entity schema to match your domain
+   - Add custom filter types
+   - Update pagination options
+
+2. **Implement Repository** (\`lib/repository.ts\`):
+   - Customize CRUD methods
+   - Add domain-specific queries
+   - Implement business logic
+
+3. **Configure Layers** (\`lib/server/layers.ts\`):
+   - Wire up dependencies (database, cache, etc.)
+   - Configure Live layer with actual implementations
+   - Customize Test layer for testing
+
+### Usage Example
+
+\`\`\`typescript
+import { ${templateOptions.className}Repository } from '${templateOptions.packageName}';
+
+// Use in your Effect program
+Effect.gen(function* () {
+  const repo = yield* ${templateOptions.className}Repository;
+  const result = yield* repo.findById("id-123");
+  // ...
+});
+\`\`\`
+`;
+
+    yield* adapter.writeFile(`${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`, claudeDoc);
+
     // Create directories
     yield* adapter.makeDirectory(sourceLibPath);
     yield* adapter.makeDirectory(sourceSharedPath);

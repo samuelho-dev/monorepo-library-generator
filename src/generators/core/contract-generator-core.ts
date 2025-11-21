@@ -246,6 +246,55 @@ function generateDomainFiles(
     const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`;
     const files: string[] = [];
 
+    // Generate CLAUDE.md
+    const claudeDoc = `# ${templateOptions.packageName}
+
+${templateOptions.description}
+
+## AI Agent Reference
+
+This is a contract library defining domain types and interfaces.
+
+### Structure
+
+- **lib/entities.ts**: Domain entities with Effect Schema
+- **lib/errors.ts**: Domain-specific error types (Data.TaggedError)
+- **lib/events.ts**: Domain events
+- **lib/ports.ts**: Repository/service interfaces (Context.Tag pattern)
+${templateOptions.includeCQRS ? `- **lib/commands.ts**: CQRS command schemas\n- **lib/queries.ts**: CQRS query schemas\n- **lib/projections.ts**: Read-model projections` : ''}${templateOptions.includeRPC ? `\n- **lib/rpc.ts**: RPC endpoint definitions` : ''}
+
+### Customization Guide
+
+1. **Entities** (\`lib/entities.ts\`):
+   - Update entity schemas to match your domain
+   - Add custom fields and validation
+   - Define value objects
+
+2. **Errors** (\`lib/errors.ts\`):
+   - Add domain-specific error types
+   - Use Data.TaggedError for error handling
+
+3. **Ports** (\`lib/ports.ts\`):
+   - Define repository interfaces
+   - Add service interfaces
+   - Use Context.Tag for dependency injection
+
+### Usage Example
+
+\`\`\`typescript
+import { ${templateOptions.className}, ${templateOptions.className}Repository } from '${templateOptions.packageName}';
+
+// Use in your Effect program
+Effect.gen(function* () {
+  const repo = yield* ${templateOptions.className}Repository;
+  const entity = yield* repo.findById("id-123");
+  // ...
+});
+\`\`\`
+`;
+
+    yield* adapter.writeFile(`${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`, claudeDoc);
+
     // Create lib directory
     yield* adapter.makeDirectory(sourceLibPath);
 

@@ -172,7 +172,7 @@
       },
       {
         "file": "src/generators/contract/contract.ts",
-        "hash": "3629054735636523548"
+        "hash": "16563075727239552615"
       },
       {
         "file": "src/generators/contract/schema.d.ts",
@@ -220,11 +220,11 @@
       },
       {
         "file": "src/generators/core/contract-generator-core.ts",
-        "hash": "8143970988208981857"
+        "hash": "6629552278821330360"
       },
       {
         "file": "src/generators/core/data-access-generator-core.ts",
-        "hash": "5761506804578216398"
+        "hash": "8136198822952992443"
       },
       {
         "file": "src/generators/data-access/README.md",
@@ -232,11 +232,11 @@
       },
       {
         "file": "src/generators/data-access/data-access.spec.ts",
-        "hash": "9426046916803221773"
+        "hash": "17769809534262480004"
       },
       {
         "file": "src/generators/data-access/data-access.ts",
-        "hash": "4875933106234586314"
+        "hash": "14943466818449993067"
       },
       {
         "file": "src/generators/data-access/schema.d.ts",

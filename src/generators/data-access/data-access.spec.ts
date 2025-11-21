@@ -673,7 +673,7 @@ describe('Data Access Library Generator', () => {
 
       await dataAccessGenerator(tree, schema);
 
-      const customRoot = 'custom/libs/product';
+      const customRoot = 'custom/libs/data-access-product';
       expect(tree.exists(`${customRoot}/project.json`)).toBe(true);
     });
 

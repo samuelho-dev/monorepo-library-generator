@@ -44,6 +44,37 @@ export default async function contractGenerator(
     generateContractCore(adapter, coreOptions) as Effect.Effect<GeneratorResult, never>
   );
 
+  // Generate Nx-specific tsconfig files
+  const tsconfigLib = {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      outDir: '../../dist/out-tsc',
+      declaration: true,
+      types: ['node'],
+    },
+    include: ['src/**/*.ts'],
+    exclude: ['jest.config.ts', 'src/**/*.spec.ts', 'src/**/*.test.ts'],
+  };
+
+  tree.write(
+    `${result.projectRoot}/tsconfig.lib.json`,
+    JSON.stringify(tsconfigLib, null, 2)
+  );
+
+  const tsconfigSpec = {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      outDir: '../../dist/out-tsc',
+      types: ['vitest/globals', 'node'],
+    },
+    include: ['vite.config.ts', 'src/**/*.test.ts', 'src/**/*.spec.ts'],
+  };
+
+  tree.write(
+    `${result.projectRoot}/tsconfig.spec.json`,
+    JSON.stringify(tsconfigSpec, null, 2)
+  );
+
   // 4. Register project with Nx
   addProjectConfiguration(tree, result.projectName, {
     root: result.projectRoot,
@@ -58,6 +89,14 @@ export default async function contractGenerator(
           tsConfig: `${result.projectRoot}/tsconfig.json`,
           packageJson: `${result.projectRoot}/package.json`,
           main: `${result.projectRoot}/src/index.ts`,
+        },
+      },
+      test: {
+        executor: '@nx/vite:test',
+        outputs: ['{options.reportsDirectory}'],
+        options: {
+          passWithNoTests: true,
+          reportsDirectory: `../../coverage/${result.projectRoot}`,
         },
       },
     },
