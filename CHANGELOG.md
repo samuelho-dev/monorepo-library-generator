@@ -1,5 +1,48 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.2.0
+
+### Minor Changes
+
+- Enable CLI support for feature, infra, and provider generators
+
+  **New Features:**
+
+  - ✨ Feature generator now available via standalone CLI
+  - ✨ Infrastructure generator now available via standalone CLI
+  - ✨ Provider generator now available via standalone CLI
+
+  **Improvements:**
+
+  - Extracted shared generator cores (~550 lines) to eliminate duplication
+  - Unified FileSystemAdapter abstraction works with both Nx Tree and Effect FileSystem
+  - Consolidated platform detection logic
+  - Fixed client/server export generation (always generated together)
+
+  **CLI Usage:**
+
+  ```bash
+  # Generate feature library
+  pnpm generate feature my-feature --scope=user --includeRPC
+
+  # Generate infrastructure library
+  pnpm generate infra cache --includeClientServer
+
+  # Generate provider library
+  pnpm generate provider stripe-payments Stripe
+  ```
+
+  **Breaking Changes:**
+
+  - None - all existing Nx generators remain fully compatible
+
+  **Technical Details:**
+
+  - Created `generateFeatureCore()`, `generateInfraCore()`, `generateProviderCore()`
+  - All 167 tests passing (36 feature, 31 infra, 20 provider, 80 others)
+  - Zero lint errors
+  - Eliminated ~40% code duplication across generators
+
 ## 1.0.1
 
 ### Patch Changes
