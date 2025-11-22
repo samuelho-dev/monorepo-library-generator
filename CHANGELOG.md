@@ -1,5 +1,41 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.2.3
+
+### Patch Changes
+
+- **Dynamic Libraries Root Detection**: Generators now automatically detect where to create libraries based on your workspace configuration
+
+  **Key Changes:**
+
+  - Added `detectLibrariesRoot()` function with 4-tier detection strategy:
+    1. User-provided `--directory` flag (highest priority)
+    2. `nx.json` `workspaceLayout.libsDir` configuration
+    3. Detect `packages/` directory (Effect monorepos)
+    4. Detect `libs/` directory (Nx default)
+    5. Default to `"libs"` as fallback
+
+  - Removed hardcoded `"libs/"` defaults from all `schema.json` files
+  - Updated `WorkspaceConfig` interface with `librariesRoot` field
+  - All core generators now use dynamic `librariesRoot`
+
+  **Usage:**
+
+  ```bash
+  # Uses detected libraries root (nx.json, packages/, or libs/)
+  pnpm generate contract user
+
+  # Override with custom directory
+  pnpm generate contract user --directory=packages/libs
+  ```
+
+  **Benefits:**
+
+  - Works with any monorepo structure (Nx, Effect, custom)
+  - No configuration required - automatic detection
+  - Fully configurable via flags when needed
+  - All 24 tests passing
+
 ## 1.2.0
 
 ### Minor Changes
