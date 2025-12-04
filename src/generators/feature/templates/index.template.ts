@@ -11,10 +11,10 @@
  * @see docs/NX_STANDARDS.md for export conventions
  */
 
-import type { FeatureTemplateOptions } from "../../../utils/shared/types"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
 import { generateExportSections } from "../../../utils/code-generation/barrel-export-utils"
 import type { ExportSection } from "../../../utils/code-generation/barrel-export-utils"
+import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
+import type { FeatureTemplateOptions } from "../../../utils/shared/types"
 
 /**
  * Generate index.ts for feature library
@@ -28,7 +28,7 @@ import type { ExportSection } from "../../../utils/code-generation/barrel-export
  * This follows the principle: "Barrel files ONLY for library public APIs"
  * @see https://tkdodo.eu/blog/please-stop-using-barrel-files
  */
-export function generateIndexFile(options: FeatureTemplateOptions): string {
+export function generateIndexFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
   const { className, includeRPC } = options
 
@@ -58,7 +58,7 @@ and avoid bundling server code in client bundles.`
       items: [
         {
           comment: "Domain types (universal)",
-          exports: 'export type * from "./lib/shared/types";'
+          exports: "export type * from \"./lib/shared/types\";"
         }
       ]
     },
@@ -67,7 +67,7 @@ and avoid bundling server code in client bundles.`
       items: [
         {
           comment: "Error definitions (universal)",
-          exports: 'export type * from "./lib/shared/errors";'
+          exports: "export type * from \"./lib/shared/errors\";"
         }
       ]
     }
@@ -81,7 +81,7 @@ and avoid bundling server code in client bundles.`
     builder.addSectionComment("RPC Definitions (Universal)")
     builder.addBlankLine()
     builder.addComment("RPC schemas are universal and can be used on any platform")
-    builder.addRaw('export type * from "./lib/rpc/rpc";\n')
+    builder.addRaw("export type * from \"./lib/rpc/rpc\";\n")
   }
 
   // Platform export guidance
@@ -99,7 +99,9 @@ and avoid bundling server code in client bundles.`
   builder.addComment(`  import { use${className} } from '@custom-repo/feature-${toKebabCase(className)}/client';`)
   builder.addComment("")
   builder.addComment("EDGE (Cloudflare Workers, Vercel Edge):")
-  builder.addComment(`  import { ${toLowerFirst(className)}Middleware } from '@custom-repo/feature-${toKebabCase(className)}/edge';`)
+  builder.addComment(
+    `  import { ${toLowerFirst(className)}Middleware } from '@custom-repo/feature-${toKebabCase(className)}/edge';`
+  )
   builder.addComment("")
   builder.addComment("This pattern ensures:")
   builder.addComment("  ✓ No server code in client bundles")
@@ -113,7 +115,7 @@ and avoid bundling server code in client bundles.`
 /**
  * Convert PascalCase to kebab-case
  */
-function toKebabCase(str: string): string {
+function toKebabCase(str: string) {
   return str
     .replace(/([a-z])([A-Z])/g, "$1-$2")
     .toLowerCase()
@@ -122,6 +124,6 @@ function toKebabCase(str: string): string {
 /**
  * Convert PascalCase to camelCase
  */
-function toLowerFirst(str: string): string {
+function toLowerFirst(str: string) {
   return str.charAt(0).toLowerCase() + str.slice(1)
 }

@@ -126,7 +126,7 @@ export function resolvePlatformExports(
  * supportsPlatformExports('data-access'); // => false
  * ```
  */
-export function hasPlatformExports(libraryType: LibraryType): boolean {
+export function hasPlatformExports(libraryType: LibraryType) {
   return libraryType !== "data-access" && libraryType !== "contract"
 }
 

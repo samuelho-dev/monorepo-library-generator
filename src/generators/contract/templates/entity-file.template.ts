@@ -17,7 +17,7 @@ export interface EntityFileOptions {
  * Creates a standalone entity file with Schema.Class definition,
  * helper types, and validation functions.
  */
-export function generateEntityFile(options: EntityFileOptions): string {
+export function generateEntityFile(options: EntityFileOptions) {
   const { entityName } = options
 
   return `import { Schema } from "effect";

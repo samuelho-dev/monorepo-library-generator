@@ -43,7 +43,7 @@ export interface PaginationOptionsConfig {
 export function addPaginationOptions(
   builder: TypeScriptBuilder,
   config: PaginationOptionsConfig = {}
-): void {
+) {
   const { cursorBased = false, offsetBased = true } = config
 
   if (offsetBased && !cursorBased) {
@@ -167,7 +167,7 @@ export interface PaginatedResponseConfig {
 export function addPaginatedResponse(
   builder: TypeScriptBuilder,
   config: PaginatedResponseConfig = {}
-): void {
+) {
   const {
     includeHasMore = false,
     includeNextCursor = false,
@@ -268,7 +268,7 @@ export function addPaginatedResponse(
 export function addPaginationTypes(
   builder: TypeScriptBuilder,
   config: PaginationOptionsConfig & PaginatedResponseConfig = {}
-): void {
+) {
   addPaginationOptions(builder, config)
   builder.addBlankLine()
   addPaginatedResponse(builder, config)
@@ -277,7 +277,7 @@ export function addPaginationTypes(
 /**
  * Adds SortDirection type alias
  */
-export function addSortDirection(builder: TypeScriptBuilder): void {
+export function addSortDirection(builder: TypeScriptBuilder) {
   builder.addRaw(`export type SortDirection = 'asc' | 'desc';`)
 }
 
@@ -316,7 +316,7 @@ export interface SortInterfaceConfig {
 export function addSortInterface(
   builder: TypeScriptBuilder,
   config: SortInterfaceConfig
-): void {
+) {
   const { className, includeDirection = true } = config
 
   const properties = [
@@ -386,7 +386,7 @@ export interface FilterInterfaceConfig {
 export function addFilterInterface(
   builder: TypeScriptBuilder,
   config: FilterInterfaceConfig
-): void {
+) {
   const { className, dynamic = false, includeSearch = true } = config
 
   const properties = []
@@ -478,7 +478,7 @@ export interface QueryOptionsConfig {
 export function addQueryOptionsType(
   builder: TypeScriptBuilder,
   config: QueryOptionsConfig
-): void {
+) {
   const {
     className,
     includeFilter = true,
@@ -533,7 +533,7 @@ ${fields.map((f) => `  readonly ${f.name}?: ${f.type};`).join("\n")}
 export function addQueryTypes(
   builder: TypeScriptBuilder,
   config: FilterInterfaceConfig & SortInterfaceConfig & QueryOptionsConfig
-): void {
+) {
   addSortDirection(builder)
   builder.addBlankLine()
 

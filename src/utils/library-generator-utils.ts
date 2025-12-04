@@ -16,7 +16,6 @@
 
 import type { ProjectConfiguration, Tree } from "@nx/devkit"
 import { addProjectConfiguration } from "@nx/devkit"
-import { createNamingVariants } from "./naming-utils"
 import { join } from "path"
 import {
   type BuildConfigOptions,
@@ -25,6 +24,7 @@ import {
   type LibraryType,
   type PlatformType
 } from "./build-config-utils"
+import { createNamingVariants } from "./naming-utils"
 import { resolvePlatformExports } from "./platform-utils"
 import { addTsConfigFiles, type TsConfigOptions } from "./tsconfig-utils"
 import { detectWorkspace, getBuildMode } from "./workspace-detection"
@@ -78,7 +78,7 @@ const LIBRARY_STRUCTURES = {
   util: {
     types: "./lib/types"
   }
-} as const
+} satisfies Record<string, Record<string, string>>
 
 /**
  * Complete options for library generation
@@ -150,13 +150,11 @@ export interface PackageJsonConfiguration {
  * Helper to safely access properties from LIBRARY_STRUCTURES
  */
 function getStructurePath(
-  structure:
-    | (typeof LIBRARY_STRUCTURES)[keyof typeof LIBRARY_STRUCTURES]
-    | undefined,
+  structure: { [key: string]: string } | undefined,
   key: string
-): string | undefined {
+) {
   if (!structure) return undefined
-  return (structure as Record<string, string>)[key]
+  return structure[key]
 }
 
 /**
@@ -170,10 +168,7 @@ function getStructurePath(
  * @param options Library generator options
  * @returns Object with shouldGenerateServer and shouldGenerateClient flags
  */
-function shouldGeneratePlatformExports(options: LibraryGeneratorOptions): {
-  shouldGenerateServer: boolean
-  shouldGenerateClient: boolean
-} {
+function shouldGeneratePlatformExports(options: LibraryGeneratorOptions) {
   // Use shared platform utilities for consistent logic
   return resolvePlatformExports({
     libraryType: options.libraryType,
@@ -202,7 +197,7 @@ function shouldGeneratePlatformExports(options: LibraryGeneratorOptions): {
 export async function generateLibraryFiles(
   tree: Tree,
   options: LibraryGeneratorOptions
-): Promise<GeneratedLibraryFiles> {
+) {
   // Detect workspace mode
   const context = detectWorkspace(tree)
   const buildMode = getBuildMode(context)
@@ -246,7 +241,7 @@ function generateProjectJson(
   tree: Tree,
   options: LibraryGeneratorOptions,
   buildMode: "nx" | "effect"
-): ProjectConfiguration {
+) {
   const buildOptions: BuildConfigOptions = {
     projectRoot: options.projectRoot,
     platform: options.platform,
@@ -275,7 +270,7 @@ function generateProjectJson(
 async function generateTsConfig(
   tree: Tree,
   options: LibraryGeneratorOptions
-): Promise<{ basePath: string; libPath: string; specPath?: string }> {
+) {
   const tsConfigOptions: TsConfigOptions = {
     projectRoot: options.projectRoot,
     projectName: options.projectName,
@@ -304,7 +299,7 @@ async function generateTsConfig(
  * @param tree - Nx Tree API
  * @returns Package scope (e.g., "@myorg")
  */
-function extractPackageScopeFromTree(tree: Tree): string {
+function extractPackageScopeFromTree(tree: Tree) {
   const packageJsonContent = tree.read("package.json", "utf-8")
   if (!packageJsonContent) {
     throw new Error("package.json not found in workspace root")
@@ -316,7 +311,7 @@ function extractPackageScopeFromTree(tree: Tree): string {
   if (!packageName || packageName.trim() === "") {
     throw new Error(
       "package.json must have a 'name' field. " +
-      "Set it to your workspace name (e.g., '@myorg/monorepo' or 'my-workspace')"
+        "Set it to your workspace name (e.g., '@myorg/monorepo' or 'my-workspace')"
     )
   }
 
@@ -337,7 +332,7 @@ function generatePackageJson(
   tree: Tree,
   options: LibraryGeneratorOptions,
   buildMode: "nx" | "effect"
-): PackageJsonConfiguration {
+) {
   const scope = extractPackageScopeFromTree(tree)
   const scopedName = `${scope}/${options.projectName}`
 
@@ -421,12 +416,7 @@ function generatePackageJson(
 function generateSourceFiles(
   tree: Tree,
   options: LibraryGeneratorOptions
-): {
-  index: string
-  server?: string
-  client?: string
-  edge?: string
-} {
+) {
   const nameVars = createNamingVariants(options.name)
 
   // Generate index.ts
@@ -618,7 +608,7 @@ export * from '${errorsPath}';
 function generateDocumentation(
   tree: Tree,
   options: LibraryGeneratorOptions
-): { readme: string; claude: string } {
+) {
   const nameVars = createNamingVariants(options.name)
 
   // Generate README.md
@@ -799,7 +789,7 @@ import { ${nameVars.className}Service } from '@custom-repo/${options.projectName
 function generateVitestConfig(
   tree: Tree,
   options: LibraryGeneratorOptions
-): void {
+) {
   // Only include @effect/vitest setup for libraries that use Effect
   // Provider, infra, and feature libraries use Effect patterns
   // Util, contract, and types libraries typically don't

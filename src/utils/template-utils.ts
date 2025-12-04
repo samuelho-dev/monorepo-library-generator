@@ -1,8 +1,8 @@
 import type { Tree } from "@nx/devkit"
 import { generateFiles } from "@nx/devkit"
 import * as path from "path"
-import type { NamingVariants } from "./shared/types"
 import { createNamingVariants } from "./naming-utils"
+import type { NamingVariants } from "./shared/types"
 
 /**
  * Base template substitutions that all generators should include
@@ -28,9 +28,9 @@ export function generateTemplateFiles<T extends BaseTemplateSubstitutions>(
   substitutions: T
 ) {
   // Ensure tmpl is always empty string for __tmpl__ removal
-  const finalSubstitutions = {
+  const finalSubstitutions: T & { tmpl: "" } = {
     ...substitutions,
-    tmpl: "" as const
+    tmpl: ""
   }
 
   generateFiles(tree, templatePath, targetPath, finalSubstitutions)
@@ -48,15 +48,17 @@ export function createBaseSubstitutions(
 ) {
   const nameVariations = createNamingVariants(name)
 
-  return {
+  const result: BaseTemplateSubstitutions = {
     ...nameVariations,
-    tmpl: "" as const,
+    tmpl: "",
     name,
     projectName,
     projectRoot,
     offsetFromRoot,
     tags: JSON.stringify(tags)
   }
+
+  return result
 }
 
 /**

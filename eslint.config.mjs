@@ -79,6 +79,18 @@ export default [
         {
           selector: "ExportAllDeclaration[source.value=/\\.(m|c)?js$/]",
           message: "Do not use .js, .mjs, or .cjs extensions in exports. This is a TypeScript-only monorepo - use extensionless imports."
+        },
+        {
+          selector: ":matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, TSDeclareFunction)[returnType]",
+          message: "Do not use explicit return type annotations. Let TypeScript infer the return type."
+        },
+        {
+          selector: "TSAsExpression",
+          message: "Do not use 'as' type assertions. Use type guards or refactor to avoid type coercion."
+        },
+        {
+          selector: "TSTypeAssertion",
+          message: "Do not use angle-bracket type assertions. Use type guards or refactor to avoid type coercion."
         }
       ],
 

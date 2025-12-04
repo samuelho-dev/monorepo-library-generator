@@ -10,7 +10,7 @@
 
 import type { Tree } from "@nx/devkit"
 import { Effect } from "effect"
-import type { FileSystemAdapter, FileSystemErrors } from "./filesystem-adapter"
+import type { FileSystemAdapter } from "./filesystem-adapter"
 import type { GeneratorContext } from "./shared/types"
 
 /**
@@ -19,7 +19,7 @@ import type { GeneratorContext } from "./shared/types"
  * @param tree - Virtual file system
  * @returns Generator context with workspace information
  */
-export function detectWorkspace(tree: Tree): GeneratorContext {
+export function detectWorkspace(tree: Tree) {
   const isNxWorkspace = detectNxWorkspace(tree)
   const isEffectNative = detectEffectNative(tree)
   const packageManager = detectPackageManager(tree)
@@ -40,7 +40,7 @@ export function detectWorkspace(tree: Tree): GeneratorContext {
  * - nx.json configuration file
  * - OR packages have project.json files
  */
-function detectNxWorkspace(tree: Tree): boolean {
+function detectNxWorkspace(tree: Tree) {
   // Check for nx.json at root
   if (tree.exists("nx.json")) {
     return true
@@ -62,7 +62,7 @@ function detectNxWorkspace(tree: Tree): boolean {
  * - Root package.json uses @effect/build-utils
  * - Packages under packages/ directory
  */
-function detectEffectNative(tree: Tree): boolean {
+function detectEffectNative(tree: Tree) {
   // Must have pnpm workspace
   if (!tree.exists("pnpm-workspace.yaml")) {
     return false
@@ -114,7 +114,7 @@ function detectPackageManager(
  * @param context - Generator context
  * @returns 'nx' or 'effect'
  */
-export function getBuildMode(context: GeneratorContext): "nx" | "effect" {
+export function getBuildMode(context: GeneratorContext) {
   // Nx takes precedence if both are detected
   if (context.isNxWorkspace) {
     return "nx"
@@ -133,7 +133,7 @@ export function getBuildMode(context: GeneratorContext): "nx" | "effect" {
  * @param context - Generator context
  * @returns true if project.json should be created
  */
-export function shouldGenerateProjectJson(context: GeneratorContext): boolean {
+export function shouldGenerateProjectJson(context: GeneratorContext) {
   return context.isNxWorkspace
 }
 
@@ -145,7 +145,7 @@ export function shouldGenerateProjectJson(context: GeneratorContext): boolean {
  */
 export function shouldGenerateEffectScripts(
   context: GeneratorContext
-): boolean {
+) {
   return context.isEffectNative
 }
 
@@ -204,12 +204,12 @@ export interface WorkspaceConfig {
  * extractScope("@myorg/monorepo") // "@myorg"
  * extractScope("my-monorepo") // "@my-monorepo"
  */
-function extractScope(packageName: string | undefined): string {
+function extractScope(packageName: string | undefined) {
   // Require package.json name field
   if (!packageName || packageName.trim() === "") {
     throw new Error(
       "package.json must have a 'name' field. " +
-      "Set it to your workspace name (e.g., '@myorg/monorepo' or 'my-workspace')"
+        "Set it to your workspace name (e.g., '@myorg/monorepo' or 'my-workspace')"
     )
   }
 
@@ -244,7 +244,7 @@ function detectLibrariesRoot(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
   hasNxJson: boolean
-): Effect.Effect<string, FileSystemErrors, unknown> {
+) {
   return Effect.gen(function*() {
     // 1. Check nx.json for workspaceLayout.libsDir
     if (hasNxJson) {
@@ -253,11 +253,11 @@ function detectLibrariesRoot(
       )
 
       try {
-        const nxJson = JSON.parse(nxJsonContent) as {
+        const nxJson: {
           workspaceLayout?: {
             libsDir?: string
           }
-        }
+        } = JSON.parse(nxJsonContent)
 
         if (nxJson.workspaceLayout?.libsDir) {
           return nxJson.workspaceLayout.libsDir
@@ -308,7 +308,7 @@ function detectLibrariesRoot(
  */
 export function detectWorkspaceConfig(
   adapter: FileSystemAdapter
-): Effect.Effect<WorkspaceConfig, FileSystemErrors, unknown> {
+) {
   return Effect.gen(function*() {
     const workspaceRoot = adapter.getWorkspaceRoot()
 
@@ -317,11 +317,11 @@ export function detectWorkspaceConfig(
       Effect.catchAll(() => Effect.succeed("{}"))
     )
 
-    const packageJson = JSON.parse(packageJsonContent) as {
+    const packageJson: {
       name?: string
       devDependencies?: Record<string, string>
       scripts?: Record<string, string>
-    }
+    } = JSON.parse(packageJsonContent)
 
     // Detect workspace type
     const hasNxJson = yield* adapter.exists(`${workspaceRoot}/nx.json`)
@@ -342,12 +342,12 @@ export function detectWorkspaceConfig(
     // Detect package manager
     const hasPnpmLock = yield* adapter.exists(`${workspaceRoot}/pnpm-lock.yaml`)
     const hasYarnLock = yield* adapter.exists(`${workspaceRoot}/yarn.lock`)
-    const packageManager = hasPnpmLock ? "pnpm" : hasYarnLock ? "yarn" : "npm"
+    const packageManager: "pnpm" | "yarn" | "npm" = hasPnpmLock ? "pnpm" : hasYarnLock ? "yarn" : "npm"
 
     // Auto-detect configuration from package.json and workspace structure
     const scope = extractScope(packageJson.name)
     const librariesRoot = yield* detectLibrariesRoot(adapter, workspaceRoot, hasNxJson)
-    const buildMode = hasNxJson ? "nx" : "effect"
+    const buildMode: "nx" | "effect" = hasNxJson ? "nx" : "effect"
 
     return {
       scope,

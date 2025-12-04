@@ -58,7 +58,7 @@ export const ContractGeneratorConfig: GeneratorConfig<ContractTemplateOptions> =
 /**
  * Get list of files to generate based on options
  */
-export function getFilesToGenerate(options: ContractTemplateOptions): Array<string> {
+export function getFilesToGenerate(options: ContractTemplateOptions) {
   let files = [...ContractGeneratorConfig.defaultFiles]
 
   // Add CQRS files if requested
@@ -85,7 +85,7 @@ export function getFilesToGenerate(options: ContractTemplateOptions): Array<stri
  */
 export function validateContractOptions(
   options: ContractTemplateOptions
-): void {
+) {
   if (!options.className || options.className.length === 0) {
     throw new Error("className is required")
   }

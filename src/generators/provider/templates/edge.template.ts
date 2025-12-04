@@ -15,7 +15,7 @@ import type { ProviderTemplateOptions } from "../../../utils/shared/types"
  */
 export function generateEdgeFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, fileName, packageName } = options
+  const { className, packageName } = options
 
   // File header
   builder.addFileHeader({

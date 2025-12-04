@@ -82,7 +82,7 @@ function getLibraryDirectory(libraryType: LibraryType) {
  */
 export function computeDependencies(
   options: ComputeDependenciesOptions
-): Array<DependencyInfo> {
+) {
   const { dependencyNames, libraryType, projectRoot, tree } = options
   const libraryDirectory = getLibraryDirectory(libraryType)
 
@@ -132,7 +132,7 @@ export function validateDependencyExists(
   tree: Tree,
   dependencyName: string,
   libraryType: LibraryType
-): boolean {
+) {
   const depFileName = createNamingVariants(dependencyName).fileName
   const libraryDirectory = getLibraryDirectory(libraryType)
   const depProjectRoot = `${libraryDirectory}/${depFileName}`

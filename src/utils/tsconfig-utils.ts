@@ -131,7 +131,7 @@ export async function computeProjectReferences(
       projectName,
       new Set()
     )
-    if (circularDeps.length > 0) {
+    if (circularDeps && circularDeps.length > 0) {
       throw new Error(
         `Circular dependency detected in ${projectName}: ${
           circularDeps.join(
@@ -146,12 +146,14 @@ export async function computeProjectReferences(
     const errorMessage = error instanceof Error ? error.message : String(error)
 
     // Check if this is an NX not found error (non-NX monorepo)
-    if (errorMessage.includes("Cannot find module") ||
-        errorMessage.includes("createProjectGraphAsync") ||
-        errorMessage.includes("nx.json")) {
+    if (
+      errorMessage.includes("Cannot find module") ||
+      errorMessage.includes("createProjectGraphAsync") ||
+      errorMessage.includes("nx.json")
+    ) {
       console.log(
         `NX not detected for ${projectName}. Skipping automatic project references. ` +
-        `For incremental TypeScript compilation, manually add references to tsconfig.lib.json.`
+          `For incremental TypeScript compilation, manually add references to tsconfig.lib.json.`
       )
       return { references: [], dependencies: [] }
     }
@@ -174,7 +176,7 @@ function detectCircularReferences(
   projectName: string,
   visited: Set<string>,
   path: Array<string> = []
-): Array<string> {
+): Array<string> | undefined {
   if (visited.has(projectName)) {
     // Found a cycle - return the path
     const cycleStart = path.indexOf(projectName)
@@ -200,7 +202,7 @@ function detectCircularReferences(
       new Set(visited),
       [...path]
     )
-    if (cycle.length > 0) {
+    if (cycle && cycle.length > 0) {
       return cycle
     }
   }
@@ -333,7 +335,7 @@ export function generateSpecTsConfig(options: TsConfigOptions) {
  * Note: Contract libraries override this via libraryType check in generateLibTsConfig()
  * to remain platform-agnostic regardless of platform setting.
  */
-function getPlatformTypes(platform: PlatformType): Array<string> {
+function getPlatformTypes(platform: PlatformType) {
   switch (platform) {
     case "node":
       return ["node"]

@@ -6,7 +6,7 @@
  */
 
 import type { TargetConfiguration } from "@nx/devkit"
-import { resolvePlatformExports, type PlatformType } from "./platform-utils"
+import { type PlatformType, resolvePlatformExports } from "./platform-utils"
 
 export type { PlatformType }
 export type LibraryType =

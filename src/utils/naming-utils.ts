@@ -11,8 +11,6 @@
  * - SCREAMING_SNAKE_CASE (for constants)
  */
 
-import type { NamingVariants } from "./shared/types"
-
 /**
  * Convert string to PascalCase
  *
@@ -24,7 +22,7 @@ import type { NamingVariants } from "./shared/types"
  * toPascalCase("user_profile") // "UserProfile"
  * toPascalCase("userProfile") // "UserProfile"
  */
-function toPascalCase(input: string): string {
+function toPascalCase(input: string) {
   return input
     .split(/[-_\s]+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -42,7 +40,7 @@ function toPascalCase(input: string): string {
  * toCamelCase("user_profile") // "userProfile"
  * toCamelCase("UserProfile") // "userProfile"
  */
-function toCamelCase(input: string): string {
+function toCamelCase(input: string) {
   const pascal = toPascalCase(input)
   return pascal.charAt(0).toLowerCase() + pascal.slice(1)
 }
@@ -58,7 +56,7 @@ function toCamelCase(input: string): string {
  * toKebabCase("userProfile") // "user-profile"
  * toKebabCase("user_profile") // "user-profile"
  */
-function toKebabCase(input: string): string {
+function toKebabCase(input: string) {
   return input
     // Insert hyphen before uppercase letters
     .replace(/([a-z])([A-Z])/g, "$1-$2")
@@ -81,7 +79,7 @@ function toKebabCase(input: string): string {
  * toScreamingSnakeCase("userProfile") // "USER_PROFILE"
  * toScreamingSnakeCase("UserProfile") // "USER_PROFILE"
  */
-function toScreamingSnakeCase(input: string): string {
+function toScreamingSnakeCase(input: string) {
   return input
     // Insert underscore before uppercase letters
     .replace(/([a-z])([A-Z])/g, "$1_$2")
@@ -126,7 +124,7 @@ function toScreamingSnakeCase(input: string): string {
  * // }
  * ```
  */
-export function createNamingVariants(input: string): NamingVariants {
+export function createNamingVariants(input: string) {
   if (!input || input.trim() === "") {
     throw new Error("Input name cannot be empty")
   }

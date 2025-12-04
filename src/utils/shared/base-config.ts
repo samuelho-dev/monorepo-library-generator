@@ -11,7 +11,9 @@
 /**
  * Standard Effect.ts imports used across all libraries
  */
-export const EFFECT_CORE_IMPORTS = {
+export const EFFECT_CORE_IMPORTS: {
+  readonly effect: ReadonlyArray<string>
+} = {
   effect: [
     "Effect",
     "Context",
@@ -22,12 +24,16 @@ export const EFFECT_CORE_IMPORTS = {
     "Either",
     "Array"
   ]
-} as const
+}
 
 /**
  * Additional Effect.ts imports for specific use cases
  */
-export const EFFECT_EXTENDED_IMPORTS = {
+export const EFFECT_EXTENDED_IMPORTS: {
+  readonly concurrent: ReadonlyArray<string>
+  readonly reactive: ReadonlyArray<string>
+  readonly testing: ReadonlyArray<string>
+} = {
   concurrent: [
     "Effect",
     "Context",
@@ -49,23 +55,29 @@ export const EFFECT_EXTENDED_IMPORTS = {
     "it",
     "expect"
   ]
-} as const
+}
 
 /**
  * Standard dependencies for all Effect-based libraries
  */
-export const EFFECT_PEER_DEPENDENCIES = {
+export const EFFECT_PEER_DEPENDENCIES: {
+  readonly effect: string
+} = {
   effect: "*"
-} as const
+}
 
 /**
  * Standard dev dependencies for testing
  */
-export const EFFECT_DEV_DEPENDENCIES = {
+export const EFFECT_DEV_DEPENDENCIES: {
+  readonly "@effect/vitest": string
+  readonly "@types/node": string
+  readonly vitest: string
+} = {
   "@effect/vitest": "workspace:*",
   "@types/node": "^22.5.2",
   vitest: "workspace:*"
-} as const
+}
 
 /**
  * File header template generator
@@ -104,7 +116,32 @@ export function createFileHeader(options: {
 /**
  * Standard file headers for different library types
  */
-export const LIBRARY_FILE_HEADERS = {
+export const LIBRARY_FILE_HEADERS: {
+  readonly contract: {
+    readonly errors: (className: string) => string
+    readonly entities: (className: string) => string
+    readonly ports: (className: string) => string
+    readonly events: (className: string) => string
+    readonly commands: (className: string) => string
+    readonly queries: (className: string) => string
+    readonly projections: (className: string) => string
+    readonly rpc: (className: string) => string
+  }
+  readonly feature: {
+    readonly service: (featureName: string) => string
+    readonly layers: (featureName: string) => string
+    readonly handlers: (featureName: string) => string
+  }
+  readonly dataAccess: {
+    readonly repository: (entityName: string) => string
+  }
+  readonly infrastructure: {
+    readonly service: (serviceName: string) => string
+  }
+  readonly provider: {
+    readonly service: (providerName: string) => string
+  }
+} = {
   contract: {
     errors: (className: string) =>
       createFileHeader({
@@ -205,12 +242,33 @@ export const LIBRARY_FILE_HEADERS = {
         moduleName: `provider/${providerName.toLowerCase()}/service`
       })
   }
-} as const
+}
 
 /**
  * Standard TypeScript compiler options for generated tsconfig files
  */
-export const TS_CONFIG_BASE = {
+export const TS_CONFIG_BASE: {
+  readonly compilerOptions: {
+    readonly target: string
+    readonly module: string
+    readonly moduleResolution: string
+    readonly strict: boolean
+    readonly esModuleInterop: boolean
+    readonly skipLibCheck: boolean
+    readonly forceConsistentCasingInFileNames: boolean
+    readonly resolveJsonModule: boolean
+    readonly isolatedModules: boolean
+    readonly declaration: boolean
+    readonly declarationMap: boolean
+    readonly sourceMap: boolean
+    readonly composite: boolean
+    readonly incremental: boolean
+    readonly noUnusedLocals: boolean
+    readonly noUnusedParameters: boolean
+    readonly noImplicitReturns: boolean
+    readonly noFallthroughCasesInSwitch: boolean
+  }
+} = {
   compilerOptions: {
     target: "ES2022",
     module: "ESNext",
@@ -231,12 +289,21 @@ export const TS_CONFIG_BASE = {
     noImplicitReturns: true,
     noFallthroughCasesInSwitch: true
   }
-} as const
+}
 
 /**
  * Standard package.json scripts for libraries
  */
-export const PACKAGE_SCRIPTS = {
+export const PACKAGE_SCRIPTS: {
+  readonly build: string
+  readonly clean: string
+  readonly lint: string
+  readonly "lint:fix": string
+  readonly test: string
+  readonly "test:watch": string
+  readonly "test:coverage": string
+  readonly typecheck: string
+} = {
   build: "tsc -b tsconfig.build.json",
   clean: "rm -rf build dist .tsbuildinfo",
   lint: "eslint src test --ext .ts",
@@ -245,16 +312,21 @@ export const PACKAGE_SCRIPTS = {
   "test:watch": "vitest",
   "test:coverage": "vitest run --coverage",
   typecheck: "tsc --noEmit"
-} as const
+}
 
 /**
  * Common naming conventions
  */
-export const NAMING_CONVENTIONS = {
+export const NAMING_CONVENTIONS: {
+  readonly toPascalCase: (str: string) => string
+  readonly toCamelCase: (str: string) => string
+  readonly toKebabCase: (str: string) => string
+  readonly toConstantCase: (str: string) => string
+} = {
   /**
    * Convert to PascalCase (for class names)
    */
-  toPascalCase: (str: string): string => {
+  toPascalCase: (str: string) => {
     return str
       .replace(/[-_](.)/g, (_, char) => char.toUpperCase())
       .replace(/^(.)/, (char) => char.toUpperCase())
@@ -263,7 +335,7 @@ export const NAMING_CONVENTIONS = {
   /**
    * Convert to camelCase (for variable names)
    */
-  toCamelCase: (str: string): string => {
+  toCamelCase: (str: string) => {
     return str
       .replace(/[-_](.)/g, (_, char) => char.toUpperCase())
       .replace(/^(.)/, (char) => char.toLowerCase())
@@ -272,7 +344,7 @@ export const NAMING_CONVENTIONS = {
   /**
    * Convert to kebab-case (for file names)
    */
-  toKebabCase: (str: string): string => {
+  toKebabCase: (str: string) => {
     return str
       .replace(/([a-z])([A-Z])/g, "$1-$2")
       .replace(/[\s_]+/g, "-")
@@ -282,29 +354,56 @@ export const NAMING_CONVENTIONS = {
   /**
    * Convert to SCREAMING_SNAKE_CASE (for constants)
    */
-  toConstantCase: (str: string): string => {
+  toConstantCase: (str: string) => {
     return str
       .replace(/([a-z])([A-Z])/g, "$1_$2")
       .replace(/[\s-]+/g, "_")
       .toUpperCase()
   }
-} as const
+}
 
 /**
  * Default tags for different library types
  */
-export const DEFAULT_LIBRARY_TAGS = {
+export const DEFAULT_LIBRARY_TAGS: {
+  readonly contract: ReadonlyArray<string>
+  readonly feature: ReadonlyArray<string>
+  readonly dataAccess: ReadonlyArray<string>
+  readonly infrastructure: ReadonlyArray<string>
+  readonly provider: ReadonlyArray<string>
+} = {
   contract: ["type:contract", "scope:shared"],
   feature: ["type:feature", "scope:shared"],
   dataAccess: ["type:data-access", "scope:server"],
   infrastructure: ["type:infrastructure", "scope:shared"],
   provider: ["type:provider", "scope:shared"]
-} as const
+}
 
 /**
  * Platform-specific export patterns
  */
-export const PLATFORM_EXPORTS = {
+export const PLATFORM_EXPORTS: {
+  readonly universal: {
+    readonly hasClient: boolean
+    readonly hasServer: boolean
+    readonly hasEdge: boolean
+  }
+  readonly serverOnly: {
+    readonly hasClient: boolean
+    readonly hasServer: boolean
+    readonly hasEdge: boolean
+  }
+  readonly clientServer: {
+    readonly hasClient: boolean
+    readonly hasServer: boolean
+    readonly hasEdge: boolean
+  }
+  readonly fullStack: {
+    readonly hasClient: boolean
+    readonly hasServer: boolean
+    readonly hasEdge: boolean
+  }
+} = {
   /**
    * Libraries that export for all platforms
    */
@@ -340,37 +439,47 @@ export const PLATFORM_EXPORTS = {
     hasServer: true,
     hasEdge: true
   }
-} as const
+}
 
 /**
  * Effect pattern defaults
  */
-export const EFFECT_PATTERNS = {
+export const EFFECT_PATTERNS: {
+  readonly testLayerPattern: "static-property"
+  readonly servicePattern: "inline-interface"
+  readonly layerPattern: "static-live"
+  readonly errorPattern: "tagged-error"
+} = {
   /**
    * Default test layer pattern (Pattern B - preferred)
    */
-  testLayerPattern: "static-property" as const,
+  testLayerPattern: "static-property",
 
   /**
    * Default service definition pattern
    */
-  servicePattern: "inline-interface" as const,
+  servicePattern: "inline-interface",
 
   /**
    * Default layer implementation pattern
    */
-  layerPattern: "static-live" as const,
+  layerPattern: "static-live",
 
   /**
    * Default error pattern
    */
-  errorPattern: "tagged-error" as const
-} as const
+  errorPattern: "tagged-error"
+}
 
 /**
  * Validation rules for library options
  */
-export const VALIDATION_RULES = {
+export const VALIDATION_RULES: {
+  readonly libraryNamePattern: RegExp
+  readonly classNamePattern: RegExp
+  readonly propertyNamePattern: RegExp
+  readonly packageScopePattern: RegExp
+} = {
   /**
    * Library name must be kebab-case
    */
@@ -390,4 +499,4 @@ export const VALIDATION_RULES = {
    * Package scope pattern
    */
   packageScopePattern: /^@[a-z0-9-]+\/[a-z0-9-]+$/
-} as const
+}

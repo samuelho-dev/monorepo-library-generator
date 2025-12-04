@@ -114,7 +114,7 @@ export class TypeScriptBuilder {
   /**
    * Add a file header with JSDoc documentation
    */
-  addFileHeader(options: FileHeaderOptions): this {
+  addFileHeader(options: FileHeaderOptions) {
     this.lines.push("/**")
     this.lines.push(` * ${options.title}`)
     this.lines.push(" *")
@@ -144,7 +144,7 @@ export class TypeScriptBuilder {
   /**
    * Add import statements
    */
-  addImports(imports: Array<ImportSpec>): this {
+  addImports(imports: Array<ImportSpec>) {
     for (const { from, imports: names, isTypeOnly } of imports) {
       const targetMap = isTypeOnly ? this.typeImports : this.imports
 
@@ -163,14 +163,14 @@ export class TypeScriptBuilder {
   /**
    * Add a single import
    */
-  addImport(from: string, name: string, isTypeOnly = false): this {
+  addImport(from: string, name: string, isTypeOnly = false) {
     return this.addImports([{ from, imports: [name], isTypeOnly }])
   }
 
   /**
    * Add a blank line
    */
-  addBlankLine(): this {
+  addBlankLine() {
     this.lines.push("")
     return this
   }
@@ -178,7 +178,7 @@ export class TypeScriptBuilder {
   /**
    * Add a single-line or multi-line comment
    */
-  addComment(text: string, style: "line" | "section" | "block" = "line"): this {
+  addComment(text: string, style: "line" | "section" | "block" = "line") {
     if (style === "section") {
       this.lines.push("// " + "=".repeat(76))
       this.lines.push(`// ${text}`)
@@ -198,14 +198,14 @@ export class TypeScriptBuilder {
   /**
    * Add a section comment (prominent separator)
    */
-  addSectionComment(text: string): this {
+  addSectionComment(text: string) {
     return this.addComment(text, "section")
   }
 
   /**
    * Add JSDoc comment
    */
-  public addJSDoc(jsdoc: string): void {
+  public addJSDoc(jsdoc: string) {
     this.lines.push("/**")
     const docLines = jsdoc.split("\n")
     for (const line of docLines) {
@@ -217,7 +217,7 @@ export class TypeScriptBuilder {
   /**
    * Add a class declaration
    */
-  addClass(config: ClassConfig): this {
+  addClass(config: ClassConfig) {
     if (config.jsdoc) {
       this.addJSDoc(config.jsdoc)
     }
@@ -285,7 +285,7 @@ export class TypeScriptBuilder {
   /**
    * Add a method to a class
    */
-  private addMethodToClass(method: MethodConfig, isStatic: boolean): void {
+  private addMethodToClass(method: MethodConfig, isStatic: boolean) {
     if (method.jsdoc) {
       this.addJSDoc(method.jsdoc)
     }
@@ -326,7 +326,7 @@ export class TypeScriptBuilder {
   /**
    * Add an interface declaration
    */
-  addInterface(config: InterfaceConfig): this {
+  addInterface(config: InterfaceConfig) {
     if (config.jsdoc) {
       this.addJSDoc(config.jsdoc)
     }
@@ -360,7 +360,7 @@ export class TypeScriptBuilder {
   /**
    * Add a type alias
    */
-  addTypeAlias(config: TypeAliasConfig): this {
+  addTypeAlias(config: TypeAliasConfig) {
     if (config.jsdoc) {
       this.addJSDoc(config.jsdoc)
     }
@@ -381,7 +381,7 @@ export class TypeScriptBuilder {
   /**
    * Add a function declaration
    */
-  addFunction(config: FunctionConfig): this {
+  addFunction(config: FunctionConfig) {
     if (config.jsdoc) {
       this.addJSDoc(config.jsdoc)
     }
@@ -431,7 +431,7 @@ export class TypeScriptBuilder {
     type?: string,
     exported = true,
     jsdoc?: string
-  ): this {
+  ) {
     if (jsdoc) {
       this.addJSDoc(jsdoc)
     }
@@ -450,7 +450,7 @@ export class TypeScriptBuilder {
   /**
    * Add raw TypeScript code
    */
-  addRaw(code: string): this {
+  addRaw(code: string) {
     this.lines.push(code)
     return this
   }
@@ -490,7 +490,7 @@ export class TypeScriptBuilder {
   /**
    * Clear all content and start fresh
    */
-  clear(): this {
+  clear() {
     this.lines = []
     this.imports.clear()
     this.typeImports.clear()

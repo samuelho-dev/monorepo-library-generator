@@ -14,7 +14,7 @@ export interface EntityBarrelOptions {
  * Creates index.ts that re-exports all entity files.
  * Users can import from the barrel or use granular imports for tree-shaking.
  */
-export function generateEntityBarrelFile(options: EntityBarrelOptions): string {
+export function generateEntityBarrelFile(options: EntityBarrelOptions) {
   const { entities } = options
 
   const exports = entities
@@ -39,7 +39,7 @@ ${exports}
 /**
  * Convert entity name to file name
  */
-function entityNameToFileName(entityName: string): string {
+function entityNameToFileName(entityName: string) {
   return entityName
     .replace(/([a-z])([A-Z])/g, "$1-$2")
     .toLowerCase()

@@ -9,8 +9,8 @@
  */
 
 import { Effect } from "effect"
-import type { FileSystemAdapter, FileSystemErrors } from "./filesystem-adapter"
 import type { LibraryType } from "./build-config-utils"
+import type { FileSystemAdapter } from "./filesystem-adapter"
 
 /**
  * Options for infrastructure file generation
@@ -61,7 +61,8 @@ export interface InfrastructureGeneratorOptions {
  * Library-specific README content templates
  */
 const README_TEMPLATES: Record<LibraryType, (options: InfrastructureGeneratorOptions) => string> = {
-  contract: (options) => `# ${options.packageName}
+  contract: (options) =>
+    `# ${options.packageName}
 
 ${options.description}
 
@@ -93,7 +94,8 @@ nx test ${options.projectName}
 \`\`\`
 `,
 
-  "data-access": (options) => `# ${options.packageName}
+  "data-access": (options) =>
+    `# ${options.packageName}
 
 ${options.description}
 
@@ -111,10 +113,10 @@ This data-access library implements the repository pattern for ${options.project
 ## Usage
 
 \`\`\`typescript
-import { ${options.projectName.replace(/^data-access-/, '')}Repository } from '${options.packageName}';
+import { ${options.projectName.replace(/^data-access-/, "")}Repository } from '${options.packageName}';
 
 const program = Effect.gen(function*() {
-  const repo = yield* ${options.projectName.replace(/^data-access-/, '')}Repository;
+  const repo = yield* ${options.projectName.replace(/^data-access-/, "")}Repository;
   const result = yield* repo.findById("id");
   return result;
 });
@@ -131,7 +133,8 @@ nx test ${options.projectName}
 \`\`\`
 `,
 
-  feature: (options) => `# ${options.packageName}
+  feature: (options) =>
+    `# ${options.packageName}
 
 ${options.description}
 
@@ -149,10 +152,10 @@ This feature library orchestrates business logic for ${options.projectName}.
 ## Usage
 
 \`\`\`typescript
-import { ${options.projectName.replace(/^feature-/, '')}Service } from '${options.packageName}/server';
+import { ${options.projectName.replace(/^feature-/, "")}Service } from '${options.packageName}/server';
 
 const program = Effect.gen(function*() {
-  const service = yield* ${options.projectName.replace(/^feature-/, '')}Service;
+  const service = yield* ${options.projectName.replace(/^feature-/, "")}Service;
   // Use service methods
 });
 \`\`\`
@@ -168,7 +171,8 @@ nx test ${options.projectName}
 \`\`\`
 `,
 
-  infra: (options) => `# ${options.packageName}
+  infra: (options) =>
+    `# ${options.packageName}
 
 ${options.description}
 
@@ -186,10 +190,10 @@ This infrastructure library provides cross-cutting services for ${options.projec
 ## Usage
 
 \`\`\`typescript
-import { ${options.projectName.replace(/^infra-/, '')}Service } from '${options.packageName}/server';
+import { ${options.projectName.replace(/^infra-/, "")}Service } from '${options.packageName}/server';
 
 const program = Effect.gen(function*() {
-  const service = yield* ${options.projectName.replace(/^infra-/, '')}Service;
+  const service = yield* ${options.projectName.replace(/^infra-/, "")}Service;
   // Use service methods
 });
 \`\`\`
@@ -205,7 +209,8 @@ nx test ${options.projectName}
 \`\`\`
 `,
 
-  provider: (options) => `# ${options.packageName}
+  provider: (options) =>
+    `# ${options.packageName}
 
 ${options.description}
 
@@ -223,12 +228,12 @@ This provider library wraps an external service SDK with Effect-based APIs.
 ## Usage
 
 \`\`\`typescript
-import { ${options.projectName.replace(/^provider-/, '')}Service } from '${options.packageName}';
+import { ${options.projectName.replace(/^provider-/, "")}Service } from '${options.packageName}';
 
 const program = Effect.gen(function*() {
-  const service = yield* ${options.projectName.replace(/^provider-/, '')}Service;
+  const service = yield* ${options.projectName.replace(/^provider-/, "")}Service;
   // Use service methods
-}).pipe(Effect.provide(${options.projectName.replace(/^provider-/, '')}Service.Live));
+}).pipe(Effect.provide(${options.projectName.replace(/^provider-/, "")}Service.Live));
 \`\`\`
 
 ## Development
@@ -242,7 +247,8 @@ nx test ${options.projectName}
 \`\`\`
 `,
 
-  util: (options) => `# ${options.packageName}
+  util: (options) =>
+    `# ${options.packageName}
 
 ${options.description}
 
@@ -303,7 +309,7 @@ nx test ${options.projectName}
 export function generateInfrastructureFiles(
   adapter: FileSystemAdapter,
   options: InfrastructureGeneratorOptions
-): Effect.Effect<void, FileSystemErrors, unknown> {
+) {
   return Effect.gen(function*() {
     const {
       additionalExports,
@@ -311,7 +317,6 @@ export function generateInfrastructureFiles(
       libraryType,
       offsetFromRoot,
       packageName,
-      projectName,
       projectRoot,
       workspaceRoot
     } = options

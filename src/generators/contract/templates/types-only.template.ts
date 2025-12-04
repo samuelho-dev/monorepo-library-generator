@@ -17,7 +17,7 @@ export interface TypesOnlyOptions {
  * Creates a file that exports only TypeScript types (no runtime code).
  * This enables zero-bundle-impact imports for type checking.
  */
-export function generateTypesOnlyFile(options: TypesOnlyOptions): string {
+export function generateTypesOnlyFile(options: TypesOnlyOptions) {
   const { entities, includeCQRS, includeRPC } = options
 
   const entityExports = entities
@@ -65,8 +65,8 @@ export type * from "./lib/ports";
 
 export type * from "./lib/events";
 ${
-  includeCQRS
-    ? `
+    includeCQRS
+      ? `
 // ============================================================================
 // CQRS Types
 // ============================================================================
@@ -75,25 +75,25 @@ export type * from "./lib/commands";
 export type * from "./lib/queries";
 export type * from "./lib/projections";
 `
-    : ""
-}${
-  includeRPC
-    ? `
+      : ""
+  }${
+    includeRPC
+      ? `
 // ============================================================================
 // RPC Types
 // ============================================================================
 
 export type * from "./lib/rpc";
 `
-    : ""
-}
+      : ""
+  }
 `
 }
 
 /**
  * Convert entity name to file name
  */
-function entityNameToFileName(entityName: string): string {
+function entityNameToFileName(entityName: string) {
   return entityName
     .replace(/([a-z])([A-Z])/g, "$1-$2")
     .toLowerCase()

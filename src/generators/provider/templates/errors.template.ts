@@ -242,7 +242,7 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw(" */")
   builder.addRaw(`export function run${className}Operation<A>(`)
   builder.addRaw("  operation: () => Promise<A>,")
-  builder.addRaw(`): Effect.Effect<A, ${className}ServiceError> {`)
+  builder.addRaw(`) {`)
   builder.addRaw("  return Effect.tryPromise({")
   builder.addRaw("    try: operation,")
   builder.addRaw(`    catch: map${className}Error,`)

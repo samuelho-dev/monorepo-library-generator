@@ -32,7 +32,7 @@ export class TreeAdapter implements FileSystemAdapter {
   writeFile(
     path: string,
     content: string
-  ): Effect.Effect<void, FileWriteError | DirectoryCreationError> {
+  ) {
     return Effect.try({
       try: () => {
         // Tree API expects paths relative to workspace root
@@ -54,7 +54,7 @@ export class TreeAdapter implements FileSystemAdapter {
    *
    * Tree.read returns Buffer | null
    */
-  readFile(path: string): Effect.Effect<string, FileReadError> {
+  readFile(path: string) {
     return Effect.try({
       try: () => {
         const relativePath = this.toRelativePath(path)
@@ -76,7 +76,7 @@ export class TreeAdapter implements FileSystemAdapter {
   /**
    * Check if a file exists using Tree API
    */
-  exists(path: string): Effect.Effect<boolean, FileSystemError> {
+  exists(path: string) {
     return Effect.try({
       try: () => {
         const relativePath = this.toRelativePath(path)
@@ -98,7 +98,7 @@ export class TreeAdapter implements FileSystemAdapter {
    * Directories are created implicitly when files are written.
    * This is a no-op for Tree API.
    */
-  makeDirectory(path: string): Effect.Effect<void, DirectoryCreationError> {
+  makeDirectory(path: string) {
     return Effect.try({
       try: () => {
         // Tree API creates directories implicitly when writing files
@@ -117,12 +117,13 @@ export class TreeAdapter implements FileSystemAdapter {
    */
   listDirectory(
     path: string
-  ): Effect.Effect<ReadonlyArray<string>, FileSystemError> {
+  ) {
     return Effect.try({
       try: () => {
         const relativePath = this.toRelativePath(path)
         const children = this.tree.children(relativePath)
-        return children as ReadonlyArray<string>
+        const result: ReadonlyArray<string> = children
+        return result
       },
       catch: (error) =>
         new FileSystemError({
@@ -139,7 +140,7 @@ export class TreeAdapter implements FileSystemAdapter {
   remove(
     path: string,
     _options?: { recursive?: boolean }
-  ): Effect.Effect<void, FileSystemError> {
+  ) {
     return Effect.try({
       try: () => {
         const relativePath = this.toRelativePath(path)
@@ -157,14 +158,14 @@ export class TreeAdapter implements FileSystemAdapter {
   /**
    * Get workspace root from Tree
    */
-  getWorkspaceRoot(): string {
+  getWorkspaceRoot() {
     return this.tree.root
   }
 
   /**
    * Get mode (always 'nx' for TreeAdapter)
    */
-  getMode(): "nx" | "effect" {
+  getMode() {
     return this.mode
   }
 
@@ -174,7 +175,7 @@ export class TreeAdapter implements FileSystemAdapter {
    * Tree API expects paths relative to workspace root.
    * If path starts with workspace root, strip it.
    */
-  private toRelativePath(path: string): string {
+  private toRelativePath(path: string) {
     const workspaceRoot = this.tree.root
     if (path.startsWith(workspaceRoot + "/")) {
       return path.slice(workspaceRoot.length + 1)
@@ -192,6 +193,6 @@ export class TreeAdapter implements FileSystemAdapter {
  * @param tree - Nx Tree instance
  * @returns TreeAdapter instance
  */
-export function createTreeAdapter(tree: Tree): TreeAdapter {
+export function createTreeAdapter(tree: Tree) {
   return new TreeAdapter(tree)
 }

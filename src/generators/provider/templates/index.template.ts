@@ -8,13 +8,13 @@
  * @see docs/NX_STANDARDS.md for export conventions
  */
 
-import type { ProviderTemplateOptions } from "../../../utils/shared/types"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
 import {
-  generateStandardErrorExports,
+  type ExportSection,
   generateExportSections,
-  type ExportSection
+  generateStandardErrorExports
 } from "../../../utils/code-generation/barrel-export-utils"
+import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
+import type { ProviderTemplateOptions } from "../../../utils/shared/types"
 
 /**
  * Generate index.ts for provider library
@@ -28,7 +28,7 @@ import {
  *
  * This follows Effect-TS patterns for external service adapters.
  */
-export function generateIndexFile(options: ProviderTemplateOptions): string {
+export function generateIndexFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
   const { className, packageName } = options
 
@@ -71,7 +71,7 @@ Usage:
       items: [
         {
           comment: "Service types and interfaces",
-          exports: 'export type * from "./lib/types";'
+          exports: "export type * from \"./lib/types\";"
         }
       ]
     }
@@ -98,7 +98,7 @@ Usage:
   builder.addComment(`       const layer = ${className}Service.Live;`)
   builder.addBlankLine()
 
-  builder.addRaw('export { ' + className + 'Service } from "./lib/service";\n')
+  builder.addRaw("export { " + className + "Service } from \"./lib/service\";\n")
 
   builder.addBlankLine()
 
@@ -106,7 +106,7 @@ Usage:
   builder.addSectionComment("Validation Utilities")
   builder.addBlankLine()
   builder.addComment("Input validation functions")
-  builder.addRaw('export * from "./lib/validation";\n')
+  builder.addRaw("export * from \"./lib/validation\";\n")
 
   builder.addBlankLine()
 
@@ -119,7 +119,7 @@ Usage:
   builder.addComment(`  - ${className}ServiceTest  (test layer with mocks)`)
   builder.addComment(`  - ${className}ServiceAuto  (automatic selection based on NODE_ENV)`)
   builder.addBlankLine()
-  builder.addRaw('export * from "./lib/layers";\n')
+  builder.addRaw("export * from \"./lib/layers\";\n")
 
   builder.addBlankLine()
 

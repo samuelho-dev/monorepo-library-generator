@@ -143,7 +143,7 @@ export interface ExportSection {
 export function generateExportSections(
   builder: TypeScriptBuilder,
   sections: ReadonlyArray<ExportSection>
-): void {
+) {
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i]
 
@@ -217,7 +217,7 @@ export interface ConditionalExport {
 export function addConditionalExports(
   builder: TypeScriptBuilder,
   exports: ReadonlyArray<ConditionalExport>
-): void {
+) {
   for (const item of exports) {
     if (item.condition) {
       builder.addBlankLine()
@@ -277,7 +277,7 @@ export interface PlatformExportConfig {
 export function addPlatformExportHeader(
   builder: TypeScriptBuilder,
   config: PlatformExportConfig
-): void {
+) {
   const descriptions = {
     server:
       `Server-side exports for ${config.packageName}.\nContains service implementations, layers, and server-specific functionality.`,

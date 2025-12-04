@@ -93,7 +93,7 @@ export const featureTemplates: Record<
 /**
  * Get list of files to generate based on feature flags
  */
-export function getFeatureFiles(options: FeatureTemplateOptions): Array<string> {
+export function getFeatureFiles(options: FeatureTemplateOptions) {
   const files: Array<string> = [
     // Shared layer (always included)
     "shared/errors",

@@ -139,6 +139,5 @@ export const ${className}RepositoryAuto = (() => {
 })();`)
   builder.addBlankLine()
 
-
   return builder.toString()
 }

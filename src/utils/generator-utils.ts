@@ -25,7 +25,7 @@ import type { LibraryType, PlatformType } from "./build-config-utils"
  * calculateOffsetFromRoot("apps/web")            // Returns: "../../"
  * ```
  */
-export function calculateOffsetFromRoot(projectRoot: string): string {
+export function calculateOffsetFromRoot(projectRoot: string) {
   const depth = projectRoot.split("/").length
   return "../".repeat(depth)
 }
@@ -46,7 +46,7 @@ export function calculateOffsetFromRoot(projectRoot: string): string {
 export function createStandardTags(
   libraryType: LibraryType,
   platform: PlatformType = "universal"
-): Array<string> {
+) {
   return [`type:${libraryType}`, `platform:${platform}`]
 }
 
@@ -75,7 +75,7 @@ export function createStandardTags(
 export function parseTags(
   tags: string | undefined,
   defaults: Array<string>
-): Array<string> {
+) {
   if (!tags) return defaults
 
   const parsed = tags
@@ -99,7 +99,7 @@ export function validateLibraryDoesNotExist(
   tree: Tree,
   projectRoot: string,
   projectName: string
-): void {
+) {
   if (tree.exists(projectRoot)) {
     throw new Error(
       `Library "${projectName}" already exists at ${projectRoot}`

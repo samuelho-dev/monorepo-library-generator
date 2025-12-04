@@ -31,7 +31,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
    *
    * Creates parent directories if they don't exist
    */
-  writeFile(path: string, content: string): Effect.Effect<void, FileWriteError | DirectoryCreationError> {
+  writeFile(path: string, content: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
       : this.pathService.resolve(path)
@@ -67,7 +67,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   /**
    * Read a file using @effect/platform FileSystem
    */
-  readFile(path: string): Effect.Effect<string, FileReadError> {
+  readFile(path: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
       : this.pathService.resolve(path)
@@ -85,7 +85,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   /**
    * Check if a file exists using @effect/platform FileSystem
    */
-  exists(path: string): Effect.Effect<boolean, FileSystemError> {
+  exists(path: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
       : this.pathService.resolve(path)
@@ -104,7 +104,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   /**
    * Create a directory using @effect/platform FileSystem
    */
-  makeDirectory(path: string): Effect.Effect<void, DirectoryCreationError> {
+  makeDirectory(path: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
       : this.pathService.resolve(path)
@@ -122,7 +122,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   /**
    * List directory contents using @effect/platform FileSystem
    */
-  listDirectory(path: string): Effect.Effect<ReadonlyArray<string>, FileSystemError> {
+  listDirectory(path: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
       : this.pathService.resolve(path)
@@ -141,7 +141,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   /**
    * Delete a file or directory using @effect/platform FileSystem
    */
-  remove(path: string, options?: { recursive?: boolean }): Effect.Effect<void, FileSystemError> {
+  remove(path: string, options?: { recursive?: boolean }) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
       : this.pathService.resolve(path)
@@ -160,14 +160,14 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   /**
    * Get workspace root
    */
-  getWorkspaceRoot(): string {
+  getWorkspaceRoot() {
     return this.workspaceRoot
   }
 
   /**
    * Get mode (always 'effect' for EffectFsAdapter)
    */
-  getMode(): "nx" | "effect" {
+  getMode() {
     return this.mode
   }
 }
@@ -183,7 +183,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
  */
 export function createEffectFsAdapter(
   workspaceRoot: string
-): Effect.Effect<FileSystemAdapter, never, FileSystem.FileSystem | Path.Path> {
+) {
   return Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
     const pathService = yield* Path.Path
