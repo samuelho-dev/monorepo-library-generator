@@ -9,18 +9,17 @@ import type { Tree } from "@nx/devkit"
 import { formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
 import { parseTags } from "../../utils/generator-utils"
-import { generateLibraryFiles } from "../../utils/library-generator-utils"
-import { standardizeGeneratorOptions, type NormalizedBaseOptions } from "../../utils/normalization-utils"
+import { generateLibraryFiles, type LibraryGeneratorOptions } from "../../utils/library-generator-utils"
+import { computeLibraryMetadata, type LibraryMetadata } from "../../utils/library-metadata"
 import { computePlatformConfiguration } from "../../utils/platform-utils"
 import { createTreeAdapter } from "../../utils/tree-adapter"
-import { detectWorkspaceConfig, type WorkspaceConfig } from "../../utils/workspace-detection"
 import { generateInfraCore, type GeneratorResult } from "../core/infra-generator-core"
 import type { InfraGeneratorSchema } from "./schema"
 
 /**
  * Normalized options with computed values
  */
-type NormalizedInfraOptions = NormalizedBaseOptions
+type NormalizedInfraOptions = LibraryMetadata
 
 /**
  * Main generator function
@@ -29,7 +28,8 @@ export default async function infraGenerator(
   tree: Tree,
   schema: InfraGeneratorSchema
 ) {
-  const options = normalizeOptions(tree, schema)
+  // Compute library metadata (single source of truth)
+  const metadata = computeLibraryMetadata(tree, schema, "infra")
 
   // Use shared platform configuration helper
   const platformConfig = computePlatformConfiguration(
@@ -54,14 +54,14 @@ export default async function infraGenerator(
   const tags = parseTags(schema.tags, defaultTags)
 
   // 1. Generate base library files (project.json, package.json, tsconfig, etc.)
-  const libraryOptions = {
-    name: options.name,
-    projectName: options.projectName,
-    projectRoot: options.projectRoot,
-    offsetFromRoot: options.offsetFromRoot,
-    libraryType: "infra" as const,
+  const libraryOptions: LibraryGeneratorOptions = {
+    name: metadata.name,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    offsetFromRoot: metadata.offsetFromRoot,
+    libraryType: "infra",
     platform,
-    description: options.description,
+    description: metadata.description,
     tags,
     includeClientServer,
     includeEdgeExports: includeEdge
@@ -72,18 +72,18 @@ export default async function infraGenerator(
   // 2. Generate domain-specific files using shared core
   const adapter = createTreeAdapter(tree)
   const coreOptions = {
-    name: options.name,
-    className: options.className,
-    propertyName: options.propertyName,
-    fileName: options.fileName,
-    constantName: options.constantName,
-    projectName: options.projectName,
-    projectRoot: options.projectRoot,
-    sourceRoot: options.sourceRoot,
-    packageName: options.packageName,
-    description: options.description,
+    name: metadata.name,
+    className: metadata.className,
+    propertyName: metadata.propertyName,
+    fileName: metadata.fileName,
+    constantName: metadata.constantName,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    sourceRoot: metadata.sourceRoot,
+    packageName: metadata.packageName,
+    description: metadata.description,
     tags: tags.join(","), // Convert array to comma-separated string for core
-    offsetFromRoot: options.offsetFromRoot,
+    offsetFromRoot: metadata.offsetFromRoot,
     platform,
     ...(includeClientServer !== undefined && { includeClientServer }),
     ...(includeEdge && { includeEdge })
@@ -136,29 +136,4 @@ ${includeClientServer ? "   - ✅ Client/Server separation enabled" : "   - Serv
 ${includeEdge ? "   - ✅ Edge runtime support enabled" : "   - No edge runtime support"}
     `)
   }
-}
-
-/**
- * Normalize options with defaults and computed values
- */
-function normalizeOptions(
-  tree: Tree,
-  schema: InfraGeneratorSchema
-): NormalizedInfraOptions {
-  // Detect workspace configuration
-  const adapter = createTreeAdapter(tree)
-  const workspaceConfig = Effect.runSync(
-    detectWorkspaceConfig(adapter).pipe(
-      Effect.orDie
-    ) as Effect.Effect<WorkspaceConfig, never, never>
-  )
-
-  // Use shared normalization utility for common fields
-  return standardizeGeneratorOptions(tree, {
-    name: schema.name,
-    ...(schema.directory !== undefined && { directory: schema.directory }),
-    ...(schema.description !== undefined && { description: schema.description }),
-    libraryType: "infra",
-    additionalTags: ["platform:node"] // Infra is primarily server-side
-  }, workspaceConfig)
 }

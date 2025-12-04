@@ -8,18 +8,13 @@
 import type { Tree } from "@nx/devkit"
 import { formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
+import type { FileSystemErrors } from "../../utils/filesystem-adapter"
 import { parseTags } from "../../utils/generator-utils"
-import { generateLibraryFiles } from "../../utils/library-generator-utils"
-import { standardizeGeneratorOptions, type NormalizedBaseOptions } from "../../utils/normalization-utils"
+import { generateLibraryFiles, type LibraryGeneratorOptions } from "../../utils/library-generator-utils"
+import { computeLibraryMetadata } from "../../utils/library-metadata"
 import { createTreeAdapter } from "../../utils/tree-adapter"
-import { detectWorkspaceConfig, type WorkspaceConfig } from "../../utils/workspace-detection"
 import { generateContractCore, type GeneratorResult } from "../core/contract-generator-core"
 import type { ContractGeneratorSchema } from "./schema"
-
-/**
- * Normalized options with computed values
- */
-type NormalizedContractOptions = NormalizedBaseOptions
 
 /**
  * Contract generator for Nx workspaces
@@ -40,28 +35,27 @@ export default async function contractGenerator(
     throw new Error("Contract name is required and cannot be empty")
   }
 
-  const options = normalizeOptions(tree, schema)
+  // Compute library metadata (single source of truth)
+  const metadata = computeLibraryMetadata(
+    tree,
+    schema,
+    "contract",
+    ["platform:universal"]
+  )
 
-  // Build tags using shared tag utility
-  const defaultTags = [
-    "type:contract",
-    `domain:${options.fileName}`,
-    "platform:universal"
-  ]
-  const tags = parseTags(schema.tags, defaultTags)
+  // Parse tags from metadata (already includes defaults)
+  const tags = metadata.tags.split(",").map(t => t.trim())
 
   // 1. Generate base library files using centralized utility
-  const libraryOptions = {
-    name: options.name,
-    projectName: options.projectName,
-    projectRoot: options.projectRoot,
-    offsetFromRoot: options.offsetFromRoot,
-    libraryType: "contract" as const,
-    platform: "universal" as const,
-    description: options.description,
-    tags,
-    includeCQRS: schema.includeCQRS ?? false,
-    includeRPC: schema.includeRPC ?? false
+  const libraryOptions: LibraryGeneratorOptions = {
+    name: metadata.name,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    offsetFromRoot: metadata.offsetFromRoot,
+    libraryType: "contract",
+    platform: "universal",
+    description: metadata.description,
+    tags
   }
 
   await generateLibraryFiles(tree, libraryOptions)
@@ -72,9 +66,9 @@ export default async function contractGenerator(
   // Parse entities if provided (comma-separated string)
   let entities: ReadonlyArray<string> | undefined
   if (schema.entities) {
-    if (typeof schema.entities === 'string') {
+    if (typeof schema.entities === "string") {
       // Split on comma and trim whitespace
-      entities = schema.entities.split(',').map(e => e.trim()).filter(e => e.length > 0)
+      entities = schema.entities.split(",").map((e) => e.trim()).filter((e) => e.length > 0)
     } else {
       entities = schema.entities
     }
@@ -92,8 +86,8 @@ export default async function contractGenerator(
   }
 
   // 3. Run core generator with Effect runtime
-  const result: GeneratorResult = await Effect.runPromise(
-    generateContractCore(adapter, coreOptions) as Effect.Effect<GeneratorResult, never>
+  const result = await Effect.runPromise(
+    generateContractCore(adapter, coreOptions) as Effect.Effect<GeneratorResult, FileSystemErrors, never>
   )
 
   // 5. Format files
@@ -102,7 +96,7 @@ export default async function contractGenerator(
   // 6. Return post-generation instructions
   return () => {
     const entityCount = entities?.length ?? 1
-    const entityList = entities?.join(", ") ?? options.className
+    const entityList = entities?.join(", ") ?? metadata.className
 
     console.log(`
 ✅ Contract library created: ${result.packageName}
@@ -147,26 +141,5 @@ Follow the TODO comments in each file to customize for your domain.
   }
 }
 
-/**
- * Normalize options with defaults and computed values
- */
-function normalizeOptions(
-  tree: Tree,
-  schema: ContractGeneratorSchema
-): NormalizedContractOptions {
-  // Detect workspace configuration
-  const adapter = createTreeAdapter(tree)
-  const workspaceConfig = Effect.runSync(
-    detectWorkspaceConfig(adapter).pipe(
-      Effect.orDie
-    ) as Effect.Effect<WorkspaceConfig, never, never>
-  )
-
-  // Use shared normalization utility for common fields
-  return standardizeGeneratorOptions(tree, {
-    name: schema.name,
-    ...(schema.directory !== undefined && { directory: schema.directory }),
-    ...(schema.description !== undefined && { description: schema.description }),
-    libraryType: "contract"
-  }, workspaceConfig)
-}
+// Forward-facing architecture: No wrapper function needed
+// computeLibraryMetadata() is called directly above

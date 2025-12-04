@@ -11,10 +11,9 @@ import type { Tree } from "@nx/devkit"
 import { formatFiles, installPackagesTask } from "@nx/devkit"
 import { Effect } from "effect"
 import { generateLibraryFiles, type LibraryGeneratorOptions } from "../../utils/library-generator-utils"
-import { standardizeGeneratorOptions } from "../../utils/normalization-utils"
+import { computeLibraryMetadata } from "../../utils/library-metadata"
 import { createNamingVariants } from "../../utils/naming-utils"
 import { createTreeAdapter } from "../../utils/tree-adapter"
-import { detectWorkspaceConfig, type WorkspaceConfig } from "../../utils/workspace-detection"
 import { generateProviderCore, type GeneratorResult } from "../core/provider-generator-core"
 import type { NormalizedProviderOptions, ProviderGeneratorSchema } from "./schema"
 
@@ -37,38 +36,38 @@ function normalizeOptions(
   const platform = options.platform || "node"
   const includeClientServer = platform === "universal" ? true : (options.includeClientServer ?? false)
 
-  // Detect workspace configuration
-  const adapter = createTreeAdapter(tree)
-  const workspaceConfig = Effect.runSync(
-    detectWorkspaceConfig(adapter).pipe(
-      Effect.orDie
-    ) as Effect.Effect<WorkspaceConfig, never, never>
-  )
-
-  // Use shared normalization (without additional tags, we'll build tags manually)
-  const baseOptions = standardizeGeneratorOptions(tree, {
-    name: options.name,
-    ...(options.directory !== undefined && { directory: options.directory }),
-    description: options.description ?? `${createNamingVariants(options.name).className} provider for ${options.externalService}`,
-    libraryType: "provider"
-  }, workspaceConfig)
-
-  // Provider-specific naming: use "Service" suffix instead of "Provider"
-  const projectClassName = `${baseOptions.className}Service`
-  const projectConstantName = `${baseOptions.constantName}_SERVICE`
-
-  // Provider-specific tags: always use "scope:provider" instead of "scope:${fileName}"
+  // Provider-specific tags: always use "scope:provider" instead of computed scope
   const serviceTag = `service:${createNamingVariants(options.externalService).fileName}`
-  const defaultTags = [
-    "type:provider",
-    "scope:provider", // Providers always use "provider" scope
+  const additionalTags = [
+    "scope:provider", // Providers always use "provider" scope (override default)
     `platform:${platform}`,
     serviceTag
   ]
-  const parsedTags = options.tags ? [...defaultTags, ...options.tags.split(",").map((t) => t.trim())] : defaultTags
+
+  // Compute base library metadata using centralized utility
+  const baseMetadata = computeLibraryMetadata(
+    tree,
+    {
+      name: options.name,
+      ...(options.directory !== undefined && { directory: options.directory }),
+      description: options.description ??
+        `${createNamingVariants(options.name).className} provider for ${options.externalService}`
+    },
+    "provider",
+    additionalTags
+  )
+
+  // Provider-specific naming: use "Service" suffix instead of "Provider"
+  const projectClassName = `${baseMetadata.className}Service`
+  const projectConstantName = `${baseMetadata.constantName}_SERVICE`
+
+  // Parse user tags if provided
+  const parsedTags = options.tags
+    ? [...baseMetadata.tags.split(",").map(t => t.trim()), ...options.tags.split(",").map((t) => t.trim())]
+    : baseMetadata.tags.split(",").map(t => t.trim())
 
   return {
-    ...baseOptions,
+    ...baseMetadata,
     externalService: options.externalService,
     platform,
     includeClientServer,

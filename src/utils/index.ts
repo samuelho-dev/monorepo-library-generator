@@ -16,8 +16,8 @@ export * from "./tsconfig-utils"
 // Build configuration utilities
 export * from "./build-config-utils"
 
-// Normalization utilities
-export * from "./normalization-utils"
+// Library metadata utilities
+export * from "./library-metadata"
 
 // Dependency utilities
 export * from "./dependency-utils"
@@ -26,9 +26,9 @@ export * from "./dependency-utils"
 export * from "./platform-utils"
 
 // Filesystem adapters
+export * from "./effect-fs-adapter"
 export * from "./filesystem-adapter"
 export * from "./tree-adapter"
-export * from "./effect-fs-adapter"
 
 // Code generation utilities
 export * from "./code-generation/barrel-export-utils"

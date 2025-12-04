@@ -8,18 +8,13 @@
 import type { Tree } from "@nx/devkit"
 import { formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
+import type { FileSystemErrors } from "../../utils/filesystem-adapter"
 import { parseTags } from "../../utils/generator-utils"
-import { generateLibraryFiles } from "../../utils/library-generator-utils"
-import { standardizeGeneratorOptions, type NormalizedBaseOptions } from "../../utils/normalization-utils"
+import { generateLibraryFiles, type LibraryGeneratorOptions } from "../../utils/library-generator-utils"
+import { computeLibraryMetadata } from "../../utils/library-metadata"
 import { createTreeAdapter } from "../../utils/tree-adapter"
-import { detectWorkspaceConfig, type WorkspaceConfig } from "../../utils/workspace-detection"
 import { generateDataAccessCore, type GeneratorResult } from "../core/data-access-generator-core"
 import type { DataAccessGeneratorSchema } from "./schema"
-
-/**
- * Normalized options with computed values
- */
-type NormalizedDataAccessOptions = NormalizedBaseOptions
 
 /**
  * Data access generator for Nx workspaces
@@ -40,25 +35,26 @@ export default async function dataAccessGenerator(
     throw new Error("Data access name is required and cannot be empty")
   }
 
-  const options = normalizeOptions(tree, schema)
+  // Compute library metadata (single source of truth)
+  const metadata = computeLibraryMetadata(
+    tree,
+    schema,
+    "data-access",
+    ["scope:shared", "platform:server"]
+  )
 
-  // Build tags using shared tag utility
-  const defaultTags = [
-    "type:data-access",
-    "scope:shared",
-    "platform:server"
-  ]
-  const tags = parseTags(undefined, defaultTags)
+  // Parse tags from metadata (already includes defaults)
+  const tags = metadata.tags.split(",").map(t => t.trim())
 
   // 1. Generate base library files using centralized utility
-  const libraryOptions = {
-    name: options.name,
-    projectName: options.projectName,
-    projectRoot: options.projectRoot,
-    offsetFromRoot: options.offsetFromRoot,
-    libraryType: "data-access" as const,
-    platform: "node" as const,
-    description: options.description,
+  const libraryOptions: LibraryGeneratorOptions = {
+    name: metadata.name,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    offsetFromRoot: metadata.offsetFromRoot,
+    libraryType: "data-access",
+    platform: "node",
+    description: metadata.description,
     tags
   }
 
@@ -74,8 +70,8 @@ export default async function dataAccessGenerator(
   }
 
   // 3. Run core generator with Effect runtime
-  const result: GeneratorResult = await Effect.runPromise(
-    generateDataAccessCore(adapter, coreOptions) as Effect.Effect<GeneratorResult, never>
+  const result = await Effect.runPromise(
+    generateDataAccessCore(adapter, coreOptions) as Effect.Effect<GeneratorResult, FileSystemErrors, never>
   )
 
   // 4. Format files
@@ -110,26 +106,5 @@ export default async function dataAccessGenerator(
   }
 }
 
-/**
- * Normalize options with defaults and computed values
- */
-function normalizeOptions(
-  tree: Tree,
-  schema: DataAccessGeneratorSchema
-): NormalizedDataAccessOptions {
-  // Detect workspace configuration
-  const adapter = createTreeAdapter(tree)
-  const workspaceConfig = Effect.runSync(
-    detectWorkspaceConfig(adapter).pipe(
-      Effect.orDie
-    ) as Effect.Effect<WorkspaceConfig, never, never>
-  )
-
-  // Use shared normalization utility for common fields
-  return standardizeGeneratorOptions(tree, {
-    name: schema.name,
-    ...(schema.directory !== undefined && { directory: schema.directory }),
-    ...(schema.description !== undefined && { description: schema.description }),
-    libraryType: "data-access"
-  }, workspaceConfig)
-}
+// Forward-facing architecture: No wrapper function needed
+// computeLibraryMetadata() is called directly above

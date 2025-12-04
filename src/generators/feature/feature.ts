@@ -9,18 +9,17 @@ import type { Tree } from "@nx/devkit"
 import { formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
 import { parseTags } from "../../utils/generator-utils"
-import { generateLibraryFiles } from "../../utils/library-generator-utils"
-import { standardizeGeneratorOptions, type NormalizedBaseOptions } from "../../utils/normalization-utils"
+import { generateLibraryFiles, type LibraryGeneratorOptions } from "../../utils/library-generator-utils"
+import { type LibraryMetadata, computeLibraryMetadata } from "../../utils/library-metadata"
 import { computePlatformConfiguration } from "../../utils/platform-utils"
 import { createTreeAdapter } from "../../utils/tree-adapter"
-import { detectWorkspaceConfig, type WorkspaceConfig } from "../../utils/workspace-detection"
 import { generateFeatureCore, type GeneratorResult } from "../core/feature-generator-core"
 import type { FeatureGeneratorSchema } from "./schema"
 
 /**
  * Normalized options with computed values
  */
-type NormalizedFeatureOptions = NormalizedBaseOptions
+type NormalizedFeatureOptions = LibraryMetadata
 
 /**
  * Main generator function
@@ -34,7 +33,8 @@ export default async function featureGenerator(
     throw new Error("Feature name is required and cannot be empty")
   }
 
-  const options = normalizeOptions(tree, schema)
+  // Compute library metadata (single source of truth)
+  const metadata = computeLibraryMetadata(tree, schema, "feature")
 
   // Feature flags
   const includeClientServer = schema.includeClientServer // Keep undefined to allow platform defaults
@@ -65,14 +65,14 @@ export default async function featureGenerator(
   const tags = parseTags(schema.tags, defaultTags)
 
   // 1. Generate base library files using centralized utility
-  const libraryOptions = {
-    name: options.name,
-    projectName: options.projectName,
-    projectRoot: options.projectRoot,
-    offsetFromRoot: options.offsetFromRoot,
-    libraryType: "feature" as const,
+  const libraryOptions: LibraryGeneratorOptions = {
+    name: metadata.name,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    offsetFromRoot: metadata.offsetFromRoot,
+    libraryType: "feature",
     platform,
-    description: options.description,
+    description: metadata.description,
     tags,
     ...(includeClientServer !== undefined && { includeClientServer }),
     includeEdgeExports: includeEdge,
@@ -84,18 +84,18 @@ export default async function featureGenerator(
   // 2. Generate domain-specific files using shared core
   const adapter = createTreeAdapter(tree)
   const coreOptions = {
-    name: options.name,
-    className: options.className,
-    propertyName: options.propertyName,
-    fileName: options.fileName,
-    constantName: options.constantName,
-    projectName: options.projectName,
-    projectRoot: options.projectRoot,
-    sourceRoot: options.sourceRoot,
-    packageName: options.packageName,
-    description: options.description,
+    name: metadata.name,
+    className: metadata.className,
+    propertyName: metadata.propertyName,
+    fileName: metadata.fileName,
+    constantName: metadata.constantName,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    sourceRoot: metadata.sourceRoot,
+    packageName: metadata.packageName,
+    description: metadata.description,
     tags: tags.join(","), // Convert array to comma-separated string for core
-    offsetFromRoot: options.offsetFromRoot,
+    offsetFromRoot: metadata.offsetFromRoot,
     platform,
     ...(schema.scope !== undefined && { scope: schema.scope }),
     ...(includeClientServer !== undefined && { includeClientServer }),
@@ -149,29 +149,4 @@ ${shouldIncludeClientServer ? `   - ${result.sourceRoot}/lib/client/hooks      -
    - See ${result.projectRoot}/README.md for usage examples
     `)
   }
-}
-
-/**
- * Normalize options with defaults and computed values
- */
-function normalizeOptions(
-  tree: Tree,
-  schema: FeatureGeneratorSchema
-): NormalizedFeatureOptions {
-  // Detect workspace configuration
-  const adapter = createTreeAdapter(tree)
-  const workspaceConfig = Effect.runSync(
-    detectWorkspaceConfig(adapter).pipe(
-      Effect.orDie
-    ) as Effect.Effect<WorkspaceConfig, never, never>
-  )
-
-  // Use shared normalization utility for common fields
-  return standardizeGeneratorOptions(tree, {
-    name: schema.name,
-    ...(schema.directory !== undefined && { directory: schema.directory }),
-    ...(schema.description !== undefined && { description: schema.description }),
-    libraryType: "feature",
-    additionalTags: ["platform:universal"] // Features default to universal
-  }, workspaceConfig)
 }
