@@ -17,19 +17,16 @@ import { generateInfraCore, type GeneratorResult } from "../core/infra-generator
 import type { InfraGeneratorSchema } from "./schema"
 
 /**
- * Normalized options with computed values
- */
-type NormalizedInfraOptions = LibraryMetadata
-
-/**
  * Main generator function
  */
 export default async function infraGenerator(
   tree: Tree,
   schema: InfraGeneratorSchema
 ) {
-  // Compute library metadata (single source of truth)
-  const metadata = computeLibraryMetadata(tree, schema, "infra")
+  // Validate required fields
+  if (!schema.name || schema.name.trim() === "") {
+    throw new Error("Infra name is required and cannot be empty")
+  }
 
   // Use shared platform configuration helper
   const platformConfig = computePlatformConfiguration(
@@ -53,6 +50,14 @@ export default async function infraGenerator(
   ]
   const tags = parseTags(schema.tags, defaultTags)
 
+  // Compute library metadata (single source of truth)
+  const metadata = computeLibraryMetadata(
+    tree,
+    schema,
+    "infra",
+    defaultTags
+  )
+
   // 1. Generate base library files (project.json, package.json, tsconfig, etc.)
   const libraryOptions: LibraryGeneratorOptions = {
     name: metadata.name,
@@ -71,7 +76,8 @@ export default async function infraGenerator(
 
   // 2. Generate domain-specific files using shared core
   const adapter = createTreeAdapter(tree)
-  const coreOptions = {
+  const coreOptions: Parameters<typeof generateInfraCore>[1] = {
+    // Pass pre-computed metadata from wrapper
     name: metadata.name,
     className: metadata.className,
     propertyName: metadata.propertyName,
@@ -81,15 +87,17 @@ export default async function infraGenerator(
     projectRoot: metadata.projectRoot,
     sourceRoot: metadata.sourceRoot,
     packageName: metadata.packageName,
-    description: metadata.description,
-    tags: tags.join(","), // Convert array to comma-separated string for core
     offsetFromRoot: metadata.offsetFromRoot,
+    description: metadata.description,
+    tags: metadata.tags,
+
+    // Feature flags
     platform,
     ...(includeClientServer !== undefined && { includeClientServer }),
-    ...(includeEdge && { includeEdge })
+    ...(includeEdge !== undefined && { includeEdge })
   }
 
-  // Use shared core via Effect
+  // 3. Run core generator with Effect runtime
   const result = await Effect.runPromise(
     generateInfraCore(adapter, coreOptions) as Effect.Effect<GeneratorResult, never>
   )

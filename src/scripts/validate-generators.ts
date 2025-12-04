@@ -84,7 +84,7 @@ function exec(command: string, cwd = WORKSPACE_ROOT) {
     })
   } catch (error) {
     if (error instanceof Error && "stdout" in error && "stderr" in error) {
-      const execError = error as {
+      const execError = error as unknown as {
         stdout: string
         stderr: string
         message: string
@@ -97,7 +97,7 @@ function exec(command: string, cwd = WORKSPACE_ROOT) {
   }
 }
 
-function cleanup(libraryPath: string): void {
+function cleanup(libraryPath: string) {
   const fullPath = join(WORKSPACE_ROOT, libraryPath)
   if (existsSync(fullPath)) {
     console.log(`  Removing existing library at ${libraryPath}...`)
@@ -105,7 +105,7 @@ function cleanup(libraryPath: string): void {
   }
 }
 
-function validateGenerator(test: GeneratorTest): ValidationResult {
+function validateGenerator(test: GeneratorTest) {
   console.log(`\n${"=".repeat(80)}`)
   console.log(`Validating: ${test.name}`)
   console.log(`${"=".repeat(80)}\n`)
@@ -134,9 +134,9 @@ function validateGenerator(test: GeneratorTest): ValidationResult {
     exec(test.buildCommand)
 
     console.log(`\n✅ ${test.name} validation PASSED\n`)
-    return { name: test.name, success: true, stage: "build" }
+    return { name: test.name, success: true, stage: "build" as const }
   } catch (error) {
-    const stage = error instanceof Error && error.message.includes("Build")
+    const stage: "cleanup" | "generate" | "build" = error instanceof Error && error.message.includes("Build")
       ? "build"
       : error instanceof Error && error.message.includes("Generate")
       ? "generate"
@@ -156,7 +156,7 @@ function validateGenerator(test: GeneratorTest): ValidationResult {
   }
 }
 
-function printSummary(results: Array<ValidationResult>): void {
+function printSummary(results: Array<ValidationResult>) {
   console.log(`\n${"=".repeat(80)}`)
   console.log("VALIDATION SUMMARY")
   console.log(`${"=".repeat(80)}\n`)
@@ -185,7 +185,7 @@ function printSummary(results: Array<ValidationResult>): void {
   }
 }
 
-async function main(): Promise<void> {
+async function main() {
   console.log("Generator Validation Starting...\n")
 
   const results: Array<ValidationResult> = []

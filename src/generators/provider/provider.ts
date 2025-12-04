@@ -10,133 +10,132 @@
 import type { Tree } from "@nx/devkit"
 import { formatFiles, installPackagesTask } from "@nx/devkit"
 import { Effect } from "effect"
+import { parseTags } from "../../utils/generator-utils"
 import { generateLibraryFiles, type LibraryGeneratorOptions } from "../../utils/library-generator-utils"
 import { computeLibraryMetadata } from "../../utils/library-metadata"
 import { createNamingVariants } from "../../utils/naming-utils"
 import { createTreeAdapter } from "../../utils/tree-adapter"
 import { generateProviderCore, type GeneratorResult } from "../core/provider-generator-core"
-import type { NormalizedProviderOptions, ProviderGeneratorSchema } from "./schema"
-
-/**
- * Normalize and validate generator options
- */
-function normalizeOptions(
-  tree: Tree,
-  options: ProviderGeneratorSchema
-): NormalizedProviderOptions {
-  // Validate required fields
-  if (!options.name || options.name.trim() === "") {
-    throw new Error("Provider name is required")
-  }
-  if (!options.externalService || options.externalService.trim() === "") {
-    throw new Error("External service name is required")
-  }
-
-  // Platform determination
-  const platform = options.platform || "node"
-  const includeClientServer = platform === "universal" ? true : (options.includeClientServer ?? false)
-
-  // Provider-specific tags: always use "scope:provider" instead of computed scope
-  const serviceTag = `service:${createNamingVariants(options.externalService).fileName}`
-  const additionalTags = [
-    "scope:provider", // Providers always use "provider" scope (override default)
-    `platform:${platform}`,
-    serviceTag
-  ]
-
-  // Compute base library metadata using centralized utility
-  const baseMetadata = computeLibraryMetadata(
-    tree,
-    {
-      name: options.name,
-      ...(options.directory !== undefined && { directory: options.directory }),
-      description: options.description ??
-        `${createNamingVariants(options.name).className} provider for ${options.externalService}`
-    },
-    "provider",
-    additionalTags
-  )
-
-  // Provider-specific naming: use "Service" suffix instead of "Provider"
-  const projectClassName = `${baseMetadata.className}Service`
-  const projectConstantName = `${baseMetadata.constantName}_SERVICE`
-
-  // Parse user tags if provided
-  const parsedTags = options.tags
-    ? [...baseMetadata.tags.split(",").map(t => t.trim()), ...options.tags.split(",").map((t) => t.trim())]
-    : baseMetadata.tags.split(",").map(t => t.trim())
-
-  return {
-    ...baseMetadata,
-    externalService: options.externalService,
-    platform,
-    includeClientServer,
-    projectClassName,
-    projectConstantName,
-    parsedTags
-  }
-}
+import type { ProviderGeneratorSchema } from "./schema"
 
 /**
  * Main provider generator function
  *
- * Simplified to use centralized library generation utilities.
- * This ensures consistency across all library types.
+ * Generates a provider library following Effect-based architecture patterns
+ * with standardized structure, configuration, and build setup.
  */
 export default async function providerGenerator(
   tree: Tree,
-  options: ProviderGeneratorSchema
+  schema: ProviderGeneratorSchema
 ) {
-  const normalizedOptions = normalizeOptions(tree, options)
+  // Validate required fields
+  if (!schema.name || schema.name.trim() === "") {
+    throw new Error("Provider name is required and cannot be empty")
+  }
+  if (!schema.externalService || schema.externalService.trim() === "") {
+    throw new Error("External service name is required and cannot be empty")
+  }
 
-  // Generate ALL library files using centralized utility
+  // Platform determination
+  const platform = schema.platform || "node"
+  const includeClientServer = platform === "universal" ? true : (schema.includeClientServer ?? false)
+
+  // Provider-specific tags: always use "scope:provider" instead of computed scope
+  const serviceTag = `service:${createNamingVariants(schema.externalService).fileName}`
+  const defaultTags = [
+    "type:provider",
+    "scope:provider", // Providers always use "provider" scope
+    `platform:${platform}`,
+    serviceTag
+  ]
+  const tags = parseTags(schema.tags, defaultTags)
+
+  // Compute library metadata (single source of truth)
+  const metadata = computeLibraryMetadata(
+    tree,
+    schema,
+    "provider",
+    defaultTags
+  )
+
+  // 1. Generate base library files using centralized utility
   const libraryOptions: LibraryGeneratorOptions = {
-    name: normalizedOptions.name,
-    projectName: normalizedOptions.projectName,
-    projectRoot: normalizedOptions.projectRoot,
-    offsetFromRoot: normalizedOptions.offsetFromRoot,
+    name: metadata.name,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    offsetFromRoot: metadata.offsetFromRoot,
     libraryType: "provider",
-    platform: normalizedOptions.platform,
-    description: normalizedOptions.description,
-    tags: normalizedOptions.parsedTags,
-    includeClientServer: normalizedOptions.includeClientServer,
-    includeEdgeExports: normalizedOptions.platform === "edge",
-    templateData: {
-      externalService: normalizedOptions.externalService,
-      projectClassName: normalizedOptions.projectClassName,
-      projectConstantName: normalizedOptions.projectConstantName
-    }
+    platform,
+    description: metadata.description,
+    tags,
+    includeClientServer,
+    includeEdgeExports: platform === "edge"
   }
 
   await generateLibraryFiles(tree, libraryOptions)
 
-  // Generate domain-specific files using shared core
+  // 2. Generate domain-specific files using shared core
   const adapter = createTreeAdapter(tree)
-  const coreOptions = {
-    name: normalizedOptions.name,
-    className: normalizedOptions.className,
-    propertyName: normalizedOptions.propertyName,
-    fileName: normalizedOptions.fileName,
-    constantName: normalizedOptions.constantName,
-    projectName: normalizedOptions.projectName,
-    projectRoot: normalizedOptions.projectRoot,
-    sourceRoot: normalizedOptions.sourceRoot,
-    packageName: normalizedOptions.packageName,
-    description: normalizedOptions.description,
-    tags: normalizedOptions.parsedTags.join(","), // Convert array to comma-separated string for core
-    offsetFromRoot: normalizedOptions.offsetFromRoot,
-    externalService: normalizedOptions.externalService,
-    platform: normalizedOptions.platform
+  const coreOptions: Parameters<typeof generateProviderCore>[1] = {
+    // Pass pre-computed metadata from wrapper
+    name: metadata.name,
+    className: metadata.className,
+    propertyName: metadata.propertyName,
+    fileName: metadata.fileName,
+    constantName: metadata.constantName,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    sourceRoot: metadata.sourceRoot,
+    packageName: metadata.packageName,
+    offsetFromRoot: metadata.offsetFromRoot,
+    description: metadata.description,
+    tags: metadata.tags,
+
+    // Provider-specific options
+    externalService: schema.externalService,
+    platform
   }
 
-  // Use shared core via Effect
-  await Effect.runPromise(
+  // 3. Run core generator with Effect runtime
+  const result = await Effect.runPromise(
     generateProviderCore(adapter, coreOptions) as Effect.Effect<GeneratorResult, never>
   )
 
-  // Format files and install packages
+  // 4. Format files
   await formatFiles(tree)
+
+  // 5. Return post-generation instructions
   return () => {
+    console.log(`
+✅ Provider library created: ${result.packageName}
+
+📁 Location: ${result.projectRoot}
+📦 Package: ${result.packageName}
+📂 Files generated: ${result.filesGenerated.length}
+🔌 External Service: ${schema.externalService}
+
+🎯 Configuration:
+   - Platform: ${platform}
+${includeClientServer ? "   - ✅ Client/Server separation enabled" : "   - Server-only (no client separation)"}
+
+🎯 Next Steps:
+1. Customize provider implementation (see TODO comments):
+   - ${result.sourceRoot}/lib/service.ts     - Implement service methods
+   - ${result.sourceRoot}/lib/types.ts       - Define types
+   - ${result.sourceRoot}/lib/validation.ts  - Add validation
+   - ${result.sourceRoot}/lib/errors.ts      - Add domain-specific errors
+
+2. Build and test:
+   - pnpm exec nx build ${result.projectName} --batch
+   - pnpm exec nx test ${result.projectName}
+
+3. Auto-sync TypeScript project references:
+   - pnpm exec nx sync
+
+📚 Documentation:
+   - See /libs/ARCHITECTURE.md for provider patterns
+   - See ${result.projectRoot}/README.md for usage examples
+    `)
     installPackagesTask(tree)
   }
 }

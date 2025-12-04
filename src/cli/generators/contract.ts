@@ -10,6 +10,7 @@
 import { Console, Effect } from "effect"
 import { generateContractCore, type GeneratorResult } from "../../generators/core/contract-generator-core"
 import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
+import { createNamingVariants } from "../../utils/naming-utils"
 
 /**
  * Contract Generator Options
@@ -20,6 +21,32 @@ export interface ContractGeneratorOptions {
   readonly tags?: string
   readonly includeCQRS?: boolean
   readonly includeRPC?: boolean
+  readonly entities?: ReadonlyArray<string>
+}
+
+/**
+ * Compute CLI metadata for library generation
+ */
+function computeCliMetadata(name: string, libraryType: string, description?: string) {
+  const nameVariants = createNamingVariants(name)
+  const fileName = nameVariants.fileName
+  const projectName = `${libraryType}-${fileName}`
+  const projectRoot = `libs/${libraryType}/${fileName}`
+  const sourceRoot = `${projectRoot}/src`
+
+  // Simple offset computation (count slashes)
+  const depth = projectRoot.split("/").length
+  const offsetFromRoot = "../".repeat(depth)
+
+  return {
+    ...nameVariants,
+    projectName,
+    projectRoot,
+    sourceRoot,
+    packageName: `@scope/${projectName}`,
+    offsetFromRoot,
+    description: description ?? `${nameVariants.className} ${libraryType} library`
+  }
 }
 
 /**
@@ -39,14 +66,36 @@ export function generateContract(options: ContractGeneratorOptions) {
     // 2. Create Effect FileSystem adapter (requires FileSystem and Path services)
     const adapter = yield* createEffectFsAdapter(workspaceRoot)
 
-    // 3. Run core generator
+    // 3. Compute metadata
+    const metadata = computeCliMetadata(options.name, "contract", options.description)
+
+    // 4. Run core generator
     yield* Console.log(`Creating contract library: ${options.name}...`)
 
     const result: GeneratorResult = yield* (
-      generateContractCore(adapter, options) as Effect.Effect<GeneratorResult>
+      generateContractCore(adapter, {
+        // Pass pre-computed metadata
+        name: metadata.name,
+        className: metadata.className,
+        propertyName: metadata.propertyName,
+        fileName: metadata.fileName,
+        constantName: metadata.constantName,
+        projectName: metadata.projectName,
+        projectRoot: metadata.projectRoot,
+        sourceRoot: metadata.sourceRoot,
+        packageName: metadata.packageName,
+        offsetFromRoot: metadata.offsetFromRoot,
+        description: metadata.description,
+        tags: options.tags ?? "type:contract,platform:universal",
+
+        // Feature flags (only include if defined)
+        ...(options.includeCQRS !== undefined && { includeCQRS: options.includeCQRS }),
+        ...(options.includeRPC !== undefined && { includeRPC: options.includeRPC }),
+        ...(options.entities && { entities: options.entities })
+      }) as Effect.Effect<GeneratorResult>
     )
 
-    // 4. CLI-specific output
+    // 5. CLI-specific output
     yield* Console.log("✨ Contract library created successfully!")
     yield* Console.log(`  Location: ${result.projectRoot}`)
     yield* Console.log(`  Package: ${result.packageName}`)

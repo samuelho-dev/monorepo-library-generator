@@ -8,7 +8,7 @@
  */
 
 import { Effect } from "effect"
-import type { FileSystemAdapter, FileSystemErrors } from "../../utils/filesystem-adapter"
+import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
 import { computePlatformConfiguration, type PlatformType } from "../../utils/platform-utils"
 import type { Platform, ProviderTemplateOptions } from "../../utils/shared/types"
 import {
@@ -69,7 +69,7 @@ export interface GeneratorResult {
 export function generateProviderCore(
   adapter: FileSystemAdapter,
   options: ProviderGeneratorCoreOptions
-): Effect.Effect<GeneratorResult, FileSystemErrors, unknown> {
+) {
   return Effect.gen(function*() {
     // Compute platform configuration
     const platformConfig = computePlatformConfiguration(

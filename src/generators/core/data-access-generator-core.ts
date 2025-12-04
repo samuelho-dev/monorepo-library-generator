@@ -8,12 +8,9 @@
  */
 
 import { Effect } from "effect"
-import { calculateOffsetFromRoot, parseTags } from "../../utils/generator-utils"
 import type { FileSystemAdapter, FileSystemErrors } from "../../utils/filesystem-adapter"
-import { generateInfrastructureFiles } from "../../utils/infrastructure-generator"
-import { createNamingVariants } from "../../utils/naming-utils"
+import { parseTags } from "../../utils/generator-utils"
 import type { DataAccessTemplateOptions } from "../../utils/shared/types"
-import { detectWorkspaceConfig } from "../../utils/workspace-detection"
 import { generateErrorsFile } from "../data-access/templates/errors.template"
 import { generateIndexFile } from "../data-access/templates/index.template"
 import { generateLayersSpecFile } from "../data-access/templates/layers-spec.template"
@@ -29,13 +26,31 @@ export type { GeneratorResult }
 
 /**
  * Data Access Generator Options
+ *
+ * Accepts pre-computed metadata from wrapper generators.
  */
 export interface DataAccessGeneratorCoreOptions {
+  // Naming variants (pre-computed by wrapper)
   readonly name: string
+  readonly className: string
+  readonly propertyName: string
+  readonly fileName: string
+  readonly constantName: string
+
+  // Project metadata (pre-computed by wrapper)
+  readonly projectName: string
+  readonly projectRoot: string
+  readonly sourceRoot: string
+  readonly packageName: string
+  readonly offsetFromRoot: string
+
+  // Optional metadata
   readonly description?: string
   readonly tags?: string
-  readonly workspaceRoot?: string
-  readonly directory?: string
+
+  // Feature flags
+  readonly includeCache?: boolean
+  readonly contractLibrary?: string
 }
 
 /**
@@ -44,70 +59,38 @@ export interface DataAccessGeneratorCoreOptions {
 export function generateDataAccessCore(
   adapter: FileSystemAdapter,
   options: DataAccessGeneratorCoreOptions
-): Effect.Effect<GeneratorResult, FileSystemErrors, unknown> {
+) {
   return Effect.gen(function*() {
-    // 1. Detect workspace configuration
-    const workspaceConfig = yield* detectWorkspaceConfig(adapter)
-    const workspaceRoot = options.workspaceRoot ?? workspaceConfig.workspaceRoot
+    // 1. Parse tags (wrapper may have passed comma-separated string)
+    const parsedTags = parseTags(options.tags, [])
 
-    // 2. Generate naming variants
-    const nameVariants = createNamingVariants(options.name)
-    const projectName = `data-access-${nameVariants.fileName}`
-    const packageName = `${workspaceConfig.scope}/${projectName}`
-
-    // 3. Determine project location
-    const projectRoot = options.directory
-      ? `${options.directory}/${projectName}`
-      : `${workspaceConfig.librariesRoot}/data-access/${nameVariants.fileName}`
-
-    const sourceRoot = `${projectRoot}/src`
-    const offsetFromRoot = calculateOffsetFromRoot(projectRoot)
-
-    // 4. Parse tags
-    const parsedTags = parseTags(options.tags, [
-      "type:data-access",
-      "scope:shared",
-      "platform:server"
-    ])
-
-    // 5. Generate infrastructure files
-    yield* generateInfrastructureFiles(adapter, {
-      workspaceRoot,
-      projectRoot,
-      projectName,
-      packageName,
-      description: options.description ?? `Data access library for ${nameVariants.className}`,
-      libraryType: "data-access",
-      offsetFromRoot
-    })
-
-    // 6. Prepare template options
+    // 2. Prepare template options
     const templateOptions: DataAccessTemplateOptions = {
       name: options.name,
-      className: nameVariants.className,
-      propertyName: nameVariants.propertyName,
-      fileName: nameVariants.fileName,
-      constantName: nameVariants.constantName,
+      className: options.className,
+      propertyName: options.propertyName,
+      fileName: options.fileName,
+      constantName: options.constantName,
       libraryType: "data-access",
-      packageName,
-      projectName,
-      projectRoot,
-      sourceRoot,
-      offsetFromRoot,
-      description: options.description ?? `Data access library for ${nameVariants.className}`,
+      packageName: options.packageName,
+      projectName: options.projectName,
+      projectRoot: options.projectRoot,
+      sourceRoot: options.sourceRoot,
+      offsetFromRoot: options.offsetFromRoot,
+      description: options.description ?? `Data access library for ${options.className}`,
       tags: parsedTags,
-      includeCache: false,
-      contractLibrary: `${workspaceConfig.scope}/contract-${nameVariants.fileName}`
+      includeCache: options.includeCache ?? false,
+      contractLibrary: options.contractLibrary ?? `@scope/contract-${options.fileName}`
     }
 
-    // 7. Generate domain files
-    const filesGenerated = yield* generateDomainFiles(adapter, sourceRoot, templateOptions)
+    // 3. Generate domain files (infrastructure handled by wrapper)
+    const filesGenerated = yield* generateDomainFiles(adapter, options.sourceRoot, templateOptions)
 
     return {
-      projectName,
-      projectRoot,
-      packageName,
-      sourceRoot,
+      projectName: options.projectName,
+      projectRoot: options.projectRoot,
+      packageName: options.packageName,
+      sourceRoot: options.sourceRoot,
       filesGenerated
     }
   })

@@ -75,14 +75,24 @@ export default async function contractGenerator(
   }
 
   const coreOptions: Parameters<typeof generateContractCore>[1] = {
-    name: schema.name,
-    ...(schema.description && { description: schema.description }),
-    ...(schema.tags && { tags: schema.tags }),
-    ...(schema.directory && { directory: schema.directory }),
-    ...(entities && { entities }),
+    // Pass pre-computed metadata from wrapper
+    name: metadata.name,
+    className: metadata.className,
+    propertyName: metadata.propertyName,
+    fileName: metadata.fileName,
+    constantName: metadata.constantName,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    sourceRoot: metadata.sourceRoot,
+    packageName: metadata.packageName,
+    offsetFromRoot: metadata.offsetFromRoot,
+    description: metadata.description,
+    tags: metadata.tags,
+
+    // Feature flags and entities
     includeCQRS: schema.includeCQRS ?? false,
     includeRPC: schema.includeRPC ?? false,
-    workspaceRoot: tree.root
+    ...(entities && { entities })
   }
 
   // 3. Run core generator with Effect runtime

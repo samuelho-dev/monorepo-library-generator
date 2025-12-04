@@ -8,17 +8,12 @@
  */
 
 import { Effect } from "effect"
-import { calculateOffsetFromRoot, parseTags } from "../../utils/generator-utils"
 import type { FileSystemAdapter, FileSystemErrors } from "../../utils/filesystem-adapter"
-import { generateInfrastructureFiles } from "../../utils/infrastructure-generator"
-import { createNamingVariants } from "../../utils/naming-utils"
+import { parseTags } from "../../utils/generator-utils"
 import type { ContractTemplateOptions } from "../../utils/shared/types"
-import { detectWorkspaceConfig } from "../../utils/workspace-detection"
 import { generateCommandsFile } from "../contract/templates/commands.template"
-import { generateEntitiesFile } from "../contract/templates/entities.template"
-import { generateEntityFile } from "../contract/templates/entity-file.template"
 import { generateEntityBarrelFile } from "../contract/templates/entity-barrel.template"
-import { generateTypesOnlyFile } from "../contract/templates/types-only.template"
+import { generateEntityFile } from "../contract/templates/entity-file.template"
 import { generateErrorsFile } from "../contract/templates/errors.template"
 import { generateEventsFile } from "../contract/templates/events.template"
 import { generateIndexFile } from "../contract/templates/index.template"
@@ -26,21 +21,39 @@ import { generatePortsFile } from "../contract/templates/ports.template"
 import { generateProjectionsFile } from "../contract/templates/projections.template"
 import { generateQueriesFile } from "../contract/templates/queries.template"
 import { generateRpcFile } from "../contract/templates/rpc.template"
+import { generateTypesOnlyFile } from "../contract/templates/types-only.template"
 
 /**
  * Contract Generator Options
  *
- * Unified options interface for both Nx and CLI entry points
+ * Accepts pre-computed metadata from wrapper generators.
+ * Wrapper is responsible for path computation via computeLibraryMetadata().
  */
 export interface ContractGeneratorCoreOptions {
+  // Naming variants (pre-computed by wrapper)
   readonly name: string
+  readonly className: string
+  readonly propertyName: string
+  readonly fileName: string
+  readonly constantName: string
+
+  // Project metadata (pre-computed by wrapper)
+  readonly projectName: string
+  readonly projectRoot: string
+  readonly sourceRoot: string
+  readonly packageName: string
+  readonly offsetFromRoot: string
+
+  // Optional metadata
   readonly description?: string
   readonly tags?: string
+
+  // Feature flags
   readonly includeCQRS?: boolean
   readonly includeRPC?: boolean
-  readonly entities?: ReadonlyArray<string> // Optional list of entity names for bundle optimization
-  readonly workspaceRoot?: string // Optional, adapter provides default if not specified
-  readonly directory?: string // Optional parent directory (e.g., "shared")
+
+  // Bundle optimization
+  readonly entities?: ReadonlyArray<string>
 }
 
 /**
@@ -69,92 +82,33 @@ export interface GeneratorResult {
 export function generateContractCore(
   adapter: FileSystemAdapter,
   options: ContractGeneratorCoreOptions
-): Effect.Effect<GeneratorResult, FileSystemErrors, unknown> {
+) {
   return Effect.gen(function*() {
-    // 1. Detect workspace configuration
-    const workspaceConfig = yield* detectWorkspaceConfig(adapter)
-    const workspaceRoot = options.workspaceRoot ?? workspaceConfig.workspaceRoot
-
-    // 2. Generate naming variants
-    const nameVariants = createNamingVariants(options.name)
-    const projectName = `contract-${nameVariants.fileName}`
-    const packageName = `${workspaceConfig.scope}/${projectName}`
-
-    // 3. Determine project location
-    const projectRoot = options.directory
-      ? `${options.directory}/${projectName}`
-      : `${workspaceConfig.librariesRoot}/contract/${nameVariants.fileName}`
-
-    const sourceRoot = `${projectRoot}/src`
-    const offsetFromRoot = calculateOffsetFromRoot(projectRoot)
-
-    // 4. Parse tags
-    const parsedTags = parseTags(options.tags, [
-      "type:contract",
-      `domain:${nameVariants.fileName}`,
-      "platform:universal"
-    ])
-
-    // 5. Prepare entities list (needed for both infrastructure and templates)
-    // Default to single entity based on library name if entities not specified
+    // 1. Prepare entities list (default to single entity based on library name if not specified)
     const entities = options.entities && options.entities.length > 0
       ? options.entities
-      : [nameVariants.className]
+      : [options.className]
 
-    // Build granular package.json exports for tree-shaking
-    const entityExports: Record<string, { import: string; types: string }> = {}
+    // 2. Parse tags (wrapper may have passed comma-separated string)
+    const parsedTags = parseTags(options.tags, [])
 
-    // Add types-only export (zero runtime overhead)
-    entityExports["./types"] = {
-      import: "./src/types.ts",
-      types: "./src/types.ts"
-    }
-
-    // Add barrel export for all entities
-    entityExports["./entities"] = {
-      import: "./src/lib/entities/index.ts",
-      types: "./src/lib/entities/index.ts"
-    }
-
-    // Add granular export for each entity (tree-shakeable)
-    for (const entityName of entities) {
-      const fileName = entityNameToFileName(entityName)
-      entityExports[`./entities/${fileName}`] = {
-        import: `./src/lib/entities/${fileName}.ts`,
-        types: `./src/lib/entities/${fileName}.ts`
-      }
-    }
-
-    // 6. Generate infrastructure files (package.json, tsconfig, etc.)
-    yield* generateInfrastructureFiles(adapter, {
-      workspaceRoot,
-      projectRoot,
-      projectName,
-      packageName,
-      description: options.description ?? `Contract library for ${nameVariants.className}`,
-      libraryType: "contract",
-      offsetFromRoot,
-      additionalExports: entityExports
-    })
-
-    // 7. Prepare template options for domain files
-
+    // 3. Prepare template options for domain files
     const templateOptions: ContractTemplateOptions = {
-      // Naming variants
+      // Naming variants (from wrapper)
       name: options.name,
-      className: nameVariants.className,
-      propertyName: nameVariants.propertyName,
-      fileName: nameVariants.fileName,
-      constantName: nameVariants.constantName,
+      className: options.className,
+      propertyName: options.propertyName,
+      fileName: options.fileName,
+      constantName: options.constantName,
 
-      // Library metadata
+      // Library metadata (from wrapper)
       libraryType: "contract",
-      packageName,
-      projectName,
-      projectRoot,
-      sourceRoot,
-      offsetFromRoot,
-      description: options.description ?? `Contract library for ${nameVariants.className}`,
+      packageName: options.packageName,
+      projectName: options.projectName,
+      projectRoot: options.projectRoot,
+      sourceRoot: options.sourceRoot,
+      offsetFromRoot: options.offsetFromRoot,
+      description: options.description ?? `Contract library for ${options.className}`,
       tags: parsedTags,
 
       // Feature flags
@@ -165,15 +119,15 @@ export function generateContractCore(
       entities
     }
 
-    // 7. Generate domain files
-    const filesGenerated = yield* generateDomainFiles(adapter, sourceRoot, templateOptions)
+    // 4. Generate domain files only (infrastructure handled by wrapper)
+    const filesGenerated = yield* generateDomainFiles(adapter, options.sourceRoot, templateOptions)
 
-    // 8. Return result
+    // 5. Return result
     return {
-      projectName,
-      projectRoot,
-      packageName,
-      sourceRoot,
+      projectName: options.projectName,
+      projectRoot: options.projectRoot,
+      packageName: options.packageName,
+      sourceRoot: options.sourceRoot,
       filesGenerated
     }
   })
@@ -341,7 +295,7 @@ Effect.gen(function* () {
  * entityNameToFileName("Product") // "product"
  * entityNameToFileName("ProductCategory") // "product-category"
  */
-function entityNameToFileName(entityName: string): string {
+function entityNameToFileName(entityName: string) {
   return entityName
     .replace(/([a-z])([A-Z])/g, "$1-$2")
     .toLowerCase()

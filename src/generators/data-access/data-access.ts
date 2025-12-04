@@ -63,10 +63,19 @@ export default async function dataAccessGenerator(
   // 2. Generate domain-specific files using shared core
   const adapter = createTreeAdapter(tree)
   const coreOptions: Parameters<typeof generateDataAccessCore>[1] = {
-    name: schema.name,
-    ...(schema.description && { description: schema.description }),
-    ...(schema.directory && { directory: schema.directory }),
-    workspaceRoot: tree.root
+    // Pass pre-computed metadata from wrapper
+    name: metadata.name,
+    className: metadata.className,
+    propertyName: metadata.propertyName,
+    fileName: metadata.fileName,
+    constantName: metadata.constantName,
+    projectName: metadata.projectName,
+    projectRoot: metadata.projectRoot,
+    sourceRoot: metadata.sourceRoot,
+    packageName: metadata.packageName,
+    offsetFromRoot: metadata.offsetFromRoot,
+    description: metadata.description,
+    tags: metadata.tags
   }
 
   // 3. Run core generator with Effect runtime
