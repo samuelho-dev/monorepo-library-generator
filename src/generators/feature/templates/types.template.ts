@@ -28,22 +28,22 @@ export function generateTypesFile(options: FeatureTemplateOptions) {
   // Add TODO comment
   builder.addComment("TODO: Add domain types")
 
-  // Add Config interface
-  builder.addInterface({
-    exported: true,
-    name: `${className}Config`,
-    properties: [],
-    jsdoc: "TODO: Add configuration fields"
-  })
+  // Add Config interface with eslint-disable
+  builder.addRaw(`/**
+ * TODO: Add configuration fields
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ${className}Config {
+}`)
   builder.addBlankLine()
 
-  // Add Result interface
-  builder.addInterface({
-    exported: true,
-    name: `${className}Result`,
-    properties: [],
-    jsdoc: "TODO: Add result fields"
-  })
+  // Add Result interface with eslint-disable
+  builder.addRaw(`/**
+ * TODO: Add result fields
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ${className}Result {
+}`)
   builder.addBlankLine()
 
   return builder.toString()

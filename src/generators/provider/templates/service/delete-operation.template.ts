@@ -41,7 +41,7 @@ Example:
   builder.addImports([
     {
       from: "../../errors",
-      imports: [`${className}ServiceError`, `map${className}Error`]
+      imports: [`${className}ServiceError`]
     }
   ])
   builder.addBlankLine()
@@ -80,8 +80,8 @@ export interface Delete${className}Operations {
  * TODO: Implement with actual ${externalService} SDK
  */
 export const deleteOperations: Delete${className}Operations = {
-  delete: (id) =>
-    Effect.gen(function* () {
+  delete: (_id) =>
+    Effect.gen(function () {
       // TODO: Replace with actual ${externalService} SDK call
       // Example:
       // const client = yield* ${externalService}Client;
@@ -119,7 +119,7 @@ export const testDeleteOperations: Delete${className}Operations = {
         return yield* Effect.fail({
           _tag: "NotFoundError",
           message: \`Resource \${id} not found\`
-        } as ${className}ServiceError);
+        });
       }
 
       testStore.delete(id);

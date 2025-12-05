@@ -61,7 +61,8 @@ TODO: Customize this file:
   builder.addRaw(`/**
  * Type alias for query builder starting from ${fileName} table
  */
-type ${className}QueryBuilder = SelectQueryBuilder<
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _${className}QueryBuilder = SelectQueryBuilder<
   Database,
   "${fileName}" | any,
   any
@@ -71,6 +72,7 @@ type ${className}QueryBuilder = SelectQueryBuilder<
   builder.addRaw(`/**
  * ${className} Filter options for queries
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ${className}QueryFilters {
   // TODO: Add filter properties based on your domain
   // Example:
@@ -107,19 +109,19 @@ export interface PaginationOptions {
  */
 export function buildFindAllQuery(
   db: Kysely<Database>,
-  filters?: ${className}QueryFilters,
-  pagination?: PaginationOptions,
-): ${className}QueryBuilder {
-  let query = db.selectFrom("${fileName}");
+  _filters?: ${className}QueryFilters,
+  _pagination?: PaginationOptions,
+) {
+  const query = db.selectFrom("${fileName}");
 
   // TODO: Add filter conditions
-  // if (filters?.status) {
-  //   query = query.where('status', '=', filters.status);
+  // if (_filters?.status) {
+  //   query = query.where('status', '=', _filters.status);
   // }
 
   // TODO: Add pagination
-  // if (pagination) {
-  //   query = query.limit(pagination.limit).offset(pagination.skip);
+  // if (_pagination) {
+  //   query = query.limit(_pagination.limit).offset(_pagination.skip);
   // }
 
   return query;
@@ -139,7 +141,7 @@ export function buildFindAllQuery(
 export function buildFindByIdQuery(
   db: Kysely<Database>,
   id: string,
-): ${className}QueryBuilder {
+) {
   return db
     .selectFrom("${fileName}")
     .where("id", "=", id);
@@ -158,9 +160,9 @@ export function buildFindByIdQuery(
  */
 export function buildCountQuery(
   db: Kysely<Database>,
-  filters?: ${className}QueryFilters,
+  _filters?: ${className}QueryFilters,
 ) {
-  let query = db
+  const query = db
     .selectFrom("${fileName}")
     .select((eb) => eb.fn.countAll().as("count"));
 

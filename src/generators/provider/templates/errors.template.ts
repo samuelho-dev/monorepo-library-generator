@@ -157,7 +157,7 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw(" * NO type coercion or assertions")
   builder.addRaw(" */")
   builder.addRaw(
-    `export function map${className}Error(error: unknown): ${className}ServiceError {`
+    `export function map${className}Error(error: unknown) {`
   )
   builder.addRaw("  // Safe property access with type guard")
   builder.addRaw("  const errorObj = typeof error === \"object\" && error !== null ? error : {};")

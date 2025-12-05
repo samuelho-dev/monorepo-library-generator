@@ -78,7 +78,7 @@ export function generateDataAccess(options: DataAccessGeneratorOptions) {
 
     // Parse tags
     const tagsString = options.tags ?? "type:data-access,scope:shared,platform:node"
-    const tags = tagsString.split(",").map(t => t.trim())
+    const tags = tagsString.split(",").map((t) => t.trim())
 
     // Phase 1: Generate infrastructure files using infrastructure generator
     yield* generateLibraryInfrastructure(adapter, {

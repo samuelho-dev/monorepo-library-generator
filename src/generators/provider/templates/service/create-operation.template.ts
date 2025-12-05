@@ -46,7 +46,7 @@ Example:
     },
     {
       from: "../../errors",
-      imports: [`${className}ServiceError`, `map${className}Error`]
+      imports: [`${className}ServiceError`]
     }
   ])
   builder.addBlankLine()
@@ -81,8 +81,8 @@ export interface Create${className}Operations {
  * TODO: Implement with actual ${externalService} SDK
  */
 export const createOperations: Create${className}Operations = {
-  create: (data) =>
-    Effect.gen(function* () {
+  create: (_data) =>
+    Effect.gen(function () {
       // TODO: Replace with actual ${externalService} SDK call
       // Example:
       // const client = yield* ${externalService}Client;
@@ -129,7 +129,7 @@ export const testCreateOperations: Create${className}Operations = {
         id,
         createdAt: new Date(),
         updatedAt: new Date()
-      } as Resource;
+      };
       testStore.set(id, resource);
       return resource;
     })

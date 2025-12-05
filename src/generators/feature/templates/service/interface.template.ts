@@ -36,7 +36,7 @@ Bundle optimization:
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+    { from: "effect", imports: ["Effect", "Layer", "Context"] }
   ])
   builder.addBlankLine()
 
@@ -44,7 +44,7 @@ Bundle optimization:
   builder.addImports([
     {
       from: "../../shared/types",
-      imports: [`${className}Config`, `${className}Result`],
+      imports: [`${className}Result`],
       isTypeOnly: true
     },
     {
@@ -101,20 +101,20 @@ export class ${className}Service extends Context.Tag("${className}Service")<
    */
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function () {
       // TODO: Inject dependencies
       // const repo = yield* UserRepository;
 
       return {
         exampleOperation: () =>
-          Effect.gen(function* () {
+          Effect.gen(function () {
             // TODO: Implement business logic
             // const data = yield* repo.findAll();
             // return { success: true, data };
 
             return {
               success: true
-            } as ${className}Result;
+            };
           })
       };
     })
@@ -129,7 +129,7 @@ export class ${className}Service extends Context.Tag("${className}Service")<
       exampleOperation: () =>
         Effect.succeed({
           success: true
-        } as ${className}Result)
+        })
     }
   );
 

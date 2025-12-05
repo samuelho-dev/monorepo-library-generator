@@ -46,7 +46,7 @@ Example:
     },
     {
       from: "../../errors",
-      imports: [`${className}ServiceError`, `map${className}Error`]
+      imports: [`${className}ServiceError`]
     }
   ])
   builder.addBlankLine()
@@ -87,8 +87,8 @@ export interface Update${className}Operations {
  * TODO: Implement with actual ${externalService} SDK
  */
 export const updateOperations: Update${className}Operations = {
-  update: (id, data) =>
-    Effect.gen(function* () {
+  update: (_id, _data) =>
+    Effect.gen(function () {
       // TODO: Replace with actual ${externalService} SDK call
       // Example:
       // const client = yield* ${externalService}Client;
@@ -127,7 +127,7 @@ export const testUpdateOperations: Update${className}Operations = {
         return yield* Effect.fail({
           _tag: "NotFoundError",
           message: \`Resource \${id} not found\`
-        } as ${className}ServiceError);
+        });
       }
 
       const updated: Resource = {
@@ -136,7 +136,7 @@ export const testUpdateOperations: Update${className}Operations = {
         id, // Preserve ID
         createdAt: existing.createdAt, // Preserve createdAt
         updatedAt: new Date()
-      } as Resource;
+      };
 
       testStore.set(id, updated);
       return updated;

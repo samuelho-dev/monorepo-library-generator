@@ -77,7 +77,7 @@ export interface InfrastructureOptions {
   /**
    * Project tags for Nx constraints
    */
-  readonly tags: string[]
+  readonly tags: Array<string>
 
   /**
    * Generate client/server split exports
@@ -121,14 +121,14 @@ export interface InfrastructureGenerationResult {
     readonly root: string
     readonly projectType: "library"
     readonly sourceRoot: string
-    readonly tags: string[]
+    readonly tags: Array<string>
     readonly targets: Record<string, unknown>
   }
 
   /**
    * Files generated during infrastructure phase
    */
-  readonly filesGenerated: string[]
+  readonly filesGenerated: Array<string>
 }
 
 /**
@@ -152,7 +152,7 @@ export function generateLibraryInfrastructure(
   return Effect.gen(function*() {
     const mode = adapter.getMode()
     const workspaceRoot = adapter.getWorkspaceRoot()
-    const filesGenerated: string[] = []
+    const filesGenerated: Array<string> = []
 
     // Compute source root if not provided
     const sourceRoot = options.sourceRoot || `${options.projectRoot}/src`
@@ -169,7 +169,9 @@ export function generateLibraryInfrastructure(
       sourceRoot,
       mode
     )
-    filesGenerated.push(...tsConfigFiles)
+    for (const file of tsConfigFiles) {
+      filesGenerated.push(file)
+    }
 
     // 3. Generate vitest configuration (all modes)
     yield* generateVitestConfigFile(adapter, workspaceRoot, options)
@@ -181,7 +183,9 @@ export function generateLibraryInfrastructure(
       workspaceRoot,
       options
     )
-    filesGenerated.push(...docFiles)
+    for (const file of docFiles) {
+      filesGenerated.push(file)
+    }
 
     // 5. Generate source file scaffolds (all modes)
     const sourceFiles = yield* generateSourceFileScaffolds(
@@ -190,7 +194,9 @@ export function generateLibraryInfrastructure(
       options,
       sourceRoot
     )
-    filesGenerated.push(...sourceFiles)
+    for (const file of sourceFiles) {
+      filesGenerated.push(file)
+    }
 
     // 6. Prepare Nx registration (Nx mode only)
     // Note: project.json is written by addProjectConfiguration() in the wrapper generator
@@ -234,7 +240,7 @@ function generatePackageJsonFile(
       .pipe(Effect.catchAll(() => Effect.succeed("{}")))
 
     const rootPackage = JSON.parse(rootPackageContent)
-    const scope = extractPackageScope(rootPackage.name || "@unknown")
+    const _scope = extractPackageScope(rootPackage.name || "@unknown")
 
     // Build granular exports configuration
     const exportConfig: ExportConfig = {
@@ -252,8 +258,8 @@ function generatePackageJsonFile(
       hasEntities: Boolean(options.entities && options.entities.length > 0),
       ...(options.entities &&
         options.entities.length > 0 && {
-          entityNames: Array.from(options.entities)
-        })
+        entityNames: Array.from(options.entities)
+      })
     }
 
     const exports = generateGranularExports(exportConfig)
@@ -295,15 +301,15 @@ function generateTsConfigFiles(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
   options: InfrastructureOptions,
-  sourceRoot: string,
-  mode: "nx" | "effect"
+  _sourceRoot: string,
+  _mode: "nx" | "effect"
 ) {
   return Effect.gen(function*() {
-    const filesGenerated: string[] = []
+    const filesGenerated: Array<string> = []
 
     // Project references (Nx mode only)
     // In effect mode, we don't have a dependency graph, so no references
-    const references: string[] = []
+    const references: Array<string> = []
     // TODO: In Nx mode, compute references from project graph
     // This requires access to Nx graph APIs which are only available in Tree context
 
@@ -394,24 +400,24 @@ function generateVitestConfigFile(
   options: InfrastructureOptions
 ) {
   return Effect.gen(function*() {
-    const vitestConfig = `import { defineConfig } from 'vitest/config';
+    const vitestConfig = `import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
-    include: ['src/**/*.{test,spec}.ts'],
+    environment: "node",
+    include: ["src/**/*.{test,spec}.ts"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      provider: "v8",
+      reporter: ["text", "json", "html"],
       exclude: [
-        'node_modules/',
-        'src/**/*.spec.ts',
-        'src/**/*.test.ts',
-      ],
-    },
-  },
-});
+        "node_modules/",
+        "src/**/*.spec.ts",
+        "src/**/*.test.ts"
+      ]
+    }
+  }
+})
 `
 
     yield* adapter.writeFile(
@@ -434,7 +440,7 @@ function generateDocumentationFiles(
   options: InfrastructureOptions
 ) {
   return Effect.gen(function*() {
-    const filesGenerated: string[] = []
+    const filesGenerated: Array<string> = []
 
     // Generate README.md
     const readmeContent = generateReadmeContent(options)
@@ -464,7 +470,7 @@ function generateSourceFileScaffolds(
   sourceRoot: string
 ) {
   return Effect.gen(function*() {
-    const filesGenerated: string[] = []
+    const filesGenerated: Array<string> = []
 
     // Create src directory
     yield* adapter.makeDirectory(`${workspaceRoot}/${sourceRoot}`)
@@ -481,7 +487,7 @@ function generateSourceFileScaffolds(
  *
  * Creates project.json with build, test, and lint targets.
  */
-function generateProjectJsonFile(
+function _generateProjectJsonFile(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
   options: InfrastructureOptions,
@@ -508,7 +514,7 @@ function createProjectConfiguration(
   sourceRoot: string
 ) {
   // Build additional entry points for client/server split
-  const additionalEntryPoints: string[] = []
+  const additionalEntryPoints: Array<string> = []
   if (options.includeClientServer) {
     additionalEntryPoints.push(`${sourceRoot}/server.ts`)
     additionalEntryPoints.push(`${sourceRoot}/client.ts`)
@@ -520,6 +526,7 @@ function createProjectConfiguration(
   return {
     name: options.projectName,
     root: options.projectRoot,
+    // eslint-disable-next-line no-restricted-syntax
     projectType: "library" as const,
     sourceRoot,
     tags: options.tags,
@@ -558,9 +565,10 @@ function createProjectConfiguration(
 /**
  * Generate README content based on library type
  */
-function generateReadmeContent(options: InfrastructureOptions): string {
+function generateReadmeContent(options: InfrastructureOptions) {
   const templates: Record<LibraryType, (opts: InfrastructureOptions) => string> = {
-    contract: (opts) => `# ${opts.packageName}
+    contract: (opts) =>
+      `# ${opts.packageName}
 
 ${opts.description}
 
@@ -592,7 +600,8 @@ nx test ${opts.projectName}
 \`\`\`
 `,
 
-    "data-access": (opts) => `# ${opts.packageName}
+    "data-access": (opts) =>
+      `# ${opts.packageName}
 
 ${opts.description}
 
@@ -623,7 +632,8 @@ nx test ${opts.projectName}
 \`\`\`
 `,
 
-    feature: (opts) => `# ${opts.packageName}
+    feature: (opts) =>
+      `# ${opts.packageName}
 
 ${opts.description}
 
@@ -660,7 +670,8 @@ nx test ${opts.projectName}
 \`\`\`
 `,
 
-    infra: (opts) => `# ${opts.packageName}
+    infra: (opts) =>
+      `# ${opts.packageName}
 
 ${opts.description}
 
@@ -691,7 +702,8 @@ nx test ${opts.projectName}
 \`\`\`
 `,
 
-    provider: (opts) => `# ${opts.packageName}
+    provider: (opts) =>
+      `# ${opts.packageName}
 
 ${opts.description}
 
@@ -728,7 +740,8 @@ nx test ${opts.projectName}
 \`\`\`
 `,
 
-    util: (opts) => `# ${opts.packageName}
+    util: (opts) =>
+      `# ${opts.packageName}
 
 ${opts.description}
 
@@ -770,7 +783,7 @@ nx test ${opts.projectName}
  * extractPackageScope("@myorg/monorepo") → "@myorg"
  * extractPackageScope("my-workspace") → "@my-workspace"
  */
-function extractPackageScope(packageName: string): string {
+function extractPackageScope(packageName: string) {
   if (packageName.startsWith("@")) {
     const scope = packageName.split("/")[0]
     if (!scope) {

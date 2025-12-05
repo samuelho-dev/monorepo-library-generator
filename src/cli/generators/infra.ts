@@ -65,7 +65,7 @@ export function generateInfra(options: InfraGeneratorOptions) {
 
     // Parse tags
     const tagsString = options.tags || `type:infra,scope:shared,platform:${platform}`
-    const tags = tagsString.split(",").map(t => t.trim())
+    const tags = tagsString.split(",").map((t) => t.trim())
 
     // Phase 1: Generate infrastructure files using infrastructure generator
     yield* generateLibraryInfrastructure(adapter, {

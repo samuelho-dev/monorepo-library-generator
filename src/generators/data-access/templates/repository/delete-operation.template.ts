@@ -68,8 +68,8 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   builder.addRaw(`export const deleteOperations: Delete${className}Operations = {
-  delete: (id: string) =>
-    Effect.gen(function* () {
+  delete: (_id: string) =>
+    Effect.gen(function () {
       // TODO: Implement database delete
       // const database = yield* KyselyService;
       // yield* database.query((db) =>
@@ -81,8 +81,8 @@ Bundle optimization: Import this file directly for smallest bundle size:
       return Effect.dieMessage("Delete operation not implemented");
     }),
 
-  deleteMany: (ids: ReadonlyArray<string>) =>
-    Effect.gen(function* () {
+  deleteMany: (_ids: ReadonlyArray<string>) =>
+    Effect.gen(function () {
       // TODO: Implement batch delete
       // const database = yield* KyselyService;
       // yield* database.query((db) =>

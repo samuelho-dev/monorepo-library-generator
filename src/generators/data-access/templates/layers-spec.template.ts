@@ -46,9 +46,8 @@ TODO: Customize this file:
   builder.addImports([
     {
       from: "vitest",
-      imports: ["describe", "it", "expect", "beforeEach", "afterEach"]
-    },
-    { from: "effect", imports: ["Effect", "Layer", "Exit"] }
+      imports: ["describe"]
+    }
   ])
   builder.addBlankLine()
 

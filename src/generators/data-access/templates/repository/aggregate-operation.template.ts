@@ -71,8 +71,8 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   builder.addRaw(`export const aggregateOperations: Aggregate${className}Operations = {
-  count: (filter?: ${className}Filter) =>
-    Effect.gen(function* () {
+  count: (_filter?: ${className}Filter) =>
+    Effect.gen(function () {
       // TODO: Implement database count
       // const database = yield* KyselyService;
       // let query = db.selectFrom("${fileName}s")
@@ -91,8 +91,8 @@ Bundle optimization: Import this file directly for smallest bundle size:
       return Effect.dieMessage("Count operation not implemented");
     }),
 
-  exists: (id: string) =>
-    Effect.gen(function* () {
+  exists: (_id: string) =>
+    Effect.gen(function () {
       // TODO: Implement database exists check
       // const database = yield* KyselyService;
       // const result = yield* database.query((db) =>

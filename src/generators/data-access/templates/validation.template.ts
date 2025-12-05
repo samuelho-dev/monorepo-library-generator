@@ -42,17 +42,9 @@ TODO: Customize this file:
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([
-    {
-      from: "./types",
-      imports: [
-        `${className}Filter`,
-        `${className}CreateInput`,
-        `${className}UpdateInput`
-      ],
-      isTypeOnly: true
-    }
-  ])
+  // Note: Imports are type-only since they're only used in JSDoc comments and return type inference
+  builder.addImport("./types", `${className}CreateInput`, true)
+  builder.addImport("./types", `${className}UpdateInput`, true)
   builder.addBlankLine()
 
   // Validation Helpers
@@ -74,12 +66,12 @@ TODO: Customize this file:
  *   price: z.number().positive(),
  * });
  *
- * export function validate${className}CreateInput(input: unknown): ${className}CreateInput {
+ * export function validate${className}CreateInput(input: unknown) {
  *   return ${className}CreateSchema.parse(input);
  * }
  * \`\`\`
  *
- * @param input - Unvalidated input data
+ * @param _input - Unvalidated input data
  * @returns Validated input data
  * @throws ValidationError if input doesn't meet schema requirements
  *
@@ -92,8 +84,8 @@ TODO: Customize this file:
  * \`\`\`
  */
 export function validate${className}CreateInput(
-  input: unknown,
-): ${className}CreateInput {
+  _input: unknown,
+) {
   // TODO: Implement schema validation with your preferred library (Zod, Effect Schema, etc.)
   throw new Error("Validation not implemented. Please implement schema validation.");
 }`)
@@ -112,12 +104,12 @@ export function validate${className}CreateInput(
  *   price: z.number().positive().optional(),
  * });
  *
- * export function validate${className}UpdateInput(input: unknown): ${className}UpdateInput {
+ * export function validate${className}UpdateInput(input: unknown) {
  *   return ${className}UpdateSchema.parse(input);
  * }
  * \`\`\`
  *
- * @param input - Unvalidated update data
+ * @param _input - Unvalidated update data
  * @returns Validated update data
  * @throws ValidationError if input doesn't meet schema requirements
  *
@@ -129,8 +121,8 @@ export function validate${className}CreateInput(
  * \`\`\`
  */
 export function validate${className}UpdateInput(
-  input: unknown,
-): ${className}UpdateInput {
+  _input: unknown,
+) {
   // TODO: Implement schema validation with your preferred library (Zod, Effect Schema, etc.)
   throw new Error("Validation not implemented. Please implement schema validation.");
 }`)
@@ -150,12 +142,12 @@ export function validate${className}UpdateInput(
  *   maxPrice: z.number().optional(),
  * });
  *
- * export function validate${className}Filter(input: unknown): ${className}Filter {
+ * export function validate${className}Filter(input: unknown) {
  *   return ${className}FilterSchema.parse(input);
  * }
  * \`\`\`
  *
- * @param input - Unvalidated filter data
+ * @param _input - Unvalidated filter data
  * @returns Validated filter data
  * @throws ValidationError if filters don't meet requirements
  *
@@ -168,8 +160,8 @@ export function validate${className}UpdateInput(
  * \`\`\`
  */
 export function validate${className}Filter(
-  input: unknown,
-): ${className}Filter {
+  _input: unknown,
+) {
   // TODO: Implement schema validation with your preferred library (Zod, Effect Schema, etc.)
   throw new Error("Validation not implemented. Please implement schema validation.");
 }`)
@@ -227,7 +219,7 @@ export function validate${className}Id(id: unknown) {
 export function validatePagination(
   skip: unknown,
   limit: unknown,
-): { skip: number; limit: number } {
+) {
   // TODO: Implement pagination validation
   const skipNum = typeof skip === 'number' ? skip : 0;
   const limitNum = typeof limit === 'number' ? limit : 20;
@@ -261,7 +253,7 @@ export function validatePagination(
  * }
  * \`\`\`
  */
-export function is${className}(obj: unknown): obj is any {
+export function is${className}(obj: unknown) {
   // TODO: Implement entity validation
   return (
     typeof obj === 'object' &&
@@ -289,7 +281,7 @@ export function is${className}(obj: unknown): obj is any {
  * }
  * \`\`\`
  */
-export function isValid${className}CreateInput(obj: unknown): obj is ${className}CreateInput {
+export function isValid${className}CreateInput(obj: unknown) {
   // TODO: Implement creation input validation
   return typeof obj === 'object' && obj !== null;
 }`)
@@ -311,7 +303,7 @@ export function isValid${className}CreateInput(obj: unknown): obj is ${className
  * }
  * \`\`\`
  */
-export function isValid${className}UpdateInput(obj: unknown): obj is ${className}UpdateInput {
+export function isValid${className}UpdateInput(obj: unknown) {
   // TODO: Implement update input validation
   return typeof obj === 'object' && (obj === null || Object.keys(obj).length > 0);
 }

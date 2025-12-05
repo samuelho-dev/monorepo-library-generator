@@ -106,7 +106,7 @@ export class ${className}NotFoundError extends Data.TaggedError(
   readonly message: string;
   readonly id: string;
 }> {
-  static create(id: string): ${className}NotFoundError {
+  static create(id: string) {
     return new ${className}NotFoundError({
       message: \`${className} not found: \${id}\`,
       id,
@@ -136,7 +136,7 @@ export class ${className}ValidationError extends Data.TaggedError(
   readonly message: string;
   readonly errors: readonly string[];
 }> {
-  static create(errors: readonly string[]): ${className}ValidationError {
+  static create(errors: readonly string[]) {
     return new ${className}ValidationError({
       message: "Validation failed",
       errors,
@@ -167,7 +167,7 @@ export class ${className}ConflictError extends Data.TaggedError(
   readonly message: string;
   readonly conflictingId?: string;
 }> {
-  static create(conflictingId?: string): ${className}ConflictError {
+  static create(conflictingId?: string) {
     return new ${className}ConflictError({
       message: conflictingId
         ? \`Resource already exists: \${conflictingId}\`
@@ -191,7 +191,7 @@ export class ${className}ConfigError extends Data.TaggedError(
   readonly message: string;
   readonly property: string;
 }> {
-  static create(property: string, reason: string): ${className}ConfigError {
+  static create(property: string, reason: string) {
     return new ${className}ConfigError({
       message: \`Invalid configuration for \${property}: \${reason}\`,
       property,
@@ -213,7 +213,7 @@ export class ${className}ConnectionError extends Data.TaggedError(
   readonly target: string;
   readonly cause: unknown;
 }> {
-  static create(target: string, cause: unknown): ${className}ConnectionError {
+  static create(target: string, cause: unknown) {
     return new ${className}ConnectionError({
       message: \`Failed to connect to \${target}\`,
       target,
@@ -236,7 +236,7 @@ export class ${className}TimeoutError extends Data.TaggedError(
   readonly operation: string;
   readonly timeoutMs: number;
 }> {
-  static create(operation: string, timeoutMs: number): ${className}TimeoutError {
+  static create(operation: string, timeoutMs: number) {
     return new ${className}TimeoutError({
       message: \`Operation "\${operation}" timed out after \${timeoutMs}ms\`,
       operation,
@@ -270,7 +270,7 @@ export class ${className}InternalError extends Data.TaggedError(
   readonly message: string;
   readonly cause: unknown;
 }> {
-  static create(reason: string, cause: unknown): ${className}InternalError {
+  static create(reason: string, cause: unknown) {
     return new ${className}InternalError({
       message: \`Internal error: \${reason}\`,
       cause,

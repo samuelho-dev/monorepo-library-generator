@@ -14,7 +14,7 @@ import { Effect } from "effect"
 import { createNamingVariants } from "./naming"
 import type { LibraryType } from "./shared/types"
 import { createTreeAdapter } from "./tree-adapter"
-import { detectWorkspaceConfig, type WorkspaceConfig } from "./workspace-detection"
+import { detectWorkspaceConfig } from "./workspace-detection"
 
 /**
  * Input for computing library metadata
@@ -154,16 +154,17 @@ export function computeLibraryMetadata(
   },
   libraryType: LibraryType,
   additionalTags?: ReadonlyArray<string>
-): LibraryMetadata {
+) {
   // Detect workspace configuration
   const adapter = createTreeAdapter(tree)
+
   const workspaceConfig = Effect.runSync(
-    detectWorkspaceConfig(adapter).pipe(Effect.orDie) as Effect.Effect<WorkspaceConfig, never, never>
+    detectWorkspaceConfig(adapter).pipe(Effect.orDie)
   )
 
   // Parse schema tags if provided
   const schemaTags = schema.tags
-    ? schema.tags.split(",").map(t => t.trim()).filter(t => t.length > 0)
+    ? schema.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0)
     : []
 
   // Combine schema tags with additional tags
@@ -194,6 +195,7 @@ export function computeLibraryMetadata(
 
   return {
     // Required by BaseTemplateSubstitutions
+    // eslint-disable-next-line no-restricted-syntax
     tmpl: "" as const,
     name: schema.name,
     offsetFromRoot: computeOffsetFromRoot(projectRoot),

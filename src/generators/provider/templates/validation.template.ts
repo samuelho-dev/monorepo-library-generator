@@ -39,7 +39,6 @@ export function generateValidationFile(options: ProviderTemplateOptions) {
     exported: true,
     jsdoc: "Validate API key format",
     params: [{ name: "apiKey", type: "string" }],
-    returnType: "boolean",
     body: `if (!apiKey || typeof apiKey !== "string") {
   return false;
 }
@@ -55,7 +54,6 @@ return apiKey.length >= 10;`
     exported: true,
     jsdoc: "Validate timeout value",
     params: [{ name: "timeout", type: "number" }],
-    returnType: "boolean",
     body: `return (
   typeof timeout === "number" && timeout > 0 && timeout <= 300000 // Max 5 minutes
 );`
@@ -67,7 +65,6 @@ return apiKey.length >= 10;`
     exported: true,
     jsdoc: "Validate email format (client-safe)",
     params: [{ name: "email", type: "string" }],
-    returnType: "boolean",
     body: `if (!email || typeof email !== "string") {
   return false;
 }
@@ -82,7 +79,6 @@ return emailRegex.test(email);`
     exported: true,
     jsdoc: "Validate URL format (client-safe)",
     params: [{ name: "url", type: "string" }],
-    returnType: "boolean",
     body: `if (!url || typeof url !== "string") {
   return false;
 }
@@ -102,7 +98,6 @@ try {
     jsdoc: "Validate required field",
     typeParams: ["T"],
     params: [{ name: "value", type: "T | null | undefined" }],
-    returnType: "value is T",
     body: `return value !== null && value !== undefined && value !== "";`
   })
 
@@ -112,7 +107,6 @@ try {
     exported: true,
     jsdoc: "Sanitize string input (client-safe)",
     params: [{ name: "input", type: "string" }],
-    returnType: "string",
     body: `if (!input || typeof input !== "string") {
   return "";
 }

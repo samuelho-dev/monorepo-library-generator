@@ -243,7 +243,7 @@ export function createTypeGuardFunctions(config: TypeGuardConfig) {
 
       return `export function is${fullTypeName}(
   error: unknown
-): error is ${fullTypeName} {
+) {
   return (
     typeof error === "object" &&
     error !== null &&

@@ -64,7 +64,7 @@ export const ${className}ServiceTest = Layer.succeed(
  */
 export const ${className}ServiceDev = Layer.effect(
   ${className}Service,
-  Effect.gen(function* () {
+  Effect.gen(function () {
     // TODO: Inject dependencies as needed
     // const userRepo = yield* UserRepository;
     // const logger = yield* LoggingService;
@@ -73,11 +73,10 @@ export const ${className}ServiceDev = Layer.effect(
 
     return {
       exampleOperation: () =>
-        Effect.gen(function* () {
+        Effect.gen(function () {
           console.log("[${className}] [DEV] exampleOperation starting");
-          const result = yield* Effect.void;
           console.log("[${className}] [DEV] exampleOperation completed");
-          return result;
+          return Effect.void;
         }),
     };
   })

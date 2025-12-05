@@ -18,9 +18,9 @@
 import type { Tree } from "@nx/devkit"
 import { addProjectConfiguration, formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
+import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import { computeLibraryMetadata } from "../../utils/library-metadata"
 import { createTreeAdapter } from "../../utils/tree-adapter"
-import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import { generateDataAccessCore } from "../core/data-access"
 import type { DataAccessGeneratorSchema } from "./schema"
 

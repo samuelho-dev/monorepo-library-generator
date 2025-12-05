@@ -40,7 +40,7 @@ See: https://effect.website/docs/guides/testing/vitest`
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer"] },
+    { from: "effect", imports: ["Effect"] },
     { from: "@effect/vitest", imports: ["describe", "expect"] },
     { from: "@effect/vitest", imports: ["it"] },
     { from: "./service", imports: [`${className}Service`] }

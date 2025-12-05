@@ -67,7 +67,7 @@ export function generateProvider(options: ProviderGeneratorOptions) {
     // Parse tags
     const tagsString = options.tags ||
       `type:provider,scope:provider,platform:${platform},service:${serviceNameVariants.fileName}`
-    const tags = tagsString.split(",").map(t => t.trim())
+    const tags = tagsString.split(",").map((t) => t.trim())
 
     // Phase 1: Generate infrastructure files using infrastructure generator
     yield* generateLibraryInfrastructure(adapter, {

@@ -8,8 +8,8 @@
 import type { Tree } from "@nx/devkit"
 import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing"
 import { Effect } from "effect"
-import { createTreeAdapter } from "./tree-adapter"
 import { generateLibraryInfrastructure } from "./infrastructure"
+import { createTreeAdapter } from "./tree-adapter"
 
 describe("infrastructure", () => {
   let tree: Tree
@@ -17,12 +17,15 @@ describe("infrastructure", () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace()
     // Add tsconfig.base.json for extends validation
-    tree.write("tsconfig.base.json", JSON.stringify({
-      compilerOptions: {
-        target: "ES2022",
-        module: "ESNext"
-      }
-    }))
+    tree.write(
+      "tsconfig.base.json",
+      JSON.stringify({
+        compilerOptions: {
+          target: "ES2022",
+          module: "ESNext"
+        }
+      })
+    )
   })
 
   describe("Mode Detection", () => {
@@ -283,7 +286,7 @@ describe("infrastructure", () => {
 
       expect(vitestConfig).toContain("defineConfig")
       expect(vitestConfig).toContain("globals: true")
-      expect(vitestConfig).toContain("environment: 'node'")
+      expect(vitestConfig).toContain("environment: \"node\"")
       expect(vitestConfig).toContain("src/**/*.{test,spec}.ts")
     })
   })
@@ -315,7 +318,6 @@ describe("infrastructure", () => {
       expect(readme).toContain("Events")
       expect(readme).toContain("Ports")
     })
-
   })
 
   describe("Nx Project Configuration", () => {

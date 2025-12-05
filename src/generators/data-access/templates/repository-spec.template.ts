@@ -50,10 +50,7 @@ What to Test:
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Option", "Layer"] },
-    { from: "vitest", imports: ["describe"] },
-    { from: "@effect/vitest", imports: ["it", "expect"] },
-    { from: "@custom-repo/provider-kysely", imports: ["KyselyService"] }
+    { from: "vitest", imports: ["describe", "expect"] }
   ])
   builder.addBlankLine()
 

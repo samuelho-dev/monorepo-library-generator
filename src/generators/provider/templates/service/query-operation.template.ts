@@ -46,7 +46,7 @@ Example:
     },
     {
       from: "../../errors",
-      imports: [`${className}ServiceError`, `map${className}Error`]
+      imports: [`${className}ServiceError`]
     }
   ])
   builder.addBlankLine()
@@ -95,8 +95,8 @@ export interface Query${className}Operations {
  * TODO: Implement with actual ${externalService} SDK
  */
 export const queryOperations: Query${className}Operations = {
-  list: (params) =>
-    Effect.gen(function* () {
+  list: (_params) =>
+    Effect.gen(function () {
       // TODO: Replace with actual ${externalService} SDK call
       // Example:
       // const client = yield* ${externalService}Client;
@@ -115,8 +115,8 @@ export const queryOperations: Query${className}Operations = {
       )
     ),
 
-  get: (id) =>
-    Effect.gen(function* () {
+  get: (_id) =>
+    Effect.gen(function () {
       // TODO: Replace with actual ${externalService} SDK call
       // Example:
       // const client = yield* ${externalService}Client;
@@ -165,7 +165,7 @@ export const testQueryOperations: Query${className}Operations = {
           total: items.length,
           totalPages: Math.ceil(items.length / limit)
         }
-      } as PaginatedResult<Resource>;
+      };
     }),
 
   get: (id) =>
@@ -175,7 +175,7 @@ export const testQueryOperations: Query${className}Operations = {
         return yield* Effect.fail({
           _tag: "NotFoundError",
           message: \`Resource \${id} not found\`
-        } as ${className}ServiceError);
+        });
       }
       return resource;
     })

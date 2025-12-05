@@ -84,7 +84,7 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
  */
 export const ${className}ServiceDev = Layer.effect(
   ${className}Service,
-  Effect.gen(function* () {
+  Effect.gen(function () {
     // TODO: Inject dependencies
     // const config = yield* ${className}Config;
     // const logger = yield* LoggingService;
@@ -217,7 +217,7 @@ export const ${className}ServiceCustom = (customConfig: {
 }) =>
   Layer.scoped(
     ${className}Service,
-    Effect.gen(function* () {
+    Effect.gen(function () {
       // Merge custom config with defaults
       const defaults = {
         timeout: 5000,
@@ -229,7 +229,7 @@ export const ${className}ServiceCustom = (customConfig: {
 
       return {
         get: (id: string) =>
-          Effect.gen(function* () {
+          Effect.gen(function () {
             // Use custom config in implementation
             console.log(\`[${className}] GET \${id} with \${defaults.timeout}ms timeout\`);
             return Option.none();

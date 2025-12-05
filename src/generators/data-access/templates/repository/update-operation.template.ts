@@ -66,8 +66,8 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   builder.addRaw(`export const updateOperations: Update${className}Operations = {
-  update: (id: string, input: ${className}UpdateInput) =>
-    Effect.gen(function* () {
+  update: (_id: string, _input: ${className}UpdateInput) =>
+    Effect.gen(function () {
       // TODO: Implement database update
       // const database = yield* KyselyService;
       // const result = yield* database.query((db) =>

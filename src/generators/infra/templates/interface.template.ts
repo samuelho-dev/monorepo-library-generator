@@ -30,17 +30,14 @@ export function generateInterfaceFile(options: InfraTemplateOptions) {
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer", "Option"] },
+    { from: "effect", imports: ["Effect", "Layer", "Option", "Context"] },
     {
       from: "./errors",
       imports: [
-        `${className}InternalError`,
-        `${className}NotFoundError`,
-        `${className}ValidationError`
+        `${className}InternalError`
       ]
     },
-    { from: "./errors", imports: [`${className}Error`], isTypeOnly: true },
-    { from: "./config", imports: [`${className}Config`], isTypeOnly: true }
+    { from: "./errors", imports: [`${className}Error`], isTypeOnly: true }
   ])
 
   // Section: Service Context.Tag Definition
@@ -229,7 +226,7 @@ export class ${className}Service extends Context.Tag(
       // 2. Acquire Resources with Effect.acquireRelease
       // Example: Connection pool that needs cleanup
       const resource = yield* Effect.acquireRelease(
-        Effect.gen(function* () {
+        Effect.gen(function () {
           // Acquire phase: Initialize resource
           // yield* logger.info("${className} service initializing");
 
@@ -249,11 +246,11 @@ export class ${className}Service extends Context.Tag(
             close: async () => { /* cleanup */ }
           };
         }),
-        (resource) => Effect.gen(function* () {
+        (resource) => Effect.gen(function () {
           // Release phase: Cleanup resource
           // yield* logger.info("${className} service shutting down");
 
-          yield* Effect.tryPromise({
+          return Effect.tryPromise({
             try: () => resource.close(),
             catch: () => new Error("Failed to close resource")
           }).pipe(
@@ -266,44 +263,42 @@ export class ${className}Service extends Context.Tag(
       // ✅ Direct object return (Effect 3.0+), no .of() needed
       return {
         get: (id: string) =>
-          Effect.gen(function* () {
+          Effect.gen(function () {
             // yield* logger.debug(\`Getting item: \${id}\`);
 
-            const result = yield* Effect.tryPromise({
+            return Effect.tryPromise({
               try: () => resource.query(id),
               catch: (error) => new ${className}InternalError({
                 message: \`Failed to get item \${id}\`,
                 cause: error
               })
-            });
-
-            return Option.fromNullable(result);
+            }).pipe(
+              Effect.map(Option.fromNullable)
+            );
           }),
 
-        findByCriteria: (criteria, skip = 0, limit = 10) =>
-          Effect.gen(function* () {
+        findByCriteria: (_criteria, _skip = 0, _limit = 10) =>
+          Effect.gen(function () {
             // yield* logger.debug("Finding items by criteria", { criteria, skip, limit });
 
-            const results = yield* Effect.tryPromise({
+            return Effect.tryPromise({
               try: async () => {
                 // Replace with actual query logic
-                return [{ id: "1", ...criteria }, { id: "2", ...criteria }]
-                  .slice(skip, skip + limit);
+                return [{ id: "1", ..._criteria }, { id: "2", ..._criteria }]
+                  .slice(_skip, _skip + _limit);
               },
               catch: (error) => new ${className}InternalError({
                 message: "Failed to find items by criteria",
                 cause: error
               })
             });
-
-            return results;
           }),
 
         create: (input) =>
-          Effect.gen(function* () {
+          Effect.gen(function () {
             // yield* logger.info("Creating item", { input });
 
-            const created = yield* Effect.tryPromise({
+            return Effect.tryPromise({
               try: async () => {
                 // Replace with actual creation logic
                 return { id: crypto.randomUUID(), ...input, createdAt: new Date() };
@@ -313,17 +308,15 @@ export class ${className}Service extends Context.Tag(
                 cause: error
               })
             });
-
-            return created;
           }),
 
         update: (id, input) =>
-          Effect.gen(function* () {
+          Effect.gen(function () {
             // yield* logger.info(\`Updating item: \${id}\`, { input });
 
             // Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
-            const updated = yield* Effect.tryPromise({
+            return Effect.tryPromise({
               try: async () => {
                 // Replace with actual update logic
                 // For existence check, use SDK-level validation or separate Effect
@@ -334,17 +327,15 @@ export class ${className}Service extends Context.Tag(
                 cause: error
               })
             });
-
-            return updated;
           }),
 
         delete: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function () {
             // yield* logger.info(\`Deleting item: \${id}\`);
 
             // Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
-            yield* Effect.tryPromise({
+            return Effect.tryPromise({
               try: async () => {
                 // Replace with actual deletion logic
                 // For existence check, use SDK-level validation or separate Effect
@@ -358,7 +349,7 @@ export class ${className}Service extends Context.Tag(
           }),
 
         healthCheck: () =>
-          Effect.gen(function* () {
+          Effect.gen(function () {
             // Check resource health
             const isHealthy = resource.isConnected;
 

@@ -36,6 +36,7 @@
   },
   "scripts": {
     "codegen": "build-utils prepare-v3",
+    "prebuild": "rm -rf .tsbuildinfo dist build",
     "build": "pnpm build-esm && pnpm build-add-extensions && pnpm build-annotate && pnpm build-cjs && pnpm build:pack && node scripts/post-build.mjs",
     "build:pack": "mv src src.backup && build-utils pack-v3 && mv src.backup src",
     "build-esm": "tsc -b tsconfig.build.json",
@@ -50,6 +51,12 @@
     "test:generators": "vitest run src/**/*.spec.ts --config vitest.config.ci.ts",
     "test:watch": "vitest --watch",
     "coverage": "vitest --coverage",
+    "gen:provider": "pnpm build && nx g ./dist/src/generators.json:provider",
+    "gen:data-access": "pnpm build && nx g ./dist/src/generators.json:data-access",
+    "gen:feature": "pnpm build && nx g ./dist/src/generators.json:feature",
+    "gen:infra": "pnpm build && nx g ./dist/src/generators.json:infra",
+    "gen:contract": "pnpm build && nx g ./dist/src/generators.json:contract",
+    "verify:lint": "pnpm lint 2>&1 | grep -E '^/' | wc -l",
     "changeset-version": "changeset version && node scripts/version.mjs",
     "changeset-publish": "pnpm build && TEST_DIST= pnpm vitest && changeset publish"
   },

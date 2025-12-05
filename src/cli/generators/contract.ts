@@ -97,7 +97,7 @@ export function generateContract(options: ContractGeneratorOptions) {
 
     // Parse tags
     const tagsString = options.tags ?? "type:contract,platform:universal"
-    const tags = tagsString.split(",").map(t => t.trim())
+    const tags = tagsString.split(",").map((t) => t.trim())
 
     yield* generateLibraryInfrastructure(adapter, {
       projectRoot: metadata.projectRoot,

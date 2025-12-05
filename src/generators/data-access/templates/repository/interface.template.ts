@@ -36,7 +36,7 @@ ARCHITECTURE PATTERN:
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Layer", "Effect", "Option"] }
+    { from: "effect", imports: ["Context", "Layer", "Effect"] }
   ])
   builder.addBlankLine()
 

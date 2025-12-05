@@ -57,7 +57,6 @@ export class Memory${className}Provider extends Context.Tag(
   builder.addFunction({
     name: `createMemory${className}Provider`,
     params: [],
-    returnType: `Context.Tag.Service<Memory${className}Provider>`,
     body: `const store = new Map<string, unknown>();
 
 return {

@@ -20,8 +20,8 @@
 import { Console, Effect } from "effect"
 import { generateFeatureCore, type GeneratorResult } from "../../generators/core/feature"
 import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
-import type { PlatformType } from "../../utils/platforms"
 import { generateLibraryInfrastructure } from "../../utils/infrastructure"
+import type { PlatformType } from "../../utils/platforms"
 
 /**
  * Feature Generator Options (CLI)
@@ -69,10 +69,10 @@ export function generateFeature(options: FeatureGeneratorOptions) {
     // Parse tags
     const tagsString = options.tags ||
       `type:feature,scope:${options.scope || options.name},platform:${platform}`
-    const tags = tagsString.split(",").map(t => t.trim())
+    const tags = tagsString.split(",").map((t) => t.trim())
 
     // Phase 1: Generate infrastructure files using infrastructure generator
-    const infraResult = yield* generateLibraryInfrastructure(adapter, {
+    const _infraResult = yield* generateLibraryInfrastructure(adapter, {
       projectName,
       projectRoot,
       sourceRoot,

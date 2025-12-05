@@ -72,7 +72,6 @@ export function generateServiceSpecFile(options: ProviderTemplateOptions) {
   builder.addImport("@effect/vitest", "it")
   builder.addImport("./service", className)
   builder.addImport("./layers", `${className}Live`)
-  builder.addImport("./errors", `${className}Error`, true)
   builder.addBlankLine()
 
   // Describe block

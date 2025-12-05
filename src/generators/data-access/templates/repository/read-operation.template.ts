@@ -132,8 +132,8 @@ export interface Read${className}Operations {
  * - Add query optimization and indexing
  */
 export const readOperations: Read${className}Operations = {
-  findById: (id: string) =>
-    Effect.gen(function* () {
+  findById: (_id: string) =>
+    Effect.gen(function () {
       // TODO: Implement database query
       // const database = yield* KyselyService;
       // const result = yield* database.query((db) =>
@@ -149,8 +149,8 @@ export const readOperations: Read${className}Operations = {
       );
     }),
 
-  findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
-    Effect.gen(function* () {
+  findAll: (_filter?: ${className}Filter, _pagination?: PaginationOptions) =>
+    Effect.gen(function () {
       // TODO: Implement database query with filters and pagination
       // const database = yield* KyselyService;
       // let query = db.selectFrom("${fileName}s").selectAll();
@@ -186,8 +186,8 @@ export const readOperations: Read${className}Operations = {
       );
     }),
 
-  findOne: (filter: ${className}Filter) =>
-    Effect.gen(function* () {
+  findOne: (_filter: ${className}Filter) =>
+    Effect.gen(function () {
       // TODO: Implement database query
       // const database = yield* KyselyService;
       // let query = db.selectFrom("${fileName}s").selectAll();

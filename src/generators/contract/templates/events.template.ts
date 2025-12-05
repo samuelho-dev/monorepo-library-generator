@@ -184,7 +184,7 @@ export class ${className}CreatedEvent extends Schema.Class<${className}CreatedEv
     ${propertyName}Id: ${className}Id;
     createdBy?: string;
     correlationId?: string;
-  }): ${className}CreatedEvent {
+  }) {
     return new ${className}CreatedEvent({
       eventId: crypto.randomUUID(),
       eventType: "${className}CreatedEvent",
@@ -231,7 +231,7 @@ export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEv
     updatedBy?: string;
     changedFields?: string[];
     correlationId?: string;
-  }): ${className}UpdatedEvent {
+  }) {
     return new ${className}UpdatedEvent({
       eventId: crypto.randomUUID(),
       eventType: "${className}UpdatedEvent",
@@ -279,7 +279,7 @@ export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEv
     deletedBy?: string;
     isSoftDelete?: boolean;
     correlationId?: string;
-  }): ${className}DeletedEvent {
+  }) {
     return new ${className}DeletedEvent({
       eventId: crypto.randomUUID(),
       eventType: "${className}DeletedEvent",

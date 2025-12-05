@@ -84,8 +84,8 @@ export interface Create${className}Operations {
    * \`\`\`typescript
    * const repo = yield* ${className}Repository;
    * const entities = yield* repo.createMany([
-   *   { /* entity 1 */ },
-   *   { /* entity 2 */ }
+   *   { name: "entity 1" },
+   *   { name: "entity 2" }
    * ]);
    * \`\`\`
    */
@@ -108,8 +108,8 @@ export interface Create${className}Operations {
  * - Implement transaction support for createMany
  */
 export const createOperations: Create${className}Operations = {
-  create: (input: ${className}CreateInput) =>
-    Effect.gen(function* () {
+  create: (_input: ${className}CreateInput) =>
+    Effect.gen(function () {
       // TODO: Implement database insert
       // const database = yield* KyselyService;
       // const result = yield* database.query((db) =>
@@ -130,8 +130,8 @@ export const createOperations: Create${className}Operations = {
       );
     }),
 
-  createMany: (inputs: ReadonlyArray<${className}CreateInput>) =>
-    Effect.gen(function* () {
+  createMany: (_inputs: ReadonlyArray<${className}CreateInput>) =>
+    Effect.gen(function () {
       // TODO: Implement batch insert with transaction
       // const database = yield* KyselyService;
       // const results = yield* database.query((db) =>
@@ -180,12 +180,12 @@ export const testCreateOperations: Create${className}Operations = {
     Effect.sync(() => {
       const id = String(++testIdCounter);
       const now = new Date();
-      const entity = {
+      const entity: ${className} = {
         ...input,
         id,
         createdAt: now,
         updatedAt: now,
-      } as ${className};
+      };
       testStore.set(id, entity);
       return entity;
     }),
@@ -195,12 +195,12 @@ export const testCreateOperations: Create${className}Operations = {
       return inputs.map((input) => {
         const id = String(++testIdCounter);
         const now = new Date();
-        const entity = {
+        const entity: ${className} = {
           ...input,
           id,
           createdAt: now,
           updatedAt: now,
-        } as ${className};
+        };
         testStore.set(id, entity);
         return entity;
       });

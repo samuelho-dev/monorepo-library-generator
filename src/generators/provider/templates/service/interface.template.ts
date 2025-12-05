@@ -175,8 +175,8 @@ export class ${className} extends Context.Tag("${className}")<
       );
 
       return {
-        config: {} as ${className}Config, // TODO: Provide actual config
-        healthCheck: Effect.succeed({ status: "healthy" } as HealthCheckResult),
+        config: {}, // TODO: Provide actual ${className}Config
+        healthCheck: Effect.succeed({ status: "healthy" }),
         ...createOps,
         ...queryOps,
         ...updateOps,
@@ -208,8 +208,8 @@ export class ${className} extends Context.Tag("${className}")<
       );
 
       return {
-        config: { apiKey: "test-key" } as ${className}Config,
-        healthCheck: Effect.succeed({ status: "healthy" } as HealthCheckResult),
+        config: { apiKey: "test-key" },
+        healthCheck: Effect.succeed({ status: "healthy" }),
         ...createOps,
         ...queryOps,
         ...updateOps,

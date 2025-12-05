@@ -112,7 +112,7 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw("    // Mock client")
   builder.addRaw("    {")
   builder.addRaw(
-    "      healthCheck: () => Promise.resolve({ status: \"healthy\" as const }),"
+    "      healthCheck: () => Promise.resolve({ status: \"healthy\" }),"
   )
   builder.addRaw("    },")
   builder.addRaw("    {")
@@ -186,7 +186,6 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
     jsdoc:
       `make${className}Layer - Custom layer factory\n\nUse this to create a layer with custom configuration\n\nExample:\n\`\`\`typescript\nconst customLayer = make${className}Layer({\n  apiKey: "custom_key",\n  timeout: 5000,\n});\n\`\`\``,
     params: [{ name: "config", type: `${className}Config` }],
-    returnType: `Layer.Layer<${className}>`,
     body: `return Layer.scoped(
   ${className},
   Effect.gen(function* () {
