@@ -311,6 +311,26 @@ export interface ProviderTemplateOptions extends BaseTemplateOptions {
    * Platform-specific implementations needed
    */
   readonly platforms: ReadonlyArray<Platform>
+
+  /**
+   * Type of provider integration
+   */
+  readonly providerType?: "sdk" | "cli" | "http" | "graphql"
+
+  /**
+   * CLI command name (for CLI providers)
+   */
+  readonly cliCommand?: string
+
+  /**
+   * Base URL (for HTTP/GraphQL providers)
+   */
+  readonly baseUrl?: string
+
+  /**
+   * Authentication type (for HTTP/GraphQL providers)
+   */
+  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
 }
 
 /**

@@ -219,6 +219,71 @@ TODO: Uncomment and customize these imports based on your needs:`
             //
             // ====================================================================
 
+            // ====================================================================
+            // Success-Path Observability with Effect.tap
+            // ====================================================================
+            //
+            // Pattern 1: Success logging without affecting the result
+            // yield* repo.create(newItem).pipe(
+            //   Effect.tap((created) =>
+            //     logger.info("Item created successfully", { id: created.id })
+            //   ),
+            //   Effect.tap((created) =>
+            //     metrics.increment("items.created", { type: created.type })
+            //   )
+            // );
+            //
+            // Pattern 2: Chaining observability with different concerns
+            // const result = yield* operation().pipe(
+            //   Effect.tap((value) =>
+            //     logger.debug("Operation completed", { value })
+            //   ),
+            //   Effect.tap((value) =>
+            //     cache.set("last_result", value)
+            //   ),
+            //   Effect.tap((value) =>
+            //     metrics.gauge("last_operation_size", value.length)
+            //   )
+            // );
+            //
+            // Pattern 3: Conditional observability based on result
+            // yield* repo.findById(id).pipe(
+            //   Effect.tap((optResult) =>
+            //     Option.isSome(optResult)
+            //       ? logger.info("Found item", { id })
+            //       : logger.warn("Item not found", { id })
+            //   )
+            // );
+            //
+            // Pattern 4: Side effects for analytics/metrics
+            // const users = yield* repo.findByCriteria(criteria).pipe(
+            //   Effect.tap((users) =>
+            //     analytics.track("users_queried", {
+            //       count: users.length,
+            //       criteria
+            //     })
+            //   )
+            // );
+            //
+            // ✅ WHEN TO USE Effect.tap:
+            // - Logging (success path)
+            // - Metrics/analytics
+            // - Cache updates (fire-and-forget)
+            // - Notifications
+            // - Any side effect that shouldn't affect the main result
+            //
+            // ❌ DON'T use Effect.tap for:
+            // - Transforming the value (use Effect.map)
+            // - Handling errors (use Effect.tapError/tapErrorTag)
+            // - Chaining dependent operations (use Effect.flatMap)
+            //
+            // Effect.tap vs Effect.tapError:
+            // - Effect.tap: Runs on SUCCESS, value continues
+            // - Effect.tapError: Runs on FAILURE, error continues
+            // - Both are "observe-only" (don't transform result)
+            //
+            // ====================================================================
+
             // Working example with error transformation (replace with your logic)
             yield* Effect.logInfo("Example operation called");
 

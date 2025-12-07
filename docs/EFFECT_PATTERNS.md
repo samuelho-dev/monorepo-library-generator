@@ -8695,3 +8695,419 @@ validateAll: (inputs) =>
 - See repository operation templates for CRUD error patterns
 
 ---
+
+## Decision Matrices & Quick Reference
+
+### Master Decision Tree: Choosing the Right Pattern
+
+This section provides comprehensive decision matrices to help you choose the right Effect pattern for your use case.
+
+#### 1. When Working With Single Values
+
+| I Want To... | Use | Why |
+|--------------|-----|-----|
+| Transform a successful value | `Effect.map` | Non-effectful transformation |
+| Transform a successful value with an Effect | `Effect.flatMap` / `Effect.andThen` | Effectful transformation |
+| Transform an error | `Effect.mapError` | Change error type |
+| Observe success without changing value | `Effect.tap` | Logging, metrics, side effects |
+| Observe specific error without handling | `Effect.tapError` / `Effect.tapErrorTag` | Error logging, metrics |
+| Handle specific error and recover | `Effect.catchTag` | Selective recovery |
+| Handle all errors and recover | `Effect.catchAll` | Universal recovery |
+| Provide fallback on error | `Effect.orElse` | Alternative computation |
+| Retry on failure | `Effect.retry` | Transient failures |
+| Timeout an operation | `Effect.timeout` | Prevent hanging |
+
+#### 2. When Working With Multiple Values
+
+| I Want To... | Use | Why |
+|--------------|-----|-----|
+| Run effects in parallel | `Effect.all([...], { concurrency: "unbounded" })` | Maximum speed |
+| Run with concurrency limit | `Effect.all([...], { concurrency: N })` | Resource control |
+| Run sequentially | `Effect.all([...], { concurrency: 1 })` | Order matters |
+| Run and collect all results | `Effect.all` with default options | Standard batch operation |
+| Run but ignore some failures | `Effect.allSuccesses` | Partial success OK |
+| Stop on first success | `Effect.race` | First wins |
+| Run in specific order | `Effect.forEach` with `{ concurrency: 1 }` | Sequential iteration |
+| Process stream of unknown size | `Stream.fromIterable` + operators | Constant memory |
+
+#### 3. When Working With Conditionals
+
+| I Want To... | Use | Why |
+|--------------|-----|-----|
+| Branch based on a value | Plain `if/else` | Simple, readable |
+| Branch based on an Effect | `Effect.if` / `Effect.gen` with `if` | Unwrap Effect first |
+| Execute only if condition is true | `Effect.when` | Conditional execution |
+| Execute only if condition is false | `Effect.unless` | Inverted guard |
+| Pattern match on tagged union | `Effect.gen` with `switch` | Type-safe branching |
+
+#### 4. When Working With Resources
+
+| I Want To... | Use | Why |
+|--------------|-----|-----|
+| Acquire and release automatically | `Effect.acquireRelease` | Cleanup guaranteed |
+| Acquire with scoped lifetime | `Layer.scoped` + `Effect.acquireRelease` | Layer-managed resources |
+| Share resource across operations | `Layer.scoped` | Single instance |
+| Different cleanup based on success/failure | `Scope.addFinalizer` with `Exit.match` | Conditional cleanup |
+
+#### 5. When Working With Concurrency
+
+| I Want To... | Use | Why |
+|--------------|-----|-----|
+| Run effect in background | `Effect.fork` | Fire-and-forget |
+| Run with scoped lifetime | `Effect.forkScoped` | Auto-cleanup |
+| Wait for background effect | `Fiber.join` | Synchronize |
+| Limit concurrent operations | `Effect.makeSemaphore(N)` + `withPermits` | Resource limiting |
+| Queue background jobs | `Queue.bounded` + processor fiber | Backpressure control |
+| Broadcast events to subscribers | `PubSub` | Event distribution |
+| Wait for initialization | `Latch` | One-time gate |
+| Pass value between fibers | `Deferred` | Fiber coordination |
+
+#### 6. When Working With Data
+
+| I Want To... | Use | Why |
+|--------------|-----|-----|
+| Handle nullable values | `Option` | Type-safe nullability |
+| Handle errors as values | `Either` | Explicit error handling |
+| Validate and parse | `Schema.decode` | Automatic validation |
+| Large/infinite datasets | `Stream` | Constant memory |
+| Paginated API responses | `Stream.paginateEffect` | Auto-pagination |
+
+---
+
+### Quick Reference: Operator Comparison
+
+#### Transformation Operators
+
+| Operator | Input → Output | When To Use | Example |
+|----------|---------------|-------------|---------|
+| `Effect.map` | `A → B` | Transform success value | `Effect.map(user => user.name)` |
+| `Effect.flatMap` | `A → Effect<B>` | Chain dependent effects | `Effect.flatMap(id => repo.findById(id))` |
+| `Effect.andThen` | `A → Effect<B>` / `B` | Chain any computation | `Effect.andThen(() => nextOp())` |
+| `Effect.mapError` | `E → E2` | Transform error | `Effect.mapError(err => new CustomError(err))` |
+
+#### Observability Operators
+
+| Operator | Observes | Continues With | Example |
+|----------|----------|---------------|---------|
+| `Effect.tap` | Success value | Original value | `Effect.tap(v => logger.info("success", v))` |
+| `Effect.tapError` | Any error | Original error | `Effect.tapError(e => logger.error("failed", e))` |
+| `Effect.tapErrorTag` | Tagged error | Original error | `Effect.tapErrorTag("NotFound", e => log(e))` |
+
+#### Error Handling Operators
+
+| Operator | Catches | Returns | Short-Circuits |
+|----------|---------|---------|----------------|
+| `Effect.catchAll` | All errors | Recovery effect | No |
+| `Effect.catchTag` | Tagged error | Recovery effect | No |
+| `Effect.orElse` | All errors | Alternative effect | No |
+| `Effect.retry` | All errors | Retried effect | After retries exhausted |
+
+#### Control Flow Operators
+
+| Operator | Use Case | Returns |
+|----------|----------|---------|
+| `Effect.if` | Binary branching on Effect | Result of true/false branch |
+| `Effect.when` | Conditional execution | `void` if false, result if true |
+| `Effect.unless` | Inverted guard | `void` if true, result if false |
+| `Effect.zip` | Combine two effects | `[A, B]` tuple |
+| `Effect.zipWith` | Combine with custom function | `C` from `(A, B) => C` |
+
+#### Batch Operators
+
+| Operator | Behavior | Use Case |
+|----------|----------|----------|
+| `Effect.all` | Fail on any error | All must succeed |
+| `Effect.allSuccesses` | Collect only successes | Partial success OK |
+| `Effect.race` | First to complete wins | Fastest wins |
+| `Effect.forEach` | Iterate with options | Sequential or parallel iteration |
+
+---
+
+### Pattern Selection Flowchart
+
+```
+START: I need to...
+
+├─ Work with a single Effect
+│  ├─ Transform the value
+│  │  ├─ Transformation is pure → Effect.map
+│  │  └─ Transformation needs Effect → Effect.flatMap
+│  ├─ Handle errors
+│  │  ├─ Transform error type → Effect.mapError
+│  │  ├─ Recover from specific error → Effect.catchTag
+│  │  ├─ Recover from any error → Effect.catchAll
+│  │  └─ Just observe error → Effect.tapError
+│  ├─ Add observability
+│  │  ├─ Log/metrics on success → Effect.tap
+│  │  └─ Log/metrics on error → Effect.tapErrorTag
+│  └─ Control timing
+│     ├─ Retry on failure → Effect.retry
+│     ├─ Add timeout → Effect.timeout
+│     └─ Run in background → Effect.fork
+
+├─ Work with multiple Effects
+│  ├─ All in parallel
+│  │  ├─ Unbounded concurrency → Effect.all (default)
+│  │  ├─ Limited concurrency → Effect.all({ concurrency: N })
+│  │  └─ Partial failures OK → Effect.allSuccesses
+│  ├─ One at a time (sequential)
+│  │  └─ Effect.all({ concurrency: 1 })
+│  └─ Race to completion
+│     └─ Effect.race
+
+├─ Work with large datasets
+│  ├─ Known size, fits in memory → Array + Effect.all
+│  ├─ Unknown size / large → Stream.fromIterable
+│  └─ Paginated API → Stream.paginateEffect
+
+├─ Work with background tasks
+│  ├─ Simple fire-and-forget → Effect.fork
+│  ├─ Need cleanup → Effect.forkScoped
+│  ├─ Queue-based processing → Queue + processor fiber
+│  └─ Event broadcasting → PubSub
+
+└─ Work with resources
+   ├─ Simple acquire/release → Effect.acquireRelease
+   ├─ Share across operations → Layer.scoped
+   └─ Conditional cleanup → Scope.addFinalizer
+
+```
+
+---
+
+### Anti-Pattern Recognition Guide
+
+#### ❌ Anti-Pattern: Manual Effect Running in Library Code
+
+```typescript
+// ❌ WRONG: Never run effects in library code
+export const getUserName = (id: string): string => {
+  return Effect.runSync(repo.findById(id).pipe(
+    Effect.map(user => user.name)
+  ));
+};
+
+// ✅ CORRECT: Return Effect, let caller run it
+export const getUserName = (id: string): Effect.Effect<string, UserError> =>
+  repo.findById(id).pipe(Effect.map(user => user.name));
+```
+
+**Why**: Library code should return Effects, not run them. Only application boundaries (main, route handlers) should run effects.
+
+---
+
+#### ❌ Anti-Pattern: Swallowing Errors Without Logging
+
+```typescript
+// ❌ WRONG: Silent error suppression
+const result = yield* operation().pipe(
+  Effect.catchAll(() => Effect.succeed(null))
+);
+
+// ✅ CORRECT: Log before recovering
+const result = yield* operation().pipe(
+  Effect.tapError((error) => logger.error("Operation failed", { error })),
+  Effect.catchAll(() => Effect.succeed(null))
+);
+```
+
+**Why**: Silent failures make debugging impossible. Always observe errors before recovery.
+
+---
+
+#### ❌ Anti-Pattern: Unbounded Concurrency for External APIs
+
+```typescript
+// ❌ WRONG: No concurrency limit
+yield* Effect.all(
+  userIds.map(id => stripe.createCharge({ userId: id }))
+);
+
+// ✅ CORRECT: Bounded concurrency
+yield* Effect.all(
+  userIds.map(id => stripe.createCharge({ userId: id })),
+  { concurrency: 5 } // Max 5 concurrent API calls
+);
+```
+
+**Why**: Unbounded concurrency can overwhelm external services, cause rate limiting (429 errors), or exhaust resources.
+
+---
+
+#### ❌ Anti-Pattern: Using flatMap When map Is Sufficient
+
+```typescript
+// ❌ WRONG: Unnecessary Effect wrapping
+const names = yield* users.pipe(
+  Effect.flatMap((users) => Effect.succeed(users.map(u => u.name)))
+);
+
+// ✅ CORRECT: Use map for pure transformations
+const names = yield* users.pipe(
+  Effect.map((users) => users.map(u => u.name))
+);
+```
+
+**Why**: `flatMap` is for effectful transformations. Use `map` for pure transformations.
+
+---
+
+#### ❌ Anti-Pattern: Loading Large Datasets Into Memory
+
+```typescript
+// ❌ WRONG: Load all 100,000 items into memory
+const allUsers = yield* repo.findAll();
+yield* Effect.forEach(allUsers, processUser);
+
+// ✅ CORRECT: Stream for constant memory
+yield* repo.streamAll({ batchSize: 100 }).pipe(
+  Stream.mapEffect(processUser),
+  Stream.runDrain
+);
+```
+
+**Why**: Arrays load everything into memory. Streams process items one-at-a-time with constant memory.
+
+---
+
+#### ❌ Anti-Pattern: Using try/catch Instead of Effect Error Handling
+
+```typescript
+// ❌ WRONG: Mixing try/catch with Effects
+try {
+  const user = yield* repo.findById(id);
+  return user;
+} catch (error) {
+  return null;
+}
+
+// ✅ CORRECT: Use Effect operators
+const user = yield* repo.findById(id).pipe(
+  Effect.catchAll((error) => Effect.succeed(null))
+);
+```
+
+**Why**: try/catch doesn't work with Effect errors. Use Effect's error handling operators.
+
+---
+
+#### ❌ Anti-Pattern: Not Using Type-Safe Error Handling
+
+```typescript
+// ❌ WRONG: Catch all errors the same way
+const result = yield* operation().pipe(
+  Effect.catchAll((error) => {
+    if (error.message.includes("not found")) {
+      return handleNotFound();
+    }
+    return handleOther();
+  })
+);
+
+// ✅ CORRECT: Use catchTag for type-safe error handling
+const result = yield* operation().pipe(
+  Effect.catchTag("NotFoundError", () => handleNotFound()),
+  Effect.catchTag("ValidationError", () => handleValidation()),
+  Effect.catchAll((error) => handleUnexpected(error))
+);
+```
+
+**Why**: Tagged errors provide type safety and clear intent. String matching is error-prone.
+
+---
+
+#### ❌ Anti-Pattern: Creating Effects Inside map
+
+```typescript
+// ❌ WRONG: Effects inside map aren't executed
+const results = yield* Effect.succeed([1, 2, 3]).pipe(
+  Effect.map((nums) => nums.map(n => repo.findById(n))) // Returns Effect[]
+);
+
+// ✅ CORRECT: Use forEach or flatMap
+const results = yield* Effect.forEach([1, 2, 3], (n) => repo.findById(n));
+```
+
+**Why**: `map` doesn't execute Effects. Use `forEach`, `all`, or `flatMap` for effectful operations.
+
+---
+
+#### ❌ Anti-Pattern: Manual Resource Cleanup
+
+```typescript
+// ❌ WRONG: Manual cleanup is error-prone
+const conn = yield* createConnection();
+try {
+  const result = yield* conn.query("...");
+  yield* conn.close();
+  return result;
+} catch (error) {
+  yield* conn.close(); // Cleanup in catch too!
+  throw error;
+}
+
+// ✅ CORRECT: Use Effect.acquireRelease
+const result = yield* Effect.acquireRelease(
+  createConnection(),
+  (conn) => conn.close()
+).pipe(
+  Effect.flatMap((conn) => conn.query("..."))
+);
+```
+
+**Why**: acquireRelease guarantees cleanup even on errors/interrupts. Manual cleanup is error-prone.
+
+---
+
+### Decision Matrix: Stream vs Array vs Queue
+
+| Scenario | Use | Reason |
+|----------|-----|--------|
+| Fixed list of items that fits in memory | `Array` + `Effect.all` | Simple, fast |
+| 1000+ items to process | `Stream` | Constant memory |
+| Unknown number of items | `Stream` | Handles unbounded data |
+| Paginated API responses | `Stream.paginateEffect` | Auto-pagination |
+| Background job queue | `Queue` + processor | Backpressure control |
+| Real-time event stream | `Stream` or `PubSub` | Continuous data |
+| Need to share events with multiple consumers | `PubSub` | Fan-out |
+
+---
+
+### Decision Matrix: Layer Patterns
+
+| Scenario | Pattern | Example |
+|----------|---------|---------|
+| Service with no resources | `Layer.succeed` | Pure mock/test service |
+| Service with initialization | `Layer.effect` | Config loading |
+| Service with cleanup | `Layer.scoped` | Database connections |
+| Service depends on others | `Layer.effect` + `yield*` deps | Compose dependencies |
+| Different implementations per environment | Static layers (Live/Test/Dev) | Environment-based |
+| Share single instance | `Layer.scoped` | Connection pools |
+
+---
+
+### Common Use Case → Pattern Mapping
+
+| Use Case | Pattern | Code Snippet |
+|----------|---------|--------------|
+| Fetch user by ID | `Effect.flatMap` | `Effect.flatMap(id => repo.findById(id))` |
+| Load dashboard (parallel) | `Effect.all` | `Effect.all({ user, notifications, activity })` |
+| Process batch with limit | `Effect.all + concurrency` | `Effect.all(items, { concurrency: 5 })` |
+| Retry failed API call | `Effect.retry` | `Effect.retry(call, { times: 3 })` |
+| Timeout slow operation | `Effect.timeout` | `Effect.timeout(op, "5 seconds")` |
+| Log successful operation | `Effect.tap` | `Effect.tap(v => logger.info("done", v))` |
+| Transform repository error | `Effect.mapError` | `Effect.mapError(e => new ServiceError(e))` |
+| Handle not found | `Effect.catchTag` | `Effect.catchTag("NotFound", () => ...)` |
+| Stream large dataset | `Stream.paginateEffect` | `repo.streamAll({ batchSize: 100 })` |
+| Background job queue | `Queue + forkScoped` | `Queue.bounded(1000) + processor` |
+| Database transaction | `Effect.acquireRelease` | `acquireRelease(begin, commit/rollback)` |
+
+---
+
+**Navigation Tips:**
+- Start with "Master Decision Tree" for high-level guidance
+- Use "Quick Reference" tables for operator comparisons
+- Check "Anti-Pattern Recognition" if something feels wrong
+- Refer to "Common Use Cases" for real-world examples
+
+---

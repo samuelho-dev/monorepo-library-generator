@@ -26,7 +26,7 @@ import type { ProviderTemplateOptions } from "../../../utils/shared/types"
  */
 export function generateErrorsFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, externalService, name: projectClassName } = options
+  const { className, externalService, name: projectClassName, providerType = "sdk" } = options
 
   // File header
   builder.addRaw("/**")
@@ -55,6 +55,78 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw("  readonly cause?: unknown;")
   builder.addRaw("}> {}")
   builder.addBlankLine()
+
+  // Add provider-type-specific errors
+  if (providerType === "cli") {
+    // CLI-specific errors
+    builder.addRaw("/**")
+    builder.addRaw(" * Command Error - for CLI command execution failures")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}CommandError extends Data.TaggedError("${className}CommandError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly exitCode?: number;")
+    builder.addRaw("  readonly stderr?: string;")
+    builder.addRaw("  readonly cause?: unknown;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+
+    builder.addRaw("/**")
+    builder.addRaw(" * Command Not Found Error - when CLI command is not available")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly command: string;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+  }
+
+  if (providerType === "http" || providerType === "graphql") {
+    // HTTP-specific errors
+    builder.addRaw("/**")
+    builder.addRaw(" * HTTP Error - for HTTP status code errors")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}HttpError extends Data.TaggedError("${className}HttpError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly statusCode: number;")
+    builder.addRaw("  readonly method: string;")
+    builder.addRaw("  readonly url: string;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+
+    builder.addRaw("/**")
+    builder.addRaw(" * Network Error - for connection/network failures")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}NetworkError extends Data.TaggedError("${className}NetworkError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly cause?: unknown;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+  }
+
+  if (providerType === "graphql") {
+    // GraphQL-specific errors
+    builder.addRaw("/**")
+    builder.addRaw(" * GraphQL Error - for GraphQL operation errors")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}GraphQLError extends Data.TaggedError("${className}GraphQLError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly errors: readonly unknown[];")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+  }
+
+  // Continue with SDK-specific errors only for SDK type
+  if (providerType === "sdk") {
 
   // API Error
   builder.addRaw("/**")
@@ -132,8 +204,9 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw("  readonly cause?: unknown;")
   builder.addRaw("}> {}")
   builder.addBlankLine()
+  }  // End SDK-specific errors
 
-  // Service Error Union Type
+  // Service Error Union Type - conditional based on provider type
   builder.addRaw("/**")
   builder.addRaw(` * Union of all ${className} service errors`)
   builder.addRaw(" */")
@@ -141,12 +214,30 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
     `export type ${className}ServiceError =`
   )
   builder.addRaw(`  | ${className}Error`)
-  builder.addRaw(`  | ${className}ApiError`)
-  builder.addRaw(`  | ${className}AuthenticationError`)
-  builder.addRaw(`  | ${className}RateLimitError`)
-  builder.addRaw(`  | ${className}TimeoutError`)
-  builder.addRaw(`  | ${className}ConnectionError`)
-  builder.addRaw(`  | ${className}ValidationError;`)
+
+  if (providerType === "cli") {
+    builder.addRaw(`  | ${className}CommandError`)
+    builder.addRaw(`  | ${className}NotFoundError`)
+    builder.addRaw(`  | ${className}TimeoutError;`)
+  } else if (providerType === "http") {
+    builder.addRaw(`  | ${className}HttpError`)
+    builder.addRaw(`  | ${className}NetworkError`)
+    builder.addRaw(`  | ${className}RateLimitError`)
+    builder.addRaw(`  | ${className}TimeoutError;`)
+  } else if (providerType === "graphql") {
+    builder.addRaw(`  | ${className}HttpError`)
+    builder.addRaw(`  | ${className}NetworkError`)
+    builder.addRaw(`  | ${className}GraphQLError`)
+    builder.addRaw(`  | ${className}ValidationError;`)
+  } else {
+    // SDK type
+    builder.addRaw(`  | ${className}ApiError`)
+    builder.addRaw(`  | ${className}AuthenticationError`)
+    builder.addRaw(`  | ${className}RateLimitError`)
+    builder.addRaw(`  | ${className}TimeoutError`)
+    builder.addRaw(`  | ${className}ConnectionError`)
+    builder.addRaw(`  | ${className}ValidationError;`)
+  }
   builder.addBlankLine()
 
   // Error Mapping Function

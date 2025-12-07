@@ -49,7 +49,7 @@ TODO: Customize this file:
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Option", "Layer"] }
+    { from: "effect", imports: ["Effect", "Option", "Layer", "Stream"] }
   ])
   builder.addBlankLine()
 
@@ -285,6 +285,21 @@ export class ${className}Repository extends Context.Tag(
             store.delete(id);
           }),
         exists: (id: string) => Effect.succeed(store.has(id)),
+        streamAll: (options?: { batchSize?: number }) => {
+          const batchSize = options?.batchSize ?? 100;
+          const allItems = Array.from(store.values());
+
+          return Stream.paginateEffect(0, (page) =>
+            Effect.succeed([
+              allItems.slice(page * batchSize, (page + 1) * batchSize),
+              (page + 1) * batchSize < allItems.length
+                ? Option.some(page + 1)
+                : Option.none()
+            ] as const)
+          ).pipe(
+            Stream.flatMap((batch) => Stream.fromIterable(batch))
+          );
+        },
       };
     })(),
   );`)
@@ -359,6 +374,16 @@ export class ${className}Repository extends Context.Tag(
             console.log("[${className}Repository] exists result:", result);
             return result;
           }),
+        streamAll: (options) => {
+          console.log("[${className}Repository] streamAll", { options });
+          return repo.streamAll(options).pipe(
+            Stream.tap((item) =>
+              Effect.sync(() => {
+                console.log("[${className}Repository] streamAll item:", item);
+              })
+            )
+          );
+        },
       };
     }),
   );`)
@@ -761,6 +786,77 @@ function create${className}Repository(
           );
         }
       }),
+
+    /**
+     * Stream all entities with pagination
+     *
+     * ✅ STREAM PATTERN: Constant-memory processing of large datasets
+     *
+     * Uses Stream.paginateEffect for automatic pagination with backpressure.
+     * Perfect for processing 1000+ entities without loading all into memory.
+     *
+     * @param options - Configuration options
+     * @param options.batchSize - Number of items per page (default: 100)
+     *
+     * @returns Stream of entities
+     *
+     * @example
+     * ```typescript
+     * // Process all entities with constant memory
+     * yield* repo.streamAll({ batchSize: 100 }).pipe(
+     *   Stream.mapEffect((entity) => processEntity(entity)),
+     *   Stream.runDrain
+     * );
+     *
+     * // Count total items
+     * const total = yield* repo.streamAll().pipe(Stream.runCount);
+     *
+     * // Export to file
+     * yield* repo.streamAll().pipe(
+     *   Stream.map((entity) => JSON.stringify(entity)),
+     *   Stream.intersperse("\\n"),
+     *   Stream.run(Sink.file("export.ndjson"))
+     * );
+     * ```
+     */
+    streamAll: (options?: { batchSize?: number }) =>
+      Stream.paginateEffect(0, (page) =>
+        Effect.gen(function* () {
+          try {
+            const batchSize = options?.batchSize ?? 100;
+
+            // ✅ KYSELY PATTERN: Paginated query with LIMIT/OFFSET
+            const results = yield* database.query((db) =>
+              db
+                .selectFrom('${fileName}')
+                .selectAll()
+                .limit(batchSize)
+                .offset(page * batchSize)
+                .execute()
+            );
+
+            // Stream.paginateEffect expects [data, Option<nextState>]
+            // Return Some(nextPage) if we got a full batch (more data likely exists)
+            // Return None if we got less than batchSize (reached the end)
+            return [
+              results,
+              results.length === batchSize
+                ? Option.some(page + 1)
+                : Option.none()
+            ] as const;
+          } catch (error) {
+            return yield* Effect.fail(
+              ${className}InternalError.create(
+                "Failed to stream ${className} entities",
+                error,
+              ),
+            );
+          }
+        })
+      ).pipe(
+        // Flatten the arrays into individual items
+        Stream.flatMap((batch) => Stream.fromIterable(batch))
+      ),
   };
 }
 `)

@@ -50,6 +50,25 @@ export default async function providerGenerator(
     throw new Error("External service name is required and cannot be empty")
   }
 
+  // Validate provider type specific requirements
+  if (schema.providerType === "cli") {
+    if (!schema.cliCommand || schema.cliCommand.trim() === "") {
+      throw new Error("cliCommand is required when providerType is 'cli'")
+    }
+  }
+
+  if (schema.providerType === "http" || schema.providerType === "graphql") {
+    if (!schema.baseUrl || schema.baseUrl.trim() === "") {
+      throw new Error("baseUrl is required for HTTP and GraphQL providers")
+    }
+  }
+
+  // Set defaults for provider type
+  const providerType = schema.providerType || "sdk"
+  const authType = (schema.providerType === "http" || schema.providerType === "graphql")
+    ? (schema.authType || "bearer")
+    : undefined
+
   // Compute platform configuration
   const platform = schema.platform || "node"
   const includeClientServer = platform === "universal" ? true : (schema.includeClientServer ?? false)
@@ -115,7 +134,11 @@ export default async function providerGenerator(
 
     // Provider-specific options
     externalService: schema.externalService,
-    platform
+    platform,
+    providerType,
+    ...(schema.cliCommand && { cliCommand: schema.cliCommand }),
+    ...(schema.baseUrl && { baseUrl: schema.baseUrl }),
+    ...(authType && { authType })
   }
 
   // Run core generator with Effect runtime

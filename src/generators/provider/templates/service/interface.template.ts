@@ -18,7 +18,7 @@ export function generateProviderServiceInterfaceFile(
   options: ProviderTemplateOptions
 ) {
   const builder = new TypeScriptBuilder()
-  const { className, externalService, fileName } = options
+  const { className, externalService, fileName, providerType = "sdk", cliCommand } = options
 
   builder.addFileHeader({
     title: `${className} Service Interface`,
@@ -26,27 +26,55 @@ export function generateProviderServiceInterfaceFile(
 
 External Service: ${externalService}
 
-Operations are split into separate files for optimal tree-shaking.
+${providerType === "sdk" ? `Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.
 
 Bundle optimization:
   - Granular import: import { createOperations } from './operations/create'
-  - Full service: import { ${className} } from './interface'`,
+  - Full service: import { ${className} } from './interface'` : `Provider Type: ${providerType}`}`,
     module: `@custom-repo/provider-${fileName}/service`
   })
   builder.addBlankLine()
 
-  // Add imports
+  // Add imports based on provider type
+  const effectImports = ["Context", "Effect", "Layer"]
+  if (providerType === "cli") {
+    effectImports.push("Command")
+  }
+
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+    { from: "effect", imports: effectImports }
   ])
   builder.addBlankLine()
 
-  // Import shared types and errors
+  // Add platform imports for HTTP/GraphQL
+  if (providerType === "http" || providerType === "graphql") {
+    builder.addImports([
+      { from: "@effect/platform", imports: ["HttpClient", "HttpClientRequest", "HttpClientResponse"] }
+    ])
+    if (providerType === "http") {
+      builder.addImports([
+        { from: "@effect/platform", imports: ["HttpBody"] }
+      ])
+    }
+    builder.addImports([
+      { from: "effect", imports: ["Schedule"] }
+    ])
+    builder.addBlankLine()
+  }
+
+  // Import shared types and errors - conditional based on provider type
+  const typeImports = [`${className}Config`]
+  if (providerType === "cli") {
+    typeImports.push("CommandResult")
+  } else {
+    typeImports.push("Resource", "ListParams", "PaginatedResult", "HealthCheckResult")
+  }
+
   builder.addImports([
     {
       from: "../types",
-      imports: [`${className}Config`, "Resource", "ListParams", "PaginatedResult", "HealthCheckResult"],
+      imports: typeImports,
       isTypeOnly: true
     },
     {
@@ -57,11 +85,130 @@ Bundle optimization:
   ])
   builder.addBlankLine()
 
-  // Service interface
+  // Service interface - conditional based on provider type
   builder.addSectionComment("Service Interface")
   builder.addBlankLine()
 
-  builder.addRaw(`/**
+  if (providerType === "cli") {
+    // CLI Provider Interface
+    builder.addRaw(`/**
+ * ${className} Service Interface
+ *
+ * CLI Provider: Wraps ${cliCommand || externalService} command execution
+ *
+ * Operations:
+ * - Command execution with stdout/stderr capture
+ * - Version detection
+ */
+export interface ${className}ServiceInterface {
+  /**
+   * Service configuration (read-only)
+   */
+  readonly config: ${className}Config;
+
+  /**
+   * Execute command with arguments
+   */
+  readonly execute: (
+    args: readonly string[]
+  ) => Effect.Effect<CommandResult, ${className}ServiceError>;
+
+  /**
+   * Get command version
+   */
+  readonly version: Effect.Effect<string, ${className}ServiceError>;
+}`)
+  } else if (providerType === "http") {
+    // HTTP Provider Interface
+    builder.addRaw(`/**
+ * ${className} Service Interface
+ *
+ * HTTP Provider: REST API client for ${externalService}
+ *
+ * Operations:
+ * - HTTP verbs (GET, POST, PUT, DELETE)
+ * - Pagination support
+ * - Schema validation
+ * - Retry logic with exponential backoff
+ */
+export interface ${className}ServiceInterface {
+  /**
+   * Service configuration (read-only)
+   */
+  readonly config: ${className}Config;
+
+  /**
+   * Health check - verifies API connectivity
+   */
+  readonly healthCheck: Effect.Effect<HealthCheckResult, ${className}ServiceError>;
+
+  /**
+   * GET request
+   */
+  readonly get: (path: string) => Effect.Effect<Resource, ${className}ServiceError>;
+
+  /**
+   * POST request
+   */
+  readonly post: (path: string, body: unknown) => Effect.Effect<Resource, ${className}ServiceError>;
+
+  /**
+   * PUT request
+   */
+  readonly put: (path: string, body: unknown) => Effect.Effect<Resource, ${className}ServiceError>;
+
+  /**
+   * DELETE request
+   */
+  readonly delete: (path: string) => Effect.Effect<void, ${className}ServiceError>;
+
+  /**
+   * List resources with pagination
+   */
+  readonly list: (params?: ListParams) => Effect.Effect<PaginatedResult<Resource>, ${className}ServiceError>;
+}`)
+  } else if (providerType === "graphql") {
+    // GraphQL Provider Interface
+    builder.addRaw(`/**
+ * ${className} Service Interface
+ *
+ * GraphQL Provider: GraphQL client for ${externalService}
+ *
+ * Operations:
+ * - GraphQL queries
+ * - GraphQL mutations
+ * - Type-safe operations
+ */
+export interface ${className}ServiceInterface {
+  /**
+   * Service configuration (read-only)
+   */
+  readonly config: ${className}Config;
+
+  /**
+   * Health check - verifies GraphQL endpoint connectivity
+   */
+  readonly healthCheck: Effect.Effect<HealthCheckResult, ${className}ServiceError>;
+
+  /**
+   * Execute GraphQL query
+   */
+  readonly query: <T>(
+    query: string,
+    variables?: Record<string, unknown>
+  ) => Effect.Effect<T, ${className}ServiceError>;
+
+  /**
+   * Execute GraphQL mutation
+   */
+  readonly mutation: <T>(
+    mutation: string,
+    variables?: Record<string, unknown>
+  ) => Effect.Effect<T, ${className}ServiceError>;
+}`)
+  } else {
+    // SDK Provider Interface (original)
+    builder.addRaw(`/**
  * ${className} Service Interface
  *
  * Provider: External service adapter for ${externalService}
@@ -306,8 +453,182 @@ export interface ${className}ServiceInterface {
 export class ${className} extends Context.Tag("${className}")<
   ${className},
   ${className}ServiceInterface
->() {
-  /**
+>() {`)
+
+  // Add conditional Live layer implementation
+  if (providerType === "cli") {
+    // CLI Live Layer
+    builder.addRaw(`  /**
+   * Live Layer - CLI command execution
+   *
+   * Executes ${cliCommand || externalService} commands using Effect Command
+   */
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const config = yield* ${className}Config
+
+      const execute = (args: readonly string[]) =>
+        Command.make("${cliCommand}", ...args).pipe(
+          Command.string,
+          Effect.map((output) => ({ output, exitCode: 0 })),
+          Effect.mapError((error) => new ${className}Error({
+            message: "Command execution failed",
+            cause: error
+          }))
+        )
+
+      const version = Command.make("${cliCommand}", "--version").pipe(
+        Command.string,
+        Effect.mapError((error) => new ${className}Error({ cause: error }))
+      )
+
+      return { config, execute, version }
+    })
+  )`)
+  } else if (providerType === "http") {
+    // HTTP Live Layer
+    builder.addRaw(`  /**
+   * Live Layer - HTTP REST API client
+   *
+   * Uses HttpClient from @effect/platform for ${externalService}
+   */
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const client = yield* HttpClient.HttpClient
+      const config = yield* ${className}Config
+
+      const scopedClient = client.pipe(
+        HttpClient.mapRequest(HttpClientRequest.prependUrl(config.baseUrl)),
+        HttpClient.mapRequest(HttpClientRequest.bearerToken(config.apiKey)),
+        HttpClient.retry(Schedule.exponential("100 millis"), { times: 3 })
+      )
+
+      const healthCheck = scopedClient.get("/health").pipe(
+        Effect.flatMap(HttpClientResponse.json),
+        Effect.map(() => ({ status: "healthy" as const })),
+        Effect.catchAll(() => Effect.succeed({ status: "unhealthy" as const }))
+      )
+
+      const get = (path: string) =>
+        scopedClient.get(path).pipe(
+          Effect.flatMap(HttpClientResponse.schemaBodyJson(ResourceSchema)),
+          Effect.mapError((error) => new ${className}HttpError({
+            message: "GET request failed",
+            statusCode: 500,
+            method: "GET",
+            url: path
+          }))
+        )
+
+      const post = (path: string, body: unknown) =>
+        scopedClient.post(path, { body: HttpBody.json(body) }).pipe(
+          Effect.flatMap(HttpClientResponse.schemaBodyJson(ResourceSchema)),
+          Effect.mapError((error) => new ${className}HttpError({
+            message: "POST request failed",
+            statusCode: 500,
+            method: "POST",
+            url: path
+          }))
+        )
+
+      const put = (path: string, body: unknown) =>
+        scopedClient.put(path, { body: HttpBody.json(body) }).pipe(
+          Effect.flatMap(HttpClientResponse.schemaBodyJson(ResourceSchema)),
+          Effect.mapError((error) => new ${className}HttpError({
+            message: "PUT request failed",
+            statusCode: 500,
+            method: "PUT",
+            url: path
+          }))
+        )
+
+      const del = (path: string) =>
+        scopedClient.delete(path).pipe(
+          Effect.asVoid,
+          Effect.mapError((error) => new ${className}HttpError({
+            message: "DELETE request failed",
+            statusCode: 500,
+            method: "DELETE",
+            url: path
+          }))
+        )
+
+      const list = (params?: ListParams) =>
+        scopedClient.get(\`/resources?page=\${params?.page || 1}&limit=\${params?.limit || 10}\`).pipe(
+          Effect.flatMap(HttpClientResponse.json),
+          Effect.map((data: any) => ({
+            data: data.items || [],
+            page: params?.page || 1,
+            limit: params?.limit || 10,
+            total: data.total || 0
+          })),
+          Effect.mapError(() => new ${className}HttpError({
+            message: "List request failed",
+            statusCode: 500,
+            method: "GET",
+            url: "/resources"
+          }))
+        )
+
+      return { config, healthCheck, get, post, put, delete: del, list }
+    })
+  )`)
+  } else if (providerType === "graphql") {
+    // GraphQL Live Layer
+    builder.addRaw(`  /**
+   * Live Layer - GraphQL API client
+   *
+   * Uses HttpClient for GraphQL operations on ${externalService}
+   */
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const client = yield* HttpClient.HttpClient
+      const config = yield* ${className}Config
+
+      const execute = <T>(operation: string, variables?: Record<string, unknown>) =>
+        client.post(config.baseUrl, {
+          body: HttpBody.json({ query: operation, variables }),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": \`Bearer \${config.apiKey}\`
+          }
+        }).pipe(
+          Effect.flatMap(HttpClientResponse.json),
+          Effect.flatMap((response: any) => {
+            if (response.errors && response.errors.length > 0) {
+              return Effect.fail(new ${className}GraphQLError({
+                message: "GraphQL operation failed",
+                errors: response.errors
+              }))
+            }
+            if (!response.data) {
+              return Effect.fail(new ${className}Error({
+                message: "No data in GraphQL response"
+              }))
+            }
+            return Effect.succeed(response.data as T)
+          })
+        )
+
+      const healthCheck = execute<{ status: string }>(\`{ health { status } }\`).pipe(
+        Effect.map(() => ({ status: "healthy" as const })),
+        Effect.catchAll(() => Effect.succeed({ status: "unhealthy" as const }))
+      )
+
+      return {
+        config,
+        healthCheck,
+        query: execute,
+        mutation: execute
+      }
+    })
+  )`)
+  } else {
+    // SDK Live Layer (original implementation)
+    builder.addRaw(`  /**
    * Live Layer - Production implementation
    *
    * Uses dynamic imports to load operations on-demand.

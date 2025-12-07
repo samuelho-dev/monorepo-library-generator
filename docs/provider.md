@@ -22,6 +22,261 @@ Provider libraries implement **adapters** for external services (Stripe, AWS, Op
 6. **Platform Agnostic**: Core logic separated from platform-specific implementations
 7. **No RPC Code**: Provider libraries do NOT handle application RPC - they wrap external service SDKs. Application RPC is handled by **feature** libraries
 
+---
+
+## Provider Types
+
+Provider libraries support four integration patterns, each optimized for different external service types. The generator creates appropriate interfaces, error types, and layer implementations based on the provider type.
+
+### 1. SDK Wrapper (Default)
+
+**Use for**: Third-party JavaScript/TypeScript SDKs with native client libraries
+
+**Examples**: Stripe, OpenAI, AWS SDK, SendGrid, Twilio
+
+**Characteristics**:
+- Wraps existing SDK methods with `Effect.tryPromise`
+- Granular operations split into separate files for tree-shaking
+- Operation files: `create.ts`, `query.ts`, `update.ts`, `delete.ts`
+- Best for: Traditional API services with official SDKs
+
+**Generator Command**:
+```bash
+pnpm exec nx g @workspace:provider stripe \
+  --externalService="Stripe" \
+  --providerType=sdk
+```
+
+**Structure**:
+```
+lib/
+├── service/
+│   ├── interface.ts         # Context.Tag with interface
+│   ├── operations/
+│   │   ├── create.ts        # Create operations (~3-4 KB)
+│   │   ├── query.ts         # Query operations (~4-5 KB)
+│   │   ├── update.ts        # Update operations (~3 KB)
+│   │   ├── delete.ts        # Delete operations (~2-3 KB)
+│   │   └── index.ts         # Operations barrel
+│   └── index.ts             # Service barrel
+├── errors.ts                # ApiError, ConnectionError, RateLimitError, etc.
+└── types.ts                 # Resource, Config, PaginationOptions
+```
+
+**Import Patterns**:
+```typescript
+// Granular import (smallest bundle)
+import { createOperations } from '@workspace/provider-stripe/service/operations/create'
+
+// Full service
+import { StripeService } from '@workspace/provider-stripe/service'
+```
+
+### 2. CLI Wrapper
+
+**Use for**: Command-line tools that need Effect integration
+
+**Examples**: Git, Docker, kubectl, terraform, AWS CLI
+
+**Characteristics**:
+- Uses Effect's `Command` API (NOT CommandExecutor)
+- Methods: `execute(args: string[])`, `version`
+- No separate operations files (all methods in interface.ts)
+- Best for: System commands, build tools, infrastructure CLIs
+
+**Generator Command**:
+```bash
+pnpm exec nx g @workspace:provider docker \
+  --externalService="Docker" \
+  --providerType=cli \
+  --cliCommand="docker"
+```
+
+**Structure**:
+```
+lib/
+├── service/
+│   ├── interface.ts         # CLI wrapper with Command API
+│   └── index.ts             # Service barrel
+├── errors.ts                # CommandError, NotFoundError
+└── types.ts                 # CommandResult, Config (commandPath, timeout)
+```
+
+**Usage Example**:
+```typescript
+import { DockerService } from '@workspace/provider-docker'
+
+Effect.gen(function* () {
+  const docker = yield* DockerService
+  const result = yield* docker.execute(["ps", "-a"])
+  const version = yield* docker.version
+})
+```
+
+### 3. HTTP/REST API
+
+**Use for**: RESTful APIs without official SDKs
+
+**Examples**: Custom internal APIs, third-party REST services, microservices
+
+**Characteristics**:
+- Uses Effect's `HttpClient` API
+- Methods: `get()`, `post()`, `put()`, `delete()`, `list()`
+- Schema validation with `Effect.Schema`
+- Authentication: Bearer token, API key, OAuth, Basic
+- Best for: HTTP APIs, REST services, JSON APIs
+
+**Generator Command**:
+```bash
+pnpm exec nx g @workspace:provider acme-api \
+  --externalService="Acme API" \
+  --providerType=http \
+  --baseUrl="https://api.acme.com" \
+  --authType=bearer
+```
+
+**Structure**:
+```
+lib/
+├── service/
+│   ├── interface.ts         # HTTP service with CRUD methods
+│   └── index.ts             # Service barrel
+├── errors.ts                # HttpError, NetworkError, RateLimitError
+└── types.ts                 # ResourceSchema (Effect.Schema), Config (baseUrl, apiKey)
+```
+
+**Usage Example**:
+```typescript
+import { AcmeApiService } from '@workspace/provider-acme-api'
+
+Effect.gen(function* () {
+  const api = yield* AcmeApiService
+  const resources = yield* api.list({ page: 1, limit: 10 })
+  const resource = yield* api.get("resource-id")
+  const created = yield* api.post({ name: "New Resource" })
+})
+```
+
+### 4. GraphQL API
+
+**Use for**: GraphQL endpoints without official SDKs
+
+**Examples**: Hasura, Apollo Server, custom GraphQL APIs
+
+**Characteristics**:
+- Uses Effect's `HttpClient` for GraphQL operations
+- Methods: `query<T>()`, `mutation<T>()`
+- Schema validation with `Effect.Schema`
+- Authentication: Bearer token, API key
+- Best for: GraphQL APIs, schema-driven APIs
+
+**Generator Command**:
+```bash
+pnpm exec nx g @workspace:provider hasura \
+  --externalService="Hasura" \
+  --providerType=graphql \
+  --baseUrl="https://api.hasura.io/v1/graphql" \
+  --authType=bearer
+```
+
+**Structure**:
+```
+lib/
+├── service/
+│   ├── interface.ts         # GraphQL service with query/mutation
+│   └── index.ts             # Service barrel
+├── errors.ts                # GraphQLError, HttpError, ValidationError
+└── types.ts                 # ResourceSchema (Effect.Schema), Config (baseUrl, apiKey)
+```
+
+**Usage Example**:
+```typescript
+import { HasuraService } from '@workspace/provider-hasura'
+
+Effect.gen(function* () {
+  const hasura = yield* HasuraService
+
+  const data = yield* hasura.query<QueryResult>(`
+    query GetResources {
+      resources { id name }
+    }
+  `)
+
+  const result = yield* hasura.mutation<MutationResult>(`
+    mutation CreateResource($input: ResourceInput!) {
+      createResource(input: $input) { id name }
+    }
+  `, { input: { name: "New Resource" } })
+})
+```
+
+### Provider Type Decision Matrix
+
+| Integration Type | Provider Type | Key Dependencies | Generated Files |
+|------------------|---------------|------------------|-----------------|
+| Third-party SDK | `sdk` | SDK package | `operations/*.ts` + `interface.ts` |
+| CLI tool | `cli` | `@effect/platform` (Command) | `interface.ts` only |
+| REST API | `http` | `@effect/platform` (HttpClient) | `interface.ts` only |
+| GraphQL API | `graphql` | `@effect/platform` (HttpClient) | `interface.ts` only |
+
+### Common Patterns by Type
+
+**SDK Wrapper Pattern**:
+- Initialize SDK client in `Layer.effect`
+- Wrap each SDK method with `Effect.tryPromise`
+- Transform SDK errors to domain errors
+- Add retry logic with `Schedule.exponential`
+- Export granular operations for tree-shaking
+
+**CLI Wrapper Pattern**:
+- Use `Command.make(cliCommand, ...args)`
+- Pipe to `Command.string` for output
+- Map to `CommandResult` with output and exitCode
+- Handle `CommandError` for failures
+- No separate operation files
+
+**HTTP Provider Pattern**:
+- Use `HttpClient.mapRequest` to set base URL
+- Add authentication with `HttpClientRequest.bearerToken`
+- Validate responses with `Schema.Struct`
+- Handle HTTP status codes (4xx, 5xx)
+- Implement retry with backoff
+
+**GraphQL Provider Pattern**:
+- POST GraphQL queries to endpoint
+- Include `query` and `variables` in body
+- Parse response for `errors` array
+- Validate data with Effect Schema
+- Type-safe query/mutation methods
+
+### When to Use Each Type
+
+Use **SDK Wrapper** when:
+- Official JavaScript/TypeScript SDK exists
+- SDK is well-maintained and stable
+- Tree-shaking is important (large SDK)
+- You want to leverage SDK's built-in features
+
+Use **CLI Wrapper** when:
+- No JavaScript SDK exists, only CLI
+- You need to automate CLI workflows
+- Building infrastructure automation tools
+- CLI is more stable than APIs
+
+Use **HTTP Provider** when:
+- No official SDK exists
+- REST API is well-documented
+- You want full control over requests
+- API is simple and doesn't need SDK overhead
+
+Use **GraphQL Provider** when:
+- GraphQL endpoint is available
+- Schema-driven development preferred
+- Need type-safe queries without codegen
+- Want efficient data fetching with fragments
+
+---
+
 ## State Management in Provider Layer
 
 **Provider libraries are server-side adapters that use Effect Ref or SynchronizedRef ONLY for SDK-level state, NEVER for application state.**

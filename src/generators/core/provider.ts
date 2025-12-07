@@ -68,6 +68,10 @@ export interface ProviderCoreOptions {
   readonly workspaceRoot?: string
   readonly externalService: string
   readonly platform: PlatformType
+  readonly providerType?: "sdk" | "cli" | "http" | "graphql"
+  readonly cliCommand?: string
+  readonly baseUrl?: string
+  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
 }
 
 /**
@@ -138,7 +142,11 @@ export function generateProviderCore(
       description: options.description,
       tags: options.tags.split(","),
       externalService: options.externalService,
-      platforms: [platformMapping[options.platform]]
+      platforms: [platformMapping[options.platform]],
+      providerType: options.providerType || "sdk",
+      ...(options.cliCommand && { cliCommand: options.cliCommand }),
+      ...(options.baseUrl && { baseUrl: options.baseUrl }),
+      ...(options.authType && { authType: options.authType })
     }
 
     // Generate all domain files
@@ -163,7 +171,204 @@ export function generateProviderCore(
     filesGenerated.push(`${options.sourceRoot}/types.ts`)
 
     // Generate CLAUDE.md with bundle optimization guidance
-    const claudeDoc = `# ${templateOptions.packageName}
+    const providerType = options.providerType || "sdk"
+
+    // Generate provider-type-specific documentation
+    let claudeDoc = ""
+
+    if (providerType === "cli") {
+      claudeDoc = `# ${templateOptions.packageName}
+
+${templateOptions.description}
+
+## Quick Reference
+
+This is an AI-optimized reference for ${templateOptions.externalService}, a CLI wrapper provider library following Effect-based service patterns.
+
+## Provider Type: CLI Wrapper
+
+This provider wraps the \`${options.cliCommand || 'cli-command'}\` command-line tool using Effect's Command API.
+
+## Architecture
+
+### Structure
+
+- **types.ts**: Type-only exports (zero runtime overhead)
+- **lib/service/interface.ts**: CLI wrapper service with Command API
+- **lib/errors.ts**: Data.TaggedError-based error types (CommandError, NotFoundError)
+- **lib/types.ts**: CLI-specific types (CommandResult, Config)
+- **lib/validation.ts**: Input validation helpers
+- **lib/layers.ts**: Layer compositions (Live, Test, Dev)
+
+## Import Patterns
+
+\`\`\`typescript
+// Type-only import (zero runtime)
+import type { CommandResult, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
+
+// Service import
+import { ${templateOptions.className} } from '${templateOptions.packageName}';
+
+Effect.gen(function* () {
+  const service = yield* ${templateOptions.className};
+  const result = yield* service.execute(["--help"]);
+  const version = yield* service.version;
+});
+\`\`\`
+
+### Customization Guide
+
+1. **Configure CLI Command** (\`lib/service/interface.ts\`):
+   - Command path is configurable via ${templateOptions.className}Config
+   - Add custom command methods beyond execute() and version()
+   - Configure timeout and environment variables
+
+2. **Error Handling** (\`lib/errors.ts\`):
+   - CommandError: Command execution failures
+   - NotFoundError: CLI tool not installed
+   - Add domain-specific error types as needed
+
+3. **Testing** (\`lib/layers.ts\`):
+   - Test layer uses Layer.succeed with mock implementations
+   - No actual CLI execution in tests
+`
+    } else if (providerType === "http") {
+      claudeDoc = `# ${templateOptions.packageName}
+
+${templateOptions.description}
+
+## Quick Reference
+
+This is an AI-optimized reference for ${templateOptions.externalService}, an HTTP/REST API provider library following Effect-based service patterns.
+
+## Provider Type: HTTP/REST API
+
+This provider integrates with ${templateOptions.externalService} HTTP API using Effect's HttpClient.
+
+## Architecture
+
+### Structure
+
+- **types.ts**: Type-only exports (zero runtime overhead)
+- **lib/service/interface.ts**: HTTP service with CRUD operations
+- **lib/errors.ts**: Data.TaggedError-based error types (HttpError, NetworkError, RateLimitError)
+- **lib/types.ts**: HTTP-specific types (ResourceSchema, Config with baseUrl)
+- **lib/validation.ts**: Input validation with Effect Schema
+- **lib/layers.ts**: Layer compositions (Live, Test, Dev)
+
+## Import Patterns
+
+\`\`\`typescript
+// Type-only import (zero runtime)
+import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
+
+// Service import
+import { ${templateOptions.className} } from '${templateOptions.packageName}';
+
+Effect.gen(function* () {
+  const service = yield* ${templateOptions.className};
+  const resources = yield* service.list({ page: 1, limit: 10 });
+  const resource = yield* service.get("resource-id");
+});
+\`\`\`
+
+### Customization Guide
+
+1. **Configure HTTP Client** (\`lib/service/interface.ts\`):
+   - Base URL configured via ${templateOptions.className}Config
+   - Authentication via ${options.authType || 'bearer'} token
+   - Retry policies and timeouts configurable
+
+2. **Define Resource Schema** (\`lib/types.ts\`):
+   - Update ResourceSchema to match your API response
+   - Use Effect Schema for validation and type safety
+
+3. **API Methods** (\`lib/service/interface.ts\`):
+   - Implement: get(), post(), put(), delete(), list()
+   - Add custom endpoints as needed
+   - Health check endpoint for monitoring
+
+4. **Error Handling** (\`lib/errors.ts\`):
+   - HttpError: HTTP status code errors (4xx, 5xx)
+   - NetworkError: Connection failures
+   - RateLimitError: Rate limiting with retry-after
+`
+    } else if (providerType === "graphql") {
+      claudeDoc = `# ${templateOptions.packageName}
+
+${templateOptions.description}
+
+## Quick Reference
+
+This is an AI-optimized reference for ${templateOptions.externalService}, a GraphQL API provider library following Effect-based service patterns.
+
+## Provider Type: GraphQL API
+
+This provider integrates with ${templateOptions.externalService} GraphQL API using Effect's HttpClient.
+
+## Architecture
+
+### Structure
+
+- **types.ts**: Type-only exports (zero runtime overhead)
+- **lib/service/interface.ts**: GraphQL service with query/mutation operations
+- **lib/errors.ts**: Data.TaggedError-based error types (GraphQLError, HttpError)
+- **lib/types.ts**: GraphQL-specific types (ResourceSchema, Config with baseUrl)
+- **lib/validation.ts**: Input validation with Effect Schema
+- **lib/layers.ts**: Layer compositions (Live, Test, Dev)
+
+## Import Patterns
+
+\`\`\`typescript
+// Type-only import (zero runtime)
+import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
+
+// Service import
+import { ${templateOptions.className} } from '${templateOptions.packageName}';
+
+Effect.gen(function* () {
+  const service = yield* ${templateOptions.className};
+
+  // GraphQL query
+  const data = yield* service.query<QueryResult>(\`
+    query GetResources {
+      resources { id name }
+    }
+  \`);
+
+  // GraphQL mutation
+  const result = yield* service.mutation<MutationResult>(\`
+    mutation CreateResource($input: ResourceInput!) {
+      createResource(input: $input) { id name }
+    }
+  \`, { input: { name: "New Resource" } });
+});
+\`\`\`
+
+### Customization Guide
+
+1. **Configure GraphQL Client** (\`lib/service/interface.ts\`):
+   - GraphQL endpoint configured via ${templateOptions.className}Config
+   - Authentication via ${options.authType || 'bearer'} token
+   - Retry policies and timeouts configurable
+
+2. **Define Schema Types** (\`lib/types.ts\`):
+   - Update ResourceSchema to match your GraphQL schema
+   - Use Effect Schema for response validation
+
+3. **GraphQL Operations** (\`lib/service/interface.ts\`):
+   - query(): Execute GraphQL queries
+   - mutation(): Execute GraphQL mutations
+   - Add typed helper methods for common operations
+
+4. **Error Handling** (\`lib/errors.ts\`):
+   - GraphQLError: GraphQL operation errors with error array
+   - HttpError: HTTP-level errors (network, status codes)
+   - ValidationError: Schema validation failures
+`
+    } else {
+      // SDK provider (default)
+      claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
 
@@ -260,6 +465,7 @@ Effect.gen(function* () {
 - Each operation can be imported independently for optimal tree-shaking
 - Service interface uses minimal overhead (~2 KB vs ~18 KB for full barrel)
 `
+    }
 
     yield* adapter.writeFile(`${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`, claudeDoc)
     filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`)
@@ -276,30 +482,36 @@ Effect.gen(function* () {
 
     // Generate service directory structure for granular imports
     const servicePath = `${sourceLibPath}/service`
-    const operationsPath = `${servicePath}/operations`
     yield* adapter.makeDirectory(servicePath)
-    yield* adapter.makeDirectory(operationsPath)
 
     // Generate service interface (lightweight Context.Tag with static layers)
     yield* adapter.writeFile(`${servicePath}/interface.ts`, generateProviderServiceInterfaceFile(templateOptions))
     filesGenerated.push(`${servicePath}/interface.ts`)
 
-    // Generate operation files (split for optimal tree-shaking)
-    yield* adapter.writeFile(`${operationsPath}/create.ts`, generateProviderCreateOperationFile(templateOptions))
-    filesGenerated.push(`${operationsPath}/create.ts`)
+    // Conditional: Only generate operations for SDK providers
+    // CLI/HTTP/GraphQL providers have operations defined in interface.ts
+    const providerType = options.providerType || "sdk"
+    if (providerType === "sdk") {
+      const operationsPath = `${servicePath}/operations`
+      yield* adapter.makeDirectory(operationsPath)
 
-    yield* adapter.writeFile(`${operationsPath}/query.ts`, generateProviderQueryOperationFile(templateOptions))
-    filesGenerated.push(`${operationsPath}/query.ts`)
+      // Generate operation files (split for optimal tree-shaking)
+      yield* adapter.writeFile(`${operationsPath}/create.ts`, generateProviderCreateOperationFile(templateOptions))
+      filesGenerated.push(`${operationsPath}/create.ts`)
 
-    yield* adapter.writeFile(`${operationsPath}/update.ts`, generateProviderUpdateOperationFile(templateOptions))
-    filesGenerated.push(`${operationsPath}/update.ts`)
+      yield* adapter.writeFile(`${operationsPath}/query.ts`, generateProviderQueryOperationFile(templateOptions))
+      filesGenerated.push(`${operationsPath}/query.ts`)
 
-    yield* adapter.writeFile(`${operationsPath}/delete.ts`, generateProviderDeleteOperationFile(templateOptions))
-    filesGenerated.push(`${operationsPath}/delete.ts`)
+      yield* adapter.writeFile(`${operationsPath}/update.ts`, generateProviderUpdateOperationFile(templateOptions))
+      filesGenerated.push(`${operationsPath}/update.ts`)
 
-    // Generate operations barrel export
-    yield* adapter.writeFile(`${operationsPath}/index.ts`, generateProviderOperationsIndexFile(templateOptions))
-    filesGenerated.push(`${operationsPath}/index.ts`)
+      yield* adapter.writeFile(`${operationsPath}/delete.ts`, generateProviderDeleteOperationFile(templateOptions))
+      filesGenerated.push(`${operationsPath}/delete.ts`)
+
+      // Generate operations barrel export
+      yield* adapter.writeFile(`${operationsPath}/index.ts`, generateProviderOperationsIndexFile(templateOptions))
+      filesGenerated.push(`${operationsPath}/index.ts`)
+    }
 
     // Generate service barrel export
     yield* adapter.writeFile(`${servicePath}/index.ts`, generateProviderServiceIndexFile(templateOptions))

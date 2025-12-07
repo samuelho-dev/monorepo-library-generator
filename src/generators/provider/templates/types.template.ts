@@ -20,7 +20,7 @@ import type { ProviderTemplateOptions } from "../../../utils/shared/types"
  */
 export function generateTypesFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { name: projectClassName } = options
+  const { name: projectClassName, className, providerType = "sdk" } = options
 
   // File header
   builder.addRaw("/**")
@@ -29,6 +29,156 @@ export function generateTypesFile(options: ProviderTemplateOptions) {
   builder.addRaw(" * Common types used across the service")
   builder.addRaw(" */")
   builder.addBlankLine()
+
+  // Add Schema import for HTTP/GraphQL providers
+  if (providerType === "http" || providerType === "graphql") {
+    builder.addImport("effect", "Schema")
+    builder.addBlankLine()
+  }
+
+  // Add provider-type-specific configuration
+  if (providerType === "cli") {
+    // CLI-specific types
+    builder.addRaw("/**")
+    builder.addRaw(" * Command Result")
+    builder.addRaw(" */")
+    builder.addRaw("export interface CommandResult {")
+    builder.addRaw("  readonly output: string;")
+    builder.addRaw("  readonly exitCode: number;")
+    builder.addRaw("}")
+    builder.addBlankLine()
+
+    builder.addRaw("/**")
+    builder.addRaw(` * ${className} Configuration`)
+    builder.addRaw(" */")
+    builder.addRaw(`export interface ${className}Config {`)
+    builder.addRaw("  readonly commandPath?: string;")
+    builder.addRaw("  readonly defaultTimeout?: number;")
+    builder.addRaw("  readonly env?: Record<string, string>;")
+    builder.addRaw("}")
+    builder.addBlankLine()
+
+    // Return early for CLI - no pagination types needed
+    return builder.toString()
+  }
+
+  if (providerType === "http" || providerType === "graphql") {
+    // HTTP/GraphQL-specific types
+    builder.addRaw("/**")
+    builder.addRaw(` * ${className} Configuration`)
+    builder.addRaw(" */")
+    builder.addRaw(`export interface ${className}Config {`)
+    builder.addRaw("  readonly baseUrl: string;")
+    builder.addRaw("  readonly apiKey: string;")
+    builder.addRaw("  readonly timeout?: number;")
+    builder.addRaw("}")
+    builder.addBlankLine()
+
+    // Resource schema for HTTP/GraphQL
+    builder.addRaw("/**")
+    builder.addRaw(" * Resource Schema - customize based on your API")
+    builder.addRaw(" */")
+    builder.addRaw("export const ResourceSchema = Schema.Struct({")
+    builder.addRaw("  id: Schema.String,")
+    builder.addRaw("  name: Schema.String,")
+    builder.addRaw("  createdAt: Schema.DateFromSelf,")
+    builder.addRaw("  updatedAt: Schema.DateFromSelf,")
+    builder.addRaw("});")
+    builder.addBlankLine()
+
+    builder.addRaw("export type Resource = Schema.Schema.Type<typeof ResourceSchema>;")
+    builder.addBlankLine()
+
+    // List params for pagination
+    builder.addRaw("/**")
+    builder.addRaw(" * List Parameters")
+    builder.addRaw(" */")
+    builder.addRaw("export interface ListParams {")
+    builder.addRaw("  readonly page?: number;")
+    builder.addRaw("  readonly limit?: number;")
+    builder.addRaw("}")
+    builder.addBlankLine()
+
+    // Paginated result
+    builder.addRaw("/**")
+    builder.addRaw(" * Paginated Result")
+    builder.addRaw(" */")
+    builder.addRaw("export interface PaginatedResult<T> {")
+    builder.addRaw("  readonly data: readonly T[];")
+    builder.addRaw("  readonly page: number;")
+    builder.addRaw("  readonly limit: number;")
+    builder.addRaw("  readonly total: number;")
+    builder.addRaw("}")
+    builder.addBlankLine()
+
+    // Health check result
+    builder.addRaw("/**")
+    builder.addRaw(" * Health Check Result")
+    builder.addRaw(" */")
+    builder.addRaw("export interface HealthCheckResult {")
+    builder.addRaw("  readonly status: \"healthy\" | \"unhealthy\";")
+    builder.addRaw("  readonly timestamp?: Date;")
+    builder.addRaw("}")
+    builder.addBlankLine()
+
+    return builder.toString()
+  }
+
+  // SDK-specific types (original implementation)
+  builder.addRaw("/**")
+  builder.addRaw(` * ${className} Configuration`)
+  builder.addRaw(" */")
+  builder.addRaw(`export interface ${className}Config {`)
+  builder.addRaw("  readonly apiKey: string;")
+  builder.addRaw("  readonly timeout?: number;")
+  builder.addRaw("}")
+  builder.addBlankLine()
+
+  // Resource type for SDK
+  builder.addRaw("/**")
+  builder.addRaw(" * Resource - customize based on your service")
+  builder.addRaw(" */")
+  builder.addRaw("export interface Resource {")
+  builder.addRaw("  readonly id: string;")
+  builder.addRaw("  readonly name: string;")
+  builder.addRaw("  readonly createdAt: Date;")
+  builder.addRaw("  readonly updatedAt: Date;")
+  builder.addRaw("}")
+  builder.addBlankLine()
+
+  // List params
+  builder.addRaw("/**")
+  builder.addRaw(" * List Parameters")
+  builder.addRaw(" */")
+  builder.addRaw("export interface ListParams {")
+  builder.addRaw("  readonly page?: number;")
+  builder.addRaw("  readonly limit?: number;")
+  builder.addRaw("}")
+  builder.addBlankLine()
+
+  // Paginated result
+  builder.addRaw("/**")
+  builder.addRaw(" * Paginated Result")
+  builder.addRaw(" */")
+  builder.addRaw("export interface PaginatedResult<T> {")
+  builder.addRaw("  readonly data: readonly T[];")
+  builder.addRaw("  readonly page: number;")
+  builder.addRaw("  readonly limit: number;")
+  builder.addRaw("  readonly total: number;")
+  builder.addRaw("}")
+  builder.addBlankLine()
+
+  // Health check result
+  builder.addRaw("/**")
+  builder.addRaw(" * Health Check Result")
+  builder.addRaw(" */")
+  builder.addRaw("export interface HealthCheckResult {")
+  builder.addRaw("  readonly status: \"healthy\" | \"unhealthy\";")
+  builder.addRaw("  readonly timestamp?: Date;")
+  builder.addRaw("}")
+  builder.addBlankLine()
+
+  // Continue with the original SDK types below...
 
   // Service Metadata
   builder.addInterface({

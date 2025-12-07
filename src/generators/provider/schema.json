@@ -66,6 +66,76 @@
       "default": false,
       "x-prompt": "Do you need separate client/server platform exports?"
     },
+    "providerType": {
+      "type": "string",
+      "description": "Type of provider integration",
+      "enum": ["sdk", "cli", "http", "graphql"],
+      "default": "sdk",
+      "x-prompt": {
+        "message": "What type of provider integration is this?",
+        "type": "list",
+        "items": [
+          {
+            "value": "sdk",
+            "label": "SDK/Library Wrapper (Stripe, AWS SDK, OpenAI, Supabase)"
+          },
+          {
+            "value": "cli",
+            "label": "CLI Tool Wrapper (ffmpeg, git, docker, imagemagick)"
+          },
+          {
+            "value": "http",
+            "label": "HTTP/REST API (custom REST endpoints, no official SDK)"
+          },
+          {
+            "value": "graphql",
+            "label": "GraphQL API (GraphQL endpoints, schema-based queries)"
+          }
+        ]
+      }
+    },
+    "cliCommand": {
+      "type": "string",
+      "description": "CLI command name (required for CLI providers, e.g., 'ffmpeg', 'git')",
+      "x-prompt": "What is the CLI command name?"
+    },
+    "baseUrl": {
+      "type": "string",
+      "description": "Base URL for HTTP/GraphQL providers (e.g., 'https://api.example.com')",
+      "x-prompt": "What is the base URL for the API?"
+    },
+    "authType": {
+      "type": "string",
+      "description": "Authentication type for HTTP/GraphQL providers",
+      "enum": ["bearer", "apikey", "oauth", "basic", "none"],
+      "default": "bearer",
+      "x-prompt": {
+        "message": "What type of authentication does the API use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "bearer",
+            "label": "Bearer Token (Authorization: Bearer)"
+          },
+          {
+            "value": "apikey",
+            "label": "API Key (custom header)"
+          },
+          {
+            "value": "oauth",
+            "label": "OAuth 2.0"
+          },
+          {
+            "value": "basic",
+            "label": "Basic Auth"
+          },
+          {
+            "value": "none",
+            "label": "No authentication"
+          }
+        ]
+      }
+    },
     "tags": {
       "type": "string",
       "description": "Additional tags for module boundary rules (comma-separated)",

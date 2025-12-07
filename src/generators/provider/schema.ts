@@ -12,6 +12,13 @@ export interface ProviderGeneratorSchema {
   description?: string
   platform?: "node" | "browser" | "universal" | "edge"
   includeClientServer?: boolean
+
+  // Provider type configuration
+  providerType?: "sdk" | "cli" | "http" | "graphql"
+  cliCommand?: string
+  baseUrl?: string
+  authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
+
   tags?: string
 
   // Dotfile generation options (Effect.ts code quality enforcement)
