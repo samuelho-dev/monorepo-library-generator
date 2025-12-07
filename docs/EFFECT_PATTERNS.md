@@ -296,6 +296,448 @@ export class UserRepository extends Context.Tag('UserRepository')<
 }
 ```
 
+### Built-in Effect Caching Operators
+
+Effect provides built-in caching operators for **operation-level memoization**, complementing infrastructure-level caching (Redis, etc.). Use built-in operators for in-process caching of computations, API calls, and resource initialization.
+
+**When to use built-in caching vs CacheService:**
+
+| Caching Type | Scope | TTL Support | Persistence | Use Case |
+|--------------|-------|-------------|-------------|----------|
+| **Effect.cached** | Single process | Indefinite | In-memory | Pure computations, SDK clients |
+| **Effect.cachedWithTTL** | Single process | Yes (duration) | In-memory | API rate limits, token refresh |
+| **Effect.once** | Single process | Indefinite | In-memory | One-time initialization |
+| **cachedFunction** | Single process | Custom | In-memory | Function memoization |
+| **CacheService (Redis)** | Distributed | Yes (custom) | Persistent | User sessions, shared data |
+| **Layered (Both)** | Hybrid | Both | Hybrid | High-traffic operations |
+
+---
+
+#### Pattern 1: Effect.cached - Indefinite Cache
+
+**Cache operation result after first execution.** Subsequent calls return the cached value without re-executing.
+
+```typescript
+import { Effect } from "effect";
+
+// User profile lookup with caching
+const getUserProfile = (userId: string) =>
+  Effect.gen(function* () {
+    const repo = yield* UserRepository;
+    const user = yield* repo.findById(userId);
+
+    if (Option.isNone(user)) {
+      return yield* Effect.fail(new UserNotFoundError({ userId }));
+    }
+
+    return user.value;
+  }).pipe(
+    Effect.cached // ✅ Result cached indefinitely
+  );
+
+// First call: Executes and caches
+const profile1 = yield* getUserProfile("user-123");
+
+// Second call: Returns cached value (no DB query)
+const profile2 = yield* getUserProfile("user-123");
+
+// ⚠️ Cache is per Effect instance
+// Creating a new Effect creates a new cache
+const freshLookup = getUserProfile("user-123"); // New cache
+```
+
+**Important:** Cache is bound to the Effect instance. To share cache across the application, create the cached Effect once and reuse:
+
+```typescript
+// ✅ GOOD: Single cached Effect shared across application
+export class UserService extends Context.Tag("UserService")<
+  UserService,
+  {
+    readonly getProfile: (
+      userId: string
+    ) => Effect.Effect<User, UserNotFoundError>;
+  }
+>() {
+  static readonly Live = Layer.sync(this, () => {
+    // Create cached operation once
+    const cachedGetProfile = (userId: string) =>
+      Effect.gen(function* () {
+        const repo = yield* UserRepository;
+        const user = yield* repo.findById(userId);
+        // ...
+        return user.value;
+      }).pipe(Effect.cached);
+
+    return {
+      getProfile: cachedGetProfile,
+    };
+  });
+}
+
+// All calls share the same cache
+const service = yield* UserService;
+const user1 = yield* service.getProfile("user-123"); // Cached
+const user2 = yield* service.getProfile("user-123"); // Cache hit
+```
+
+---
+
+#### Pattern 2: Effect.cachedWithTTL - Time-Based Expiration
+
+**Auto-refresh cache after duration.** Perfect for rate-limited APIs or time-sensitive data.
+
+```typescript
+import { Effect } from "effect";
+
+// Exchange rate caching with 5-minute TTL
+const getExchangeRate = (currency: string) =>
+  Effect.gen(function* () {
+    const api = yield* ExchangeRateAPI;
+    yield* Effect.log(`Fetching exchange rate for ${currency}`);
+
+    const rate = yield* Effect.tryPromise({
+      try: () => api.getRates(currency),
+      catch: (error) => new APIError({ message: String(error) }),
+    });
+
+    return rate;
+  }).pipe(
+    Effect.cachedWithTTL("5 minutes") // ✅ Refreshes every 5 minutes
+  );
+
+// First call: Fetches from API
+const rate1 = yield* getExchangeRate("USD");
+
+// Within 5 minutes: Returns cached value
+yield* Effect.sleep("2 minutes");
+const rate2 = yield* getExchangeRate("USD"); // Cache hit
+
+// After 5 minutes: Refreshes from API
+yield* Effect.sleep("4 minutes");
+const rate3 = yield* getExchangeRate("USD"); // Fetches again
+```
+
+**Real-World: Token Refresh with TTL**
+
+```typescript
+// OAuth token with auto-refresh
+const getAccessToken = Effect.gen(function* () {
+  const oauth = yield* OAuthService;
+  yield* Effect.log("Refreshing access token");
+
+  const token = yield* oauth.refreshToken();
+  return token;
+}).pipe(
+  Effect.cachedWithTTL("55 minutes") // Refresh 5min before expiry
+);
+
+// Use in API calls
+const makeAuthenticatedRequest = (endpoint: string) =>
+  Effect.gen(function* () {
+    const token = yield* getAccessToken; // Cached or refreshed
+    const api = yield* APIClient;
+
+    return yield* api.request(endpoint, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  });
+```
+
+---
+
+#### Pattern 3: Effect.once - One-Time Initialization
+
+**Execute exactly once, even with concurrent calls.** Ideal for SDK initialization, config loading, database migration.
+
+```typescript
+import { Effect } from "effect";
+
+// Initialize Stripe SDK exactly once
+const initializeStripe = Effect.gen(function* () {
+  yield* Effect.log("Initializing Stripe SDK");
+  const config = yield* ConfigService;
+
+  const stripe = new Stripe(config.stripeApiKey, {
+    apiVersion: "2023-10-16",
+  });
+
+  yield* Effect.log("Stripe SDK initialized");
+  return stripe;
+}).pipe(
+  Effect.once // ✅ Runs only on first call
+);
+
+// All concurrent calls wait for single initialization
+const program = Effect.all(
+  [
+    initializeStripe, // First call: executes
+    initializeStripe, // Waits for first call
+    initializeStripe, // Waits for first call
+  ],
+  { concurrency: "unbounded" }
+);
+
+yield* program;
+// Logs "Initializing Stripe SDK" only ONCE
+```
+
+**Database Migration Example:**
+
+```typescript
+const runMigrations = Effect.gen(function* () {
+  const database = yield* DatabaseService;
+  yield* Effect.log("Running database migrations");
+
+  yield* database.migrate();
+
+  yield* Effect.log("Migrations complete");
+}).pipe(
+  Effect.once // ✅ Migrations run exactly once
+);
+
+// Safe to call from multiple services
+export class UserRepository extends Context.Tag("UserRepository")<
+  UserRepository,
+  RepositoryInterface
+>() {
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      // Ensure migrations before repository starts
+      yield* runMigrations; // Safe: runs once globally
+
+      const database = yield* DatabaseService;
+      return createRepository(database);
+    })
+  );
+}
+```
+
+---
+
+#### Pattern 4: cachedFunction - Function Memoization
+
+**Memoize function calls by input parameters.** Results cached by argument equality.
+
+```typescript
+import { cachedFunction } from "effect/Function";
+import { Effect } from "effect";
+
+// Expensive shipping cost calculation
+const calculateShippingCost = cachedFunction(
+  (weight: number, distance: number) =>
+    Effect.gen(function* () {
+      yield* Effect.log(`Computing shipping for ${weight}kg, ${distance}km`);
+
+      // Expensive calculation
+      const baseRate = 5;
+      const weightCost = weight * 0.5;
+      const distanceCost = distance * 0.1;
+
+      yield* Effect.sleep("100 millis"); // Simulate computation
+
+      return baseRate + weightCost + distanceCost;
+    })
+);
+
+// First call: Computes
+const cost1 = yield* calculateShippingCost(10, 500);
+// Logs: "Computing shipping for 10kg, 500km"
+
+// Same arguments: Returns cached
+const cost2 = yield* calculateShippingCost(10, 500);
+// No log - cached result
+
+// Different arguments: Computes new
+const cost3 = yield* calculateShippingCost(20, 500);
+// Logs: "Computing shipping for 20kg, 500km"
+```
+
+**Custom Equivalence:**
+
+```typescript
+import { Equal } from "effect";
+
+interface ProductQuery {
+  category: string;
+  minPrice: number;
+}
+
+// Cache by object equality
+const searchProducts = cachedFunction(
+  (query: ProductQuery) =>
+    Effect.gen(function* () {
+      const db = yield* DatabaseService;
+      yield* Effect.log(`Searching products`, query);
+
+      const results = yield* db.query((qb) =>
+        qb
+          .selectFrom("products")
+          .where("category", "=", query.category)
+          .where("price", ">=", query.minPrice)
+          .selectAll()
+          .execute()
+      );
+
+      return results;
+    }),
+  {
+    // Custom cache key equality
+    equivalence: Equal.struct({
+      category: Equal.string,
+      minPrice: Equal.number,
+    }),
+  }
+);
+
+// Cached by object content, not reference
+const results1 = yield* searchProducts({ category: "books", minPrice: 10 });
+const results2 = yield* searchProducts({ category: "books", minPrice: 10 });
+// Second call uses cache (same content)
+```
+
+---
+
+#### Pattern 5: Layered Caching Strategy
+
+**Combine Effect.cached (in-memory) + CacheService (distributed Redis)** for optimal performance.
+
+```typescript
+import { Effect, Option } from "effect";
+
+// Two-tier caching: In-memory (L1) + Redis (L2)
+const getProductDetails = (productId: string) =>
+  Effect.gen(function* () {
+    const cache = yield* CacheService; // L2: Redis
+    const db = yield* DatabaseService;
+
+    // Check L2 cache (Redis - shared across processes)
+    const cached = yield* cache.get<Product>(`product:${productId}`);
+    if (Option.isSome(cached)) {
+      yield* Effect.log("L2 cache hit (Redis)");
+      return cached.value;
+    }
+
+    // L2 miss: Query database
+    yield* Effect.log("Cache miss - querying database");
+    const product = yield* db.query((qb) =>
+      qb
+        .selectFrom("products")
+        .where("id", "=", productId)
+        .selectAll()
+        .executeTakeFirst()
+    );
+
+    if (!product) {
+      return yield* Effect.fail(new ProductNotFoundError({ productId }));
+    }
+
+    // Store in L2 cache (Redis)
+    yield* cache.set(`product:${productId}`, product, "10 minutes");
+
+    return product;
+  }).pipe(
+    Effect.cached // L1: In-memory cache per process
+  );
+
+// First call (Process A):
+// 1. L1 miss (in-memory)
+// 2. L2 miss (Redis)
+// 3. Database query
+// 4. Store in Redis
+// 5. Cache in memory
+
+// Second call (Process A):
+// 1. L1 hit (in-memory) ✅ Fastest
+
+// Call from Process B:
+// 1. L1 miss (different process)
+// 2. L2 hit (Redis) ✅ Fast, shared
+```
+
+**Decision Matrix for Layered Caching:**
+
+```typescript
+// Use L1 only (Effect.cached) when:
+// - Single server/process
+// - Low traffic
+// - Data doesn't change across processes
+
+// Use L2 only (CacheService/Redis) when:
+// - Multiple servers
+// - Need cache invalidation
+// - Data shared across services
+
+// Use L1 + L2 (Layered) when:
+// - High traffic (thousands of req/sec)
+// - Read-heavy operations
+// - Multiple servers
+// - Acceptable to serve slightly stale data
+```
+
+---
+
+### Caching Strategy Decision Guide
+
+| Scenario | Operator | Reason |
+|----------|----------|--------|
+| User profile lookup | Effect.cached | Rarely changes, high read |
+| Exchange rates | Effect.cachedWithTTL | Time-sensitive |
+| SDK initialization | Effect.once | Initialize exactly once |
+| Shipping cost | cachedFunction | Depends on inputs |
+| Multi-server app | CacheService | Share across processes |
+| High-traffic reads | Layered | Best performance |
+| API rate limits | Effect.cachedWithTTL | Respect quotas |
+| Database connections | Effect.once | Pool initialization |
+| Product catalog (multi-server) | Layered | Fast + shared |
+| Configuration | Effect.once | Load once at startup |
+
+---
+
+### Anti-Patterns: What NOT to Do
+
+```typescript
+// ❌ WRONG: Creating new cached Effect each time
+const getBadProfile = (userId: string) => {
+  // Creates NEW cache on every call
+  return Effect.gen(function* () {
+    // ...
+  }).pipe(Effect.cached);
+};
+
+// Each call creates new cache (no benefit)
+yield* getBadProfile("user-123"); // Cache 1
+yield* getBadProfile("user-123"); // Cache 2 (different instance!)
+
+// ✅ CORRECT: Create cached Effect once, reuse
+const cachedGetProfile = Effect.gen(function* () {
+  // ...
+}).pipe(Effect.cached);
+
+yield* cachedGetProfile; // Cache
+yield* cachedGetProfile; // Hit same cache
+
+// ❌ WRONG: Using Effect.cached for cross-process data
+// Will NOT share cache across servers
+const sharedData = Effect.succeed(data).pipe(Effect.cached);
+
+// ✅ CORRECT: Use CacheService for cross-process
+const sharedData = Effect.gen(function* () {
+  const cache = yield* CacheService;
+  return yield* cache.get("shared-key");
+});
+```
+
+---
+
+### Cross-References
+
+- [Repository Pattern with Caching](#repository-pattern-with-caching) - Infrastructure caching example
+- [Stream Caching](./DATA-ACCESS.md) - Caching stream results
+- [Effect Caching Documentation](https://effect.website/docs/caching/caching-effects/)
+
+---
+
 ## Layer Creation Patterns
 
 ### Decision Tree: Choosing the Right Layer Constructor
@@ -1103,6 +1545,359 @@ When in doubt:
 - Are you sending this error over the network? → Schema.TaggedError
 - Is it internal domain logic? → Data.TaggedError
 
+## Advanced Effect Patterns
+
+This section covers production-grade patterns for resilience, resource management, validation, and error handling at scale.
+
+### Pattern Selection Guide
+
+Use this matrix to quickly identify which pattern best fits your use case:
+
+| Pattern | Best For | Alternatives | Complexity |
+|---------|----------|--------------|------------|
+| tapErrorTag | Error observability without handling | catchTag (if handling needed) | Low |
+| filterOrFail | Input validation with custom errors | Schema validation libraries | Low |
+| parallelErrors | Collecting all validation errors | Default fail-fast behavior | Low |
+| mapBoth | Transforming both success and error channels | Separate map + mapError | Low |
+| timeout+retry | External API resilience with fallback | Circuit breaker (for cascades) | Medium |
+| Circuit Breaker | Preventing cascading failures | Timeout+retry only | High |
+| Exit-aware finalizers | Transactional cleanup (commit/rollback) | Simple acquireRelease | Medium |
+
+**Quick Decision Tree:**
+- Need to observe errors without handling? → **tapErrorTag**
+- Need to validate data with custom errors? → **filterOrFail**
+- Need to collect all errors from parallel operations? → **parallelErrors**
+- Need to transform both success and error simultaneously? → **mapBoth**
+- Need timeout protection for external APIs? → **timeout+retry**
+- Need to prevent cascading failures? → **Circuit Breaker**
+- Need conditional cleanup based on success/failure? → **Exit-aware finalizers**
+
+---
+
+### Resilience Patterns
+
+#### Timeout + Retry + Cache Fallback
+
+Multi-tier fallback strategy for external service calls with graceful degradation:
+
+```typescript
+import { Effect, Schedule, Option } from "effect";
+
+const resilientGet = (id: string) =>
+  Effect.tryPromise({
+    try: () => sdkClient.get(id),
+    catch: (error) => new SDKError({ cause: error }),
+  }).pipe(
+    Effect.timeout("5 seconds"),
+    Effect.retry({
+      schedule: Schedule.exponential("200 millis"),
+      times: 3
+    }),
+    Effect.catchTag("TimeoutException", () =>
+      Effect.gen(function* () {
+        const cached = yield* cache.get<Resource>(`resource:${id}`);
+        return yield* Option.match(cached, {
+          onSome: Effect.succeed,
+          onNone: () => Effect.fail(new ResourceUnavailableError({
+            message: "Resource unavailable and no cache"
+          }))
+        });
+      })
+    )
+  );
+```
+
+**Use for:** External APIs with unreliable networks, SLA-critical operations requiring graceful degradation.
+
+---
+
+#### Circuit Breaker Pattern
+
+> **Pattern Overview:** Prevents cascading failures by tracking errors and fast-failing when threshold exceeded.
+>
+> **Core Implementation:**
+> ```typescript
+> const breaker = yield* createCircuitBreaker(effect, threshold, resetAfter);
+> const result = yield* breaker.call;  // Fails fast when circuit is open
+> ```
+>
+> **Key Components:**
+> - State tracking with `Ref` (failures count, circuit status, last failure time)
+> - Auto-reset after timeout period
+> - Fail-fast when circuit open (avoids overwhelming failing service)
+>
+> **Full Implementation:** See provider template `service.template.ts:420-476`
+>
+> **Use for:** Microservices architectures, high-throughput systems, protecting against cascading failures.
+
+---
+
+#### Resilience Strategy Comparison
+
+| Strategy | Protects Against | Overhead | Best For |
+|----------|------------------|----------|----------|
+| Timeout only | Hanging requests | Low | Internal services, simple APIs |
+| Timeout + Retry | Transient failures | Medium | External APIs with retryable errors |
+| Timeout + Retry + Cache | Service unavailability | Medium | Read operations, eventual consistency OK |
+| Circuit Breaker | Cascading failures | Low (when open) | Microservices, distributed systems |
+| Combined (all above) | Complete resilience | High | Critical external dependencies |
+
+### Exit-Aware Finalizers
+
+Conditional cleanup based on operation outcome using `Scope.addFinalizer` + `Exit.match`.
+
+#### Database Transaction Pattern
+
+```typescript
+import { Effect, Exit, Scope } from "effect";
+
+const withTransaction = <A, E>(
+  operation: (conn: Connection) => Effect.Effect<A, E>
+) =>
+  Effect.acquireRelease(
+    Effect.gen(function* () {
+      const connection = yield* Effect.tryPromise({
+        try: () => pool.connect(),
+        catch: (error) => new DatabaseConnectionError({ cause: error })
+      });
+      yield* Effect.sync(() => connection.beginTransaction());
+
+      // Exit-aware finalizer: commit or rollback based on outcome
+      yield* Scope.addFinalizer((exit) =>
+        Exit.match(exit, {
+          onFailure: () =>
+            Effect.gen(function* () {
+              yield* Effect.tryPromise(() => connection.rollback()).pipe(
+                Effect.catchAll(() => Effect.void)
+              );
+              yield* Effect.sync(() => connection.release());
+            }),
+          onSuccess: () =>
+            Effect.gen(function* () {
+              yield* Effect.tryPromise(() => connection.commit()).pipe(
+                Effect.tapError(() =>
+                  Effect.tryPromise(() => connection.rollback()).pipe(
+                    Effect.catchAll(() => Effect.void)
+                  )
+                )
+              );
+              yield* Effect.sync(() => connection.release());
+            })
+        })
+      );
+      return connection;
+    }),
+    (connection) =>
+      Effect.sync(() => connection.isConnected && connection.release()).pipe(
+        Effect.catchAll(() => Effect.void)
+      )
+  ).pipe(Effect.flatMap(operation));
+```
+
+**Full implementation with error handling:** See infrastructure template `interface.template.ts:232-291`
+
+---
+
+#### Exit-Aware Cleanup Patterns
+
+| Resource Type | Success Action | Failure Action | Pattern |
+|---------------|----------------|----------------|---------|
+| Database Transaction | `commit()` | `rollback()` | See example above |
+| Message Queue | `ack()` | `nack()` | `Exit.isSuccess(exit) ? ack : nack` |
+| Distributed Lock | `release({ status: 'completed' })` | `release({ status: 'failed' })` | Pass metadata to release |
+| File Upload | `persist()` | `cleanup()` | Move vs delete temp file |
+| Two-Phase Commit | `prepare() → commit()` | `abort()` | Coordinator pattern |
+
+---
+
+#### When to Use
+
+| Use Case | Pattern | Rationale |
+|----------|---------|-----------|
+| Database transactions | Exit-aware finalizers | Need commit/rollback based on outcome |
+| Message queues | Exit-aware finalizers | Need ack/nack based on processing result |
+| Simple resource cleanup | `acquireRelease` | No conditional logic needed |
+| Multiple independent resources | `Effect.all` + `acquireRelease` | Cleanup each independently |
+
+### Data Validation with filterOrFail
+
+Declarative validation that transforms data or fails with custom errors.
+
+#### Object Validation with Chaining
+
+```typescript
+const processedData = yield* Effect.succeed(userData).pipe(
+  // Validate structure
+  Effect.filterOrFail(
+    (user) => user.email.includes("@") && user.name.length > 0,
+    (user) => new ValidationError({
+      message: "Invalid user data",
+      fields: {
+        email: user.email.includes("@") ? null : "Email must contain @",
+        name: user.name.length > 0 ? null : "Name cannot be empty"
+      }
+    })
+  ),
+  // Validate business rules
+  Effect.filterOrFail(
+    (user) => VALID_ROLES.includes(user.role),
+    (user) => new ValidationError({ message: `Invalid role: ${user.role}` })
+  ),
+  // Process validated data
+  Effect.flatMap((validUser) => repository.save(validUser))
+);
+```
+
+#### Validation Pattern Variations
+
+| Validation Type | Pattern | Example |
+|-----------------|---------|---------|
+| Single Value | `Effect.succeed(value).pipe(filterOrFail(...))` | Age range: `age >= 18 && age <= 120` |
+| Object Props | `Effect.succeed(obj).pipe(filterOrFail(...))` | See example above |
+| Chained Rules | Chain multiple `filterOrFail` operators | Structure check → business rules → save |
+| Option→Value | `filterOrFail(Option.isSome, ...).pipe(map(v => v.value))` | Convert `Option<User>` to `User` or fail |
+| Array Content | `filterOrFail(arr => arr.every(...))` | Validate all items meet criteria |
+
+**Use for:** Input validation, business rule enforcement, API validation, multi-step pipelines.
+
+### Batch Error Collection with parallelErrors
+
+Collect all errors from parallel operations for comprehensive reporting.
+
+#### Form Validation Example
+
+```typescript
+const validateForm = (formData: FormData) =>
+  Effect.all([
+    Effect.succeed(formData.email).pipe(
+      Effect.filterOrFail(
+        (email) => email.includes("@"),
+        () => new ValidationError({ field: "email", message: "Invalid email" })
+      )
+    ),
+    Effect.succeed(formData.age).pipe(
+      Effect.filterOrFail(
+        (age) => age >= 18,
+        () => new ValidationError({ field: "age", message: "Must be 18+" })
+      )
+    )
+  ]).pipe(
+    Effect.parallelErrors,
+    Effect.catchAll((errors) =>
+      Effect.fail(new FormValidationError({
+        message: "Form validation failed",
+        fields: errors.map((e) => ({ field: e.field, error: e.message }))
+      }))
+    )
+  );
+```
+
+---
+
+#### Error Collection Strategies
+
+| Strategy | Pattern | Use Case | Example |
+|----------|---------|----------|---------|
+| **Fail on All Errors** | `parallelErrors + catchAll(fail)` | Form validation | See example above |
+| **Partial Success** | `parallelErrors + catchAll(succeed([]))` | Optional data fetching | Load products, return empty on failure |
+| **Log & Fail** | `parallelErrors + catchAll(log + fail)` | Batch processing | Log all failures, then fail with summary |
+| **Collect & Continue** | `parallelErrors + catchAll(succeed(errors))` | Diagnostics | Return error list for analysis |
+
+---
+
+#### Default vs parallelErrors Comparison
+
+| Aspect | Default | parallelErrors |
+|--------|---------|----------------|
+| Failure Mode | Fail fast (first error) | Collect all errors |
+| Error Type | Single error | Array of errors |
+| Best For | Stop on first problem | Show all errors (better UX) |
+
+**Use for:** Form validation, batch operations, multi-item validation. **Avoid:** When you need fail-fast behavior.
+
+### Dual-Channel Transformation with mapBoth
+
+Transform both success and error channels simultaneously in a single operation.
+
+#### API Normalization Example
+
+```typescript
+const normalizedResult = yield* externalAPI.fetchUser(userId).pipe(
+  Effect.mapBoth({
+    onSuccess: (apiUser) => ({
+      // Transform to domain model
+      id: apiUser.user_id,
+      name: apiUser.full_name,
+      email: apiUser.email_address,
+      createdAt: new Date(apiUser.created_at),
+      // Add metadata
+      source: "external_api",
+      timestamp: Date.now()
+    }),
+    onFailure: (apiError) =>
+      // Transform to domain error
+      new DomainError({
+        message: "Failed to fetch user",
+        cause: apiError,
+        statusCode: apiError.status_code,
+        // Add observability
+        timestamp: Date.now(),
+        retryable: apiError.status_code >= 500
+      })
+  })
+);
+```
+
+---
+
+#### Common Use Cases
+
+| Use Case | onSuccess Transforms | onFailure Transforms | Example |
+|----------|---------------------|----------------------|---------|
+| **API Normalization** | External→Domain model | SDK error→Domain error | See above |
+| **API Response Format** | `{ status: 'success', data }` | `{ status: 'error', error }` | REST API responses |
+| **Add Metadata** | `+ timestamp, source, cached` | `+ timestamp, retryable` | Observability |
+| **Correlation Tracking** | `+ correlationId, duration` | `+ correlationId, duration` | Distributed tracing |
+
+---
+
+#### mapBoth vs Separate Operators
+
+```typescript
+// Using mapBoth (preferred when transforming both channels)
+const result = yield* operation.pipe(
+  Effect.mapBoth({ onSuccess: transform, onFailure: transformError })
+);
+
+// Using separate operators (use when only one channel needs transformation)
+const result = yield* operation.pipe(
+  Effect.map(transform),           // Only success
+  Effect.mapError(transformError)  // Only error
+);
+```
+
+**Use `mapBoth` when:** Both channels need transformation. **Use `map`/`mapError` when:** Only one channel needs transformation.
+
+### Pattern Decision Tree
+
+```
+Error Handling:
+├─ Observe only → tapErrorTag
+├─ Transform → mapError / mapBoth
+├─ Handle specific → catchTag
+├─ Validate → filterOrFail
+└─ Collect all → parallelErrors
+
+Resources:
+├─ Simple cleanup → acquireRelease
+└─ Conditional (transactions) → Scope.addFinalizer + Exit.match
+
+Resilience:
+├─ Retry → Effect.retry + Schedule
+├─ Timeout → Effect.timeout + fallback
+└─ Circuit breaker → See provider template
+```
+
 ## Effect.gen vs Combinators
 
 ### Use Effect.gen for:
@@ -1151,6 +1946,1345 @@ const safeGetUser = (id: string) =>
     Effect.catchTag('UserNotFound', () => Effect.succeed(defaultUser)),
   );
 ```
+
+## Schema Patterns (Advanced Validation & Documentation)
+
+Effect Schema provides powerful runtime validation with TypeScript type inference. Beyond basic types, Schema offers filters, transformations, annotations, and projections for production-grade APIs.
+
+### Schema.annotations() - OpenAPI & Documentation
+
+Add metadata to schemas for auto-generated documentation, API specs, and better error messages.
+
+```typescript
+import { Schema } from "effect";
+
+// ✅ Field-level annotations
+export const Email = Schema.String.pipe(
+  Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+  Schema.annotations({
+    title: "Email Address",
+    description: "Valid email address for user communication",
+    examples: ["user@example.com", "admin@company.org"],
+    jsonSchema: {
+      format: "email",
+      minLength: 5,
+      maxLength: 255
+    }
+  })
+);
+
+// ✅ Class-level annotations for entities
+export class User extends Schema.Class<User>("User")({
+  id: Schema.UUID.annotations({
+    title: "User ID",
+    description: "Unique identifier",
+    examples: ["550e8400-e29b-41d4-a716-446655440000"]
+  }),
+
+  email: Email,
+
+  age: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+    Schema.lessThanOrEqualTo(150)
+  ).annotations({
+    title: "Age",
+    description: "User age in years",
+    examples: [25, 42],
+    jsonSchema: { minimum: 0, maximum: 150 }
+  }),
+}).pipe(
+  Schema.annotations({
+    identifier: "User",
+    title: "User Entity",
+    description: "Core user domain entity with validation and type safety",
+    jsonSchema: {
+      required: ["id", "email", "age"]
+    }
+  })
+) {}
+
+// ✅ Generate OpenAPI schemas from annotations
+const openApiSchema = Schema.make(User); // Includes all annotations
+```
+
+**Use Cases:**
+- Auto-generate OpenAPI/Swagger documentation
+- Client SDK generation with metadata
+- Form field labels and help text
+- Better validation error messages
+- API documentation tooling
+
+---
+
+### Schema.filter() - Custom Validation Logic
+
+Add custom validation predicates beyond built-in validators for business rules.
+
+```typescript
+import { Schema } from "effect";
+
+// ✅ Single field filter
+export const PositiveEven = Schema.Number.pipe(
+  Schema.filter((n) =>
+    n > 0 && n % 2 === 0 || "Must be a positive even number"
+  )
+);
+
+// ✅ Cross-field validation
+export class DateRange extends Schema.Class<DateRange>("DateRange")({
+  startDate: Schema.DateTimeUtc,
+  endDate: Schema.DateTimeUtc,
+}).pipe(
+  Schema.filter((range) => {
+    if (range.endDate <= range.startDate) {
+      return {
+        path: ["endDate"],
+        message: "End date must be after start date"
+      };
+    }
+    return true;
+  })
+) {}
+
+// ✅ Multiple validation errors
+export class PasswordInput extends Schema.Class<PasswordInput>("PasswordInput")({
+  password: Schema.String,
+  confirmPassword: Schema.String,
+}).pipe(
+  Schema.filter((input) => {
+    const errors: Array<{ path: string[]; message: string }> = [];
+
+    if (input.password.length < 8) {
+      errors.push({
+        path: ["password"],
+        message: "Password must be at least 8 characters"
+      });
+    }
+
+    if (input.password !== input.confirmPassword) {
+      errors.push({
+        path: ["confirmPassword"],
+        message: "Passwords must match"
+      });
+    }
+
+    return errors.length === 0 || errors;
+  })
+) {}
+
+// ✅ Async validation with filterEffect
+export const UniqueEmail = Schema.String.pipe(
+  Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+  Schema.filterEffect((email) =>
+    Effect.gen(function* () {
+      const userRepo = yield* UserRepository;
+      const exists = yield* userRepo.existsByEmail(email);
+
+      if (exists) {
+        return yield* Effect.fail({
+          path: ["email"],
+          message: "Email already registered"
+        });
+      }
+
+      return true;
+    })
+  )
+);
+
+// Usage in forms
+const validateUserInput = (input: unknown) =>
+  Schema.decodeUnknown(PasswordInput)(input).pipe(
+    Effect.map((validated) => ({
+      success: true,
+      data: validated
+    })),
+    Effect.catchAll((error) => Effect.succeed({
+      success: false,
+      errors: error.message // Array of { path, message }
+    }))
+  );
+```
+
+**Use Cases:**
+- Cross-field validation (date ranges, password matching)
+- Database uniqueness checks (async validation)
+- Business rule enforcement
+- Form validation with multiple errors
+- Domain invariants
+
+---
+
+### Schema.transform() - Data Normalization
+
+Bi-directional transformations between encoded (API) and decoded (domain) formats.
+
+```typescript
+import { Schema } from "effect";
+
+// ✅ String normalization
+export const NormalizedEmail = Schema.String.pipe(
+  Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+  Schema.transform(
+    Schema.String,
+    {
+      decode: (email) => email.toLowerCase().trim(),
+      encode: (email) => email // Already normalized
+    }
+  )
+);
+
+// ✅ Type transformation (string → number)
+export const PriceInCents = Schema.String.pipe(
+  Schema.pattern(/^\d+\.\d{2}$/), // "19.99" format
+  Schema.transform(
+    Schema.Number,
+    {
+      decode: (str) => Math.round(parseFloat(str) * 100), // → 1999 cents
+      encode: (cents) => (cents / 100).toFixed(2) // → "19.99"
+    }
+  )
+);
+
+// ✅ Async transformation with transformOrFail
+export const ValidatedUserId = Schema.String.pipe(
+  Schema.transformOrFail(
+    Schema.String,
+    {
+      decode: (id) =>
+        Effect.gen(function* () {
+          const userApi = yield* UserAPI;
+          const exists = yield* userApi.checkExists(id);
+
+          if (!exists) {
+            return yield* Effect.fail(
+              new ParseResult.Type(
+                Schema.String.ast,
+                id,
+                "User not found"
+              )
+            );
+          }
+
+          return id;
+        }),
+      encode: (id) => Effect.succeed(id)
+    }
+  )
+);
+
+// ✅ Object transformation for API compatibility
+export const UserDto = Schema.Struct({
+  id: Schema.UUID,
+  email_address: NormalizedEmail,  // snake_case for API
+  created_at: Schema.DateTimeUtc,
+}).pipe(
+  Schema.transform(
+    Schema.Struct({
+      id: Schema.UUID,
+      email: Schema.String,       // camelCase for domain
+      createdAt: Schema.Date,
+    }),
+    {
+      decode: (dto) => ({
+        id: dto.id,
+        email: dto.email_address,
+        createdAt: new Date(dto.created_at)
+      }),
+      encode: (domain) => ({
+        id: domain.id,
+        email_address: domain.email,
+        created_at: domain.createdAt.toISOString()
+      })
+    }
+  )
+);
+```
+
+**Use Cases:**
+- Email/string normalization (lowercase, trim)
+- API ↔ Domain model transformations
+- Unit conversions (dollars ↔ cents)
+- Date format conversions
+- Async API validation during parsing
+
+---
+
+### Schema Projections - Type Extraction
+
+Extract Type (domain) or Encoded (API) portions from schemas with transformations.
+
+```typescript
+import { Schema } from "effect";
+
+// Define full schema with transformation
+const UserSchema = Schema.Struct({
+  id: Schema.UUID,
+  email: NormalizedEmail,      // Has transform
+  created_at: Schema.DateTimeUtc,
+}).pipe(
+  Schema.transform(
+    Schema.Struct({
+      id: Schema.UUID,
+      email: Schema.String,
+      createdAt: Schema.Date,
+    }),
+    {
+      decode: (encoded) => ({
+        id: encoded.id,
+        email: encoded.email,
+        createdAt: new Date(encoded.created_at)
+      }),
+      encode: (decoded) => ({
+        id: decoded.id,
+        email: decoded.email,
+        created_at: decoded.createdAt.toISOString()
+      })
+    }
+  )
+);
+
+// ✅ Extract API format (pre-transformation)
+const UserApiSchema = Schema.encodedSchema(UserSchema);
+type UserApi = Schema.Schema.Type<typeof UserApiSchema>;
+// { id: string; email: string; created_at: string }
+
+// ✅ Extract Domain format (post-transformation)
+const UserDomainSchema = Schema.typeSchema(UserSchema);
+type UserDomain = Schema.Schema.Type<typeof UserDomainSchema>;
+// { id: string; email: string; createdAt: Date }
+
+// ✅ Use in different layers
+// Contract layer: Full UserSchema (with transformations)
+export { UserSchema };
+
+// Feature RPC layer: API format only (no transformations)
+export const UserResponse = Schema.encodedSchema(UserSchema);
+
+// Data-access layer: Domain format
+export const UserEntity = Schema.typeSchema(UserSchema);
+
+// ✅ encodedBoundSchema - Preserve filters before transformation
+const FilteredEmail = Schema.String.pipe(
+  Schema.filter((s) => s.includes("@") || "Invalid email")
+);
+
+const TransformedEmail = FilteredEmail.pipe(
+  Schema.transform(
+    Schema.String,
+    {
+      decode: (s) => s.toLowerCase(),
+      encode: (s) => s
+    }
+  )
+);
+
+// Get Encoded + filters (without transform)
+const EncodedWithFilters = Schema.encodedBoundSchema(TransformedEmail);
+// Includes email filter, but NOT the lowercase transform
+```
+
+**Use Cases:**
+- Separate API DTOs from domain models
+- Generate request/response types from shared schemas
+- Type-safe API client generation
+- Avoid redundant schema definitions
+- Layer-specific type extraction
+
+---
+
+### Schema.pretty() - Custom Error Formatting
+
+Improve error messages for debugging and user-facing validation.
+
+```typescript
+import { Schema, Pretty } from "effect";
+
+// ✅ Custom pretty formatter
+export const ProductSchema = Schema.Struct({
+  id: Schema.UUID,
+  name: Schema.String,
+  price: Schema.Number,
+}).pipe(
+  Schema.annotations({
+    pretty: () => (product) =>
+      `Product(id="${product.id}", name="${product.name}", price=$${product.price.toFixed(2)})`
+  })
+);
+
+// Usage
+const formatter = Pretty.make(ProductSchema);
+console.log(formatter({
+  id: "123e4567-e89b-12d3-a456-426614174000",
+  name: "Widget",
+  price: 19.99
+}));
+// Output: Product(id="123e4567-e89b-12d3-a456-426614174000", name="Widget", price=$19.99)
+
+// ✅ Error message customization
+export const Age = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+  Schema.lessThanOrEqualTo(150),
+  Schema.annotations({
+    message: () => "Age must be an integer between 0 and 150"
+  })
+);
+
+// Invalid age shows custom message instead of generic error
+Schema.decodeUnknownSync(Age)(-5);
+// Error: Age must be an integer between 0 and 150
+```
+
+**Use Cases:**
+- User-friendly error messages
+- Better debugging output
+- Custom validation feedback
+- Development tooling
+
+---
+
+### Advanced Schema Composition
+
+Combine schemas with extend, partial, pick, and omit for reusability.
+
+```typescript
+import { Schema } from "effect";
+
+// ✅ Base entity pattern
+export const BaseEntity = Schema.Struct({
+  id: Schema.UUID,
+  createdAt: Schema.DateTimeUtc,
+  updatedAt: Schema.DateTimeUtc,
+});
+
+// ✅ Extend base entity
+export const Product = Schema.Struct({
+  name: Schema.String,
+  price: Schema.Number,
+  sku: Schema.String,
+}).pipe(
+  Schema.extend(BaseEntity)
+);
+// Result: { id, createdAt, updatedAt, name, price, sku }
+
+// ✅ Partial for updates
+export const UpdateProduct = Schema.partial(
+  Schema.pick(Product, "name", "price", "sku")
+);
+// Result: { name?, price?, sku? }
+
+// ✅ Omit for creation
+export const CreateProduct = Schema.omit(Product, "id", "createdAt", "updatedAt");
+// Result: { name, price, sku }
+
+// ✅ Pick for specific fields
+export const ProductSummary = Schema.pick(Product, "id", "name", "price");
+// Result: { id, name, price }
+
+// ✅ Required - make all fields required
+export const RequiredProduct = Schema.required(UpdateProduct);
+// Result: { name, price, sku } (all required)
+
+// ✅ Branded types for nominal typing
+export const UserId = Schema.String.pipe(Schema.brand("UserId"));
+export const ProductId = Schema.String.pipe(Schema.brand("ProductId"));
+
+// Type-safe - cannot mix UserIds and ProductIds
+const processUser = (id: Schema.Schema.Type<typeof UserId>) => {
+  // id is branded as UserId
+};
+
+const productId: Schema.Schema.Type<typeof ProductId> = "123" as any;
+processUser(productId); // ❌ Type error: ProductId is not assignable to UserId
+```
+
+**Use Cases:**
+- Reduce schema duplication with base entities
+- Create update/create variants from entities
+- Type-safe nominal IDs (UserId vs ProductId)
+- Domain-driven design patterns
+- Bulk operations on optional fields
+
+---
+
+## Streaming & Queuing Patterns
+
+Effect's **Stream** provides constant-memory data processing for large or unbounded datasets. Unlike arrays that load everything into memory, streams process elements one (or in chunks) at a time with built-in backpressure control.
+
+**When to use Stream:**
+- Processing 10,000+ database rows
+- Infinite data sources (websockets, event streams, log tailing)
+- CSV/JSON file exports with millions of rows
+- Real-time event processing with backpressure
+- Memory-constrained environments
+
+**When NOT to use Stream:**
+- Small datasets (<1000 items) - use Array
+- One-time data transformations - use Effect.map
+- Simple list operations - use ReadonlyArray methods
+
+### Decision Matrix: Stream vs Array vs Queue
+
+| Feature | Array | Stream | Queue |
+|---------|-------|--------|-------|
+| **Memory** | Load all | Constant (chunked) | Bounded buffer |
+| **Data Size** | <1000 items | 1000+ items or unbounded | Unbounded (async) |
+| **Backpressure** | No | Yes (built-in) | Yes (bounded) |
+| **Performance** | Fast for small | Optimized for large | Async coordination |
+| **Use Case** | In-memory lists | File I/O, DB exports | Producer/consumer |
+| **Error Handling** | Throws | Effect-based | Effect-based |
+
+---
+
+### Stream Pattern 1: Basic Stream Creation & Consumption
+
+**Creating Streams:**
+
+```typescript
+import { Stream, Effect } from "effect";
+
+// From iterable
+const numbersStream = Stream.fromIterable([1, 2, 3, 4, 5]);
+
+// From range
+const rangeStream = Stream.range(1, 100); // 1 to 100
+
+// From single value
+const singleStream = Stream.succeed(42);
+
+// Empty stream
+const emptyStream = Stream.empty;
+
+// From Effect
+const effectStream = Stream.fromEffect(
+  Effect.gen(function* () {
+    const data = yield* fetchData();
+    return data;
+  })
+);
+
+// Infinite stream
+const infiniteStream = Stream.iterate(0, (n) => n + 1); // 0, 1, 2, 3, ...
+```
+
+**Consuming Streams:**
+
+```typescript
+// Collect all elements (use with caution on large streams)
+const allItems = yield* Stream.runCollect(numbersStream);
+// Returns: Chunk.Chunk<number>
+
+// Run forEach (side effects)
+yield* Stream.runForEach(numbersStream, (n) =>
+  Effect.log(`Processing: ${n}`)
+);
+
+// Run to sink
+const sum = yield* Stream.run(
+  numbersStream,
+  Sink.foldLeft(0, (acc, n: number) => acc + n)
+);
+
+// Take first N
+const firstFive = yield* Stream.run(numbersStream, Sink.take(5));
+```
+
+**Real-World Example: Processing Paginated API Results**
+
+```typescript
+import { Stream, Effect } from "effect";
+
+interface PaginatedResponse<T> {
+  items: T[];
+  nextCursor: string | null;
+}
+
+// Create stream from paginated API
+const paginatedStream = <T>(
+  fetchPage: (cursor: string | null) => Effect.Effect<PaginatedResponse<T>, Error>
+): Stream.Stream<T, Error> =>
+  Stream.unfoldEffect(null as string | null, (cursor) =>
+    Effect.gen(function* () {
+      const response = yield* fetchPage(cursor);
+
+      if (response.items.length === 0) {
+        return Option.none(); // End stream
+      }
+
+      return Option.some([
+        response.items, // Current chunk
+        response.nextCursor // Next state
+      ] as const);
+    })
+  ).pipe(
+    Stream.flatMap(Stream.fromIterable) // Flatten chunks
+  );
+
+// Usage
+const allUsers = paginatedStream((cursor) =>
+  Effect.tryPromise({
+    try: () => api.users.list({ cursor, limit: 100 }),
+    catch: (error) => new Error(`Failed to fetch users: ${error}`)
+  })
+);
+
+// Process stream
+yield* Stream.runForEach(allUsers, (user) =>
+  Effect.log("Processing user", user.id)
+);
+```
+
+---
+
+### Stream Pattern 2: Stream Transformations
+
+```typescript
+import { Stream, Effect } from "effect";
+
+const numbers = Stream.range(1, 10);
+
+// map - Transform elements
+const doubled = numbers.pipe(
+  Stream.map((n) => n * 2)
+);
+
+// filter - Keep only matching elements
+const evens = numbers.pipe(
+  Stream.filter((n) => n % 2 === 0)
+);
+
+// flatMap - Transform to streams and flatten
+const expanded = numbers.pipe(
+  Stream.flatMap((n) => Stream.range(1, n))
+);
+
+// take - Limit elements
+const firstThree = numbers.pipe(
+  Stream.take(3)
+);
+
+// drop - Skip elements
+const skipFirstTwo = numbers.pipe(
+  Stream.drop(2)
+);
+
+// rechunk - Change chunk size (important for performance)
+const largeChunks = numbers.pipe(
+  Stream.rechunk(100) // Process in batches of 100
+);
+
+// mapEffect - Async transformations
+const fetchedData = Stream.fromIterable(["id1", "id2", "id3"]).pipe(
+  Stream.mapEffect((id) =>
+    Effect.tryPromise({
+      try: () => fetch(`/api/users/${id}`).then(r => r.json()),
+      catch: (error) => new Error(`Fetch failed: ${error}`)
+    })
+  )
+);
+```
+
+**Real-World Example: Data Processing Pipeline**
+
+```typescript
+import { Stream, Effect } from "effect";
+
+interface RawData {
+  id: string;
+  value: string;
+}
+
+interface ProcessedData {
+  id: string;
+  value: number;
+  timestamp: Date;
+}
+
+const processDataPipeline = (inputStream: Stream.Stream<RawData, Error>) =>
+  inputStream.pipe(
+    // Filter out invalid data
+    Stream.filter((data) => data.value !== ""),
+
+    // Transform with Effect (async validation)
+    Stream.mapEffect((data) =>
+      Effect.gen(function* () {
+        const validated = yield* validateData(data);
+        return validated;
+      })
+    ),
+
+    // Map to processed format
+    Stream.map((data): ProcessedData => ({
+      id: data.id,
+      value: parseInt(data.value, 10),
+      timestamp: new Date()
+    })),
+
+    // Process in chunks for efficiency
+    Stream.rechunk(50)
+  );
+
+// Usage
+const rawStream = Stream.fromIterable(rawData);
+const processedStream = processDataPipeline(rawStream);
+
+yield* Stream.runForEach(processedStream, (item) =>
+  Effect.log("Processed", item)
+);
+```
+
+---
+
+### Stream Pattern 3: Resourceful Streams (Critical for Safety)
+
+**Stream.acquireRelease** ensures resources are properly cleaned up even if stream processing fails or is interrupted.
+
+```typescript
+import { Stream, Effect } from "effect";
+
+// Database connection stream with auto-cleanup
+const queryStream = <T>(query: string): Stream.Stream<T, Error> =>
+  Stream.acquireRelease(
+    // Acquire: Open database connection
+    Effect.gen(function* () {
+      const connection = yield* database.connect();
+      yield* Effect.log("Database connection opened");
+      return connection;
+    }),
+    // Release: Close connection (called even on error/interruption)
+    (connection) =>
+      Effect.gen(function* () {
+        yield* connection.close();
+        yield* Effect.log("Database connection closed");
+      })
+  ).pipe(
+    Stream.flatMap((connection) =>
+      Stream.fromEffect(
+        Effect.tryPromise({
+          try: () => connection.query<T>(query),
+          catch: (error) => new Error(`Query failed: ${error}`)
+        })
+      ).pipe(
+        Stream.flatMap(Stream.fromIterable)
+      )
+    )
+  );
+
+// File stream with auto-close
+const fileStream = (path: string): Stream.Stream<string, Error> =>
+  Stream.acquireRelease(
+    // Acquire: Open file handle
+    Effect.tryPromise({
+      try: () => fs.open(path, 'r'),
+      catch: (error) => new Error(`Failed to open file: ${error}`)
+    }),
+    // Release: Close file handle
+    (fileHandle) =>
+      Effect.tryPromise({
+        try: () => fileHandle.close(),
+        catch: () => new Error("Failed to close file")
+      })
+  ).pipe(
+    Stream.flatMap((handle) =>
+      Stream.fromEffect(
+        Effect.tryPromise({
+          try: () => handle.readFile('utf-8'),
+          catch: (error) => new Error(`Read failed: ${error}`)
+        })
+      ).pipe(
+        Stream.flatMap((content) =>
+          Stream.fromIterable(content.split('\n'))
+        )
+      )
+    )
+  );
+
+// Usage - resource automatically cleaned up
+yield* Stream.runForEach(
+  queryStream<User>("SELECT * FROM users"),
+  (user) => Effect.log("User:", user)
+);
+// Database connection automatically closed here
+```
+
+**Stream.ensuring** - Run cleanup after stream completes:
+
+```typescript
+const streamWithCleanup = Stream.range(1, 100).pipe(
+  Stream.ensuring(
+    Effect.log("Stream processing completed - running cleanup")
+  )
+);
+```
+
+**Stream.finalizer** - Add finalizer to current scope:
+
+```typescript
+const streamWithFinalizer = Stream.fromEffect(
+  Effect.gen(function* () {
+    yield* Stream.finalizer(
+      Effect.log("Finalizer running")
+    );
+    return 42;
+  })
+);
+```
+
+---
+
+### Stream Pattern 4: Concurrency & Backpressure Control
+
+```typescript
+import { Stream, Effect, Schedule } from "effect";
+
+// mapEffect with concurrency control
+const concurrentStream = Stream.fromIterable(urls).pipe(
+  Stream.mapEffect(
+    (url) =>
+      Effect.tryPromise({
+        try: () => fetch(url).then(r => r.json()),
+        catch: (error) => new Error(`Fetch failed: ${error}`)
+      }),
+    { concurrency: 5 } // Process up to 5 URLs concurrently
+  )
+);
+
+// Buffer for backpressure
+const bufferedStream = dataStream.pipe(
+  Stream.buffer({ capacity: 100 }) // Buffer up to 100 items
+);
+
+// Merge multiple streams
+const merged = Stream.merge(stream1, stream2);
+
+// Zip streams (combine elements)
+const zipped = Stream.zip(numbersStream, lettersStream);
+
+// Rate limiting with delays
+const rateLimited = Stream.fromIterable(requests).pipe(
+  Stream.mapEffect((req) =>
+    Effect.gen(function* () {
+      yield* Effect.sleep("100 millis"); // 100ms between requests
+      return yield* processRequest(req);
+    })
+  )
+);
+```
+
+**Real-World Example: Concurrent API Calls with Rate Limiting**
+
+```typescript
+import { Stream, Effect, Schedule } from "effect";
+
+interface ProcessingResult {
+  id: string;
+  status: "success" | "failed";
+  data?: unknown;
+  error?: string;
+}
+
+const processItemsWithRateLimit = (
+  items: readonly string[],
+  processItem: (id: string) => Effect.Effect<unknown, Error>
+): Stream.Stream<ProcessingResult, never> =>
+  Stream.fromIterable(items).pipe(
+    // Process 10 items concurrently
+    Stream.mapEffect(
+      (id) =>
+        processItem(id).pipe(
+          // Add retry with exponential backoff
+          Effect.retry({
+            schedule: Schedule.exponential("100 millis").pipe(
+              Schedule.compose(Schedule.recurs(3))
+            )
+          }),
+          // Convert to result (never fail)
+          Effect.match({
+            onFailure: (error): ProcessingResult => ({
+              id,
+              status: "failed",
+              error: error.message
+            }),
+            onSuccess: (data): ProcessingResult => ({
+              id,
+              status: "success",
+              data
+            })
+          })
+        ),
+      { concurrency: 10 }
+    ),
+    // Add 50ms delay between batches for rate limiting
+    Stream.rechunk(10),
+    Stream.mapChunks((chunk) =>
+      Chunk.map(chunk, (item) => {
+        // Delay only applied between chunks
+        return item;
+      })
+    ),
+    Stream.mapEffect((result) =>
+      Effect.sleep("50 millis").pipe(Effect.as(result))
+    ),
+    // Buffer results
+    Stream.buffer({ capacity: 50 })
+  );
+
+// Usage
+const results = processItemsWithRateLimit(
+  itemIds,
+  (id) =>
+    Effect.tryPromise({
+      try: () => api.processItem(id),
+      catch: (error) => new Error(`Processing failed: ${error}`)
+    })
+);
+
+yield* Stream.runForEach(results, (result) =>
+  result.status === "success"
+    ? Effect.log("Success:", result.id)
+    : Effect.log("Failed:", result.id, result.error)
+);
+```
+
+---
+
+### Stream Pattern 5: Error Handling in Streams
+
+```typescript
+import { Stream, Effect } from "effect";
+
+// catchAll - Handle all errors
+const safeStream = dangerousStream.pipe(
+  Stream.catchAll((error) =>
+    Stream.fromEffect(Effect.log("Error occurred:", error)).pipe(
+      Stream.flatMap(() => Stream.empty)
+    )
+  )
+);
+
+// catchSome - Handle specific errors
+const partiallyHandled = dataStream.pipe(
+  Stream.catchSome((error) =>
+    error.message.includes("NotFound")
+      ? Option.some(Stream.empty)
+      : Option.none()
+  )
+);
+
+// retry - Retry failed stream elements
+const retriedStream = Stream.fromEffect(unstableEffect).pipe(
+  Stream.retry({
+    schedule: Schedule.exponential("100 millis")
+  })
+);
+
+// Graceful degradation - continue on error
+const resilientStream = Stream.fromIterable(items).pipe(
+  Stream.mapEffect((item) =>
+    processItem(item).pipe(
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* Effect.log("Processing failed, using default", error);
+          return defaultValue;
+        })
+      )
+    )
+  )
+);
+```
+
+**Real-World Example: Resilient Stream Processing**
+
+```typescript
+import { Stream, Effect, Schedule } from "effect";
+
+const processStreamWithErrorHandling = <T, E, R>(
+  stream: Stream.Stream<T, E, R>,
+  processor: (item: T) => Effect.Effect<void, Error>
+): Effect.Effect<{ processed: number; failed: number }, never, R> =>
+  Effect.gen(function* () {
+    let processed = 0;
+    let failed = 0;
+
+    yield* stream.pipe(
+      // Retry individual items
+      Stream.mapEffect((item) =>
+        processor(item).pipe(
+          Effect.retry({
+            schedule: Schedule.exponential("100 millis").pipe(
+              Schedule.compose(Schedule.recurs(2))
+            )
+          }),
+          Effect.match({
+            onFailure: (error) => {
+              failed++;
+              return Effect.log("Item processing failed:", error);
+            },
+            onSuccess: () => {
+              processed++;
+              return Effect.void;
+            }
+          }),
+          Effect.flatten
+        )
+      ),
+      // Continue on error (never fail the stream)
+      Stream.catchAll((error) =>
+        Stream.fromEffect(Effect.log("Stream error:", error)).pipe(
+          Stream.flatMap(() => Stream.empty)
+        )
+      ),
+      Stream.runDrain
+    );
+
+    return { processed, failed };
+  });
+```
+
+---
+
+## Sink Patterns
+
+**Sink** is the counterpart to Stream - it consumes elements from a stream and produces a single result.
+
+### Sink Pattern 1: Basic Sink Usage
+
+```typescript
+import { Stream, Sink, Chunk } from "effect";
+
+const numbers = Stream.range(1, 100);
+
+// collectAll - Collect into Chunk
+const allNumbers = yield* Stream.run(numbers, Sink.collectAll());
+// Returns: Chunk.Chunk<number>
+
+// take - Take first N elements
+const firstTen = yield* Stream.run(numbers, Sink.take(10));
+
+// drain - Run stream for side effects, discard results
+yield* Stream.run(
+  numbers.pipe(Stream.mapEffect((n) => Effect.log(n))),
+  Sink.drain
+);
+
+// head - Take first element
+const first = yield* Stream.run(numbers, Sink.head());
+// Returns: Option.Option<number>
+
+// last - Take last element
+const last = yield* Stream.run(numbers, Sink.last());
+```
+
+---
+
+### Sink Pattern 2: Custom Sinks for Aggregation
+
+```typescript
+import { Sink, Stream, Effect } from "effect";
+
+// foldLeft - Accumulate with function
+const sum = yield* Stream.run(
+  Stream.range(1, 100),
+  Sink.foldLeft(0, (acc, n: number) => acc + n)
+);
+
+// Custom sink for average
+const average = <N extends number>(
+  stream: Stream.Stream<N, Error>
+): Effect.Effect<number, Error> =>
+  Stream.run(
+    stream,
+    Sink.foldLeft(
+      { sum: 0, count: 0 },
+      (acc, n: number) => ({
+        sum: acc.sum + n,
+        count: acc.count + 1
+      })
+    )
+  ).pipe(
+    Effect.map((result) =>
+      result.count === 0 ? 0 : result.sum / result.count
+    )
+  );
+
+// Usage
+const avg = yield* average(Stream.fromIterable([1, 2, 3, 4, 5]));
+// Returns: 3
+
+// forEach - Side effects for each element
+yield* Stream.run(
+  numbers,
+  Sink.forEach((n) => Effect.log("Processing:", n))
+);
+```
+
+**Real-World Example: Computing Statistics**
+
+```typescript
+import { Sink, Stream, Effect } from "effect";
+
+interface Stats {
+  count: number;
+  sum: number;
+  min: number;
+  max: number;
+  avg: number;
+}
+
+const computeStats = (
+  stream: Stream.Stream<number, Error>
+): Effect.Effect<Stats, Error> =>
+  Stream.run(
+    stream,
+    Sink.foldLeft(
+      { count: 0, sum: 0, min: Infinity, max: -Infinity },
+      (acc, n: number) => ({
+        count: acc.count + 1,
+        sum: acc.sum + n,
+        min: Math.min(acc.min, n),
+        max: Math.max(acc.max, n)
+      })
+    )
+  ).pipe(
+    Effect.map((result) => ({
+      ...result,
+      avg: result.count === 0 ? 0 : result.sum / result.count
+    }))
+  );
+
+// Usage
+const stats = yield* computeStats(Stream.range(1, 1000));
+// Returns: { count: 1000, sum: 500500, min: 1, max: 1000, avg: 500.5 }
+```
+
+---
+
+### Sink Pattern 3: File I/O with Streams + Sinks
+
+**CSV Export Example:**
+
+```typescript
+import { Stream, Sink, Effect } from "effect";
+import * as fs from "fs";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+const exportUsersToCSV = (
+  users: Stream.Stream<User, Error>,
+  filePath: string
+): Effect.Effect<void, Error> =>
+  Effect.gen(function* () {
+    // Create write stream
+    const writeStream = yield* Effect.tryPromise({
+      try: () => Promise.resolve(fs.createWriteStream(filePath)),
+      catch: (error) => new Error(`Failed to create file: ${error}`)
+    });
+
+    // Add CSV header
+    writeStream.write("id,name,email\n");
+
+    // Process stream and write to file
+    yield* users.pipe(
+      // Convert to CSV rows
+      Stream.map(
+        (user) => `${user.id},${user.name},${user.email}\n`
+      ),
+      // Write each row
+      Stream.mapEffect((row) =>
+        Effect.tryPromise({
+          try: () =>
+            new Promise<void>((resolve, reject) => {
+              if (!writeStream.write(row)) {
+                writeStream.once("drain", () => resolve());
+              } else {
+                resolve();
+              }
+            }),
+          catch: (error) => new Error(`Write failed: ${error}`)
+        })
+      ),
+      Stream.runDrain
+    );
+
+    // Close stream
+    yield* Effect.tryPromise({
+      try: () =>
+        new Promise<void>((resolve) => {
+          writeStream.end(() => resolve());
+        }),
+      catch: () => new Error("Failed to close file")
+    });
+  });
+
+// Usage
+const userStream = Stream.fromIterable(users);
+yield* exportUsersToCSV(userStream, "users.csv");
+```
+
+---
+
+## Stream + Sink Integration: Complete Pipeline Example
+
+**End-to-End: Database → Stream → Transform → Aggregate → Export**
+
+```typescript
+import { Stream, Sink, Effect } from "effect";
+
+// Full data processing pipeline
+const dataProcessingPipeline = Effect.gen(function* () {
+  const database = yield* DatabaseService;
+  const logger = yield* LoggingService;
+
+  yield* logger.info("Starting data export pipeline");
+
+  // Step 1: Stream from database
+  const rawDataStream = Stream.acquireRelease(
+    Effect.gen(function* () {
+      const connection = yield* database.connect();
+      return connection;
+    }),
+    (connection) => connection.close()
+  ).pipe(
+    Stream.flatMap((connection) =>
+      Stream.fromEffect(
+        Effect.tryPromise({
+          try: () => connection.query("SELECT * FROM sales WHERE year = 2024"),
+          catch: (error) => new Error(`Query failed: ${error}`)
+        })
+      ).pipe(Stream.flatMap(Stream.fromIterable))
+    )
+  );
+
+  // Step 2: Transform data
+  const transformedStream = rawDataStream.pipe(
+    // Filter invalid records
+    Stream.filter((record) => record.amount > 0),
+
+    // Enrich with async data
+    Stream.mapEffect(
+      (record) =>
+        Effect.gen(function* () {
+          const customer = yield* fetchCustomer(record.customerId);
+          return { ...record, customerName: customer.name };
+        }),
+      { concurrency: 10 }
+    ),
+
+    // Process in chunks
+    Stream.rechunk(100)
+  );
+
+  // Step 3: Compute aggregates (using Sink)
+  const stats = yield* Stream.run(
+    transformedStream,
+    Sink.foldLeft(
+      { totalSales: 0, count: 0, avgSale: 0 },
+      (acc, record) => ({
+        totalSales: acc.totalSales + record.amount,
+        count: acc.count + 1,
+        avgSale: 0 // Computed after
+      })
+    )
+  ).pipe(
+    Effect.map((result) => ({
+      ...result,
+      avgSale: result.count > 0 ? result.totalSales / result.count : 0
+    }))
+  );
+
+  yield* logger.info("Pipeline complete", stats);
+
+  return stats;
+});
+```
+
+---
+
+## Performance Considerations
+
+### Memory Usage: Stream vs Array
+
+```typescript
+// ❌ BAD: Loads all 1 million records into memory
+const allUsers = yield* database.query("SELECT * FROM users");
+const processed = allUsers.map(processUser);
+
+// ✅ GOOD: Constant memory usage
+const userStream = Stream.acquireRelease(
+  database.connect(),
+  (conn) => conn.close()
+).pipe(
+  Stream.flatMap((conn) =>
+    Stream.fromEffect(
+      Effect.tryPromise({
+        try: () => conn.query("SELECT * FROM users"),
+        catch: (error) => new Error(`Query failed: ${error}`)
+      })
+    ).pipe(Stream.flatMap(Stream.fromIterable))
+  ),
+  Stream.mapEffect((user) => processUser(user)),
+  Stream.rechunk(100) // Process in batches
+);
+
+yield* Stream.runDrain(userStream);
+// Only 100 users in memory at a time
+```
+
+### Chunk Size Optimization
+
+```typescript
+// Default chunk size (16)
+const defaultStream = Stream.fromIterable(items);
+
+// Optimized for bulk operations (larger chunks = fewer allocations)
+const bulkStream = Stream.fromIterable(items).pipe(
+  Stream.rechunk(1000) // Process 1000 items at a time
+);
+
+// Optimized for low latency (smaller chunks = faster response)
+const realTimeStream = Stream.fromIterable(items).pipe(
+  Stream.rechunk(1) // Process immediately
+);
+```
+
+---
+
+## When to Use Stream vs Array: Decision Guide
+
+| Scenario | Use | Reason |
+|----------|-----|--------|
+| <1000 items | Array | Faster, simpler |
+| 1000-10,000 items | Either | Depends on memory constraints |
+| 10,000+ items | Stream | Constant memory |
+| Unbounded data | Stream | Only option |
+| Real-time events | Stream | Built for streaming |
+| One-time processing | Array | Simpler |
+| Multiple passes | Array | Stream consumed once |
+| CSV/JSON export | Stream + Sink | Memory efficient |
+| Pagination | Stream | Natural fit |
+| File I/O | Stream | Built-in backpressure |
+
+---
+
+## Cross-References
+
+**Related Patterns:**
+- [Runtime Preservation in Streams](./INFRA.md#runtime-preservation-in-streams) - Infrastructure patterns
+- [Streaming APIs](./PROVIDER.md#streaming-api-with-callbacks) - Provider patterns
+- [Data-Access Streaming](./DATA-ACCESS.md) - Repository stream queries
+
+**Effect Documentation:**
+- [Stream Introduction](https://effect.website/docs/stream/introduction/)
+- [Resourceful Streams](https://effect.website/docs/stream/resourceful-streams/)
+- [Sink Introduction](https://effect.website/docs/sink/introduction/)
+
+---
 
 ## Service Composition Patterns
 
@@ -1758,16 +3892,16 @@ import { NodeRuntime } from '@effect/platform-node';
 
 NodeRuntime.runMain(program.pipe(Effect.provide(AppLayer)));
 
-// ✅ For testing
-import { Effect } from 'effect';
-import { expect, it } from 'vitest';
+// ✅ For testing - use @effect/vitest (see TESTING_PATTERNS.md)
+import { Effect, Layer } from 'effect';
+import { expect, it } from '@effect/vitest';
 
-it('should process payment', async () => {
-  const result = await Effect.runPromise(
-    processPayment(100).pipe(Effect.provide(TestLayer)),
-  );
-  expect(result.status).toBe('success');
-});
+it.scoped('should process payment', () =>
+  Effect.gen(function* () {
+    const result = yield* processPayment(100);
+    expect(result.status).toBe('success');
+  }).pipe(Effect.provide(Layer.fresh(TestLayer))),
+);
 
 // ❌ AVOID: runSync for async effects
 Effect.runSync(asyncEffect); // Will throw if effect is async
@@ -2006,11 +4140,11 @@ sdk.onEvent(() => {
 Use `@effect/vitest` to test runtime preservation:
 
 ```typescript
-import { it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
+import { Effect, Layer, Runtime } from 'effect';
 
 describe('RuntimePreservation', () => {
-  it('should preserve runtime in callbacks', () =>
+  it.scoped('should preserve runtime in callbacks', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const runtime = yield* Effect.runtime();
       const runFork = Runtime.runFork(runtime);
@@ -2023,7 +4157,7 @@ describe('RuntimePreservation', () => {
       );
 
       expect(called).toBe(true);
-    }));
+    }).pipe(Effect.provide(Layer.fresh(Layer.empty)))); // ✅ Always Layer.fresh
 });
 ```
 
@@ -2136,6 +4270,544 @@ export class CacheRefresh extends Context.Tag('CacheRefresh')<
 | **FiberSet**   | Unkeyed concurrent work | Job processors, background workers                    |
 | **FiberMap**   | Keyed work with dedup   | Cache refresh, API request deduplication              |
 | **Effect.all** | Simple parallelism      | Parallel independent tasks (preferred for most cases) |
+
+---
+
+## Advanced Concurrency Primitives
+
+Effect provides five core concurrency primitives for coordination and resource management: **Queue**, **Semaphore**, **PubSub**, **Latch**, and **Deferred**. Each solves specific concurrency challenges.
+
+### Queue - Producer/Consumer Patterns
+
+**Queue** provides type-safe, asynchronous queuing with automatic backpressure for work distribution and task processing.
+
+```typescript
+import { Queue, Effect, Scope } from "effect";
+
+// ✅ Background job processing with bounded queue
+export class JobQueueService extends Context.Tag("JobQueueService")<
+  JobQueueService,
+  {
+    readonly enqueue: <T>(job: Job<T>) => Effect.Effect<boolean>;
+    readonly start: Effect.Effect<void, never, Scope.Scope>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      // Bounded queue with backpressure (max 1000 pending jobs)
+      const jobQueue = yield* Queue.bounded<Job<unknown>>(1000);
+
+      return {
+        enqueue: (job) => Queue.offer(jobQueue, job),
+
+        start: Effect.gen(function* () {
+          // Background processor (runs until scope closes)
+          while (true) {
+            // Take batch of jobs
+            const jobs = yield* Queue.takeUpTo(jobQueue, 10);
+
+            // Process with controlled concurrency
+            yield* Effect.all(
+              jobs.map(job => processJob(job)),
+              { concurrency: 5 }
+            );
+          }
+        }).pipe(Effect.forkScoped)
+      };
+    })
+  );
+}
+
+// ✅ Email queue with fire-and-forget pattern
+export class EmailService extends Context.Tag("EmailService")<
+  EmailService,
+  {
+    readonly sendEmail: (email: Email) => Effect.Effect<void>;
+  }
+>() {
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const jobQueue = yield* JobQueueService;
+
+      return {
+        sendEmail: (email) =>
+          jobQueue.enqueue({
+            type: "send_email",
+            payload: email,
+            retries: 3
+          }).pipe(Effect.asVoid)
+      };
+    })
+  );
+}
+```
+
+**Queue Strategies:**
+
+| Strategy | Behavior When Full | Use Case |
+|----------|-------------------|----------|
+| `Queue.bounded(n)` | Suspends offers (backpressure) | Job queues, work distribution |
+| `Queue.dropping(n)` | Discards new items | Non-critical events, metrics |
+| `Queue.sliding(n)` | Removes oldest for new | Real-time data, latest-wins |
+| `Queue.unbounded()` | Never full (grows infinitely) | Development, low-volume |
+
+**Key Operations:**
+- `Queue.offer` - Add item (suspends if full for bounded)
+- `Queue.take` - Remove item (suspends if empty)
+- `Queue.takeUpTo(n)` - Batch processing (non-blocking)
+- `Queue.takeAll` - Drain queue
+- `Queue.poll` - Non-blocking take (returns Option)
+
+**Use Cases:**
+- Background job processing (emails, reports, exports)
+- Task distribution across workers
+- Event buffering with backpressure
+- Rate-limited API call queuing
+
+---
+
+### Semaphore - Resource Limiting & Rate Control
+
+**Semaphore** provides permit-based concurrency control for protecting shared resources and rate limiting.
+
+```typescript
+import { Effect } from "effect";
+
+// ✅ API rate limiting (max 5 concurrent requests)
+export class StripeService extends Context.Tag("StripeService")<
+  StripeService,
+  {
+    readonly createCharge: (params: ChargeParams) => Effect.Effect<Charge, StripeError>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      const stripe = new Stripe(config.apiKey);
+
+      // Limit to 5 concurrent API calls
+      const rateLimiter = yield* Effect.makeSemaphore(5);
+
+      return {
+        createCharge: (params) =>
+          rateLimiter.withPermits(1)(
+            Effect.tryPromise({
+              try: () => stripe.charges.create(params),
+              catch: (error) => new StripeError({ cause: error })
+            })
+          )
+      };
+    })
+  );
+}
+
+// ✅ Database connection pool protection
+export class DatabaseService extends Context.Tag("DatabaseService")<
+  DatabaseService,
+  {
+    readonly query: <T>(fn: (db: Kysely<DB>) => Promise<T>) => Effect.Effect<T, DatabaseError>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      const pool = yield* createDatabasePool();
+
+      // Protect pool with semaphore (max 20 connections)
+      const poolLimiter = yield* Effect.makeSemaphore(20);
+
+      return {
+        query: (fn) =>
+          poolLimiter.withPermits(1)(
+            Effect.tryPromise({
+              try: () => fn(kysely),
+              catch: (error) => new DatabaseError({ cause: error })
+            })
+          )
+      };
+    })
+  );
+}
+
+// ✅ Sequential execution (1-permit semaphore)
+const sequential = Effect.makeSemaphore(1);
+
+const tasks = [task1, task2, task3];
+yield* Effect.all(
+  tasks.map(task =>
+    sequential.pipe(
+      Effect.flatMap(sem => sem.withPermits(1)(task))
+    )
+  )
+);
+// Executes sequentially despite Effect.all
+```
+
+**Semaphore API:**
+- `Effect.makeSemaphore(n)` - Create with n permits
+- `semaphore.withPermits(count)(effect)` - Acquire → run → release
+- `semaphore.take(count)` - Manual acquire
+- `semaphore.release(count)` - Manual release
+
+**Use Cases:**
+- API rate limiting (prevent 429 errors)
+- Database connection pools
+- File system access limits
+- Sequential execution guarantees
+- Resource throttling
+
+---
+
+### PubSub - Event Broadcasting
+
+**PubSub** broadcasts messages to all subscribers with built-in backpressure strategies.
+
+```typescript
+import { PubSub, Queue, Effect, Scope } from "effect";
+
+// ✅ Event bus for domain events
+export class EventBusService extends Context.Tag("EventBusService")<
+  EventBusService,
+  {
+    readonly publish: (event: DomainEvent) => Effect.Effect<boolean>;
+    readonly subscribe: Effect.Effect<Queue.Dequeue<DomainEvent>, never, Scope.Scope>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      // Sliding strategy handles slow consumers
+      const eventBus = yield* PubSub.bounded<DomainEvent>(1000);
+
+      return {
+        publish: (event) => PubSub.publish(eventBus, event),
+        subscribe: PubSub.subscribe(eventBus)
+      };
+    })
+  );
+}
+
+// ✅ Real-time notifications with multiple subscribers
+export class NotificationService extends Context.Tag("NotificationService")<
+  NotificationService,
+  {
+    readonly notifyUserCreated: (user: User) => Effect.Effect<void>;
+  }
+>() {
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const eventBus = yield* EventBusService;
+
+      return {
+        notifyUserCreated: (user) =>
+          eventBus.publish({
+            type: "UserCreated",
+            payload: user,
+            timestamp: new Date()
+          }).pipe(Effect.asVoid)
+      };
+    })
+  );
+}
+
+// ✅ Subscribe and process events
+const processEvents = Effect.gen(function* () {
+  const eventBus = yield* EventBusService;
+  const subscription = yield* eventBus.subscribe;
+
+  // Process events forever
+  yield* Queue.take(subscription).pipe(
+    Effect.flatMap(event => handleEvent(event)),
+    Effect.forever,
+    Effect.forkScoped
+  );
+});
+
+// ✅ WebSocket broadcasting
+export class WebSocketServer extends Context.Tag("WebSocketServer")<
+  WebSocketServer,
+  {
+    readonly broadcast: (message: Message) => Effect.Effect<void>;
+    readonly registerClient: (ws: WebSocket) => Effect.Effect<void, never, Scope.Scope>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      const messageBus = yield* PubSub.unbounded<Message>();
+
+      return {
+        broadcast: (message) =>
+          PubSub.publish(messageBus, message).pipe(Effect.asVoid),
+
+        registerClient: (ws) =>
+          Effect.gen(function* () {
+            const subscription = yield* PubSub.subscribe(messageBus);
+
+            // Forward messages to this client
+            yield* Queue.take(subscription).pipe(
+              Effect.flatMap(msg =>
+                Effect.sync(() => ws.send(JSON.stringify(msg)))
+              ),
+              Effect.forever,
+              Effect.forkScoped
+            );
+          })
+      };
+    })
+  );
+}
+```
+
+**PubSub Strategies:**
+
+| Strategy | Behavior When Full | Use Case |
+|----------|-------------------|----------|
+| `PubSub.bounded(n)` | Suspends publishers | Critical events |
+| `PubSub.dropping(n)` | Discards new messages | Non-critical notifications |
+| `PubSub.sliding(n)` | Removes oldest messages | Real-time data streams |
+| `PubSub.unbounded()` | Never full | Development, low-volume |
+
+**IMPORTANT:** Subscribe BEFORE publishing to guarantee event receipt.
+
+**Use Cases:**
+- Domain event broadcasting
+- WebSocket message distribution
+- Real-time notifications
+- Distributed logging (fan-out)
+- Event-driven cache invalidation
+
+---
+
+### Latch - Startup Coordination
+
+**Latch** provides one-time synchronization gates for coordinating initialization.
+
+```typescript
+import { Effect } from "effect";
+
+// ✅ Block operations until database migrations complete
+export class DatabaseService extends Context.Tag("DatabaseService")<
+  DatabaseService,
+  {
+    readonly query: <T>(fn: QueryFn<T>) => Effect.Effect<T, DatabaseError>;
+    readonly waitForMigrations: Effect.Effect<void>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      const db = yield* initializeDatabase();
+      const migrationLatch = yield* Effect.makeLatch(false); // Closed
+
+      // Run migrations in background, open when done
+      yield* Effect.forkScoped(
+        Effect.gen(function* () {
+          yield* runMigrations(db);
+          yield* migrationLatch.open();
+        })
+      );
+
+      return {
+        query: (fn) =>
+          migrationLatch.whenOpen(  // Wait for migrations
+            Effect.tryPromise({
+              try: () => fn(db),
+              catch: (error) => new DatabaseError({ cause: error })
+            })
+          ),
+
+        waitForMigrations: migrationLatch.await()
+      };
+    })
+  );
+}
+
+// ✅ Application startup coordination
+const app = Effect.gen(function* () {
+  const db = yield* DatabaseService;
+
+  // Block until migrations complete
+  yield* db.waitForMigrations();
+
+  // Now safe to handle requests
+  yield* startHttpServer();
+});
+
+// ✅ Cache warmup coordination
+export class CacheService extends Context.Tag("CacheService")<
+  CacheService,
+  {
+    readonly get: <T>(key: string) => Effect.Effect<Option.Option<T>>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      const cache = new Map<string, unknown>();
+      const warmupLatch = yield* Effect.makeLatch(false);
+
+      // Background warmup
+      yield* Effect.forkScoped(
+        Effect.gen(function* () {
+          yield* loadCriticalData(cache);
+          yield* warmupLatch.open();
+        })
+      );
+
+      return {
+        get: (key) =>
+          warmupLatch.whenOpen(  // Wait for warmup
+            Effect.sync(() => Option.fromNullable(cache.get(key)))
+          )
+      };
+    })
+  );
+}
+```
+
+**Latch API:**
+- `Effect.makeLatch(open: boolean)` - Create latch (open/closed)
+- `latch.open()` - Open gate (unblocks waiting fibers)
+- `latch.await()` - Wait for gate to open
+- `latch.whenOpen(effect)` - Run effect only when open
+
+**Use Cases:**
+- Block requests until database migrations finish
+- Wait for configuration loading
+- Coordinate service initialization
+- Ensure cache warmup before serving traffic
+
+---
+
+### Deferred - Fiber Coordination
+
+**Deferred** is a promise-like primitive for one-time value resolution with fiber coordination.
+
+```typescript
+import { Deferred, Effect } from "effect";
+
+// ✅ Lazy resource initialization
+export class ResourceService extends Context.Tag("ResourceService")<
+  ResourceService,
+  {
+    readonly getHandle: Effect.Effect<ResourceHandle, InitError>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      const handleDeferred = yield* Deferred.make<ResourceHandle, InitError>();
+
+      // Initialize on first access
+      const initOnce = Effect.gen(function* () {
+        // Check if already initialized
+        const result = yield* Deferred.poll(handleDeferred);
+
+        if (Option.isNone(result)) {
+          // Not initialized yet, do it now
+          const handle = yield* initializeResource();
+          yield* Deferred.succeed(handleDeferred, handle);
+        }
+      });
+
+      return {
+        getHandle: Effect.gen(function* () {
+          yield* initOnce;
+          return yield* Deferred.await(handleDeferred);
+        })
+      };
+    })
+  );
+}
+
+// ✅ Cache warmup with result passing
+export class CacheService extends Context.Tag("CacheService")<
+  CacheService,
+  {
+    readonly warmup: Effect.Effect<Map<string, unknown>, CacheError>;
+    readonly get: <T>(key: string) => Effect.Effect<Option.Option<T>, CacheError>;
+  }
+>() {
+  static readonly Live = Layer.scoped(
+    this,
+    Effect.gen(function* () {
+      const cacheDeferred = yield* Deferred.make<Map<string, unknown>, CacheError>();
+
+      // Background warmup
+      yield* Effect.forkScoped(
+        Effect.gen(function* () {
+          const cache = new Map<string, unknown>();
+          yield* loadUserCache(cache);
+          yield* loadProductCache(cache);
+          yield* Deferred.succeed(cacheDeferred, cache);
+        }).pipe(
+          Effect.catchAll((error) =>
+            Deferred.fail(cacheDeferred, error)
+          )
+        )
+      );
+
+      return {
+        warmup: Deferred.await(cacheDeferred),
+
+        get: (key) =>
+          Effect.gen(function* () {
+            const cache = yield* Deferred.await(cacheDeferred);
+            return Option.fromNullable(cache.get(key));
+          })
+      };
+    })
+  );
+}
+
+// ✅ Work handoff between fibers
+const coordinatedWork = Effect.gen(function* () {
+  const resultDeferred = yield* Deferred.make<Result, WorkError>();
+
+  // Producer fiber
+  yield* Effect.forkScoped(
+    Effect.gen(function* () {
+      const result = yield* doExpensiveWork();
+      yield* Deferred.succeed(resultDeferred, result);
+    })
+  );
+
+  // Consumer fiber (waits for result)
+  yield* Effect.forkScoped(
+    Effect.gen(function* () {
+      const result = yield* Deferred.await(resultDeferred);
+      yield* processResult(result);
+    })
+  );
+});
+```
+
+**Deferred API:**
+- `Deferred.make<A, E>()` - Create deferred
+- `Deferred.succeed(d, value)` - Resolve with success
+- `Deferred.fail(d, error)` - Resolve with failure
+- `Deferred.await(d)` - Wait for resolution
+- `Deferred.poll(d)` - Non-blocking status check (returns Option)
+
+**Deferred vs Latch vs Queue:**
+
+| Primitive | Value | Multiple Use | Can Fail |
+|-----------|-------|--------------|----------|
+| **Deferred** | Yes (type A) | No (one-time) | Yes (type E) |
+| **Latch** | No (gate only) | No (one-time) | No |
+| **Queue** | Yes (type A) | Yes (stream) | Yes (type E) |
+
+**Use Cases:**
+- Lazy resource initialization (initialize on first use)
+- Cache warmup with error handling
+- Configuration loading with validation
+- Work handoff between fibers with typed results
+
+---
 
 ## Parallel Operations
 
@@ -2453,8 +5125,10 @@ export class PaymentService extends Context.Tag('PaymentService')<
 }
 
 // Usage in tests with specific scenarios
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
+
 describe('PaymentService', () => {
-  it('should handle payment failures', async () => {
+  it.scoped('should handle payment failures', () => { // ✅ Always it.scoped
     const TestLayer = Layer.mergeAll(
       DatabaseService.Test,
       LoggingService.Test,
@@ -2464,29 +5138,161 @@ describe('PaymentService', () => {
       }),
     );
 
-    const result = await Effect.runPromise(
-      processPayment(100).pipe(Effect.either, Effect.provide(TestLayer)),
-    );
-
-    expect(Either.isLeft(result)).toBe(true);
+    return Effect.gen(function* () {
+      const result = yield* processPayment(100).pipe(Effect.either);
+      expect(Either.isLeft(result)).toBe(true);
+    }).pipe(Effect.provide(Layer.fresh(TestLayer))); // ✅ Always Layer.fresh
   });
 
-  it('should process payment successfully', async () => {
+  it.scoped('should process payment successfully', () => { // ✅ Always it.scoped
     const TestLayer = Layer.mergeAll(
       DatabaseService.Test,
       LoggingService.Test,
       PaymentService.Test,
     );
 
-    const result = await Effect.runPromise(
-      processPayment(100).pipe(Effect.provide(TestLayer)),
-    );
-
-    expect(result.status).toBe('success');
-    expect(result.amount).toBe(100);
+    return Effect.gen(function* () {
+      const result = yield* processPayment(100);
+      expect(result.status).toBe('success');
+      expect(result.amount).toBe(100);
+    }).pipe(Effect.provide(Layer.fresh(TestLayer))); // ✅ Always Layer.fresh
   });
 });
 ```
+
+### Layer.fresh - Test Isolation
+
+Effect layers are memoized by default for performance. In tests, use `Layer.fresh` to create fresh instances and prevent state leakage between tests.
+
+#### Why Layer.fresh Matters
+
+**The Problem**: Effect layers are memoized globally by default. When multiple tests use the same layer, they share the same instance:
+
+```typescript
+// ❌ PROBLEM: Shared memoized layer
+it.scoped("test 1 adds item to cache", () =>
+  Effect.gen(function* () {
+    const cache = yield* CacheService;
+    yield* cache.set("key", "value1");
+    // Cache now has: { key: "value1" }
+  }).pipe(Effect.provide(CacheService.Test))
+);
+
+it.scoped("test 2 expects empty cache", () =>
+  Effect.gen(function* () {
+    const cache = yield* CacheService;
+    const result = yield* cache.get("key");
+    // ❌ FLAKY: key="value1" still exists from test 1!
+    expect(Option.isNone(result)).toBe(true);
+  }).pipe(Effect.provide(CacheService.Test))
+);
+```
+
+**The Solution**: Wrap test layers with `Layer.fresh` to create fresh instances:
+
+```typescript
+// ✅ CORRECT: Fresh layer instance per test
+it.scoped("test 1 adds item to cache", () =>
+  Effect.gen(function* () {
+    const cache = yield* CacheService;
+    yield* cache.set("key", "value1");
+    // Cache has: { key: "value1" }
+  }).pipe(Effect.provide(Layer.fresh(CacheService.Test)))
+);
+
+it.scoped("test 2 expects empty cache", () =>
+  Effect.gen(function* () {
+    const cache = yield* CacheService;
+    const result = yield* cache.get("key");
+    // ✅ PASSES: Fresh cache instance, no key
+    expect(Option.isNone(result)).toBe(true);
+  }).pipe(Effect.provide(Layer.fresh(CacheService.Test)))
+);
+```
+
+#### When to Use Layer.fresh
+
+**Always Use** (in tests):
+- ✅ Test layers (`Service.Test`)
+- ✅ Inline mocks (`Layer.succeed(...)`)
+- ✅ Repository tests (in-memory Map/Set storage)
+- ✅ Any stateful service in tests
+- ✅ Dev layers with logging or state
+
+**Never Use** (in production):
+- ❌ Production layers (`Service.Live`) - should be memoized for performance
+- ❌ Non-test code - memoization is a feature, not a bug
+
+**Quick Decision Tree**:
+```
+Are you in a test file?
+├─ YES → Use Layer.fresh for all test layers
+└─ NO  → DO NOT use Layer.fresh (keep memoization)
+```
+
+#### Pattern: Layer.fresh with Composed Layers
+
+When composing multiple layers, wrap the entire composition:
+
+```typescript
+// Repository with mocked database
+const MockDatabase = Layer.succeed(DatabaseService, {
+  query: () => Effect.succeed([{ id: 1, name: "Test" }])
+});
+
+it.scoped("repository test with mock", () =>
+  Effect.gen(function* () {
+    const repo = yield* UserRepository;
+    const users = yield* repo.findAll();
+    expect(users.length).toBe(1);
+  }).pipe(
+    Effect.provide(Layer.fresh(
+      UserRepositoryLive.pipe(Layer.provide(MockDatabase))
+    ))
+  )
+);
+```
+
+#### Pattern: Layer.fresh with Multiple Services
+
+Wrap each test layer individually when using multiple services:
+
+```typescript
+it.scoped("orchestration test", () =>
+  Effect.gen(function* () {
+    const payment = yield* PaymentService;
+    const email = yield* EmailService;
+    const logger = yield* LoggerService;
+
+    yield* payment.processPayment(100);
+    yield* email.sendReceipt("user@example.com");
+    yield* logger.info("Payment completed");
+  }).pipe(
+    Effect.provide(PaymentService.Live),
+    Effect.provide(Layer.fresh(EmailService.Test)),
+    Effect.provide(Layer.fresh(LoggerService.Test))
+  )
+);
+```
+
+#### Benefits of Layer.fresh
+
+1. **Test Isolation**: Each test starts with clean state
+2. **Prevents Flaky Tests**: No state leakage between test runs
+3. **Predictable Results**: Tests don't depend on execution order
+4. **Minimal Cost**: 1-5ms overhead per test (worth it for reliability)
+5. **Self-Documenting**: Makes test isolation explicit
+
+#### Performance Considerations
+
+**Overhead**: Creating fresh layers adds 1-5ms per test for in-memory layers. This is negligible compared to:
+- Network I/O: 10-1000ms
+- Database queries: 10-100ms
+- Debugging one flaky test: 10+ minutes
+
+**Recommendation**: Always use `Layer.fresh` for tests. The reliability benefit far outweighs the minimal performance cost.
+
+**Reference**: [Effect Testing Guide - Layer.fresh](https://effect.website/docs/guides/testing/vitest#layer-fresh)
 
 ## Layer Dependency Visualization
 
@@ -2962,6 +5768,16 @@ const parseUser = (data: unknown): Effect.Effect<User, ValidationError> =>
 | Effect.all          | Parallel execution         | `Effect.all([...], { concurrency: "unbounded" })`                   |
 | Effect.runPromise   | Run in async context       | `await Effect.runPromise(program)`                                  |
 | NodeRuntime.runMain | CLI apps                   | `NodeRuntime.runMain(program)`                                      |
+| **Advanced Patterns** | | |
+| Effect.timeout      | Timeout protection         | `effect.pipe(Effect.timeout("5 seconds"))`                          |
+| Effect.retry        | Retry with backoff         | `effect.pipe(Effect.retry(Schedule.exponential("100 millis")))`     |
+| filterOrFail        | Data validation            | `Effect.filterOrFail(predicate, () => error)`                       |
+| parallelErrors      | Collect all errors         | `Effect.all([...]).pipe(Effect.parallelErrors)`                     |
+| mapBoth             | Transform both channels    | `effect.pipe(Effect.mapBoth({ onSuccess, onFailure }))`             |
+| tapErrorTag         | Observe specific errors    | `effect.pipe(Effect.tapErrorTag("ErrorType", (e) => log(e)))`       |
+| Scope.addFinalizer  | Exit-aware cleanup         | `Scope.addFinalizer((exit) => Exit.match(exit, {...}))`             |
+| Circuit Breaker     | Prevent cascading failures | `createCircuitBreaker(effect, threshold, resetAfter)`               |
+| acquireRelease      | Resource management        | `Effect.acquireRelease(acquire, release)`                           |
 
 **Note**: Both `Effect.Service` and `Context.Tag` are valid in Effect 3.0+. Choose based on your needs.
 
@@ -3051,31 +5867,39 @@ export class PaymentService extends Context.Tag('PaymentService')<
 
 ## Testing with @effect/vitest
 
-The monorepo uses **@effect/vitest** for testing Effect-based services. This library provides seamless integration between Vitest and Effect, with automatic TestContext injection, TestClock support, and native Effect test patterns.
+> **📘 Comprehensive Guide:** See [TESTING_PATTERNS.md](./TESTING_PATTERNS.md) for complete testing standards, anti-patterns, and migration guides.
 
-### Basic Effect Test
+The monorepo uses **@effect/vitest** for ALL testing with standardized patterns:
 
+**Standard Pattern (Use Everywhere):**
 ```typescript
-import { it, expect } from '@effect/vitest';
-import { Effect } from 'effect';
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
+import { Effect, Layer } from 'effect';
 import { MyService } from './my-service';
-import { MyServiceLive } from './my-service';
 
 describe('MyService', () => {
-  it('should perform operation', () =>
+  it.scoped('should perform operation', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const service = yield* MyService;
       const result = yield* service.operation();
 
       expect(result).toBe(expectedValue);
-    }).pipe(Effect.provide(MyServiceLive)));
+    }).pipe(Effect.provide(Layer.fresh(MyService.Test))) // ✅ Always Layer.fresh
+  );
 });
 ```
+
+**Key Standards:**
+- ✅ **ALL** imports from `@effect/vitest` (describe, expect, it)
+- ✅ **ALL** tests use `it.scoped()` (not it.effect() or plain it())
+- ✅ **ALL** layers wrapped with `Layer.fresh()` for isolation
+
+### Basic Effect Test
 
 ### Testing with Dependencies
 
 ```typescript
-import { it, expect } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer } from 'effect';
 
 describe('ServiceWithDependencies', () => {
@@ -3085,7 +5909,7 @@ describe('ServiceWithDependencies', () => {
     MyServiceLive,
   );
 
-  it('should use injected dependencies', () =>
+  it.scoped('should use injected dependencies', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const service = yield* MyService;
       const db = yield* DatabaseService;
@@ -3094,7 +5918,7 @@ describe('ServiceWithDependencies', () => {
       const result = yield* service.operationWithDeps();
 
       expect(result).toBeDefined();
-    }).pipe(Effect.provide(TestLayer)));
+    }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
 });
 ```
 
@@ -3103,11 +5927,11 @@ describe('ServiceWithDependencies', () => {
 @effect/vitest automatically provides a TestClock for simulating time in tests:
 
 ```typescript
-import { it, expect } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, TestClock } from 'effect';
 
 describe('TimeBasedOperations', () => {
-  it('should handle time-based operations', () =>
+  it.scoped('should handle time-based operations', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       // Start async operation
       const fiber = yield* Effect.fork(delayedOperation());
@@ -3119,7 +5943,7 @@ describe('TimeBasedOperations', () => {
       const result = yield* Fiber.join(fiber);
 
       expect(result).toBe(expectedValue);
-    }).pipe(Effect.provide(MyServiceLive)));
+    }).pipe(Effect.provide(Layer.fresh(MyServiceLive)))); // ✅ Always Layer.fresh
 });
 ```
 
@@ -3128,7 +5952,7 @@ describe('TimeBasedOperations', () => {
 Use `it.scoped()` for Effects that require resource management:
 
 ```typescript
-import { it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Scope } from 'effect';
 
 describe('ResourceManagement', () => {
@@ -3139,7 +5963,7 @@ describe('ResourceManagement', () => {
       const result = yield* useResource(resource);
 
       expect(result).toBeDefined();
-    }).pipe(Effect.provide(MyServiceLive)),
+    }).pipe(Effect.provide(Layer.fresh(MyServiceLive))), // ✅ Always Layer.fresh
   );
 });
 ```
@@ -3149,13 +5973,16 @@ describe('ResourceManagement', () => {
 Use `it.live()` to run tests with the real (live) Effect environment without TestClock:
 
 ```typescript
+import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
+import { Effect, Layer } from 'effect';
+
 it.live('should use real environment', () =>
   Effect.gen(function* () {
     // Uses real time, real services, etc.
     const result = yield* realServiceCall();
 
     expect(result).toBeDefined();
-  }).pipe(Effect.provide(MyServiceLive)),
+  }).pipe(Effect.provide(Layer.fresh(MyServiceLive))), // ✅ Always Layer.fresh
 );
 ```
 
@@ -3164,11 +5991,11 @@ it.live('should use real environment', () =>
 Capture errors using `Effect.exit()` to verify error handling:
 
 ```typescript
-import { it, expect } from '@effect/vitest';
-import { Effect, Exit } from 'effect';
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
+import { Effect, Exit, Layer } from 'effect';
 
 describe('ErrorHandling', () => {
-  it('should handle errors correctly', () =>
+  it.scoped('should handle errors correctly', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const exit = yield* Effect.exit(failingOperation());
 
@@ -3178,7 +6005,7 @@ describe('ErrorHandling', () => {
           new MyError({ reason: 'ValidationFailed' }),
         );
       }
-    }).pipe(Effect.provide(MyServiceLive)));
+    }).pipe(Effect.provide(Layer.fresh(MyServiceLive)))); // ✅ Always Layer.fresh
 });
 ```
 
@@ -3188,26 +6015,27 @@ describe('ErrorHandling', () => {
 
 ```typescript
 import { it } from '@effect/vitest';
+import { Effect, Layer } from 'effect';
 
 // Run only this test (skip all others)
-it.effect.only('focused test', () =>
+it.scoped.only('focused test', () => // ✅ Use it.scoped.only
   Effect.gen(function* () {
     /* ... */
-  }),
+  }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
 );
 
 // Skip this test temporarily
-it.effect.skip('skipped test', () =>
+it.scoped.skip('skipped test', () => // ✅ Use it.scoped.skip
   Effect.gen(function* () {
     /* ... */
-  }),
+  }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
 );
 
 // Mark test as expected to fail
-it.effect.fails('known issue', () =>
+it.scoped.fails('known issue', () => // ✅ Use it.scoped.fails
   Effect.gen(function* () {
     /* ... */
-  }),
+  }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
 );
 ```
 
@@ -3241,6 +6069,7 @@ export class MyService extends Context.Tag('MyService')<
 }
 
 // my-service.spec.ts - Tests use static Test property
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer } from 'effect';
 import { MyService } from './my-service';
 import { DatabaseService } from '@samuelho-dev/infra-database';
@@ -3252,12 +6081,12 @@ const TestLayer = Layer.mergeAll(
 );
 
 describe('MyService', () => {
-  it('should work with test layer', () =>
+  it.scoped('should work with test layer', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const service = yield* MyService;
       const result = yield* service.operation();
       expect(result).toBeDefined();
-    }).pipe(Effect.provide(TestLayer)));
+    }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
 });
 ```
 
@@ -3279,36 +6108,41 @@ export const TestDatabaseService = Layer.succeed(DatabaseService, {
 
 ### Common Testing Patterns
 
+> **📘 More Examples:** See [TESTING_PATTERNS.md](./TESTING_PATTERNS.md) for comprehensive testing patterns and anti-patterns.
+
 **Pattern 1: Verify Service Calls**
 
 ```typescript
-it('should call dependencies', () =>
+import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
+import { Effect, Layer } from 'effect';
+
+it.scoped('should call dependencies', () => // ✅ Always it.scoped
   Effect.gen(function* () {
     const service = yield* MyService;
     yield* service.operation();
 
     // Verify via mock/spy if needed
     expect(mockDatabase.query).toHaveBeenCalled();
-  }).pipe(Effect.provide(TestLayer)));
+  }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
 ```
 
 **Pattern 2: Test Error Recovery**
 
 ```typescript
-it('should recover from errors', () =>
+it.scoped('should recover from errors', () => // ✅ Always it.scoped
   Effect.gen(function* () {
     const result = yield* riskyOperation().pipe(
       Effect.catchAll(() => Effect.succeed(fallbackValue)),
     );
 
     expect(result).toBe(fallbackValue);
-  }).pipe(Effect.provide(TestLayer)));
+  }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
 ```
 
 **Pattern 3: Test Concurrent Operations**
 
 ```typescript
-it('should handle concurrent operations', () =>
+it.scoped('should handle concurrent operations', () => // ✅ Always it.scoped
   Effect.gen(function* () {
     const results = yield* Effect.all(
       [operation1(), operation2(), operation3()],
@@ -3316,7 +6150,7 @@ it('should handle concurrent operations', () =>
     );
 
     expect(results).toHaveLength(3);
-  }).pipe(Effect.provide(TestLayer)));
+  }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
 ```
 
 ### Configuration
@@ -3457,3 +6291,1259 @@ All patterns in this guide have been validated against Effect 3.0+ official docu
 - FiberMap (documentId 6560) ✅
 - Ref and SynchronizedRef for state management ✅
 - Structured logging (documentId 7333) ✅
+
+---
+
+## Event Sourcing Pattern
+
+Event sourcing captures all changes to application state as a sequence of events. This pattern is ideal for audit trails, temporal queries, and event-driven architectures.
+
+### Event Definition with Schema
+
+Use `Schema.TaggedRequest` for commands and `Schema.Struct` for events:
+
+```typescript
+import { Schema } from "@effect/schema";
+import { Effect, Data } from "effect";
+
+// Command (request to change state)
+export class CreateUserCommand extends Schema.TaggedRequest<CreateUserCommand>()(
+  "CreateUserCommand",
+  {
+    failure: Schema.Never, // Commands don't fail directly
+    success: Schema.Struct({
+      eventId: Schema.String,
+      timestamp: Schema.Number,
+    }),
+    payload: {
+      userId: Schema.String,
+      email: Schema.String,
+      name: Schema.String,
+    },
+  }
+) {}
+
+// Events (immutable facts)
+export class UserCreatedEvent extends Schema.Struct({
+  _tag: Schema.Literal("UserCreated"),
+  eventId: Schema.String,
+  aggregateId: Schema.String, // userId
+  timestamp: Schema.Number,
+  version: Schema.Number,
+  data: Schema.Struct({
+    email: Schema.String,
+    name: Schema.String,
+  }),
+}) {}
+
+export class UserEmailChangedEvent extends Schema.Struct({
+  _tag: Schema.Literal("UserEmailChanged"),
+  eventId: Schema.String,
+  aggregateId: Schema.String,
+  timestamp: Schema.Number,
+  version: Schema.Number,
+  data: Schema.Struct({
+    oldEmail: Schema.String,
+    newEmail: Schema.String,
+  }),
+}) {}
+
+// Event union for type safety
+export type UserEvent =
+  | typeof UserCreatedEvent.Type
+  | typeof UserEmailChangedEvent.Type;
+```
+
+### Event Store Service
+
+```typescript
+import { Context, Effect, Layer } from "effect";
+import type { UserEvent } from "./events";
+
+export interface EventStoreInterface {
+  readonly append: (
+    aggregateId: string,
+    events: UserEvent[],
+    expectedVersion: number
+  ) => Effect.Effect<void, EventStoreError>;
+
+  readonly loadEvents: (
+    aggregateId: string
+  ) => Effect.Effect<UserEvent[], EventStoreError>;
+
+  readonly loadEventsSince: (
+    timestamp: number
+  ) => Effect.Effect<UserEvent[], EventStoreError>;
+}
+
+export class EventStore extends Context.Tag("EventStore")<
+  EventStore,
+  EventStoreInterface
+>() {
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const database = yield* KyselyService;
+
+      return {
+        append: (aggregateId, events, expectedVersion) =>
+          Effect.gen(function* () {
+            yield* database.transaction((trx) =>
+              Effect.gen(function* () {
+                // Optimistic concurrency check
+                const currentVersion = yield* database.query((db) =>
+                  db
+                    .selectFrom("events")
+                    .where("aggregateId", "=", aggregateId)
+                    .select((eb) => eb.fn.max("version").as("maxVersion"))
+                    .executeTakeFirst()
+                );
+
+                if (currentVersion?.maxVersion !== expectedVersion) {
+                  return yield* Effect.fail(
+                    new ConcurrencyError({
+                      aggregateId,
+                      expected: expectedVersion,
+                      actual: currentVersion?.maxVersion ?? 0,
+                    })
+                  );
+                }
+
+                // Append events
+                yield* database.query((db) =>
+                  db
+                    .insertInto("events")
+                    .values(
+                      events.map((event, i) => ({
+                        eventId: event.eventId,
+                        aggregateId,
+                        eventType: event._tag,
+                        eventData: JSON.stringify(event.data),
+                        version: expectedVersion + i + 1,
+                        timestamp: event.timestamp,
+                      }))
+                    )
+                    .execute()
+                );
+              })
+            );
+          }),
+
+        loadEvents: (aggregateId) =>
+          Effect.gen(function* () {
+            const rows = yield* database.query((db) =>
+              db
+                .selectFrom("events")
+                .where("aggregateId", "=", aggregateId)
+                .orderBy("version", "asc")
+                .selectAll()
+                .execute()
+            );
+
+            return rows.map((row) => ({
+              _tag: row.eventType,
+              eventId: row.eventId,
+              aggregateId: row.aggregateId,
+              timestamp: row.timestamp,
+              version: row.version,
+              data: JSON.parse(row.eventData),
+            })) as UserEvent[];
+          }),
+
+        loadEventsSince: (timestamp) =>
+          Effect.gen(function* () {
+            const rows = yield* database.query((db) =>
+              db
+                .selectFrom("events")
+                .where("timestamp", ">=", timestamp)
+                .orderBy("timestamp", "asc")
+                .selectAll()
+                .execute()
+            );
+
+            return rows.map((row) => ({
+              _tag: row.eventType,
+              eventId: row.eventId,
+              aggregateId: row.aggregateId,
+              timestamp: row.timestamp,
+              version: row.version,
+              data: JSON.parse(row.eventData),
+            })) as UserEvent[];
+          }),
+      };
+    })
+  );
+}
+```
+
+### Event Projection Pattern
+
+Project events into queryable read models:
+
+```typescript
+export interface UserProjection {
+  readonly userId: string;
+  readonly email: string;
+  readonly name: string;
+  readonly version: number;
+  readonly createdAt: number;
+  readonly updatedAt: number;
+}
+
+export class UserProjectionService extends Context.Tag("UserProjectionService")<
+  UserProjectionService,
+  {
+    readonly project: (events: UserEvent[]) => Effect.Effect<UserProjection>;
+    readonly rebuild: (userId: string) => Effect.Effect<void, ProjectionError>;
+  }
+>() {
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const eventStore = yield* EventStore;
+      const database = yield* KyselyService;
+
+      return {
+        project: (events) =>
+          Effect.succeed(
+            events.reduce((state, event) => {
+              switch (event._tag) {
+                case "UserCreated":
+                  return {
+                    userId: event.aggregateId,
+                    email: event.data.email,
+                    name: event.data.name,
+                    version: event.version,
+                    createdAt: event.timestamp,
+                    updatedAt: event.timestamp,
+                  };
+
+                case "UserEmailChanged":
+                  return {
+                    ...state,
+                    email: event.data.newEmail,
+                    version: event.version,
+                    updatedAt: event.timestamp,
+                  };
+
+                default:
+                  return state;
+              }
+            }, {} as UserProjection)
+          ),
+
+        rebuild: (userId) =>
+          Effect.gen(function* () {
+            const events = yield* eventStore.loadEvents(userId);
+            const projection = yield* this.project(events);
+
+            yield* database.query((db) =>
+              db
+                .insertInto("user_projections")
+                .values(projection)
+                .onConflict((oc) =>
+                  oc.column("userId").doUpdateSet(projection)
+                )
+                .execute()
+            );
+          }),
+      };
+    })
+  );
+}
+```
+
+### Query Pattern from Projections
+
+```typescript
+export class UserQueryService extends Context.Tag("UserQueryService")<
+  UserQueryService,
+  {
+    readonly findById: (
+      userId: string
+    ) => Effect.Effect<Option.Option<UserProjection>, QueryError>;
+    readonly findByEmail: (
+      email: string
+    ) => Effect.Effect<Option.Option<UserProjection>, QueryError>;
+  }
+>() {
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const database = yield* KyselyService;
+
+      return {
+        findById: (userId) =>
+          database.query((db) =>
+            db
+              .selectFrom("user_projections")
+              .where("userId", "=", userId)
+              .selectAll()
+              .executeTakeFirst()
+          ).pipe(Effect.map(Option.fromNullable)),
+
+        findByEmail: (email) =>
+          database.query((db) =>
+            db
+              .selectFrom("user_projections")
+              .where("email", "=", email)
+              .selectAll()
+              .executeTakeFirst()
+          ).pipe(Effect.map(Option.fromNullable)),
+      };
+    })
+  );
+}
+```
+
+### Event Sourcing Best Practices
+
+**Event Design**:
+- ✅ Events are immutable facts (past tense: "UserCreated", not "CreateUser")
+- ✅ Include all data needed for projections (avoid database lookups)
+- ✅ Use semantic versioning for event schema evolution
+- ✅ Store metadata: aggregateId, version, timestamp, eventId
+
+**Projection Strategy**:
+- ✅ Project events into denormalized read models for queries
+- ✅ Rebuild projections from events for data migration
+- ✅ Use eventual consistency (projections may lag behind events)
+- ✅ Consider CQRS: separate write (commands) and read (queries) models
+
+**Error Handling**:
+- ✅ Commands can fail before generating events
+- ✅ Events are facts and cannot fail (only projection can fail)
+- ✅ Handle optimistic concurrency with version checks
+- ✅ Use sagas/process managers for multi-aggregate transactions
+
+**Template References**:
+- Contract event templates: `nx g contract:event`
+- Event store repository: `nx g data-access:repository --event-sourced`
+
+---
+
+## RPC + Schema Integration
+
+Effect RPC enables type-safe client-server communication with automatic serialization and validation using `@effect/schema` and `@effect/rpc`.
+
+### Request/Response Schema Patterns
+
+Define RPC requests and responses with full type safety:
+
+```typescript
+import { Schema } from "@effect/schema";
+import { Rpc } from "@effect/rpc";
+
+// Request schema with validation
+export class GetUserRequest extends Schema.TaggedRequest<GetUserRequest>()(
+  "GetUserRequest",
+  {
+    failure: Schema.Union(
+      Schema.Struct({
+        _tag: Schema.Literal("UserNotFound"),
+        userId: Schema.String,
+      }),
+      Schema.Struct({
+        _tag: Schema.Literal("ValidationError"),
+        errors: Schema.Array(Schema.String),
+      })
+    ),
+    success: Schema.Struct({
+      id: Schema.String,
+      email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+      name: Schema.String.pipe(Schema.minLength(1)),
+      createdAt: Schema.DateFromSelf,
+    }),
+    payload: {
+      userId: Schema.String.pipe(Schema.uuid()),
+    },
+  }
+) {}
+
+// Batch request for multiple users
+export class GetUsersRequest extends Schema.TaggedRequest<GetUsersRequest>()(
+  "GetUsersRequest",
+  {
+    failure: Schema.Struct({
+      _tag: Schema.Literal("ValidationError"),
+      errors: Schema.Array(Schema.String),
+    }),
+    success: Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        email: Schema.String,
+        name: Schema.String,
+        createdAt: Schema.DateFromSelf,
+      })
+    ),
+    payload: {
+      userIds: Schema.Array(Schema.String.pipe(Schema.uuid())),
+      includeDeleted: Schema.optional(Schema.Boolean).pipe(
+        Schema.withDefault(() => false)
+      ),
+    },
+  }
+) {}
+
+// Mutation request
+export class CreateUserRequest extends Schema.TaggedRequest<CreateUserRequest>()(
+  "CreateUserRequest",
+  {
+    failure: Schema.Union(
+      Schema.Struct({
+        _tag: Schema.Literal("EmailAlreadyExists"),
+        email: Schema.String,
+      }),
+      Schema.Struct({
+        _tag: Schema.Literal("ValidationError"),
+        errors: Schema.Array(Schema.String),
+      })
+    ),
+    success: Schema.Struct({
+      id: Schema.String,
+      email: Schema.String,
+      name: Schema.String,
+      createdAt: Schema.DateFromSelf,
+    }),
+    payload: {
+      email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+      name: Schema.String.pipe(Schema.minLength(1)),
+    },
+  }
+) {}
+```
+
+### Error Serialization
+
+Properly serialize errors across RPC boundary:
+
+```typescript
+import { Data } from "effect";
+
+// Define serializable errors
+export class UserNotFoundError extends Data.TaggedError("UserNotFound")<{
+  userId: string;
+}> {}
+
+export class EmailAlreadyExistsError extends Data.TaggedError("EmailAlreadyExists")<{
+  email: string;
+}> {}
+
+export class ValidationError extends Data.TaggedError("ValidationError")<{
+  errors: string[];
+}> {}
+
+// Map domain errors to RPC schema errors
+function toRpcError(error: UserServiceError) {
+  switch (error._tag) {
+    case "UserNotFound":
+      return { _tag: "UserNotFound" as const, userId: error.userId };
+    case "EmailAlreadyExists":
+      return { _tag: "EmailAlreadyExists" as const, email: error.email };
+    case "ValidationError":
+      return { _tag: "ValidationError" as const, errors: error.errors };
+  }
+}
+```
+
+### Type-Safe RPC Handlers
+
+Implement request handlers with full type safety:
+
+```typescript
+import { Context, Effect, Layer } from "effect";
+import { Rpc, RpcRouter } from "@effect/rpc";
+import { HttpRpcResolver } from "@effect/rpc-http";
+
+// Define RPC router
+export const UserRpcRouter = RpcRouter.make(
+  // Handler for GetUserRequest
+  Rpc.effect(GetUserRequest, (request) =>
+    Effect.gen(function* () {
+      const userService = yield* UserService;
+      const user = yield* userService.findById(request.userId);
+
+      if (Option.isNone(user)) {
+        return yield* Effect.fail({
+          _tag: "UserNotFound" as const,
+          userId: request.userId,
+        });
+      }
+
+      return {
+        id: user.value.id,
+        email: user.value.email,
+        name: user.value.name,
+        createdAt: user.value.createdAt,
+      };
+    })
+  ),
+
+  // Handler for GetUsersRequest
+  Rpc.effect(GetUsersRequest, (request) =>
+    Effect.gen(function* () {
+      const userService = yield* UserService;
+      const users = yield* userService.findByIds(
+        request.userIds,
+        request.includeDeleted
+      );
+
+      return users.map((user) => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+      }));
+    })
+  ),
+
+  // Handler for CreateUserRequest
+  Rpc.effect(CreateUserRequest, (request) =>
+    Effect.gen(function* () {
+      const userService = yield* UserService;
+
+      // Check if email exists
+      const existing = yield* userService.findByEmail(request.email);
+      if (Option.isSome(existing)) {
+        return yield* Effect.fail({
+          _tag: "EmailAlreadyExists" as const,
+          email: request.email,
+        });
+      }
+
+      const user = yield* userService.create({
+        email: request.email,
+        name: request.name,
+      });
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+      };
+    })
+  )
+);
+
+// RPC Server Layer
+export const UserRpcServerLive = Layer.effect(
+  Rpc.Server,
+  Effect.gen(function* () {
+    return Rpc.server(UserRpcRouter);
+  })
+).pipe(
+  Layer.provide(UserService.Live),
+  Layer.provide(DatabaseService.Live)
+);
+```
+
+### RPC Client Usage
+
+Use the RPC client with full type safety:
+
+```typescript
+import { HttpRpcResolver } from "@effect/rpc-http";
+
+// Client resolver
+export const UserRpcClientLive = HttpRpcResolver.make<typeof UserRpcRouter>({
+  url: "http://localhost:3000/rpc/users",
+}).pipe(Layer.effect(Rpc.Resolver));
+
+// Usage in application
+const program = Effect.gen(function* () {
+  const resolver = yield* Rpc.Resolver;
+
+  // Type-safe request - compiler ensures correct payload
+  const user = yield* resolver.execute(
+    new GetUserRequest({ userId: "123e4567-e89b-12d3-a456-426614174000" })
+  );
+
+  console.log(user); // { id, email, name, createdAt }
+
+  // Batch request
+  const users = yield* resolver.execute(
+    new GetUsersRequest({
+      userIds: [
+        "123e4567-e89b-12d3-a456-426614174000",
+        "223e4567-e89b-12d3-a456-426614174001",
+      ],
+      includeDeleted: false,
+    })
+  );
+
+  // Handle typed errors
+  yield* resolver.execute(
+    new GetUserRequest({ userId: "invalid" })
+  ).pipe(
+    Effect.catchTag("UserNotFound", (error) =>
+      Effect.logWarning(`User ${error.userId} not found`)
+    ),
+    Effect.catchTag("ValidationError", (error) =>
+      Effect.logError(`Validation failed: ${error.errors.join(", ")}`)
+    )
+  );
+});
+```
+
+### RPC Best Practices
+
+**Schema Design**:
+- ✅ Use `Schema.TaggedRequest` for all RPC requests
+- ✅ Define explicit success and failure schemas
+- ✅ Leverage schema refinements (`.pipe(Schema.uuid())`, `.pipe(Schema.pattern(...))`)
+- ✅ Use `Schema.DateFromSelf` for dates (automatic serialization)
+- ✅ Provide sensible defaults with `Schema.withDefault()`
+
+**Error Handling**:
+- ✅ Use tagged unions for error types (discriminated by `_tag`)
+- ✅ Map domain errors to serializable RPC errors
+- ✅ Provide context in error payloads (e.g., userId, email)
+- ✅ Use `Effect.catchTag` for type-safe error handling on client
+
+**Performance**:
+- ✅ Batch requests when fetching multiple resources
+- ✅ Use streaming for large datasets (`Stream` instead of arrays)
+- ✅ Consider pagination for list operations
+- ✅ Cache resolver results when appropriate
+
+**Security**:
+- ✅ Validate all inputs with schema refinements
+- ✅ Sanitize error messages (don't expose internal details)
+- ✅ Use authentication middleware for protected endpoints
+- ✅ Rate limit RPC endpoints
+
+**Template References**:
+- RPC route generation: `nx g feature:rpc-route`
+- See contract templates for request/response schemas
+
+---
+
+## Client/Edge Layer Patterns
+
+Different runtime environments (browser, edge, Node.js) require platform-specific layer implementations and exports.
+
+### Browser-Safe Constraints
+
+Client-side layers cannot access Node.js APIs:
+
+```typescript
+// ❌ WRONG - Node.js dependencies break in browser
+import { KyselyService } from "@custom-repo/infra-kysely"; // Uses 'fs', 'path'
+import { readFileSync } from "fs";
+
+// ✅ CORRECT - Browser-safe implementation
+export class ClientStorageService extends Context.Tag("ClientStorageService")<
+  ClientStorageService,
+  {
+    readonly get: (key: string) => Effect.Effect<Option.Option<string>>;
+    readonly set: (key: string, value: string) => Effect.Effect<void>;
+  }
+>() {
+  static readonly Live = Layer.succeed(this, {
+    get: (key) => Effect.sync(() => Option.fromNullable(localStorage.getItem(key))),
+    set: (key, value) => Effect.sync(() => localStorage.setItem(key, value)),
+  });
+}
+```
+
+### Edge Runtime Limitations
+
+Edge runtimes (Cloudflare Workers, Vercel Edge) have additional restrictions:
+
+```typescript
+// ❌ WRONG - These don't work in edge runtime
+import { createServer } from "http"; // Not available
+import { Pool } from "pg"; // TCP not available
+import fs from "fs"; // File system not available
+
+// ✅ CORRECT - Edge-compatible patterns
+export class EdgeCacheService extends Context.Tag("EdgeCacheService")<
+  EdgeCacheService,
+  {
+    readonly get: (key: string) => Effect.Effect<Option.Option<string>>;
+    readonly set: (key: string, value: string, ttl: number) => Effect.Effect<void>;
+  }
+>() {
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      // Use platform-provided KV storage
+      const kv = yield* Effect.sync(() => globalThis.KV_NAMESPACE);
+
+      return {
+        get: (key) =>
+          Effect.tryPromise({
+            try: () => kv.get(key),
+            catch: () => new CacheError({ key }),
+          }).pipe(Effect.map(Option.fromNullable)),
+
+        set: (key, value, ttl) =>
+          Effect.tryPromise({
+            try: () => kv.put(key, value, { expirationTtl: ttl }),
+            catch: () => new CacheError({ key }),
+          }),
+      };
+    })
+  );
+}
+```
+
+### Platform-Specific Exports
+
+Structure exports for different platforms:
+
+```typescript
+// src/index.ts (main entry - server only)
+export * from "./server";
+
+// src/server.ts (Node.js server)
+export { UserService } from "./lib/service";
+export { UserServiceLive, UserServiceTest } from "./lib/layers";
+export { UserRepository } from "./lib/repository"; // Uses Kysely
+
+// src/client.ts (browser-safe)
+export { UserService } from "./lib/service"; // Service tag only
+export type * from "./lib/types"; // Types only
+export { UserValidationError } from "./lib/errors"; // Serializable errors
+
+// ❌ DON'T export in client.ts:
+// - Layers that use Node.js APIs
+// - Database repositories
+// - File system operations
+
+// src/edge.ts (edge runtime)
+export { UserService } from "./lib/service";
+export { UserServiceEdge } from "./lib/layers-edge"; // Edge-specific layer
+export type * from "./lib/types";
+```
+
+### Service Availability by Platform
+
+| Service Type | Server | Client | Edge |
+|--------------|--------|--------|------|
+| **Contract (types, errors)** | ✅ | ✅ | ✅ |
+| **Data-Access (repositories)** | ✅ | ❌ | ❌ |
+| **Feature (business logic)** | ✅ | ✅* | ✅* |
+| **Infra (Kysely, logging)** | ✅ | ❌ | ❌ |
+| **Provider (external SDKs)** | ✅ | ⚠️** | ⚠️** |
+
+\* Feature layers must not depend on server-only infra
+\*\* Only if SDK is platform-compatible
+
+### Client Layer Implementation Example
+
+```typescript
+// lib/layers-client.ts
+export const UserServiceClient = Layer.effect(
+  UserService,
+  Effect.gen(function* () {
+    // Client uses RPC to call server
+    const rpcClient = yield* RpcClient;
+
+    return {
+      findById: (id) =>
+        rpcClient.execute(new GetUserRequest({ userId: id })),
+
+      create: (data) =>
+        rpcClient.execute(new CreateUserRequest(data)),
+    };
+  })
+);
+```
+
+**Best Practices**:
+- ✅ Use conditional exports in package.json for platform targeting
+- ✅ Test client/edge builds separately (`vitest --environment jsdom`)
+- ✅ Document platform constraints in service headers
+- ✅ Use type-only imports (`import type`) in client code when possible
+
+**Template References**:
+- Client exports: Generated automatically in `src/client.ts`
+- Edge exports: Generated automatically in `src/edge.ts` (when applicable)
+
+---
+
+## Configuration Patterns
+
+Manage environment-specific configuration with Effect's Config system and Context.Tag.
+
+### Config Tag Setup
+
+```typescript
+import { Config, Context, Effect, Layer } from "effect";
+import { Schema } from "@effect/schema";
+
+// Define config schema
+export class AppConfigSchema extends Schema.Struct({
+  port: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
+  logLevel: Schema.Literal("debug", "info", "warn", "error"),
+  databaseUrl: Schema.String.pipe(Schema.minLength(1)),
+  apiKey: Schema.String.pipe(Schema.minLength(10)),
+  timeout: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
+}) {}
+
+export type AppConfig = typeof AppConfigSchema.Type;
+
+// Config service tag
+export class AppConfigService extends Context.Tag("AppConfigService")<
+  AppConfigService,
+  AppConfig
+>() {
+  // Load from environment variables
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const config = yield* Config.all({
+        port: Config.number("PORT").pipe(Config.withDefault(3000)),
+        logLevel: Config.literal("debug", "info", "warn", "error")("LOG_LEVEL")
+          .pipe(Config.withDefault("info" as const)),
+        databaseUrl: Config.string("DATABASE_URL"),
+        apiKey: Config.secret("API_KEY").pipe(Config.map((secret) => secret.value)),
+        timeout: Config.number("TIMEOUT").pipe(Config.withDefault(30000)),
+      });
+
+      // Validate with schema
+      return yield* Schema.decode(AppConfigSchema)(config);
+    })
+  );
+
+  // Test config
+  static readonly Test = Layer.succeed(this, {
+    port: 3001,
+    logLevel: "debug",
+    databaseUrl: "postgresql://test:test@localhost:5432/test",
+    apiKey: "test-api-key",
+    timeout: 5000,
+  });
+}
+```
+
+### Environment-Based Configuration
+
+```typescript
+// Development overrides
+export const AppConfigDev = Layer.effect(
+  AppConfigService,
+  Effect.gen(function* () {
+    const base = yield* AppConfigService.Live.pipe(
+      Layer.build,
+      Effect.map((ctx) => Context.get(ctx, AppConfigService))
+    );
+
+    return {
+      ...base,
+      logLevel: "debug" as const,
+      timeout: 60000, // Longer timeouts for debugging
+    };
+  })
+);
+
+// Production hardening
+export const AppConfigProd = Layer.effect(
+  AppConfigService,
+  Effect.gen(function* () {
+    const base = yield* AppConfigService.Live.pipe(
+      Layer.build,
+      Effect.map((ctx) => Context.get(ctx, AppConfigService))
+    );
+
+    // Validate required production settings
+    if (!base.apiKey || base.apiKey === "test-api-key") {
+      return yield* Effect.fail(new ConfigError("Production API key required"));
+    }
+
+    return base;
+  })
+);
+```
+
+### Configuration Composition
+
+```typescript
+// Service-specific config
+export class DatabaseConfig extends Schema.Struct({
+  url: Schema.String,
+  maxConnections: Schema.Number,
+  connectionTimeout: Schema.Number,
+}) {}
+
+export class DatabaseConfigService extends Context.Tag("DatabaseConfigService")<
+  DatabaseConfigService,
+  typeof DatabaseConfig.Type
+>() {
+  // Derive from app config
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      const appConfig = yield* AppConfigService;
+
+      return {
+        url: appConfig.databaseUrl,
+        maxConnections: 10,
+        connectionTimeout: appConfig.timeout,
+      };
+    })
+  ).pipe(Layer.provide(AppConfigService.Live));
+}
+```
+
+**Best Practices**:
+- ✅ Use Config.secret for sensitive values (never logged)
+- ✅ Provide defaults with Config.withDefault
+- ✅ Validate all config with @effect/schema
+- ✅ Use Config.all for loading multiple values atomically
+- ✅ Derive service configs from app config for consistency
+
+---
+
+## Pagination Patterns
+
+Implement efficient pagination for repository queries.
+
+### Offset/Limit Pagination
+
+```typescript
+export interface PaginationParams {
+  readonly page: number; // 1-indexed
+  readonly limit: number;
+}
+
+export interface PaginatedResult<T> {
+  readonly data: readonly T[];
+  readonly page: number;
+  readonly limit: number;
+  readonly total: number;
+  readonly totalPages: number;
+}
+
+// Repository operation
+findAll: (params: PaginationParams) =>
+  Effect.gen(function* () {
+    const database = yield* KyselyService;
+    const offset = (params.page - 1) * params.limit;
+
+    const [data, countResult] = yield* Effect.all([
+      database.query((db) =>
+        db
+          .selectFrom("users")
+          .selectAll()
+          .limit(params.limit)
+          .offset(offset)
+          .execute()
+      ),
+      database.query((db) =>
+        db
+          .selectFrom("users")
+          .select((eb) => eb.fn.countAll().as("count"))
+          .executeTakeFirst()
+      ),
+    ]);
+
+    const total = Number(countResult?.count ?? 0);
+
+    return {
+      data,
+      page: params.page,
+      limit: params.limit,
+      total,
+      totalPages: Math.ceil(total / params.limit),
+    };
+  })
+```
+
+### Cursor-Based Pagination
+
+More efficient for large datasets:
+
+```typescript
+export interface CursorParams {
+  readonly cursor?: string; // Last seen ID
+  readonly limit: number;
+}
+
+export interface CursorResult<T> {
+  readonly data: readonly T[];
+  readonly nextCursor: string | null;
+  readonly hasMore: boolean;
+}
+
+// Repository operation with cursor
+findAllCursor: (params: CursorParams) =>
+  Effect.gen(function* () {
+    const database = yield* KyselyService;
+
+    const data = yield* database.query((db) => {
+      let query = db
+        .selectFrom("users")
+        .selectAll()
+        .orderBy("id", "asc")
+        .limit(params.limit + 1); // Fetch one extra to check hasMore
+
+      if (params.cursor) {
+        query = query.where("id", ">", params.cursor);
+      }
+
+      return query.execute();
+    });
+
+    const hasMore = data.length > params.limit;
+    const results = hasMore ? data.slice(0, -1) : data;
+    const nextCursor = hasMore ? results[results.length - 1].id : null;
+
+    return {
+      data: results,
+      nextCursor,
+      hasMore,
+    };
+  })
+```
+
+**Best Practices**:
+- ✅ Use cursor pagination for infinite scroll / real-time feeds
+- ✅ Use offset pagination for traditional page navigation
+- ✅ Always include total count for offset pagination
+- ✅ Index cursor columns for performance
+- ✅ Validate page/limit parameters (max limit 100)
+
+---
+
+## Testing Patterns Deep Dive
+
+Advanced Effect testing patterns with Layer.fresh and test composition.
+
+### Layer.fresh for Test Isolation
+
+```typescript
+import { it } from "@effect/vitest";
+import { Effect, Layer } from "effect";
+
+describe("UserService", () => {
+  // ✅ CORRECT - Each test gets fresh layer
+  it.effect("creates user", () =>
+    Effect.gen(function* () {
+      const service = yield* UserService;
+      const user = yield* service.create({ email: "test@example.com" });
+      expect(user.id).toBeDefined();
+    }).pipe(Effect.provide(Layer.fresh(UserService.Test)))
+  );
+
+  // ✅ CORRECT - Tests are isolated
+  it.effect("finds user by ID", () =>
+    Effect.gen(function* () {
+      const service = yield* UserService;
+      const created = yield* service.create({ email: "test@example.com" });
+      const found = yield* service.findById(created.id);
+      expect(Option.isSome(found)).toBe(true);
+    }).pipe(Effect.provide(Layer.fresh(UserService.Test)))
+  );
+});
+```
+
+### Test Layer Composition
+
+```typescript
+// Compose multiple test layers
+const TestLayers = Layer.mergeAll(
+  Layer.fresh(UserService.Test),
+  Layer.fresh(EmailService.Test),
+  Layer.fresh(LoggingService.Test)
+);
+
+it.effect("registers user and sends email", () =>
+  Effect.gen(function* () {
+    const userService = yield* UserService;
+    const emailService = yield* EmailService;
+
+    const user = yield* userService.create({ email: "test@example.com" });
+    yield* emailService.sendWelcome(user.email);
+
+    // Verify email was sent (mock tracks calls)
+    const sent = yield* emailService.getSentEmails();
+    expect(sent).toHaveLength(1);
+  }).pipe(Effect.provide(TestLayers))
+);
+```
+
+### Integration Testing with Real Database
+
+```typescript
+// Integration test layer with test database
+const IntegrationLayers = Layer.mergeAll(
+  UserRepository.Live, // Real repository
+  KyselyService.Test, // Test database connection
+  LoggingService.Test
+);
+
+describe("UserRepository Integration", () => {
+  beforeEach(async () => {
+    // Migrate test database
+    await Effect.runPromise(
+      migrateDatabase.pipe(Effect.provide(KyselyService.Test))
+    );
+  });
+
+  it.effect("persists user to database", () =>
+    Effect.gen(function* () {
+      const repo = yield* UserRepository;
+      const user = yield* repo.create({ email: "test@example.com" });
+
+      // Verify in database
+      const found = yield* repo.findById(user.id);
+      expect(Option.isSome(found)).toBe(true);
+    }).pipe(Effect.provide(IntegrationLayers))
+  );
+});
+```
+
+**Best Practices**:
+- ✅ Always use Layer.fresh in tests for isolation
+- ✅ Use Layer.succeed for Test layers (not Layer.effect)
+- ✅ Compose test layers with Layer.mergeAll
+- ✅ Separate unit tests (mocks) from integration tests (real deps)
+- ✅ Use @effect/vitest for Effect-aware assertions
+
+---
+
+## Error Handling by Operation Type
+
+Different operation types require specific error handling strategies.
+
+### CRUD Operation Errors
+
+```typescript
+// Create - Handle conflicts
+create: (input) =>
+  Effect.gen(function* () {
+    const database = yield* KyselyService;
+
+    return yield* database.query((db) =>
+      db.insertInto("users").values(input).returning("id").executeTakeFirst()
+    ).pipe(
+      Effect.catchTag("DatabaseError", (error) => {
+        if (error.code === "23505") { // Unique violation
+          return Effect.fail(new EmailAlreadyExistsError({ email: input.email }));
+        }
+        return Effect.fail(new DatabaseError({ cause: error }));
+      })
+    );
+  })
+
+// Read - Handle not found
+findById: (id) =>
+  database.query((db) =>
+    db.selectFrom("users").where("id", "=", id).selectAll().executeTakeFirst()
+  ).pipe(
+    Effect.map(Option.fromNullable),
+    Effect.catchAll(() => Effect.succeed(Option.none()))
+  )
+
+// Update - Handle not found + conflicts
+update: (id, input) =>
+  Effect.gen(function* () {
+    const existing = yield* findById(id);
+    if (Option.isNone(existing)) {
+      return yield* Effect.fail(new UserNotFoundError({ id }));
+    }
+
+    return yield* database.query((db) =>
+      db.updateTable("users").set(input).where("id", "=", id).execute()
+    );
+  })
+
+// Delete - Idempotent
+delete: (id) =>
+  database.query((db) =>
+    db.deleteFrom("users").where("id", "=", id).execute()
+  ).pipe(Effect.asVoid) // Don't fail if already deleted
+```
+
+### Schema Validation Errors
+
+```typescript
+import { Schema } from "@effect/schema";
+
+const UserSchema = Schema.Struct({
+  email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+  age: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(18)),
+});
+
+create: (input) =>
+  Effect.gen(function* () {
+    // Validate input
+    const validated = yield* Schema.decode(UserSchema)(input).pipe(
+      Effect.mapError((error) =>
+        new ValidationError({
+          errors: error.message.split("\n"),
+        })
+      )
+    );
+
+    return yield* createUser(validated);
+  })
+```
+
+### External Service Errors
+
+```typescript
+// Retry with exponential backoff
+callExternalAPI: (url) =>
+  Effect.tryPromise({
+    try: () => fetch(url),
+    catch: (error) => new APIError({ cause: error }),
+  }).pipe(
+    Effect.retry({
+      times: 3,
+      schedule: Schedule.exponential("100 millis"),
+    }),
+    Effect.timeout("5 seconds"),
+    Effect.catchAll((error) =>
+      Effect.logError(`API call failed: ${error}`).pipe(
+        Effect.flatMap(() => Effect.fail(new ExternalServiceError({ url })))
+      )
+    )
+  )
+```
+
+### Error Recovery Patterns
+
+```typescript
+// Fallback to default
+getUserPreferences: (userId) =>
+  loadFromDatabase(userId).pipe(
+    Effect.orElse(() => Effect.succeed(defaultPreferences))
+  )
+
+// Retry with alternative
+fetchData: (id) =>
+  primaryAPI.fetch(id).pipe(
+    Effect.orElse(() => backupAPI.fetch(id)),
+    Effect.orElse(() => cache.get(id))
+  )
+
+// Collect all errors
+validateAll: (inputs) =>
+  Effect.forEach(inputs, validate, { mode: "either" }).pipe(
+    Effect.flatMap((results) => {
+      const errors = results.filter(Either.isLeft);
+      if (errors.length > 0) {
+        return Effect.fail(new BatchValidationError({ errors }));
+      }
+      return Effect.succeed(results.map((r) => r.right));
+    })
+  )
+```
+
+**Best Practices**:
+- ✅ Use tagged errors for type-safe error handling
+- ✅ Map database errors to domain errors
+- ✅ Validate early with Schema.decode
+- ✅ Use retries for transient failures
+- ✅ Provide fallbacks for non-critical failures
+- ✅ Log errors before recovery
+
+**Template References**:
+- Error definitions: Generated in `lib/errors.ts`
+- See repository operation templates for CRUD error patterns
+
+---

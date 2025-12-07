@@ -118,6 +118,170 @@ export interface ${className}ServiceInterface {
   readonly delete: (
     id: string
   ) => Effect.Effect<void, ${className}ServiceError>;
+
+  // ==========================================================================
+  // TODO: Stream-Based Operations for Large-Scale API Interactions
+  // ==========================================================================
+  //
+  // Stream provides constant-memory processing for paginated APIs and bulk operations.
+  // Use Stream when:
+  // - Fetching all pages from paginated API endpoints
+  // - Processing large batches of API calls
+  // - Streaming events from external services
+  // - Need backpressure to avoid rate limits
+  //
+  // Example 1: Stream all pages from paginated API
+  //
+  // readonly streamAll: (
+  //   params?: Omit<ListParams, "page">
+  // ) => Stream.Stream<Resource, ${className}ServiceError, never>;
+  //
+  // // Implementation:
+  // streamAll: (params) =>
+  //   Stream.asyncScoped<Resource, ${className}ServiceError>((emit) =>
+  //     Effect.gen(function* () {
+  //       const client = yield* ${className}Client;
+  //       let page = 1;
+  //       let hasMore = true;
+  //
+  //       while (hasMore) {
+  //         const result = yield* client.list({ ...params, page }).pipe(
+  //           Effect.retry({
+  //             schedule: Schedule.exponential("1 second").pipe(
+  //               Schedule.compose(Schedule.recurs(3))
+  //             )
+  //           })
+  //         );
+  //
+  //         for (const item of result.data) {
+  //           yield* emit.single(item);
+  //         }
+  //
+  //         hasMore = result.data.length === result.limit;
+  //         page++;
+  //
+  //         // Rate limiting: delay between pages
+  //         if (hasMore) {
+  //           yield* Effect.sleep("100 millis");
+  //         }
+  //       }
+  //     })
+  //   ),
+  //
+  // // Usage in service layer:
+  // const all = yield* provider.streamAll({ limit: 100 }).pipe(
+  //   Stream.runCollect,
+  //   Effect.map(Chunk.toArray)
+  // );
+  //
+  // Benefits:
+  // - Constant memory regardless of total items
+  // - Built-in rate limiting between pages
+  // - Automatic retry with backoff
+  //
+  // Example 2: Bulk create with backpressure
+  //
+  // readonly bulkCreate: (
+  //   items: readonly Omit<Resource, "id" | "createdAt" | "updatedAt">[]
+  // ) => Stream.Stream<Resource, ${className}ServiceError, never>;
+  //
+  // // Implementation:
+  // bulkCreate: (items) =>
+  //   Stream.fromIterable(items).pipe(
+  //     // Process 5 at a time (concurrency control)
+  //     Stream.mapEffect(
+  //       (item) => this.create(item),
+  //       { concurrency: 5 }
+  //     ),
+  //     // Add delay between batches for rate limiting
+  //     Stream.tap(() => Effect.sleep("200 millis"))
+  //   ),
+  //
+  // // Usage:
+  // const created = yield* provider.bulkCreate(items).pipe(
+  //   Stream.runCollect,
+  //   Effect.map(Chunk.toArray)
+  // );
+  //
+  // Benefits:
+  // - Respects API rate limits
+  // - Controlled concurrency
+  // - Backpressure prevents overwhelming external service
+  //
+  // Example 3: Stream events from webhook/external source
+  //
+  // readonly streamEvents: () => Stream.Stream<
+  //   ${className}Event,
+  //   ${className}ServiceError,
+  //   never
+  // >;
+  //
+  // // Implementation with Queue:
+  // streamEvents: () =>
+  //   Stream.asyncScoped<${className}Event, ${className}ServiceError>((emit) =>
+  //     Effect.gen(function* () {
+  //       const client = yield* ${className}Client;
+  //
+  //       // Subscribe to webhook/SSE/websocket
+  //       const subscription = yield* Effect.acquireRelease(
+  //         Effect.gen(function* () {
+  //           const sub = yield* client.subscribe();
+  //
+  //           // Emit events as they arrive
+  //           sub.on("event", (event) => {
+  //             emit.single(event);
+  //           });
+  //
+  //           return sub;
+  //         }),
+  //         (sub) => Effect.sync(() => sub.unsubscribe())
+  //       );
+  //
+  //       // Keep stream alive
+  //       yield* Effect.never;
+  //     })
+  //   ),
+  //
+  // // Usage:
+  // yield* provider.streamEvents().pipe(
+  //   Stream.mapEffect((event) => processEvent(event)),
+  //   Stream.runDrain
+  // );
+  //
+  // Example 4: Batch delete with retry
+  //
+  // readonly bulkDelete: (
+  //   ids: readonly string[]
+  // ) => Stream.Stream<void, ${className}ServiceError, never>;
+  //
+  // // Implementation:
+  // bulkDelete: (ids) =>
+  //   Stream.fromIterable(ids).pipe(
+  //     // Process 10 at a time
+  //     Stream.grouped(10),
+  //     Stream.mapEffect((batch) =>
+  //       Effect.gen(function* () {
+  //         yield* Effect.forEach(
+  //           batch,
+  //           (id) => this.delete(id).pipe(
+  //             Effect.retry({
+  //               schedule: Schedule.exponential("1 second").pipe(
+  //                 Schedule.compose(Schedule.recurs(3))
+  //               )
+  //             })
+  //           ),
+  //           { concurrency: 10 }
+  //         );
+  //       })
+  //     ),
+  //     Stream.tap(() => Effect.sleep("500 millis")) // Rate limiting
+  //   ),
+  //
+  // // Usage:
+  // yield* provider.bulkDelete(idsToDelete).pipe(Stream.runDrain);
+  //
+  // See EFFECT_PATTERNS.md "Streaming & Queuing Patterns" for comprehensive examples.
+  // See PROVIDER.md for provider-specific Stream integration patterns.
 }`)
   builder.addBlankLine()
 
@@ -160,6 +324,83 @@ export class ${className} extends Context.Tag("${className}")<
       //   import("${externalService}-sdk").then(m => new m.${externalService}Client(config))
       // );
 
+      // =================================================================
+      // OPTIONAL: Rate Limiting with Semaphore
+      // =================================================================
+      //
+      // If your external service has rate limits, use Semaphore to control concurrency:
+      //
+      // import { Effect } from "effect";
+      //
+      // // Create semaphore with max concurrent requests (e.g., 5 concurrent API calls)
+      // const rateLimiter = yield* Effect.makeSemaphore(5);
+      //
+      // // Wrap operations with semaphore.withPermits:
+      // const rateLimitedGet = (id: string) =>
+      //   rateLimiter.withPermits(1)(
+      //     Effect.tryPromise({
+      //       try: () => client.get(id),
+      //       catch: (error) => new ${className}ServiceError({ cause: error })
+      //     })
+      //   );
+      //
+      // Benefits:
+      // - Prevents "429 Too Many Requests" errors
+      // - Protects external service from overload
+      // - Automatic backpressure (suspends when permits exhausted)
+      // - No manual throttling logic needed
+      //
+      // Use Cases:
+      // - API rate limiting (max 10 requests/second → semaphore with 10 permits)
+      // - Connection pooling (max 20 DB connections → semaphore with 20 permits)
+      // - Resource throttling (max 3 concurrent file uploads → semaphore with 3 permits)
+      //
+      // See EFFECT_PATTERNS.md "Semaphore - Resource Limiting & Rate Control" for comprehensive examples.
+
+      // =================================================================
+      // OPTIONAL: Lazy Initialization with Deferred
+      // =================================================================
+      //
+      // Use Deferred for lazy initialization and fiber coordination:
+      //
+      // import { Deferred, Effect } from "effect";
+      //
+      // // Create deferred value for cache warmup
+      // const cacheReady = yield* Deferred.make<void, never>();
+      //
+      // // Start background warmup, signal when complete
+      // yield* Effect.forkScoped(
+      //   Effect.gen(function* () {
+      //     // yield* warmupCache();
+      //     yield* Deferred.succeed(cacheReady, void 0);
+      //   })
+      // );
+      //
+      // // Operations wait for cache before executing:
+      // get: (id: string) =>
+      //   Effect.gen(function* () {
+      //     yield* Deferred.await(cacheReady);  // Wait for warmup
+      //     // ...proceed with operation
+      //   }),
+      //
+      // Benefits:
+      // - One-time value resolution (like Promise)
+      // - Type-safe fiber coordination
+      // - Automatic suspension of waiting fibers
+      // - No polling or busy-waiting needed
+      //
+      // Use Cases:
+      // - Cache warmup coordination (wait for cache before serving)
+      // - Lazy resource initialization (initialize on first use)
+      // - Fiber handoff (pass values between fibers)
+      // - Configuration loading (wait for config before operations)
+      //
+      // Deferred vs Latch:
+      // - Deferred: Carries a value (like Promise), can fail
+      // - Latch: Just a gate (no value), always succeeds
+      //
+      // See EFFECT_PATTERNS.md "Deferred - Fiber Coordination" for comprehensive examples.
+
       // Lazy load operations for optimal bundle size
       const createOps = yield* Effect.promise(() =>
         import("./operations/create").then((m) => m.createOperations)
@@ -188,40 +429,123 @@ export class ${className} extends Context.Tag("${className}")<
   /**
    * Test Layer - In-memory implementation
    *
-   * Uses test operations from each operation file.
-   * Shares a common in-memory store across all operations.
+   * Uses Layer.succeed for deterministic testing.
+   * No dynamic imports - all operations are plain functions for proper Layer.fresh isolation.
+   *
+   * IMPORTANT: This provides minimal stub implementations.
+   * Customize these stubs based on your testing needs.
    */
-  static readonly Test = Layer.effect(
+  static readonly Test = Layer.succeed(
     this,
-    Effect.gen(function* () {
-      const createOps = yield* Effect.promise(() =>
-        import("./operations/create").then((m) => m.testCreateOperations)
-      );
-      const queryOps = yield* Effect.promise(() =>
-        import("./operations/query").then((m) => m.testQueryOperations)
-      );
-      const updateOps = yield* Effect.promise(() =>
-        import("./operations/update").then((m) => m.testUpdateOperations)
-      );
-      const deleteOps = yield* Effect.promise(() =>
-        import("./operations/delete").then((m) => m.testDeleteOperations)
-      );
+    {
+      config: { apiKey: "test-key", timeout: 1000 } as ${className}Config,
+      healthCheck: Effect.succeed({ status: "healthy" as const }),
 
-      return {
-        config: { apiKey: "test-key" },
-        healthCheck: Effect.succeed({ status: "healthy" }),
-        ...createOps,
-        ...queryOps,
-        ...updateOps,
-        ...deleteOps
-      };
-    })
+      // Query operations
+      list: (_params) => Effect.succeed({
+        data: [{ id: "test-id-1", name: "test-resource", createdAt: new Date(), updatedAt: new Date() }] as Resource[],
+        page: 1,
+        limit: 10,
+        total: 1,
+      } as PaginatedResult<Resource>),
+      get: (id) => Effect.succeed({
+        id,
+        name: "test-resource",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as Resource),
+
+      // Create operations
+      create: (data) => Effect.succeed({
+        id: "test-id-1",
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Resource),
+
+      // Update operations
+      update: (id, data) => Effect.succeed({
+        id,
+        ...data,
+        name: data.name || "test-resource",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Resource),
+
+      // Delete operations
+      delete: (_id) => Effect.void,
+    }
   );
 
   /**
-   * Dev Layer - Development with logging
+   * Dev Layer - Development with enhanced logging
+   *
+   * Wraps Live layer with request/response logging for debugging.
+   * Useful for debugging external SDK integrations.
    */
-  static readonly Dev = this.Live;
+  static readonly Dev = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      console.log(\`[${className}] [DEV] Initializing development layer\`);
+
+      // Get actual implementation from Live layer
+      const liveService = yield* ${className}.Live.pipe(
+        Layer.build,
+        Effect.map(Context.unsafeGet(${className}))
+      );
+
+      // Wrap all operations with logging
+      return {
+        config: liveService.config,
+
+        healthCheck: Effect.gen(function* () {
+          console.log(\`[${className}] [DEV] healthCheck called\`);
+          const result = yield* liveService.healthCheck;
+          console.log(\`[${className}] [DEV] healthCheck result:\`, result);
+          return result;
+        }),
+
+        list: (params) =>
+          Effect.gen(function* () {
+            console.log(\`[${className}] [DEV] list called with:\`, params);
+            const result = yield* liveService.list(params);
+            console.log(\`[${className}] [DEV] list result:\`, { count: result.data.length, total: result.total });
+            return result;
+          }),
+
+        get: (id) =>
+          Effect.gen(function* () {
+            console.log(\`[${className}] [DEV] get called with id:\`, id);
+            const result = yield* liveService.get(id);
+            console.log(\`[${className}] [DEV] get result:\`, result);
+            return result;
+          }),
+
+        create: (data) =>
+          Effect.gen(function* () {
+            console.log(\`[${className}] [DEV] create called with:\`, data);
+            const result = yield* liveService.create(data);
+            console.log(\`[${className}] [DEV] create result:\`, result);
+            return result;
+          }),
+
+        update: (id, data) =>
+          Effect.gen(function* () {
+            console.log(\`[${className}] [DEV] update called with id:\`, id, \`data:\`, data);
+            const result = yield* liveService.update(id, data);
+            console.log(\`[${className}] [DEV] update result:\`, result);
+            return result;
+          }),
+
+        delete: (id) =>
+          Effect.gen(function* () {
+            console.log(\`[${className}] [DEV] delete called with id:\`, id);
+            yield* liveService.delete(id);
+            console.log(\`[${className}] [DEV] delete completed\`);
+          })
+      };
+    })
+  );
 }`)
 
   return builder.toString()

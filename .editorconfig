@@ -1,0 +1,49 @@
+# EditorConfig is awesome: https://EditorConfig.org
+# Effect.ts Code Style - Enforced across all editors
+
+# Top-most EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 120
+
+# TypeScript/JavaScript files - Effect.ts standards
+[*.{ts,tsx,js,jsx,mts,cts,mjs,cjs}]
+indent_style = space
+indent_size = 2
+quote_type = double
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# YAML files
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Package.json - special formatting
+[package.json]
+indent_style = space
+indent_size = 2
+
+# Effect Schema files - strict formatting
+[**/schemas/*.ts]
+indent_style = space
+indent_size = 2
+
+# Test files
+[*.{spec,test}.{ts,tsx}]
+indent_style = space
+indent_size = 2

@@ -156,7 +156,7 @@ export function createStandardTargets(options: BuildConfigOptions) {
     typecheck: createTypecheckTarget(options.projectRoot)
   }
 
-  targets.test = createTestTarget(options.projectRoot)
+  targets["test"] = createTestTarget(options.projectRoot)
 
   return targets
 }
@@ -170,7 +170,7 @@ export function createStandardTargets(options: BuildConfigOptions) {
  * @param options - Build configuration options
  * @returns Scripts object for package.json
  */
-export function createEffectScripts(_options: BuildConfigOptions) {
+export function createEffectScripts() {
   return {
     codegen: "build-utils prepare-v2",
     build: "pnpm build-esm && pnpm build-annotate && pnpm build-cjs && build-utils pack-v2",

@@ -21,7 +21,7 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  */
 export function generateValidationFile(options: DataAccessTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, fileName, propertyName: _propertyName } = options
+  const { className, fileName } = options
 
   // Add file header
   builder.addFileHeader({

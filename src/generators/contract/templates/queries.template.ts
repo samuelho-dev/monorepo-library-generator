@@ -25,7 +25,7 @@ export function generateQueriesFile(options: ContractTemplateOptions) {
   const domainName = propertyName
 
   // Add file header
-  builder.addRaw(createFileHeader(className, domainName, fileName))
+  builder.addRaw(createFileHeader(className, fileName))
   builder.addBlankLine()
 
   // Add imports
@@ -109,7 +109,6 @@ export const ${className}QuerySchema = Schema.Union(
  */
 function createFileHeader(
   className: string,
-  domainName: string,
   fileName: string
 ) {
   return `/**
@@ -121,8 +120,11 @@ function createFileHeader(
  * TODO: Customize for your domain:
  * 1. Add domain-specific query parameters
  * 2. Add filter and sort options
- * 3. Create custom queries for common patterns
- * 4. Add pagination support
+ * 3. Add Schema.annotations() for OpenAPI/documentation
+ * 4. Add Schema.filter() for parameter validation
+ * 5. Add Schema.transform() for search term normalization
+ * 6. Create custom queries for common patterns
+ * 7. Add pagination support
  *
  * @module @custom-repo/contract-${fileName}/queries
  */`
@@ -136,9 +138,18 @@ function createGetQuery(className: string, propertyName: string) {
  * Query to get a single ${className} by ID
  */
 export class Get${className}Query extends Schema.Class<Get${className}Query>("Get${className}Query")({
-  /** ${className} ID to fetch */
-  ${propertyName}Id: Schema.UUID,
-}) {
+  /** ${className} ID to fetch (branded type for type safety) */
+  ${propertyName}Id: ${className}Id.annotations({
+    title: "${className} ID",
+    description: "Branded UUID of the ${className} to retrieve"
+  }),
+}).pipe(
+  Schema.annotations({
+    identifier: "Get${className}Query",
+    title: "Get ${className}",
+    description: "Query to fetch a single ${className} by ID"
+  })
+) {
   static create(${propertyName}Id: ${className}Id) {
     return new Get${className}Query({
       ${propertyName}Id,
@@ -156,33 +167,81 @@ function createListQuery(className: string) {
  */
 export class List${className}sQuery extends Schema.Class<List${className}sQuery>("List${className}sQuery")({
   /** Page number (1-indexed) */
-  page: Schema.Number.pipe(Schema.int(), Schema.positive()),
+  page: Schema.Number.pipe(
+    Schema.int(),
+    Schema.positive()
+  ).annotations({
+    title: "Page Number",
+    description: "Page number (1-indexed) for pagination",
+    examples: [1],
+    jsonSchema: { minimum: 1 }
+  }),
 
   /** Items per page */
   limit: Schema.Number.pipe(
     Schema.int(),
     Schema.positive(),
     Schema.lessThanOrEqualTo(100)
-  ),
+  ).annotations({
+    title: "Page Limit",
+    description: "Number of items per page (max 100)",
+    examples: [20],
+    jsonSchema: { minimum: 1, maximum: 100 }
+  }),
 
   /** Sort field */
-  sortBy: Schema.optional(Schema.String),
+  sortBy: Schema.optional(Schema.String).annotations({
+    title: "Sort Field",
+    description: "Field name to sort by"
+  }),
 
   /** Sort direction */
-  sortDirection: Schema.optional(Schema.Literal("asc", "desc")),
+  sortDirection: Schema.optional(Schema.Literal("asc", "desc")).annotations({
+    title: "Sort Direction",
+    description: "Sort direction (ascending or descending)",
+    examples: ["asc"]
+  }),
 
-  // TODO: Add domain-specific filter fields
+  // TODO: Add domain-specific filter fields with Schema.annotations()
   // Example filters:
   //
   // /** Filter by status */
-  // status: Schema.optional(Schema.String),
+  // status: Schema.optional(Schema.String).annotations({
+  //   title: "Status Filter",
+  //   description: "Filter by status"
+  // }),
   //
   // /** Filter by owner */
-  // ownerId: Schema.optional(Schema.UUID),
+  // ownerId: Schema.optional(Schema.UUID).annotations({
+  //   title: "Owner Filter",
+  //   description: "Filter by owner UUID"
+  // }),
   //
   // /** Search term */
-  // search: Schema.optional(Schema.String),
-}) {
+  // search: Schema.optional(Schema.String).annotations({
+  //   title: "Search Term",
+  //   description: "Text search filter"
+  // }),
+}).pipe(
+  // TODO: Add pagination validation with Schema.filter()
+  // Example:
+  // Schema.filter((query) => {
+  //   if (query.page < 1) {
+  //     return { path: ["page"], message: "Page must be >= 1" };
+  //   }
+  //   if (query.limit > 100) {
+  //     return { path: ["limit"], message: "Limit cannot exceed 100" };
+  //   }
+  //   return true;
+  // }),
+
+  // Class-level annotations
+  Schema.annotations({
+    identifier: "List${className}sQuery",
+    title: "List ${className}s",
+    description: "Query to list ${className}s with pagination and filtering"
+  })
+) {
   static create(params: {
     page?: number;
     limit?: number;
@@ -210,18 +269,58 @@ function createSearchQuery(className: string) {
  */
 export class Search${className}sQuery extends Schema.Class<Search${className}sQuery>("Search${className}sQuery")({
   /** Search term */
-  searchTerm: Schema.String.pipe(Schema.minLength(1)),
+  searchTerm: Schema.String.pipe(
+    Schema.minLength(1)
+  ).annotations({
+    title: "Search Term",
+    description: "Text to search for in ${className}s",
+    examples: ["example search"],
+    jsonSchema: { minLength: 1 }
+  }),
 
   /** Page number (1-indexed) */
-  page: Schema.Number.pipe(Schema.int(), Schema.positive()),
+  page: Schema.Number.pipe(
+    Schema.int(),
+    Schema.positive()
+  ).annotations({
+    title: "Page Number",
+    description: "Page number for paginated search results",
+    examples: [1],
+    jsonSchema: { minimum: 1 }
+  }),
 
   /** Items per page */
   limit: Schema.Number.pipe(
     Schema.int(),
     Schema.positive(),
     Schema.lessThanOrEqualTo(100)
-  ),
-}) {
+  ).annotations({
+    title: "Results Limit",
+    description: "Number of search results per page (max 100)",
+    examples: [20],
+    jsonSchema: { minimum: 1, maximum: 100 }
+  }),
+}).pipe(
+  // TODO: Add search term normalization with Schema.transform()
+  // Example:
+  // Schema.transform(
+  //   Schema.Struct({ /* same fields */ }),
+  //   {
+  //     decode: (query) => ({
+  //       ...query,
+  //       searchTerm: query.searchTerm.trim().toLowerCase(), // Normalize
+  //     }),
+  //     encode: (query) => query
+  //   }
+  // ),
+
+  // Class-level annotations
+  Schema.annotations({
+    identifier: "Search${className}sQuery",
+    title: "Search ${className}s",
+    description: "Query to search ${className}s by text with pagination"
+  })
+) {
   static create(params: {
     searchTerm: string;
     page?: number;

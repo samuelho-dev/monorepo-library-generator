@@ -41,7 +41,7 @@ const packageJson = JSON.parse(readFileSync(distPackageJsonPath, "utf-8"))
 
 // Add generators field and update bin to use .mjs extension
 // pack-v3 already handles exports correctly, we just need to add Nx-specific fields
-const { bin: _bin, name, version, ...rest } = packageJson
+const { name, version, ...rest } = packageJson
 const updatedPackageJson = {
   name,
   version,

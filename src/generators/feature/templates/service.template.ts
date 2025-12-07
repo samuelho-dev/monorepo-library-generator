@@ -141,10 +141,26 @@ TODO: Uncomment and customize these imports based on your needs:`
             // ====================================================================
 
             // ====================================================================
-            // Error Transformation Patterns
+            // Error Handling Patterns
             // ====================================================================
             //
-            // Pattern 1: Transform repository errors to feature errors
+            // Pattern 1: Error Observability with tapErrorTag (non-invasive logging)
+            // yield* repo.findById(userId).pipe(
+            //   Effect.tapErrorTag("NotFoundError", (error) =>
+            //     logger.warn("User not found", { userId, error })
+            //   ),
+            //   Effect.tapErrorTag("DatabaseError", (error) =>
+            //     metrics.increment("database.error", { operation: "findById" })
+            //   ),
+            //   Effect.mapError((repoError) =>
+            //     new ${className}Error({
+            //       message: \`Failed to find user \${userId}\`,
+            //       cause: repoError
+            //     })
+            //   )
+            // );
+            //
+            // Pattern 2: Transform repository errors to feature errors
             // const user = yield* repo.findById(userId).pipe(
             //   Effect.mapError((repoError) =>
             //     new ${className}Error({
@@ -203,8 +219,28 @@ TODO: Uncomment and customize these imports based on your needs:`
             //
             // ====================================================================
 
-            // TODO: Replace this with your actual business logic
+            // Working example with error transformation (replace with your logic)
             yield* Effect.logInfo("Example operation called");
+
+            // Example: Error transformation pattern
+            // Uncomment and adapt for your use case:
+            //
+            // const data = yield* repo.findById("example-id").pipe(
+            //   Effect.tapErrorTag("NotFoundError", (error) =>
+            //     Effect.logWarn("Resource not found", { id: "example-id", error })
+            //   ),
+            //   Effect.mapError((repoError) =>
+            //     new ${className}Error({
+            //       message: "Failed to retrieve ${fileName}",
+            //       cause: repoError,
+            //     })
+            //   )
+            // );
+            //
+            // return { success: true, data };
+
+            // For now, return a simple result
+            return { success: true } as ${className}Result;
           }),
       };
     })
@@ -230,7 +266,30 @@ TODO: Uncomment and customize these imports based on your needs:`
   builder.addRaw(`//
 // COMPREHENSIVE ERROR HANDLING PATTERNS:
 //
-// 1. Basic Error Transformation with mapError
+// 1. Error Observability with tapErrorTag (Recommended)
+// ---------------------------------------------
+// Log/track specific errors WITHOUT altering error flow:
+//
+// const user = yield* userRepo.findById(userId).pipe(
+//   Effect.tapErrorTag("NotFoundError", (error) =>
+//     logger.warn("User lookup failed", { userId, error })
+//   ),
+//   Effect.tapErrorTag("DatabaseError", (error) =>
+//     metrics.increment("database.error")
+//   ),
+//   Effect.mapError((repoError) =>
+//     new ${className}Error({
+//       message: \`Failed to retrieve user \${userId}\`,
+//       cause: repoError
+//     })
+//   )
+// );
+//
+// WHY tapErrorTag vs catchTag:
+// - tapErrorTag: Observe errors without handling (for logging/metrics)
+// - catchTag: Handle/transform specific errors (for recovery)
+//
+// 2. Basic Error Transformation with mapError
 // ---------------------------------------------
 // Transform any lower-layer error into a feature-specific error:
 //
@@ -243,7 +302,7 @@ TODO: Uncomment and customize these imports based on your needs:`
 //   )
 // );
 //
-// 2. Catch Specific Error Types with catchTag
+// 3. Catch Specific Error Types with catchTag
 // ---------------------------------------------
 // Handle specific error types differently:
 //
@@ -338,7 +397,113 @@ TODO: Uncomment and customize these imports based on your needs:`
 //     message: "Both primary and backup sources failed",
 //     cause: err
 //   }))
-// );`)
+// );
+//
+// 8. Data Validation with filterOrFail
+// ---------------------------------------------
+// Declarative validation with custom errors
+//
+// // Validate object properties with chaining
+// const processedData = yield* Effect.succeed(userData).pipe(
+//   Effect.filterOrFail(
+//     (user) => user.email.includes("@") && user.name.length > 0,
+//     (user) => new ${className}Error({
+//       message: "Invalid user data",
+//       details: {
+//         email: user.email.includes("@") ? null : "Email must contain @",
+//         name: user.name.length > 0 ? null : "Name cannot be empty"
+//       }
+//     })
+//   ),
+//   Effect.filterOrFail(
+//     (user) => VALID_ROLES.includes(user.role),
+//     (user) => new ${className}Error({ message: \`Invalid role: \${user.role}\` })
+//   ),
+//   Effect.flatMap((validUser) => repo.save(validUser))
+// );
+//
+// Variations:
+// - Single value: Effect.succeed(age).pipe(filterOrFail(age => age >= 18, ...))
+// - Option→Value: Effect.succeed(maybe).pipe(filterOrFail(Option.isSome, ...))
+// - Array content: Effect.succeed(items).pipe(filterOrFail(arr => arr.every(...)))
+// See EFFECT_PATTERNS.md for detailed examples
+//
+// 9. Collect All Errors with Effect.parallelErrors
+// ---------------------------------------------
+// Collect all errors from parallel operations for comprehensive reporting
+//
+// // Form validation - collect all field errors
+// const validateForm = (formData: FormData) =>
+//   Effect.all([
+//     Effect.succeed(formData.email).pipe(
+//       Effect.filterOrFail(
+//         (email) => email.includes("@"),
+//         () => new ${className}Error({ message: "Invalid email" })
+//       )
+//     ),
+//     Effect.succeed(formData.age).pipe(
+//       Effect.filterOrFail(
+//         (age) => age >= 18,
+//         () => new ${className}Error({ message: "Must be 18 or older" })
+//       )
+//     )
+//   ]).pipe(
+//     Effect.parallelErrors,
+//     Effect.catchAll((errors) =>
+//       Effect.fail(
+//         new ${className}Error({
+//           message: "Form validation failed",
+//           details: errors.map((e) => e.message)
+//         })
+//       )
+//     )
+//   );
+//
+// Error Collection Strategies:
+// - Fail on all errors: parallelErrors + catchAll(fail)  // Form validation
+// - Partial success: parallelErrors + catchAll(succeed([])) // Optional data
+// - Log & fail: parallelErrors + catchAll(log + fail)     // Batch processing
+// - Collect & continue: parallelErrors + catchAll(succeed(errors)) // Diagnostics
+//
+// See EFFECT_PATTERNS.md for batch operations and error handling strategies
+//
+// 10. Transform Both Channels with mapBoth
+// ---------------------------------------------
+// Transform both success and error channels simultaneously
+//
+// // API Normalization
+// const normalizedResult = yield* externalAPI.fetchUser(userId).pipe(
+//   Effect.mapBoth({
+//     onSuccess: (apiUser) => ({
+//       id: apiUser.user_id,
+//       name: apiUser.full_name,
+//       email: apiUser.email_address,
+//       createdAt: new Date(apiUser.created_at),
+//       source: "external_api",
+//       timestamp: Date.now()
+//     }),
+//     onFailure: (apiError) =>
+//       new ${className}Error({
+//         message: "Failed to fetch user",
+//         cause: apiError,
+//         code: apiError.status_code,
+//         timestamp: Date.now(),
+//         retryable: apiError.status_code >= 500
+//       })
+//   })
+// );
+//
+// Common Use Cases:
+// - API Normalization: External→Domain model (success), SDK→Domain error (failure)
+// - API Response Format: { status: 'success', data } / { status: 'error', error }
+// - Add Metadata: + timestamp, source (both channels)
+// - Correlation Tracking: + correlationId, duration (both channels)
+//
+// Use mapBoth when: Both channels need transformation
+// Use map/mapError when: Only one channel needs transformation
+//
+// See EFFECT_PATTERNS.md for detailed examples and use cases
+//`)
   builder.addBlankLine()
 
   // Add layer composition examples
@@ -354,7 +519,7 @@ TODO: Uncomment and customize these imports based on your needs:`
 //
 // Example 2: Compose with multiple dependencies
 // export const ${className}ServiceComplete = ${className}Service.Live.pipe(
-//   Layer.provideMerge(Layer.mergeAll(
+//   Layer.provide(Layer.mergeAll(
 //     LoggingServiceLive,
 //     UserRepositoryLive,
 //     CacheServiceLive

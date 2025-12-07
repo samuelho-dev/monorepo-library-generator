@@ -2093,6 +2093,13 @@ const create = (input: ProductInsert) =>
 
 Data-access libraries test repository implementations to ensure they correctly fulfill contract interfaces. Tests use `@effect/vitest` with minimal mocking for rapid iteration.
 
+> **📘 Comprehensive Testing Guide:** See [TESTING_PATTERNS.md](./TESTING_PATTERNS.md) for complete testing standards and patterns.
+
+**Standard Testing Pattern:**
+- ✅ ALL imports from `@effect/vitest`
+- ✅ ALL tests use `it.scoped()`
+- ✅ ALL layers wrapped with `Layer.fresh()`
+
 ### Test File Structure
 
 **Single Test File**: `src/lib/repository.spec.ts`
@@ -2102,7 +2109,9 @@ Tests verify that repository implementations correctly fulfill contract interfac
 #### ✅ DO:
 
 - ✅ Test repository behavior (does it fulfill the contract interface?)
-- ✅ Use `it.scoped` for repository tests (they need Scope)
+- ✅ Import ALL test utilities from `@effect/vitest` (describe, expect, it)
+- ✅ Use `it.scoped()` for ALL tests (they need Scope)
+- ✅ Wrap ALL test layers with `Layer.fresh()` for isolation
 - ✅ Create inline mocks with `Layer.succeed`
 - ✅ Focus on contract compliance, not implementation details
 - ✅ Keep tests in one file: `src/lib/repository.spec.ts`
@@ -2114,7 +2123,9 @@ Tests verify that repository implementations correctly fulfill contract interfac
 - ❌ Test query builder implementation (Kysely handles this)
 - ❌ Test database connection logic (provider layer handles this)
 - ❌ Create 5-6 test files (one file is sufficient)
-- ❌ Use manual `Effect.runPromise` (use `it.scoped` instead)
+- ❌ Use manual `Effect.runPromise` (use `it.scoped()` instead)
+- ❌ Mix imports from `vitest` and `@effect/vitest` (use @effect/vitest only)
+- ❌ Forget `Layer.fresh()` wrapping (causes test state leakage)
 
 ### Example: Repository Implementation Tests
 
@@ -2123,7 +2134,7 @@ Tests verify that repository implementations correctly fulfill contract interfac
 ```typescript
 // src/lib/repository.spec.ts
 import { Effect, Option, Layer } from 'effect';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { ProductRepository } from '@samuelho-dev/contract-product';
 import { KyselyService } from '@samuelho-dev/provider-kysely';
 import type { ProductSelect } from '@samuelho-dev/types-database';
@@ -2153,7 +2164,7 @@ const KyselyServiceMock = Layer.succeed(KyselyService, {
 // Test repository implementation
 describe('ProductRepository', () => {
   // Use it.scoped for repository tests (they need Scope)
-  it.scoped('findById returns product when it exists', () =>
+  it.scoped('findById returns product when it exists', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const repo = yield* ProductRepository;
       const result = yield* repo.findById('prod-123');
@@ -2165,12 +2176,14 @@ describe('ProductRepository', () => {
       }
     }).pipe(
       Effect.provide(
-        ProductRepositoryLive.pipe(Layer.provide(KyselyServiceMock)),
+        Layer.fresh( // ✅ Always Layer.fresh
+          ProductRepositoryLive.pipe(Layer.provide(KyselyServiceMock))
+        ),
       ),
     ),
   );
 
-  it.scoped('findById returns None when product does not exist', () =>
+  it.scoped('findById returns None when product does not exist', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const mockNotFound = Layer.succeed(KyselyService, {
         db: {
@@ -2189,11 +2202,15 @@ describe('ProductRepository', () => {
 
       expect(Option.isNone(result)).toBe(true);
     }).pipe(
-      Effect.provide(ProductRepositoryLive.pipe(Layer.provide(mockNotFound))),
+      Effect.provide(
+        Layer.fresh( // ✅ Always Layer.fresh
+          ProductRepositoryLive.pipe(Layer.provide(mockNotFound))
+        )
+      ),
     ),
   );
 
-  it.scoped('create inserts new product', () =>
+  it.scoped('create inserts new product', () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const mockCreate = Layer.succeed(KyselyService, {
         db: {
@@ -2225,7 +2242,11 @@ describe('ProductRepository', () => {
       expect(result.id).toBe('new-prod-789');
       expect(result.name).toBe('New Product');
     }).pipe(
-      Effect.provide(ProductRepositoryLive.pipe(Layer.provide(mockCreate))),
+      Effect.provide(
+        Layer.fresh( // ✅ Always Layer.fresh
+          ProductRepositoryLive.pipe(Layer.provide(mockCreate))
+        )
+      ),
     ),
   );
 });
@@ -2845,4 +2866,168 @@ This ensures:
 
 ---
 
-**Word Count:** ~6,500 words
+## Stream-Based Repository Operations
+
+For processing large datasets or implementing pagination efficiently, repositories can expose Stream-based operations alongside standard methods.
+
+### When to Use Stream
+
+Use Stream for:
+- **Large Result Sets:** Processing 1000+ records
+- **Memory Constraints:** Constant-memory processing required
+- **Pagination:** Fetching all pages from database
+- **Batch Processing:** Processing records in chunks
+- **Real-time Processing:** Backpressure-aware data flows
+
+### Stream Implementation Pattern
+
+```typescript
+export interface ProductRepository {
+  // Standard operations
+  readonly findAll: () => Effect.Effect<Product[], ProductRepositoryError>;
+
+  // Stream-based operations for large datasets
+  readonly streamAll: (options?: {
+    batchSize?: number;
+    filters?: ProductFilters;
+  }) => Stream.Stream<Product, ProductRepositoryError, never>;
+}
+
+// Implementation
+streamAll: (options = {}) =>
+  Stream.asyncScoped<Product, ProductRepositoryError>((emit) =>
+    Effect.gen(function* () {
+      const db = yield* KyselyService;
+      const batchSize = options.batchSize ?? 100;
+      let offset = 0;
+
+      while (true) {
+        // Fetch batch from database
+        const batch = yield* Effect.tryPromise({
+          try: () =>
+            db
+              .selectFrom('products')
+              .selectAll()
+              .limit(batchSize)
+              .offset(offset)
+              .execute(),
+          catch: (error) =>
+            new ProductRepositoryError({
+              message: 'Failed to stream products',
+              cause: error,
+            }),
+        });
+
+        // End stream if no more results
+        if (batch.length === 0) break;
+
+        // Emit each product
+        for (const product of batch) {
+          yield* emit.single(product);
+        }
+
+        offset += batchSize;
+      }
+    }),
+  ),
+```
+
+### Stream Usage in Feature Services
+
+```typescript
+// Feature service using repository stream
+processAllProducts: () =>
+  Effect.gen(function* () {
+    const repo = yield* ProductRepository;
+
+    // Process with constant memory
+    const summary = yield* repo.streamAll({ batchSize: 100 }).pipe(
+      // Transform each product
+      Stream.mapEffect((product) =>
+        Effect.gen(function* () {
+          yield* validateProduct(product);
+          yield* enrichProduct(product);
+          return product;
+        }),
+      ),
+      // Group into batches for bulk operations
+      Stream.grouped(50),
+      Stream.mapEffect((batch) => processBatch(batch)),
+      // Collect results
+      Stream.runCollect,
+      Effect.map((results) => ({
+        processed: Chunk.size(results),
+        success: true,
+      })),
+    );
+
+    return summary;
+  }),
+```
+
+### Stream with Sink for Aggregation
+
+Use Sink for constant-memory aggregations:
+
+```typescript
+// Calculate total revenue across all orders
+calculateTotalRevenue: (startDate: Date, endDate: Date) =>
+  Effect.gen(function* () {
+    const repo = yield* OrderRepository;
+
+    const total = yield* repo
+      .streamByCriteria({
+        status: 'completed',
+        createdAt: { gte: startDate, lte: endDate },
+      })
+      .pipe(
+        Stream.map((order) => order.amount),
+        Stream.run(Sink.sum), // Constant memory aggregation!
+      );
+
+    return total;
+  }),
+```
+
+### Benefits of Stream-Based Operations
+
+**Memory Efficiency:**
+- Process millions of records with constant memory
+- No need to load entire result set into memory
+- Automatic backpressure prevents overflow
+
+**Performance:**
+- Batch fetching reduces database round-trips
+- Parallel processing with controlled concurrency
+- Progressive processing starts immediately
+
+**Composability:**
+- Easy to add transformations, filtering, batching
+- Integrate with Effect operators (mapEffect, filter, etc.)
+- Combine with Sink for aggregations
+
+### Testing Stream Operations
+
+```typescript
+it.scoped('streamAll processes all products', () =>
+  Effect.gen(function* () {
+    const repo = yield* ProductRepository;
+
+    const products = yield* repo.streamAll({ batchSize: 10 }).pipe(
+      Stream.take(5), // Test first 5 items
+      Stream.runCollect,
+      Effect.map(Chunk.toArray),
+    );
+
+    expect(products.length).toBe(5);
+  }).pipe(Effect.provide(Layer.fresh(ProductRepositoryLive))),
+);
+```
+
+**See Also:**
+- [EFFECT_PATTERNS.md - Streaming & Queuing Patterns](./EFFECT_PATTERNS.md#streaming--queuing-patterns)
+- [TESTING_PATTERNS.md - Testing with TestClock](./TESTING_PATTERNS.md#testing-with-testclock)
+
+---
+
+**Word Count:** ~7,000 words

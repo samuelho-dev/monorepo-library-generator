@@ -72,7 +72,7 @@ export function generateFeature(options: FeatureGeneratorOptions) {
     const tags = tagsString.split(",").map((t) => t.trim())
 
     // Phase 1: Generate infrastructure files using infrastructure generator
-    const _infraResult = yield* generateLibraryInfrastructure(adapter, {
+    yield* generateLibraryInfrastructure(adapter, {
       projectName,
       projectRoot,
       sourceRoot,

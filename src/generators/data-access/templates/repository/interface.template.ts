@@ -86,7 +86,102 @@ export interface ${className}RepositoryInterface
     Read${className}Operations,
     Update${className}Operations,
     Delete${className}Operations,
-    Aggregate${className}Operations {}`)
+    Aggregate${className}Operations {
+
+  // ==========================================================================
+  // TODO: Stream-Based Operations for Large Datasets
+  // ==========================================================================
+  //
+  // Stream provides constant-memory processing for large/unbounded datasets.
+  // Use Stream when:
+  // - Processing 1000+ items
+  // - Memory constraints are critical
+  // - Need backpressure handling
+  //
+  // Example: Stream all entities with backpressure
+  //
+  // readonly streamAll: (options?: {
+  //   batchSize?: number;
+  //   filters?: Record<string, unknown>;
+  // }) => Stream.Stream<YourEntity, ${className}RepositoryError, never>;
+  //
+  // Implementation pattern:
+  //
+  // streamAll: (options = {}) =>
+  //   Stream.asyncScoped<YourEntity, ${className}RepositoryError>((emit) =>
+  //     Effect.gen(function* () {
+  //       const db = yield* KyselyService;
+  //       const batchSize = options.batchSize ?? 100;
+  //       let offset = 0;
+  //
+  //       while (true) {
+  //         const batch = yield* Effect.tryPromise({
+  //           try: () => db.selectFrom("your_table")
+  //             .selectAll()
+  //             .limit(batchSize)
+  //             .offset(offset)
+  //             .execute(),
+  //           catch: (error) => new ${className}RepositoryError({
+  //             message: "Failed to stream entities",
+  //             cause: error
+  //           })
+  //         });
+  //
+  //         if (batch.length === 0) break;
+  //
+  //         for (const item of batch) {
+  //           yield* emit.single(item);
+  //         }
+  //
+  //         offset += batchSize;
+  //       }
+  //     })
+  //   ),
+  //
+  // Usage in service layer:
+  //
+  // const repo = yield* ${className}Repository;
+  // yield* repo.streamAll({ batchSize: 100 }).pipe(
+  //   Stream.mapEffect((entity) => processEntity(entity)),
+  //   Stream.runDrain
+  // );
+  //
+  // Example: Stream with Sink for aggregation
+  //
+  // readonly streamByCriteria: (
+  //   criteria: Record<string, unknown>,
+  //   options?: { batchSize?: number }
+  // ) => Stream.Stream<YourEntity, ${className}RepositoryError, never>;
+  //
+  // // Use with Sink for memory-efficient aggregation
+  // const totalRevenue = yield* repo.streamByCriteria({ status: "completed" }).pipe(
+  //   Stream.map(order => order.amount),
+  //   Stream.run(Sink.sum) // Constant memory aggregation
+  // );
+  //
+  // Example: Batch processing with Stream
+  //
+  // readonly streamForProcessing: () => Stream.Stream<
+  //   YourEntity,
+  //   ${className}RepositoryError,
+  //   never
+  // >;
+  //
+  // // Process in batches with backpressure
+  // yield* repo.streamForProcessing().pipe(
+  //   Stream.grouped(50), // Process 50 at a time
+  //   Stream.mapEffect((batch) =>
+  //     Effect.gen(function* () {
+  //       // Process batch
+  //       yield* processBatch(batch);
+  //     })
+  //   ),
+  //   Stream.runDrain
+  // );
+  //
+  // See EFFECT_PATTERNS.md "Streaming & Queuing Patterns" for comprehensive examples.
+  // See DATA-ACCESS.md for repository-specific Stream integration patterns.
+}`)
   builder.addBlankLine()
 
   // Context.Tag
@@ -147,36 +242,43 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
   /**
    * Test Layer - In-memory implementation
    *
-   * Uses Map-based storage for testing
+   * Uses Layer.succeed for deterministic testing.
+   * No dynamic imports - all operations are plain functions for proper Layer.fresh isolation.
+   *
+   * IMPORTANT: This provides minimal stub implementations.
+   * Customize these stubs based on your testing needs.
    */
-  static readonly Test = Layer.effect(
+  static readonly Test = Layer.succeed(
     this,
-    Effect.gen(function* () {
-      // Import test implementations
-      const createOps = yield* Effect.promise(() =>
-        import("./operations/create").then((m) => m.testCreateOperations)
-      );
-      const readOps = yield* Effect.promise(() =>
-        import("./operations/read").then((m) => m.testReadOperations)
-      );
-      const updateOps = yield* Effect.promise(() =>
-        import("./operations/update").then((m) => m.testUpdateOperations)
-      );
-      const deleteOps = yield* Effect.promise(() =>
-        import("./operations/delete").then((m) => m.testDeleteOperations)
-      );
-      const aggregateOps = yield* Effect.promise(() =>
-        import("./operations/aggregate").then((m) => m.testAggregateOperations)
-      );
+    {
+      // Create operations
+      create: (input) => Effect.succeed({ id: "test-id-1", ...input } as any),
+      createMany: (inputs) => Effect.succeed(
+        inputs.map((input, i) => ({ id: \`test-id-\${i + 1}\`, ...input })) as any
+      ),
 
-      return {
-        ...createOps,
-        ...readOps,
-        ...updateOps,
-        ...deleteOps,
-        ...aggregateOps,
-      };
-    })
+      // Read operations
+      findById: (id) => Effect.succeed({ id, name: "test-entity" } as any),
+      findMany: (ids) => Effect.succeed(
+        ids.map(id => ({ id, name: "test-entity" })) as any
+      ),
+      findAll: () => Effect.succeed([{ id: "test-id-1", name: "test-entity" }] as any),
+      findByCriteria: (_criteria, _skip, _limit) => Effect.succeed([{ id: "test-id-1", name: "test-entity" }] as any),
+
+      // Update operations
+      update: (id, input) => Effect.succeed({ id, ...input } as any),
+      updateMany: (updates) => Effect.succeed(
+        updates.map(({ id, data }) => ({ id, ...data })) as any
+      ),
+
+      // Delete operations
+      delete: (_id) => Effect.void,
+      deleteMany: (_ids) => Effect.void,
+
+      // Aggregate operations
+      count: () => Effect.succeed(1),
+      exists: (_id) => Effect.succeed(true),
+    }
   );
 
   /**

@@ -425,11 +425,73 @@ export class StripeService extends Context.Tag('StripeService')<
 }
 ```
 
+### Pattern 5: Stream-Based Data Processing
+
+For large datasets or paginated APIs, use Stream for constant-memory processing:
+
+```typescript
+// Feature: Order Processing Service with Stream
+export class OrderProcessingService extends Context.Tag('OrderProcessingService')<
+  OrderProcessingService,
+  {
+    readonly processAllOrders: () => Effect.Effect<
+      ProcessingSummary,
+      OrderError,
+      OrderRepository
+    >;
+  }
+>() {
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+      return {
+        processAllOrders: () =>
+          Effect.gen(function* () {
+            const repo = yield* OrderRepository;
+
+            // Stream all orders with constant memory usage
+            const summary = yield* repo.streamAll({ batchSize: 100 }).pipe(
+              // Process each order
+              Stream.mapEffect((order) =>
+                Effect.gen(function* () {
+                  yield* validateOrder(order);
+                  yield* enrichOrder(order);
+                  return order;
+                }),
+              ),
+              // Group into batches for bulk operations
+              Stream.grouped(50),
+              Stream.mapEffect((batch) => saveBatch(batch)),
+              // Collect results
+              Stream.runCollect,
+              Effect.map((results) => ({
+                processed: Chunk.size(results),
+                success: true,
+              })),
+            );
+
+            return summary;
+          }),
+      };
+    }),
+  );
+}
+```
+
+**Benefits:**
+- **Constant Memory:** Process millions of records without loading all into memory
+- **Backpressure:** Prevents overwhelming downstream systems
+- **Composable:** Easy to add transformations, filtering, and batching
+
+**See:** [EFFECT_PATTERNS.md - Streaming & Queuing Patterns](./EFFECT_PATTERNS.md#streaming--queuing-patterns)
+
 ---
 
 ## Layer Composition Strategies
 
-### Strategy 1: Application-Level Composition (Recommended)
+### Strategy 1: Application-Level Composition (REQUIRED)
+
+**This is the required pattern for all libraries.** Services MUST NOT pre-wire their dependencies.
 
 Compose all layers at the application entry point:
 
@@ -467,9 +529,23 @@ const program = Effect.gen(function* () {
 Effect.runPromise(program.pipe(Effect.provide(AppLayer)));
 ```
 
-### Strategy 2: Library-Level Pre-Wiring
+**Rationale for Required Pattern:**
+- **Flexibility:** Applications control the full dependency graph
+- **Testability:** Can mock individual dependencies without unwrapping
+- **Transparency:** All dependencies visible at application level
+- **Consistency:** Single pattern across all libraries reduces cognitive load
 
-Each library provides its own layer with dependencies:
+---
+
+### ⚠️ Strategy 2: Library-Level Pre-Wiring (Exceptions Only)
+
+**This pattern is generally prohibited.** Only use when ALL conditions are met:
+
+1. ✅ Internal implementation detail (NOT exported in public API)
+2. ✅ Services are tightly coupled (always used together)
+3. ✅ Both services in SAME library (no cross-library dependencies)
+
+Each library provides its own layer with dependencies (NOT RECOMMENDED):
 
 ```typescript
 // libs/feature/product/src/lib/server/layers.ts
@@ -482,9 +558,45 @@ export const ProductFeatureLayer = ProductServiceLive.pipe(
 const AppLayer = Layer.mergeAll(
   DatabaseServiceLive,
   CacheServiceLive,
-  ProductFeatureLayer, // Pre-wired
+  ProductFeatureLayer, // Pre-wired (NOT RECOMMENDED)
 );
 ```
+
+**Example of Acceptable Exception:**
+
+```typescript
+// ✅ ACCEPTABLE: Internal implementation detail within same library
+// libs/infra/cache/src/lib/internal/layers.ts (NOT exported in index.ts)
+const InternalCacheLayer = MemoryCacheService.Live.pipe(
+  Layer.provide(LocalStorageService.Live) // Both in same infra library
+);
+```
+
+**Prohibited Patterns:**
+
+```typescript
+// ❌ WRONG: Cross-library pre-wiring
+export const ProductFeatureLayer = ProductService.Live.pipe(
+  Layer.provide(ProductRepository.Live), // From different library
+);
+
+// ❌ WRONG: Feature services pre-wiring repositories
+export const UserFeatureLayer = UserService.Live.pipe(
+  Layer.provide(UserRepository.Live), // Should be app-level
+);
+
+// ❌ WRONG: Infrastructure services pre-wiring providers
+export const DatabaseLayer = DatabaseService.Live.pipe(
+  Layer.provide(PostgresProvider.Live), // Should be app-level
+);
+
+// ❌ WRONG: Any exported layer with pre-wired dependencies
+export const AnythingWithDependencies = Service.Live.pipe(
+  Layer.provide(AnyOtherService.Live), // Violates transparency
+);
+```
+
+**Enforcement:** Generators produce layers WITHOUT pre-wiring. Applications compose at entry point.
 
 ---
 
@@ -599,10 +711,17 @@ Automatic dependency detection with graceful fallbacks:
 
 ## Testing Patterns
 
+> **📘 Comprehensive Testing Guide:** See [TESTING_PATTERNS.md](./TESTING_PATTERNS.md) for complete testing standards, patterns, and anti-patterns.
+
+All tests follow standardized @effect/vitest patterns:
+- ✅ ALL imports from `@effect/vitest`
+- ✅ ALL tests use `it.scoped()`
+- ✅ ALL layers wrapped with `Layer.fresh()`
+
 ### Repository Testing (with @effect/vitest)
 
 ```typescript
-import { it } from '@effect/vitest';
+import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer, Option } from 'effect';
 import { ProductRepository } from '@samuelho-dev/contract-product';
 import { ProductRepositoryLive } from '../repository';
@@ -612,15 +731,18 @@ const MockDatabaseLayer = Layer.succeed(DatabaseService, {
   query: () => Effect.succeed({ id: 'test', name: 'Test Product' }),
 });
 
-it.scoped('findById returns product', () =>
+it.scoped('findById returns product', () => // ✅ Always it.scoped
   Effect.gen(function* () {
     const repo = yield* ProductRepository;
     const result = yield* repo.findById('test');
 
     expect(Option.isSome(result)).toBe(true);
   }).pipe(
-    Effect.provide(ProductRepositoryLive),
-    Effect.provide(MockDatabaseLayer),
+    Effect.provide(
+      Layer.fresh( // ✅ Always Layer.fresh
+        ProductRepositoryLive.pipe(Layer.provide(MockDatabaseLayer))
+      )
+    ),
   ),
 );
 ```
@@ -628,7 +750,7 @@ it.scoped('findById returns product', () =>
 ### Service Testing (with mocked dependencies)
 
 ```typescript
-import { it } from '@effect/vitest';
+import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer } from 'effect';
 import { ProductService } from '../service';
 
@@ -636,15 +758,18 @@ const MockProductRepository = Layer.succeed(ProductRepository, {
   findById: () => Effect.succeed(Option.some(mockProduct)),
 });
 
-it.scoped('createOrder validates product', () =>
+it.scoped('createOrder validates product', () => // ✅ Always it.scoped
   Effect.gen(function* () {
     const service = yield* ProductService;
     const result = yield* service.createOrder({ productId: 'test' });
 
     expect(result.productId).toBe('test');
   }).pipe(
-    Effect.provide(ProductServiceLive),
-    Effect.provide(MockProductRepository),
+    Effect.provide(
+      Layer.fresh( // ✅ Always Layer.fresh
+        ProductServiceLive.pipe(Layer.provide(MockProductRepository))
+      )
+    ),
   ),
 );
 ```

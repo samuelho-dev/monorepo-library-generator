@@ -1342,6 +1342,230 @@ export const fulfillOrder = (orderId: string) =>
   });
 ```
 
+## Caching Strategies for Feature Services
+
+Effect provides built-in caching operators for optimizing service performance. Choose the right strategy based on your use case.
+
+### Decision Matrix: Caching Strategies
+
+| Strategy            | Scope       | TTL Support | Persistence | Use Case                |
+| ------------------- | ----------- | ----------- | ----------- | ----------------------- |
+| Effect.cached       | Single proc | Indefinite  | In-memory   | Pure computations       |
+| Effect.cachedWithTTL| Single proc | Yes (time)  | In-memory   | API rate limits         |
+| Effect.once         | Single proc | Indefinite  | In-memory   | One-time initialization |
+| cachedFunction      | Single proc | Indefinite  | In-memory   | Function memoization    |
+| CacheService (Redis)| Distributed | Yes (custom)| Persistent  | Multi-server deploys    |
+| Layered caching     | Both        | Yes         | Both        | High-traffic endpoints  |
+
+### Pattern 1: Effect.cached - Indefinite Cache
+
+Use for **pure computations** where same input always produces same output:
+
+```typescript
+// libs/feature/pricing/src/lib/server/service.ts
+export const calculateDiscount = (tier: string, amount: number) =>
+  Effect.gen(function* () {
+    const rules = yield* DiscountRulesRepository;
+    const tierRules = yield* rules.findByTier(tier);
+
+    // Expensive calculation
+    const discount = tierRules.rules.reduce(
+      (acc, rule) => acc + calculateRule(rule, amount),
+      0,
+    );
+
+    return discount;
+  }).pipe(Effect.cached); // ← Cache indefinitely
+
+// Usage - cached per (tier, amount) combination
+const discount1 = yield* calculateDiscount("gold", 100); // Fresh
+const discount2 = yield* calculateDiscount("gold", 100); // Cached!
+```
+
+**When to use:**
+- ✅ Pure calculations (deterministic output)
+- ✅ Reference data that rarely changes
+- ✅ Expensive computations
+- ❌ User-specific dynamic data
+- ❌ Time-sensitive data
+
+### Pattern 2: Effect.cachedWithTTL - Time-Based Expiration
+
+Use for **frequently accessed data** that changes periodically:
+
+```typescript
+// libs/feature/catalog/src/lib/server/service.ts
+export const getFeaturedProducts = () =>
+  Effect.gen(function* () {
+    const repo = yield* ProductRepository;
+    const products = yield* repo.findByCriteria({ featured: true });
+    return products;
+  }).pipe(Effect.cachedWithTTL("10 minutes")); // ← Refresh every 10 minutes
+
+// Usage
+const products1 = yield* getFeaturedProducts(); // Fresh from DB
+const products2 = yield* getFeaturedProducts(); // Cached
+// ... 11 minutes later ...
+const products3 = yield* getFeaturedProducts(); // Fresh again
+```
+
+**When to use:**
+- ✅ API responses with rate limits
+- ✅ Frequently accessed data
+- ✅ Reducing database load
+- ❌ Data requiring immediate consistency
+
+### Pattern 3: Layered Caching (L1: Memory + L2: Redis)
+
+Use for **high-traffic endpoints** in multi-server deployments:
+
+```typescript
+// libs/feature/product/src/lib/server/service.ts
+export const getProductDetails = (productId: string) =>
+  Effect.gen(function* () {
+    // L2 Cache: Check Redis first
+    const cache = yield* CacheService;
+    const cached = yield* cache.get<Product>(`product:${productId}`);
+
+    if (Option.isSome(cached)) {
+      return cached.value;
+    }
+
+    // Cache miss - fetch from repository
+    const repo = yield* ProductRepository;
+    const product = yield* repo.findById(productId);
+
+    if (Option.isNone(product)) {
+      return yield* Effect.fail(new ProductNotFoundError({ productId }));
+    }
+
+    // Store in Redis with 1-hour TTL
+    yield* cache.set(`product:${productId}`, product.value, "1 hour");
+
+    return product.value;
+  }).pipe(Effect.cached); // ← L1 Cache: In-memory
+
+// Pattern: L1 (fast, per-process) + L2 (shared, durable)
+```
+
+**When to use:**
+- ✅ High-traffic endpoints
+- ✅ Multi-server deployments
+- ✅ Expensive database queries
+- ✅ Need cache consistency across servers
+
+### Pattern 4: Effect.once - One-Time Initialization
+
+Use for **application setup** that should run exactly once:
+
+```typescript
+// libs/feature/config/src/lib/server/service.ts
+export const initializeFeatureFlags = () =>
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const logger = yield* LoggingService;
+
+    yield* logger.info("Loading feature flags");
+    const flags = yield* config.loadFeatureFlags();
+
+    yield* logger.info("Feature flags initialized", { count: flags.length });
+    return flags;
+  }).pipe(Effect.once); // ← Runs exactly once
+
+// Multiple calls share same result
+const flags1 = yield* initializeFeatureFlags(); // Initializes
+const flags2 = yield* initializeFeatureFlags(); // Returns cached
+```
+
+**When to use:**
+- ✅ Application initialization
+- ✅ Configuration loading
+- ✅ One-time setup operations
+
+### Pattern 5: cachedFunction - Function Memoization
+
+Use for **pure functions** with multiple argument combinations:
+
+```typescript
+import { cachedFunction } from "effect/Function";
+
+// libs/feature/pricing/src/lib/server/service.ts
+const calculateShippingCost = cachedFunction(
+  (weight: number, distance: number, express: boolean) =>
+    Effect.gen(function* () {
+      const rules = yield* ShippingRulesRepository;
+      // Expensive calculation...
+      return calculateCost(rules, weight, distance, express);
+    }),
+);
+
+// Each unique (weight, distance, express) combination is cached
+export const getShippingQuote = (order: Order) =>
+  Effect.gen(function* () {
+    const cost = yield* calculateShippingCost(
+      order.weight,
+      order.distance,
+      order.expressShipping,
+    );
+    return { cost, estimatedDays: calculateDays(order.distance) };
+  });
+```
+
+**When to use:**
+- ✅ Pure function memoization
+- ✅ Expensive calculations with multiple inputs
+- ✅ Deterministic transformations
+
+### Pattern 6: Cache Invalidation
+
+Always invalidate cache when underlying data changes:
+
+```typescript
+// libs/feature/product/src/lib/server/service.ts
+export const updateProduct = (
+  productId: string,
+  updates: ProductUpdate,
+) =>
+  Effect.gen(function* () {
+    const repo = yield* ProductRepository;
+    const cache = yield* CacheService;
+
+    // Update database
+    const updated = yield* repo.update(productId, updates);
+
+    // Invalidate cache (write-through pattern)
+    yield* cache.delete(`product:${productId}`);
+
+    return updated;
+  });
+
+// Pattern: Write-through invalidation
+// 1. Update database
+// 2. Invalidate cache
+// 3. Next read will refresh cache
+```
+
+### Caching Best Practices
+
+**Do:**
+- ✅ Cache expensive computations
+- ✅ Use TTL for time-sensitive data
+- ✅ Invalidate cache on writes
+- ✅ Layer caches (L1 + L2) for high traffic
+- ✅ Monitor cache hit rates
+
+**Don't:**
+- ❌ Cache user-specific data indefinitely
+- ❌ Cache data requiring immediate consistency
+- ❌ Forget to invalidate on updates
+- ❌ Over-cache (increased memory usage)
+
+**See Also:**
+- [EFFECT_PATTERNS.md - Built-in Caching Operators](./EFFECT_PATTERNS.md#built-in-effect-caching-operators)
+- [INFRA.md - CacheService Implementation](./INFRA.md)
+
+---
+
 ## Runtime Preservation for Callbacks
 
 When integrating with **callback-based APIs** (WebSockets, event emitters, SDK callbacks), you must preserve the Effect runtime to execute Effect programs within callbacks.
@@ -2078,13 +2302,21 @@ export const PaymentTest = PaymentService.Live.pipe(
 
 Feature libraries test business logic and service orchestration. Tests use `@effect/vitest` with minimal mocking for rapid iteration.
 
+> **📘 Comprehensive Testing Guide:** See [TESTING_PATTERNS.md](./TESTING_PATTERNS.md) for complete testing standards and patterns.
+
+**Standard Testing Pattern:**
+- ✅ ALL imports from `@effect/vitest`
+- ✅ ALL tests use `it.scoped()`
+- ✅ ALL layers wrapped with `Layer.fresh()`
+
 **Generator Must Create (Testing):**
 - ✅ Single test file `src/lib/service.spec.ts`
-- ✅ Tests using `it.effect` or `it.scoped` from `@effect/vitest`
+- ✅ Tests using `it.scoped()` from `@effect/vitest`
 - ✅ Inline mocks with `Layer.succeed` for dependencies
 - ✅ Test business logic and orchestration behavior
 - ✅ Vitest configuration with `@effect/vitest/setup`
 - ✅ Test layer composition with mock dependencies
+- ✅ All test layers wrapped with `Layer.fresh()`
 
 **Generator Must NOT Create (Testing):**
 - ❌ Separate `mock-factories.ts` files (inline mocks)
@@ -2092,19 +2324,21 @@ Feature libraries test business logic and service orchestration. Tests use `@eff
 - ❌ Multiple test files per service (one file only)
 - ❌ Tests for infrastructure/providers (wrong layer)
 - ❌ Tests for repositories (belongs in data-access)
-- ❌ Manual `Effect.runPromise` (use `it.effect`/`it.scoped`)
+- ❌ Manual `Effect.runPromise` (use `it.scoped()`)
+- ❌ Use of `it.effect()` (deprecated in favor of `it.scoped()`)
 
 ### Test File Structure
 
 **Single Test File**: `src/lib/service.spec.ts`
 
-Tests verify that services correctly implement business logic while orchestrating dependencies. Use inline mocks with `it.effect` or `it.scoped`.
+Tests verify that services correctly implement business logic while orchestrating dependencies. Use inline mocks with `it.scoped`.
 
 #### ✅ DO:
 
 - ✅ Test business logic (does the service implement the use case correctly?)
-- ✅ Use `it.effect` for service tests (simplest form)
-- ✅ Use `it.scoped` if your service needs Scope for resources
+- ✅ Import ALL test utilities from `@effect/vitest` (describe, expect, it)
+- ✅ Use `it.scoped()` for ALL tests (consistent with project standards)
+- ✅ Wrap ALL test layers with `Layer.fresh()` for isolation
 - ✅ Create inline mocks with `Layer.succeed`
 - ✅ Focus on behavior, not implementation details
 - ✅ Keep tests in one file: `src/lib/service.spec.ts`
@@ -2116,7 +2350,10 @@ Tests verify that services correctly implement business logic while orchestratin
 - ❌ Test infrastructure (database, cache) logic (that's tested in infra/provider layers)
 - ❌ Test repository implementations (that's tested in data-access layer)
 - ❌ Create 5-6 test files (one file is sufficient)
-- ❌ Use manual `Effect.runPromise` (use `it.effect`/`it.scoped` instead)
+- ❌ Use manual `Effect.runPromise` (use `it.scoped()` instead)
+- ❌ Use `it.effect()` (deprecated in favor of `it.scoped()`)
+- ❌ Mix imports from `vitest` and `@effect/vitest` (use @effect/vitest only)
+- ❌ Forget `Layer.fresh()` wrapping (causes test state leakage)
 
 ### Example: Service Tests
 
@@ -2125,7 +2362,7 @@ Tests verify that services correctly implement business logic while orchestratin
 ```typescript
 // src/lib/service.spec.ts
 import { Effect, Layer } from "effect";
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "@effect/vitest"; // ✅ All from @effect/vitest
 import { PaymentService } from "./service";
 import { ProductRepository } from "@creativetoolkits/contract-product";
 import { StripeService } from "@creativetoolkits/provider-stripe";
@@ -2154,8 +2391,8 @@ const StripeServiceMock = Layer.succeed(StripeService, {
 });
 
 describe("PaymentService", () => {
-  // Use it.effect for service tests
-  it.effect("processPayment creates payment intent", () =>
+  // Use it.scoped for all tests
+  it.scoped("processPayment creates payment intent", () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const payment = yield* PaymentService;
 
@@ -2169,16 +2406,18 @@ describe("PaymentService", () => {
       expect(result.status).toBe("pending");
     }).pipe(
       Effect.provide(
-        Layer.mergeAll(
-          PaymentServiceLive,
-          ProductRepositoryMock,
-          StripeServiceMock,
+        Layer.fresh( // ✅ Always Layer.fresh
+          Layer.mergeAll(
+            PaymentServiceLive,
+            ProductRepositoryMock,
+            StripeServiceMock,
+          )
         ),
       ),
     ),
   );
 
-  it.effect("handles payment failure gracefully", () =>
+  it.scoped("handles payment failure gracefully", () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const failingStripeMock = Layer.succeed(StripeService, {
         paymentIntents: {
@@ -2208,10 +2447,12 @@ describe("PaymentService", () => {
       }
     }).pipe(
       Effect.provide(
-        Layer.mergeAll(
-          PaymentServiceLive,
-          ProductRepositoryMock,
-          failingStripeMock,
+        Layer.fresh( // ✅ Always Layer.fresh
+          Layer.mergeAll(
+            PaymentServiceLive,
+            ProductRepositoryMock,
+            failingStripeMock,
+          )
         ),
       ),
     ),
@@ -2239,9 +2480,10 @@ export default defineConfig({
 
 1. **One Test File**: Keep all service tests in `src/lib/service.spec.ts`
 2. **Inline Mocks**: Create mocks inline with `Layer.succeed`, no separate files
-3. **Use it.effect**: Feature tests rarely need Scope (use `it.effect` unless you have resources)
-4. **Focus on Business Logic**: Test use cases, not infrastructure coordination
-5. **Minimal Mocking**: Mock only dependencies, not the service itself
+3. **Use it.scoped()**: ALL tests use `it.scoped()` for consistency (not `it.effect()`)
+4. **Always Layer.fresh**: Wrap ALL test layers with `Layer.fresh()` for isolation
+5. **Focus on Business Logic**: Test use cases, not infrastructure coordination
+6. **Minimal Mocking**: Mock only dependencies, not the service itself
 
 ## Platform-Specific Exports
 

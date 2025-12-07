@@ -32,6 +32,25 @@ Provides different layer implementations for different environments.`
   ])
   builder.addBlankLine()
 
+  // Resource Management Documentation
+  builder.addRaw("// ".repeat(38))
+  builder.addRaw("// Resource Management")
+  builder.addRaw("// ".repeat(38))
+  builder.addRaw("//")
+  builder.addRaw("// Layer.effect: Stateless business logic (default)")
+  builder.addRaw("// Layer.scoped: Services managing resources (WebSocket, files, workers)")
+  builder.addRaw("//")
+  builder.addRaw("// Example with cleanup:")
+  builder.addRaw("//   const resource = yield* Effect.acquireRelease(")
+  builder.addRaw("//     Effect.sync(() => openConnection()),  // acquire")
+  builder.addRaw("//     (r) => Effect.sync(() => r.close())    // release")
+  builder.addRaw("//   );")
+  builder.addRaw("//")
+  builder.addRaw("// See EFFECT_PATTERNS.md for complete examples")
+  builder.addRaw("//")
+  builder.addRaw("// ".repeat(38))
+  builder.addBlankLine()
+
   // Add Live layer
   builder.addRaw(`/**
  * Live layer for production
@@ -39,17 +58,19 @@ Provides different layer implementations for different environments.`
 export const ${className}ServiceLive = ${className}Service.Live;`)
   builder.addBlankLine()
 
-  // Add Test layer
+  // Add comment about Test layer location (Pattern B)
   builder.addRaw(`/**
- * Test layer with mock implementations
- * Uses Layer.succeed with plain object for deterministic testing
- */
-export const ${className}ServiceTest = Layer.succeed(
-  ${className}Service,
-  {
-    exampleOperation: () => Effect.void,
-  }
-);`)
+ * Test Layer Location (Pattern B)
+ *
+ * The Test layer is defined as a static property on ${className}Service.
+ * Import and use it as: ${className}Service.Test
+ *
+ * This pattern (Pattern B) keeps test implementations co-located with
+ * service definitions for better discoverability.
+ *
+ * See: service/interface.ts for the Test layer definition
+ * See: TESTING_PATTERNS.md for Pattern B documentation
+ */`)
   builder.addBlankLine()
 
   // Add Dev layer
@@ -87,18 +108,21 @@ export const ${className}ServiceDev = Layer.effect(
   builder.addRaw(`/**
  * Auto layer - automatically selects based on NODE_ENV
  *
+ * Uses Layer.suspend for lazy evaluation - the layer is selected at runtime
+ * when the layer is first used, not at module import time.
+ *
  * Environment mapping:
- * - test: Uses ${className}ServiceTest (mocks)
+ * - test: Uses ${className}Service.Test (Pattern B - static property)
  * - development: Uses ${className}ServiceDev (with logging)
  * - production: Uses ${className}ServiceLive (production)
  * - default: Uses ${className}ServiceLive
  */
-export const ${className}ServiceAuto = (() => {
+export const ${className}ServiceAuto = Layer.suspend(() => {
   const env = process.env["NODE_ENV"] || "production";
 
   switch (env) {
     case "test":
-      return ${className}ServiceTest;
+      return ${className}Service.Test;
     case "development":
       return ${className}ServiceDev;
     case "production":
@@ -106,7 +130,7 @@ export const ${className}ServiceAuto = (() => {
     default:
       return ${className}ServiceLive;
   }
-})();`)
+});`)
   builder.addBlankLine()
 
   return builder.toString()

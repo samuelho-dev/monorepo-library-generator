@@ -571,7 +571,7 @@ Handles compilation of production code with unique output directories:
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": ["vitest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     // AUTOMATICALLY UPDATED BY NX SYNC
     // References to tsconfig.lib.json files of dependencies
@@ -597,9 +597,9 @@ Handles test file compilation:
   "compilerOptions": {
     // Output MUST be different from tsconfig.lib.json
     "outDir": "../../../dist/libs/{type}/{domain}/spec",
-    "types": ["jest", "node"]
+    "types": ["vitest", "node"]
   },
-  "include": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"],
+  "include": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"],
   "references": [
     // Reference to this project's lib config
     { "path": "./tsconfig.lib.json" }

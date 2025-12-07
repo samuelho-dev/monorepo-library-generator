@@ -22,6 +22,7 @@ import { parseTags } from "../../utils/generators"
 import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import { computeLibraryMetadata } from "../../utils/library-metadata"
 import { computePlatformConfiguration } from "../../utils/platforms"
+import { addDotfilesToLibrary } from "../../utils/shared/dotfile-generation"
 import { createTreeAdapter } from "../../utils/tree-adapter"
 import { generateInfraCore } from "../core/infra"
 import type { InfraGeneratorSchema } from "./schema"
@@ -128,17 +129,33 @@ export default async function infraGenerator(
     generateInfraCore(adapter, coreOptions)
   )
 
+  // Phase 3: Add dotfiles for Effect.ts code quality enforcement
+  const addDotfiles = schema.addDotfiles ?? true
+  if (addDotfiles) {
+    await Effect.runPromise(
+      addDotfilesToLibrary(adapter, {
+        projectRoot: metadata.projectRoot,
+        includeVSCodeSettings: schema.includeVSCodeSettings ?? true,
+        overwrite: schema.overwriteDotfiles ?? false
+      })
+    )
+  }
+
   // Format generated files
   await formatFiles(tree)
 
   // Return post-generation callback
   return () => {
+    const dotfilesMessage = addDotfiles
+      ? "\n✨ Dotfiles: Effect.ts code quality enforcement enabled"
+      : ""
+
     console.log(`
 ✅ Infrastructure library created: ${result.packageName}
 
 📁 Location: ${result.projectRoot}
 📦 Package: ${result.packageName}
-📂 Files generated: ${result.filesGenerated.length}
+📂 Files generated: ${result.filesGenerated.length}${dotfilesMessage}
 
 🎯 IMPORTANT - Customization Required:
 This library was generated with minimal scaffolding.

@@ -8,4 +8,9 @@ export interface InfraGeneratorSchema {
   platform?: PlatformType
   includeClientServer?: boolean
   includeEdge?: boolean
+
+  // Dotfile generation options (Effect.ts code quality enforcement)
+  addDotfiles?: boolean // Default: true
+  includeVSCodeSettings?: boolean // Default: true
+  overwriteDotfiles?: boolean // Default: false
 }

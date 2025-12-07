@@ -7,4 +7,9 @@ export interface ContractGeneratorSchema {
   includeCQRS?: boolean
   includeRPC?: boolean
   tags?: string
+
+  // Dotfile generation options (Effect.ts code quality enforcement)
+  addDotfiles?: boolean // Default: true
+  includeVSCodeSettings?: boolean // Default: true
+  overwriteDotfiles?: boolean // Default: false
 }

@@ -43,4 +43,9 @@ export interface DataAccessGeneratorSchema {
    * "Repository-based data access for product domain"
    */
   readonly description?: string
+
+  // Dotfile generation options (Effect.ts code quality enforcement)
+  addDotfiles?: boolean // Default: true
+  includeVSCodeSettings?: boolean // Default: true
+  overwriteDotfiles?: boolean // Default: false
 }

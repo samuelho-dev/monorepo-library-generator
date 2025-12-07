@@ -585,6 +585,12 @@ All libraries include:
 - **[Contract Libraries](./docs/CONTRACT.md)** - Contract generator guide
 - **[Examples](./docs/EXAMPLES.md)** - End-to-end examples
 
+### Advanced Patterns
+- **[Testing Patterns](./docs/TESTING_PATTERNS.md)** - @effect/vitest testing guide with TestClock
+- **Effect Patterns - Stream & Caching** (in EFFECT_PATTERNS.md):
+  - [Streaming & Queuing Patterns](./docs/EFFECT_PATTERNS.md#streaming--queuing-patterns) - Constant-memory processing for large datasets
+  - [Built-in Caching Operators](./docs/EFFECT_PATTERNS.md#built-in-effect-caching-operators) - Effect.cached, cachedWithTTL, layered caching
+
 ### Bundle Optimization
 - **[Implementation Summary](./IMPLEMENTATION_SUMMARY.md)** - Bundle optimization overview and usage
 - **[Validation](./VALIDATION.md)** - Compliance validation and testing

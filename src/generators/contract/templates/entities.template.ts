@@ -35,8 +35,11 @@ export function generateEntitiesFile(options: ContractTemplateOptions) {
  * TODO: Customize for your domain:
  * 1. Add domain-specific fields
  * 2. Add validation rules (Schema.minLength, Schema.positive, etc.)
- * 3. Add computed fields if needed
- * 4. Import database types (${className}Select, etc.) from types-database
+ * 3. Add Schema.annotations() for OpenAPI/documentation
+ * 4. Add Schema.filter() for cross-field validation
+ * 5. Add Schema.transform() for data normalization
+ * 6. Add computed fields if needed
+ * 7. Import database types (${className}Select, etc.) from types-database
  */
 `)
 
@@ -97,23 +100,58 @@ export class ${className} extends Schema.Class<${className}>("${className}")({
   updatedAt: Schema.DateTimeUtc,
 
   // TODO: Add domain-specific fields here
-  // Example fields:
+  // Example fields with Schema.annotations():
   //
   // /** ${className} name */
   // name: Schema.String.pipe(
   //   Schema.minLength(1),
   //   Schema.maxLength(255)
-  // ),
+  // ).annotations({
+  //   title: "${className} Name",
+  //   description: "The human-readable name for this ${className}",
+  //   examples: ["Example ${className}"],
+  //   jsonSchema: { minLength: 1, maxLength: 255 }
+  // }),
   //
   // /** ${className} description */
-  // description: Schema.optional(Schema.String),
+  // description: Schema.optional(Schema.String).annotations({
+  //   title: "Description",
+  //   description: "Optional description providing additional context"
+  // }),
   //
   // /** ${className} status */
-  // status: Schema.Literal("draft", "active", "archived"),
+  // status: Schema.Literal("draft", "active", "archived").annotations({
+  //   title: "Status",
+  //   description: "Current lifecycle status",
+  //   examples: ["active"]
+  // }),
   //
   // /** Owner user ID */
-  // ownerId: Schema.UUID,
-}) {}`
+  // ownerId: Schema.UUID.annotations({
+  //   title: "Owner ID",
+  //   description: "UUID of the user who owns this ${className}"
+  // }),
+}).pipe(
+  // TODO: Add cross-field validation with Schema.filter()
+  // Example:
+  // Schema.filter((entity) => {
+  //   // Validate relationships between fields
+  //   if (entity.endDate && entity.startDate && entity.endDate < entity.startDate) {
+  //     return {
+  //       path: ["endDate"],
+  //       message: "End date must be after start date"
+  //     };
+  //   }
+  //   return true;
+  // }),
+
+  // Add class-level annotations for OpenAPI documentation
+  Schema.annotations({
+    identifier: "${className}",
+    title: "${className} Entity",
+    description: "Core ${className} domain entity with runtime validation and type safety"
+  })
+) {}`
 
   builder.addRaw(entityClass)
   builder.addBlankLine()

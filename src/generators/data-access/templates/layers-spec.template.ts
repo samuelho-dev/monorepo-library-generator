@@ -45,8 +45,12 @@ TODO: Customize this file:
   // Add imports
   builder.addImports([
     {
-      from: "vitest",
-      imports: ["describe"]
+      from: "@effect/vitest",
+      imports: ["describe", "expect", "it"]
+    },
+    {
+      from: "effect",
+      imports: ["Effect", "Layer"]
     }
   ])
   builder.addBlankLine()
@@ -64,269 +68,433 @@ TODO: Customize this file:
   // TODO: Add layer composition tests
 
   describe('Layer Composition', () => {
-    it('should compose all layers without errors', async () => {
-      // TODO: Implement layer composition test
-      // const layers = Layer.merge(
-      //   ${className}RepositoryLive,
-      //   ${className}QueryBuilderLive
-      // );
-      //
-      // const program = Effect.gen(function* () {
-      //   // Test that composed layers work
-      //   return true;
-      // });
-      //
-      // const result = await Effect.runPromise(program.pipe(
-      //   Effect.provide(layers)
-      // ));
-      //
-      // expect(result).toBe(true);
-    });
+    // TODO: Implement layer composition test
+    //
+    // it.scoped('should compose all layers without errors', () =>
+    //   Effect.gen(function* () {
+    //     const layers = Layer.merge(
+    //       ${className}RepositoryLive,
+    //       ${className}QueryBuilderLive
+    //     );
+    //
+    //     // Test that composed layers work
+    //     const result = yield* Effect.succeed(true);
+    //     expect(result).toBe(true);
+    //   }).pipe(Effect.provide(Layer.fresh(layers)))
+    // );
   });
 
   describe('Repository Layer', () => {
     // TODO: Add repository layer tests
+    //
+    // it.scoped('should provide repository in Live environment', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     expect(repo).toBeDefined();
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryLive)))
+    // );
 
-    it('should provide repository in Live environment', async () => {
-      // TODO: Implement repository layer test
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   return repo !== undefined;
-      // });
-      //
-      // const result = await Effect.runPromise(program.pipe(
-      //   Effect.provide(${className}RepositoryLive)
-      // ));
-      //
-      // expect(result).toBe(true);
-    });
+    //
+    // it.scoped('should use Test layer for in-memory storage', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     const created = yield* repo.save({ /* test data */ });
+    //     const found = yield* repo.findById(created.id);
+    //     expect(Option.isSome(found)).toBe(true);
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
 
-    it('should use Test layer for in-memory storage', async () => {
-      // TODO: Implement test layer verification
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   const created = yield* repo.save({ /* test data */ });
-      //   const found = yield* repo.findById(created.id);
-      //   return Option.isSome(found);
-      // });
-      //
-      // const result = await Effect.runPromise(program.pipe(
-      //   Effect.provide(${className}RepositoryTest)
-      // ));
-      //
-      // expect(result).toBe(true);
-    });
-
-    it('should use Dev layer with logging', async () => {
-      // TODO: Implement dev layer with logging verification
-      // const logs: string[] = [];
-      // const mockConsole = { log: (msg: string) => logs.push(msg) };
-      //
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   yield* repo.findAll();
-      //   return logs.length > 0; // Should have logged
-      // });
-      //
-      // const result = await Effect.runPromise(program.pipe(
-      //   Effect.provide(${className}RepositoryDev)
-      // ));
-      //
-      // expect(result).toBe(true);
-    });
+    //
+    // it.scoped('should use Dev layer with logging', () =>
+    //   Effect.gen(function* () {
+    //     const logs: string[] = [];
+    //     // const mockConsole = { log: (msg: string) => logs.push(msg) };
+    //
+    //     const repo = yield* ${className}Repository;
+    //     yield* repo.findAll();
+    //     expect(logs.length).toBeGreaterThan(0); // Should have logged
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryDev)))
+    // );
   });
 
   describe('Query Builder Layer', () => {
     // TODO: Add query builder layer tests
-
-    it('should build valid find all query', async () => {
-      // TODO: Implement query builder test
-      // const program = Effect.gen(function* () {
-      //   const db = yield* DatabaseService;
-      //   const query = buildFindAllQuery(db);
-      //   // Verify query structure
-      //   return query !== undefined;
-      // });
-    });
-
-    it('should build queries with filters', async () => {
-      // TODO: Implement filtered query test
-      // const filters: ${className}QueryFilters = { /* test filters */ };
-      // const query = buildFindAllQuery(db, filters);
-      // // Verify filter application
-    });
-
-    it('should build queries with pagination', async () => {
-      // TODO: Implement paginated query test
-      // const pagination = { skip: 0, limit: 20 };
-      // const query = buildFindAllQuery(db, undefined, pagination);
-      // // Verify pagination application
-    });
+    //
+    // it.scoped('should build valid find all query', () =>
+    //   Effect.gen(function* () {
+    //     const db = yield* DatabaseService;
+    //     const query = buildFindAllQuery(db);
+    //     // Verify query structure
+    //     expect(query).toBeDefined();
+    //   }).pipe(Effect.provide(Layer.fresh(DatabaseServiceMock)))
+    // );
+    //
+    // it.scoped('should build queries with filters', () =>
+    //   Effect.gen(function* () {
+    //     const db = yield* DatabaseService;
+    //     const filters: ${className}QueryFilters = { /* test filters */ };
+    //     const query = buildFindAllQuery(db, filters);
+    //     // Verify filter application
+    //     expect(query).toBeDefined();
+    //   }).pipe(Effect.provide(Layer.fresh(DatabaseServiceMock)))
+    // );
+    //
+    // it.scoped('should build queries with pagination', () =>
+    //   Effect.gen(function* () {
+    //     const db = yield* DatabaseService;
+    //     const pagination = { skip: 0, limit: 20 };
+    //     const query = buildFindAllQuery(db, undefined, pagination);
+    //     // Verify pagination application
+    //     expect(query).toBeDefined();
+    //   }).pipe(Effect.provide(Layer.fresh(DatabaseServiceMock)))
+    // );
   });
 
   describe('Error Handling', () => {
     // TODO: Add error handling tests
-
-    it('should handle not found errors', async () => {
-      // TODO: Implement not found error handling
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   return yield* repo.findById('non-existent-id');
-      // });
-      //
-      // const result = await Effect.runPromise(
-      //   program.pipe(
-      //     Effect.catch(error => {
-      //       expect(error).toBeInstanceOf(${className}NotFoundError);
-      //       return Effect.succeed(null);
-      //     }),
-      //     Effect.provide(${className}RepositoryTest)
-      //   )
-      // );
-    });
-
-    it('should handle validation errors', async () => {
-      // TODO: Implement validation error handling
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   const invalid = { /* invalid data */ };
-      //   return yield* repo.save(invalid);
-      // });
-      //
-      // const result = await Effect.runPromise(
-      //   program.pipe(
-      //     Effect.catch(error => {
-      //       expect(error).toBeInstanceOf(${className}ValidationError);
-      //       return Effect.succeed(null);
-      //     }),
-      //     Effect.provide(${className}RepositoryLive)
-      //   )
-      // );
-    });
-
-    it('should handle conflict errors', async () => {
-      // TODO: Implement conflict error handling
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   yield* repo.save({ /* duplicate data */ });
-      //   return yield* repo.save({ /* same duplicate */ });
-      // });
-      //
-      // const result = await Effect.runPromise(
-      //   program.pipe(
-      //     Effect.catch(error => {
-      //       expect(error).toBeInstanceOf(${className}ConflictError);
-      //       return Effect.succeed(null);
-      //     }),
-      //     Effect.provide(${className}RepositoryTest)
-      //   )
-      // );
-    });
-
-    it('should handle internal errors', async () => {
-      // TODO: Implement internal error handling
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   // Force an error condition
-      //   return yield* repo.findAll();
-      // });
-      //
-      // const result = await Effect.runPromise(
-      //   program.pipe(
-      //     Effect.catch(error => {
-      //       expect(error).toBeInstanceOf(${className}InternalError);
-      //       return Effect.succeed(null);
-      //     }),
-      //     Effect.provide(${className}RepositoryLive)
-      //   )
-      // );
-    });
+    //
+    // it.scoped('should handle not found errors', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     const result = yield* repo.findById('non-existent-id').pipe(
+    //       Effect.catchAll(error => {
+    //         expect(error).toBeInstanceOf(${className}NotFoundError);
+    //         return Effect.succeed(null);
+    //       })
+    //     );
+    //     expect(result).toBeNull();
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
+    //
+    // it.scoped('should handle validation errors', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     const invalid = { /* invalid data */ };
+    //     const result = yield* repo.save(invalid).pipe(
+    //       Effect.catchAll(error => {
+    //         expect(error).toBeInstanceOf(${className}ValidationError);
+    //         return Effect.succeed(null);
+    //       })
+    //     );
+    //     expect(result).toBeNull();
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryLive)))
+    // );
+    //
+    // it.scoped('should handle conflict errors', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     yield* repo.save({ /* duplicate data */ });
+    //     const result = yield* repo.save({ /* same duplicate */ }).pipe(
+    //       Effect.catchAll(error => {
+    //         expect(error).toBeInstanceOf(${className}ConflictError);
+    //         return Effect.succeed(null);
+    //       })
+    //     );
+    //     expect(result).toBeNull();
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
+    //
+    // it.scoped('should handle internal errors', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     // Force an error condition
+    //     const result = yield* repo.findAll().pipe(
+    //       Effect.catchAll(error => {
+    //         expect(error).toBeInstanceOf(${className}InternalError);
+    //         return Effect.succeed(null);
+    //       })
+    //     );
+    //     expect(result).toBeNull();
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryLive)))
+    // );
   });
 
   describe('CRUD Operations', () => {
     // TODO: Add CRUD operation tests
-
-    it('should create and retrieve an entity', async () => {
-      // TODO: Implement create/retrieve test
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   const created = yield* repo.save({ /* test data */ });
-      //   const found = yield* repo.findById(created.id);
-      //   return Option.isSome(found);
-      // });
-      //
-      // const result = await Effect.runPromise(program.pipe(
-      //   Effect.provide(${className}RepositoryTest)
-      // ));
-      //
-      // expect(result).toBe(true);
-    });
-
-    it('should update an entity', async () => {
-      // TODO: Implement update test
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   const created = yield* repo.save({ /* test data */ });
-      //   const updated = yield* repo.update(created.id, { /* new data */ });
-      //   return updated.id === created.id;
-      // });
-    });
-
-    it('should delete an entity', async () => {
-      // TODO: Implement delete test
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   const created = yield* repo.save({ /* test data */ });
-      //   yield* repo.delete(created.id);
-      //   const found = yield* repo.findById(created.id);
-      //   return Option.isNone(found);
-      // });
-    });
-
-    it('should count entities', async () => {
-      // TODO: Implement count test
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   yield* repo.save({ /* test data 1 */ });
-      //   yield* repo.save({ /* test data 2 */ });
-      //   const count = yield* repo.count();
-      //   return count === 2;
-      // });
-    });
+    //
+    // it.scoped('should create and retrieve an entity', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     const created = yield* repo.save({ /* test data */ });
+    //     const found = yield* repo.findById(created.id);
+    //     expect(Option.isSome(found)).toBe(true);
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
+    //
+    // it.scoped('should update an entity', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     const created = yield* repo.save({ /* test data */ });
+    //     const updated = yield* repo.update(created.id, { /* new data */ });
+    //     expect(updated.id).toBe(created.id);
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
+    //
+    // it.scoped('should delete an entity', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     const created = yield* repo.save({ /* test data */ });
+    //     yield* repo.delete(created.id);
+    //     const found = yield* repo.findById(created.id);
+    //     expect(Option.isNone(found)).toBe(true);
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
+    //
+    // it.scoped('should count entities', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     yield* repo.save({ /* test data 1 */ });
+    //     yield* repo.save({ /* test data 2 */ });
+    //     const count = yield* repo.count();
+    //     expect(count).toBe(2);
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
   });
 
   describe('Performance', () => {
     // TODO: Add performance tests
+    //
+    // it.scoped('should handle bulk operations efficiently', () =>
+    //   Effect.gen(function* () {
+    //     const startTime = performance.now();
+    //
+    //     const repo = yield* ${className}Repository;
+    //     for (let i = 0; i < 100; i++) {
+    //       yield* repo.save({ /* bulk data */ });
+    //     }
+    //
+    //     const endTime = performance.now();
+    //     expect(endTime - startTime).toBeLessThan(5000); // TODO: Adjust threshold
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
+    //
+    // it.scoped('should cache query results', () =>
+    //   Effect.gen(function* () {
+    //     const repo = yield* ${className}Repository;
+    //     const result1 = yield* repo.findAll();
+    //     const result2 = yield* repo.findAll();
+    //     expect(result1).toBe(result2); // Should be cached
+    //   }).pipe(Effect.provide(Layer.fresh(${className}RepositoryTest)))
+    // );
+  });
 
-    it('should handle bulk operations efficiently', async () => {
-      // TODO: Implement bulk operation performance test
-      // const startTime = performance.now();
-      //
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   for (let i = 0; i < 100; i++) {
-      //     yield* repo.save({ /* bulk data */ });
-      //   }
-      //   return true;
-      // });
-      //
-      // const result = await Effect.runPromise(program.pipe(
-      //   Effect.provide(${className}RepositoryTest)
-      // ));
-      //
-      // const endTime = performance.now();
-      // expect(endTime - startTime).toBeLessThan(5000); // TODO: Adjust threshold
-    });
+  describe('Time-Based Operations with TestClock', () => {
+    // ==========================================================================
+    // PATTERN: Use TestClock to control time in tests without waiting
+    // @effect/vitest provides TestClock automatically with it.scoped
+    // ==========================================================================
 
-    it('should cache query results', async () => {
-      // TODO: Implement caching performance test
-      // const program = Effect.gen(function* () {
-      //   const repo = yield* ${className}Repository;
-      //   const result1 = yield* repo.findAll();
-      //   const result2 = yield* repo.findAll();
-      //   return result1 === result2; // Should be cached
-      // });
-    });
+    // TODO: Test layer initialization with delays
+    //
+    // it.scoped('should handle delayed layer initialization', () =>
+    //   Effect.gen(function* () {
+    //     const delayedLayer = Layer.scoped(
+    //       ${className}Repository,
+    //       Effect.gen(function* () {
+    //         // Simulate slow initialization (connection pool, etc.)
+    //         yield* Effect.sleep("500 millis");
+    //         return { /* repository implementation */ };
+    //       })
+    //     );
+    //
+    //     const fiber = yield* Effect.fork(
+    //       Effect.gen(function* () {
+    //         const repo = yield* ${className}Repository;
+    //         return repo;
+    //       }).pipe(Effect.provide(Layer.fresh(delayedLayer)))
+    //     );
+    //
+    //     // Advance clock to allow layer initialization
+    //     yield* TestClock.adjust("600 millis");
+    //
+    //     const result = yield* Fiber.join(fiber);
+    //     expect(result).toBeDefined();
+    //   })
+    // );
+
+    // TODO: Test cache expiration in repository layer
+    //
+    // it.scoped('should expire cached results after TTL', () =>
+    //   Effect.gen(function* () {
+    //     let queryCount = 0;
+    //
+    //     const cachingLayer = Layer.succeed(${className}Repository, {
+    //       findAll: () =>
+    //         Effect.gen(function* () {
+    //           queryCount++;
+    //           return [{ id: \`item-\${queryCount}\` }];
+    //         }).pipe(Effect.cachedWithTTL("10 minutes"))
+    //     });
+    //
+    //     const repo = yield* ${className}Repository;
+    //
+    //     // First query - cache miss
+    //     const result1 = yield* repo.findAll();
+    //     expect(queryCount).toBe(1);
+    //
+    //     // Second query - cache hit
+    //     const result2 = yield* repo.findAll();
+    //     expect(queryCount).toBe(1); // Still 1
+    //
+    //     // Advance clock past TTL
+    //     yield* TestClock.adjust("11 minutes");
+    //
+    //     // Third query - cache expired
+    //     const result3 = yield* repo.findAll();
+    //     expect(queryCount).toBe(2); // Incremented
+    //   }).pipe(Effect.provide(Layer.fresh(cachingLayer)))
+    // );
+
+    // TODO: Test timeout for layer composition
+    //
+    // it.scoped('should timeout if layer initialization takes too long', () =>
+    //   Effect.gen(function* () {
+    //     const slowLayer = Layer.effect(
+    //       ${className}Repository,
+    //       Effect.gen(function* () {
+    //         yield* Effect.sleep("5000 millis"); // Very slow
+    //         return { /* repository */ };
+    //       })
+    //     );
+    //
+    //     const result = yield* Effect.gen(function* () {
+    //       const repo = yield* ${className}Repository;
+    //       return repo;
+    //     }).pipe(
+    //       Effect.provide(Layer.fresh(slowLayer)),
+    //       Effect.timeout("1000 millis"),
+    //       Effect.exit
+    //     );
+    //
+    //     expect(Exit.isFailure(result)).toBe(true);
+    //   })
+    // );
+
+    // TODO: Test retry with backoff for layer initialization
+    //
+    // it.scoped('should retry layer initialization with exponential backoff', () =>
+    //   Effect.gen(function* () {
+    //     let attempts = 0;
+    //
+    //     const unreliableLayer = Layer.effect(
+    //       ${className}Repository,
+    //       Effect.gen(function* () {
+    //         attempts++;
+    //         if (attempts < 3) {
+    //           return yield* Effect.fail(new Error("Initialization failed"));
+    //         }
+    //         return { /* repository */ };
+    //       }).pipe(
+    //         Effect.retry({
+    //           schedule: Schedule.exponential("100 millis").pipe(
+    //             Schedule.compose(Schedule.recurs(3))
+    //           )
+    //         })
+    //       )
+    //     );
+    //
+    //     const fiber = yield* Effect.fork(
+    //       Effect.gen(function* () {
+    //         const repo = yield* ${className}Repository;
+    //         return repo;
+    //       }).pipe(Effect.provide(Layer.fresh(unreliableLayer)))
+    //     );
+    //
+    //     // Advance clock to trigger retries
+    //     yield* TestClock.adjust("100 millis");  // 1st retry
+    //     yield* TestClock.adjust("200 millis");  // 2nd retry
+    //     yield* TestClock.adjust("400 millis");  // 3rd retry succeeds
+    //
+    //     const result = yield* Fiber.join(fiber);
+    //     expect(result).toBeDefined();
+    //     expect(attempts).toBe(3);
+    //   })
+    // );
+
+    // TODO: Test scheduled cleanup/refresh operations
+    //
+    // it.scoped('should run scheduled cleanup operations', () =>
+    //   Effect.gen(function* () {
+    //     let cleanupCount = 0;
+    //
+    //     const scheduledLayer = Layer.scoped(
+    //       ${className}Repository,
+    //       Effect.gen(function* () {
+    //         // Schedule cleanup every 5 minutes
+    //         yield* Effect.forkScoped(
+    //           Effect.gen(function* () {
+    //             yield* Effect.repeat(
+    //               Effect.sync(() => { cleanupCount++; }),
+    //               Schedule.spaced("5 minutes")
+    //             );
+    //           })
+    //         );
+    //
+    //         return { /* repository */ };
+    //       })
+    //     );
+    //
+    //     yield* Effect.gen(function* () {
+    //       const repo = yield* ${className}Repository;
+    //       expect(repo).toBeDefined();
+    //
+    //       // Advance clock to trigger cleanups
+    //       yield* TestClock.adjust("5 minutes");  // 1st cleanup
+    //       yield* TestClock.adjust("5 minutes");  // 2nd cleanup
+    //       yield* TestClock.adjust("5 minutes");  // 3rd cleanup
+    //
+    //       expect(cleanupCount).toBe(3);
+    //     }).pipe(Effect.provide(Layer.fresh(scheduledLayer)));
+    //   })
+    // );
+
+    // TODO: Test layer acquisition/release timing
+    //
+    // it.scoped('should properly time layer resource acquisition and release', () =>
+    //   Effect.gen(function* () {
+    //     const events: string[] = [];
+    //
+    //     const trackedLayer = Layer.scoped(
+    //       ${className}Repository,
+    //       Effect.acquireRelease(
+    //         Effect.gen(function* () {
+    //           yield* Effect.sleep("100 millis");
+    //           events.push("acquired");
+    //           return { /* repository */ };
+    //         }),
+    //         () => Effect.gen(function* () {
+    //           yield* Effect.sleep("50 millis");
+    //           events.push("released");
+    //         })
+    //       )
+    //     );
+    //
+    //     const fiber = yield* Effect.fork(
+    //       Effect.scoped(
+    //         Effect.gen(function* () {
+    //           const repo = yield* ${className}Repository;
+    //           events.push("used");
+    //           return repo;
+    //         }).pipe(Effect.provide(Layer.fresh(trackedLayer)))
+    //       )
+    //     );
+    //
+    //     // Advance clock for acquisition
+    //     yield* TestClock.adjust("150 millis");
+    //
+    //     const result = yield* Fiber.join(fiber);
+    //
+    //     // Advance clock for release
+    //     yield* TestClock.adjust("100 millis");
+    //
+    //     expect(events).toEqual(["acquired", "used", "released"]);
+    //   })
+    // );
+
+    // Required imports for TestClock tests:
+    // import { Fiber, TestClock, Exit, Schedule } from "effect"
+    //
+    // See TESTING_PATTERNS.md "Testing with TestClock" for more examples.
   });
 });
 `)

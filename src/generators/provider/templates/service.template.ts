@@ -252,7 +252,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw(`      catch: map${className}Error,`)
   builder.addRaw("    });")
   builder.addBlankLine()
-  builder.addRaw("    // List operation with pagination")
+  builder.addRaw("    // List operation with pagination + error observability")
   builder.addRaw("    const list = (params?: ListParams) =>")
   builder.addRaw("      Effect.tryPromise({")
   builder.addRaw(
@@ -274,7 +274,16 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw("          };")
   builder.addRaw("        },")
   builder.addRaw(`        catch: map${className}Error,`)
-  builder.addRaw("      }).pipe(Effect.retry(retryPolicy));")
+  builder.addRaw("      }).pipe(")
+  builder.addRaw("        // Error observability with tapErrorTag")
+  builder.addRaw("        // Effect.tapErrorTag(\"RateLimitError\", (error) =>")
+  builder.addRaw("        //   logger.warn(\"Rate limit hit\", { operation: \"list\", error })")
+  builder.addRaw("        // ),")
+  builder.addRaw("        // Effect.tapErrorTag(\"NetworkError\", (error) =>")
+  builder.addRaw("        //   metrics.increment(\"sdk.network_error\")")
+  builder.addRaw("        // ),")
+  builder.addRaw("        Effect.retry(retryPolicy)")
+  builder.addRaw("      );")
   builder.addBlankLine()
   builder.addRaw("    // Get operation with retry")
   builder.addRaw("    const get = (id: string) =>")
@@ -354,6 +363,49 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw("    };")
   builder.addRaw("  }")
   builder.addRaw("}")
+  builder.addBlankLine()
+
+  // Add resilience patterns comment section
+  builder.addSectionComment("Advanced Resilience Patterns")
+  builder.addRaw(`//
+// Timeout + Retry + Cache Fallback
+// ================================
+// Multi-tier resilience for external service calls
+//
+// const resilientGet = (id: string) =>
+//   Effect.tryPromise({
+//     try: () => sdkClient.get(id),
+//     catch: map${className}Error,
+//   }).pipe(
+//     Effect.timeout("5 seconds"),
+//     Effect.retry({ schedule: Schedule.exponential("200 millis"), times: 3 }),
+//     Effect.catchTag("TimeoutException", () =>
+//       Effect.gen(function* () {
+//         const cached = yield* cache.get<Resource>(\`resource:\${id}\`);
+//         return yield* Option.match(cached, {
+//           onSome: Effect.succeed,
+//           onNone: () => Effect.fail(
+//             new ${className}ServiceError({ message: "Resource unavailable" })
+//           )
+//         });
+//       })
+//     )
+//   );
+//
+// Circuit Breaker Pattern
+// =======================
+// Prevent cascading failures by tracking errors and fast-failing when threshold exceeded.
+// Uses Ref for state management (failure count, circuit status).
+// See EFFECT_PATTERNS.md "Resilience Patterns" for full implementation.
+//
+// Additional Patterns
+// ==================
+// - Timeout with custom error: Effect.timeout + catchTag("TimeoutException", ...)
+// - Race cache vs API: Effect.race(cacheGet, apiGet)
+// - Rate limiting: Use Semaphore for concurrent request control
+//
+// See EFFECT_PATTERNS.md for detailed examples and pattern selection guide.
+//`)
   builder.addBlankLine()
 
   // Service Configuration interface

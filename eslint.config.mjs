@@ -91,6 +91,24 @@ export default [
         {
           selector: "TSTypeAssertion",
           message: "Do not use angle-bracket type assertions. Use type guards or refactor to avoid type coercion."
+        },
+
+        // Effect.ts Code Style Enforcement
+        {
+          selector: "MemberExpression[object.name='Effect'][property.name='Do']",
+          message: "Effect.Do is deprecated. Use Effect.gen with yield* syntax instead. See: https://effect.website/docs/code-style/do/"
+        },
+        {
+          selector: "CallExpression[callee.object.name='Effect'][callee.property.name='gen'] > FunctionExpression[generator=true] YieldExpression[delegate=false]",
+          message: "Use yield* (not yield) for Effect operations in Effect.gen. See: https://effect.website/docs/code-style/do/"
+        },
+        {
+          selector: "TSPropertySignature[key.name=/.*[Ii]d$/][typeAnnotation.typeAnnotation.type='TSTypeReference'][typeAnnotation.typeAnnotation.typeName.name='UUID']:not([typeAnnotation.typeAnnotation.typeName.object])",
+          message: "Use branded types for ID fields. Replace plain UUID with branded type: type FooId = string & Brand.Brand<'FooId'>. See docs/EFFECT_CODE_QUALITY_AUDIT.md"
+        },
+        {
+          selector: "CallExpression[callee.object.name='Schema'][callee.property.name='UUID']:has(Identifier[name=/.*[Ii]d$/])",
+          message: "Use Schema.String.pipe(Schema.uuid(), Schema.brand('FooId')) for branded ID types. See: https://effect.website/docs/code-style/branded-types/"
         }
       ],
 
@@ -118,8 +136,10 @@ export default [
       "@typescript-eslint/consistent-type-imports": "warn",
 
       "@typescript-eslint/no-unused-vars": ["error", {
-        argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_"
+        // Do NOT use underscore prefixes - that's an anti-pattern
+        // Either use the variable or remove it
+        argsIgnorePattern: "^$", // Match nothing - no prefixes allowed
+        varsIgnorePattern: "^$"  // Match nothing - no prefixes allowed
       }],
 
       "@typescript-eslint/ban-ts-comment": "off",

@@ -1396,7 +1396,14 @@ export * from "./lib/ports";
 
 ## Testing & Spec File Patterns
 
+> **📘 Comprehensive Testing Guide:** See [TESTING_PATTERNS.md](./TESTING_PATTERNS.md) for complete testing standards and patterns.
+
 Contract libraries test domain contracts (schemas, errors, events) to ensure they're correctly defined. Tests use `@effect/vitest` for Effect-aware testing with minimal overhead.
+
+**Standard Testing Pattern:**
+- ✅ ALL imports from `@effect/vitest`
+- ✅ ALL tests use `it.scoped()` for consistency
+- ✅ Layer.fresh not needed for simple contract tests (no stateful services)
 
 ### Minimal Test Structure
 
@@ -1429,7 +1436,7 @@ describe("Product Contract", () => {
   // Schema Validation Tests
   // ========================================
 
-  it.effect("ProductEntity validates correct data", () =>
+  it.scoped("ProductEntity validates correct data", () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const validProduct: ProductSelect = {
         id: "prod-123",
@@ -1447,7 +1454,7 @@ describe("Product Contract", () => {
     }),
   );
 
-  it.effect("ProductEntity rejects invalid price", () =>
+  it.scoped("ProductEntity rejects invalid price", () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const invalidProduct = {
         id: "prod-123",
@@ -1468,7 +1475,7 @@ describe("Product Contract", () => {
   // Event Schema Tests
   // ========================================
 
-  it.effect("ProductCreatedEvent validates correctly", () =>
+  it.scoped("ProductCreatedEvent validates correctly", () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const event = {
         type: "ProductCreated" as const,
@@ -1488,7 +1495,7 @@ describe("Product Contract", () => {
   // Error Type Tests
   // ========================================
 
-  it.effect("ProductNotFoundError constructs with product ID", () =>
+  it.scoped("ProductNotFoundError constructs with product ID", () => // ✅ Always it.scoped
     Effect.sync(() => {
       const error = new ProductNotFoundError({ productId: "prod-123" });
 
@@ -1497,7 +1504,7 @@ describe("Product Contract", () => {
     }),
   );
 
-  it.effect("ProductValidationError includes field details", () =>
+  it.scoped("ProductValidationError includes field details", () => // ✅ Always it.scoped
     Effect.sync(() => {
       const error = new ProductValidationError({
         field: "price",
@@ -1516,7 +1523,8 @@ describe("Product Contract", () => {
 
 #### ✅ DO:
 
-- Use `it.effect` for all Effect-based tests
+- Use `it.scoped()` for ALL tests (consistent with project standards)
+- Import ALL test utilities from `@effect/vitest` (describe, expect, it)
 - Test schema validation (happy path + error cases)
 - Test error construction
 - Keep all tests in ONE file (`src/lib/contracts.spec.ts`)
@@ -1528,7 +1536,9 @@ describe("Product Contract", () => {
 - ❌ Create separate `test-layer.ts` files (inline mocks instead)
 - ❌ Test repository implementations (belongs in data-access)
 - ❌ Create 5-6 test files (one file is sufficient)
-- ❌ Use manual `Effect.runPromise` (use `it.effect`/`it.scoped` instead)
+- ❌ Use manual `Effect.runPromise` (use `it.scoped()` instead)
+- ❌ Use `it.effect()` (deprecated in favor of `it.scoped()`)
+- ❌ Mix imports from `vitest` and `@effect/vitest` (use @effect/vitest only)
 - ❌ Mock repository interfaces in contract tests (test the interface definition, not behavior)
 
 ### Vitest Configuration

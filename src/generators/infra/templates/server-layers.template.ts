@@ -168,6 +168,9 @@ export const ${className}ServiceDev = Layer.effect(
  * Selects appropriate layer based on NODE_ENV environment variable.
  * Convenient for applications that auto-select layers at startup.
  *
+ * Uses Layer.suspend for lazy evaluation - the layer is selected at runtime
+ * when the layer is first used, not at module import time.
+ *
  * Environment mapping:
  * - NODE_ENV=production → ${className}Service.Live
  * - NODE_ENV=test → ${className}Service.Test
@@ -186,7 +189,7 @@ export const ${className}ServiceDev = Layer.effect(
  * );
  * \`\`\`
  */
-export const ${className}ServiceAuto = (() => {
+export const ${className}ServiceAuto = Layer.suspend(() => {
   const env = process.env["NODE_ENV"] || "development";
 
   switch (env) {
@@ -197,7 +200,7 @@ export const ${className}ServiceAuto = (() => {
     default:
       return ${className}ServiceDev;
   }
-})();`)
+});`)
   builder.addBlankLine()
 
   // Section: Advanced Pattern Examples
@@ -260,7 +263,7 @@ export const ${className}ServiceWithRetry = Layer.effect(
     // Get base service implementation
     const baseService = yield* ${className}Service.Live.pipe(
       Layer.build,
-      Effect.map((context) => Context.get(context, ${className}Service))
+      Effect.map(Context.unsafeGet(${className}Service))
     );
 
     // Wrap methods with retry policy

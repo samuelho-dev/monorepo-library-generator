@@ -6,11 +6,13 @@ dist/
 build/
 *.tsbuildinfo
 .tsbuildinfo/
+.nx/
 
 # Test artifacts
 coverage/
 libs/
 packages/
+
 
 # Development
 .direnv/

@@ -20,7 +20,7 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  */
 export function generateRepositoryFile(options: DataAccessTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, fileName, propertyName: _propertyName } = options
+  const { className, fileName } = options
 
   // Add file header with architecture notes
   builder.addFileHeader({
@@ -549,6 +549,23 @@ function create${className}Repository(
 
     findById: (id: string) =>
       Effect.gen(function* () {
+        // NOTE: Error observability with tapErrorTag
+        // Add logging/metrics without altering error flow:
+        //
+        // const result = yield* database.query((db) =>
+        //   db.selectFrom('${fileName}')
+        //     .selectAll()
+        //     .where('id', '=', id)
+        //     .executeTakeFirst()
+        // ).pipe(
+        //   Effect.tapErrorTag("DatabaseConnectionError", (error) =>
+        //     logger.error("DB connection lost", { operation: "findById", id, error })
+        //   ),
+        //   Effect.tapErrorTag("QueryTimeoutError", (error) =>
+        //     metrics.increment("database.query.timeout", { table: "${fileName}" })
+        //   )
+        // );
+
         try {
           // ✅ KYSELY PATTERN: Query single row with executeTakeFirst()
           const result = yield* database.query((db) =>

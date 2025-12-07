@@ -155,8 +155,7 @@ export interface PaginatedResult<T> {
   const repositoryTag = createRepositoryTag(
     className,
     domainName,
-    fileName,
-    propertyName
+    fileName
   )
   builder.addRaw(repositoryTag)
   builder.addBlankLine()
@@ -172,8 +171,7 @@ export interface PaginatedResult<T> {
   const serviceTag = createServiceTag(
     className,
     domainName,
-    fileName,
-    propertyName
+    fileName
   )
   builder.addRaw(serviceTag)
   builder.addBlankLine()
@@ -188,7 +186,6 @@ export interface PaginatedResult<T> {
 
     const projectionRepositoryTag = createProjectionRepositoryTag(
       className,
-      domainName,
       fileName
     )
     builder.addRaw(projectionRepositoryTag)
@@ -233,8 +230,7 @@ function createFileHeader(
 function createRepositoryTag(
   className: string,
   domainName: string,
-  fileName: string,
-  _propertyName: string
+  fileName: string
 ) {
   return `/**
  * ${className}Repository Context Tag for dependency injection
@@ -334,8 +330,7 @@ export class ${className}Repository extends Context.Tag(
 function createServiceTag(
   className: string,
   domainName: string,
-  fileName: string,
-  _propertyName: string
+  fileName: string
 ) {
   return `/**
  * ${className}Service Context Tag for dependency injection
@@ -406,7 +401,6 @@ export class ${className}Service extends Context.Tag(
  */
 function createProjectionRepositoryTag(
   className: string,
-  domainName: string,
   fileName: string
 ) {
   return `/**

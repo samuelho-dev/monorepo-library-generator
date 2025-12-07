@@ -63,17 +63,17 @@ export function getFilesToGenerate(options: ContractTemplateOptions) {
   // Add CQRS files if requested
   if (
     options.includeCQRS &&
-    ContractGeneratorConfig.conditionalFiles?.includeCQRS
+    ContractGeneratorConfig.conditionalFiles?.["includeCQRS"]
   ) {
-    files = files.concat(ContractGeneratorConfig.conditionalFiles.includeCQRS)
+    files = files.concat(ContractGeneratorConfig.conditionalFiles["includeCQRS"])
   }
 
   // Add RPC file if requested
   if (
     options.includeRPC &&
-    ContractGeneratorConfig.conditionalFiles?.includeRPC
+    ContractGeneratorConfig.conditionalFiles?.["includeRPC"]
   ) {
-    files = files.concat(ContractGeneratorConfig.conditionalFiles.includeRPC)
+    files = files.concat(ContractGeneratorConfig.conditionalFiles["includeRPC"])
   }
 
   return files

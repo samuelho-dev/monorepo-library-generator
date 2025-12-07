@@ -49,23 +49,47 @@ export function generateEventsFile(options: ContractTemplateOptions) {
  */
 export const EventMetadata = Schema.Struct({
   /** Unique event identifier */
-  eventId: Schema.UUID,
+  eventId: Schema.UUID.annotations({
+    title: "Event ID",
+    description: "Unique identifier for this event"
+  }),
 
   /** Event type identifier */
-  eventType: Schema.String,
+  eventType: Schema.String.annotations({
+    title: "Event Type",
+    description: "Name of the event type"
+  }),
 
   /** Event version for schema evolution */
-  eventVersion: Schema.Literal("1.0"),
+  eventVersion: Schema.Literal("1.0").annotations({
+    title: "Event Version",
+    description: "Event schema version for evolution"
+  }),
 
   /** Timestamp when event occurred */
-  occurredAt: Schema.DateTimeUtcFromSelf,
+  occurredAt: Schema.DateTimeUtcFromSelf.annotations({
+    title: "Occurred At",
+    description: "UTC timestamp when the event occurred"
+  }),
 
   /** Optional correlation ID for tracing */
-  correlationId: Schema.optional(Schema.UUID),
+  correlationId: Schema.optional(Schema.UUID).annotations({
+    title: "Correlation ID",
+    description: "ID to correlate related events across services"
+  }),
 
   /** Optional causation ID (ID of event that caused this one) */
-  causationId: Schema.optional(Schema.UUID),
-});
+  causationId: Schema.optional(Schema.UUID).annotations({
+    title: "Causation ID",
+    description: "ID of the event that caused this event"
+  }),
+}).pipe(
+  Schema.annotations({
+    identifier: "EventMetadata",
+    title: "Event Metadata",
+    description: "Standard metadata included in all domain events"
+  })
+);
 `)
 
   builder.addBlankLine()
@@ -76,14 +100,33 @@ export const EventMetadata = Schema.Struct({
  */
 export const AggregateMetadata = Schema.Struct({
   /** Aggregate root identifier */
-  aggregateId: Schema.UUID,
+  aggregateId: Schema.UUID.annotations({
+    title: "Aggregate ID",
+    description: "Identifier of the aggregate root this event belongs to"
+  }),
 
   /** Aggregate type */
-  aggregateType: Schema.Literal("${className}"),
+  aggregateType: Schema.Literal("${className}").annotations({
+    title: "Aggregate Type",
+    description: "Type name of the aggregate root"
+  }),
 
   /** Aggregate version for optimistic concurrency */
-  aggregateVersion: Schema.Number.pipe(Schema.int(), Schema.positive()),
-});
+  aggregateVersion: Schema.Number.pipe(
+    Schema.int(),
+    Schema.positive()
+  ).annotations({
+    title: "Aggregate Version",
+    description: "Version number for optimistic concurrency control",
+    jsonSchema: { minimum: 1 }
+  }),
+}).pipe(
+  Schema.annotations({
+    identifier: "AggregateMetadata",
+    title: "Aggregate Metadata",
+    description: "Metadata for event sourcing and aggregate tracking"
+  })
+);
 `)
 
   builder.addBlankLine()
@@ -146,10 +189,11 @@ function createFileHeader(
  *
  * TODO: Customize this file for your domain:
  * 1. Add domain-specific fields to event payloads
- * 2. Create custom events for domain-specific operations
- * 3. Use EventMetadata for correlation and causation tracking
- * 4. Use AggregateMetadata for event sourcing patterns
- * 5. Consider adding:
+ * 2. Add Schema.annotations() for event documentation
+ * 3. Create custom events for domain-specific operations
+ * 4. Use EventMetadata for correlation and causation tracking
+ * 5. Use AggregateMetadata for event sourcing patterns
+ * 6. Consider adding:
  *    - State transition events (e.g., StatusChanged)
  *    - Business process events (e.g., Approved, Rejected)
  *    - Integration events for external systems
@@ -173,13 +217,25 @@ export class ${className}CreatedEvent extends Schema.Class<${className}CreatedEv
   ...AggregateMetadata.fields,
 
   /** ${className} identifier */
-  ${propertyName}Id: Schema.UUID,
+  ${propertyName}Id: Schema.UUID.annotations({
+    title: "${className} ID",
+    description: "ID of the ${propertyName} that was created"
+  }),
 
   /** User who created the ${propertyName} */
-  createdBy: Schema.optional(Schema.UUID),
+  createdBy: Schema.optional(Schema.UUID).annotations({
+    title: "Created By",
+    description: "UUID of the user who created this ${propertyName}"
+  }),
 
-  // TODO: Add domain-specific fields to the event payload
-}) {
+  // TODO: Add domain-specific fields to the event payload with Schema.annotations()
+}).pipe(
+  Schema.annotations({
+    identifier: "${className}CreatedEvent",
+    title: "${className} Created Event",
+    description: "Event emitted when a ${propertyName} is created"
+  })
+) {
   static create(params: {
     ${propertyName}Id: ${className}Id;
     createdBy?: string;
@@ -215,16 +271,31 @@ export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEv
   ...AggregateMetadata.fields,
 
   /** ${className} identifier */
-  ${propertyName}Id: Schema.UUID,
+  ${propertyName}Id: Schema.UUID.annotations({
+    title: "${className} ID",
+    description: "ID of the ${propertyName} that was updated"
+  }),
 
   /** User who updated the ${propertyName} */
-  updatedBy: Schema.optional(Schema.UUID),
+  updatedBy: Schema.optional(Schema.UUID).annotations({
+    title: "Updated By",
+    description: "UUID of the user who updated this ${propertyName}"
+  }),
 
   /** Fields that were changed (optional) */
-  changedFields: Schema.optional(Schema.Array(Schema.String)),
+  changedFields: Schema.optional(Schema.Array(Schema.String)).annotations({
+    title: "Changed Fields",
+    description: "List of field names that were modified"
+  }),
 
-  // TODO: Add domain-specific fields to track what changed
-}) {
+  // TODO: Add domain-specific fields to track what changed with Schema.annotations()
+}).pipe(
+  Schema.annotations({
+    identifier: "${className}UpdatedEvent",
+    title: "${className} Updated Event",
+    description: "Event emitted when a ${propertyName} is updated"
+  })
+) {
   static create(params: {
     ${propertyName}Id: ${className}Id;
     aggregateVersion: number;
@@ -263,16 +334,31 @@ export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEv
   ...AggregateMetadata.fields,
 
   /** ${className} identifier */
-  ${propertyName}Id: Schema.UUID,
+  ${propertyName}Id: Schema.UUID.annotations({
+    title: "${className} ID",
+    description: "ID of the ${propertyName} that was deleted"
+  }),
 
   /** User who deleted the ${propertyName} */
-  deletedBy: Schema.optional(Schema.UUID),
+  deletedBy: Schema.optional(Schema.UUID).annotations({
+    title: "Deleted By",
+    description: "UUID of the user who deleted this ${propertyName}"
+  }),
 
   /** Whether this was a soft delete */
-  isSoftDelete: Schema.optional(Schema.Boolean),
+  isSoftDelete: Schema.optional(Schema.Boolean).annotations({
+    title: "Soft Delete",
+    description: "True if this was a soft delete (marked as deleted but not removed)"
+  }),
 
-  // TODO: Add domain-specific fields
-}) {
+  // TODO: Add domain-specific fields with Schema.annotations()
+}).pipe(
+  Schema.annotations({
+    identifier: "${className}DeletedEvent",
+    title: "${className} Deleted Event",
+    description: "Event emitted when a ${propertyName} is deleted"
+  })
+) {
   static create(params: {
     ${propertyName}Id: ${className}Id;
     aggregateVersion: number;

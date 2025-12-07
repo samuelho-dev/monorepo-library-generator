@@ -16,7 +16,7 @@
  *
  * Mode-specific behavior is determined by adapter.getMode():
  * - "nx": Returns config for Nx workspace registration via addProjectConfiguration()
- * - "effect": Standalone library without Nx-specific configuration
+ * -: Standalone library without Nx-specific configuration
  *
  * @module monorepo-library-generator/infrastructure
  */
@@ -165,9 +165,7 @@ export function generateLibraryInfrastructure(
     const tsConfigFiles = yield* generateTsConfigFiles(
       adapter,
       workspaceRoot,
-      options,
-      sourceRoot,
-      mode
+      options
     )
     for (const file of tsConfigFiles) {
       filesGenerated.push(file)
@@ -191,7 +189,6 @@ export function generateLibraryInfrastructure(
     const sourceFiles = yield* generateSourceFileScaffolds(
       adapter,
       workspaceRoot,
-      options,
       sourceRoot
     )
     for (const file of sourceFiles) {
@@ -233,15 +230,6 @@ function generatePackageJsonFile(
   options: InfrastructureOptions
 ) {
   return Effect.gen(function*() {
-    // Read root package.json to extract scope
-    const rootPackageJsonPath = `${workspaceRoot}/package.json`
-    const rootPackageContent = yield* adapter
-      .readFile(rootPackageJsonPath)
-      .pipe(Effect.catchAll(() => Effect.succeed("{}")))
-
-    const rootPackage = JSON.parse(rootPackageContent)
-    const _scope = extractPackageScope(rootPackage.name || "@unknown")
-
     // Build granular exports configuration
     const exportConfig: ExportConfig = {
       libraryType: options.libraryType,
@@ -300,9 +288,7 @@ function generatePackageJsonFile(
 function generateTsConfigFiles(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
-  options: InfrastructureOptions,
-  _sourceRoot: string,
-  _mode: "nx" | "effect"
+  options: InfrastructureOptions
 ) {
   return Effect.gen(function*() {
     const filesGenerated: Array<string> = []
@@ -466,7 +452,6 @@ function generateDocumentationFiles(
 function generateSourceFileScaffolds(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
-  options: InfrastructureOptions,
   sourceRoot: string
 ) {
   return Effect.gen(function*() {
@@ -479,27 +464,6 @@ function generateSourceFileScaffolds(
     // We don't generate them here to avoid duplication
 
     return filesGenerated
-  })
-}
-
-/**
- * Generate project.json file (Nx mode only)
- *
- * Creates project.json with build, test, and lint targets.
- */
-function _generateProjectJsonFile(
-  adapter: FileSystemAdapter,
-  workspaceRoot: string,
-  options: InfrastructureOptions,
-  sourceRoot: string
-) {
-  return Effect.gen(function*() {
-    const projectConfig = createProjectConfiguration(options, sourceRoot)
-
-    yield* adapter.writeFile(
-      `${workspaceRoot}/${options.projectRoot}/project.json`,
-      JSON.stringify(projectConfig, null, 2) + "\n"
-    )
   })
 }
 
@@ -774,24 +738,4 @@ nx test ${opts.projectName}
   }
 
   return templates[options.libraryType](options)
-}
-
-/**
- * Extract package scope from package name
- *
- * @example
- * extractPackageScope("@myorg/monorepo") → "@myorg"
- * extractPackageScope("my-workspace") → "@my-workspace"
- */
-function extractPackageScope(packageName: string) {
-  if (packageName.startsWith("@")) {
-    const scope = packageName.split("/")[0]
-    if (!scope) {
-      throw new Error(`Invalid scoped package name: ${packageName}`)
-    }
-    return scope
-  }
-
-  // No scope - use package name as scope (add @ prefix)
-  return `@${packageName}`
 }

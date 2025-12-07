@@ -20,6 +20,7 @@ import { addProjectConfiguration, formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
 import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import { computeLibraryMetadata } from "../../utils/library-metadata"
+import { addDotfilesToLibrary } from "../../utils/shared/dotfile-generation"
 import { createTreeAdapter } from "../../utils/tree-adapter"
 import { generateContractCore } from "../core/contract"
 import type { ContractGeneratorSchema } from "./schema"
@@ -117,6 +118,18 @@ export default async function contractGenerator(
     generateContractCore(adapter, coreOptions)
   )
 
+  // Phase 3: Add dotfiles for Effect.ts code quality enforcement
+  const addDotfiles = schema.addDotfiles ?? true
+  if (addDotfiles) {
+    await Effect.runPromise(
+      addDotfilesToLibrary(adapter, {
+        projectRoot: metadata.projectRoot,
+        includeVSCodeSettings: schema.includeVSCodeSettings ?? true,
+        overwrite: schema.overwriteDotfiles ?? false
+      })
+    )
+  }
+
   // Format generated files
   await formatFiles(tree)
 
@@ -125,13 +138,17 @@ export default async function contractGenerator(
     const entityCount = entities?.length ?? 1
     const entityList = entities?.join(", ") ?? metadata.className
 
+    const dotfilesMessage = addDotfiles
+      ? "\n✨ Dotfiles: Effect.ts code quality enforcement enabled"
+      : ""
+
     console.log(`
 ✅ Contract library created: ${result.packageName}
 
 📁 Location: ${result.projectRoot}
 📦 Package: ${result.packageName}
 📂 Files generated: ${result.filesGenerated.length}
-🎯 Entities: ${entityCount} (${entityList})
+🎯 Entities: ${entityCount} (${entityList})${dotfilesMessage}
 
 ⚡ Bundle Optimization Features:
    ✓ Separate entity files for tree-shaking

@@ -13,6 +13,9 @@ import { Effect } from "effect"
 import type { FileSystemAdapter } from "./filesystem-adapter"
 import { DirectoryCreationError, FileReadError, FileSystemError, FileWriteError } from "./filesystem-adapter"
 
+// Re-export FileSystemAdapter type for use in other modules
+export type { FileSystemAdapter } from "./filesystem-adapter"
+
 /**
  * Tree Adapter Implementation
  *
@@ -138,8 +141,7 @@ export class TreeAdapter implements FileSystemAdapter {
    * Delete a file or directory using Tree API
    */
   remove(
-    path: string,
-    _options?: { recursive?: boolean }
+    path: string
   ) {
     return Effect.try({
       try: () => {

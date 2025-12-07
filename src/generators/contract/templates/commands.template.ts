@@ -25,7 +25,7 @@ export function generateCommandsFile(options: ContractTemplateOptions) {
   const domainName = propertyName
 
   // Add file header
-  builder.addRaw(createFileHeader(className, domainName, fileName))
+  builder.addRaw(createFileHeader(className, fileName))
   builder.addBlankLine()
 
   // Add imports
@@ -45,7 +45,7 @@ export function generateCommandsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Create command
-  builder.addRaw(createCreateCommand(className, propertyName))
+  builder.addRaw(createCreateCommand(className))
   builder.addBlankLine()
 
   // Update command
@@ -65,7 +65,7 @@ export function generateCommandsFile(options: ContractTemplateOptions) {
   builder.addComment(
     `export class Change${className}StatusCommand extends Schema.Class<Change${className}StatusCommand>("Change${className}StatusCommand")({`
   )
-  builder.addComment(`  ${propertyName}Id: Schema.UUID,`)
+  builder.addComment(`  ${propertyName}Id: ${className}Id, // Branded ID type`)
   builder.addComment("  newStatus: Schema.String,")
   builder.addComment("  reason: Schema.optional(Schema.String),")
   builder.addComment("}) {")
@@ -113,7 +113,6 @@ export const ${className}CommandSchema = Schema.Union(
  */
 function createFileHeader(
   className: string,
-  domainName: string,
   fileName: string
 ) {
   return `/**
@@ -125,8 +124,11 @@ function createFileHeader(
  * TODO: Customize for your domain:
  * 1. Add domain-specific command fields
  * 2. Add validation rules (Schema.minLength, Schema.positive, etc.)
- * 3. Create custom commands for domain-specific operations
- * 4. Add factory methods for command creation
+ * 3. Add Schema.annotations() for OpenAPI/documentation
+ * 4. Add Schema.filter() for cross-field validation
+ * 5. Add Schema.transform() for data normalization
+ * 6. Create custom commands for domain-specific operations
+ * 7. Add factory methods for command creation
  *
  * @module @custom-repo/contract-${fileName}/commands
  */`
@@ -135,26 +137,72 @@ function createFileHeader(
 /**
  * Create Create command
  */
-function createCreateCommand(className: string, _propertyName: string) {
+function createCreateCommand(className: string) {
   return `/**
  * Command to create a new ${className}
  */
 export class Create${className}Command extends Schema.Class<Create${className}Command>("Create${className}Command")({
   /** ${className} name */
-  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
+  name: Schema.String.pipe(
+    Schema.minLength(1),
+    Schema.maxLength(255)
+  ).annotations({
+    title: "${className} Name",
+    description: "The name for the new ${className}",
+    examples: ["New ${className}"],
+    jsonSchema: { minLength: 1, maxLength: 255 }
+  }),
 
-  // TODO: Add domain-specific fields
+  // TODO: Add domain-specific fields with Schema.annotations()
   // Example fields:
   //
   // /** ${className} description */
-  // description: Schema.optional(Schema.String),
+  // description: Schema.optional(Schema.String).annotations({
+  //   title: "Description",
+  //   description: "Optional description"
+  // }),
   //
   // /** ${className} category */
-  // category: Schema.String,
+  // category: Schema.String.annotations({
+  //   title: "Category",
+  //   description: "Category classification"
+  // }),
   //
   // /** Owner user ID */
-  // ownerId: Schema.UUID,
-}) {
+  // ownerId: Schema.UUID.annotations({
+  //   title: "Owner ID",
+  //   description: "UUID of the owning user"
+  // }),
+}).pipe(
+  // TODO: Add cross-field validation with Schema.filter()
+  // Example:
+  // Schema.filter((cmd) => {
+  //   if (!cmd.name || cmd.name.trim().length === 0) {
+  //     return { path: ["name"], message: "Name cannot be empty" };
+  //   }
+  //   return true;
+  // }),
+
+  // TODO: Add data normalization with Schema.transform()
+  // Example:
+  // Schema.transform(
+  //   Schema.Struct({ /* same fields */ }),
+  //   {
+  //     decode: (cmd) => ({
+  //       ...cmd,
+  //       name: cmd.name.trim(), // Normalize name
+  //     }),
+  //     encode: (cmd) => cmd
+  //   }
+  // ),
+
+  // Class-level annotations
+  Schema.annotations({
+    identifier: "Create${className}Command",
+    title: "Create ${className}",
+    description: "Command to create a new ${className} with validation"
+  })
+) {
   static create(params: {
     name: string;
     // TODO: Add parameters
@@ -175,24 +223,56 @@ function createUpdateCommand(className: string, propertyName: string) {
  * Command to update an existing ${className}
  */
 export class Update${className}Command extends Schema.Class<Update${className}Command>("Update${className}Command")({
-  /** ${className} ID to update */
-  ${propertyName}Id: Schema.UUID,
+  /** ${className} ID to update (branded type for type safety) */
+  ${propertyName}Id: ${className}Id.annotations({
+    title: "${className} ID",
+    description: "Branded UUID of the ${className} to update"
+  }),
 
   /** Fields to update */
   updates: Schema.Record({
     key: Schema.String,
     value: Schema.Unknown,
+  }).annotations({
+    title: "Updates",
+    description: "Key-value pairs of fields to update"
   }),
 
-  // TODO: Add domain-specific update fields
+  // TODO: Add domain-specific update fields with Schema.annotations()
   // Example fields:
   //
   // /** New name (optional) */
-  // name: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
+  // name: Schema.optional(
+  //   Schema.String.pipe(Schema.minLength(1))
+  // ).annotations({
+  //   title: "Name",
+  //   description: "Updated name (optional)"
+  // }),
   //
   // /** New status (optional) */
-  // status: Schema.optional(Schema.String),
-}) {
+  // status: Schema.optional(Schema.String).annotations({
+  //   title: "Status",
+  //   description: "Updated status (optional)"
+  // }),
+}).pipe(
+  // TODO: Add validation with Schema.filter()
+  // Example:
+  // Schema.filter((cmd) => {
+  //   // Ensure at least one field is being updated
+  //   const hasUpdates = Object.keys(cmd.updates).length > 0;
+  //   if (!hasUpdates) {
+  //     return { path: ["updates"], message: "At least one field must be updated" };
+  //   }
+  //   return true;
+  // }),
+
+  // Class-level annotations
+  Schema.annotations({
+    identifier: "Update${className}Command",
+    title: "Update ${className}",
+    description: "Command to update an existing ${className}"
+  })
+) {
   static create(params: {
     ${propertyName}Id: ${className}Id;
     updates: Record<string, unknown>;
@@ -213,12 +293,24 @@ function createDeleteCommand(className: string, propertyName: string) {
  * Command to delete a ${className}
  */
 export class Delete${className}Command extends Schema.Class<Delete${className}Command>("Delete${className}Command")({
-  /** ${className} ID to delete */
-  ${propertyName}Id: Schema.UUID,
+  /** ${className} ID to delete (branded type for type safety) */
+  ${propertyName}Id: ${className}Id.annotations({
+    title: "${className} ID",
+    description: "Branded UUID of the ${className} to delete"
+  }),
 
   /** Reason for deletion (optional) */
-  reason: Schema.optional(Schema.String),
-}) {
+  reason: Schema.optional(Schema.String).annotations({
+    title: "Deletion Reason",
+    description: "Optional reason for deleting this ${className}"
+  }),
+}).pipe(
+  Schema.annotations({
+    identifier: "Delete${className}Command",
+    title: "Delete ${className}",
+    description: "Command to delete a ${className}"
+  })
+) {
   static create(params: {
     ${propertyName}Id: ${className}Id;
     reason?: string;

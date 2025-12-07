@@ -845,12 +845,21 @@ Provider libraries test external SDK integration. Tests use `@effect/vitest` wit
 
 **Single Test File**: `src/lib/service.spec.ts`
 
-Tests verify that provider services correctly wrap external SDKs with Effect patterns. Use inline mocks with `it.effect`.
+Tests verify that provider services correctly wrap external SDKs with Effect patterns. Use inline mocks with `it.scoped`.
+
+> **📘 Comprehensive Testing Guide:** See [TESTING_PATTERNS.md](./TESTING_PATTERNS.md) for complete testing standards and patterns.
+
+**Standard Testing Pattern:**
+- ✅ ALL imports from `@effect/vitest`
+- ✅ ALL tests use `it.scoped()`
+- ✅ ALL layers wrapped with `Layer.fresh()`
 
 #### ✅ DO:
 
 - ✅ Test SDK wrapping (does the provider correctly wrap SDK methods?)
-- ✅ Use `it.effect` for provider tests (simplest form)
+- ✅ Import ALL test utilities from `@effect/vitest` (describe, expect, it)
+- ✅ Use `it.scoped()` for ALL tests (consistent with project standards)
+- ✅ Wrap ALL test layers with `Layer.fresh()` for isolation
 - ✅ Create inline mocks with minimal test data
 - ✅ Focus on error transformation and Effect integration
 - ✅ Keep tests in one file: `src/lib/service.spec.ts`
@@ -862,7 +871,10 @@ Tests verify that provider services correctly wrap external SDKs with Effect pat
 - ❌ Test the external SDK itself (that's the SDK's responsibility)
 - ❌ Create complex mock objects matching full SDK types (minimal data only)
 - ❌ Create 5-6 test files (one file is sufficient)
-- ❌ Use manual `Effect.runPromise` (use `it.effect` instead)
+- ❌ Use manual `Effect.runPromise` (use `it.scoped()` instead)
+- ❌ Use `it.effect()` (deprecated in favor of `it.scoped()`)
+- ❌ Mix imports from `vitest` and `@effect/vitest` (use @effect/vitest only)
+- ❌ Forget `Layer.fresh()` wrapping (causes test state leakage)
 
 ### Example: Provider Tests
 
@@ -871,8 +883,7 @@ Tests verify that provider services correctly wrap external SDKs with Effect pat
 ```typescript
 // src/lib/service.spec.ts
 import { Effect, Layer } from "effect";
-import { describe, expect } from "vitest";
-import { it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest"; // ✅ All from @effect/vitest
 import { StripeService } from "./service";
 
 describe("StripeService", () => {
@@ -892,7 +903,7 @@ describe("StripeService", () => {
 
   const mockLayer = Layer.succeed(StripeService, mockStripeSDK);
 
-  it.effect("wraps SDK method correctly", () =>
+  it.scoped("wraps SDK method correctly", () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const stripe = yield* StripeService;
 
@@ -903,10 +914,10 @@ describe("StripeService", () => {
 
       expect(result.id).toBe("pi_test_123");
       expect(result.amount).toBe(1000);
-    }).pipe(Effect.provide(mockLayer))
+    }).pipe(Effect.provide(Layer.fresh(mockLayer))) // ✅ Always Layer.fresh
   );
 
-  it.effect("transforms SDK errors to domain errors", () =>
+  it.scoped("transforms SDK errors to domain errors", () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const failingMock = Layer.succeed(StripeService, {
         paymentIntents: {
@@ -933,7 +944,7 @@ describe("StripeService", () => {
       if (Either.isLeft(result)) {
         expect(result.left._tag).toBe("StripeError");
       }
-    }).pipe(Effect.provide(failingMock))
+    }).pipe(Effect.provide(Layer.fresh(failingMock))) // ✅ Always Layer.fresh
   );
 });
 ```
@@ -958,9 +969,10 @@ export default defineConfig({
 
 1. **One Test File**: Keep all provider tests in `src/lib/service.spec.ts`
 2. **Inline Mocks**: Create minimal SDK mocks inline, no separate files
-3. **Use it.effect**: Provider tests rarely need Scope (use `it.effect`)
-4. **Focus on Integration**: Test SDK wrapping and error transformation
-5. **Minimal Mocking**: Mock only what you need for each test
+3. **Use it.scoped()**: ALL tests use `it.scoped()` for consistency (not `it.effect()`)
+4. **Always Layer.fresh**: Wrap ALL test layers with `Layer.fresh()` for isolation
+5. **Focus on Integration**: Test SDK wrapping and error transformation
+6. **Minimal Mocking**: Mock only what you need for each test
 
 ---
 
