@@ -1,5 +1,11 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.5.1
+
+### Patch Changes
+
+- 379a2b1: Fix version reporting in CLI and MCP binaries - now dynamically reads from package.json instead of hardcoded values. Adds automatic version.ts generation during build process.
+
 ## 1.5.0
 
 ### Minor Changes
