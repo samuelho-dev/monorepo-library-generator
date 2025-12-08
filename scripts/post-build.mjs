@@ -5,29 +5,33 @@ import { join } from "node:path"
 import process from "node:process"
 
 const distDir = join(process.cwd(), "dist")
+const buildDir = join(process.cwd(), "build")
 
 console.log("📦 Post-build: Preparing Nx generator structure...\n")
 
-// 1. Flatten the nested dist/dist/ structure created by pack-v3
-// NOTE: pack-v3 still creates this nested structure, same as pack-v2
-const nestedDistDir = join(distDir, "dist")
-if (statSync(nestedDistDir, { throwIfNoEntry: false })?.isDirectory()) {
-  const esmNested = join(nestedDistDir, "esm")
-  const cjsNested = join(nestedDistDir, "cjs")
-  const dtsNested = join(nestedDistDir, "dts")
+// 1. Create dist directory structure and copy build output
+mkdirSync(distDir, { recursive: true })
 
-  if (statSync(esmNested, { throwIfNoEntry: false })?.isDirectory()) {
-    renameSync(esmNested, join(distDir, "esm"))
-  }
-  if (statSync(cjsNested, { throwIfNoEntry: false })?.isDirectory()) {
-    renameSync(cjsNested, join(distDir, "cjs"))
-  }
-  if (statSync(dtsNested, { throwIfNoEntry: false })?.isDirectory()) {
-    renameSync(dtsNested, join(distDir, "dts"))
-  }
+// Copy package.json to dist first
+const rootPackageJson = join(process.cwd(), "package.json")
+const distPackageJson = join(distDir, "package.json")
+cpSync(rootPackageJson, distPackageJson)
+console.log("✓ Copied package.json to dist/")
 
-  rmSync(nestedDistDir, { recursive: true, force: true })
-  console.log("✓ Flattened nested dist/dist/ structure")
+// Copy build output to dist
+const buildEsm = join(buildDir, "esm")
+const buildCjs = join(buildDir, "cjs")
+const distEsm = join(distDir, "esm")
+const distCjs = join(distDir, "cjs")
+
+if (statSync(buildEsm, { throwIfNoEntry: false })?.isDirectory()) {
+  cpSync(buildEsm, distEsm, { recursive: true })
+  console.log("✓ Copied build/esm to dist/esm")
+}
+
+if (statSync(buildCjs, { throwIfNoEntry: false })?.isDirectory()) {
+  cpSync(buildCjs, distCjs, { recursive: true })
+  console.log("✓ Copied build/cjs to dist/cjs")
 }
 
 // 2. Add package.json to cjs directory to explicitly mark it as CommonJS
