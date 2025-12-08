@@ -129,7 +129,9 @@ export default async function featureGenerator(
     ...(includeClientServer !== undefined && { includeClientServer }),
     includeRPC,
     includeCQRS,
-    includeEdge
+    includeEdge,
+    ...(schema.includeSubServices !== undefined && { includeSubServices: schema.includeSubServices }),
+    ...(schema.subServices !== undefined && { subServices: schema.subServices })
   }
 
   // Run core generator with Effect runtime

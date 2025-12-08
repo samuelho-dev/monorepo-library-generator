@@ -31,6 +31,7 @@ import {
   generateServerLayersFile,
   generateUseHookFile
 } from "../infra/templates/index"
+import { generateProviderConsolidation } from "./provider-consolidation"
 
 /**
  * Infrastructure Generator Core Options
@@ -62,6 +63,8 @@ export interface InfraCoreOptions {
   readonly platform?: PlatformType
   readonly includeClientServer?: boolean
   readonly includeEdge?: boolean
+  readonly consolidatesProviders?: boolean
+  readonly providers?: string
 }
 
 /**
@@ -345,9 +348,31 @@ function MyComponent() {
       }
     }
 
-    // Generate index file (barrel exports)
-    yield* adapter.writeFile(`${options.sourceRoot}/index.ts`, generateIndexFile(templateOptions))
-    filesGenerated.push(`${options.sourceRoot}/index.ts`)
+    // Generate provider consolidation (conditional)
+    if (options.consolidatesProviders && options.providers) {
+      const providersList = options.providers
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean)
+
+      if (providersList.length > 0) {
+        const consolidationResult = yield* generateProviderConsolidation(adapter, {
+          projectRoot: options.projectRoot,
+          sourceRoot: options.sourceRoot,
+          packageName: options.packageName,
+          providers: providersList
+        })
+
+        // Track generated consolidation files
+        filesGenerated.push(`${options.sourceRoot}/index.ts`)
+        filesGenerated.push(`${options.sourceRoot}/lib/layers.ts`)
+        filesGenerated.push(`${options.sourceRoot}/lib/orchestrator.ts`)
+      }
+    } else {
+      // Generate standard index file (barrel exports) when not consolidating providers
+      yield* adapter.writeFile(`${options.sourceRoot}/index.ts`, generateIndexFile(templateOptions))
+      filesGenerated.push(`${options.sourceRoot}/index.ts`)
+    }
 
     // Generate platform-specific barrel exports
     // Always generate server.ts and client.ts since they're declared in package.json exports

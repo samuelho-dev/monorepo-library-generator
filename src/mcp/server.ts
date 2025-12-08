@@ -14,6 +14,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 /* eslint-enable no-restricted-syntax */
 import { Effect } from "effect"
+import { VERSION } from "../version"
 
 // Tool definitions (with JSON Schema from Effect)
 import { ContractToolDefinition } from "./schemas/contract.schema"
@@ -37,7 +38,7 @@ import { handleInitWorkspace } from "./tools/init-workspace.handler"
 const server = new Server(
   {
     name: "monorepo-library-generator",
-    version: "1.3.0"
+    version: VERSION
   },
   {
     capabilities: {
@@ -138,7 +139,7 @@ async function main() {
 
   // Log to stderr (stdout is used for MCP protocol)
   console.error("✅ Monorepo Library Generator MCP Server (Effect-based)")
-  console.error("📦 Version: 1.3.0")
+  console.error(`📦 Version: ${VERSION}`)
   console.error("⚡ Using Effect Schema for validation (NO ZOD)")
   console.error("🔧 Available tools: 6 (1 workspace + 5 generators)")
   console.error("")

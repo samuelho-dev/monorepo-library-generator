@@ -121,7 +121,9 @@ export default async function infraGenerator(
     // Feature flags
     platform,
     ...(includeClientServer !== undefined && { includeClientServer }),
-    ...(includeEdge !== undefined && { includeEdge })
+    ...(includeEdge !== undefined && { includeEdge }),
+    ...(schema.consolidatesProviders !== undefined && { consolidatesProviders: schema.consolidatesProviders }),
+    ...(schema.providers !== undefined && { providers: schema.providers })
   }
 
   // Run core generator with Effect runtime

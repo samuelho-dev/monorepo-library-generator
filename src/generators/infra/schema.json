@@ -39,6 +39,17 @@
       "type": "boolean",
       "description": "Skip generating test files",
       "default": false
+    },
+    "consolidatesProviders": {
+      "type": "boolean",
+      "description": "Generate provider consolidation structure (aggregates multiple provider libraries)",
+      "default": false,
+      "x-prompt": "Does this infrastructure library consolidate multiple providers?"
+    },
+    "providers": {
+      "type": "string",
+      "description": "Comma-separated list of provider libraries to consolidate (e.g., 'kubectl,talos,terraform')",
+      "x-prompt": "Which providers should be consolidated? (comma-separated, leave empty to skip)"
     }
   },
   "required": ["name"]

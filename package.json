@@ -38,7 +38,7 @@
   },
   "scripts": {
     "codegen": "build-utils prepare-v3",
-    "prebuild": "rm -rf .tsbuildinfo dist build",
+    "prebuild": "rm -rf .tsbuildinfo dist build && node scripts/generate-version.mjs",
     "build": "pnpm build-esm && pnpm build-add-extensions && pnpm build-annotate && pnpm build-cjs && node scripts/post-build.mjs && node scripts/bundle-cli.mjs && node scripts/bundle-mcp.mjs",
     "build-esm": "tsc -b tsconfig.build.json",
     "build-add-extensions": "babel build/esm --plugins babel-plugin-add-import-extension --out-dir build/esm --source-maps --no-babelrc",

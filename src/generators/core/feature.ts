@@ -40,6 +40,7 @@ import {
   generateFeatureServiceIndexFile,
   generateFeatureServiceInterfaceFile
 } from "../feature/templates/service/index"
+import { generateSubServices } from "./sub-services"
 
 /**
  * Feature Generator Core Options
@@ -76,6 +77,8 @@ export interface FeatureCoreOptions {
   readonly includeRPC?: boolean
   readonly includeCQRS?: boolean
   readonly includeEdge?: boolean
+  readonly includeSubServices?: boolean
+  readonly subServices?: string
 }
 
 /**
@@ -356,6 +359,34 @@ const server = ${templateOptions.fileName}Handlers.pipe(
 
     yield* adapter.writeFile(`${serverPath}/service.spec.ts`, generateServiceSpecFile(templateOptions))
     filesGenerated.push(`${serverPath}/service.spec.ts`)
+
+    // Generate sub-services (conditional)
+    if (options.includeSubServices && options.subServices) {
+      const subServicesList = options.subServices
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+
+      if (subServicesList.length > 0) {
+        const subServicesResult = yield* generateSubServices(adapter, {
+          projectRoot: options.projectRoot,
+          sourceRoot: options.sourceRoot,
+          packageName: options.packageName,
+          subServices: subServicesList
+        })
+
+        // Track generated sub-service files
+        const servicesPath = `${serverPath}/services`
+        filesGenerated.push(`${servicesPath}/index.ts`)
+        subServicesList.forEach(serviceName => {
+          filesGenerated.push(`${servicesPath}/${serviceName}/index.ts`)
+          filesGenerated.push(`${servicesPath}/${serviceName}/service.ts`)
+          filesGenerated.push(`${servicesPath}/${serviceName}/layers.ts`)
+          filesGenerated.push(`${servicesPath}/${serviceName}/errors.ts`)
+          filesGenerated.push(`${servicesPath}/${serviceName}/types.ts`)
+        })
+      }
+    }
 
     // Create CQRS directory placeholders (conditional)
     if (includeCQRS) {

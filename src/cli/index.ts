@@ -10,6 +10,7 @@
 import { Args, Command, Options } from "@effect/cli"
 import { NodeContext, NodeRuntime } from "@effect/platform-node"
 import { Console, Effect, Option } from "effect"
+import { VERSION } from "../version"
 import { initWorkspace } from "./commands/init-workspace"
 import { generateContract } from "./generators/contract"
 import { generateDataAccess } from "./generators/data-access"
@@ -332,7 +333,7 @@ const mainCommand = Command.make("mlg").pipe(
 
 const cli = Command.run(mainCommand, {
   name: "Monorepo Library Generator",
-  version: "v1.3.0"
+  version: `v${VERSION}`
 })
 
 /**
