@@ -90,6 +90,17 @@
       "type": "string",
       "description": "Additional tags for module boundary rules (comma-separated)",
       "x-prompt": "Any additional tags? (comma-separated, optional)"
+    },
+    "includeSubServices": {
+      "type": "boolean",
+      "description": "Generate services/ subdirectory for modular feature organization",
+      "default": false,
+      "x-prompt": "Does this feature need sub-service organization?"
+    },
+    "subServices": {
+      "type": "string",
+      "description": "Comma-separated list of sub-services to generate (e.g., backup,checkpoint,config)",
+      "x-prompt": "Which sub-services should be generated? (comma-separated, leave empty to skip)"
     }
   },
   "required": ["name"]

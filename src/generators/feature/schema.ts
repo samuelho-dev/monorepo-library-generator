@@ -11,6 +11,10 @@ export interface FeatureGeneratorSchema {
   testRunner?: "vitest"
   tags?: string
 
+  // Sub-service organization for consolidated features
+  includeSubServices?: boolean
+  subServices?: string // Comma-separated list
+
   // Dotfile generation options (Effect.ts code quality enforcement)
   // Only library-specific dotfiles (eslint.config.mjs, tsconfig.json) are added
   addDotfiles?: boolean // Default: true
