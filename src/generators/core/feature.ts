@@ -368,7 +368,7 @@ const server = ${templateOptions.fileName}Handlers.pipe(
         .filter(Boolean)
 
       if (subServicesList.length > 0) {
-        const subServicesResult = yield* generateSubServices(adapter, {
+        yield* generateSubServices(adapter, {
           projectRoot: options.projectRoot,
           sourceRoot: options.sourceRoot,
           packageName: options.packageName,

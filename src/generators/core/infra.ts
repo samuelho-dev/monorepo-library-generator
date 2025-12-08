@@ -356,7 +356,7 @@ function MyComponent() {
         .filter(Boolean)
 
       if (providersList.length > 0) {
-        const consolidationResult = yield* generateProviderConsolidation(adapter, {
+        yield* generateProviderConsolidation(adapter, {
           projectRoot: options.projectRoot,
           sourceRoot: options.sourceRoot,
           packageName: options.packageName,

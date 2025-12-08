@@ -1,4 +1,4 @@
-import { Effect, Array as EffectArray } from "effect"
+import { Effect } from "effect"
 import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
 import { generateSubServiceTemplate } from "../feature/templates/sub-service.template"
 import { generateSubServiceIndexTemplate } from "../feature/templates/sub-service-index.template"
@@ -24,7 +24,7 @@ export const generateSubServices = (
     yield* adapter.makeDirectory(servicesDir)
 
     // Generate each sub-service
-    yield* EffectArray.forEach(
+    yield* Effect.forEach(
       options.subServices,
       (serviceName) => generateSingleSubService(adapter, {
         ...options,
