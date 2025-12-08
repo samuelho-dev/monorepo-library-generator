@@ -127,84 +127,133 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
 
   // Continue with SDK-specific errors only for SDK type
   if (providerType === "sdk") {
+    // API Error
+    builder.addRaw("/**")
+    builder.addRaw(` * API Error - for ${externalService} API failures`)
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}ApiError extends Data.TaggedError("${className}ApiError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly statusCode?: number;")
+    builder.addRaw("  readonly errorCode?: string;")
+    builder.addRaw("  readonly cause?: unknown;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
 
-  // API Error
-  builder.addRaw("/**")
-  builder.addRaw(` * API Error - for ${externalService} API failures`)
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export class ${className}ApiError extends Data.TaggedError("${className}ApiError")<{`
-  )
-  builder.addRaw("  readonly message: string;")
-  builder.addRaw("  readonly statusCode?: number;")
-  builder.addRaw("  readonly errorCode?: string;")
-  builder.addRaw("  readonly cause?: unknown;")
-  builder.addRaw("}> {}")
-  builder.addBlankLine()
+    // Connection Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Connection Error - for network/connectivity failures")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}ConnectionError extends Data.TaggedError("${className}ConnectionError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly cause?: unknown;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
 
-  // Connection Error
-  builder.addRaw("/**")
-  builder.addRaw(" * Connection Error - for network/connectivity failures")
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export class ${className}ConnectionError extends Data.TaggedError("${className}ConnectionError")<{`
-  )
-  builder.addRaw("  readonly message: string;")
-  builder.addRaw("  readonly cause?: unknown;")
-  builder.addRaw("}> {}")
-  builder.addBlankLine()
+    // Rate Limit Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Rate Limit Error - for API rate limiting")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}RateLimitError extends Data.TaggedError("${className}RateLimitError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly retryAfter?: number;")
+    builder.addRaw("  readonly limit?: number;")
+    builder.addRaw("  readonly remaining?: number;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
 
-  // Rate Limit Error
-  builder.addRaw("/**")
-  builder.addRaw(" * Rate Limit Error - for API rate limiting")
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export class ${className}RateLimitError extends Data.TaggedError("${className}RateLimitError")<{`
-  )
-  builder.addRaw("  readonly message: string;")
-  builder.addRaw("  readonly retryAfter?: number;")
-  builder.addRaw("  readonly limit?: number;")
-  builder.addRaw("  readonly remaining?: number;")
-  builder.addRaw("}> {}")
-  builder.addBlankLine()
+    // Validation Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Validation Error - for input validation failures")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}ValidationError extends Data.TaggedError("${className}ValidationError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly field?: string;")
+    builder.addRaw("  readonly value?: unknown;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
 
-  // Validation Error
-  builder.addRaw("/**")
-  builder.addRaw(" * Validation Error - for input validation failures")
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export class ${className}ValidationError extends Data.TaggedError("${className}ValidationError")<{`
-  )
-  builder.addRaw("  readonly message: string;")
-  builder.addRaw("  readonly field?: string;")
-  builder.addRaw("  readonly value?: unknown;")
-  builder.addRaw("}> {}")
-  builder.addBlankLine()
+    // Timeout Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Timeout Error - for request timeouts")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}TimeoutError extends Data.TaggedError("${className}TimeoutError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly timeout: number;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
 
-  // Timeout Error
-  builder.addRaw("/**")
-  builder.addRaw(" * Timeout Error - for request timeouts")
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export class ${className}TimeoutError extends Data.TaggedError("${className}TimeoutError")<{`
-  )
-  builder.addRaw("  readonly message: string;")
-  builder.addRaw("  readonly timeout: number;")
-  builder.addRaw("}> {}")
-  builder.addBlankLine()
+    // Authentication Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Authentication Error - for auth failures")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}AuthenticationError extends Data.TaggedError("${className}AuthenticationError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly cause?: unknown;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
 
-  // Authentication Error
-  builder.addRaw("/**")
-  builder.addRaw(" * Authentication Error - for auth failures")
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export class ${className}AuthenticationError extends Data.TaggedError("${className}AuthenticationError")<{`
-  )
-  builder.addRaw("  readonly message: string;")
-  builder.addRaw("  readonly cause?: unknown;")
-  builder.addRaw("}> {}")
-  builder.addBlankLine()
-  }  // End SDK-specific errors
+    // Not Found Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Not Found Error - for 404 responses")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly resourceId?: string;")
+    builder.addRaw("  readonly resourceType?: string;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+
+    // Conflict Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Conflict Error - for 409 conflicts")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}ConflictError extends Data.TaggedError("${className}ConflictError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly conflictingField?: string;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+
+    // Config Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Config Error - for configuration failures")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}ConfigError extends Data.TaggedError("${className}ConfigError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly configKey?: string;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+
+    // Internal Error
+    builder.addRaw("/**")
+    builder.addRaw(" * Internal Error - for 5xx server errors")
+    builder.addRaw(" */")
+    builder.addRaw(
+      `export class ${className}InternalError extends Data.TaggedError("${className}InternalError")<{`
+    )
+    builder.addRaw("  readonly message: string;")
+    builder.addRaw("  readonly statusCode?: number;")
+    builder.addRaw("  readonly cause?: unknown;")
+    builder.addRaw("}> {}")
+    builder.addBlankLine()
+  } // End SDK-specific errors
 
   // Service Error Union Type - conditional based on provider type
   builder.addRaw("/**")
@@ -236,7 +285,11 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
     builder.addRaw(`  | ${className}RateLimitError`)
     builder.addRaw(`  | ${className}TimeoutError`)
     builder.addRaw(`  | ${className}ConnectionError`)
-    builder.addRaw(`  | ${className}ValidationError;`)
+    builder.addRaw(`  | ${className}ValidationError`)
+    builder.addRaw(`  | ${className}NotFoundError`)
+    builder.addRaw(`  | ${className}ConflictError`)
+    builder.addRaw(`  | ${className}ConfigError`)
+    builder.addRaw(`  | ${className}InternalError;`)
   }
   builder.addBlankLine()
 
@@ -263,6 +316,32 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
     "      message: typeof message === \"string\" ? message : \"Authentication failed\","
   )
   builder.addRaw("      cause: error,")
+  builder.addRaw("    });")
+  builder.addRaw("  }")
+  builder.addBlankLine()
+  builder.addRaw("  // Not found errors")
+  builder.addRaw("  if (statusCode === 404) {")
+  builder.addRaw("    const resourceId = Reflect.get(errorObj, \"resourceId\");")
+  builder.addRaw(`    return new ${className}NotFoundError({`)
+  builder.addRaw(
+    "      message: typeof message === \"string\" ? message : \"Resource not found\","
+  )
+  builder.addRaw(
+    "      ...(typeof resourceId === \"string\" && { resourceId }),"
+  )
+  builder.addRaw("    });")
+  builder.addRaw("  }")
+  builder.addBlankLine()
+  builder.addRaw("  // Conflict errors")
+  builder.addRaw("  if (statusCode === 409) {")
+  builder.addRaw("    const conflictingField = Reflect.get(errorObj, \"field\");")
+  builder.addRaw(`    return new ${className}ConflictError({`)
+  builder.addRaw(
+    "      message: typeof message === \"string\" ? message : \"Resource conflict\","
+  )
+  builder.addRaw(
+    "      ...(typeof conflictingField === \"string\" && { conflictingField }),"
+  )
   builder.addRaw("    });")
   builder.addRaw("  }")
   builder.addBlankLine()
@@ -299,7 +378,20 @@ export function generateErrorsFile(options: ProviderTemplateOptions) {
   builder.addRaw("    });")
   builder.addRaw("  }")
   builder.addBlankLine()
-  builder.addRaw("  // API errors (4xx/5xx)")
+  builder.addRaw("  // Internal server errors (5xx)")
+  builder.addRaw(
+    "  if (typeof statusCode === \"number\" && statusCode >= 500) {"
+  )
+  builder.addRaw(`    return new ${className}InternalError({`)
+  builder.addRaw(
+    "      message: typeof message === \"string\" ? message : \"Internal server error\","
+  )
+  builder.addRaw("      statusCode,")
+  builder.addRaw("      cause: error,")
+  builder.addRaw("    });")
+  builder.addRaw("  }")
+  builder.addBlankLine()
+  builder.addRaw("  // API errors (other 4xx)")
   builder.addRaw(
     "  if (typeof statusCode === \"number\" && statusCode >= 400) {"
   )

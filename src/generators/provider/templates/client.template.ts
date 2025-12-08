@@ -21,12 +21,12 @@ export function generateClientFile(options: ProviderTemplateOptions) {
   builder.addFileHeader({
     title: `${packageName}/client`,
     description:
-      `Client-side exports for ${className}Service provider.\nContains browser-compatible service implementations and types.`,
+      `Client-side exports for ${className} provider.\nContains browser-compatible service implementations and types.`,
     module: `${packageName}/client`
   })
 
   builder.addRaw(`// Service implementation (client-compatible)
-export { ${className}Service } from "./lib/service";
+export { ${className} } from "./lib/service";
 
 // Client-safe types only (no Node.js dependencies)
 export type * from "./lib/types";

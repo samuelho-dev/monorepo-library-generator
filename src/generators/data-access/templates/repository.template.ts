@@ -33,14 +33,6 @@ ARCHITECTURE PATTERN:
 2. Create implementation that provides all methods
 3. Wrap with Layer.effect() for dependency injection
 
-TODO: Customize this file:
-1. Import from actual contract library: \`@custom-repo/contract-${fileName}\`
-2. Implement database access using Kysely queries
-3. Add error handling and retry logic
-4. Implement caching strategies if needed
-5. Add performance optimizations (batching, indexing)
-6. Implement transaction support for composite operations
-
 @see @custom-repo/contract-${fileName} - Repository contract interface
 @see https://effect.website/docs/guides/context-management for layer patterns`,
     module: `@custom-repo/data-access-${fileName}/server`
@@ -131,7 +123,7 @@ TODO: Customize this file:
   builder.addImports([
     {
       from: "./shared/types",
-      imports: [`${className}CreateInput`, `${className}UpdateInput`],
+      imports: [`${className}`, `${className}CreateInput`, `${className}UpdateInput`],
       isTypeOnly: true
     },
     {
@@ -166,13 +158,13 @@ export class ${className}Repository extends Context.Tag(
   {
     readonly findById: (
       id: string
-    ) => Effect.Effect<Option.Option<unknown>, ${className}RepositoryError>;
+    ) => Effect.Effect<Option.Option<${className}>, ${className}RepositoryError>;
     readonly findAll: (
       filters?: Record<string, unknown>,
       pagination?: { limit: number; offset: number },
       sort?: { field: string; direction: "asc" | "desc" }
     ) => Effect.Effect<
-      { items: readonly unknown[]; total: number; limit: number; offset: number; hasMore: boolean },
+      { items: readonly ${className}[]; total: number; limit: number; offset: number; hasMore: boolean },
       ${className}RepositoryError
     >;
     readonly count: (
@@ -180,11 +172,11 @@ export class ${className}Repository extends Context.Tag(
     ) => Effect.Effect<number, ${className}RepositoryError>;
     readonly create: (
       input: ${className}CreateInput
-    ) => Effect.Effect<unknown, ${className}RepositoryError>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError>;
     readonly update: (
       id: string,
       input: ${className}UpdateInput
-    ) => Effect.Effect<unknown, ${className}RepositoryError>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError>;
     readonly delete: (
       id: string
     ) => Effect.Effect<void, ${className}RepositoryError>;
@@ -215,12 +207,13 @@ export class ${className}Repository extends Context.Tag(
       // const logger = yield* LoggingService;
 
       // For now, create repository with placeholder database
-      // TODO: Replace with actual KyselyService once provider-kysely is configured
       const placeholderDb: DatabaseService = {
         query: <T>(_fn: (db: KyselyDatabase) => Promise<T>): Effect.Effect<T, never, never> =>
-          Effect.dieMessage(
-            "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
-          ),
+          Effect.fail(
+            ${className}InternalError.create(
+              "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
+            )
+          ) as Effect.Effect<T, never, never>,
       };
       return create${className}Repository(placeholderDb, undefined);
     })
@@ -236,16 +229,16 @@ export class ${className}Repository extends Context.Tag(
   static readonly Test = Layer.succeed(
     this,
     (() => {
-      const store = new Map<string, unknown>();
+      const store = new Map<string, ${className}>();
       let idCounter = 0;
 
       return {
         findById: (id: string) =>
           Effect.succeed(
-            store.has(id) ? Option.some(store.get(id)) : Option.none(),
+            store.has(id) ? Option.some(store.get(id)!) : Option.none(),
           ),
         findAll: (
-          _filters?: Record<string, unknown>,
+          filters?: Record<string, unknown>,
           pagination?: { limit: number; offset: number },
         ) =>
           Effect.succeed({
@@ -318,9 +311,11 @@ export class ${className}Repository extends Context.Tag(
       // Same as Live layer but with console logging wrapper
       const placeholderDb: DatabaseService = {
         query: <T>(_fn: (db: KyselyDatabase) => Promise<T>): Effect.Effect<T, never, never> =>
-          Effect.dieMessage(
-            "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
-          ),
+          Effect.fail(
+            ${className}InternalError.create(
+              "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
+            )
+          ) as Effect.Effect<T, never, never>,
       };
       const repo = create${className}Repository(placeholderDb, undefined);
 
@@ -328,62 +323,62 @@ export class ${className}Repository extends Context.Tag(
       return {
         findById: (id: string) =>
           Effect.gen(function* () {
-            console.log("[${className}Repository] findById", { id });
+            yield* Effect.logDebug("[${className}Repository] findById", { id });
             const result = yield* repo.findById(id);
-            console.log("[${className}Repository] findById result:", Option.isSome(result) ? "found" : "not found");
+            yield* Effect.logDebug("[${className}Repository] findById result:", Option.isSome(result) ? "found" : "not found");
             return result;
           }),
         findAll: (filters, pagination, sort) =>
           Effect.gen(function* () {
-            console.log("[${className}Repository] findAll", { filters, pagination, sort });
+            yield* Effect.logDebug("[${className}Repository] findAll", { filters, pagination, sort });
             const result = yield* repo.findAll(filters, pagination, sort);
-            console.log("[${className}Repository] findAll result count:", result.items.length);
+            yield* Effect.logDebug("[${className}Repository] findAll result count:", result.items.length);
             return result;
           }),
         count: (filters) =>
           Effect.gen(function* () {
-            console.log("[${className}Repository] count", { filters });
+            yield* Effect.logDebug("[${className}Repository] count", { filters });
             const result = yield* repo.count(filters);
-            console.log("[${className}Repository] count result:", result);
+            yield* Effect.logDebug("[${className}Repository] count result:", result);
             return result;
           }),
         create: (input) =>
           Effect.gen(function* () {
-            console.log("[${className}Repository] create", { input });
+            yield* Effect.logDebug("[${className}Repository] create", { input });
             const result = yield* repo.create(input);
-            console.log("[${className}Repository] create result:", result);
+            yield* Effect.logDebug("[${className}Repository] create result:", result);
             return result;
           }),
         update: (id, input) =>
           Effect.gen(function* () {
-            console.log("[${className}Repository] update", { id, input });
+            yield* Effect.logDebug("[${className}Repository] update", { id, input });
             const result = yield* repo.update(id, input);
-            console.log("[${className}Repository] update result:", result);
+            yield* Effect.logDebug("[${className}Repository] update result:", result);
             return result;
           }),
         delete: (id) =>
           Effect.gen(function* () {
-            console.log("[${className}Repository] delete", { id });
+            yield* Effect.logDebug("[${className}Repository] delete", { id });
             yield* repo.delete(id);
-            console.log("[${className}Repository] delete success");
+            yield* Effect.logDebug("[${className}Repository] delete success");
           }),
         exists: (id) =>
           Effect.gen(function* () {
-            console.log("[${className}Repository] exists", { id });
+            yield* Effect.logDebug("[${className}Repository] exists", { id });
             const result = yield* repo.exists(id);
-            console.log("[${className}Repository] exists result:", result);
+            yield* Effect.logDebug("[${className}Repository] exists result:", result);
             return result;
           }),
-        streamAll: (options) => {
-          console.log("[${className}Repository] streamAll", { options });
-          return repo.streamAll(options).pipe(
-            Stream.tap((item) =>
-              Effect.sync(() => {
-                console.log("[${className}Repository] streamAll item:", item);
-              })
+        streamAll: (options) =>
+          Effect.logDebug("[${className}Repository] streamAll", { options }).pipe(
+            Effect.andThen(
+              repo.streamAll(options).pipe(
+                Stream.tap((item) =>
+                  Effect.logDebug("[${className}Repository] streamAll item:", item)
+                )
+              )
             )
-          );
-        },
+          ),
       };
     }),
   );`)
@@ -801,7 +796,7 @@ function create${className}Repository(
      * @returns Stream of entities
      *
      * @example
-     * ```typescript
+     * \`\`\`typescript
      * // Process all entities with constant memory
      * yield* repo.streamAll({ batchSize: 100 }).pipe(
      *   Stream.mapEffect((entity) => processEntity(entity)),
@@ -817,7 +812,7 @@ function create${className}Repository(
      *   Stream.intersperse("\\n"),
      *   Stream.run(Sink.file("export.ndjson"))
      * );
-     * ```
+     * \`\`\`
      */
     streamAll: (options?: { batchSize?: number }) =>
       Stream.paginateEffect(0, (page) =>

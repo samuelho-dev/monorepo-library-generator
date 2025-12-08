@@ -22,6 +22,7 @@ import { generateContractCore, type GeneratorResult } from "../../generators/cor
 import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
 import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import { createNamingVariants } from "../../utils/naming"
+import { addDotfilesToLibrary } from "../../utils/shared/dotfile-generation"
 
 /**
  * Contract Generator Options (CLI)
@@ -111,6 +112,12 @@ export function generateContract(options: ContractGeneratorOptions) {
       tags,
       ...(options.includeRPC !== undefined && { includeRPC: options.includeRPC }),
       ...(options.entities !== undefined && { entities: options.entities })
+    })
+
+    // Add dotfiles to library
+    yield* addDotfilesToLibrary(adapter, {
+      projectRoot: metadata.projectRoot,
+      merge: true
     })
 
     // Phase 2: Generate domain files via core generator

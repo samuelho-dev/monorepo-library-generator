@@ -108,8 +108,8 @@ export interface Create${className}Operations {
  * - Implement transaction support for createMany
  */
 export const createOperations: Create${className}Operations = {
-  create: (_input: ${className}CreateInput) =>
-    Effect.gen(function () {
+  create: (input: ${className}CreateInput) =>
+    Effect.gen(function* () {
       // TODO: Implement database insert
       // const database = yield* KyselyService;
       // const result = yield* database.query((db) =>
@@ -125,13 +125,13 @@ export const createOperations: Create${className}Operations = {
       // );
       // return result;
 
-      return Effect.dieMessage(
+      return yield* Effect.dieMessage(
         "Create operation not implemented. Configure KyselyService and implement database logic."
       );
     }),
 
-  createMany: (_inputs: ReadonlyArray<${className}CreateInput>) =>
-    Effect.gen(function () {
+  createMany: (inputs: ReadonlyArray<${className}CreateInput>) =>
+    Effect.gen(function* () {
       // TODO: Implement batch insert with transaction
       // const database = yield* KyselyService;
       // const results = yield* database.query((db) =>
@@ -155,7 +155,7 @@ export const createOperations: Create${className}Operations = {
       // );
       // return results;
 
-      return Effect.dieMessage(
+      return yield* Effect.dieMessage(
         "CreateMany operation not implemented. Configure KyselyService and implement batch logic."
       );
     }),

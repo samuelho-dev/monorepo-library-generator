@@ -46,7 +46,8 @@ Example:
     },
     {
       from: "../../errors",
-      imports: [`${className}ServiceError`]
+      imports: [`${className}ServiceError`],
+      isTypeOnly: true
     }
   ])
   builder.addBlankLine()
@@ -94,7 +95,7 @@ export const createOperations: Create${className}Operations = {
 
       yield* Effect.logWarning(\`Create operation called with data but not implemented\`);
       yield* Effect.logDebug(\`Data: \${JSON.stringify(data)}\`);
-      return yield* Effect.dieMessage("Create operation not implemented - replace with ${externalService} SDK call");
+      return yield* Effect.fail(new ${className}InternalError({ message: "Create operation not implemented - replace with ${externalService} SDK call" }));
     }).pipe(
       Effect.retry(
         Schedule.exponential(Duration.millis(100)).pipe(

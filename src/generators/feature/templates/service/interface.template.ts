@@ -528,21 +528,21 @@ export class ${className}Service extends Context.Tag("${className}Service")<
   static readonly Dev = Layer.effect(
     this,
     Effect.gen(function* () {
-      console.log(\`[${className}Service] [DEV] Initializing development layer\`);
+      yield* Effect.logInfo(\`[${className}Service] [DEV] Initializing development layer\`);
 
       // Get actual implementation from Live layer
       const liveService = yield* ${className}Service.Live.pipe(
         Layer.build,
-        Effect.map(Context.unsafeGet(${className}Service))
+        Effect.andThen(${className}Service)
       );
 
       // Wrap operations with logging
       return {
         exampleOperation: () =>
           Effect.gen(function* () {
-            console.log(\`[${className}Service] [DEV] exampleOperation called\`);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] exampleOperation called\`);
             const result = yield* liveService.exampleOperation();
-            console.log(\`[${className}Service] [DEV] exampleOperation result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] exampleOperation result:\`, result);
             return result;
           })
       };

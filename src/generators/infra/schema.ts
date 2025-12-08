@@ -10,7 +10,7 @@ export interface InfraGeneratorSchema {
   includeEdge?: boolean
 
   // Dotfile generation options (Effect.ts code quality enforcement)
+  // Only library-specific dotfiles (eslint.config.mjs, tsconfig.json) are added
   addDotfiles?: boolean // Default: true
-  includeVSCodeSettings?: boolean // Default: true
   overwriteDotfiles?: boolean // Default: false
 }

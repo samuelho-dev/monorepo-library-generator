@@ -46,7 +46,12 @@ Example:
     },
     {
       from: "../../errors",
-      imports: [`${className}ServiceError`]
+      imports: [`${className}ServiceError`],
+      isTypeOnly: true
+    },
+    {
+      from: "../../errors",
+      imports: [`${className}NotFoundError`]
     }
   ])
   builder.addBlankLine()
@@ -126,10 +131,13 @@ export const testUpdateOperations: Update${className}Operations = {
     Effect.gen(function* () {
       const existing = testStore.get(id);
       if (!existing) {
-        return yield* Effect.fail({
-          _tag: "NotFoundError",
-          message: \`Resource \${id} not found\`
-        });
+        return yield* Effect.fail(
+          new ${className}NotFoundError({
+            message: \`Resource \${id} not found\`,
+            resourceId: id,
+            resourceType: "Resource",
+          })
+        );
       }
 
       const updated: Resource = {

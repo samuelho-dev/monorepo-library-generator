@@ -28,9 +28,6 @@ export function generateSchemasFile(options: FeatureTemplateOptions) {
   builder.addImports([{ from: "effect", imports: ["Schema"] }])
   builder.addBlankLine()
 
-  // Add TODO comment
-  builder.addComment("TODO: Add domain schemas")
-
   // Add Config schema
   builder.addRaw(`export const ${className}ConfigSchema = Schema.Struct({
   // Add configuration schema fields

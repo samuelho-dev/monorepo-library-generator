@@ -12,13 +12,18 @@ import type { FileSystemAdapter } from "../tree-adapter"
  */
 export interface GeneratorDotfileOptions {
   readonly projectRoot: string
-  readonly includeVSCodeSettings?: boolean
   readonly overwrite?: boolean
   readonly merge?: boolean
 }
 
 /**
  * Add Effect.ts dotfiles to a generated library
+ *
+ * IMPORTANT: Only library-specific dotfiles are included:
+ * - eslint.config.mjs: Library-level linting rules (extends workspace config)
+ * - tsconfig.json: Library-level TypeScript config (extends workspace config)
+ *
+ * Workspace-level dotfiles (.editorconfig, .vscode/*) should NOT be added per-library.
  *
  * @param adapter - FileSystem adapter for Nx Tree or CLI
  * @param options - Dotfile generation options
@@ -29,28 +34,21 @@ export const addDotfilesToLibrary = (
   options: GeneratorDotfileOptions
 ) =>
   Effect.gen(function*() {
-    const { includeVSCodeSettings = true, merge = true, overwrite = false, projectRoot } = options
+    const { merge = true, overwrite = false, projectRoot } = options
 
-    // Build options object based on includeVSCodeSettings
-    // With exactOptionalPropertyTypes, we can't pass undefined - must omit the property
-    const dotfileOptions = includeVSCodeSettings
-      ? {
-        targetDir: projectRoot,
-        overwrite,
-        merge
-      }
-      : {
-        targetDir: projectRoot,
-        overwrite,
-        merge,
-        include: [".editorconfig", "eslint.config.mjs", "tsconfig.json"] satisfies ReadonlyArray<DotfileName>
-      }
+    // Only include library-specific dotfiles (exclude workspace-level files)
+    const dotfileOptions = {
+      targetDir: projectRoot,
+      overwrite,
+      merge,
+      include: ["eslint.config.mjs", "tsconfig.json"] satisfies ReadonlyArray<DotfileName>
+    }
 
     // Copy dotfiles with merge support
     const result = yield* copyAllDotfiles(adapter, dotfileOptions)
 
     yield* Effect.logInfo(
-      `Added ${result.copied} dotfiles to ${projectRoot} (${result.merged} merged)`
+      `Added ${result.copied} library-specific dotfiles to ${projectRoot} (${result.merged} merged)`
     )
 
     return result

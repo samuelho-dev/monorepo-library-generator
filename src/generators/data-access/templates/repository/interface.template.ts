@@ -241,7 +241,7 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
         ids.map(id => ({ id, name: "test-entity" })) as any
       ),
       findAll: () => Effect.succeed([{ id: "test-id-1", name: "test-entity" }] as any),
-      findByCriteria: (_criteria, _skip, _limit) => Effect.succeed([{ id: "test-id-1", name: "test-entity" }] as any),
+      findByCriteria: () => Effect.succeed([{ id: "test-id-1", name: "test-entity" }] as any),
 
       // Update operations
       update: (id, input) => Effect.succeed({ id, ...input } as any),
@@ -250,12 +250,12 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
       ),
 
       // Delete operations
-      delete: (_id) => Effect.void,
-      deleteMany: (_ids) => Effect.void,
+      delete: () => Effect.void,
+      deleteMany: () => Effect.void,
 
       // Aggregate operations
       count: () => Effect.succeed(1),
-      exists: (_id) => Effect.succeed(true),
+      exists: () => Effect.succeed(true),
     }
   );
 

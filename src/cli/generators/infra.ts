@@ -22,6 +22,7 @@ import { generateInfraCore, type GeneratorResult } from "../../generators/core/i
 import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
 import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import type { PlatformType } from "../../utils/platforms"
+import { addDotfilesToLibrary } from "../../utils/shared/dotfile-generation"
 
 /**
  * Infrastructure Generator Options (CLI)
@@ -80,6 +81,12 @@ export function generateInfra(options: InfraGeneratorOptions) {
       tags,
       ...(options.includeClientServer !== undefined && { includeClientServer: options.includeClientServer }),
       ...(options.includeEdge !== undefined && { includeEdgeExports: options.includeEdge })
+    })
+
+    // Add dotfiles to library
+    yield* addDotfilesToLibrary(adapter, {
+      projectRoot,
+      merge: true
     })
 
     // Prepare core options

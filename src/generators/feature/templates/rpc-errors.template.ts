@@ -44,8 +44,6 @@ export class ${className}RpcError extends Schema.TaggedError<${className}RpcErro
 ) {}`)
   builder.addBlankLine()
 
-  // Add TODO comments
-  builder.addComment("TODO: Add more RPC-specific error types if needed")
   builder.addComment("Note: Use Schema.TaggedError ONLY for RPC boundaries")
   builder.addComment(
     "For domain errors, use Data.TaggedError in ../shared/errors.ts"

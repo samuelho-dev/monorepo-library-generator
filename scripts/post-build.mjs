@@ -1,16 +1,6 @@
 #!/usr/bin/env node
 import console from "node:console"
-import {
-  chmodSync,
-  cpSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  renameSync,
-  rmSync,
-  statSync,
-  writeFileSync
-} from "node:fs"
+import { cpSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import process from "node:process"
 
@@ -22,9 +12,20 @@ console.log("📦 Post-build: Preparing Nx generator structure...\n")
 // NOTE: pack-v3 still creates this nested structure, same as pack-v2
 const nestedDistDir = join(distDir, "dist")
 if (statSync(nestedDistDir, { throwIfNoEntry: false })?.isDirectory()) {
-  renameSync(join(nestedDistDir, "esm"), join(distDir, "esm"))
-  renameSync(join(nestedDistDir, "cjs"), join(distDir, "cjs"))
-  renameSync(join(nestedDistDir, "dts"), join(distDir, "dts"))
+  const esmNested = join(nestedDistDir, "esm")
+  const cjsNested = join(nestedDistDir, "cjs")
+  const dtsNested = join(nestedDistDir, "dts")
+
+  if (statSync(esmNested, { throwIfNoEntry: false })?.isDirectory()) {
+    renameSync(esmNested, join(distDir, "esm"))
+  }
+  if (statSync(cjsNested, { throwIfNoEntry: false })?.isDirectory()) {
+    renameSync(cjsNested, join(distDir, "cjs"))
+  }
+  if (statSync(dtsNested, { throwIfNoEntry: false })?.isDirectory()) {
+    renameSync(dtsNested, join(distDir, "dts"))
+  }
+
   rmSync(nestedDistDir, { recursive: true, force: true })
   console.log("✓ Flattened nested dist/dist/ structure")
 }
@@ -42,12 +43,14 @@ const packageJson = JSON.parse(readFileSync(distPackageJsonPath, "utf-8"))
 // Add generators field and update bin to use .mjs extension
 // pack-v3 already handles exports correctly, we just need to add Nx-specific fields
 const { name, version, ...rest } = packageJson
+delete rest.bin
 const updatedPackageJson = {
   name,
   version,
   generators: "./src/generators.json",
   bin: {
-    mlg: "./bin/cli-bundled.mjs" // Bundled ESM CLI entry point
+    mlg: "./bin/cli.mjs",
+    "mlg-mcp": "./bin/mcp-server.mjs"
   },
   ...rest
 }
@@ -139,24 +142,18 @@ if (!statSync(generatorsJsonDest, { throwIfNoEntry: false })?.isFile()) {
 
 console.log("✓ Copied generators.json to dist/src/")
 
-// 6. Create dist/bin/cli.mjs (ESM module)
-// The CLI uses ESM and imports from dist/esm/
+// 5.5. Copy dotfile templates to dist/src/dotfiles/
+const dotfilesSource = join(process.cwd(), "src", "dotfiles")
+const dotfilesDest = join(distDir, "src", "dotfiles")
+
+if (statSync(dotfilesSource, { throwIfNoEntry: false })?.isDirectory()) {
+  cpSync(dotfilesSource, dotfilesDest, { recursive: true })
+  console.log("✓ Copied dotfile templates to dist/src/dotfiles/")
+}
+
+// 6. Ensure bin directory exists for bundled executables
 const binDir = join(distDir, "bin")
 mkdirSync(binDir, { recursive: true })
-
-const cliContent = `#!/usr/bin/env node
-
-import { main } from '../esm/cli/index.js';
-import { NodeRuntime } from '@effect/platform-node';
-
-NodeRuntime.runMain(main(process.argv));
-`
-
-const cliPath = join(binDir, "cli.mjs")
-writeFileSync(cliPath, cliContent)
-chmodSync(cliPath, 0o755)
-
-console.log("✓ Created dist/bin/cli.mjs")
 
 // 7. Bundle CLI into single file with esbuild
 console.log("\n📦 Bundling CLI...")

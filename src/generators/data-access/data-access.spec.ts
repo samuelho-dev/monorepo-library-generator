@@ -149,7 +149,7 @@ describe("Data Access Library Generator", () => {
       // Test layer is defined as static member in interface.ts
       const interfaceContent = tree.read(`${projectRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
       expect(interfaceContent).toContain("static readonly Test")
-      expect(interfaceContent).toContain("Map") // In-memory Map storage
+      expect(interfaceContent).toContain("Layer.succeed") // Stub-based test implementation
 
       // Check operations files for methods
       const readOps = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, "utf-8") || ""
@@ -608,8 +608,9 @@ describe("Data Access Library Generator", () => {
       // Test layer is in interface.ts
       const interfaceContent = tree.read(`${projectRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
 
-      // Test layer should have in-memory Map
-      expect(interfaceContent).toContain("Map")
+      // Test layer should have stub implementations
+      expect(interfaceContent).toContain("static readonly Test")
+      expect(interfaceContent).toContain("Layer.succeed")
 
       // Check that operations exist
       expect(tree.exists(`${projectRoot}/src/lib/repository/operations/read.ts`)).toBe(true)

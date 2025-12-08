@@ -187,7 +187,7 @@ This is an AI-optimized reference for ${templateOptions.externalService}, a CLI 
 
 ## Provider Type: CLI Wrapper
 
-This provider wraps the \`${options.cliCommand || 'cli-command'}\` command-line tool using Effect's Command API.
+This provider wraps the \`${options.cliCommand || "cli-command"}\` command-line tool using Effect's Command API.
 
 ## Architecture
 
@@ -276,7 +276,7 @@ Effect.gen(function* () {
 
 1. **Configure HTTP Client** (\`lib/service/interface.ts\`):
    - Base URL configured via ${templateOptions.className}Config
-   - Authentication via ${options.authType || 'bearer'} token
+   - Authentication via ${options.authType || "bearer"} token
    - Retry policies and timeouts configurable
 
 2. **Define Resource Schema** (\`lib/types.ts\`):
@@ -349,7 +349,7 @@ Effect.gen(function* () {
 
 1. **Configure GraphQL Client** (\`lib/service/interface.ts\`):
    - GraphQL endpoint configured via ${templateOptions.className}Config
-   - Authentication via ${options.authType || 'bearer'} token
+   - Authentication via ${options.authType || "bearer"} token
    - Retry policies and timeouts configurable
 
 2. **Define Schema Types** (\`lib/types.ts\`):
@@ -490,7 +490,6 @@ Effect.gen(function* () {
 
     // Conditional: Only generate operations for SDK providers
     // CLI/HTTP/GraphQL providers have operations defined in interface.ts
-    const providerType = options.providerType || "sdk"
     if (providerType === "sdk") {
       const operationsPath = `${servicePath}/operations`
       yield* adapter.makeDirectory(operationsPath)

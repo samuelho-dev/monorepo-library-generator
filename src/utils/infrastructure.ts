@@ -260,6 +260,9 @@ function generatePackageJsonFile(
       sideEffects: false, // Enable aggressive tree-shaking
       description: options.description,
       exports,
+      dependencies: options.libraryType === "provider"
+        ? { "@custom-repo/infra-env": "*" }
+        : undefined,
       peerDependencies: {
         effect: "*"
       }
@@ -490,7 +493,6 @@ function createProjectConfiguration(
   return {
     name: options.projectName,
     root: options.projectRoot,
-    // eslint-disable-next-line no-restricted-syntax
     projectType: "library" as const,
     sourceRoot,
     tags: options.tags,

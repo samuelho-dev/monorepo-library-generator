@@ -10,6 +10,7 @@
 
 import type { Tree } from "@nx/devkit"
 import { Effect } from "effect"
+import * as fs from "node:fs"
 import type { FileSystemAdapter } from "./filesystem-adapter"
 import { DirectoryCreationError, FileReadError, FileSystemError, FileWriteError } from "./filesystem-adapter"
 
@@ -56,15 +57,28 @@ export class TreeAdapter implements FileSystemAdapter {
    * Read a file using Tree API
    *
    * Tree.read returns Buffer | null
+   *
+   * Falls back to real filesystem if file not in virtual tree.
+   * This allows tests to read template files (like dotfiles) that exist
+   * on the real filesystem but not in the virtual test tree.
    */
   readFile(path: string) {
     return Effect.try({
       try: () => {
         const relativePath = this.toRelativePath(path)
         const content = this.tree.read(relativePath)
+
         if (content === null) {
+          // Fallback: Try reading from real filesystem
+          // This allows tests to work with template files outside virtual tree
+          // (e.g., dotfile templates in src/dotfiles/)
+          if (fs.existsSync(path)) {
+            return fs.readFileSync(path, "utf-8")
+          }
+
           throw new Error(`File not found: ${path}`)
         }
+
         // Convert Buffer to string
         return content.toString("utf-8")
       },

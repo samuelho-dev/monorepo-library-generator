@@ -20,7 +20,7 @@ import type { ProviderTemplateOptions } from "../../../utils/shared/types"
  */
 export function generateTypesFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { name: projectClassName, className, providerType = "sdk" } = options
+  const { className, name: projectClassName, providerType = "sdk" } = options
 
   // File header
   builder.addRaw("/**")

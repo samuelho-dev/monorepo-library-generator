@@ -107,7 +107,6 @@ export default async function dataAccessGenerator(
     await Effect.runPromise(
       addDotfilesToLibrary(adapter, {
         projectRoot: metadata.projectRoot,
-        includeVSCodeSettings: schema.includeVSCodeSettings ?? true,
         overwrite: schema.overwriteDotfiles ?? false
       })
     )

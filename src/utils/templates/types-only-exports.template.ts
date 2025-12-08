@@ -69,14 +69,7 @@ export type * from "./lib/shared/errors";
 // Validation Types
 // ============================================================================
 
-// Filter validators
-export type * from "./lib/validation/filter-validators";
-
-// Input validators
-export type * from "./lib/validation/input-validators";
-
-// Entity validators
-export type * from "./lib/validation/entity-validators";
+export type * from "./lib/shared/validation";
 `
 }
 

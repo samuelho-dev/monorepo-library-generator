@@ -52,8 +52,7 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addImport("effect", "Effect")
   builder.addImport("@custom-repo/infra-env", "env")
   builder.addImport("./service", className)
-  builder.addImport("./service", `create${className}Client`)
-  builder.addImport("./service", `${className}Config`, true)
+  builder.addImport("./types", `${className}Config`, true)
   builder.addBlankLine()
 
   // Resource Management Documentation
@@ -147,9 +146,16 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw(`      timeout: env.${projectConstantName}_TIMEOUT || 20000,`)
   builder.addRaw("    };")
   builder.addBlankLine()
-  builder.addRaw(`    const client = create${className}Client(config);`)
-  builder.addBlankLine()
-  builder.addRaw(`    return ${className}.make(client, config);`)
+  builder.addRaw("    // Return service implementation directly (Effect 3.0+ pattern)")
+  builder.addRaw("    return yield* Effect.succeed({")
+  builder.addRaw("      config,")
+  builder.addRaw("      healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
+  builder.addRaw("      list: (params) => Effect.fail(new ${className}InternalError({ message: \"list operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("      get: (id) => Effect.fail(new ${className}InternalError({ message: \"get operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("      create: (data) => Effect.fail(new ${className}InternalError({ message: \"create operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("      update: (id, data) => Effect.fail(new ${className}InternalError({ message: \"update operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("      delete: (id) => Effect.fail(new ${className}InternalError({ message: \"delete operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("    });")
   builder.addRaw("  }),")
   builder.addRaw(");")
   builder.addBlankLine()
@@ -170,7 +176,8 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw(`//       timeout: env.${projectConstantName}_TIMEOUT || 20000,`)
   builder.addRaw("//     };")
   builder.addRaw("//")
-  builder.addRaw(`//     const client = create${className}Client(config);`)
+  builder.addRaw("//     // Initialize SDK client")
+  builder.addRaw("//     const client = new ExternalSDK(config);")
   builder.addRaw("//")
   builder.addRaw("//     // Register cleanup function")
   builder.addRaw("//     yield* Effect.addFinalizer(() =>")
@@ -183,7 +190,12 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw("//       }),")
   builder.addRaw("//     );")
   builder.addRaw("//")
-  builder.addRaw(`//     return ${className}.make(client, config);`)
+  builder.addRaw("//     // Return service implementation directly")
+  builder.addRaw("//     return {")
+  builder.addRaw("//       config,")
+  builder.addRaw("//       healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
+  builder.addRaw("//       // ... operation implementations")
+  builder.addRaw("//     };")
   builder.addRaw("//   }),")
   builder.addRaw("// );")
   builder.addRaw("//")
@@ -194,22 +206,20 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw("/**")
   builder.addRaw(" * Test Layer - Testing environment")
   builder.addRaw(" *")
-  builder.addRaw(" * Uses Layer.succeed for mock data")
+  builder.addRaw(" * Uses Layer.succeed for immediate mock value (Effect 3.0+ pattern)")
   builder.addRaw(" */")
   builder.addRaw(`export const ${className}Test = Layer.succeed(`)
   builder.addRaw(`  ${className},`)
-  builder.addRaw(`  ${className}.make(`)
-  builder.addRaw("    // Mock client")
-  builder.addRaw("    {")
-  builder.addRaw(
-    "      healthCheck: () => Promise.resolve({ status: \"healthy\" }),"
-  )
-  builder.addRaw("    },")
-  builder.addRaw("    {")
-  builder.addRaw("      apiKey: \"test_key\",")
-  builder.addRaw("      timeout: 1000,")
-  builder.addRaw("    },")
-  builder.addRaw("  ),")
+  builder.addRaw("  {")
+  builder.addRaw("    config: { apiKey: \"test_key\", timeout: 1000 },")
+  builder.addRaw("    healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
+  builder.addRaw("    // Mock implementations for all operations")
+  builder.addRaw("    list: () => Effect.succeed({ data: [], page: 1, limit: 10, total: 0 }),")
+  builder.addRaw("    get: (id) => Effect.succeed({ id, name: \"test\" }),")
+  builder.addRaw("    create: (data) => Effect.succeed({ id: \"test-id\", ...data }),")
+  builder.addRaw("    update: (id, data) => Effect.succeed({ id, ...data }),")
+  builder.addRaw("    delete: (id) => Effect.void,")
+  builder.addRaw("  },")
   builder.addRaw(");")
   builder.addBlankLine()
 
@@ -230,11 +240,21 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw("      timeout: 30000, // Longer timeout for dev")
   builder.addRaw("    };")
   builder.addBlankLine()
-  builder.addRaw(`    const client = create${className}Client(config);`)
+  builder.addRaw("    // TODO: Initialize actual SDK client if needed")
+  builder.addRaw("    // const client = new ExternalSDK(config);")
   builder.addBlankLine()
-  builder.addRaw(`    console.log(\`[${className}] [DEV] Development layer initialized\`);`)
+  builder.addRaw(`    yield* Effect.logInfo(\`[${className}] [DEV] Development layer initialized\`);`)
   builder.addBlankLine()
-  builder.addRaw(`    return ${className}.make(client, config);`)
+  builder.addRaw("    // Return service implementation with debug logging")
+  builder.addRaw("    return yield* Effect.succeed({")
+  builder.addRaw("      config,")
+  builder.addRaw("      healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
+  builder.addRaw("      list: (params) => Effect.fail(new ${className}InternalError({ message: \"list operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("      get: (id) => Effect.fail(new ${className}InternalError({ message: \"get operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("      create: (data) => Effect.fail(new ${className}InternalError({ message: \"create operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("      update: (id, data) => Effect.fail(new ${className}InternalError({ message: \"update operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("      delete: (id) => Effect.fail(new ${className}InternalError({ message: \"delete operation not implemented - integrate with SDK\" })),")
+  builder.addRaw("    });")
   builder.addRaw("  }),")
   builder.addRaw(");")
   builder.addBlankLine()
@@ -273,17 +293,33 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
     body: `return Layer.scoped(
   ${className},
   Effect.gen(function* () {
-    const client = create${className}Client(config);
+    // TODO: Initialize SDK client if needed
+    // const client = new ExternalSDK(config);
 
     // Register cleanup function
     yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        console.log(\`[${className}] [CUSTOM] Cleaning up client resources\`);
-        // TODO: Add cleanup logic
-      }),
+      Effect.logInfo(\`[${className}] [CUSTOM] Cleaning up client resources\`).pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            // TODO: Add cleanup logic
+            // client.close()
+            // client.disconnect()
+          })
+        )
+      )
     );
 
-    return ${className}.make(client, config);
+    // Return service implementation directly (Effect 3.0+ pattern)
+    return {
+      config,
+      healthCheck: Effect.succeed({ status: "healthy" as const }),
+      // TODO: Replace with actual SDK implementations
+      list: (params) => Effect.dieMessage("list operation not implemented - integrate with SDK"),
+      get: (id) => Effect.dieMessage("get operation not implemented - integrate with SDK"),
+      create: (data) => Effect.dieMessage("create operation not implemented - integrate with SDK"),
+      update: (id, data) => Effect.dieMessage("update operation not implemented - integrate with SDK"),
+      delete: (id) => Effect.dieMessage("delete operation not implemented - integrate with SDK"),
+    };
   }),
 );`
   })

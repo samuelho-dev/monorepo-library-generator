@@ -29,6 +29,7 @@ export function generateInterfaceFile(options: InfraTemplateOptions) {
 
   // Imports
   builder.addImports([
+    { from: "node:crypto", imports: ["randomUUID"] },
     { from: "effect", imports: ["Effect", "Layer", "Option", "Context"] },
     {
       from: "./errors",
@@ -179,7 +180,7 @@ export class ${className}Service extends Context.Tag(
       // 2. Acquire Resources with Effect.acquireRelease
       // Example: Connection pool that needs cleanup
       const resource = yield* Effect.acquireRelease(
-        Effect.gen(function () {
+        Effect.gen(function* () {
           // Acquire phase: Initialize resource
           // yield* logger.info("${className} service initializing");
 
@@ -199,7 +200,7 @@ export class ${className}Service extends Context.Tag(
             close: async () => { /* cleanup */ }
           };
         }),
-        (resource) => Effect.gen(function () {
+        (resource) => Effect.gen(function* () {
           // Release phase: Cleanup resource
           // yield* logger.info("${className} service shutting down");
 
@@ -484,42 +485,42 @@ export class ${className}Service extends Context.Tag(
       // ✅ Direct object return (Effect 3.0+), no .of() needed
       return {
         get: (id: string) =>
-          Effect.gen(function () {
+          Effect.gen(function* () {
             // yield* logger.debug(\`Getting item: \${id}\`);
 
-            return Effect.tryPromise({
+            const result = yield* Effect.tryPromise({
               try: () => resource.query(id),
               catch: (error) => new ${className}InternalError({
                 message: \`Failed to get item \${id}\`,
                 cause: error
               })
-            }).pipe(
-              Effect.map(Option.fromNullable)
-            );
+            });
+            return Option.fromNullable(result);
           }),
 
-        findByCriteria: (_criteria, _skip = 0, _limit = 10) =>
-          Effect.gen(function () {
+        findByCriteria: (criteria, skip = 0, limit = 10) =>
+          Effect.gen(function* () {
             // yield* logger.debug("Finding items by criteria", { criteria, skip, limit });
 
-            return Effect.tryPromise({
+            const result = yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual query logic
-                return [{ id: "1", ..._criteria }, { id: "2", ..._criteria }]
-                  .slice(_skip, _skip + _limit);
+                return [{ id: "1", ...criteria }, { id: "2", ...criteria }]
+                  .slice(skip, skip + limit);
               },
               catch: (error) => new ${className}InternalError({
                 message: "Failed to find items by criteria",
                 cause: error
               })
             });
+            return result;
           }),
 
         create: (input) =>
-          Effect.gen(function () {
+          Effect.gen(function* () {
             // yield* logger.info("Creating item", { input });
 
-            return Effect.tryPromise({
+            const result = yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual creation logic
                 return { id: crypto.randomUUID(), ...input, createdAt: new Date() };
@@ -529,15 +530,16 @@ export class ${className}Service extends Context.Tag(
                 cause: error
               })
             });
+            return result;
           }),
 
         update: (id, input) =>
-          Effect.gen(function () {
+          Effect.gen(function* () {
             // yield* logger.info(\`Updating item: \${id}\`, { input });
 
             // Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
-            return Effect.tryPromise({
+            const result = yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual update logic
                 // For existence check, use SDK-level validation or separate Effect
@@ -548,15 +550,16 @@ export class ${className}Service extends Context.Tag(
                 cause: error
               })
             });
+            return result;
           }),
 
         delete: (id) =>
-          Effect.gen(function () {
+          Effect.gen(function* () {
             // yield* logger.info(\`Deleting item: \${id}\`);
 
             // Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
-            return Effect.tryPromise({
+            yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual deletion logic
                 // For existence check, use SDK-level validation or separate Effect
@@ -570,7 +573,7 @@ export class ${className}Service extends Context.Tag(
           }),
 
         healthCheck: () =>
-          Effect.gen(function () {
+          Effect.gen(function* () {
             // Check resource health
             const isHealthy = resource.isConnected;
 
@@ -597,11 +600,11 @@ export class ${className}Service extends Context.Tag(
    * No external dependencies required.
    */
   static readonly Test = Layer.succeed(this, {
-    get: (_id: string) => Effect.succeed(Option.none()),
-    findByCriteria: (_criteria, _skip, _limit) => Effect.succeed([]),
+    get: () => Effect.succeed(Option.none()),
+    findByCriteria: () => Effect.succeed([]),
     create: (input) => Effect.succeed({ id: "test-id", ...input }),
-    update: (_id, input) => Effect.succeed({ id: "test-id", ...input }),
-    delete: (_id) => Effect.void,
+    update: (_, input) => Effect.succeed({ id: "test-id", ...input }),
+    delete: () => Effect.void,
     healthCheck: () => Effect.succeed(true)
   });
 
@@ -618,60 +621,60 @@ export class ${className}Service extends Context.Tag(
   static readonly Dev = Layer.effect(
     this,
     Effect.gen(function* () {
-      console.log(\`[${className}Service] [DEV] Initializing development layer\`);
+      yield* Effect.logInfo(\`[${className}Service] [DEV] Initializing development layer\`);
 
       // Get actual implementation from Live layer
       const liveService = yield* ${className}Service.Live.pipe(
         Layer.build,
-        Effect.map(Context.unsafeGet(${className}Service))
+        Effect.andThen(${className}Service)
       );
 
       // Wrap all operations with verbose logging
       return {
         get: (id: string) =>
           Effect.gen(function* () {
-            console.log(\`[${className}Service] [DEV] get called with id:\`, id);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] get called with id:\`, id);
             const result = yield* liveService.get(id);
-            console.log(\`[${className}Service] [DEV] get result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] get result:\`, result);
             return result;
           }),
 
         findByCriteria: (criteria, skip, limit) =>
           Effect.gen(function* () {
-            console.log(\`[${className}Service] [DEV] findByCriteria called:\`, { criteria, skip, limit });
+            yield* Effect.logDebug(\`[${className}Service] [DEV] findByCriteria called:\`, { criteria, skip, limit });
             const result = yield* liveService.findByCriteria(criteria, skip, limit);
-            console.log(\`[${className}Service] [DEV] findByCriteria returned \${result.length} items\`);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] findByCriteria returned \${result.length} items\`);
             return result;
           }),
 
         create: (input) =>
           Effect.gen(function* () {
-            console.log(\`[${className}Service] [DEV] create called with:\`, input);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] create called with:\`, input);
             const result = yield* liveService.create(input);
-            console.log(\`[${className}Service] [DEV] create result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] create result:\`, result);
             return result;
           }),
 
         update: (id, input) =>
           Effect.gen(function* () {
-            console.log(\`[${className}Service] [DEV] update called:\`, { id, input });
+            yield* Effect.logDebug(\`[${className}Service] [DEV] update called:\`, { id, input });
             const result = yield* liveService.update(id, input);
-            console.log(\`[${className}Service] [DEV] update result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] update result:\`, result);
             return result;
           }),
 
         delete: (id) =>
           Effect.gen(function* () {
-            console.log(\`[${className}Service] [DEV] delete called with id:\`, id);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] delete called with id:\`, id);
             yield* liveService.delete(id);
-            console.log(\`[${className}Service] [DEV] delete completed\`);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] delete completed\`);
           }),
 
         healthCheck: () =>
           Effect.gen(function* () {
-            console.log(\`[${className}Service] [DEV] healthCheck called\`);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck called\`);
             const result = yield* liveService.healthCheck();
-            console.log(\`[${className}Service] [DEV] healthCheck result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck result:\`, result);
             return result;
           })
       };

@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "include": ["src"],
-  "exclude": ["src/**/*.spec.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/dotfiles/**/*"],
   "compilerOptions": {
     "types": ["node"],
     "outDir": "build/src",

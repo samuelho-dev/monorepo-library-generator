@@ -28,7 +28,7 @@ export function generateEventsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema", "DateTime"] }])
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
 
   builder.addImports([
     { from: "./entities", imports: [`${className}Id`], isTypeOnly: true }
@@ -167,7 +167,6 @@ export const AggregateMetadata = Schema.Struct({
     jsdoc: `Union of all ${domainName} domain events`
   })
 
-  builder.addComment("TODO: Add custom domain events to this union")
   builder.addBlankLine()
 
   return builder.toString()
@@ -186,17 +185,6 @@ function createFileHeader(
  *
  * Defines domain events for ${domainName} operations.
  * Events are used for event-driven architecture and messaging.
- *
- * TODO: Customize this file for your domain:
- * 1. Add domain-specific fields to event payloads
- * 2. Add Schema.annotations() for event documentation
- * 3. Create custom events for domain-specific operations
- * 4. Use EventMetadata for correlation and causation tracking
- * 5. Use AggregateMetadata for event sourcing patterns
- * 6. Consider adding:
- *    - State transition events (e.g., StatusChanged)
- *    - Business process events (e.g., Approved, Rejected)
- *    - Integration events for external systems
  *
  * @see https://effect.website/docs/schema/schema for Schema patterns
  * @module @custom-repo/contract-${fileName}/events
@@ -226,16 +214,8 @@ export class ${className}CreatedEvent extends Schema.Class<${className}CreatedEv
   createdBy: Schema.optional(Schema.UUID).annotations({
     title: "Created By",
     description: "UUID of the user who created this ${propertyName}"
-  }),
-
-  // TODO: Add domain-specific fields to the event payload with Schema.annotations()
-}).pipe(
-  Schema.annotations({
-    identifier: "${className}CreatedEvent",
-    title: "${className} Created Event",
-    description: "Event emitted when a ${propertyName} is created"
   })
-) {
+}) {
   static create(params: {
     ${propertyName}Id: ${className}Id;
     createdBy?: string;
@@ -245,7 +225,7 @@ export class ${className}CreatedEvent extends Schema.Class<${className}CreatedEv
       eventId: crypto.randomUUID(),
       eventType: "${className}CreatedEvent",
       eventVersion: "1.0",
-      occurredAt: DateTime.unsafeNow(),
+      occurredAt: new Date(),
       aggregateId: params.${propertyName}Id,
       aggregateType: "${className}",
       aggregateVersion: 1,
@@ -286,16 +266,8 @@ export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEv
   changedFields: Schema.optional(Schema.Array(Schema.String)).annotations({
     title: "Changed Fields",
     description: "List of field names that were modified"
-  }),
-
-  // TODO: Add domain-specific fields to track what changed with Schema.annotations()
-}).pipe(
-  Schema.annotations({
-    identifier: "${className}UpdatedEvent",
-    title: "${className} Updated Event",
-    description: "Event emitted when a ${propertyName} is updated"
   })
-) {
+}) {
   static create(params: {
     ${propertyName}Id: ${className}Id;
     aggregateVersion: number;
@@ -307,7 +279,7 @@ export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEv
       eventId: crypto.randomUUID(),
       eventType: "${className}UpdatedEvent",
       eventVersion: "1.0",
-      occurredAt: DateTime.unsafeNow(),
+      occurredAt: new Date(),
       aggregateId: params.${propertyName}Id,
       aggregateType: "${className}",
       aggregateVersion: params.aggregateVersion,
@@ -349,16 +321,8 @@ export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEv
   isSoftDelete: Schema.optional(Schema.Boolean).annotations({
     title: "Soft Delete",
     description: "True if this was a soft delete (marked as deleted but not removed)"
-  }),
-
-  // TODO: Add domain-specific fields with Schema.annotations()
-}).pipe(
-  Schema.annotations({
-    identifier: "${className}DeletedEvent",
-    title: "${className} Deleted Event",
-    description: "Event emitted when a ${propertyName} is deleted"
   })
-) {
+}) {
   static create(params: {
     ${propertyName}Id: ${className}Id;
     aggregateVersion: number;
@@ -370,7 +334,7 @@ export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEv
       eventId: crypto.randomUUID(),
       eventType: "${className}DeletedEvent",
       eventVersion: "1.0",
-      occurredAt: DateTime.unsafeNow(),
+      occurredAt: new Date(),
       aggregateId: params.${propertyName}Id,
       aggregateType: "${className}",
       aggregateVersion: params.aggregateVersion,

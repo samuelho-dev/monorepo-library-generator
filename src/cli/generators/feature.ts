@@ -22,6 +22,7 @@ import { generateFeatureCore, type GeneratorResult } from "../../generators/core
 import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
 import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import type { PlatformType } from "../../utils/platforms"
+import { addDotfilesToLibrary } from "../../utils/shared/dotfile-generation"
 
 /**
  * Feature Generator Options (CLI)
@@ -85,6 +86,12 @@ export function generateFeature(options: FeatureGeneratorOptions) {
       ...(options.includeClientServer !== undefined && { includeClientServer: options.includeClientServer }),
       ...(options.includeRPC !== undefined && { includeRPC: options.includeRPC }),
       ...(options.includeEdge !== undefined && { includeEdgeExports: options.includeEdge })
+    })
+
+    // Add dotfiles to library
+    yield* addDotfilesToLibrary(adapter, {
+      projectRoot,
+      merge: true
     })
 
     // Prepare core options for domain file generation

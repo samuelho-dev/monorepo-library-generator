@@ -41,7 +41,7 @@ export type ${entityName}Id = string & Brand.Brand<"${entityName}Id">;
  * Validates and brands UUID strings as ${entityName}Id.
  */
 export const ${entityName}Id = Schema.String.pipe(
-  Schema.uuid(),
+  Schema.UUID,
   Schema.brand("${entityName}Id")
 );
 
@@ -49,24 +49,17 @@ export const ${entityName}Id = Schema.String.pipe(
  * ${entityName} Entity
  *
  * Domain entity with Effect Schema validation and branded ID type.
- *
- * TODO: Customize this entity for your domain:
- * 1. Add domain-specific fields
- * 2. Add validation rules (Schema.minLength, Schema.positive, etc.)
- * 3. Add computed fields if needed
- * 4. Consider adding more branded types for other domain primitives
  */
 export class ${entityName} extends Schema.Class<${entityName}>("${entityName}")({
   id: ${entityName}Id,
   createdAt: Schema.DateTimeUtc,
   updatedAt: Schema.DateTimeUtc
-  // TODO: Add your domain fields here
 }) {}
 
 /**
  * Insert type - for creating new ${entityName} (without generated fields)
  */
-export type ${entityName}Insert = typeof ${entityName}.Encoded;
+export type ${entityName}Insert = typeof ${entityName}.Type;
 
 /**
  * Update type - partial insert (for updates)

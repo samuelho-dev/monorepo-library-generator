@@ -152,7 +152,6 @@ export default async function providerGenerator(
     await Effect.runPromise(
       addDotfilesToLibrary(adapter, {
         projectRoot: metadata.projectRoot,
-        includeVSCodeSettings: schema.includeVSCodeSettings ?? true,
         overwrite: schema.overwriteDotfiles ?? false
       })
     )

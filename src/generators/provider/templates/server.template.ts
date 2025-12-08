@@ -21,19 +21,19 @@ export function generateServerFile(options: ProviderTemplateOptions) {
   builder.addFileHeader({
     title: `${packageName}/server`,
     description:
-      `Server-side exports for ${className}Service provider.\nContains service implementations, layers, and server-specific functionality.`,
+      `Server-side exports for ${className} provider.\nContains service implementations, layers, and server-specific functionality.`,
     module: `${packageName}/server`
   })
 
   builder.addRaw(`// Service implementation
-export { ${className}Service } from "./lib/service";
+export { ${className} } from "./lib/service";
 
 // Service layers
 export {
-  ${className}ServiceLive,
-  ${className}ServiceTest,
-  ${className}ServiceDev,
-  ${className}ServiceAuto,
+  ${className}Live,
+  ${className}Test,
+  ${className}Dev,
+  ${className}Auto,
 } from "./lib/layers";
 
 // Types and validation

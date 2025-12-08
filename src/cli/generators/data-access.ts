@@ -20,6 +20,7 @@ import { generateDataAccessCore, type GeneratorResult } from "../../generators/c
 import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
 import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import { createNamingVariants } from "../../utils/naming"
+import { addDotfilesToLibrary } from "../../utils/shared/dotfile-generation"
 
 /**
  * Data Access Generator Options (CLI)
@@ -91,6 +92,12 @@ export function generateDataAccess(options: DataAccessGeneratorOptions) {
       offsetFromRoot: metadata.offsetFromRoot,
       platform: "node",
       tags
+    })
+
+    // Add dotfiles to library
+    yield* addDotfilesToLibrary(adapter, {
+      projectRoot: metadata.projectRoot,
+      merge: true
     })
 
     // Phase 2: Generate domain files via core generator

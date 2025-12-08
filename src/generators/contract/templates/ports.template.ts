@@ -32,19 +32,6 @@ export function generatePortsFile(options: ContractTemplateOptions) {
     { from: "effect", imports: ["Context", "Effect", "Option"] }
   ])
 
-  // TODO: Uncomment when types-database library is available
-  // builder.addImports([
-  //   {
-  //     from: '@custom-repo/types-database',
-  //     imports: [
-  //       `${className}`,
-  //       `Partial<${className}>`,
-  //       `Partial<${className}>`,
-  //     ],
-  //     isTypeOnly: true,
-  //   },
-  // ]);
-
   builder.addImports([
     {
       from: "./entities",
@@ -95,17 +82,6 @@ export function generatePortsFile(options: ContractTemplateOptions) {
     ]
   })
 
-  builder.addComment("TODO: Add domain-specific filters here")
-  builder.addComment("Example filters:")
-  builder.addComment("")
-  builder.addComment("/** Filter by unique slug */")
-  builder.addComment("readonly slug?: string;")
-  builder.addComment("")
-  builder.addComment("/** Filter by status */")
-  builder.addComment("readonly status?: string | readonly string[];")
-  builder.addComment("")
-  builder.addComment("/** Filter by owner */")
-  builder.addComment("readonly ownerId?: string;")
   builder.addBlankLine()
 
   // PaginationParams interface
@@ -209,16 +185,6 @@ function createFileHeader(
  * Defines repository and service interfaces for ${domainName} domain.
  * These ports are implemented in the data-access layer using Effect's dependency injection.
  *
- * TODO: Customize this file for your domain:
- * 1. Add domain-specific query methods to the repository
- * 2. Add domain-specific filters to ${className}Filters
- * 3. Add business logic methods to the service
- * 4. Consider adding:
- *    - Bulk operations (createMany, updateMany, deleteMany)
- *    - Domain-specific queries (findByStatus, findByOwner, etc.)
- *    - Transaction support for multi-step operations
- *    - Caching strategies
- *
  * @see https://effect.website/docs/guides/context-management for dependency injection
  * @module @custom-repo/contract-${fileName}/ports
  */`
@@ -288,14 +254,14 @@ export class ${className}Repository extends Context.Tag(
      */
     readonly count: (
       filters?: ${className}Filters
-    ) => Effect.Effect<number, ${className}RepositoryError>;
+    ) => Effect.Effect<number, ${className}RepositoryError, never>;
 
     /**
      * Create a new ${domainName}
      */
     readonly create: (
       input: Partial<${className}>
-    ) => Effect.Effect<${className}, ${className}RepositoryError>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
 
     /**
      * Update an existing ${domainName}
@@ -303,23 +269,21 @@ export class ${className}Repository extends Context.Tag(
     readonly update: (
       id: string,
       input: Partial<${className}>
-    ) => Effect.Effect<${className}, ${className}RepositoryError>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
 
     /**
      * Delete a ${domainName} permanently
      */
     readonly delete: (
       id: string
-    ) => Effect.Effect<void, ${className}RepositoryError>;
+    ) => Effect.Effect<void, ${className}RepositoryError, never>;
 
     /**
      * Check if ${domainName} exists by ID
      */
     readonly exists: (
       id: string
-    ) => Effect.Effect<boolean, ${className}RepositoryError>;
-
-    // TODO: Add domain-specific repository methods here
+    ) => Effect.Effect<boolean, ${className}RepositoryError, never>;
   }
 >() {}`
 }
@@ -358,7 +322,7 @@ export class ${className}Service extends Context.Tag(
      */
     readonly get: (
       id: string
-    ) => Effect.Effect<${className}, ${className}RepositoryError>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
 
     /**
      * List ${domainName}s with filters and pagination
@@ -367,14 +331,14 @@ export class ${className}Service extends Context.Tag(
       filters?: ${className}Filters,
       pagination?: PaginationParams,
       sort?: SortOptions
-    ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError>;
+    ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError, never>;
 
     /**
      * Create a new ${domainName}
      */
     readonly create: (
       input: Partial<${className}>
-    ) => Effect.Effect<${className}, ${className}RepositoryError>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
 
     /**
      * Update an existing ${domainName}
@@ -382,16 +346,14 @@ export class ${className}Service extends Context.Tag(
     readonly update: (
       id: string,
       input: Partial<${className}>
-    ) => Effect.Effect<${className}, ${className}RepositoryError>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
 
     /**
      * Delete a ${domainName}
      */
     readonly delete: (
       id: string
-    ) => Effect.Effect<void, ${className}RepositoryError>;
-
-    // TODO: Add domain-specific service methods here
+    ) => Effect.Effect<void, ${className}RepositoryError, never>;
   }
 >() {}`
 }
@@ -428,7 +390,7 @@ export class ${className}ProjectionRepository extends Context.Tag(
      */
     readonly findProjection: (
       id: string
-    ) => Effect.Effect<Option.Option<unknown>, ${className}RepositoryError>;
+    ) => Effect.Effect<Option.Option<unknown>, ${className}RepositoryError, never>;
 
     /**
      * List projections with filters
@@ -436,7 +398,7 @@ export class ${className}ProjectionRepository extends Context.Tag(
     readonly listProjections: (
       filters?: Record<string, unknown>,
       pagination?: PaginationParams
-    ) => Effect.Effect<PaginatedResult<unknown>, ${className}RepositoryError>;
+    ) => Effect.Effect<PaginatedResult<unknown>, ${className}RepositoryError, never>;
 
     /**
      * Update projection (called by event handlers)
@@ -444,16 +406,14 @@ export class ${className}ProjectionRepository extends Context.Tag(
     readonly updateProjection: (
       id: string,
       data: unknown
-    ) => Effect.Effect<void, ${className}RepositoryError>;
+    ) => Effect.Effect<void, ${className}RepositoryError, never>;
 
     /**
      * Rebuild projection from event stream
      */
     readonly rebuildProjection: (
       id: string
-    ) => Effect.Effect<void, ${className}RepositoryError>;
-
-    // TODO: Add domain-specific projection methods
+    ) => Effect.Effect<void, ${className}RepositoryError, never>;
   }
 >() {}`
 }

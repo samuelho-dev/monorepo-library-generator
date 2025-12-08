@@ -53,13 +53,6 @@ export const ${propertyName}Atom = Atom.make<${className}State>({
 });`)
   builder.addBlankLine()
 
-  // Add TODO comments
-  builder.addComment("TODO: Add more atoms as needed")
-  builder.addComment("Example:")
-  builder.addComment(
-    `// export const ${propertyName}FiltersAtom = Atom.make<FilterState>({...});`
-  )
-  builder.addBlankLine()
 
   return builder.toString()
 }

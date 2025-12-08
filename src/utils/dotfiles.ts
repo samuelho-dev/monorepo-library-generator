@@ -8,7 +8,9 @@
  */
 
 import { Effect } from "effect"
+import { existsSync } from "node:fs"
 import * as path from "node:path"
+import { fileURLToPath } from "node:url"
 import { mergeDotfileContent } from "./dotfile-merge"
 import { type FileSystemAdapter, FileSystemError } from "./filesystem-adapter"
 
@@ -79,7 +81,29 @@ export const getDotfileTemplatePath = (name: DotfileName) => {
   }
 
   const templateFile = templateMap[name]
-  return path.join(__dirname, "../dotfiles", templateFile)
+
+  // Calculate dotfiles path based on current module location
+  const currentFile = fileURLToPath(import.meta.url)
+  const currentDir = path.dirname(currentFile)
+
+  // Bundled CLI: dist/bin/cli.mjs -> dist/src/dotfiles
+  if (currentDir.includes(path.join("dist", "bin"))) {
+    return path.join(currentDir, "..", "src", "dotfiles", templateFile)
+  }
+
+  // Development/Tests: build/esm/utils/dotfiles.js -> src/dotfiles
+  // Find project root by looking for package.json going up the directory tree
+  let projectRoot = currentDir
+  while (!existsSync(path.join(projectRoot, "package.json"))) {
+    const parent = path.dirname(projectRoot)
+    if (parent === projectRoot) {
+      // Reached filesystem root without finding package.json
+      throw new Error("Could not find project root (package.json)")
+    }
+    projectRoot = parent
+  }
+
+  return path.join(projectRoot, "src", "dotfiles", templateFile)
 }
 
 /**

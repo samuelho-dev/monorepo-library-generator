@@ -66,8 +66,8 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   builder.addRaw(`export const updateOperations: Update${className}Operations = {
-  update: (_id: string, _input: ${className}UpdateInput) =>
-    Effect.gen(function () {
+  update: (id: string, input: ${className}UpdateInput) =>
+    Effect.gen(function* () {
       // TODO: Implement database update
       // const database = yield* KyselyService;
       // const result = yield* database.query((db) =>
@@ -87,7 +87,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
       //
       // return result;
 
-      return Effect.dieMessage("Update operation not implemented");
+      return yield* Effect.dieMessage("Update operation not implemented");
     }),
 };`)
   builder.addBlankLine()

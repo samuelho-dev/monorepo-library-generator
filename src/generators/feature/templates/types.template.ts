@@ -25,25 +25,22 @@ export function generateTypesFile(options: FeatureTemplateOptions) {
     module: `@custom-repo/feature-${name}/shared/types`
   })
 
-  // Add TODO comment
-  builder.addComment("TODO: Add domain types")
-
-  // Add Config interface with eslint-disable
+  // Add Config interface
   builder.addRaw(`/**
- * TODO: Add configuration fields
+ * Service configuration
+ *
+ * Add configuration fields as needed for your service
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface ${className}Config {
-}`)
+export type ${className}Config = Record<string, never>;`)
   builder.addBlankLine()
 
-  // Add Result interface with eslint-disable
+  // Add Result interface
   builder.addRaw(`/**
- * TODO: Add result fields
+ * Service operation result
+ *
+ * Add result fields as needed for your service operations
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface ${className}Result {
-}`)
+export type ${className}Result = Record<string, never>;`)
   builder.addBlankLine()
 
   return builder.toString()

@@ -85,8 +85,8 @@ export default [
           message: "Do not use explicit return type annotations. Let TypeScript infer the return type."
         },
         {
-          selector: "TSAsExpression",
-          message: "Do not use 'as' type assertions. Use type guards or refactor to avoid type coercion."
+          selector: "TSAsExpression:not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
+          message: "Do not use 'as' type assertions. Use type guards or refactor to avoid type coercion. Note: 'as const' is allowed."
         },
         {
           selector: "TSTypeAssertion",

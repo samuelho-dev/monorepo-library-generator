@@ -41,12 +41,12 @@ This library provides an Effect-based adapter for the ${className} external serv
 It wraps the external SDK in Effect types for composable error handling.
 
 Effect 3.0+ Pattern:
-  - ${className}Service extends Context.Tag
-  - Access layers via static members: ${className}Service.Live, ${className}Service.Test
+  - ${className} extends Context.Tag
+  - Access layers via static members: ${className}.Live, ${className}.Test
 
 Usage:
-  import { ${className}Service } from '${packageName}';
-  const layer = ${className}Service.Live;`
+  import { ${className} } from '${packageName}';
+  const layer = ${className}.Live;`
   })
 
   builder.addBlankLine()
@@ -85,20 +85,20 @@ Usage:
   builder.addSectionComment("Service Implementation")
   builder.addBlankLine()
 
-  builder.addComment(`${className}Service - External service adapter`)
+  builder.addComment(`${className} - External service adapter`)
   builder.addComment("")
   builder.addComment("Effect 3.0+ Pattern: Context.Tag with static layer members")
   builder.addComment("Access layers via static members:")
-  builder.addComment(`  - ${className}Service.Live  (production - wraps real SDK)`)
-  builder.addComment(`  - ${className}Service.Test  (testing - mock implementation)`)
+  builder.addComment(`  - ${className}.Live  (production - wraps real SDK)`)
+  builder.addComment(`  - ${className}.Test  (testing - mock implementation)`)
   builder.addComment("")
   builder.addComment("Migration from pre-3.0 pattern:")
-  builder.addComment(`  OLD: import { ${className}ServiceLive } from '...';`)
-  builder.addComment(`  NEW: import { ${className}Service } from '...';`)
-  builder.addComment(`       const layer = ${className}Service.Live;`)
+  builder.addComment(`  OLD: import { ${className}Live } from '...';`)
+  builder.addComment(`  NEW: import { ${className} } from '...';`)
+  builder.addComment(`       const layer = ${className}.Live;`)
   builder.addBlankLine()
 
-  builder.addRaw("export { " + className + "Service } from \"./lib/service\";\n")
+  builder.addRaw("export { " + className + " } from \"./lib/service\";\n")
 
   builder.addBlankLine()
 
@@ -115,9 +115,9 @@ Usage:
   builder.addBlankLine()
   builder.addComment("Pre-wired layer compositions with dependencies")
   builder.addComment("Use these if you want automatic dependency wiring:")
-  builder.addComment(`  - ${className}ServiceLive  (production layer with dependencies)`)
-  builder.addComment(`  - ${className}ServiceTest  (test layer with mocks)`)
-  builder.addComment(`  - ${className}ServiceAuto  (automatic selection based on NODE_ENV)`)
+  builder.addComment(`  - ${className}Live  (production layer with dependencies)`)
+  builder.addComment(`  - ${className}Test  (test layer with mocks)`)
+  builder.addComment(`  - ${className}Auto  (automatic selection based on NODE_ENV)`)
   builder.addBlankLine()
   builder.addRaw("export * from \"./lib/layers\";\n")
 
@@ -129,14 +129,14 @@ Usage:
   builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   builder.addComment("")
   builder.addComment("import { Effect, Layer } from 'effect';")
-  builder.addComment(`import { ${className}Service, ${className}ServiceLive } from '${packageName}';`)
+  builder.addComment(`import { ${className}, ${className}Live } from '${packageName}';`)
   builder.addComment("")
   builder.addComment("const program = Effect.gen(function* () {")
-  builder.addComment(`  const service = yield* ${className}Service;`)
+  builder.addComment(`  const service = yield* ${className};`)
   builder.addComment("  // Use service methods...")
   builder.addComment("});")
   builder.addComment("")
-  builder.addComment(`const runnable = program.pipe(Effect.provide(${className}ServiceLive));`)
+  builder.addComment(`const runnable = program.pipe(Effect.provide(${className}Live));`)
   builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   return builder.toString()

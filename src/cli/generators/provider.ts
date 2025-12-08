@@ -22,6 +22,7 @@ import { generateProviderCore, type GeneratorResult } from "../../generators/cor
 import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
 import { generateLibraryInfrastructure } from "../../utils/infrastructure"
 import type { PlatformType } from "../../utils/platforms"
+import { addDotfilesToLibrary } from "../../utils/shared/dotfile-generation"
 
 /**
  * Provider Generator Options (CLI)
@@ -80,6 +81,12 @@ export function generateProvider(options: ProviderGeneratorOptions) {
       platform,
       offsetFromRoot: "../../..",
       tags
+    })
+
+    // Add dotfiles to library
+    yield* addDotfilesToLibrary(adapter, {
+      projectRoot,
+      merge: true
     })
 
     // Prepare core options

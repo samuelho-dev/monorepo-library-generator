@@ -92,7 +92,7 @@ export interface Read${className}Operations {
    * const repo = yield* ${className}Repository;
    * const results = yield* repo.findAll(
    *   { search: "query" },
-   *   { limit: 20, offset: 0 }
+   *   { limit: 20, skip: 0 }
    * );
    * \`\`\`
    */
@@ -132,8 +132,8 @@ export interface Read${className}Operations {
  * - Add query optimization and indexing
  */
 export const readOperations: Read${className}Operations = {
-  findById: (_id: string) =>
-    Effect.gen(function () {
+  findById: (id: string) =>
+    Effect.gen(function* () {
       // TODO: Implement database query
       // const database = yield* KyselyService;
       // const result = yield* database.query((db) =>
@@ -144,13 +144,13 @@ export const readOperations: Read${className}Operations = {
       // );
       // return result ? Option.some(result) : Option.none();
 
-      return Effect.dieMessage(
+      return yield* Effect.dieMessage(
         "FindById operation not implemented. Configure KyselyService and implement query logic."
       );
     }),
 
-  findAll: (_filter?: ${className}Filter, _pagination?: PaginationOptions) =>
-    Effect.gen(function () {
+  findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
+    Effect.gen(function* () {
       // TODO: Implement database query with filters and pagination
       // const database = yield* KyselyService;
       // let query = db.selectFrom("${fileName}s").selectAll();
@@ -168,8 +168,8 @@ export const readOperations: Read${className}Operations = {
       //
       // // Apply pagination
       // const limit = pagination?.limit ?? 50;
-      // const offset = pagination?.offset ?? 0;
-      // query = query.limit(limit).offset(offset);
+      // const skip = pagination?.skip ?? 0;
+      // query = query.limit(limit).offset(skip);
       //
       // const items = yield* database.query((db) => query.execute());
       //
@@ -177,17 +177,17 @@ export const readOperations: Read${className}Operations = {
       //   items,
       //   total,
       //   limit,
-      //   offset,
-      //   hasMore: offset + items.length < total
+      //   skip,
+      //   hasMore: skip + items.length < total
       // };
 
-      return Effect.dieMessage(
+      return yield* Effect.dieMessage(
         "FindAll operation not implemented. Configure KyselyService and implement query logic."
       );
     }),
 
-  findOne: (_filter: ${className}Filter) =>
-    Effect.gen(function () {
+  findOne: (filter: ${className}Filter) =>
+    Effect.gen(function* () {
       // TODO: Implement database query
       // const database = yield* KyselyService;
       // let query = db.selectFrom("${fileName}s").selectAll();
@@ -202,7 +202,7 @@ export const readOperations: Read${className}Operations = {
       // );
       // return result ? Option.some(result) : Option.none();
 
-      return Effect.dieMessage(
+      return yield* Effect.dieMessage(
         "FindOne operation not implemented. Configure KyselyService and implement query logic."
       );
     }),
@@ -242,17 +242,17 @@ export const testReadOperations: Read${className}Operations = {
 
       const total = items.length;
       const limit = pagination?.limit ?? 50;
-      const offset = pagination?.offset ?? 0;
+      const skip = pagination?.skip ?? 0;
 
       // Apply pagination
-      const paginatedItems = items.slice(offset, offset + limit);
+      const paginatedItems = items.slice(skip, skip + limit);
 
       return {
         items: paginatedItems,
         total,
         limit,
-        offset,
-        hasMore: offset + paginatedItems.length < total,
+        skip,
+        hasMore: skip + paginatedItems.length < total,
       };
     }),
 

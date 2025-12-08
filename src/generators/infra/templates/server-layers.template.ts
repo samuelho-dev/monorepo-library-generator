@@ -84,39 +84,44 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
  */
 export const ${className}ServiceDev = Layer.effect(
   ${className}Service,
-  Effect.gen(function () {
+  Effect.gen(function* () {
     // TODO: Inject dependencies
     // const config = yield* ${className}Config;
     // const logger = yield* LoggingService;
 
     // TODO: Add development-specific setup (verbose logging, etc.)
-    console.log("[${className}] Development layer initialized");
+    yield* Effect.logInfo("[${className}] Development layer initialized");
 
     return {
-      get: (id: string) => {
-        console.log(\`[${className}] DEV GET \${id}\`);
-        return Effect.succeed(Option.none());
-      },
-      findByCriteria: (_criteria, _skip, _limit) => {
-        console.log(\`[${className}] DEV findByCriteria\`);
-        return Effect.succeed([]);
-      },
-      create: (input) => {
-        console.log(\`[${className}] DEV create\`, input);
-        return Effect.succeed({ id: "dev-id", ...input });
-      },
-      update: (id, input) => {
-        console.log(\`[${className}] DEV update \${id}\`, input);
-        return Effect.succeed({ id, ...input });
-      },
-      delete: (id) => {
-        console.log(\`[${className}] DEV delete \${id}\`);
-        return Effect.void;
-      },
-      healthCheck: () => {
-        console.log(\`[${className}] DEV healthCheck\`);
-        return Effect.succeed(true);
-      },
+      get: () =>
+        Effect.gen(function* () {
+          yield* Effect.logDebug(\`[${className}] DEV GET\`);
+          return Option.none();
+        }),
+      findByCriteria: () =>
+        Effect.gen(function* () {
+          yield* Effect.logDebug(\`[${className}] DEV findByCriteria\`);
+          return [];
+        }),
+      create: (input) =>
+        Effect.gen(function* () {
+          yield* Effect.logDebug(\`[${className}] DEV create\`, input);
+          return { id: "dev-id", ...input };
+        }),
+      update: (_, input) =>
+        Effect.gen(function* () {
+          yield* Effect.logDebug(\`[${className}] DEV update\`, input);
+          return { id: "dev-id", ...input };
+        }),
+      delete: () =>
+        Effect.gen(function* () {
+          yield* Effect.logDebug(\`[${className}] DEV delete\`);
+        }),
+      healthCheck: () =>
+        Effect.gen(function* () {
+          yield* Effect.logDebug(\`[${className}] DEV healthCheck\`);
+          return true;
+        }),
     };
   }),
 );`)
@@ -220,7 +225,7 @@ export const ${className}ServiceCustom = (customConfig: {
 }) =>
   Layer.scoped(
     ${className}Service,
-    Effect.gen(function () {
+    Effect.gen(function* () {
       // Merge custom config with defaults
       const defaults = {
         timeout: 5000,
@@ -228,19 +233,19 @@ export const ${className}ServiceCustom = (customConfig: {
         ...customConfig,
       };
 
-      console.log("[${className}] Custom layer initialized with", defaults);
+      yield* Effect.logInfo("[${className}] Custom layer initialized with", defaults);
 
       return {
-        get: (id: string) =>
-          Effect.gen(function () {
+        get: () =>
+          Effect.gen(function* () {
             // Use custom config in implementation
-            console.log(\`[${className}] GET \${id} with \${defaults.timeout}ms timeout\`);
+            yield* Effect.logDebug(\`[${className}] GET with \${defaults.timeout}ms timeout\`);
             return Option.none();
           }),
-        findByCriteria: (_criteria, _skip, _limit) => Effect.succeed([]),
+        findByCriteria: () => Effect.succeed([]),
         create: (input) => Effect.succeed({ id: "custom-id", ...input }),
-        update: (id, input) => Effect.succeed({ id, ...input }),
-        delete: (_id) => Effect.void,
+        update: (_, input) => Effect.succeed({ id: "custom-id", ...input }),
+        delete: () => Effect.void,
         healthCheck: () => Effect.succeed(true),
       };
     }),
@@ -263,7 +268,7 @@ export const ${className}ServiceWithRetry = Layer.effect(
     // Get base service implementation
     const baseService = yield* ${className}Service.Live.pipe(
       Layer.build,
-      Effect.map(Context.unsafeGet(${className}Service))
+      Effect.andThen(${className}Service)
     );
 
     // Wrap methods with retry policy

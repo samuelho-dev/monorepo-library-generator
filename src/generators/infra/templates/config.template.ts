@@ -141,14 +141,14 @@ export const production${className}Config: ${className}Config = {
 
   builder.addFunction({
     name: `validate${className}Config`,
-    params: [{ name: "_config", type: `${className}Config` }],
+    params: [{ name: "config", type: `${className}Config` }],
     body: `// TODO: Add validation logic
 // Example:
 // if (!config.timeout || config.timeout < 0) {
 //   throw new Error('Invalid timeout: must be positive number');
 // }`,
     jsdoc:
-      `Validate configuration\n\nTODO: Add configuration validation logic\n\n@param _config - Configuration to validate\n@throws Error if configuration is invalid\n\n@example\n\`\`\`typescript\nvalidate${className}Config(config);\n\`\`\``
+      `Validate configuration\n\nTODO: Add configuration validation logic\n\n@param config - Configuration to validate\n@throws Error if configuration is invalid\n\n@example\n\`\`\`typescript\nvalidate${className}Config(config);\n\`\`\``
   })
 
   return builder.toString()

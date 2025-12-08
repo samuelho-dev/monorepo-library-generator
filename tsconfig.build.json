@@ -6,8 +6,6 @@
     "outDir": "build/esm",
     "noEmit": false,
     "declaration": true,
-    "declarationMap": true,
-    "declarationDir": "build/dts",
-    "stripInternal": true
+    "declarationMap": true
   }
 }

@@ -10,6 +10,7 @@
 import { Args, Command, Options } from "@effect/cli"
 import { NodeContext, NodeRuntime } from "@effect/platform-node"
 import { Console, Effect, Option } from "effect"
+import { initWorkspace } from "./commands/init-workspace"
 import { generateContract } from "./generators/contract"
 import { generateDataAccess } from "./generators/data-access"
 import { generateFeature } from "./generators/feature"
@@ -285,11 +286,53 @@ const generateCommand = Command.make("generate").pipe(
 )
 
 /**
+ * Init Workspace Command
+ *
+ * Initializes workspace-level dotfiles for consistent development experience.
+ */
+const overwriteOption = Options.boolean("overwrite").pipe(
+  Options.withDescription("Overwrite existing files"),
+  Options.withDefault(false)
+)
+
+const mergeOption = Options.boolean("merge").pipe(
+  Options.withDescription("Merge with existing files"),
+  Options.withDefault(true)
+)
+
+const initWorkspaceCommand = Command.make(
+  "init-workspace",
+  {
+    overwrite: overwriteOption,
+    merge: mergeOption
+  },
+  ({ merge, overwrite }) =>
+    initWorkspace({
+      overwrite,
+      merge
+    }).pipe(
+      Effect.catchAll((error) =>
+        Console.error(`Error initializing workspace: ${error}`).pipe(
+          Effect.flatMap(() => Effect.fail(error))
+        )
+      )
+    )
+).pipe(
+  Command.withDescription(
+    "Initialize workspace-level dotfiles (.editorconfig, .vscode/*)"
+  )
+)
+
+/**
  * Main CLI Application
  */
-const cli = Command.run(generateCommand, {
+const mainCommand = Command.make("mlg").pipe(
+  Command.withSubcommands([generateCommand, initWorkspaceCommand])
+)
+
+const cli = Command.run(mainCommand, {
   name: "Monorepo Library Generator",
-  version: "v1.0.0"
+  version: "v1.3.0"
 })
 
 /**

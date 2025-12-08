@@ -72,11 +72,75 @@ export interface MergeResult {
  * @returns JSON string without comments
  */
 export const stripJsonComments = (content: string) => {
-  // Remove single-line comments (// ...)
-  let result = content.replace(/\/\/.*$/gm, "")
+  // For JSON files (tsconfig.json, .vscode/*.json), we need to be careful
+  // not to strip glob patterns like "src/**/*" which contain /* and */
+  //
+  // Strategy: Only strip comments that appear outside of quoted strings
+  // This is a simplified approach - for production use, consider a proper JSON parser
 
-  // Remove multi-line comments (/* ... */)
-  result = result.replace(/\/\*[\s\S]*?\*\//g, "")
+  let result = ""
+  let inString = false
+  let escapeNext = false
+  let i = 0
+
+  while (i < content.length) {
+    const char = content[i]
+    const nextChar = content[i + 1]
+
+    // Handle escape sequences in strings
+    if (escapeNext) {
+      result += char
+      escapeNext = false
+      i++
+      continue
+    }
+
+    // Track string boundaries
+    if (char === "\"" && !escapeNext) {
+      inString = !inString
+      result += char
+      i++
+      continue
+    }
+
+    // Track escape character
+    if (char === "\\" && inString) {
+      escapeNext = true
+      result += char
+      i++
+      continue
+    }
+
+    // Skip comments only if outside strings
+    if (!inString) {
+      // Single-line comment
+      if (char === "/" && nextChar === "/") {
+        // Skip until end of line
+        while (i < content.length && content[i] !== "\n") {
+          i++
+        }
+        continue
+      }
+
+      // Multi-line comment
+      if (char === "/" && nextChar === "*") {
+        // Skip until */
+        i += 2
+        while (i < content.length - 1) {
+          if (content[i] === "*" && content[i + 1] === "/") {
+            i += 2
+            break
+          }
+          i++
+        }
+        continue
+      }
+    }
+
+    // Normal character
+    result += char
+    i++
+  }
 
   return result
 }

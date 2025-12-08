@@ -195,7 +195,6 @@ export function computeLibraryMetadata(
 
   return {
     // Required by BaseTemplateSubstitutions
-    // eslint-disable-next-line no-restricted-syntax
     tmpl: "" as const,
     name: schema.name,
     offsetFromRoot: computeOffsetFromRoot(projectRoot),

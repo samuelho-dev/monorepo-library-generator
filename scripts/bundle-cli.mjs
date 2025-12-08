@@ -2,8 +2,7 @@
 /**
  * Bundle CLI into a single executable file
  *
- * Uses esbuild to bundle all CLI code and dependencies into dist/bin/cli-bundled.mjs
- * This allows the CLI to work without needing .js extensions in imports.
+ * Uses esbuild to bundle all CLI code and dependencies into dist/bin/cli.mjs
  */
 
 import * as esbuild from "esbuild"
@@ -23,25 +22,31 @@ try {
     platform: "node",
     format: "esm",
     target: "node16",
-    outfile: join(distDir, "bin", "cli-bundled.mjs"),
+    outfile: join(distDir, "bin", "cli.mjs"),
     banner: {
       js: "#!/usr/bin/env node"
     },
     // Keep Effect dependencies external (standard practice)
     packages: "external",
-    minify: false,
+    minify: true,
     sourcemap: true,
     logLevel: "info",
     external: [
       // Node.js built-ins
-      "node:*"
+      "node:*",
+      // Effect packages (installed as dependencies)
+      "effect",
+      "@effect/platform",
+      "@effect/platform-node",
+      "@effect/cli",
+      "@effect/ai"
     ]
   })
 
   // Make executable
-  chmodSync(join(distDir, "bin", "cli-bundled.mjs"), 0o755)
+  chmodSync(join(distDir, "bin", "cli.mjs"), 0o755)
 
-  console.log("\n✓ CLI bundled successfully to dist/bin/cli-bundled.mjs")
+  console.log("\n✓ CLI bundled successfully to dist/bin/cli.mjs")
 } catch (error) {
   console.error("❌ CLI bundling failed:", error)
   process.exit(1)
