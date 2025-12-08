@@ -62,7 +62,7 @@
     "gen:contract": "pnpm build && nx g ./dist/src/generators.json:contract",
     "verify:lint": "pnpm lint 2>&1 | grep -E '^/' | wc -l",
     "changeset-version": "changeset version && node scripts/version.mjs",
-    "changeset-publish": "pnpm build && TEST_DIST= pnpm vitest && changeset publish"
+    "changeset-publish": "pnpm build && TEST_DIST= pnpm test:ci && changeset publish"
   },
   "dependencies": {
     "@effect/ai": "^0.32.1",
