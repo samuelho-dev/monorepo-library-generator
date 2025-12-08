@@ -38,8 +38,7 @@
   "scripts": {
     "codegen": "build-utils prepare-v3",
     "prebuild": "rm -rf .tsbuildinfo dist build",
-    "build": "pnpm build-esm && pnpm build-add-extensions && pnpm build-annotate && pnpm build-cjs && pnpm build:pack && node scripts/post-build.mjs && node scripts/bundle-mcp.mjs",
-    "build:pack": "echo 'Skipping pack - using manual build process'",
+    "build": "pnpm build-esm && pnpm build-add-extensions && pnpm build-annotate && pnpm build-cjs && node scripts/post-build.mjs && node scripts/bundle-cli.mjs && node scripts/bundle-mcp.mjs",
     "build-esm": "tsc -b tsconfig.build.json",
     "build-add-extensions": "babel build/esm --plugins babel-plugin-add-import-extension --out-dir build/esm --source-maps --no-babelrc",
     "build-cjs": "babel build/esm --plugins @babel/transform-export-namespace-from --plugins @babel/transform-modules-commonjs --out-dir build/cjs --source-maps",
