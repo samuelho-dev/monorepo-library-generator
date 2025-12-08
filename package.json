@@ -33,7 +33,8 @@
   "generators": "./src/generators.json",
   "publishConfig": {
     "access": "public",
-    "directory": "dist"
+    "directory": "dist",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "codegen": "build-utils prepare-v3",
