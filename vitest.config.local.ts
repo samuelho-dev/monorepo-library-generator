@@ -5,9 +5,8 @@ import { defineConfig } from "vitest/config"
  * Local Development Test Configuration
  *
  * Optimized for fast feedback during development:
- * - Only runs unit tests in test directory
- * - Skips slow NX generator tests (spec files)
- * - Fast timeouts for quick iteration
+ * - Runs all tests including generator specs
+ * - Moderate timeout for generator tests
  *
  * Usage: pnpm test
  */
@@ -15,11 +14,14 @@ export default defineConfig({
   plugins: [],
   test: {
     include: [
-      "./test/**/*.test.ts" // Only unit tests, skip generator specs
+      "./test/**/*.test.ts", // Unit tests (when they exist)
+      "./src/**/*.spec.ts" // Generator integration tests
     ],
     globals: true,
     environment: "node",
-    testTimeout: 5000, // Fast timeout - these should be quick!
+    testTimeout: 30000, // Allow time for generator workspace creation
+    // Run sequentially to prevent NX graph conflicts
+    fileParallelism: false,
   },
   resolve: {
     alias: {

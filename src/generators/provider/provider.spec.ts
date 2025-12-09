@@ -268,7 +268,7 @@ describe("provider generator", () => {
       )
 
       // With includeClientServer=true, client.ts exports full implementation
-      expect(clientContent).toContain("export { AnalyticsService }")
+      expect(clientContent).toContain("export { Analytics }")
       expect(clientContent).toContain("export type")
     })
   })
