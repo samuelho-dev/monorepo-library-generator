@@ -772,7 +772,7 @@ export class ${className} extends Context.Tag("${className}")<
    * No dynamic imports - all operations are plain functions for proper Layer.fresh isolation.
    *
    * IMPORTANT: This provides placeholder implementations that guide you to provide your own mocks.
-   * Customize via Layer.succeed(${className}, { /* your mock implementations */ })
+   * Customize via Layer.succeed(${className}, \\{ ...your mock implementations \\})
    * or use ${className}.Dev for a working implementation.
    */
   static readonly Test = Layer.succeed(
