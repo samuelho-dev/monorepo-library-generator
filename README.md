@@ -11,6 +11,7 @@ Generate production-ready TypeScript libraries for Effect-native monorepos with 
 - 📦 **Workspace Agnostic**: Works with Nx, pnpm workspaces, Yarn, Turborepo
 - 🌍 **Platform Aware**: Generate server/client/edge exports automatically
 - 🔧 **TypeScript 5.6+**: Strict mode, project references, composite builds
+- ✨ **Type-Safe**: Zero type assertions - demonstrates TypeScript's type inference capabilities
 - 🧪 **Testing Ready**: Vitest + @effect/vitest integration
 - 🛡️ **Resource Safe**: Layer.scoped pattern prevents resource leaks
 - 📚 **Self-Documenting**: Comprehensive inline docs and CLAUDE.md files

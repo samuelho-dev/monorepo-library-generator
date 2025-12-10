@@ -766,53 +766,51 @@ export class ${className} extends Context.Tag("${className}")<
   );
 
   /**
-   * Test Layer - In-memory implementation
+   * Test Layer - Placeholder implementation
    *
    * Uses Layer.succeed for deterministic testing.
    * No dynamic imports - all operations are plain functions for proper Layer.fresh isolation.
    *
-   * IMPORTANT: This provides minimal stub implementations.
-   * Customize these stubs based on your testing needs.
+   * IMPORTANT: This provides placeholder implementations that guide you to provide your own mocks.
+   * Customize via Layer.succeed(${className}, { /* your mock implementations */ })
+   * or use ${className}.Dev for a working implementation.
    */
   static readonly Test = Layer.succeed(
     this,
     {
-      config: { apiKey: "test-key", timeout: 1000 } as ${className}Config,
-      healthCheck: Effect.succeed({ status: "healthy" as const }),
+      // Configuration can be provided with test values
+      config: { apiKey: "test-key", timeout: 1000 },
 
-      // Query operations
-      list: () => Effect.succeed({
-        data: [{ id: "test-id-1", name: "test-resource", createdAt: new Date(), updatedAt: new Date() }] as Resource[],
-        page: 1,
-        limit: 10,
-        total: 1,
-      } as PaginatedResult<Resource>),
-      get: (id) => Effect.succeed({
-        id,
-        name: "test-resource",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      } as Resource),
+      // Health check returns a simple success - no type assertions needed
+      healthCheck: Effect.succeed({ status: "healthy" }),
 
-      // Create operations
-      create: (data) => Effect.succeed({
-        id: "test-id-1",
-        ...data,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Resource),
+      // Query operations - provide your own test mocks
+      list: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock via Layer.succeed(${className}, {...}) or use Dev layer."
+        ),
+      get: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
 
-      // Update operations
-      update: (id, data) => Effect.succeed({
-        id,
-        ...data,
-        name: data.name || "test-resource",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Resource),
+      // Create operations - provide your own test mocks
+      create: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
 
-      // Delete operations
-      delete: () => Effect.void,
+      // Update operations - provide your own test mocks
+      update: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
+
+      // Delete operations - provide your own test mocks
+      delete: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
     }
   );
 

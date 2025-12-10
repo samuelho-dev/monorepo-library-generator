@@ -5,4 +5,4 @@
  * DO NOT EDIT MANUALLY - This file is regenerated on every build
  */
 
-export const VERSION = "1.5.1"
+export const VERSION = "1.5.2"

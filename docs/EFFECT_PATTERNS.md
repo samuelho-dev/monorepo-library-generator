@@ -3225,7 +3225,7 @@ const processUser = (id: Schema.Schema.Type<typeof UserId>) => {
   // id is branded as UserId
 };
 
-const productId: Schema.Schema.Type<typeof ProductId> = "123" as any;
+const productId: Schema.Schema.Type<typeof ProductId> = "123";
 processUser(productId); // ❌ Type error: ProductId is not assignable to UserId
 ```
 

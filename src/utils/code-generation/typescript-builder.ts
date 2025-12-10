@@ -153,7 +153,11 @@ export class TypeScriptBuilder {
       }
 
       for (const name of names) {
-        targetMap.get(from)!.add(name)
+        const importSet = targetMap.get(from)
+        if (!importSet) {
+          throw new Error(`Import set not found for ${from}`)
+        }
+        importSet.add(name)
       }
     }
 

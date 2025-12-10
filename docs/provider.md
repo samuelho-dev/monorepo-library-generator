@@ -887,7 +887,7 @@ const createMockEvent = (
     api_version: "2023-10-16",
     created: Math.floor(Date.now() / 1000),
     data: {
-      object: {} as any, // Event data varies by type
+      object: {}, // Event data varies by type
       previous_attributes: undefined,
     },
     livemode: false,
@@ -1152,7 +1152,7 @@ describe("StripeService", () => {
           amount: params.amount,
           currency: params.currency,
           status: "requires_payment_method",
-        } as any),
+        }),
     },
   };
 
@@ -1572,13 +1572,14 @@ export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeServic
               .on(
                 "postgres_changes",
                 { event: "*", schema: "public", table },
-                (payload) => {
+                (payload: DatabaseChange) => {
                   // Use runtime to enqueue with logging
+                  // Payload type is inferred from Supabase's postgres_changes callback
                   runFork(
                     Effect.gen(function* () {
                       const logger = yield* LoggingService;
                       yield* logger.debug("Database change", { payload });
-                      yield* Queue.offer(queue, payload as DatabaseChange);
+                      yield* Queue.offer(queue, payload);
                     })
                   );
                 }
@@ -1801,7 +1802,7 @@ Provider libraries can depend on:
 | **Throwing exceptions** | Untyped errors, lost context | ❌ `throw new Error()` | Return `Effect.fail(new TypedError())` |
 | **Hardcoded config** | Inflexible, no env separation | ❌ `const apiKey = "sk_live_..."` | Use `Effect.Config.secret("API_KEY")` |
 | **Missing retry logic** | Poor resilience | ❌ Direct `Effect.tryPromise` without retry | Add `Effect.retry(Schedule.exponential(...))` |
-| **Type assertions (`as any`)** | Bypass type safety in tests | ❌ `{ id: "pi_test" } as any` | Use typed factory functions with `Partial<T>` |
+| **Type assertions (`as any`)** | Bypass type safety in tests | ❌ `{ id: "pi_test" }` | Use typed factory functions with `Partial<T>` |
 | **Resource leaks** | Memory/connection leaks | ❌ Manual cleanup, missing finalizers | Use `Layer.scoped` + `Effect.acquireRelease` |
 | **Client-side secrets** | Security risk | ❌ API keys in `client.ts` | Keep secrets in `server.ts` only |
 

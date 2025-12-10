@@ -209,11 +209,9 @@ export class ${className}Repository extends Context.Tag(
       // For now, create repository with placeholder database
       const placeholderDb: DatabaseService = {
         query: <T>(_fn: (db: KyselyDatabase) => Promise<T>): Effect.Effect<T, never, never> =>
-          Effect.fail(
-            ${className}InternalError.create(
-              "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
-            )
-          ) as Effect.Effect<T, never, never>,
+          Effect.dieMessage(
+            "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
+          ),
       };
       return create${className}Repository(placeholderDb, undefined);
     })
@@ -235,7 +233,7 @@ export class ${className}Repository extends Context.Tag(
       return {
         findById: (id: string) =>
           Effect.succeed(
-            store.has(id) ? Option.some(store.get(id)!) : Option.none(),
+            Option.fromNullable(store.get(id))
           ),
         findAll: (
           filters?: Record<string, unknown>,
@@ -311,11 +309,9 @@ export class ${className}Repository extends Context.Tag(
       // Same as Live layer but with console logging wrapper
       const placeholderDb: DatabaseService = {
         query: <T>(_fn: (db: KyselyDatabase) => Promise<T>): Effect.Effect<T, never, never> =>
-          Effect.fail(
-            ${className}InternalError.create(
-              "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
-            )
-          ) as Effect.Effect<T, never, never>,
+          Effect.dieMessage(
+            "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
+          ),
       };
       const repo = create${className}Repository(placeholderDb, undefined);
 

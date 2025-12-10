@@ -1567,11 +1567,11 @@ export interface HealthCheckable {
 const makeCacheService = Effect.gen(function* () {
   const redis = yield* RedisService;
 
-  const healthCheck = () =>
+  const healthCheck = (): Effect.Effect<{ status: "healthy" | "unhealthy"; timestamp: number }, never> =>
     Effect.gen(function* () {
-      const pingResult = yield* Effect.tryPromise(() => redis.ping()).pipe(
-        Effect.map(() => "healthy" as const),
-        Effect.catchAll(() => Effect.succeed("unhealthy" as const)),
+      const pingResult: "healthy" | "unhealthy" = yield* Effect.tryPromise(() => redis.ping()).pipe(
+        Effect.map((): "healthy" | "unhealthy" => "healthy"),
+        Effect.catchAll(() => Effect.succeed<"healthy" | "unhealthy">("unhealthy")),
       );
 
       return {

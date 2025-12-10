@@ -1,6 +1,6 @@
 {
   "name": "@samuelho-dev/monorepo-library-generator",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "type": "module",
   "packageManager": "pnpm@10.14.0",
   "license": "MIT",

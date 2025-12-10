@@ -218,44 +218,75 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
   );
 
   /**
-   * Test Layer - In-memory implementation
+   * Test Layer - Placeholder implementation
    *
    * Uses Layer.succeed for deterministic testing.
    * No dynamic imports - all operations are plain functions for proper Layer.fresh isolation.
    *
-   * IMPORTANT: This provides minimal stub implementations.
-   * Customize these stubs based on your testing needs.
+   * IMPORTANT: This provides placeholder implementations that guide you to provide your own mocks.
+   * Customize via Layer.succeed(${className}Repository, { /* your mock implementations */ })
+   * or use ${className}Repository.Dev for a working in-memory implementation.
    */
   static readonly Test = Layer.succeed(
     this,
     {
-      // Create operations
-      create: (input) => Effect.succeed({ id: "test-id-1", ...input } as any),
-      createMany: (inputs) => Effect.succeed(
-        inputs.map((input, i) => ({ id: \`test-id-\${i + 1}\`, ...input })) as any
-      ),
+      // Create operations - provide your own test mocks
+      create: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock via Layer.succeed(${className}Repository, {...}) or use Dev layer for actual implementation."
+        ),
+      createMany: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
 
-      // Read operations
-      findById: (id) => Effect.succeed({ id, name: "test-entity" } as any),
-      findMany: (ids) => Effect.succeed(
-        ids.map(id => ({ id, name: "test-entity" })) as any
-      ),
-      findAll: () => Effect.succeed([{ id: "test-id-1", name: "test-entity" }] as any),
-      findByCriteria: () => Effect.succeed([{ id: "test-id-1", name: "test-entity" }] as any),
+      // Read operations - provide your own test mocks
+      findById: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
+      findMany: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
+      findAll: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
+      findByCriteria: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
 
-      // Update operations
-      update: (id, input) => Effect.succeed({ id, ...input } as any),
-      updateMany: (updates) => Effect.succeed(
-        updates.map(({ id, data }) => ({ id, ...data })) as any
-      ),
+      // Update operations - provide your own test mocks
+      update: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
+      updateMany: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
 
-      // Delete operations
-      delete: () => Effect.void,
-      deleteMany: () => Effect.void,
+      // Delete operations - provide your own test mocks
+      delete: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
+      deleteMany: () =>
+        Effect.dieMessage(
+          "Test layer not implemented. Provide your own test mock or use Dev layer."
+        ),
 
-      // Aggregate operations
-      count: () => Effect.succeed(1),
-      exists: () => Effect.succeed(true),
+      // Aggregate operations - simple defaults that work without creating entities
+      count: () => Effect.succeed(0),
+      exists: () => Effect.succeed(false),
+
+      // Stream operation - provide your own test mock
+      streamAll: () =>
+        Stream.die(
+          new Error("Test layer not implemented. Provide your own test mock or use Dev layer.")
+        ),
     }
   );
 

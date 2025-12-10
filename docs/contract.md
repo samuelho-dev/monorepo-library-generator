@@ -1478,7 +1478,7 @@ describe("Product Contract", () => {
   it.scoped("ProductCreatedEvent validates correctly", () => // ✅ Always it.scoped
     Effect.gen(function* () {
       const event = {
-        type: "ProductCreated" as const,
+        type: "ProductCreated",
         productId: "prod-123",
         sellerId: "seller-456",
         timestamp: new Date().toISOString(),

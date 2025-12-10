@@ -1,5 +1,42 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.5.2
+
+### Patch Changes
+
+- **Remove unnecessary type coercions and assertions**
+
+  This patch demonstrates TypeScript's type inference capabilities by removing all unnecessary type coercions, assertions, and type narrowing from generated code templates.
+
+  **Changes:**
+
+  1. **Repository Interface Template** - Replaced test layer `as any` assertions with honest placeholder implementations using `Effect.dieMessage`. Test layers now guide developers to provide their own mocks.
+
+  2. **Repository Template** - Removed non-null assertions and type casts:
+
+     - Replaced `store.get(id)!` with `Option.fromNullable(store.get(id))`
+     - Replaced `Effect.fail(...) as Effect.Effect<T, never, never>` with `Effect.dieMessage(...)`
+
+  3. **Provider Service Interface Template** - Replaced test layer type assertions with placeholder implementations. No more `as Resource` or `as PaginatedResult` assertions.
+
+  4. **Provider Service Template** - Improved config pattern:
+
+     - Replaced `||` with `??` for default values (properly handles falsy values like 0)
+     - Removed `!` non-null assertions on retry config (nullish coalescing ensures values are never undefined)
+     - Removed `as const` type narrowing on health check status
+
+  5. **TypeScript Builder** - Replaced `targetMap.get(from)!` with proper undefined check that throws descriptive error.
+
+  **Architecture Improvement:**
+
+  Test layers now use honest placeholder implementations instead of creating mock entities with type assertions. This approach:
+
+  - Achieves zero type assertions without compromising branded type safety
+  - Guides developers to provide their own test implementations
+  - Demonstrates proper type-driven design where TypeScript infers types from schemas and interfaces
+
+  **Breaking Changes:** None - this is a patch release focusing on internal code quality improvements.
+
 ## 1.5.1
 
 ### Patch Changes

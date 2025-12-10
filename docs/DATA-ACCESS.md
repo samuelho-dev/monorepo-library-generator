@@ -1705,12 +1705,11 @@ export const ProductRepositoryLive = Layer.effect(
             return Option.none();
           }
 
-          const product = result as Product;
-
+          // Kysely's type inference provides the correct type from database schema
           // Update cache
-          yield* cache.set(`product:${id}`, product, '1 hour');
+          yield* cache.set(`product:${id}`, result, '1 hour');
 
-          return Option.some(product);
+          return Option.some(result);
         }),
 
       // ✅ Implement create exactly as defined in contract
@@ -1726,12 +1725,11 @@ export const ProductRepositoryLive = Layer.effect(
               .executeTakeFirstOrThrow(),
           );
 
-          const product = result as Product;
-
+          // Kysely's type inference provides the correct type from database schema
           // Invalidate cache
           yield* cache.delete('products:list');
 
-          return product;
+          return result;
         }),
 
       // ✅ Implement all other methods from contract
@@ -1755,7 +1753,7 @@ export const ProductRepositoryLive = Layer.effect(
           // Invalidate cache
           yield* cache.delete(`product:${id}`);
 
-          return result as Product;
+          return result;
         }),
 
       delete: (id: ProductId) =>
@@ -1778,7 +1776,7 @@ export const ProductRepositoryLive = Layer.effect(
               .execute(),
           );
 
-          return results as Product[];
+          return results;
         }),
 
       findBySeller: (sellerId: string, options) =>
@@ -1798,7 +1796,7 @@ export const ProductRepositoryLive = Layer.effect(
           }
 
           const results = yield* query.execute();
-          return results as Product[];
+          return results;
         }),
     };
   }),
@@ -1917,7 +1915,8 @@ findById: (id) =>
 findById: (id) =>
   Effect.gen(function* () {
     const result = yield* database.query(/* ... */);
-    return result ? Option.some(result as Product) : Option.none();
+    // Kysely's type inference provides correct type from database schema
+    return Option.fromNullable(result);
   });
 ```
 
@@ -2146,19 +2145,19 @@ const KyselyServiceMock = Layer.succeed(KyselyService, {
     selectFrom: () => ({
       selectAll: () => ({
         where: () => ({
-          executeTakeFirst: () =>
-            Effect.succeed<ProductSelect | null>({
+          executeTakeFirst: (): Effect.Effect<ProductSelect | null> =>
+            Effect.succeed({
               id: 'prod-123',
               name: 'Test Product',
               price: 1000,
               sellerId: 'seller-456',
               createdAt: new Date(),
               updatedAt: new Date(),
-            } as ProductSelect),
+            }),
         }),
       }),
     }),
-  } as any,
+  },
 });
 
 // Test repository implementation
@@ -2194,7 +2193,7 @@ describe('ProductRepository', () => {
               }),
             }),
           }),
-        } as any,
+        },
       });
 
       const repo = yield* ProductRepository;
@@ -2217,7 +2216,7 @@ describe('ProductRepository', () => {
           insertInto: () => ({
             values: () => ({
               returningAll: () => ({
-                executeTakeFirstOrThrow: () =>
+                executeTakeFirstOrThrow: (): Effect.Effect<ProductSelect> =>
                   Effect.succeed({
                     id: 'new-prod-789',
                     name: 'New Product',
@@ -2225,11 +2224,11 @@ describe('ProductRepository', () => {
                     sellerId: 'seller-456',
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                  } as ProductSelect),
+                  }),
               }),
             }),
           }),
-        } as any,
+        },
       });
 
       const repo = yield* ProductRepository;

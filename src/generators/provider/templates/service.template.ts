@@ -223,18 +223,18 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw("    const sdkClient = client;")
   builder.addBlankLine()
   builder.addRaw(`    const serviceConfig: ${className}Config = {`)
-  builder.addRaw("      apiKey: config?.apiKey || \"\",")
-  builder.addRaw("      timeout: config?.timeout || 20000,")
-  builder.addRaw("      retryAttempts: config?.retryAttempts || 3,")
-  builder.addRaw("      retryDelay: config?.retryDelay || 1000,")
+  builder.addRaw("      apiKey: config?.apiKey ?? \"\",")
+  builder.addRaw("      timeout: config?.timeout ?? 20000,")
+  builder.addRaw("      retryAttempts: config?.retryAttempts ?? 3,")
+  builder.addRaw("      retryDelay: config?.retryDelay ?? 1000,")
   builder.addRaw("    };")
   builder.addBlankLine()
   builder.addRaw("    // Retry policy: exponential backoff with max attempts")
   builder.addRaw(
-    "    const retryPolicy = Schedule.exponential(Duration.millis(serviceConfig.retryDelay!))"
+    "    const retryPolicy = Schedule.exponential(Duration.millis(serviceConfig.retryDelay))"
   )
   builder.addRaw(
-    "      .pipe(Schedule.compose(Schedule.recurs(serviceConfig.retryAttempts!)));"
+    "      .pipe(Schedule.compose(Schedule.recurs(serviceConfig.retryAttempts)));"
   )
   builder.addBlankLine()
   builder.addRaw("    // Health check implementation")
@@ -244,7 +244,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addRaw("        // Example: await sdkClient.ping()")
   builder.addBlankLine()
   builder.addRaw("        return {")
-  builder.addRaw("          status: \"healthy\" as const,")
+  builder.addRaw("          status: \"healthy\",")
   builder.addRaw("          timestamp: new Date().toISOString(),")
   builder.addRaw("          version: \"1.0.0\",")
   builder.addRaw("        };")

@@ -1069,5 +1069,117 @@ Following these rules ensures:
 
 ---
 
-**Last Updated:** 2025-12-06
-**Version:** 1.0.0
+## Test Layer Implementation Pattern
+
+### Zero-Assertion Philosophy
+
+Generated test layers follow a **zero type assertion** approach that demonstrates TypeScript's type inference capabilities:
+
+```typescript
+// ✅ CORRECT: Placeholder pattern (no type assertions)
+static readonly Test = Layer.succeed(this, {
+  processPayment: () =>
+    Effect.dieMessage(
+      "Test layer not implemented. Provide your own test mock via Layer.succeed(PaymentService, {...})"
+    ),
+  refundPayment: () =>
+    Effect.dieMessage("Test layer not implemented"),
+  // Simple defaults for non-entity operations
+  count: () => Effect.succeed(0),
+  exists: () => Effect.succeed(false),
+});
+
+// ❌ WRONG: Creating mock entities with type assertions
+static readonly Test = Layer.succeed(this, {
+  processPayment: () =>
+    Effect.succeed({
+      paymentId: "test-id",
+      status: "pending" as const,  // ❌ Type narrowing
+    } as PaymentResult),  // ❌ Type assertion
+});
+```
+
+### Why Placeholder Implementations?
+
+**Problem**: Branded types (like `ProductId`, `UserId`) cannot be created from raw strings without:
+- Brand constructors (don't exist in template generation)
+- Type assertions (`as any`, `as Type`)
+- Schema decoders (chicken-and-egg problem)
+
+**Solution**: Test layers don't need to create mock entities. Instead:
+
+1. **Honest Communication**: Clearly tells developers the test layer is a placeholder
+2. **Zero Assertions**: No `as any`, `as const`, or type casts needed
+3. **Type-Safe**: Preserves branded type security
+4. **User-Friendly**: Error messages guide developers to provide their own mocks
+
+### Providing Your Own Test Mocks
+
+When you need test mocks, provide them explicitly:
+
+```typescript
+// In your test file
+const MockPaymentService = Layer.succeed(PaymentService, {
+  processPayment: (params) =>
+    Effect.succeed({
+      paymentId: "test-payment-id",
+      clientSecret: "test-secret",
+      status: "pending",  // TypeScript infers literal type from return type
+    }),
+  refundPayment: () => Effect.succeed({
+    refundId: "test-refund",
+    status: "refunded",
+    amount: 1000,
+  }),
+  // ... other operations
+});
+
+// Use in tests
+it.scoped("processes payment correctly", () =>
+  Effect.gen(function* () {
+    const service = yield* PaymentService;
+    const result = yield* service.processPayment(testParams);
+    expect(result.status).toBe("pending");
+  }).pipe(Effect.provide(Layer.fresh(MockPaymentService)))
+);
+```
+
+### TypeScript Type Inference Best Practices
+
+1. **No `as const` needed**: Define proper return types in interfaces
+   ```typescript
+   // Interface defines literal type
+   interface PaymentResult {
+     status: "pending" | "completed";  // Literal union type
+   }
+
+   // TypeScript infers "pending" as literal from interface
+   function processPayment(): PaymentResult {
+     return { status: "pending" };  // ✅ No `as const` needed
+   }
+   ```
+
+2. **No `!` assertions**: Use nullish coalescing or proper error handling
+   ```typescript
+   // ❌ WRONG:
+   const value = config.retryDelay || 1000;
+   Schedule.exponential(Duration.millis(value!));
+
+   // ✅ CORRECT:
+   const value = config.retryDelay ?? 1000;  // Never undefined
+   Schedule.exponential(Duration.millis(value));
+   ```
+
+3. **No type casts**: Use `Effect.dieMessage` for unimplemented placeholders
+   ```typescript
+   // ❌ WRONG:
+   query: <T>(_fn) => Effect.fail(error) as Effect.Effect<T, never, never>
+
+   // ✅ CORRECT:
+   query: <T>(_fn) => Effect.dieMessage("Database not configured...")
+   ```
+
+---
+
+**Last Updated:** 2025-12-09
+**Version:** 1.5.2

@@ -710,10 +710,20 @@ export class PaymentService extends Context.Tag("PaymentService")<
               stripePaymentIntentId: paymentIntent.id,
             });
 
+            // Extract client secret with proper error handling
+            const clientSecret = paymentIntent.client_secret;
+            if (!clientSecret) {
+              return yield* Effect.fail(
+                new PaymentProcessingError({
+                  message: "Stripe payment intent missing client_secret",
+                })
+              );
+            }
+
             return {
               paymentId: payment.id,
-              clientSecret: paymentIntent.client_secret!,
-              status: "pending" as const,
+              clientSecret,
+              status: "pending",
             };
           }),
 
@@ -750,7 +760,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
 
             return {
               refundId: refund.id,
-              status: "refunded" as const,
+              status: "refunded",
               amount: refund.amount,
             };
           }),
@@ -785,21 +795,27 @@ export class PaymentService extends Context.Tag("PaymentService")<
   );
 
   static readonly Test = Layer.succeed(this, {
+    // Placeholder implementations - provide your own test mocks
     processPayment: () =>
-      Effect.succeed({
-        paymentId: "test-payment",
-        clientSecret: "test-secret",
-        status: "pending" as const,
-      }),
+      Effect.dieMessage(
+        "Test layer not implemented. Provide your own test mock via Layer.succeed(PaymentService, {...})"
+      ),
     refundPayment: () =>
-      Effect.succeed({
-        refundId: "test-refund",
-        status: "refunded" as const,
-        amount: 1000,
-      }),
-    listPayments: () => Effect.succeed([]),
-    getPayment: () => Effect.succeed({} as Payment),
-    verifyPaymentIntent: () => Effect.succeed(true),
+      Effect.dieMessage(
+        "Test layer not implemented. Provide your own test mock"
+      ),
+    listPayments: () =>
+      Effect.dieMessage(
+        "Test layer not implemented. Provide your own test mock"
+      ),
+    getPayment: () =>
+      Effect.dieMessage(
+        "Test layer not implemented. Provide your own test mock"
+      ),
+    verifyPaymentIntent: () =>
+      Effect.dieMessage(
+        "Test layer not implemented. Provide your own test mock"
+      ),
   });
 }
 ```
@@ -1114,7 +1130,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
             return {
               paymentId: payment.id,
               clientSecret: payment.client_secret,
-              status: "pending" as const,
+              status: "pending",
             };
           }),
 
@@ -1167,7 +1183,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
 
             return {
               refundId: refund.id,
-              status: "refunded" as const,
+              status: "refunded",
               amount: refund.amount,
             };
           }),
