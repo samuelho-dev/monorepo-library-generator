@@ -1,6 +1,7 @@
 export const generateSubServiceLayersTemplate = (options: {
   className: string
-}) => `/**
+}) =>
+  `/**
  * ${options.className} Effect Layers
  */
 

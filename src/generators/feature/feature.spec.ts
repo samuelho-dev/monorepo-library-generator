@@ -252,9 +252,9 @@ describe("feature generator", () => {
       expect(config.projectType).toBe("library")
 
       // Build target with batch mode
-      expect(config.targets?.build).toBeDefined()
-      expect(config.targets?.build?.executor).toBe("@nx/js:tsc")
-      expect(config.targets?.build?.options?.batch).toBe(true)
+      expect(config.targets?.["build"]).toBeDefined()
+      expect(config.targets?.["build"]?.executor).toBe("@nx/js:tsc")
+      expect(config.targets?.["build"]?.options?.batch).toBe(true)
     })
 
     it("should include client entry point for includeClientServer", async () => {
@@ -265,10 +265,10 @@ describe("feature generator", () => {
 
       const config = readProjectConfiguration(tree, "feature-search")
 
-      expect(config.targets?.build?.options?.additionalEntryPoints).toContain(
+      expect(config.targets?.["build"]?.options?.additionalEntryPoints).toContain(
         "libs/feature/search/src/server.ts"
       )
-      expect(config.targets?.build?.options?.additionalEntryPoints).toContain(
+      expect(config.targets?.["build"]?.options?.additionalEntryPoints).toContain(
         "libs/feature/search/src/client.ts"
       )
     })

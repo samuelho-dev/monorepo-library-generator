@@ -6,6 +6,7 @@
  * that can be imported by both CLI and MCP server.
  */
 
+import console from "node:console"
 import { readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import process from "node:process"

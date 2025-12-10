@@ -29,8 +29,8 @@ import { handleGenerateContract } from "./tools/contract.handler"
 import { handleGenerateDataAccess } from "./tools/data-access.handler"
 import { handleGenerateFeature } from "./tools/feature.handler"
 import { handleGenerateInfra } from "./tools/infra.handler"
-import { handleGenerateProvider } from "./tools/provider.handler"
 import { handleInitWorkspace } from "./tools/init-workspace.handler"
+import { handleGenerateProvider } from "./tools/provider.handler"
 
 /**
  * Create MCP server instance (no Zod dependency)

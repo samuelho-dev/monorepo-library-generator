@@ -118,13 +118,13 @@ describe("provider generator", () => {
       expect(config.tags).toContain("service:stripe-api")
 
       // Build target with vitest (not jest) - provider.md line 1432
-      expect(config.targets?.test).toBeDefined()
-      expect(config.targets?.test?.executor).toBe("@nx/vite:test")
+      expect(config.targets?.["test"]).toBeDefined()
+      expect(config.targets?.["test"]?.executor).toBe("@nx/vite:test")
 
       // Build target with batch mode - provider.md line 1423
-      expect(config.targets?.build).toBeDefined()
-      expect(config.targets?.build?.executor).toBe("@nx/js:tsc")
-      expect(config.targets?.build?.options?.batch).toBe(true)
+      expect(config.targets?.["build"]).toBeDefined()
+      expect(config.targets?.["build"]?.executor).toBe("@nx/js:tsc")
+      expect(config.targets?.["build"]?.options?.batch).toBe(true)
     })
 
     it("should include client entry point for universal platform", async () => {
@@ -137,10 +137,10 @@ describe("provider generator", () => {
 
       const config = readProjectConfiguration(tree, "provider-analytics")
 
-      expect(config.targets?.build?.options?.additionalEntryPoints).toContain(
+      expect(config.targets?.["build"]?.options?.additionalEntryPoints).toContain(
         "libs/provider/analytics/src/server.ts"
       )
-      expect(config.targets?.build?.options?.additionalEntryPoints).toContain(
+      expect(config.targets?.["build"]?.options?.additionalEntryPoints).toContain(
         "libs/provider/analytics/src/client.ts"
       )
     })

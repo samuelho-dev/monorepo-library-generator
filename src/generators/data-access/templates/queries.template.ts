@@ -135,6 +135,5 @@ export function buildCountQuery(
 }`)
   builder.addBlankLine()
 
-
   return builder.toString()
 }

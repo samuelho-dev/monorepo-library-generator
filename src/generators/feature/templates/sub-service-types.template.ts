@@ -1,6 +1,7 @@
 export const generateSubServiceTypesTemplate = (options: {
   className: string
-}) => `/**
+}) =>
+  `/**
  * ${options.className} Type Definitions
  */
 

@@ -1,23 +1,23 @@
 import { Effect } from "effect"
 import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
-import { generateSubServiceTemplate } from "../feature/templates/sub-service.template"
+import { generateSubServiceErrorsTemplate } from "../feature/templates/sub-service-errors.template"
 import { generateSubServiceIndexTemplate } from "../feature/templates/sub-service-index.template"
 import { generateSubServiceLayersTemplate } from "../feature/templates/sub-service-layers.template"
-import { generateSubServiceErrorsTemplate } from "../feature/templates/sub-service-errors.template"
 import { generateSubServiceTypesTemplate } from "../feature/templates/sub-service-types.template"
+import { generateSubServiceTemplate } from "../feature/templates/sub-service.template"
 
 export interface SubServiceOptions {
   projectRoot: string
   sourceRoot: string
   packageName: string
-  subServices: string[]
+  subServices: Array<string>
 }
 
 export const generateSubServices = (
   adapter: FileSystemAdapter,
   options: SubServiceOptions
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const servicesDir = `${options.sourceRoot}/lib/server/services`
 
     // Create services directory
@@ -26,11 +26,12 @@ export const generateSubServices = (
     // Generate each sub-service
     yield* Effect.forEach(
       options.subServices,
-      (serviceName) => generateSingleSubService(adapter, {
-        ...options,
-        servicesDir,
-        serviceName
-      }),
+      (serviceName) =>
+        generateSingleSubService(adapter, {
+          ...options,
+          servicesDir,
+          serviceName
+        }),
       { concurrency: "unbounded" }
     )
 
@@ -42,7 +43,7 @@ export const generateSubServices = (
 
     return {
       generatedServices: options.subServices,
-      filesGenerated: options.subServices.length * 5 + 1  // 5 files per service + 1 barrel
+      filesGenerated: options.subServices.length * 5 + 1 // 5 files per service + 1 barrel
     }
   })
 
@@ -50,7 +51,7 @@ const generateSingleSubService = (
   adapter: FileSystemAdapter,
   options: SubServiceOptions & { servicesDir: string; serviceName: string }
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const serviceDir = `${options.servicesDir}/${options.serviceName}`
     const className = toClassName(options.serviceName)
 
@@ -94,11 +95,11 @@ const generateSingleSubService = (
 
 const generateServicesBarrel = (
   adapter: FileSystemAdapter,
-  options: { servicesDir: string; subServices: string[] }
+  options: { servicesDir: string; subServices: Array<string> }
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const exports = options.subServices
-      .map(name => `export * as ${toClassName(name)} from "./${name}"`)
+      .map((name) => `export * as ${toClassName(name)} from "./${name}"`)
       .join("\n")
 
     yield* adapter.writeFile(
@@ -114,9 +115,9 @@ ${exports}
     )
   })
 
-const toClassName = (name: string): string => {
+const toClassName = (name: string) => {
   return name
     .split("-")
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join("")
 }

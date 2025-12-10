@@ -224,7 +224,7 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
    * No dynamic imports - all operations are plain functions for proper Layer.fresh isolation.
    *
    * IMPORTANT: This provides placeholder implementations that guide you to provide your own mocks.
-   * Customize via Layer.succeed(${className}Repository, { /* your mock implementations */ })
+   * Customize via Layer.succeed(${className}Repository, \\{ ...your mock implementations \\})
    * or use ${className}Repository.Dev for a working in-memory implementation.
    */
   static readonly Test = Layer.succeed(

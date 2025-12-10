@@ -1,17 +1,17 @@
 export const generateProviderConsolidationLayersTemplate = (options: {
-  providers: string[]
+  providers: Array<string>
   packageName: string
 }) => {
   const workspaceName = options.packageName.split("/")[0]
   const imports = options.providers
-    .map(p => {
+    .map((p) => {
       const className = toClassName(p)
       return `import { ${className}Live } from "${workspaceName}/provider-${p}"`
     })
     .join("\n")
 
   const layerMerge = options.providers
-    .map(p => `  ${toClassName(p)}Live`)
+    .map((p) => `  ${toClassName(p)}Live`)
     .join(",\n")
 
   return `/**
@@ -43,9 +43,9 @@ ${layerMerge}
 `
 }
 
-const toClassName = (name: string): string => {
+const toClassName = (name: string) => {
   return name
     .split("-")
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join("")
 }

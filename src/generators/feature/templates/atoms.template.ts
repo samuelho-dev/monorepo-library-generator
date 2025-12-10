@@ -53,6 +53,5 @@ export const ${propertyName}Atom = Atom.make<${className}State>({
 });`)
   builder.addBlankLine()
 
-
   return builder.toString()
 }

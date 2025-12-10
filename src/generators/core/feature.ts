@@ -378,7 +378,7 @@ const server = ${templateOptions.fileName}Handlers.pipe(
         // Track generated sub-service files
         const servicesPath = `${serverPath}/services`
         filesGenerated.push(`${servicesPath}/index.ts`)
-        subServicesList.forEach(serviceName => {
+        subServicesList.forEach((serviceName) => {
           filesGenerated.push(`${servicesPath}/${serviceName}/index.ts`)
           filesGenerated.push(`${servicesPath}/${serviceName}/service.ts`)
           filesGenerated.push(`${servicesPath}/${serviceName}/layers.ts`)

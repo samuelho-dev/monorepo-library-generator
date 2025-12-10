@@ -11,7 +11,7 @@ export interface InfraGeneratorSchema {
 
   // Provider consolidation options
   consolidatesProviders?: boolean
-  providers?: string  // Comma-separated list
+  providers?: string // Comma-separated list
 
   // Dotfile generation options (Effect.ts code quality enforcement)
   // Only library-specific dotfiles (eslint.config.mjs, tsconfig.json) are added

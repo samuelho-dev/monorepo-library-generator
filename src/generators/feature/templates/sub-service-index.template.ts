@@ -1,6 +1,7 @@
 export const generateSubServiceIndexTemplate = (options: {
   className: string
-}) => `/**
+}) =>
+  `/**
  * ${options.className} Service Exports
  */
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import console from "node:console"
-import { cpSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import process from "node:process"
 

@@ -1,17 +1,17 @@
 export const generateOrchestratorTemplate = (options: {
-  providers: string[]
+  providers: Array<string>
   packageName: string
 }) => {
   const workspaceName = options.packageName.split("/")[0]
   const providerImports = options.providers
-    .map(p => {
+    .map((p) => {
       const className = toClassName(p)
       return `import { ${className} } from "${workspaceName}/provider-${p}"`
     })
     .join("\n")
 
   const providerDeps = options.providers
-    .map(p => toClassName(p))
+    .map((p) => toClassName(p))
     .join(" | ")
 
   return `/**
@@ -54,7 +54,7 @@ export const ClusterOrchestrator = Context.GenericTag<ClusterOrchestrator>("@inf
  * ClusterOrchestrator implementation
  */
 export const makeClusterOrchestrator = Effect.gen(function* () {
-${options.providers.map(p => `  const ${p} = yield* ${toClassName(p)}`).join("\n")}
+${options.providers.map((p) => `  const ${p} = yield* ${toClassName(p)}`).join("\n")}
 
   return ClusterOrchestrator.of({
     bootstrap: Effect.gen(function* () {
@@ -85,9 +85,9 @@ export const ClusterOrchestratorLive = Layer.effect(
 `
 }
 
-const toClassName = (name: string): string => {
+const toClassName = (name: string) => {
   return name
     .split("-")
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join("")
 }

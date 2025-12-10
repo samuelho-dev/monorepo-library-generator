@@ -2,7 +2,8 @@ export const generateSubServiceTemplate = (options: {
   serviceName: string
   className: string
   packageName: string
-}) => `/**
+}) =>
+  `/**
  * ${options.className} Sub-Service
  *
  * Part of the ${options.packageName} feature

@@ -1,6 +1,7 @@
 export const generateSubServiceErrorsTemplate = (options: {
   className: string
-}) => `/**
+}) =>
+  `/**
  * ${options.className} Error Types
  */
 
