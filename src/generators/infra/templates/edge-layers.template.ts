@@ -35,7 +35,7 @@ export function generateEdgeLayersFile(options: InfraTemplateOptions) {
   // Imports
   builder.addImports([
     { from: "effect", imports: ["Layer", "Effect"] },
-    { from: "../service/interface", imports: [`${className}Service`] }
+    { from: "../service/service", imports: [`${className}Service`] }
   ])
 
   // Section: Edge Layer

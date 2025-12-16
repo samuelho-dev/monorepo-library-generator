@@ -4,39 +4,24 @@
  * Effect Schema validation helpers for MCP tool handlers.
  */
 
-import { Effect, ParseResult } from "effect"
+import { Data, ParseResult } from "effect"
 
 /**
  * Validation Error
+ *
+ * Tagged error for validation failures with structured error information.
+ * Preserves the original ParseResult.ParseError for debugging.
  */
-export class ValidationError extends Error {
-  readonly _tag = "ValidationError"
-
-  constructor(message: string) {
-    super(message)
-    this.name = "ValidationError"
-  }
-}
+export class ValidationError extends Data.TaggedError("ValidationError")<{
+  readonly message: string
+  readonly cause?: ParseResult.ParseError
+}> {}
 
 /**
  * Format ParseResult error as human-readable string
+ *
+ * Uses TreeFormatter for properly structured, user-friendly error messages.
  */
-export const formatParseError = (error: ParseResult.ParseError) => {
-  return Effect.runSync(ParseResult.TreeFormatter.formatError(error))
-}
-
-/**
- * Format validation error for MCP response
- */
-export const formatValidationError = (error: ValidationError) => {
-  return [
-    "❌ Validation Error",
-    "",
-    error.message,
-    "",
-    "💡 Tips:",
-    "  - Check that all required fields are provided",
-    "  - Ensure values match the expected format",
-    "  - Use --dryRun to preview without validation errors"
-  ].join("\n")
+export const formatParseError = (error: ParseResult.ParseError): string => {
+  return ParseResult.TreeFormatter.formatErrorSync(error)
 }

@@ -257,9 +257,8 @@ describe("infrastructure", () => {
 
       const packageJson = JSON.parse(tree.read("libs/feature/auth/package.json", "utf-8") || "{}")
 
-      // Check platform-specific exports
-      expect(packageJson.exports["./server"]).toBeDefined()
-      expect(packageJson.exports["./client"]).toBeDefined()
+      // Platform-specific exports removed - only functional exports
+      expect(packageJson.exports["."]).toBeDefined()
       expect(packageJson.exports["./types"]).toBeDefined()
     })
   })

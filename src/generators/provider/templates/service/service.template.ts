@@ -1,20 +1,21 @@
 /**
- * Provider Service Interface Template
+ * Provider Service Template
  *
- * Generates service/interface.ts with Context.Tag definition
+ * Generates service/service.ts with Context.Tag definition
  *
- * @module monorepo-library-generator/provider/service/interface-template
+ * @module monorepo-library-generator/provider/service/service-template
  */
 
 import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
 import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
+import { getPackageName } from "../../../../utils/workspace-config"
 
 /**
- * Generate service/interface.ts file
+ * Generate service/service.ts file
  *
  * Creates Context.Tag interface with static layers using dynamic imports
  */
-export function generateProviderServiceInterfaceFile(options: ProviderTemplateOptions) {
+export function generateProviderServiceFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
   const { className, cliCommand, externalService, fileName, providerType = "sdk" } = options
 
@@ -48,7 +49,7 @@ Bundle optimization:
   builder.addBlankLine()
 
   // Import env for configuration
-  builder.addImports([{ from: "@custom-repo/infra-env", imports: ["env"] }])
+  builder.addImports([{ from: getPackageName("env"), imports: ["env"] }])
   builder.addBlankLine()
 
   // Add platform imports for HTTP/GraphQL
@@ -81,6 +82,14 @@ Bundle optimization:
       from: "../errors",
       imports: [`${className}ServiceError`],
       isTypeOnly: true
+    }
+  ])
+
+  // Import NotFoundError as value for Test layer usage
+  builder.addImports([
+    {
+      from: "../errors",
+      imports: [`${className}NotFoundError`]
     }
   ])
 
@@ -570,12 +579,28 @@ export class ${className} extends Context.Tag("${className}")<
       const list = (params?: ListParams) =>
         scopedClient.get(\`/resources?page=\${params?.page || 1}&limit=\${params?.limit || 10}\`).pipe(
           Effect.flatMap(HttpClientResponse.json),
-          Effect.map((data: any) => ({
-            data: data.items || [],
-            page: params?.page || 1,
-            limit: params?.limit || 10,
-            total: data.total || 0
-          })),
+          Effect.flatMap((data: unknown) => {
+            // Schema validation for runtime type safety
+            const ResponseSchema = Schema.Struct({
+              items: Schema.Array(Schema.Unknown),
+              total: Schema.Number
+            })
+
+            return Schema.decodeUnknown(ResponseSchema)(data).pipe(
+              Effect.mapError(() => new ${className}HttpError({
+                message: "Invalid API response format",
+                statusCode: 500,
+                method: "GET",
+                url: "/resources"
+              })),
+              Effect.map((validated) => ({
+                data: validated.items,
+                page: params?.page || 1,
+                limit: params?.limit || 10,
+                total: validated.total
+              }))
+            )
+          }),
           Effect.mapError(() => new ${className}HttpError({
             message: "List request failed",
             statusCode: 500,
@@ -609,19 +634,42 @@ export class ${className} extends Context.Tag("${className}")<
           }
         }).pipe(
           Effect.flatMap(HttpClientResponse.json),
-          Effect.flatMap((response: any) => {
-            if (response.errors && response.errors.length > 0) {
+          Effect.flatMap((response: unknown) => {
+            // Schema validation for GraphQL responses
+            const GraphQLResponseSchema = Schema.Struct({
+              data: Schema.optional(Schema.Unknown),
+              errors: Schema.optional(Schema.Array(Schema.Struct({
+                message: Schema.String
+              })))
+            })
+
+            return Schema.decodeUnknown(GraphQLResponseSchema)(response).pipe(
+              Effect.mapError(() => new ${className}GraphQLError({
+                message: "Invalid GraphQL response format",
+                operation,
+                variables
+              }))
+            )
+          }),
+          Effect.flatMap((validated) => {
+            // Check for GraphQL errors
+            if (validated.errors && validated.errors.length > 0) {
               return Effect.fail(new ${className}GraphQLError({
                 message: "GraphQL operation failed",
-                errors: response.errors
+                operation,
+                variables,
+                errors: validated.errors
               }))
             }
-            if (!response.data) {
+
+            // Check for data
+            if (!validated.data) {
               return Effect.fail(new ${className}Error({
                 message: "No data in GraphQL response"
               }))
             }
-            return Effect.succeed(response.data as T)
+
+            return Effect.succeed(validated.data as T)
           })
         )
 
@@ -756,7 +804,7 @@ export class ${className} extends Context.Tag("${className}")<
 
       return {
         config,
-        healthCheck: Effect.succeed({ status: "healthy" }),
+        healthCheck: Effect.succeed({ status: "healthy" as const }),
         ...createOps,
         ...queryOps,
         ...updateOps,
@@ -781,36 +829,46 @@ export class ${className} extends Context.Tag("${className}")<
       // Configuration can be provided with test values
       config: { apiKey: "test-key", timeout: 1000 },
 
-      // Health check returns a simple success - no type assertions needed
-      healthCheck: Effect.succeed({ status: "healthy" }),
+      // Health check returns a simple success with literal type
+      healthCheck: Effect.succeed({ status: "healthy" as const }),
 
-      // Query operations - provide your own test mocks
-      list: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock via Layer.succeed(${className}, {...}) or use Dev layer."
-        ),
-      get: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
+      // Mock implementations - customize for your tests
+      // Returns empty/default values for testing
+      list: (params) => Effect.succeed({
+        data: [],
+        page: params?.page ?? 1,
+        limit: params?.limit ?? 10,
+        total: 0,
+      }),
 
-      // Create operations - provide your own test mocks
-      create: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
+      // Returns NotFoundError - demonstrates typed error handling
+      get: (id) => Effect.fail(
+        new ${className}NotFoundError({
+          message: \`Test mock: resource \${id} not found\`,
+          resourceId: id,
+          resourceType: "Resource",
+        })
+      ),
 
-      // Update operations - provide your own test mocks
-      update: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
+      // Returns mock created resource
+      create: (data) => Effect.succeed({
+        id: "test-id",
+        ...data,
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
+      } as Resource),
 
-      // Delete operations - provide your own test mocks
-      delete: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
+      // Returns mock updated resource
+      update: (id, data) => Effect.succeed({
+        id,
+        name: "test-resource",
+        ...data,
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
+      } as Resource),
+
+      // Returns void (success)
+      delete: (id) => Effect.void,
     }
   );
 

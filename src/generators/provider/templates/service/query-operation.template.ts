@@ -51,7 +51,7 @@ Example:
     },
     {
       from: "../../errors",
-      imports: [`${className}NotFoundError`]
+      imports: [`${className}NotFoundError`, `${className}InternalError`, `${className}TimeoutError`]
     }
   ])
   builder.addBlankLine()
@@ -113,8 +113,20 @@ export const queryOperations: Query${className}Operations = {
 
       yield* Effect.logWarning(\`List operation called but not implemented\`);
       yield* Effect.logDebug(\`Params: \${JSON.stringify(params)}\`);
-      return yield* Effect.dieMessage("List operation not implemented - replace with ${externalService} SDK call");
+      return yield* Effect.fail(
+        new ${className}InternalError({
+          message: "List operation not implemented - replace with ${externalService} SDK call"
+        })
+      );
     }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          new ${className}TimeoutError({
+            message: "List operation timed out",
+            timeout: 30000,
+          }),
+      }),
       Effect.retry(
         Schedule.exponential(Duration.millis(100)).pipe(
           Schedule.compose(Schedule.recurs(3))
@@ -134,8 +146,20 @@ export const queryOperations: Query${className}Operations = {
       // return result;
 
       yield* Effect.logWarning(\`Get operation called for id \${id} but not implemented\`);
-      return yield* Effect.dieMessage("Get operation not implemented - replace with ${externalService} SDK call");
+      return yield* Effect.fail(
+        new ${className}InternalError({
+          message: "Get operation not implemented - replace with ${externalService} SDK call"
+        })
+      );
     }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          new ${className}TimeoutError({
+            message: "Get operation timed out",
+            timeout: 30000,
+          }),
+      }),
       Effect.retry(
         Schedule.exponential(Duration.millis(100)).pipe(
           Schedule.compose(Schedule.recurs(3))

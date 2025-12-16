@@ -1,5 +1,85 @@
 {
-  "nodes": {},
+  "nodes": {
+    "env": {
+      "name": "env",
+      "type": "lib",
+      "data": {
+        "root": "env",
+        "name": "env",
+        "tags": [
+          "npm:private",
+          "scope:shared",
+          "type:infra",
+          "platform:universal"
+        ],
+        "metadata": {
+          "targetGroups": {},
+          "js": {
+            "packageName": "@creativetoolkits/env",
+            "packageVersion": "0.0.1",
+            "packageExports": {
+              ".": {
+                "types": "./src/index.d.ts",
+                "default": "./src/index.js"
+              }
+            },
+            "packageMain": "./src/index.js",
+            "isInPackageManagerWorkspaces": false
+          }
+        },
+        "targets": {
+          "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": [
+              "{options.outputPath}"
+            ],
+            "options": {
+              "outputPath": "dist/libs/env",
+              "main": "libs/env/src/index.ts",
+              "tsConfig": "libs/env/tsconfig.lib.json",
+              "assets": [
+                "libs/env/*.md"
+              ],
+              "clean": false
+            },
+            "dependsOn": [
+              "^build"
+            ],
+            "configurations": {},
+            "parallelism": true,
+            "cache": true
+          },
+          "lint": {
+            "executor": "@nx/eslint:lint",
+            "outputs": [
+              "{options.outputFile}"
+            ],
+            "configurations": {},
+            "options": {},
+            "parallelism": true,
+            "cache": true
+          },
+          "test": {
+            "executor": "@nx/vite:test",
+            "outputs": [
+              "{workspaceRoot}/coverage/{projectRoot}"
+            ],
+            "options": {
+              "config": "libs/env/vitest.config.ts",
+              "passWithNoTests": true
+            },
+            "configurations": {},
+            "parallelism": true,
+            "cache": true
+          }
+        },
+        "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+        "sourceRoot": "libs/env/src",
+        "projectType": "library",
+        "implicitDependencies": []
+      }
+    }
+  },
   "externalNodes": {
     "npm:@babel/cli": {
       "type": "npm",
@@ -395,6 +475,24 @@
         "version": "0.91.8",
         "packageName": "@dprint/typescript",
         "hash": "sha512-tuKn4leCPItox1O4uunHcQF0QllDCvPWklnNQIh2PiWWVtRAGltJJnM4Cwj5AciplosD1Hiz7vAY3ew3crLb3A=="
+      }
+    },
+    "npm:@effect-atom/atom-react": {
+      "type": "npm",
+      "name": "npm:@effect-atom/atom-react",
+      "data": {
+        "version": "0.4.4",
+        "packageName": "@effect-atom/atom-react",
+        "hash": "sha512-EWT9WpB67GNCecxQXJdAZNVMhuk3VxpdDfojxg1wOgWmR5TPaGiXA74Jqa2Y9AEjSB0hMMAk7RNve2CoIikg2w=="
+      }
+    },
+    "npm:@effect-atom/atom": {
+      "type": "npm",
+      "name": "npm:@effect-atom/atom",
+      "data": {
+        "version": "0.4.10",
+        "packageName": "@effect-atom/atom",
+        "hash": "sha512-SEPDN4rbNsz0LTWfu4+a//OGh+zIpe64pJ4SJDFN1k07c9l171FTKCHIQHVwjK84vE+TxIj/Tg/JZzgxEkdMsQ=="
       }
     },
     "npm:@effect/ai": {
@@ -6157,6 +6255,15 @@
         "hash": "sha512-K5zQjDllxWkf7Z5xJdV0/B0WTNqx6vxG70zJE4N0kBs4LovmEYWJzQGxC9bS9RAKu3bgM40lrd5zoLJ12MQ5BA=="
       }
     },
+    "npm:react-dom": {
+      "type": "npm",
+      "name": "npm:react-dom",
+      "data": {
+        "version": "19.2.3",
+        "packageName": "react-dom",
+        "hash": "sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg=="
+      }
+    },
     "npm:react-is": {
       "type": "npm",
       "name": "npm:react-is",
@@ -6164,6 +6271,15 @@
         "version": "18.3.1",
         "packageName": "react-is",
         "hash": "sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg=="
+      }
+    },
+    "npm:react": {
+      "type": "npm",
+      "name": "npm:react",
+      "data": {
+        "version": "19.2.3",
+        "packageName": "react",
+        "hash": "sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA=="
       }
     },
     "npm:read-pkg-up": {
@@ -6380,6 +6496,15 @@
         "version": "2.1.2",
         "packageName": "safer-buffer",
         "hash": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="
+      }
+    },
+    "npm:scheduler": {
+      "type": "npm",
+      "name": "npm:scheduler",
+      "data": {
+        "version": "0.27.0",
+        "packageName": "scheduler",
+        "hash": "sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q=="
       }
     },
     "npm:semver@5.7.2": {
@@ -7392,6 +7517,18 @@
     }
   },
   "dependencies": {
+    "env": [
+      {
+        "source": "env",
+        "target": "npm:tslib",
+        "type": "static"
+      },
+      {
+        "source": "env",
+        "target": "npm:effect",
+        "type": "static"
+      }
+    ],
     "npm:@babel/cli": [
       {
         "source": "npm:@babel/cli",
@@ -8268,6 +8405,50 @@
       {
         "source": "npm:@changesets/write",
         "target": "npm:prettier",
+        "type": "static"
+      }
+    ],
+    "npm:@effect-atom/atom-react": [
+      {
+        "source": "npm:@effect-atom/atom-react",
+        "target": "npm:@effect-atom/atom",
+        "type": "static"
+      },
+      {
+        "source": "npm:@effect-atom/atom-react",
+        "target": "npm:effect",
+        "type": "static"
+      },
+      {
+        "source": "npm:@effect-atom/atom-react",
+        "target": "npm:react",
+        "type": "static"
+      },
+      {
+        "source": "npm:@effect-atom/atom-react",
+        "target": "npm:scheduler",
+        "type": "static"
+      }
+    ],
+    "npm:@effect-atom/atom": [
+      {
+        "source": "npm:@effect-atom/atom",
+        "target": "npm:@effect/experimental",
+        "type": "static"
+      },
+      {
+        "source": "npm:@effect-atom/atom",
+        "target": "npm:@effect/platform",
+        "type": "static"
+      },
+      {
+        "source": "npm:@effect-atom/atom",
+        "target": "npm:@effect/rpc",
+        "type": "static"
+      },
+      {
+        "source": "npm:@effect-atom/atom",
+        "target": "npm:effect",
         "type": "static"
       }
     ],
@@ -13907,6 +14088,18 @@
         "type": "static"
       }
     ],
+    "npm:react-dom": [
+      {
+        "source": "npm:react-dom",
+        "target": "npm:react",
+        "type": "static"
+      },
+      {
+        "source": "npm:react-dom",
+        "target": "npm:scheduler",
+        "type": "static"
+      }
+    ],
     "npm:read-pkg-up": [
       {
         "source": "npm:read-pkg-up",
@@ -15630,5 +15823,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1765351943888
+  "computedAt": 1765866480249
 }

@@ -9,7 +9,7 @@
 export { generateRepositoryAggregateOperationFile } from "./aggregate-operation.template"
 export { generateRepositoryCreateOperationFile } from "./create-operation.template"
 export { generateRepositoryDeleteOperationFile } from "./delete-operation.template"
-export { generateRepositoryInterfaceFile } from "./interface.template"
+export { generateRepositoryFile } from "./repository.template"
 export { generateRepositoryOperationsIndexFile } from "./operations-index.template"
 export { generateRepositoryReadOperationFile } from "./read-operation.template"
 export { generateRepositoryIndexFile } from "./repository-index.template"

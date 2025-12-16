@@ -8,6 +8,8 @@ export interface InfraGeneratorSchema {
   platform?: PlatformType
   includeClientServer?: boolean
   includeEdge?: boolean
+  includeClient?: boolean
+  includeServer?: boolean
 
   // Provider consolidation options
   consolidatesProviders?: boolean

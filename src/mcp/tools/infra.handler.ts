@@ -1,140 +1,91 @@
 /**
- * Infrastructure Generator MCP Tool Handler
+ * Infra Generator MCP Tool Handler (Refactored)
  *
- * Handles infrastructure library generation via MCP protocol.
- * Uses Effect Schema for validation and existing Nx generators.
+ * Handles infrastructure library generation via MCP protocol using unified infrastructure.
  */
 
-import { Effect, Option } from "effect"
-import { exec } from "node:child_process"
-import { promisify } from "node:util"
-import { decodeInfraArgs } from "../schemas/infra.schema"
-import { buildGeneratorCommand, getExecutionMode } from "../utils/command-builder"
-import { formatErrorResult, formatSuccessResult } from "../utils/result-formatter"
-import { formatParseError } from "../utils/validation"
-import { detectWorkspace } from "../utils/workspace-detector"
-
-const execAsync = promisify(exec)
+import { Effect, ParseResult } from "effect"
+import { generateInfraCore } from "../../generators/core/infra"
+import { createExecutor } from "../../infrastructure/execution/executor"
+import { formatErrorResponse, formatOutput, formatValidationError } from "../../infrastructure/output/formatter"
+import { decodeInfraInput } from "../../infrastructure/validation/registry"
+import { ValidationError } from "../utils/validation"
+import type { McpResponse } from "../../infrastructure/output/formatter"
 
 /**
- * Handle infrastructure generation with Effect Schema validation
+ * Create infra executor using unified infrastructure
+ */
+const infraExecutor = createExecutor(
+  "infra",
+  generateInfraCore,
+  (validated, metadata) => {
+    const platform = validated["platform"] as "node" | "browser" | "universal" | "edge" | undefined
+    const includeClient = validated["includeClient"] as boolean | undefined
+    const includeServer = validated["includeServer"] as boolean | undefined
+    const result: any = { ...metadata }
+    if (platform !== undefined) {
+      result.platform = platform
+    }
+    if (includeClient && includeServer) {
+      result.includeClientServer = true
+    }
+    return result
+  }
+)
+
+/**
+ * Handle infra generation with unified infrastructure
  */
 export const handleGenerateInfra = (input: unknown) =>
-  Effect.gen(function*() {
-    // 1. Validate input with Effect Schema
-    const validationResult = yield* decodeInfraArgs(input).pipe(
-      Effect.either
+  Effect.gen(function* () {
+    // 1. Validate input using proper error channel
+    const validated = yield* decodeInfraInput(input).pipe(
+      Effect.mapError((parseError) =>
+        new ValidationError({
+          message: ParseResult.TreeFormatter.formatErrorSync(parseError),
+          cause: parseError
+        })
+      )
     )
 
-    if (validationResult._tag === "Left") {
-      const errorMessage = formatParseError(validationResult.left)
-      return {
-        success: false,
-        message: `❌ Validation Error:\n\n${errorMessage}\n\n💡 Check your input parameters and try again.`
-      }
-    }
-
-    const args = validationResult.right
-
-    // 2. Auto-detect workspace
-    const workspaceResult = yield* detectWorkspace(args.workspaceRoot).pipe(
-      Effect.either
-    )
-
-    if (workspaceResult._tag === "Left") {
-      return {
-        success: false,
-        message: formatErrorResult(workspaceResult.left)
-      }
-    }
-
-    const workspace = workspaceResult.right
-
-    // 3. Handle dry-run mode
-    if (args.dryRun) {
+    // 2. Handle dry-run mode
+    if (validated.dryRun) {
       return {
         success: true,
         message: [
           "🔍 DRY RUN MODE",
           "",
-          `Would generate infrastructure library: infra-${args.name}`,
+          `Would generate infra library: infra-${validated.name}`,
           "",
           "📦 Configuration:",
-          `  - Name: ${args.name}`,
-          `  - Workspace: ${workspace.root}`,
-          `  - Scope: ${workspace.scope}`,
-          `  - Type: ${workspace.type}`,
-          `  - Mode: ${getExecutionMode(workspace)}`,
-          `  - Platform: ${args.platform}`,
-          `  - Client/Server: ${args.includeClientServer}`,
-          `  - Edge: ${args.includeEdge}`,
+          `  - Name: ${validated.name}`,
+          `  - Infrastructure Type: ${validated.infraType}`,
+          `  - Include Client: ${validated.includeClient ?? true}`,
+          `  - Include Server: ${validated.includeServer ?? true}`,
           "",
           "To actually generate files, set dryRun: false"
         ].join("\n")
       }
     }
 
-    // 4. Build Nx generate command
-    const directory = Option.getOrElse(() => "libs/infra")(args.directory)
-    const description = Option.getOrUndefined(args.description)
-    const tags = Option.getOrUndefined(args.tags)
-
-    const cliArgs: Array<string> = [
-      `--name=${args.name}`,
-      `--directory=${directory}`,
-      `--platform=${args.platform}`,
-      ...(description ? [`--description="${description}"`] : []),
-      ...(args.includeClientServer ? ["--includeClientServer=true"] : []),
-      ...(args.includeEdge ? ["--includeEdge=true"] : []),
-      ...(tags ? [`--tags=${tags}`] : []),
-      "--no-interactive"
-    ]
-
-    const command = buildGeneratorCommand(workspace, "infra", cliArgs)
-
-    // 5. Run generator (Nx or CLI mode based on workspace type)
-    const generatorResult = yield* Effect.tryPromise({
-      try: async () => {
-        const { stderr, stdout } = await execAsync(command, {
-          cwd: workspace.root,
-          env: { ...process.env, NX_DAEMON: "false" }
-        })
-        return { stdout, stderr }
-      },
-      catch: (error) => error
-    }).pipe(Effect.either)
-
-    if (generatorResult._tag === "Left") {
-      return {
+    // 3. Execute generator with proper error handling
+    return yield* infraExecutor
+      .execute({
+        ...validated,
+        __interfaceType: "mcp" as const
+      })
+      .pipe(
+        Effect.map((result) => formatOutput(result, "mcp")),
+        Effect.catchTag("GeneratorExecutionError", (error) =>
+          Effect.succeed(formatErrorResponse(error))
+        )
+      )
+  }).pipe(
+    // Handle validation errors at top level
+    Effect.catchTag("ValidationError", (error) =>
+      Effect.succeed({
         success: false,
-        message: formatErrorResult(generatorResult.left)
-      }
-    }
-
-    // 6. Format success response
-    const libraryName = `infra-${args.name}`
-    const projectRoot = `${Option.getOrElse(() => "libs/infra")(args.directory)}/${args.name}`
-
-    return {
-      success: true,
-      message: formatSuccessResult({
-        libraryType: "infra",
-        libraryName,
-        filesCreated: [
-          `${projectRoot}/package.json`,
-          `${projectRoot}/tsconfig.json`,
-          `${projectRoot}/src/index.ts`,
-          `${projectRoot}/src/server.ts`,
-          `${projectRoot}/src/lib/service/interface.ts`,
-          `${projectRoot}/src/lib/providers/memory.ts`,
-          `${projectRoot}/src/lib/layers/server-layers.ts`
-        ],
-        workspaceType: workspace.type,
-        nextSteps: [
-          `Run \`${workspace.packageManager} install\` to install dependencies`,
-          `Import service: \`import { ${args.name}Service } from '${workspace.scope}/${libraryName}/server'\``
-        ]
-      }),
-      files: []
-    }
-  })
+        message: formatValidationError(error.message)
+      } as McpResponse)
+    )
+  )

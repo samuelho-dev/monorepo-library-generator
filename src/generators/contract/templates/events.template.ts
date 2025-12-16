@@ -28,7 +28,7 @@ export function generateEventsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: "effect", imports: ["DateTime", "Schema"] }])
 
   builder.addImports([
     { from: "./entities", imports: [`${className}Id`], isTypeOnly: true }
@@ -225,7 +225,7 @@ export class ${className}CreatedEvent extends Schema.Class<${className}CreatedEv
       eventId: crypto.randomUUID(),
       eventType: "${className}CreatedEvent",
       eventVersion: "1.0",
-      occurredAt: new Date(),
+      occurredAt: DateTime.now(),
       aggregateId: params.${propertyName}Id,
       aggregateType: "${className}",
       aggregateVersion: 1,
@@ -279,7 +279,7 @@ export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEv
       eventId: crypto.randomUUID(),
       eventType: "${className}UpdatedEvent",
       eventVersion: "1.0",
-      occurredAt: new Date(),
+      occurredAt: DateTime.now(),
       aggregateId: params.${propertyName}Id,
       aggregateType: "${className}",
       aggregateVersion: params.aggregateVersion,
@@ -334,7 +334,7 @@ export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEv
       eventId: crypto.randomUUID(),
       eventType: "${className}DeletedEvent",
       eventVersion: "1.0",
-      occurredAt: new Date(),
+      occurredAt: DateTime.now(),
       aggregateId: params.${propertyName}Id,
       aggregateType: "${className}",
       aggregateVersion: params.aggregateVersion,

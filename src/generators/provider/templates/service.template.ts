@@ -245,7 +245,7 @@ export function generateServiceFile(options: ProviderTemplateOptions) {
   builder.addBlankLine()
   builder.addRaw("        return {")
   builder.addRaw("          status: \"healthy\",")
-  builder.addRaw("          timestamp: new Date().toISOString(),")
+  builder.addRaw("          timestamp: new Date(),")
   builder.addRaw("          version: \"1.0.0\",")
   builder.addRaw("        };")
   builder.addRaw("      },")

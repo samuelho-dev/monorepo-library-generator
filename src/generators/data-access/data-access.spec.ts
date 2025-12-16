@@ -107,16 +107,16 @@ describe("Data Access Library Generator", () => {
       await dataAccessGenerator(tree, schema)
 
       // New granular structure
-      expect(tree.exists(`${projectRoot}/src/lib/repository/interface.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/repository/repository.ts`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib/repository/operations/create.ts`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib/repository/operations/read.ts`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib/repository/index.ts`)).toBe(true)
 
-      const interfaceContent = tree.read(`${projectRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
 
       // Should have ProductRepository Context.Tag
-      expect(interfaceContent).toContain("ProductRepository")
-      expect(interfaceContent).toContain("Context.Tag")
+      expect(repositoryContent).toContain("ProductRepository")
+      expect(repositoryContent).toContain("Context.Tag")
 
       const readContent = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, "utf-8") || ""
       // Should have standard repository read methods
@@ -128,12 +128,12 @@ describe("Data Access Library Generator", () => {
 
       await dataAccessGenerator(tree, schema)
 
-      // Static members are in interface.ts (Effect 3.0+ pattern)
-      const interfaceContent = tree.read(`${projectRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
-      expect(interfaceContent).toContain("static readonly Live")
-      expect(interfaceContent).toContain("static readonly Test")
-      expect(interfaceContent).toContain("static readonly Dev")
-      expect(interfaceContent).toContain("static readonly Auto")
+      // Static members are in repository.ts (Effect 3.0+ pattern)
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
+      expect(repositoryContent).toContain("static readonly Live")
+      expect(repositoryContent).toContain("static readonly Test")
+      expect(repositoryContent).toContain("static readonly Dev")
+      expect(repositoryContent).toContain("static readonly Auto")
 
       // Layers file should export them
       const layersContent = tree.read(`${projectRoot}/src/lib/server/layers.ts`, "utf-8") || ""
@@ -146,10 +146,10 @@ describe("Data Access Library Generator", () => {
 
       await dataAccessGenerator(tree, schema)
 
-      // Test layer is defined as static member in interface.ts
-      const interfaceContent = tree.read(`${projectRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
-      expect(interfaceContent).toContain("static readonly Test")
-      expect(interfaceContent).toContain("Layer.succeed") // Stub-based test implementation
+      // Test layer is defined as static member in repository.ts
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
+      expect(repositoryContent).toContain("static readonly Test")
+      expect(repositoryContent).toContain("Layer.succeed") // Stub-based test implementation
 
       // Check operations files for methods
       const readOps = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, "utf-8") || ""
@@ -379,7 +379,7 @@ describe("Data Access Library Generator", () => {
       expect(tree.exists(`${projectRoot}/src`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib/repository`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/interface.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/repository/repository.ts`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib/repository/operations`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib/shared`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib/shared/errors.ts`)).toBe(true)
@@ -456,10 +456,10 @@ describe("Data Access Library Generator", () => {
 
       await dataAccessGenerator(tree, schema)
 
-      const interfaceContent = tree.read(`${projectRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
 
       // Should use PascalCase for class/interface names
-      expect(interfaceContent).toContain("ProductRepository")
+      expect(repositoryContent).toContain("ProductRepository")
 
       const errorContent = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
 
@@ -472,15 +472,15 @@ describe("Data Access Library Generator", () => {
 
       await dataAccessGenerator(tree, schema)
 
-      const interfaceContent = tree.read(`${projectRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
 
       // Should not have EJS template syntax (which would indicate incomplete generation)
-      expect(interfaceContent).not.toContain("<%=")
-      expect(interfaceContent).not.toContain("%>")
+      expect(repositoryContent).not.toContain("<%=")
+      expect(repositoryContent).not.toContain("%>")
       // Should have actual implementation (at least one of these)
-      const hasImplementation = interfaceContent.includes("Context.Tag") ||
-        interfaceContent.includes("const") ||
-        interfaceContent.includes("export")
+      const hasImplementation = repositoryContent.includes("Context.Tag") ||
+        repositoryContent.includes("const") ||
+        repositoryContent.includes("export")
       expect(hasImplementation).toBe(true)
     })
 
@@ -550,7 +550,7 @@ describe("Data Access Library Generator", () => {
       // Verify core template files exist with new granular structure
       const coreTemplateFiles = [
         `${projectRoot}/src/index.ts`,
-        `${projectRoot}/src/lib/repository/interface.ts`,
+        `${projectRoot}/src/lib/repository/repository.ts`,
         `${projectRoot}/src/lib/repository/operations/create.ts`,
         `${projectRoot}/src/lib/repository/operations/read.ts`,
         `${projectRoot}/src/lib/repository.spec.ts`,
@@ -605,12 +605,12 @@ describe("Data Access Library Generator", () => {
 
       await dataAccessGenerator(tree, schema)
 
-      // Test layer is in interface.ts
-      const interfaceContent = tree.read(`${projectRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
+      // Test layer is in repository.ts
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
 
       // Test layer should have stub implementations
-      expect(interfaceContent).toContain("static readonly Test")
-      expect(interfaceContent).toContain("Layer.succeed")
+      expect(repositoryContent).toContain("static readonly Test")
+      expect(repositoryContent).toContain("Layer.succeed")
 
       // Check that operations exist
       expect(tree.exists(`${projectRoot}/src/lib/repository/operations/read.ts`)).toBe(true)
@@ -689,8 +689,8 @@ describe("Data Access Library Generator", () => {
       expect(projectJson.name).toBe("data-access-payment-method")
 
       // Check repository uses PascalCase
-      const interfaceContent = tree.read(`${paymentRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
-      expect(interfaceContent).toContain("PaymentMethod")
+      const repositoryContent = tree.read(`${paymentRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
+      expect(repositoryContent).toContain("PaymentMethod")
     })
 
     it("should use consistent naming across all generated files", async () => {
@@ -701,8 +701,8 @@ describe("Data Access Library Generator", () => {
       const userRoot = "libs/data-access/user-profile"
 
       // Repository should use PascalCase
-      const interfaceContent = tree.read(`${userRoot}/src/lib/repository/interface.ts`, "utf-8") || ""
-      expect(interfaceContent).toContain("UserProfileRepository")
+      const repositoryContent = tree.read(`${userRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
+      expect(repositoryContent).toContain("UserProfileRepository")
 
       // Errors should use PascalCase
       const errorContent = tree.read(`${userRoot}/src/lib/shared/errors.ts`, "utf-8") || ""

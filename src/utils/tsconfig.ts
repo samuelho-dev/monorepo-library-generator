@@ -9,7 +9,7 @@
  * - TypeScript incremental compilation support
  */
 
-import type { Tree } from "@nx/devkit"
+import type { ProjectGraph, Tree } from "@nx/devkit"
 import { createProjectGraphAsync, readProjectConfiguration } from "@nx/devkit"
 import { join, relative } from "path"
 import type { LibraryType, PlatformType } from "./build-config"
@@ -169,7 +169,7 @@ export async function computeProjectReferences(
  * TypeScript --build mode fails with circular references, so we must prevent them
  */
 function detectCircularReferences(
-  graph: any,
+  graph: ProjectGraph,
   projectName: string,
   visited: Set<string>,
   path: Array<string> = []
@@ -263,7 +263,7 @@ export function generateLibTsConfig(
   // Contract libraries need typeRoots: [] to prevent auto-inclusion of all @types/* packages
   // TypeScript defaults to ["node_modules/@types"] which auto-includes packages like
   // @types/minimatch, @types/three, etc. from the workspace root
-  const compilerOptions: any = {
+  const compilerOptions: Record<string, unknown> = {
     composite: true,
     declaration: true,
     declarationMap: true,

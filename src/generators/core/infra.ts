@@ -8,7 +8,6 @@
  * - Generates service interface and configuration files
  * - Creates provider implementations (memory, live)
  * - Generates layer compositions for different environments
- * - Creates platform-specific exports (client, server, edge)
  * - Infrastructure generation is handled by wrapper generators
  *
  * @module monorepo-library-generator/generators/core/infra-generator-core
@@ -22,11 +21,10 @@ import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/
 import {
   generateClientLayersFile,
   generateConfigFile,
-  generateEdgeFile,
   generateEdgeLayersFile,
   generateErrorsFile,
   generateIndexFile,
-  generateInterfaceFile,
+  generateServiceFile,
   generateMemoryProviderFile,
   generateServerLayersFile,
   generateUseHookFile
@@ -167,7 +165,7 @@ This is an infrastructure library following Effect-based service patterns with g
 
 - **types.ts**: Type-only exports (zero runtime overhead)
 - **lib/service/**: Service definition
-  - \`interface.ts\`: Context.Tag with service interface
+  - \`service.ts\`: Context.Tag with service interface
   - \`config.ts\`: Service configuration types (~2 KB)
   - \`errors.ts\`: Error types (~2 KB)
 
@@ -303,8 +301,8 @@ function MyComponent() {
     yield* adapter.writeFile(`${serviceLibPath}/errors.ts`, generateErrorsFile(templateOptions))
     filesGenerated.push(`${serviceLibPath}/errors.ts`)
 
-    yield* adapter.writeFile(`${serviceLibPath}/interface.ts`, generateInterfaceFile(templateOptions))
-    filesGenerated.push(`${serviceLibPath}/interface.ts`)
+    yield* adapter.writeFile(`${serviceLibPath}/service.ts`, generateServiceFile(templateOptions))
+    filesGenerated.push(`${serviceLibPath}/service.ts`)
 
     yield* adapter.writeFile(`${serviceLibPath}/config.ts`, generateConfigFile(templateOptions))
     filesGenerated.push(`${serviceLibPath}/config.ts`)
@@ -341,11 +339,6 @@ function MyComponent() {
         filesGenerated.push(`${layersLibPath}/edge-layers.ts`)
       }
 
-      const edgeContent = generateEdgeFile(templateOptions)
-      if (edgeContent) {
-        yield* adapter.writeFile(`${options.sourceRoot}/edge.ts`, edgeContent)
-        filesGenerated.push(`${options.sourceRoot}/edge.ts`)
-      }
     }
 
     // Generate provider consolidation (conditional)
@@ -374,80 +367,8 @@ function MyComponent() {
       filesGenerated.push(`${options.sourceRoot}/index.ts`)
     }
 
-    // Generate platform-specific barrel exports
-    // Always generate server.ts and client.ts since they're declared in package.json exports
-    // This ensures imports don't fail even if features aren't included
-
-    // Server barrel export (always generate)
-    const serverBarrelContent = `/**
- * Server-side exports for ${templateOptions.className}
- *
- * Bundle optimization: Import from this file for server-only code.
- * This keeps server-side code out of client bundles.
- */
-
-// Service layers (server-specific)
-export {
-  ${templateOptions.className}ServiceLive,
-  ${templateOptions.className}ServiceTest,
-  ${templateOptions.className}ServiceDev,
-} from "./lib/layers/server-layers";
-
-// Configuration
-export { default${templateOptions.className}Config, get${templateOptions.className}ConfigForEnvironment } from "./lib/service/config";
-
-// Service interface
-export { ${templateOptions.className}Service } from "./lib/service/interface";
-
-// Memory provider (for testing)
-export {
-  Memory${templateOptions.className}Provider,
-  Memory${templateOptions.className}ProviderLive,
-} from "./lib/providers/memory";
-
-// Errors
-export type * from "./lib/service/errors";
-`
-    yield* adapter.writeFile(`${options.sourceRoot}/server.ts`, serverBarrelContent)
-    filesGenerated.push(`${options.sourceRoot}/server.ts`)
-
-    // Client barrel export (always generate, but content varies based on includeClientServer)
-    const clientBarrelContent = includeClientServer
-      ? `/**
- * Client-side exports for ${templateOptions.className}
- *
- * Bundle optimization: Import from this file for client-only code.
- * This keeps client-side code out of server bundles.
- */
-
-// React hooks
-export { use${templateOptions.className} } from "./lib/client/hooks/use-${templateOptions.fileName}";
-
-// Client layers (browser-safe)
-export { ${templateOptions.className}ServiceClientLayers } from "./lib/layers/client-layers";
-
-// Service interface
-export { ${templateOptions.className}Service } from "./lib/service/interface";
-
-// Errors (universal)
-export type * from "./lib/service/errors";
-`
-      : `/**
- * Client-side exports for ${templateOptions.className}
- *
- * Type-only exports for client-side code.
- * Full client implementation requires includeClientServer=true.
- */
-
-// Service interface (type-only)
-export type { ${templateOptions.className}Service } from "./lib/service/interface";
-
-// Errors (type-only)
-export type * from "./lib/service/errors";
-`
-
-    yield* adapter.writeFile(`${options.sourceRoot}/client.ts`, clientBarrelContent)
-    filesGenerated.push(`${options.sourceRoot}/client.ts`)
+    // Platform-specific barrel exports removed - rely on automatic tree-shaking
+    // All exports are now handled through the main index.ts
 
     return {
       projectName: options.projectName,

@@ -6,6 +6,7 @@
 
 import { Effect } from "effect"
 import { describe, expect, it, vi } from "vitest"
+import type { McpResponse } from "../../infrastructure/output/formatter"
 import { handleGenerateContract } from "./contract.handler"
 import { handleGenerateDataAccess } from "./data-access.handler"
 import { handleGenerateFeature } from "./feature.handler"
@@ -56,7 +57,7 @@ describe("Dual-Mode MCP Handlers", () => {
           dryRun: true
         }
 
-        const result = await Effect.runPromise(handleGenerateContract(input))
+        const result = (await Effect.runPromise(handleGenerateContract(input))) as McpResponse
 
         expect(result.success).toBe(true)
         expect(result.message).toContain("Mode: Nx Generator")
@@ -70,7 +71,7 @@ describe("Dual-Mode MCP Handlers", () => {
           dryRun: true
         }
 
-        const result = await Effect.runPromise(handleGenerateContract(input))
+        const result = (await Effect.runPromise(handleGenerateContract(input))) as McpResponse
 
         expect(result.success).toBe(true)
         expect(result.message).toContain("Scope: @test")
@@ -85,7 +86,7 @@ describe("Dual-Mode MCP Handlers", () => {
           dryRun: true
         }
 
-        const result = await Effect.runPromise(handleGenerateContract(input))
+        const result = (await Effect.runPromise(handleGenerateContract(input))) as McpResponse
 
         expect(result.success).toBe(true)
         expect(result.message).toContain("Mode: CLI (Agnostic)")
@@ -101,7 +102,7 @@ describe("Dual-Mode MCP Handlers", () => {
           dryRun: true
         }
 
-        const result = await Effect.runPromise(handleGenerateContract(input))
+        const result = (await Effect.runPromise(handleGenerateContract(input))) as McpResponse
 
         expect(result.success).toBe(true)
         expect(result.message).toContain("Mode: CLI (Agnostic)")
@@ -120,7 +121,7 @@ describe("Dual-Mode MCP Handlers", () => {
           dryRun: true
         }
 
-        const result = await Effect.runPromise(handleGenerateContract(input))
+        const result = (await Effect.runPromise(handleGenerateContract(input))) as McpResponse
 
         expect(result.success).toBe(true)
         expect(result.message).toContain("Entities: Product, Category")
@@ -138,7 +139,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateDataAccess(input))
+      const result = await Effect.runPromise(handleGenerateDataAccess(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Mode: Nx Generator")
@@ -151,7 +152,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateDataAccess(input))
+      const result = await Effect.runPromise(handleGenerateDataAccess(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Mode: CLI (Agnostic)")
@@ -165,7 +166,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateDataAccess(input))
+      const result = await Effect.runPromise(handleGenerateDataAccess(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Contract Domain: product-v2")
@@ -181,7 +182,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateFeature(input))
+      const result = await Effect.runPromise(handleGenerateFeature(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Mode: Nx Generator")
@@ -195,7 +196,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateFeature(input))
+      const result = await Effect.runPromise(handleGenerateFeature(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Mode: CLI (Agnostic)")
@@ -213,7 +214,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateFeature(input))
+      const result = await Effect.runPromise(handleGenerateFeature(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Platform: universal")
@@ -233,7 +234,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateInfra(input))
+      const result = await Effect.runPromise(handleGenerateInfra(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Mode: Nx Generator")
@@ -247,7 +248,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateInfra(input))
+      const result = await Effect.runPromise(handleGenerateInfra(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Mode: CLI (Agnostic)")
@@ -264,7 +265,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateProvider(input))
+      const result = await Effect.runPromise(handleGenerateProvider(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Mode: Nx Generator")
@@ -279,7 +280,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateProvider(input))
+      const result = await Effect.runPromise(handleGenerateProvider(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("Mode: CLI (Agnostic)")
@@ -294,7 +295,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateProvider(input))
+      const result = await Effect.runPromise(handleGenerateProvider(input)) as McpResponse
 
       expect(result.success).toBe(true)
       expect(result.message).toContain("External Service: Stripe")
@@ -309,7 +310,7 @@ describe("Dual-Mode MCP Handlers", () => {
         dryRun: true
       }
 
-      const result = await Effect.runPromise(handleGenerateContract(input))
+      const result = (await Effect.runPromise(handleGenerateContract(input))) as McpResponse
 
       expect(result.success).toBe(false)
       expect(result.message).toContain("Workspace not found")
@@ -326,30 +327,30 @@ describe("Dual-Mode MCP Handlers", () => {
     workspaces.forEach(({ expectedMode, path, type }) => {
       describe(`${type} workspace`, () => {
         it("should use same mode across all generators", async () => {
-          const contractResult = await Effect.runPromise(
+          const contractResult = (await Effect.runPromise(
             handleGenerateContract({
               name: "test",
               workspaceRoot: path,
               dryRun: true
             })
-          )
+          )) as McpResponse
 
-          const dataAccessResult = await Effect.runPromise(
+          const dataAccessResult = (await Effect.runPromise(
             handleGenerateDataAccess({
               name: "test",
               workspaceRoot: path,
               dryRun: true
             })
-          )
+          )) as McpResponse
 
-          const featureResult = await Effect.runPromise(
+          const featureResult = (await Effect.runPromise(
             handleGenerateFeature({
               name: "test",
               workspaceRoot: path,
               platform: "node" as const,
               dryRun: true
             })
-          )
+          )) as McpResponse
 
           expect(contractResult.message).toContain(`Mode: ${expectedMode}`)
           expect(dataAccessResult.message).toContain(`Mode: ${expectedMode}`)

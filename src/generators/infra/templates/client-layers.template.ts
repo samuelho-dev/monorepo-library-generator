@@ -34,22 +34,25 @@ export function generateClientLayersFile(options: InfraTemplateOptions) {
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Layer", "Effect"] },
-    { from: "../service/interface", imports: [`${className}Service`] }
+    { from: "effect", imports: ["Layer", "Effect", "Option"] },
+    { from: "../service/service", imports: [`${className}Service`] }
   ])
 
   // Section: Client Layer
   builder.addSectionComment("Client Layer (Browser-Safe)")
 
-  builder.addRaw(`/**
- * Client Layer
+  builder.addRaw(`// ${className}Service static members for client platform
+// These extend the service tag with platform-specific layers
+
+/**
+ * Client Live Layer (Effect 3.0+ Pattern)
  *
  * Browser-safe implementation of ${className}Service.
  * Uses only browser APIs and client-side data sources.
  *
- * TODO: Implement browser-specific service logic
+ * Defined as static member: ${className}Service.ClientLive
  */
-export const ${className}ServiceClientLayers = Layer.effect(
+${className}Service.ClientLive = Layer.effect(
   ${className}Service,
   Effect.gen(function* () {
     // TODO: Inject browser-specific dependencies

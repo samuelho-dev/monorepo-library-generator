@@ -48,6 +48,10 @@ Example:
       from: "../../errors",
       imports: [`${className}ServiceError`],
       isTypeOnly: true
+    },
+    {
+      from: "../../errors",
+      imports: [`${className}InternalError`, `${className}TimeoutError`]
     }
   ])
   builder.addBlankLine()
@@ -95,8 +99,20 @@ export const createOperations: Create${className}Operations = {
 
       yield* Effect.logWarning(\`Create operation called with data but not implemented\`);
       yield* Effect.logDebug(\`Data: \${JSON.stringify(data)}\`);
-      return yield* Effect.fail(new ${className}InternalError({ message: "Create operation not implemented - replace with ${externalService} SDK call" }));
+      return yield* Effect.fail(
+        new ${className}InternalError({
+          message: "Create operation not implemented - replace with ${externalService} SDK call"
+        })
+      );
     }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          new ${className}TimeoutError({
+            message: "Create operation timed out",
+            timeout: 30000,
+          }),
+      }),
       Effect.retry(
         Schedule.exponential(Duration.millis(100)).pipe(
           Schedule.compose(Schedule.recurs(3))

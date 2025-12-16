@@ -19,7 +19,7 @@ describe("Infra Generator - Foundation", () => {
     it("should generate all base files for server-only infrastructure", async () => {
       await infraGenerator(tree, { name: "cache" })
 
-      expect(tree.exists("libs/infra/cache/src/lib/service/interface.ts")).toBe(
+      expect(tree.exists("libs/infra/cache/src/lib/service/service.ts")).toBe(
         true
       )
       expect(tree.exists("libs/infra/cache/src/lib/service/errors.ts")).toBe(
@@ -101,7 +101,7 @@ describe("Infra Generator - Foundation", () => {
       })
 
       const indexContent = tree.read("libs/infra/cache/src/index.ts", "utf-8")
-      expect(indexContent).toContain("from './lib/service/interface'")
+      expect(indexContent).toContain("from './lib/service/service'")
       expect(indexContent).toContain("from './lib/layers/server-layers'")
       expect(indexContent).toContain("from './lib/service/errors'")
     })
@@ -114,14 +114,14 @@ describe("Infra Generator - Foundation", () => {
         includeClientServer: true
       })
 
-      expect(tree.exists("libs/infra/storage/src/client.ts")).toBe(true)
-      expect(tree.exists("libs/infra/storage/src/server.ts")).toBe(true)
+      expect(tree.exists("libs/infra/storage/src/index.ts")).toBe(true)
+      expect(tree.exists("libs/infra/storage/src/lib/client/hooks")).toBe(true)
     })
 
     it("should accept includeEdge flag", async () => {
       await infraGenerator(tree, { name: "auth", includeEdge: true })
 
-      expect(tree.exists("libs/infra/auth/src/edge.ts")).toBe(true)
+      expect(tree.exists("libs/infra/auth/src/index.ts")).toBe(true)
       expect(tree.exists("libs/infra/auth/src/lib/layers/edge-layers.ts")).toBe(
         true
       )
@@ -134,9 +134,9 @@ describe("Infra Generator - Foundation", () => {
         includeEdge: true
       })
 
-      expect(tree.exists("libs/infra/webhook/src/client.ts")).toBe(true)
-      expect(tree.exists("libs/infra/webhook/src/server.ts")).toBe(true)
-      expect(tree.exists("libs/infra/webhook/src/edge.ts")).toBe(true)
+      expect(tree.exists("libs/infra/webhook/src/index.ts")).toBe(true)
+      expect(tree.exists("libs/infra/webhook/src/lib/client/hooks")).toBe(true)
+      expect(tree.exists("libs/infra/webhook/src/lib/layers/edge-layers.ts")).toBe(true)
     })
   })
 })
@@ -156,14 +156,14 @@ describe("Infra Generator - Server-Only Structure", () => {
     it("should use Context.Tag with inline interface (Effect 3.0+ pattern)", async () => {
       await infraGenerator(tree, { name: "cache" })
 
-      const interfaceContent = tree.read(
-        "libs/infra/cache/src/lib/service/interface.ts",
+      const serviceContent = tree.read(
+        "libs/infra/cache/src/lib/service/service.ts",
         "utf-8"
       )
       // Modern Effect 3.0+ pattern: Context.Tag with inline interface
-      expect(interfaceContent).toContain("export class CacheService")
-      expect(interfaceContent).toContain("extends Context.Tag")
-      expect(interfaceContent).toContain("readonly get:")
+      expect(serviceContent).toContain("export class CacheService")
+      expect(serviceContent).toContain("extends Context.Tag")
+      expect(serviceContent).toContain("readonly get:")
     })
 
     it("should generate service errors with Data.TaggedError", async () => {
@@ -189,12 +189,11 @@ describe("Infra Generator - Server-Only Structure", () => {
       expect(layersContent).toContain("CacheService.Test")
     })
 
-    it("should ALWAYS generate client.ts and server.ts barrel exports", async () => {
+    it("should generate server layers by default", async () => {
       await infraGenerator(tree, { name: "cache" })
 
-      // Platform barrel exports are ALWAYS generated since they're in package.json exports
-      expect(tree.exists("libs/infra/cache/src/client.ts")).toBe(true)
-      expect(tree.exists("libs/infra/cache/src/server.ts")).toBe(true)
+      // Platform barrel exports removed - check actual implementation
+      expect(tree.exists("libs/infra/cache/src/lib/layers/server-layers.ts")).toBe(true)
     })
 
     it("should NOT create client/ directory when no flags", async () => {
@@ -217,14 +216,15 @@ describe("Infra Generator - Client-Server Separation", () => {
   })
 
   describe("Platform Separation", () => {
-    it("should generate BOTH client.ts AND server.ts when includeClientServer=true", async () => {
+    it("should generate client and server implementation when includeClientServer=true", async () => {
       await infraGenerator(tree, {
         name: "storage",
         includeClientServer: true
       })
 
-      expect(tree.exists("libs/infra/storage/src/client.ts")).toBe(true)
-      expect(tree.exists("libs/infra/storage/src/server.ts")).toBe(true)
+      // Platform barrel exports removed - check actual implementation
+      expect(tree.exists("libs/infra/storage/src/lib/client/hooks")).toBe(true)
+      expect(tree.exists("libs/infra/storage/src/lib/layers/server-layers.ts")).toBe(true)
     })
 
     it("should generate client/hooks/ directory", async () => {
@@ -262,47 +262,46 @@ describe("Infra Generator - Client-Server Separation", () => {
         "libs/infra/storage/src/index.ts",
         "utf-8"
       )
-      expect(indexContent).toContain("from './lib/service/interface'")
+      expect(indexContent).toContain("from './lib/service/service'")
       expect(indexContent).not.toContain("from './lib/layers")
     })
 
-    it("should export client layers from client.ts", async () => {
+    it("should export client layers from client-layers.ts", async () => {
       await infraGenerator(tree, {
         name: "storage",
         includeClientServer: true
       })
 
-      const clientContent = tree.read(
-        "libs/infra/storage/src/client.ts",
+      const clientLayersContent = tree.read(
+        "libs/infra/storage/src/lib/layers/client-layers.ts",
         "utf-8"
       )
-      expect(clientContent).toContain("StorageServiceClientLayers")
+      expect(clientLayersContent).toContain("StorageService.ClientLive")
     })
 
-    it("should export server layers from server.ts", async () => {
+    it("should export server layers from server-layers.ts", async () => {
       await infraGenerator(tree, {
         name: "storage",
         includeClientServer: true
       })
 
-      const serverContent = tree.read(
-        "libs/infra/storage/src/server.ts",
+      const serverLayersContent = tree.read(
+        "libs/infra/storage/src/lib/layers/server-layers.ts",
         "utf-8"
       )
-      expect(serverContent).toContain("StorageServiceLive")
+      expect(serverLayersContent).toContain("StorageService.Live")
     })
 
-    it("should ALWAYS generate client.ts and server.ts barrel exports even when includeClientServer=false", async () => {
+    it("should NOT create client implementation when includeClientServer=false", async () => {
       await infraGenerator(tree, {
         name: "cache",
         includeClientServer: false
       })
 
-      // Platform barrel exports are ALWAYS generated since they're in package.json exports
-      expect(tree.exists("libs/infra/cache/src/client.ts")).toBe(true)
-      expect(tree.exists("libs/infra/cache/src/server.ts")).toBe(true)
-      // But client directory should NOT exist when includeClientServer=false
+      // Platform barrel exports removed - check that client implementation doesn't exist
       expect(tree.exists("libs/infra/cache/src/lib/client")).toBe(false)
+      // But server layers should still exist
+      expect(tree.exists("libs/infra/cache/src/lib/layers/server-layers.ts")).toBe(true)
     })
   })
 })
@@ -319,12 +318,6 @@ describe("Infra Generator - Edge Platform", () => {
   })
 
   describe("Edge Runtime Support", () => {
-    it("should generate edge.ts when includeEdge=true", async () => {
-      await infraGenerator(tree, { name: "auth", includeEdge: true })
-
-      expect(tree.exists("libs/infra/auth/src/edge.ts")).toBe(true)
-    })
-
     it("should generate edge-layers.ts when includeEdge=true", async () => {
       await infraGenerator(tree, { name: "auth", includeEdge: true })
 
@@ -336,7 +329,6 @@ describe("Infra Generator - Edge Platform", () => {
     it("should NOT generate edge files when includeEdge=false", async () => {
       await infraGenerator(tree, { name: "cache" })
 
-      expect(tree.exists("libs/infra/cache/src/edge.ts")).toBe(false)
       expect(
         tree.exists("libs/infra/cache/src/lib/layers/edge-layers.ts")
       ).toBe(false)
@@ -349,9 +341,10 @@ describe("Infra Generator - Edge Platform", () => {
         includeEdge: true
       })
 
-      expect(tree.exists("libs/infra/webhook/src/client.ts")).toBe(true)
-      expect(tree.exists("libs/infra/webhook/src/server.ts")).toBe(true)
-      expect(tree.exists("libs/infra/webhook/src/edge.ts")).toBe(true)
+      // Platform barrel exports removed - check actual implementation
+      expect(tree.exists("libs/infra/webhook/src/lib/client/hooks")).toBe(true)
+      expect(tree.exists("libs/infra/webhook/src/lib/layers/server-layers.ts")).toBe(true)
+      expect(tree.exists("libs/infra/webhook/src/lib/layers/edge-layers.ts")).toBe(true)
     })
   })
 })
@@ -368,16 +361,14 @@ describe("Infra Generator - File Cleanup", () => {
   })
 
   describe("Conditional File Removal", () => {
-    it("should ALWAYS generate barrel exports but remove client implementation when includeClientServer=false", async () => {
+    it("should remove client implementation when includeClientServer=false", async () => {
       // First generate with flag
       await infraGenerator(tree, {
         name: "storage",
         includeClientServer: true
       })
 
-      // Verify barrel exports and client implementation exist
-      expect(tree.exists("libs/infra/storage/src/client.ts")).toBe(true)
-      expect(tree.exists("libs/infra/storage/src/server.ts")).toBe(true)
+      // Verify client implementation exists
       expect(tree.exists("libs/infra/storage/src/lib/client")).toBe(true)
 
       // Generate without flag
@@ -387,33 +378,30 @@ describe("Infra Generator - File Cleanup", () => {
         includeClientServer: false
       })
 
-      // Barrel exports should still exist
-      expect(tree2.exists("libs/infra/storage/src/client.ts")).toBe(true)
-      expect(tree2.exists("libs/infra/storage/src/server.ts")).toBe(true)
-      // But client implementation directory should not exist
+      // Platform barrel exports removed
+      // Client implementation directory should not exist
       expect(tree2.exists("libs/infra/storage/src/lib/client")).toBe(false)
+      // But server layers should exist
+      expect(tree2.exists("libs/infra/storage/src/lib/layers/server-layers.ts")).toBe(true)
     })
 
-    it("should remove edge files when includeEdge=false", async () => {
+    it("should not generate edge files when includeEdge=false", async () => {
       const tree2 = createTreeWithEmptyWorkspace()
       await infraGenerator(tree2, { name: "cache", includeEdge: false })
 
-      expect(tree2.exists("libs/infra/cache/src/edge.ts")).toBe(false)
       expect(
         tree2.exists("libs/infra/cache/src/lib/layers/edge-layers.ts")
       ).toBe(false)
     })
 
-    it("should preserve all files when both flags enabled", async () => {
+    it("should preserve all implementation layers when both flags enabled", async () => {
       await infraGenerator(tree, {
         name: "universal",
         includeClientServer: true,
         includeEdge: true
       })
 
-      expect(tree.exists("libs/infra/universal/src/client.ts")).toBe(true)
-      expect(tree.exists("libs/infra/universal/src/server.ts")).toBe(true)
-      expect(tree.exists("libs/infra/universal/src/edge.ts")).toBe(true)
+      // Platform barrel exports removed - check actual implementation layers
       expect(
         tree.exists("libs/infra/universal/src/lib/layers/client-layers.ts")
       ).toBe(true)
@@ -425,18 +413,19 @@ describe("Infra Generator - File Cleanup", () => {
       ).toBe(true)
     })
 
-    it("should never generate client.ts without server.ts", async () => {
+    it("should generate client and server implementation directories when includeClientServer is true", async () => {
       await infraGenerator(tree, {
         name: "storage",
         includeClientServer: true
       })
 
-      const clientExists = tree.exists("libs/infra/storage/src/client.ts")
-      const serverExists = tree.exists("libs/infra/storage/src/server.ts")
+      // Platform-specific barrel files removed - check actual implementation directories
+      const clientDirExists = tree.exists("libs/infra/storage/src/lib/client")
+      const serverLayersExists = tree.exists("libs/infra/storage/src/lib/layers/server-layers.ts")
 
-      // Both must exist together
-      expect(clientExists).toBe(serverExists)
-      expect(clientExists).toBe(true)
+      // Both implementation directories should exist
+      expect(clientDirExists).toBe(true)
+      expect(serverLayersExists).toBe(true)
     })
   })
 })

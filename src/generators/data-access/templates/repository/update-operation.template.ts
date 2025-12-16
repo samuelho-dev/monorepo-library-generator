@@ -28,7 +28,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
   })
   builder.addBlankLine()
 
-  builder.addImports([{ from: "effect", imports: ["Effect"] }])
+  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
   builder.addBlankLine()
 
   builder.addImports([
@@ -39,9 +39,19 @@ Bundle optimization: Import this file directly for smallest bundle size:
     },
     {
       from: "../../shared/errors",
-      imports: [`${className}RepositoryError`, `${className}NotFoundError`]
+      imports: [
+        `${className}RepositoryError`,
+        `${className}NotFoundError`,
+        `${className}InternalError`,
+        `${className}TimeoutError`
+      ]
     }
   ])
+  builder.addBlankLine()
+
+  // Import infrastructure services
+  builder.addComment("Infrastructure services - Database for persistence")
+  builder.addRaw(`import { DatabaseService } from "@custom-repo/infra-database";`)
   builder.addBlankLine()
 
   builder.addSectionComment("Update Operations Interface")
@@ -65,54 +75,52 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addSectionComment("Live Implementation")
   builder.addBlankLine()
 
-  builder.addRaw(`export const updateOperations: Update${className}Operations = {
+  builder.addRaw(`/**
+ * Live update operations implementation
+ *
+ * Uses DatabaseService for persistence with type-safe database queries
+ *
+ * PRODUCTION INTEGRATION:
+ * - DatabaseService for database access via Kysely
+ * - Effect.log* methods for observability
+ * - Proper error handling for not found cases
+ * - Timeout protection and distributed tracing
+ */
+export const updateOperations: Update${className}Operations = {
   update: (id: string, input: ${className}UpdateInput) =>
     Effect.gen(function* () {
-      // TODO: Implement database update
-      // const database = yield* KyselyService;
-      // const result = yield* database.query((db) =>
-      //   db.updateTable("${fileName}s")
-      //     .set({
-      //       ...input,
-      //       updatedAt: new Date()
-      //     })
-      //     .where("id", "=", id)
-      //     .returningAll()
-      //     .executeTakeFirst()
-      // );
-      //
-      // if (!result) {
-      //   return yield* Effect.fail(${className}NotFoundError.create(id));
-      // }
-      //
-      // return result;
+      const database = yield* DatabaseService;
 
-      return yield* Effect.dieMessage("Update operation not implemented");
-    }),
-};`)
-  builder.addBlankLine()
+      yield* Effect.logInfo(\`Updating ${className} with id: \${id}\`);
 
-  builder.addSectionComment("Test Implementation")
-  builder.addBlankLine()
+      const updated = yield* database.query((db) =>
+        db
+          .updateTable("${fileName}s")
+          .set({
+            ...input,
+            updated_at: new Date(),
+          })
+          .where("id", "=", id)
+          .returningAll()
+          .executeTakeFirst()
+      );
 
-  builder.addRaw(`import { testStore } from "./create";
-
-export const testUpdateOperations: Update${className}Operations = {
-  update: (id: string, input: ${className}UpdateInput) =>
-    Effect.gen(function* () {
-      const existing = testStore.get(id);
-      if (!existing) {
+      if (!updated) {
+        yield* Effect.logWarning(\`${className} not found: \${id}\`);
         return yield* Effect.fail(${className}NotFoundError.create(id));
       }
 
-      const updated = {
-        ...existing,
-        ...input,
-        updatedAt: new Date(),
-      };
-      testStore.set(id, updated);
+      yield* Effect.logInfo(\`${className} updated successfully (id: \${id})\`);
+
       return updated;
-    }),
+    }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          ${className}TimeoutError.create("update", 30000)
+      }),
+      Effect.withSpan("${className}Repository.update")
+    ),
 };`)
 
   return builder.toString()

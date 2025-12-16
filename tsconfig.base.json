@@ -1,41 +1,60 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "ES2022"],
-    "allowJs": true,
-    "checkJs": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "preserve",
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "sourceMap": true,
-
-    // Effect.ts Strict Type Checking
-    "noUncheckedIndexedAccess": true,
+    "target": "ES2022",
+    "strict": true,
     "exactOptionalPropertyTypes": true,
-    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-
-    "downlevelIteration": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "declaration": false,
-    "declarationMap": false,
-    "preserveSymlinks": true,
+    "allowJs": false,
+    "checkJs": false,
+    "moduleDetection": "force",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "importHelpers": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "plugins": [{ "name": "@effect/language-service" }]
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "lib": [
+      "ES2022"
+    ],
+    "paths": {
+      "@custom-repo/contract-*": [
+        "libs/contract/*/src/index.ts"
+      ],
+      "@custom-repo/data-access-*": [
+        "libs/data-access/*/src/index.ts"
+      ],
+      "@custom-repo/feature-*": [
+        "libs/feature/*/src/index.ts"
+      ],
+      "@custom-repo/infra-*": [
+        "libs/infra/*/src/index.ts"
+      ],
+      "@custom-repo/provider-*": [
+        "libs/provider/*/src/index.ts"
+      ],
+      "@custom-repo/env": [
+        "libs/env/src/index.ts"
+      ]
+    }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".nx"
+  ]
 }

@@ -18,6 +18,7 @@ import { Effect } from "effect"
 import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
 import { parseTags } from "../../utils/generators"
 import type { DataAccessTemplateOptions } from "../../utils/shared/types"
+import { getPackageName } from "../../utils/workspace-config"
 import { generateErrorsFile } from "../data-access/templates/errors.template"
 import { generateIndexFile } from "../data-access/templates/index.template"
 import { generateLayersSpecFile } from "../data-access/templates/layers-spec.template"
@@ -34,7 +35,7 @@ import {
   generateRepositoryCreateOperationFile,
   generateRepositoryDeleteOperationFile,
   generateRepositoryIndexFile,
-  generateRepositoryInterfaceFile,
+  generateRepositoryFile,
   generateRepositoryOperationsIndexFile,
   generateRepositoryReadOperationFile,
   generateRepositoryUpdateOperationFile
@@ -123,7 +124,7 @@ export function generateDataAccessCore(
       description: options.description ?? `Data access library for ${options.className}`,
       tags: parsedTags,
       includeCache: options.includeCache ?? false,
-      contractLibrary: options.contractLibrary ?? `@scope/contract-${options.fileName}`
+      contractLibrary: options.contractLibrary ?? getPackageName("contract", options.fileName)
     }
 
     // Generate all domain files
@@ -283,9 +284,9 @@ Effect.gen(function* () {
     yield* adapter.makeDirectory(operationsPath)
 
     // Generate repository interface
-    const interfaceContent = generateRepositoryInterfaceFile(templateOptions)
-    yield* adapter.writeFile(`${repositoryPath}/interface.ts`, interfaceContent)
-    files.push(`${repositoryPath}/interface.ts`)
+    const interfaceContent = generateRepositoryFile(templateOptions)
+    yield* adapter.writeFile(`${repositoryPath}/repository.ts`, interfaceContent)
+    files.push(`${repositoryPath}/repository.ts`)
 
     // Generate operation files (split for optimal tree-shaking)
     const operationFiles = [

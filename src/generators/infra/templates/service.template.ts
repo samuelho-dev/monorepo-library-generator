@@ -1,5 +1,5 @@
 /**
- * Infrastructure Service Interface Template
+ * Infrastructure Service Template
  *
  * Generates the service definition using Effect 3.0+ Context.Tag pattern.
  *
@@ -8,13 +8,30 @@
 
 import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
 import type { InfraTemplateOptions } from "../../../utils/shared/types"
+import {
+  hasProviderMapping,
+  getProviderClassName,
+  getProviderPackageName
+} from "../../../utils/infra-provider-mapping"
 
 /**
- * Generate service interface file for infrastructure service
+ * Generate service file for infrastructure service
  */
-export function generateInterfaceFile(options: InfraTemplateOptions) {
+export function generateServiceFile(options: InfraTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const { className, fileName, includeClientServer } = options
+
+  // Check if this infrastructure has a provider mapping
+  const hasProvider = hasProviderMapping(fileName)
+  const providerClassName = hasProvider
+    ? getProviderClassName(fileName)
+    : undefined
+  const providerPackage = hasProvider
+    ? getProviderPackageName(fileName, "@custom-repo")
+    : undefined
+
+  // Check if this is a database infrastructure
+  const isDatabaseInfra = fileName === "database"
 
   // File header
   builder.addFileHeader({
@@ -39,6 +56,20 @@ export function generateInterfaceFile(options: InfraTemplateOptions) {
     },
     { from: "./errors", imports: [`${className}Error`], isTypeOnly: true }
   ])
+
+  // Add provider import if mapping exists
+  if (hasProvider && providerClassName && providerPackage) {
+    builder.addImport(providerPackage, providerClassName)
+  }
+
+  // Add Kysely type imports and KyselyService for database infrastructure
+  if (isDatabaseInfra) {
+    builder.addImports([
+      { from: "kysely", imports: ["Kysely"], isTypeOnly: true },
+      { from: "@custom-repo/types-database", imports: ["Database"], isTypeOnly: true },
+      { from: "../providers/kysely-provider", imports: ["KyselyService"] }
+    ])
+  }
 
   // Section: Service Context.Tag Definition
   builder.addSectionComment(
@@ -96,7 +127,7 @@ export class ${className}Service extends Context.Tag(
       criteria: Record<string, unknown>,
       skip?: number,
       limit?: number
-    ) => Effect.Effect<readonly unknown[], ${className}Error>;
+    ) => Effect.Effect<readonly unknown[], ${className}Error, never>;
 
     /**
      * Create new item
@@ -111,7 +142,7 @@ export class ${className}Service extends Context.Tag(
      */
     readonly create: (
       input: Record<string, unknown>
-    ) => Effect.Effect<unknown, ${className}Error>;
+    ) => Effect.Effect<unknown, ${className}Error, never>;
 
     /**
      * Update existing item
@@ -128,7 +159,7 @@ export class ${className}Service extends Context.Tag(
     readonly update: (
       id: string,
       input: Record<string, unknown>
-    ) => Effect.Effect<unknown, ${className}Error>;
+    ) => Effect.Effect<unknown, ${className}Error, never>;
 
     /**
      * Delete item by ID
@@ -141,7 +172,7 @@ export class ${className}Service extends Context.Tag(
      * yield* service.delete("id-123");
      * \`\`\`
      */
-    readonly delete: (id: string) => Effect.Effect<void, ${className}Error>;
+    readonly delete: (id: string) => Effect.Effect<void, ${className}Error, never>;
 
     /**
      * Health check for monitoring and readiness probes
@@ -153,7 +184,63 @@ export class ${className}Service extends Context.Tag(
      * const isHealthy = yield* service.healthCheck();
      * \`\`\`
      */
-    readonly healthCheck: () => Effect.Effect<boolean, never>;
+    readonly healthCheck: () => Effect.Effect<boolean, never>;${
+      isDatabaseInfra
+        ? `
+
+    /**
+     * Execute a raw Kysely query
+     *
+     * Provides direct access to the Kysely query builder for complex queries
+     * that cannot be expressed through the standard CRUD operations.
+     *
+     * @param fn - Function that receives a Kysely instance and returns a Promise
+     * @returns Effect that succeeds with query result
+     *
+     * @example
+     * \`\`\`typescript
+     * const users = yield* service.query((db) =>
+     *   db.selectFrom("users")
+     *     .where("status", "=", "active")
+     *     .selectAll()
+     *     .execute()
+     * );
+     * \`\`\`
+     */
+    readonly query: <A>(
+      fn: (db: Kysely<Database>) => Promise<A>
+    ) => Effect.Effect<A, ${className}Error, never>;
+
+    /**
+     * Execute an effect within a database transaction
+     *
+     * Creates a transaction scope where all database operations are atomic.
+     * If the effect fails or is interrupted, the transaction is automatically rolled back.
+     * On success, the transaction is committed.
+     *
+     * The provided effect receives a transaction-scoped ${className}Service where all
+     * operations execute within the transaction context.
+     *
+     * @param fn - Effect to execute within the transaction scope
+     * @returns Effect that succeeds with the result of the transaction
+     *
+     * @example
+     * \`\`\`typescript
+     * const result = yield* service.transaction(
+     *   Effect.gen(function* () {
+     *     const txService = yield* ${className}Service;
+     *     const user = yield* txService.create({ name: "Alice" });
+     *     const profile = yield* txService.create({ userId: user.id });
+     *     return { user, profile };
+     *   })
+     * );
+     * \`\`\`
+     */
+    readonly transaction: <A, E>(
+      fn: Effect.Effect<A, E, ${className}Service>
+    ) => Effect.Effect<A, ${className}Error | E, never>;`
+        : ""
+    }
   }
 >() {`)
 
@@ -175,11 +262,45 @@ export class ${className}Service extends Context.Tag(
       // Uncomment and customize based on your service needs:
       // const config = yield* ${className}Config;
       // const logger = yield* LoggingService;
-      // const provider = yield* ProviderService; // Replace with actual provider
+      ${hasProvider && providerClassName ? `const provider = yield* ${providerClassName};` : `// const provider = yield* ProviderService; // Replace with actual provider`}
+${isDatabaseInfra ? `
+      // Inject Kysely service for type-safe query builder access
+      const kysely = yield* KyselyService<Database>();` : ""}
 
       // 2. Acquire Resources with Effect.acquireRelease
       // Example: Connection pool that needs cleanup
-      const resource = yield* Effect.acquireRelease(
+${hasProvider && providerClassName ? `      // When using a provider, resource acquisition is handled by the provider
+      // Uncomment below if you need additional custom resources
+      // const resource = yield* Effect.acquireRelease(
+      //   Effect.gen(function* () {
+      //     // Acquire phase: Initialize resource
+      //     // yield* logger.info("${className} service initializing");
+      //
+      //     // Replace with actual resource initialization:
+      //     // const pool = yield* Effect.tryPromise({
+      //     //   try: () => createConnectionPool(config),
+      //     //   catch: (error) => new ${className}InitializationError({
+      //     //     message: "Failed to create connection pool",
+      //     //     cause: error
+      //     //   })
+      //     // });
+      //
+      //     // For demonstration, return a mock resource
+      //     return {
+      //       isConnected: true,
+      //       query: async (id: string) => ({ id, data: "example" }),
+      //       close: async () => { /* cleanup */ }
+      //     };
+      //   }),
+      //   (resource) =>
+      //     // Release phase: Cleanup resource
+      //     Effect.tryPromise({
+      //       try: () => resource.close(),
+      //       catch: () => new Error("Failed to close resource")
+      //     }).pipe(
+      //       Effect.catchAll(() => Effect.void) // Ignore cleanup errors
+      //     )
+      // );` : `      const resource = yield* Effect.acquireRelease(
         Effect.gen(function* () {
           // Acquire phase: Initialize resource
           // yield* logger.info("${className} service initializing");
@@ -200,18 +321,15 @@ export class ${className}Service extends Context.Tag(
             close: async () => { /* cleanup */ }
           };
         }),
-        (resource) => Effect.gen(function* () {
+        (resource) =>
           // Release phase: Cleanup resource
-          // yield* logger.info("${className} service shutting down");
-
-          return Effect.tryPromise({
+          Effect.tryPromise({
             try: () => resource.close(),
             catch: () => new Error("Failed to close resource")
           }).pipe(
             Effect.catchAll(() => Effect.void) // Ignore cleanup errors
-          );
-        })
-      );
+          )
+      );`}
 
       // ${"=".repeat(74)}
       // OPTIONAL: Background Job Queue with Queue
@@ -483,20 +601,31 @@ export class ${className}Service extends Context.Tag(
 
       // 3. Return Service Implementation
       // ✅ Direct object return (Effect 3.0+), no .of() needed
+      // Operations are instrumented with Effect.withSpan for distributed tracing
       return {
         get: (id: string) =>
           Effect.gen(function* () {
             // yield* logger.debug(\`Getting item: \${id}\`);
 
-            const result = yield* Effect.tryPromise({
+            ${
+              hasProvider && providerClassName
+                ? `// Delegate to provider
+            return yield* provider.get(id).pipe(
+              Effect.map(Option.some),
+              Effect.catchTag("${providerClassName}NotFoundError", () =>
+                Effect.succeed(Option.none())
+              )
+            );`
+                : `const result = yield* Effect.tryPromise({
               try: () => resource.query(id),
               catch: (error) => new ${className}InternalError({
                 message: \`Failed to get item \${id}\`,
                 cause: error
               })
             });
-            return Option.fromNullable(result);
-          }),
+            return Option.fromNullable(result);`
+            }
+          }).pipe(Effect.withSpan("${className}.get")),
 
         findByCriteria: (criteria, skip = 0, limit = 10) =>
           Effect.gen(function* () {
@@ -514,30 +643,39 @@ export class ${className}Service extends Context.Tag(
               })
             });
             return result;
-          }),
+          }).pipe(Effect.withSpan("${className}.findByCriteria")),
 
         create: (input) =>
           Effect.gen(function* () {
             // yield* logger.info("Creating item", { input });
 
-            const result = yield* Effect.tryPromise({
+            ${
+              hasProvider && providerClassName
+                ? `// Delegate to provider
+            return yield* provider.create(input);`
+                : `const result = yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual creation logic
-                return { id: crypto.randomUUID(), ...input, createdAt: new Date() };
+                return { id: randomUUID(), ...input, createdAt: new Date() };
               },
               catch: (error) => new ${className}InternalError({
                 message: "Failed to create item",
                 cause: error
               })
             });
-            return result;
-          }),
+            return result;`
+            }
+          }).pipe(Effect.withSpan("${className}.create")),
 
         update: (id, input) =>
           Effect.gen(function* () {
             // yield* logger.info(\`Updating item: \${id}\`, { input });
 
-            // Note: Cannot use yield* inside async callback
+            ${
+              hasProvider && providerClassName
+                ? `// Delegate to provider
+            return yield* provider.update(id, input);`
+                : `// Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
             const result = yield* Effect.tryPromise({
               try: async () => {
@@ -550,14 +688,19 @@ export class ${className}Service extends Context.Tag(
                 cause: error
               })
             });
-            return result;
-          }),
+            return result;`
+            }
+          }).pipe(Effect.withSpan("${className}.update")),
 
         delete: (id) =>
           Effect.gen(function* () {
             // yield* logger.info(\`Deleting item: \${id}\`);
 
-            // Note: Cannot use yield* inside async callback
+            ${
+              hasProvider && providerClassName
+                ? `// Delegate to provider
+            yield* provider.delete(id);`
+                : `// Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
             yield* Effect.tryPromise({
               try: async () => {
@@ -569,12 +712,17 @@ export class ${className}Service extends Context.Tag(
                 message: \`Failed to delete item \${id}\`,
                 cause: error
               })
-            });
-          }),
+            });`
+            }
+          }).pipe(Effect.withSpan("${className}.delete")),
 
         healthCheck: () =>
           Effect.gen(function* () {
-            // Check resource health
+            ${
+              hasProvider && providerClassName
+                ? `// Delegate to provider
+            return yield* provider.healthCheck();`
+                : `// Check resource health
             const isHealthy = resource.isConnected;
 
             // Optionally: Perform actual health check query
@@ -583,8 +731,50 @@ export class ${className}Service extends Context.Tag(
             //   catch: () => false as const
             // }).pipe(Effect.catchAll(() => Effect.succeed(false as const)));
 
-            return isHealthy;
-          })
+            return isHealthy;`
+            }
+          }).pipe(Effect.withSpan("${className}.healthCheck"))${
+            isDatabaseInfra
+              ? `,
+
+        query: <A>(fn: (db: Kysely<Database>) => Promise<A>) =>
+          kysely.query(fn).pipe(Effect.withSpan("${className}.query")),
+
+        transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
+          Effect.gen(function* () {
+            // Execute transaction using Kysely's transaction support
+            return yield* kysely.query((db) =>
+              db.transaction().execute(async (trx) => {
+                // Create a transaction-scoped Kysely service
+                const txKyselyService = KyselyService<Database>();
+                const txKyselyLayer = Layer.succeed(txKyselyService, {
+                  query: <T>(queryFn: (db: Kysely<Database>) => Promise<T>) =>
+                    Effect.tryPromise({
+                      try: () => queryFn(trx as unknown as Kysely<Database>),
+                      catch: (error) =>
+                        new ${className}InternalError({
+                          message: \`Transaction query failed: \${String(error)}\`,
+                          cause: error,
+                        }),
+                    }),
+                  transaction: () =>
+                    Effect.fail(
+                      new ${className}InternalError({
+                        message: "Nested transactions not supported",
+                        cause: new Error("Cannot start a transaction within a transaction"),
+                      })
+                    ),
+                });
+
+                // Provide the transaction-scoped Kysely service and run fn
+                return await Effect.runPromise(
+                  fn.pipe(Effect.provide(txKyselyLayer))
+                );
+              })
+            );
+          }).pipe(Effect.withSpan("${className}.transaction"))`
+              : ""
+          }
       };
     })
   );
@@ -600,12 +790,63 @@ export class ${className}Service extends Context.Tag(
    * No external dependencies required.
    */
   static readonly Test = Layer.succeed(this, {
-    get: () => Effect.succeed(Option.none()),
-    findByCriteria: () => Effect.succeed([]),
-    create: (input) => Effect.succeed({ id: "test-id", ...input }),
-    update: (_, input) => Effect.succeed({ id: "test-id", ...input }),
-    delete: () => Effect.void,
-    healthCheck: () => Effect.succeed(true)
+    get: (id: string) =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug(\`[${className}] TEST get id=\${id}\`);
+        return Option.none();
+      }),
+    findByCriteria: (criteria: Record<string, unknown>, skip?: number, limit?: number) =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug(\`[${className}] TEST findByCriteria\`, { criteria, skip, limit });
+        return [];
+      }),
+    create: (input: Record<string, unknown>) =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug(\`[${className}] TEST create\`, input);
+        return { id: "test-id", ...input };
+      }),
+    update: (id: string, input: Record<string, unknown>) =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug(\`[${className}] TEST update id=\${id}\`, input);
+        return { id, ...input };
+      }),
+    delete: (id: string) =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug(\`[${className}] TEST delete id=\${id}\`);
+      }),
+    healthCheck: () =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug(\`[${className}] TEST healthCheck\`);
+        return true;
+      })${
+      isDatabaseInfra
+        ? `,
+    query: <A>(fn: (db: Kysely<Database>) => Promise<A>) =>
+      Effect.gen(function* () {
+        // Mock Kysely instance for testing
+        const mockDb = {} as Kysely<Database>;
+        return yield* Effect.tryPromise({
+          try: () => fn(mockDb),
+          catch: (error) => new ${className}InternalError({
+            message: "Test query execution failed",
+            cause: error
+          })
+        });
+      }),
+    transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
+      Effect.gen(function* () {
+        // For testing, just execute the effect with the test service
+        return yield* fn.pipe(
+          Effect.provideService(${className}Service, ${className}Service.Test.pipe(
+            Layer.build,
+            Effect.scoped,
+            Effect.flatMap(() => ${className}Service),
+            Effect.runSync
+          ))
+        );
+      })`
+        : ""
+    }
   });
 
   // ${"=".repeat(74)}
@@ -626,7 +867,7 @@ export class ${className}Service extends Context.Tag(
       // Get actual implementation from Live layer
       const liveService = yield* ${className}Service.Live.pipe(
         Layer.build,
-        Effect.andThen(${className}Service)
+        Effect.map((ctx) => Context.get(ctx, ${className}Service))
       );
 
       // Wrap all operations with verbose logging
@@ -676,10 +917,54 @@ export class ${className}Service extends Context.Tag(
             const result = yield* liveService.healthCheck();
             yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck result:\`, result);
             return result;
-          })
+          })${
+            isDatabaseInfra
+              ? `,
+
+        query: <A>(fn: (db: Kysely<Database>) => Promise<A>) =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug(\`[${className}Service] [DEV] query called\`);
+            const result = yield* liveService.query(fn);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] query result:\`, result);
+            return result;
+          }),
+
+        transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug(\`[${className}Service] [DEV] transaction started\`);
+            const result = yield* liveService.transaction(fn);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] transaction completed\`);
+            return result;
+          })`
+              : ""
+          }
       };
     })
-  );
+  );${
+    includeClientServer
+      ? `
+
+  // ${"=".repeat(74)}
+  // Platform-Specific Layers (Client/Server)
+  // ${"=".repeat(74)}
+
+  /**
+   * Client Live Layer
+   *
+   * Browser-safe implementation defined in client.ts
+   * This property is assigned at module load time.
+   */
+  static ClientLive: Layer.Layer<${className}Service, never, never>;
+
+  /**
+   * Server Live Layer
+   *
+   * Node.js implementation defined in server.ts
+   * This property is assigned at module load time.
+   */
+  static ServerLive: Layer.Layer<${className}Service, never, never>;`
+      : ""
+  }
 }`)
 
   return builder.toString()

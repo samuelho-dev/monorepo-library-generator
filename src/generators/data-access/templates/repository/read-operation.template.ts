@@ -31,7 +31,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Effect", "Option"] }])
+  builder.addImports([{ from: "effect", imports: ["Effect", "Option", "Duration"] }])
   builder.addBlankLine()
 
   builder.addImports([
@@ -47,10 +47,20 @@ Bundle optimization: Import this file directly for smallest bundle size:
     },
     {
       from: "../../shared/errors",
-      imports: [`${className}RepositoryError`],
-      isTypeOnly: true
+      imports: [
+        `${className}RepositoryError`,
+        `${className}InternalError`,
+        `${className}TimeoutError`
+      ],
+      isTypeOnly: false
     }
   ])
+  builder.addBlankLine()
+
+  // Import infrastructure services
+  builder.addComment("Infrastructure services - Cache for performance, Database for persistence")
+  builder.addRaw(`import { CacheService } from "@custom-repo/infra-cache";`)
+  builder.addRaw(`import { DatabaseService } from "@custom-repo/infra-database";`)
   builder.addBlankLine()
 
   // Operation interface
@@ -126,150 +136,156 @@ export interface Read${className}Operations {
   builder.addRaw(`/**
  * Live read operations implementation
  *
- * TODO: Implement with actual database queries
- * - Use KyselyService for database access
- * - Implement efficient filtering and pagination
- * - Add query optimization and indexing
+ * Uses DatabaseService for persistence with cache-aside pattern
+ *
+ * PRODUCTION INTEGRATION:
+ * - DatabaseService for database access via Kysely
+ * - CacheService for performance optimization
+ * - Effect.log* methods for observability
+ * - Timeout protection and distributed tracing
  */
 export const readOperations: Read${className}Operations = {
   findById: (id: string) =>
     Effect.gen(function* () {
-      // TODO: Implement database query
-      // const database = yield* KyselyService;
-      // const result = yield* database.query((db) =>
-      //   db.selectFrom("${fileName}s")
-      //     .selectAll()
-      //     .where("id", "=", id)
-      //     .executeTakeFirst()
-      // );
-      // return result ? Option.some(result) : Option.none();
+      const cache = yield* CacheService;
+      const database = yield* DatabaseService;
 
-      return yield* Effect.dieMessage(
-        "FindById operation not implemented. Configure KyselyService and implement query logic."
-      );
-    }),
+      yield* Effect.logInfo(\`Finding ${className} by ID: \${id}\`);
 
-  findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
-    Effect.gen(function* () {
-      // TODO: Implement database query with filters and pagination
-      // const database = yield* KyselyService;
-      // let query = db.selectFrom("${fileName}s").selectAll();
-      //
-      // // Apply filters
-      // if (filter?.search) {
-      //   query = query.where("name", "ilike", \`%\${filter.search}%\`);
-      // }
-      //
-      // // Get total count before pagination
-      // const totalResult = yield* database.query((db) =>
-      //   query.select((eb) => eb.fn.count("id").as("count")).executeTakeFirst()
-      // );
-      // const total = Number(totalResult?.count ?? 0);
-      //
-      // // Apply pagination
-      // const limit = pagination?.limit ?? 50;
-      // const skip = pagination?.skip ?? 0;
-      // query = query.limit(limit).offset(skip);
-      //
-      // const items = yield* database.query((db) => query.execute());
-      //
-      // return {
-      //   items,
-      //   total,
-      //   limit,
-      //   skip,
-      //   hasMore: skip + items.length < total
-      // };
-
-      return yield* Effect.dieMessage(
-        "FindAll operation not implemented. Configure KyselyService and implement query logic."
-      );
-    }),
-
-  findOne: (filter: ${className}Filter) =>
-    Effect.gen(function* () {
-      // TODO: Implement database query
-      // const database = yield* KyselyService;
-      // let query = db.selectFrom("${fileName}s").selectAll();
-      //
-      // // Apply filters
-      // if (filter.search) {
-      //   query = query.where("name", "ilike", \`%\${filter.search}%\`);
-      // }
-      //
-      // const result = yield* database.query((db) =>
-      //   query.executeTakeFirst()
-      // );
-      // return result ? Option.some(result) : Option.none();
-
-      return yield* Effect.dieMessage(
-        "FindOne operation not implemented. Configure KyselyService and implement query logic."
-      );
-    }),
-};`)
-  builder.addBlankLine()
-
-  // Test implementation
-  builder.addSectionComment("Test Implementation")
-  builder.addBlankLine()
-
-  builder.addRaw(`// Import shared test store from create operations
-import { testStore } from "./create";
-
-/**
- * Test read operations implementation
- *
- * Uses in-memory Map for testing
- */
-export const testReadOperations: Read${className}Operations = {
-  findById: (id: string) =>
-    Effect.sync(() => {
-      const entity = testStore.get(id);
-      return entity ? Option.some(entity) : Option.none();
-    }),
-
-  findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
-    Effect.sync(() => {
-      let items = Array.from(testStore.values());
-
-      // Apply filters (simple search implementation)
-      if (filter?.search) {
-        const searchLower = filter.search.toLowerCase();
-        items = items.filter((item) =>
-          JSON.stringify(item).toLowerCase().includes(searchLower)
-        );
+      // Check cache first
+      const cacheKey = \`${fileName}:\${id}\`;
+      const cached = yield* cache.get(cacheKey);
+      if (Option.isSome(cached)) {
+        yield* Effect.logDebug(\`Cache hit for ${fileName}:\${id}\`);
+        return Option.some(cached.value as ${className});
       }
 
-      const total = items.length;
+      // Cache miss - query database
+      yield* Effect.logDebug(\`Cache miss for ${fileName}:\${id}, querying database\`);
+
+      const entity = yield* database.query((db) =>
+        db
+          .selectFrom("${fileName}s")
+          .selectAll()
+          .where("id", "=", id)
+          .executeTakeFirst()
+      );
+
+      if (entity) {
+        // Cache the result
+        yield* cache.set(cacheKey, entity);
+        yield* Effect.logDebug(\`Cached ${fileName}:\${id}\`);
+        return Option.some(entity);
+      }
+
+      yield* Effect.logDebug(\`${className} not found: \${id}\`);
+      return Option.none();
+    }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          ${className}TimeoutError.create("findById", 30000)
+      }),
+      Effect.withSpan("${className}Repository.findById")
+    ),
+
+  findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
+    Effect.gen(function* () {
+      const database = yield* DatabaseService;
+
+      yield* Effect.logInfo(\`Finding all ${className} entities (filter: \${JSON.stringify(filter)})\`);
+
       const limit = pagination?.limit ?? 50;
       const skip = pagination?.skip ?? 0;
 
-      // Apply pagination
-      const paginatedItems = items.slice(skip, skip + limit);
+      // Build query with filtering
+      const items = yield* database.query((db) => {
+        let query = db.selectFrom("${fileName}s").selectAll();
+
+        // Apply filters (basic search implementation)
+        // TODO: Implement proper full-text search or specific field filtering
+        if (filter?.search) {
+          query = query.where((eb) =>
+            eb.or([
+              // Add searchable fields here based on your schema
+              eb("name", "ilike", \`%\${filter.search}%\`),
+            ])
+          );
+        }
+
+        return query.limit(limit).offset(skip).execute();
+      });
+
+      // Get total count (without pagination)
+      const total = yield* database.query((db) => {
+        let query = db.selectFrom("${fileName}s").select((eb) => eb.fn.countAll().as("count"));
+
+        if (filter?.search) {
+          query = query.where((eb) =>
+            eb.or([
+              eb("name", "ilike", \`%\${filter.search}%\`),
+            ])
+          );
+        }
+
+        return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
+      });
+
+      yield* Effect.logInfo(\`Found \${items.length} ${className} entities (total: \${total})\`);
 
       return {
-        items: paginatedItems,
+        items,
         total,
         limit,
         skip,
-        hasMore: skip + paginatedItems.length < total,
+        hasMore: skip + items.length < total,
       };
-    }),
+    }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          ${className}TimeoutError.create("findAll", 30000)
+      }),
+      Effect.withSpan("${className}Repository.findAll")
+    ),
 
   findOne: (filter: ${className}Filter) =>
-    Effect.sync(() => {
-      let items = Array.from(testStore.values());
+    Effect.gen(function* () {
+      const database = yield* DatabaseService;
 
-      // Apply filters
-      if (filter.search) {
-        const searchLower = filter.search.toLowerCase();
-        items = items.filter((item) =>
-          JSON.stringify(item).toLowerCase().includes(searchLower)
-        );
+      yield* Effect.logInfo(\`Finding one ${className} entity (filter: \${JSON.stringify(filter)})\`);
+
+      // Build query with filtering
+      const entity = yield* database.query((db) => {
+        let query = db.selectFrom("${fileName}s").selectAll();
+
+        // Apply filters
+        if (filter.search) {
+          query = query.where((eb) =>
+            eb.or([
+              eb("name", "ilike", \`%\${filter.search}%\`),
+            ])
+          );
+        }
+
+        return query.limit(1).executeTakeFirst();
+      });
+
+      if (entity) {
+        yield* Effect.logDebug(\`Found ${className} matching filter\`);
+        return Option.some(entity);
       }
 
-      return items.length > 0 ? Option.some(items[0]) : Option.none();
-    }),
+      yield* Effect.logDebug(\`No ${className} found matching filter\`);
+      return Option.none();
+    }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          ${className}TimeoutError.create("findOne", 30000)
+      }),
+      Effect.withSpan("${className}Repository.findOne")
+    ),
 };`)
 
   return builder.toString()

@@ -815,6 +815,46 @@
     "type": "static"
   },
   {
+    "source": "npm:@effect-atom/atom-react",
+    "target": "npm:@effect-atom/atom",
+    "type": "static"
+  },
+  {
+    "source": "npm:@effect-atom/atom-react",
+    "target": "npm:effect",
+    "type": "static"
+  },
+  {
+    "source": "npm:@effect-atom/atom-react",
+    "target": "npm:react",
+    "type": "static"
+  },
+  {
+    "source": "npm:@effect-atom/atom-react",
+    "target": "npm:scheduler",
+    "type": "static"
+  },
+  {
+    "source": "npm:@effect-atom/atom",
+    "target": "npm:@effect/experimental",
+    "type": "static"
+  },
+  {
+    "source": "npm:@effect-atom/atom",
+    "target": "npm:@effect/platform",
+    "type": "static"
+  },
+  {
+    "source": "npm:@effect-atom/atom",
+    "target": "npm:@effect/rpc",
+    "type": "static"
+  },
+  {
+    "source": "npm:@effect-atom/atom",
+    "target": "npm:effect",
+    "type": "static"
+  },
+  {
     "source": "npm:@effect/ai",
     "target": "npm:@effect/experimental",
     "type": "static"
@@ -5882,6 +5922,16 @@
   {
     "source": "npm:raw-body",
     "target": "npm:unpipe",
+    "type": "static"
+  },
+  {
+    "source": "npm:react-dom",
+    "target": "npm:react",
+    "type": "static"
+  },
+  {
+    "source": "npm:react-dom",
+    "target": "npm:scheduler",
     "type": "static"
   },
   {

@@ -26,17 +26,15 @@ describe("feature generator", () => {
 
       const projectRoot = "libs/feature/auth"
 
-      // Should ALWAYS have server.ts barrel export
-      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBeTruthy()
+      // Server files should exist
       expect(
-        tree.exists(`${projectRoot}/src/lib/server/service/interface.ts`)
+        tree.exists(`${projectRoot}/src/lib/server/service/service.ts`)
       ).toBeTruthy()
       expect(
         tree.exists(`${projectRoot}/src/lib/server/layers.ts`)
       ).toBeTruthy()
 
       // Should NOT have client files (platform=node, no includeClientServer)
-      expect(tree.exists(`${projectRoot}/src/client.ts`)).toBeFalsy()
       expect(tree.exists(`${projectRoot}/src/lib/client`)).toBeFalsy()
 
       // Should have shared files
@@ -57,11 +55,9 @@ describe("feature generator", () => {
 
       const projectRoot = "libs/feature/search"
 
-      // Universal platform generates BOTH (OR logic matches both conditions)
-      expect(tree.exists(`${projectRoot}/src/client.ts`)).toBeTruthy()
-      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBeTruthy()
+      // Universal platform generates BOTH server and client
       expect(
-        tree.exists(`${projectRoot}/src/lib/server/service/interface.ts`)
+        tree.exists(`${projectRoot}/src/lib/server/service/service.ts`)
       ).toBeTruthy()
 
       // Client directory should exist for universal platform
@@ -78,8 +74,6 @@ describe("feature generator", () => {
       const projectRoot = "libs/feature/payment"
 
       // includeClientServer=true generates BOTH regardless of platform
-      expect(tree.exists(`${projectRoot}/src/client.ts`)).toBeTruthy()
-      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBeTruthy()
       expect(tree.exists(`${projectRoot}/src/lib/client/atoms`)).toBeTruthy()
       expect(tree.exists(`${projectRoot}/src/lib/client/hooks`)).toBeTruthy()
     })
@@ -124,7 +118,7 @@ describe("feature generator", () => {
 
       const projectRoot = "libs/feature/middleware"
 
-      expect(tree.exists(`${projectRoot}/src/edge.ts`)).toBeTruthy()
+      // Platform barrel exports removed - check actual implementation
       expect(
         tree.exists(`${projectRoot}/src/lib/edge/middleware.ts`)
       ).toBeTruthy()
@@ -157,20 +151,21 @@ describe("feature generator", () => {
 
       const projectRoot = "libs/feature/full"
 
-      // All exports
+      // Main barrel export
       expect(tree.exists(`${projectRoot}/src/index.ts`)).toBeTruthy()
-      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBeTruthy()
-      expect(tree.exists(`${projectRoot}/src/client.ts`)).toBeTruthy()
-      expect(tree.exists(`${projectRoot}/src/edge.ts`)).toBeTruthy()
 
+      // Platform barrel exports removed - check actual implementation
       // Server
       expect(
-        tree.exists(`${projectRoot}/src/lib/server/service/interface.ts`)
+        tree.exists(`${projectRoot}/src/lib/server/service/service.ts`)
       ).toBeTruthy()
 
       // Client
       expect(tree.exists(`${projectRoot}/src/lib/client/hooks`)).toBeTruthy()
       expect(tree.exists(`${projectRoot}/src/lib/client/atoms`)).toBeTruthy()
+
+      // Edge
+      expect(tree.exists(`${projectRoot}/src/lib/edge/middleware.ts`)).toBeTruthy()
 
       // RPC
       expect(tree.exists(`${projectRoot}/src/lib/rpc/rpc.ts`)).toBeTruthy()
@@ -265,12 +260,9 @@ describe("feature generator", () => {
 
       const config = readProjectConfiguration(tree, "feature-search")
 
-      expect(config.targets?.["build"]?.options?.additionalEntryPoints).toContain(
-        "libs/feature/search/src/server.ts"
-      )
-      expect(config.targets?.["build"]?.options?.additionalEntryPoints).toContain(
-        "libs/feature/search/src/client.ts"
-      )
+      // Platform barrel exports removed - no additional entry points needed
+      // Modern bundlers handle tree-shaking automatically
+      expect(config.targets?.["build"]).toBeDefined()
     })
   })
 
@@ -290,12 +282,12 @@ describe("feature generator", () => {
       // Effect peer dependency
       expect(packageJson.peerDependencies?.effect).toBeDefined()
 
-      // Exports configuration
+      // Exports configuration - platform barrel exports removed
       expect(packageJson.exports?.["."]?.import).toBeDefined()
-      expect(packageJson.exports?.["./server"]?.import).toBeDefined()
+      expect(packageJson.exports?.["./types"]).toBeDefined()
     })
 
-    it("should include client export when includeClientServer=true", async () => {
+    it("should generate same exports regardless of includeClientServer flag", async () => {
       await featureGenerator(tree, {
         name: "search",
         includeClientServer: true
@@ -305,10 +297,12 @@ describe("feature generator", () => {
         tree.read("libs/feature/search/package.json", "utf-8") || "{}"
       )
 
-      expect(packageJson.exports?.["./client"]).toBeDefined()
+      // Platform-specific exports removed - only functional exports
+      expect(packageJson.exports?.["."]?.import).toBeDefined()
+      expect(packageJson.exports?.["./types"]).toBeDefined()
     })
 
-    it("should NOT include client export when includeClientServer=false and platform=node", async () => {
+    it("should not include platform-specific exports", async () => {
       await featureGenerator(tree, {
         name: "auth",
         platform: "node",
@@ -319,10 +313,13 @@ describe("feature generator", () => {
         tree.read("libs/feature/auth/package.json", "utf-8") || "{}"
       )
 
+      // Platform barrel exports removed
       expect(packageJson.exports?.["./client"]).toBeUndefined()
+      expect(packageJson.exports?.["./server"]).toBeUndefined()
+      expect(packageJson.exports?.["./edge"]).toBeUndefined()
     })
 
-    it("should include edge export when includeEdge=true", async () => {
+    it("should not include edge-specific exports", async () => {
       await featureGenerator(tree, {
         name: "middleware",
         includeEdge: true
@@ -332,7 +329,8 @@ describe("feature generator", () => {
         tree.read("libs/feature/middleware/package.json", "utf-8") || "{}"
       )
 
-      expect(packageJson.exports?.["./edge"]).toBeDefined()
+      // Platform barrel exports removed
+      expect(packageJson.exports?.["./edge"]).toBeUndefined()
     })
   })
 
@@ -343,7 +341,7 @@ describe("feature generator", () => {
       })
 
       const serviceContent = tree.read(
-        "libs/feature/payment/src/lib/server/service/interface.ts",
+        "libs/feature/payment/src/lib/server/service/service.ts",
         "utf-8"
       )
 
@@ -453,39 +451,30 @@ describe("feature generator", () => {
       expect(indexContent).not.toContain("./lib/server/layers")
     })
 
-    it("should export ALL server code in server.ts", async () => {
+    it("should generate server implementation files", async () => {
       await featureGenerator(tree, {
         name: "payment",
         includeRPC: true
       })
 
-      const serverContent = tree.read(
-        "libs/feature/payment/src/server.ts",
-        "utf-8"
-      )
-
-      expect(serverContent).toContain("./lib/server/service/index")
-      expect(serverContent).toContain("./lib/server/layers")
-      expect(serverContent).toContain("./lib/rpc")
+      // Platform barrel exports removed - check actual implementation files
+      expect(tree.exists("libs/feature/payment/src/lib/server/service/service.ts")).toBeTruthy()
+      expect(tree.exists("libs/feature/payment/src/lib/server/layers.ts")).toBeTruthy()
+      expect(tree.exists("libs/feature/payment/src/lib/rpc/rpc.ts")).toBeTruthy()
     })
 
-    it("should NOT export service implementation in client.ts", async () => {
+    it("should generate client implementation when includeClientServer is true", async () => {
       await featureGenerator(tree, {
         name: "search",
         includeClientServer: true
       })
 
-      const clientContent = tree.read(
-        "libs/feature/search/src/client.ts",
-        "utf-8"
-      )
+      // Platform barrel exports removed - check actual implementation directories
+      expect(tree.exists("libs/feature/search/src/lib/client/hooks")).toBeTruthy()
+      expect(tree.exists("libs/feature/search/src/lib/client/atoms")).toBeTruthy()
 
-      // Should export client code
-      expect(clientContent).toContain("./lib/client/hooks")
-      expect(clientContent).toContain("./lib/client/atoms")
-
-      // Should NOT export server service
-      expect(clientContent).not.toContain("./lib/server/service")
+      // Server service should also exist
+      expect(tree.exists("libs/feature/search/src/lib/server/service/service.ts")).toBeTruthy()
     })
   })
 
@@ -522,9 +511,8 @@ describe("feature generator", () => {
         includeClientServer: true
       })
 
-      // In a real workspace, path mappings would be added by NX's library generator
-      // In virtual test workspace, we verify the client file was created
-      expect(tree.exists("libs/feature/search/src/client.ts")).toBeTruthy()
+      // Platform barrel exports removed - verify client implementation directory was created
+      expect(tree.exists("libs/feature/search/src/lib/client/hooks")).toBeTruthy()
       const config = readProjectConfiguration(tree, "feature-search")
       expect(config).toBeDefined()
     })
@@ -537,7 +525,7 @@ describe("feature generator", () => {
       })
 
       const serviceContent = tree.read(
-        "libs/feature/my-custom-feature/src/lib/server/service/interface.ts",
+        "libs/feature/my-custom-feature/src/lib/server/service/service.ts",
         "utf-8"
       )
 

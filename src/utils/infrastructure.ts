@@ -25,7 +25,9 @@ import { Effect } from "effect"
 import type { LibraryType } from "./build-config"
 import { type ExportConfig, generateGranularExports } from "./exports"
 import type { FileSystemAdapter } from "./filesystem-adapter"
+import { getProviderForInfra, hasProviderMapping } from "./infra-provider-mapping"
 import type { PlatformType } from "./platforms"
+import { getPackageName } from "./workspace-config"
 
 /**
  * Unified Infrastructure Generation Options
@@ -252,6 +254,58 @@ function generatePackageJsonFile(
 
     const exports = generateGranularExports(exportConfig)
 
+    // Build dependencies based on library type
+    const dependencies = (() => {
+      // Provider libraries depend on env for configuration
+      if (options.libraryType === "provider") {
+        return { [getPackageName("env")]: "*" }
+      }
+
+      // Infrastructure libraries depend on their matching provider
+      if (options.libraryType === "infra") {
+        // Extract infrastructure name from projectName
+        // e.g., "infra-cache" -> "cache", "env" -> "env"
+        const infraName = options.projectName.startsWith("infra-")
+          ? options.projectName.substring(6) // Remove "infra-" prefix
+          : options.projectName
+
+        // Check if this infrastructure has a provider mapping
+        if (hasProviderMapping(infraName)) {
+          const providerName = getProviderForInfra(infraName)
+          if (providerName) {
+            return {
+              [getPackageName("provider", providerName)]: "*"
+            }
+          }
+        }
+      }
+
+      // Other library types have no dependencies
+      return undefined
+    })()
+
+    // Build peer dependencies based on library type
+    const peerDependencies = (() => {
+      const base = { effect: "*" }
+
+      // Data-access libraries need kysely for query building
+      if (options.libraryType === "data-access") {
+        return { ...base, kysely: "*" }
+      }
+
+      // Feature libraries need @effect-atom for client-side state
+      if (options.libraryType === "feature") {
+        return {
+          ...base,
+          "@effect-atom/atom": "*",
+          "@effect-atom/atom-react": "*"
+        }
+      }
+
+      // Other library types just need effect
+      return base
+    })()
+
     // Create package.json content
     const packageJson = {
       name: options.packageName,
@@ -260,12 +314,8 @@ function generatePackageJsonFile(
       sideEffects: false, // Enable aggressive tree-shaking
       description: options.description,
       exports,
-      dependencies: options.libraryType === "provider"
-        ? { "@custom-repo/infra-env": "*" }
-        : undefined,
-      peerDependencies: {
-        effect: "*"
-      }
+      dependencies,
+      peerDependencies
     }
 
     // Write package.json

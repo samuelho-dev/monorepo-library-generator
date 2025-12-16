@@ -11,9 +11,11 @@ import { Args, Command, Options } from "@effect/cli"
 import { NodeContext, NodeRuntime } from "@effect/platform-node"
 import { Console, Effect, Option } from "effect"
 import { VERSION } from "../version"
+import { init } from "./commands/init"
 import { initWorkspace } from "./commands/init-workspace"
 import { generateContract } from "./generators/contract"
 import { generateDataAccess } from "./generators/data-access"
+import { generateDomain } from "./generators/domain"
 import { generateFeature } from "./generators/feature"
 import { generateInfra } from "./generators/infra"
 import { generateProvider } from "./generators/provider"
@@ -273,6 +275,64 @@ const providerCommand = Command.make(
 )
 
 /**
+ * Domain Generator Command
+ *
+ * Generates a complete domain with pre-wired dependencies:
+ * - Contract library (types/schemas)
+ * - Data-Access library (repository)
+ * - Feature library (business logic)
+ */
+const includeCacheOption = Options.boolean("includeCache").pipe(
+  Options.withDescription("Include cache integration in data-access layer"),
+  Options.optional
+)
+
+const domainCommand = Command.make(
+  "domain",
+  {
+    name: nameArg,
+    description: descriptionOption,
+    tags: tagsOption,
+    scope: scopeOption,
+    includeCache: includeCacheOption,
+    includeClientServer: includeClientServerOption,
+    includeRPC: includeRPCFeatureOption,
+    includeCQRS: includeCQRSFeatureOption,
+    includeEdge: includeEdgeOption
+  },
+  ({ description, includeCache, includeClientServer, includeCQRS, includeEdge, includeRPC, name, scope, tags }) => {
+    const desc = Option.getOrUndefined(description)
+    const scopeValue = Option.getOrUndefined(scope)
+    const includeCacheVal = Option.getOrUndefined(includeCache)
+    const includeCS = Option.getOrUndefined(includeClientServer)
+    const includeRPCVal = Option.getOrUndefined(includeRPC)
+    const includeCQRSVal = Option.getOrUndefined(includeCQRS)
+    const includeEdgeVal = Option.getOrUndefined(includeEdge)
+
+    return generateDomain({
+      name,
+      ...(desc && { description: desc }),
+      tags,
+      ...(scopeValue && { scope: scopeValue }),
+      // Only include boolean flags if they are explicitly true (flag was provided)
+      ...(includeCacheVal === true && { includeCache: includeCacheVal }),
+      ...(includeCS === true && { includeClientServer: includeCS }),
+      ...(includeRPCVal === true && { includeRPC: includeRPCVal }),
+      ...(includeCQRSVal === true && { includeCQRS: includeCQRSVal }),
+      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal })
+    }).pipe(
+      Effect.catchAll((error) =>
+        Console.error(`Error generating domain: ${error}`).pipe(
+          Effect.flatMap(() => Effect.fail(error))
+        )
+      )
+    )
+  }
+).pipe(
+  Command.withDescription("Generate a complete domain (contract + data-access + feature) with pre-wired dependencies")
+)
+
+/**
  * Generate Command (parent command with subcommands)
  */
 const generateCommand = Command.make("generate").pipe(
@@ -280,6 +340,7 @@ const generateCommand = Command.make("generate").pipe(
   Command.withSubcommands([
     contractCommand,
     dataAccessCommand,
+    domainCommand,
     featureCommand,
     infraCommand,
     providerCommand
@@ -287,9 +348,9 @@ const generateCommand = Command.make("generate").pipe(
 )
 
 /**
- * Init Workspace Command
+ * Init Command
  *
- * Initializes workspace-level dotfiles for consistent development experience.
+ * Initializes complete Effect-based monorepo with built-in libraries
  */
 const overwriteOption = Options.boolean("overwrite").pipe(
   Options.withDescription("Overwrite existing files"),
@@ -301,6 +362,55 @@ const mergeOption = Options.boolean("merge").pipe(
   Options.withDefault(true)
 )
 
+const skipProvidersOption = Options.boolean("skip-providers").pipe(
+  Options.withDescription("Skip generating built-in provider libraries"),
+  Options.withDefault(false)
+)
+
+const skipInfraOption = Options.boolean("skip-infra").pipe(
+  Options.withDescription("Skip generating built-in infrastructure libraries"),
+  Options.withDefault(false)
+)
+
+const includePrismaOption = Options.boolean("includePrisma").pipe(
+  Options.withDescription("Scaffold Prisma directory structure for schema-driven development"),
+  Options.withDefault(false)
+)
+
+const initCommand = Command.make(
+  "init",
+  {
+    overwrite: overwriteOption,
+    merge: mergeOption,
+    skipProviders: skipProvidersOption,
+    skipInfra: skipInfraOption,
+    includePrisma: includePrismaOption
+  },
+  ({ includePrisma, merge, overwrite, skipInfra, skipProviders }) =>
+    init({
+      overwrite,
+      merge,
+      includeProviders: !skipProviders,
+      includeInfra: !skipInfra,
+      includePrisma
+    }).pipe(
+      Effect.catchAll((error) =>
+        Console.error(`Error initializing monorepo: ${error}`).pipe(
+          Effect.flatMap(() => Effect.fail(error))
+        )
+      )
+    )
+).pipe(
+  Command.withDescription(
+    "Initialize Effect-based monorepo with built-in libraries and dotfiles"
+  )
+)
+
+/**
+ * Init Workspace Command (Legacy - workspace dotfiles only)
+ *
+ * Initializes workspace-level dotfiles for consistent development experience.
+ */
 const initWorkspaceCommand = Command.make(
   "init-workspace",
   {
@@ -320,7 +430,7 @@ const initWorkspaceCommand = Command.make(
     )
 ).pipe(
   Command.withDescription(
-    "Initialize workspace-level dotfiles (.editorconfig, .vscode/*)"
+    "Initialize workspace-level dotfiles only (.editorconfig, .vscode/*)"
   )
 )
 
@@ -328,7 +438,7 @@ const initWorkspaceCommand = Command.make(
  * Main CLI Application
  */
 const mainCommand = Command.make("mlg").pipe(
-  Command.withSubcommands([generateCommand, initWorkspaceCommand])
+  Command.withSubcommands([generateCommand, initCommand, initWorkspaceCommand])
 )
 
 const cli = Command.run(mainCommand, {

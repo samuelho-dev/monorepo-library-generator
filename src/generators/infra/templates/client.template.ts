@@ -37,7 +37,7 @@ export { use${className} } from "./lib/client/hooks/use-${fileName}";
 export { ${className}ServiceClientLayers } from "./lib/layers/client-layers";
 
 // Service interface
-export { ${className}Service } from "./lib/service/interface";
+export { ${className}Service } from "./lib/service/service";
 
 // Errors (universal)
 `)

@@ -1,20 +1,20 @@
 /**
- * Repository Interface Template
+ * Repository Template
  *
- * Generates repository/interface.ts file with Context.Tag definition
+ * Generates repository/repository.ts file with Context.Tag definition
  *
- * @module monorepo-library-generator/data-access/repository/interface-template
+ * @module monorepo-library-generator/data-access/repository/repository-template
  */
 
 import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
 import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
 
 /**
- * Generate repository/interface.ts file
+ * Generate repository/repository.ts file
  *
  * Creates the Context.Tag interface with static layers (Live, Test, Dev, Auto)
  */
-export function generateRepositoryInterfaceFile(
+export function generateRepositoryFile(
   options: DataAccessTemplateOptions
 ) {
   const builder = new TypeScriptBuilder()
@@ -184,8 +184,11 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
   /**
    * Live Layer - Production implementation
    *
-   * Requires: KyselyService for database access
-   * Optional: LoggingService for query logging
+   * Requires:
+   * - DatabaseService (from @custom-repo/infra-database) for database persistence
+   * - CacheService (from @custom-repo/infra-cache) for performance optimization
+   *
+   * Operations handle service injection internally via Effect.gen
    */
   static readonly Live = Layer.effect(
     this,
@@ -230,63 +233,60 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
   static readonly Test = Layer.succeed(
     this,
     {
-      // Create operations - provide your own test mocks
-      create: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock via Layer.succeed(${className}Repository, {...}) or use Dev layer for actual implementation."
-        ),
-      createMany: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
+      // Create operations - mock implementations
+      // Returns mock created entity with test-id
+      create: (input) =>
+        Effect.succeed({
+          id: "test-id",
+          ...input,
+          createdAt: new Date("2024-01-01T00:00:00Z"),
+          updatedAt: new Date("2024-01-01T00:00:00Z"),
+        }),
+
+      createMany: (inputs) =>
+        Effect.succeed(
+          inputs.map((input, i) => ({
+            id: \`test-id-\${i}\`,
+            ...input,
+            createdAt: new Date("2024-01-01T00:00:00Z"),
+            updatedAt: new Date("2024-01-01T00:00:00Z"),
+          }))
         ),
 
-      // Read operations - provide your own test mocks
-      findById: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
-      findMany: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
-      findAll: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
-      findByCriteria: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
+      // Read operations - return empty results or None
+      // Customize these mocks for your specific test scenarios
+      findById: (id) => Effect.succeed(Option.none()),
 
-      // Update operations - provide your own test mocks
-      update: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
-      updateMany: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
+      findMany: (criteria) => Effect.succeed([]),
 
-      // Delete operations - provide your own test mocks
-      delete: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
-      deleteMany: () =>
-        Effect.dieMessage(
-          "Test layer not implemented. Provide your own test mock or use Dev layer."
-        ),
+      findAll: () => Effect.succeed([]),
 
-      // Aggregate operations - simple defaults that work without creating entities
+      findByCriteria: (criteria) => Effect.succeed([]),
+
+      // Update operations - return mock updated entity
+      update: (id, input) =>
+        Effect.succeed({
+          id,
+          name: "test-updated",
+          ...input,
+          createdAt: new Date("2024-01-01T00:00:00Z"),
+          updatedAt: new Date(),
+        }),
+
+      updateMany: (criteria, input) => Effect.succeed(0),
+
+      // Delete operations - return success
+      delete: (id) => Effect.void,
+
+      deleteMany: (criteria) => Effect.succeed(0),
+
+      // Aggregate operations - simple defaults
       count: () => Effect.succeed(0),
-      exists: () => Effect.succeed(false),
 
-      // Stream operation - provide your own test mock
-      streamAll: () =>
-        Stream.die(
-          new Error("Test layer not implemented. Provide your own test mock or use Dev layer.")
-        ),
+      exists: (id) => Effect.succeed(false),
+
+      // Stream operation - empty stream
+      streamAll: () => Stream.empty,
     }
   );
 

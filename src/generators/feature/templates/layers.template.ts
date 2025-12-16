@@ -28,7 +28,8 @@ Provides different layer implementations for different environments.`
   // Add imports
   builder.addImports([
     { from: "effect", imports: ["Effect", "Layer"] },
-    { from: "./service", imports: [`${className}Service`] }
+    { from: "./service", imports: [`${className}Service`] },
+    { from: "../shared/types", imports: [`${className}Result`], isTypeOnly: true }
   ])
   builder.addBlankLine()
 
@@ -68,7 +69,7 @@ export const ${className}ServiceLive = ${className}Service.Live;`)
  * This pattern (Pattern B) keeps test implementations co-located with
  * service definitions for better discoverability.
  *
- * See: service/interface.ts for the Test layer definition
+ * See: service/service.ts for the Test layer definition
  * See: TESTING_PATTERNS.md for Pattern B documentation
  */`)
   builder.addBlankLine()
@@ -100,6 +101,7 @@ export const ${className}ServiceDev = Layer.effect(
         Effect.sync(() => {
           console.log("[${className}] [DEV] exampleOperation starting");
           console.log("[${className}] [DEV] exampleOperation completed");
+          return {} as ${className}Result;
         }),
     };
   })

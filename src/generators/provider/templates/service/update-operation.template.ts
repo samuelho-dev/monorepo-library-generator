@@ -51,7 +51,7 @@ Example:
     },
     {
       from: "../../errors",
-      imports: [`${className}NotFoundError`]
+      imports: [`${className}NotFoundError`, `${className}InternalError`, `${className}TimeoutError`]
     }
   ])
   builder.addBlankLine()
@@ -105,8 +105,20 @@ export const updateOperations: Update${className}Operations = {
 
       yield* Effect.logWarning(\`Update operation called for id \${id} but not implemented\`);
       yield* Effect.logDebug(\`Data: \${JSON.stringify(data)}\`);
-      return yield* Effect.dieMessage("Update operation not implemented - replace with ${externalService} SDK call");
+      return yield* Effect.fail(
+        new ${className}InternalError({
+          message: "Update operation not implemented - replace with ${externalService} SDK call"
+        })
+      );
     }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          new ${className}TimeoutError({
+            message: "Update operation timed out",
+            timeout: 30000,
+          }),
+      }),
       Effect.retry(
         Schedule.exponential(Duration.millis(100)).pipe(
           Schedule.compose(Schedule.recurs(3))

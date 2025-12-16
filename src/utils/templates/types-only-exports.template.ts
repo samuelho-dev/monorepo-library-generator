@@ -116,7 +116,7 @@ ${
 // ============================================================================
 
 // Service interface types
-export type * from "./lib/server/service/interface";
+export type * from "./lib/server/service/service";
 `
       : ""
   }${
@@ -175,7 +175,7 @@ export function generateProviderTypesOnly(
 // Service Types
 // ============================================================================
 
-export type * from "./lib/service/interface";
+export type * from "./lib/service/service";
 
 // ============================================================================
 // Shared Types
@@ -222,7 +222,7 @@ export function generateInfraTypesOnly(options: TypesOnlyExportOptions) {
 // Service Types
 // ============================================================================
 
-export type * from "./lib/service/interface";
+export type * from "./lib/service/service";
 
 // ============================================================================
 // Configuration Types

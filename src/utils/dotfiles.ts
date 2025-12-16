@@ -69,6 +69,16 @@ export interface DotfileMetadata {
 }
 
 /**
+ * Result of copying a dotfile
+ */
+export interface CopyDotfileResult {
+  readonly copied: boolean
+  readonly path: string
+  readonly merged: boolean
+  readonly reason?: string
+}
+
+/**
  * Get the path to a dotfile template
  */
 export const getDotfileTemplatePath = (name: DotfileName) => {
@@ -199,10 +209,11 @@ export const copyDotfile = (
         templateContent
       ).pipe(
         // Graceful fallback on merge error
-        Effect.catchAll((error: any) =>
+        Effect.catchAll((error: unknown) =>
           Effect.gen(function*() {
+            const message = error instanceof Error ? error.message : String(error)
             yield* Effect.logWarning(
-              `Failed to merge ${dotfile.name}: ${error.message}. Using Effect.ts template.`
+              `Failed to merge ${dotfile.name}: ${message}. Using Effect.ts template.`
             )
             return {
               merged: templateContent,
@@ -259,8 +270,7 @@ export const copyDotfile = (
     return {
       copied: true,
       path: targetPath,
-      merged: wasMerged,
-      reason: undefined
+      merged: wasMerged
     }
   })
 
@@ -293,13 +303,13 @@ export const copyAllDotfiles = (
     )
 
     // Copy each dotfile
-    const results = yield* Effect.all(
+    const results: ReadonlyArray<CopyDotfileResult> = yield* Effect.all(
       dotfilesToCopy.map((dotfile) => copyDotfile(fs, dotfile, options.targetDir, overwrite, merge)),
       { concurrency: "unbounded" }
     )
 
-    const copiedCount = results.filter((r: any) => r.copied).length
-    const mergedCount = results.filter((r: any) => r.merged).length
+    const copiedCount = results.filter((r) => r.copied).length
+    const mergedCount = results.filter((r) => r.merged).length
     const skippedCount = results.length - copiedCount
 
     yield* Effect.logInfo(
@@ -344,17 +354,25 @@ export const validateDotfiles = (
       { concurrency: "unbounded" }
     )
 
-    const missing = validationResults.filter((r: any) => !r.exists)
+    interface ValidationResult {
+      readonly dotfile: DotfileName
+      readonly exists: boolean
+      readonly path: string
+      readonly required: boolean
+    }
+
+    const typedResults = validationResults as ReadonlyArray<ValidationResult>
+    const missing = typedResults.filter((r) => !r.exists)
 
     if (missing.length > 0) {
       yield* Effect.logWarning(
-        `Missing required dotfiles: ${missing.map((m: any) => m.dotfile).join(", ")}`
+        `Missing required dotfiles: ${missing.map((m) => m.dotfile).join(", ")}`
       )
     }
 
     return {
       valid: missing.length === 0,
-      missing: missing.map((m: any) => m.dotfile),
+      missing: missing.map((m) => m.dotfile),
       results: validationResults
     }
   })

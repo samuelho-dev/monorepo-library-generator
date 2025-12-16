@@ -11,6 +11,7 @@ import type { Tree } from "@nx/devkit"
 import * as path from "path"
 import { createNamingVariants } from "./naming"
 import type { LibraryType } from "./shared/types"
+import { getPackageName } from "./workspace-config"
 
 /**
  * Dependency information for TypeScript project references and package.json
@@ -104,7 +105,7 @@ export function computeDependencies(
     const projectName = `${libraryType}-${depFileName}`
 
     return {
-      packageName: `@custom-repo/${projectName}`,
+      packageName: getPackageName(libraryType, depFileName),
       projectName,
       relativePath,
       relativeLibPath,

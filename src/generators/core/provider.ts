@@ -8,7 +8,6 @@
  * - Generates service implementation for external service integration
  * - Creates types, validation, and error definitions
  * - Generates layer compositions for different environments
- * - Creates platform-specific exports (client, server, edge)
  * - Infrastructure generation is handled by wrapper generators
  *
  * @module monorepo-library-generator/generators/core/provider-generator-core
@@ -16,16 +15,13 @@
 
 import { Effect } from "effect"
 import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
-import { computePlatformConfiguration, type PlatformType } from "../../utils/platforms"
+import type { PlatformType } from "../../utils/platforms"
 import type { Platform, ProviderTemplateOptions } from "../../utils/shared/types"
 import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates/types-only-exports.template"
 import {
-  generateClientFile,
-  generateEdgeFile,
   generateErrorsFile,
   generateIndexFile,
   generateLayersFile,
-  generateServerFile,
   generateServiceSpecFile,
   generateTypesFile,
   generateValidationFile
@@ -36,7 +32,7 @@ import {
   generateProviderOperationsIndexFile,
   generateProviderQueryOperationFile,
   generateProviderServiceIndexFile,
-  generateProviderServiceInterfaceFile,
+  generateProviderServiceFile,
   generateProviderUpdateOperationFile
 } from "../provider/templates/service/index"
 
@@ -105,19 +101,6 @@ export function generateProviderCore(
   options: ProviderCoreOptions
 ) {
   return Effect.gen(function*() {
-    // Compute platform configuration
-    const platformConfig = computePlatformConfiguration(
-      {
-        platform: options.platform
-      },
-      {
-        defaultPlatform: "node",
-        libraryType: "provider"
-      }
-    )
-
-    const { includeEdge } = platformConfig
-
     // Map PlatformType to Platform for template options (internal mapping)
     const platformMapping: Record<PlatformType, Platform> = {
       node: "server",
@@ -464,6 +447,172 @@ Effect.gen(function* () {
 - Operations are lazy-loaded via dynamic imports
 - Each operation can be imported independently for optimal tree-shaking
 - Service interface uses minimal overhead (~2 KB vs ~18 KB for full barrel)
+
+## SDK Integration Guide
+
+### Baseline Implementation
+
+The generated library includes a **working baseline implementation** using in-memory storage.
+This allows you to:
+- Use the service immediately without SDK setup
+- Test Effect patterns and layer composition
+- Verify integration points before adding external dependencies
+
+### Replacing with Real SDK
+
+Follow these steps to integrate with the actual ${templateOptions.externalService} SDK:
+
+#### 1. Install SDK Package
+
+\`\`\`bash
+pnpm add ${templateOptions.externalService.toLowerCase()}-sdk
+# Or the actual package name for ${templateOptions.externalService}
+\`\`\`
+
+#### 2. Update Live Layer (\`lib/layers.ts\`)
+
+Replace the in-memory store with SDK initialization:
+
+\`\`\`typescript
+export const ${templateOptions.className}Live = Layer.effect(
+  ${templateOptions.className},
+  Effect.gen(function* () {
+    const config: ${templateOptions.className}Config = {
+      apiKey: env.${templateOptions.constantName}_API_KEY,
+      timeout: env.${templateOptions.constantName}_TIMEOUT || 20000,
+    };
+
+    // Initialize SDK client
+    const client = new ${templateOptions.externalService}SDK(config);
+
+    return {
+      config,
+      healthCheck: Effect.succeed({ status: "healthy" as const })
+        .pipe(Effect.withSpan("${templateOptions.className}.healthCheck")),
+
+      // Replace store.list with SDK call
+      list: (params) =>
+        Effect.tryPromise({
+          try: () => client.list({
+            page: params?.page ?? 1,
+            limit: params?.limit ?? 10
+          }),
+          catch: (error) => new ${templateOptions.className}InternalError({
+            message: "Failed to list items",
+            cause: error
+          })
+        }).pipe(
+          Effect.timeoutFail({
+            duration: \`\${config.timeout} millis\`,
+            onTimeout: () => new ${templateOptions.className}TimeoutError({
+              message: "list operation timed out",
+              timeoutMs: config.timeout,
+              operation: "list"
+            })
+          }),
+          Effect.withSpan("${templateOptions.className}.list")
+        ),
+
+      // Repeat for get, create, update, delete operations
+      // ... (follow same pattern with Effect.tryPromise + timeoutFail)
+    };
+  }),
+);
+\`\`\`
+
+#### 3. Add Resource Cleanup (If Needed)
+
+If your SDK requires cleanup (connections, pools, etc.), switch to \`Layer.scoped\`:
+
+\`\`\`typescript
+export const ${templateOptions.className}Live = Layer.scoped(
+  ${templateOptions.className},
+  Effect.gen(function* () {
+    const config: ${templateOptions.className}Config = {
+      apiKey: env.${templateOptions.constantName}_API_KEY,
+      timeout: env.${templateOptions.constantName}_TIMEOUT || 20000,
+    };
+
+    // Initialize SDK with cleanup
+    const client = yield* Effect.acquireRelease(
+      Effect.tryPromise(() => ${templateOptions.externalService}SDK.connect(config)),
+      (client) => Effect.sync(() => client.close())
+    );
+
+    // Or use Effect.addFinalizer for simpler cleanup
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => client.close())
+    );
+
+    return {
+      // ... service implementation
+    };
+  }),
+);
+\`\`\`
+
+#### 4. Update Dev Layer (Optional)
+
+Add debug logging to Dev layer for development:
+
+\`\`\`typescript
+list: (params) =>
+  Effect.tryPromise({
+    try: () => client.list(params),
+    catch: (error) => new ${templateOptions.className}InternalError({
+      message: "Failed to list items",
+      cause: error
+    })
+  }).pipe(
+    Effect.tap(() => Effect.logDebug("[${templateOptions.className}] list called", params)),
+    Effect.timeoutFail({ /* ... */ }),
+    Effect.withSpan("${templateOptions.className}.list")
+  ),
+\`\`\`
+
+#### 5. Update Custom Layer Factory
+
+Replace in-memory store in \`make${templateOptions.className}Layer\`:
+
+\`\`\`typescript
+export function make${templateOptions.className}Layer(config: ${templateOptions.className}Config) {
+  return Layer.scoped(
+    ${templateOptions.className},
+    Effect.gen(function* () {
+      const client = new ${templateOptions.externalService}SDK(config);
+
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => client.close())
+      );
+
+      return {
+        // ... SDK-based implementation
+      };
+    }),
+  );
+}
+\`\`\`
+
+### Integration Checklist
+
+- [ ] Install SDK package
+- [ ] Update Live layer with SDK initialization
+- [ ] Replace in-memory operations with SDK calls
+- [ ] Add timeout wrappers (\`Effect.timeoutFail\`)
+- [ ] Add error handling (\`Effect.tryPromise\` with typed errors)
+- [ ] Keep distributed tracing (\`Effect.withSpan\`)
+- [ ] Add cleanup if SDK requires it (\`Layer.scoped\` + \`Effect.addFinalizer\`)
+- [ ] Update Dev layer with debug logging
+- [ ] Test with real SDK credentials
+- [ ] Remove in-memory store helper (or keep for testing)
+
+### Testing Strategy
+
+1. **Keep Test layer unchanged** - it should remain a pure mock
+2. **Use Dev layer for local testing** with real SDK
+3. **Use Live layer in production**
+
+The baseline implementation remains useful for unit tests and demonstrations.
 `
     }
 
@@ -484,9 +633,9 @@ Effect.gen(function* () {
     const servicePath = `${sourceLibPath}/service`
     yield* adapter.makeDirectory(servicePath)
 
-    // Generate service interface (lightweight Context.Tag with static layers)
-    yield* adapter.writeFile(`${servicePath}/interface.ts`, generateProviderServiceInterfaceFile(templateOptions))
-    filesGenerated.push(`${servicePath}/interface.ts`)
+    // Generate service definition (lightweight Context.Tag with static layers)
+    yield* adapter.writeFile(`${servicePath}/service.ts`, generateProviderServiceFile(templateOptions))
+    filesGenerated.push(`${servicePath}/service.ts`)
 
     // Conditional: Only generate operations for SDK providers
     // CLI/HTTP/GraphQL providers have operations defined in interface.ts
@@ -522,24 +671,8 @@ Effect.gen(function* () {
     yield* adapter.writeFile(`${sourceLibPath}/service.spec.ts`, generateServiceSpecFile(templateOptions))
     filesGenerated.push(`${sourceLibPath}/service.spec.ts`)
 
-    // Generate platform-specific export files
-    // Always generate server.ts and client.ts since they're declared in package.json exports
-    // This ensures imports don't fail even if the platform is node-only
-
-    const serverContent = generateServerFile(templateOptions)
-    yield* adapter.writeFile(`${options.sourceRoot}/server.ts`, serverContent)
-    filesGenerated.push(`${options.sourceRoot}/server.ts`)
-
-    const clientContent = generateClientFile(templateOptions)
-    yield* adapter.writeFile(`${options.sourceRoot}/client.ts`, clientContent)
-    filesGenerated.push(`${options.sourceRoot}/client.ts`)
-
-    // Edge exports (conditional)
-    if (includeEdge || options.platform === "edge") {
-      const edgeContent = generateEdgeFile(templateOptions)
-      yield* adapter.writeFile(`${options.sourceRoot}/edge.ts`, edgeContent)
-      filesGenerated.push(`${options.sourceRoot}/edge.ts`)
-    }
+    // Platform-specific export files removed - rely on automatic tree-shaking
+    // All exports are now handled through the main index.ts
 
     return {
       projectName: options.projectName,

@@ -31,7 +31,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Effect"] }])
+  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
   builder.addBlankLine()
 
   builder.addImports([
@@ -42,10 +42,19 @@ Bundle optimization: Import this file directly for smallest bundle size:
     },
     {
       from: "../../shared/errors",
-      imports: [`${className}RepositoryError`],
-      isTypeOnly: true
+      imports: [
+        `${className}RepositoryError`,
+        `${className}InternalError`,
+        `${className}TimeoutError`
+      ],
+      isTypeOnly: false
     }
   ])
+  builder.addBlankLine()
+
+  // Import infrastructure services
+  builder.addComment("Infrastructure services - Database for persistence")
+  builder.addRaw(`import { DatabaseService } from "@custom-repo/infra-database";`)
   builder.addBlankLine()
 
   // Operation interface
@@ -102,115 +111,77 @@ export interface Create${className}Operations {
   builder.addRaw(`/**
  * Live create operations implementation
  *
- * TODO: Implement with actual database operations
- * - Use KyselyService for database access
- * - Add validation and error handling
- * - Implement transaction support for createMany
+ * Uses DatabaseService for persistence with type-safe database queries
+ *
+ * PRODUCTION INTEGRATION:
+ * - DatabaseService for database access via Kysely
+ * - Effect.log* methods for observability
+ * - Transaction support for batch operations
+ * - Timeout protection and distributed tracing
  */
 export const createOperations: Create${className}Operations = {
   create: (input: ${className}CreateInput) =>
     Effect.gen(function* () {
-      // TODO: Implement database insert
-      // const database = yield* KyselyService;
-      // const result = yield* database.query((db) =>
-      //   db.insertInto("${fileName}s")
-      //     .values({
-      //       ...input,
-      //       id: randomUUID(),
-      //       createdAt: new Date(),
-      //       updatedAt: new Date()
-      //     })
-      //     .returningAll()
-      //     .executeTakeFirstOrThrow()
-      // );
-      // return result;
+      const database = yield* DatabaseService;
 
-      return yield* Effect.dieMessage(
-        "Create operation not implemented. Configure KyselyService and implement database logic."
+      yield* Effect.logInfo(\`Creating ${className}: \${JSON.stringify(input)}\`);
+
+      const entity = yield* database.query((db) =>
+        db
+          .insertInto("${fileName}s")
+          .values({
+            ...input,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow()
       );
-    }),
+
+      yield* Effect.logInfo(\`${className} created successfully (id: \${entity.id})\`);
+
+      return entity;
+    }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          ${className}TimeoutError.create("create", 30000)
+      }),
+      Effect.withSpan("${className}Repository.create")
+    ),
 
   createMany: (inputs: ReadonlyArray<${className}CreateInput>) =>
     Effect.gen(function* () {
-      // TODO: Implement batch insert with transaction
-      // const database = yield* KyselyService;
-      // const results = yield* database.query((db) =>
-      //   db.transaction().execute(async (trx) => {
-      //     const inserted = [];
-      //     for (const input of inputs) {
-      //       const result = await trx
-      //         .insertInto("${fileName}s")
-      //         .values({
-      //           ...input,
-      //           id: randomUUID(),
-      //           createdAt: new Date(),
-      //           updatedAt: new Date()
-      //         })
-      //         .returningAll()
-      //         .executeTakeFirstOrThrow();
-      //       inserted.push(result);
-      //     }
-      //     return inserted;
-      //   })
-      // );
-      // return results;
+      const database = yield* DatabaseService;
 
-      return yield* Effect.dieMessage(
-        "CreateMany operation not implemented. Configure KyselyService and implement batch logic."
+      yield* Effect.logInfo(\`Creating \${inputs.length} ${className} entities\`);
+
+      const entities = yield* database.query((db) =>
+        db
+          .insertInto("${fileName}s")
+          .values(
+            inputs.map((input) => ({
+              ...input,
+              created_at: new Date(),
+              updated_at: new Date(),
+            }))
+          )
+          .returningAll()
+          .execute()
       );
-    }),
+
+      yield* Effect.logInfo(\`Created \${entities.length} ${className} entities successfully\`);
+
+      return entities;
+    }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          ${className}TimeoutError.create("createMany", 30000)
+      }),
+      Effect.withSpan("${className}Repository.createMany")
+    ),
 };`)
-  builder.addBlankLine()
-
-  // Test implementation
-  builder.addSectionComment("Test Implementation")
-  builder.addBlankLine()
-
-  builder.addRaw(`// Shared test storage
-const testStore = new Map<string, ${className}>();
-let testIdCounter = 0;
-
-/**
- * Test create operations implementation
- *
- * Uses in-memory Map for testing
- */
-export const testCreateOperations: Create${className}Operations = {
-  create: (input: ${className}CreateInput) =>
-    Effect.sync(() => {
-      const id = String(++testIdCounter);
-      const now = new Date();
-      const entity: ${className} = {
-        ...input,
-        id,
-        createdAt: now,
-        updatedAt: now,
-      };
-      testStore.set(id, entity);
-      return entity;
-    }),
-
-  createMany: (inputs: ReadonlyArray<${className}CreateInput>) =>
-    Effect.sync(() => {
-      return inputs.map((input) => {
-        const id = String(++testIdCounter);
-        const now = new Date();
-        const entity: ${className} = {
-          ...input,
-          id,
-          createdAt: now,
-          updatedAt: now,
-        };
-        testStore.set(id, entity);
-        return entity;
-      });
-    }),
-};
-
-/**
- * Export test store for use by other operation modules
- */
-export { testStore };`)
 
   return builder.toString()
 }

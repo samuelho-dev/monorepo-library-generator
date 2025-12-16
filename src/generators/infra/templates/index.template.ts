@@ -28,7 +28,7 @@ export function generateIndexFile(options: InfraTemplateOptions) {
     builder.addSectionComment("Server-Only Mode: Export Everything from Root")
 
     builder.addRaw(`// Service interface and layers
-export { ${className}Service } from "./lib/service/interface";
+export { ${className}Service } from "./lib/service/service";
 export type { ${className}Config } from "./lib/service/config";
 export { default${className}Config, get${className}ConfigForEnvironment } from "./lib/service/config";
 
@@ -57,7 +57,7 @@ export type { ${className}ServiceError } from "./lib/service/errors";`)
     )
 
     builder.addRaw(`// Service interface (universal)
-export { ${className}Service } from "./lib/service/interface";
+export { ${className}Service } from "./lib/service/service";
 export type { ${className}Config } from "./lib/service/config";
 
 // Configuration (universal)

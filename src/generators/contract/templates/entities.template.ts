@@ -26,7 +26,7 @@ export function generateEntitiesFile(options: ContractTemplateOptions) {
   builder.addFileHeader({
     title: `${className} Domain Entities`,
     description:
-      "Defines domain entities using Schema.Class for runtime validation. Database types are imported from @custom-repo/types-database.",
+      "Defines domain entities using Schema.Class for runtime validation. Database types are imported from @custom-repo/infra-database.",
     module: `@custom-repo/contract-${fileName}/entities`
   })
 
@@ -39,7 +39,7 @@ export function generateEntitiesFile(options: ContractTemplateOptions) {
  * 4. Add Schema.filter() for cross-field validation
  * 5. Add Schema.transform() for data normalization
  * 6. Add computed fields if needed
- * 7. Import database types (${className}Select, etc.) from types-database
+ * 7. Import database types (${className}Select, etc.) from infra-database
  */
 `)
 
@@ -55,7 +55,7 @@ export function generateEntitiesFile(options: ContractTemplateOptions) {
 
   builder.addSectionComment("Type Aliases for Database Types")
   builder.addComment(
-    "Import database-generated types from types-database library"
+    "Import database-generated types from infra-database library"
   )
   builder.addComment("DO NOT duplicate these definitions here")
   builder.addBlankLine()
@@ -72,7 +72,7 @@ export function generateEntitiesFile(options: ContractTemplateOptions) {
   builder.addComment(`  ${className}Select,`)
   builder.addComment(`  ${className}Insert,`)
   builder.addComment(`  ${className}Update,`)
-  builder.addComment("} from \"@custom-repo/types-database\";")
+  builder.addComment("} from \"@custom-repo/infra-database\";")
   builder.addBlankLine()
 
   // ============================================================================

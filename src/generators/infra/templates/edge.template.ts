@@ -34,7 +34,7 @@ export function generateEdgeFile(options: InfraTemplateOptions) {
 export { ${className}ServiceEdgeLayers } from "./lib/layers/edge-layers";
 
 // Service interface
-export { ${className}Service } from "./lib/service/interface";
+export { ${className}Service } from "./lib/service/service";
 
 // Errors (universal)
 `)

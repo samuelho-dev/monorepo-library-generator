@@ -38,7 +38,7 @@ import {
 } from "../feature/templates/index"
 import {
   generateFeatureServiceIndexFile,
-  generateFeatureServiceInterfaceFile
+  generateFeatureServiceFile
 } from "../feature/templates/service/index"
 import { generateSubServices } from "./sub-services"
 
@@ -347,8 +347,8 @@ const server = ${templateOptions.fileName}Handlers.pipe(
     yield* adapter.makeDirectory(servicePath)
 
     // Generate service interface (lightweight Context.Tag with static layers)
-    yield* adapter.writeFile(`${servicePath}/interface.ts`, generateFeatureServiceInterfaceFile(templateOptions))
-    filesGenerated.push(`${servicePath}/interface.ts`)
+    yield* adapter.writeFile(`${servicePath}/service.ts`, generateFeatureServiceFile(templateOptions))
+    filesGenerated.push(`${servicePath}/service.ts`)
 
     // Generate service index (barrel export for service)
     yield* adapter.writeFile(`${servicePath}/index.ts`, generateFeatureServiceIndexFile(templateOptions))
@@ -439,53 +439,8 @@ const server = ${templateOptions.fileName}Handlers.pipe(
       filesGenerated.push(`${edgePath}/middleware.ts`)
     }
 
-    // Generate platform barrel exports (server.ts and client.ts)
-    // These provide convenient entry points for platform-specific imports
-
-    // Always generate server.ts barrel export
-    const serverBarrelExport = `/**
- * Server-side exports for ${templateOptions.className}
- *
- * Bundle optimization: Import from this file for server-only code.
- * This keeps server-side code out of client bundles.
- */
-
-export * from "./lib/server/service/index"
-export * from "./lib/server/layers"
-${includeRPC ? "export * from \"./lib/rpc/rpc\"\nexport * from \"./lib/rpc/handlers\"" : ""}
-`
-    yield* adapter.writeFile(`${options.sourceRoot}/server.ts`, serverBarrelExport)
-    filesGenerated.push(`${options.sourceRoot}/server.ts`)
-
-    // Generate client.ts barrel export if client features are included
-    if (shouldIncludeClientServer) {
-      const clientBarrelExport = `/**
- * Client-side exports for ${templateOptions.className}
- *
- * Bundle optimization: Import from this file for client-only code.
- * This keeps client-side code out of server bundles.
- */
-
-export * from "./lib/client/hooks/index"
-export * from "./lib/client/atoms/index"
-`
-      yield* adapter.writeFile(`${options.sourceRoot}/client.ts`, clientBarrelExport)
-      filesGenerated.push(`${options.sourceRoot}/client.ts`)
-    }
-
-    // Generate edge.ts barrel export if edge features are included
-    if (shouldIncludeEdge) {
-      const edgeBarrelExport = `/**
- * Edge Runtime Exports
- *
- * Edge-compatible middleware and utilities.
- * Optimized for edge compute environments (Cloudflare Workers, Vercel Edge, etc.)
- */
-export * from "./lib/edge/middleware"
-`
-      yield* adapter.writeFile(`${options.sourceRoot}/edge.ts`, edgeBarrelExport)
-      filesGenerated.push(`${options.sourceRoot}/edge.ts`)
-    }
+    // Platform-specific barrel exports removed - rely on automatic tree-shaking
+    // All exports are now handled through the main index.ts
 
     return {
       projectName: options.projectName,

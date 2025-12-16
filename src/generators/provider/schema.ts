@@ -19,6 +19,9 @@ export interface ProviderGeneratorSchema {
   baseUrl?: string
   authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
 
+  // Operations to generate
+  operations?: ReadonlyArray<"create" | "read" | "update" | "delete" | "query">
+
   tags?: string
 
   // Dotfile generation options (Effect.ts code quality enforcement)

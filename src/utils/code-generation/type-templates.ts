@@ -169,7 +169,7 @@ export function addPaginatedResponse(
   config: PaginatedResponseConfig = {}
 ) {
   const {
-    includeHasMore = false,
+    includeHasMore = true,
     includeNextCursor = false,
     itemsFieldName = "items"
   } = config

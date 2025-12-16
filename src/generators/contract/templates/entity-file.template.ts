@@ -40,8 +40,7 @@ export type ${entityName}Id = string & Brand.Brand<"${entityName}Id">;
  *
  * Validates and brands UUID strings as ${entityName}Id.
  */
-export const ${entityName}Id = Schema.String.pipe(
-  Schema.UUID,
+export const ${entityName}Id = Schema.UUID.pipe(
   Schema.brand("${entityName}Id")
 );
 

@@ -77,12 +77,15 @@ export function generateTypesFile(options: ProviderTemplateOptions) {
     // Resource schema for HTTP/GraphQL
     builder.addRaw("/**")
     builder.addRaw(" * Resource Schema - customize based on your API")
+    builder.addRaw(" *")
+    builder.addRaw(" * Date fields use Schema.DateTimeUtc for automatic ISO 8601 string ↔ Date conversion.")
+    builder.addRaw(" * This handles serialization over HTTP/GraphQL automatically.")
     builder.addRaw(" */")
     builder.addRaw("export const ResourceSchema = Schema.Struct({")
     builder.addRaw("  id: Schema.String,")
     builder.addRaw("  name: Schema.String,")
-    builder.addRaw("  createdAt: Schema.DateFromSelf,")
-    builder.addRaw("  updatedAt: Schema.DateFromSelf,")
+    builder.addRaw("  createdAt: Schema.DateTimeUtc,")
+    builder.addRaw("  updatedAt: Schema.DateTimeUtc,")
     builder.addRaw("});")
     builder.addBlankLine()
 

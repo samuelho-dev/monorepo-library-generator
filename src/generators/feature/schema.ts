@@ -11,6 +11,12 @@ export interface FeatureGeneratorSchema {
   testRunner?: "vitest"
   tags?: string
 
+  // Data access library
+  dataAccessLibrary?: string
+
+  // Client state management
+  includeClientState?: boolean
+
   // Sub-service organization for consolidated features
   includeSubServices?: boolean
   subServices?: string // Comma-separated list

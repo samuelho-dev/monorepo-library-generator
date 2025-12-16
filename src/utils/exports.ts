@@ -148,6 +148,8 @@ export function generateDataAccessExports() {
 
 /**
  * Generate granular exports for feature libraries
+ *
+ * Platform-specific exports removed - rely on automatic tree-shaking
  */
 export function generateFeatureExports(config: ExportConfig) {
   const exports: ExportMap = {
@@ -163,55 +165,7 @@ export function generateFeatureExports(config: ExportConfig) {
     }
   }
 
-  // Server exports
-  if (config.platform === "node" || config.platform === "universal" || config.includeClientServer) {
-    exports["./server"] = {
-      import: "./src/server.ts",
-      types: "./src/server.ts"
-    }
-    exports["./server/service"] = {
-      import: "./src/lib/server/service/index.ts",
-      types: "./src/lib/server/service/index.ts"
-    }
-    exports["./server/service/*"] = {
-      import: "./src/lib/server/service/operations/*.ts",
-      types: "./src/lib/server/service/operations/*.ts"
-    }
-    exports["./server/layers"] = {
-      import: "./src/lib/server/layers.ts",
-      types: "./src/lib/server/layers.ts"
-    }
-  }
-
-  // Client exports
-  if (config.platform === "browser" || config.platform === "universal" || config.includeClientServer) {
-    exports["./client"] = {
-      import: "./src/client.ts",
-      types: "./src/client.ts"
-    }
-    exports["./client/hooks"] = {
-      import: "./src/lib/client/hooks/index.ts",
-      types: "./src/lib/client/hooks/index.ts"
-    }
-    exports["./client/hooks/*"] = {
-      import: "./src/lib/client/hooks/*.ts",
-      types: "./src/lib/client/hooks/*.ts"
-    }
-    exports["./client/atoms"] = {
-      import: "./src/lib/client/atoms/index.ts",
-      types: "./src/lib/client/atoms/index.ts"
-    }
-  }
-
-  // Edge exports
-  if (config.includeEdgeExports) {
-    exports["./edge"] = {
-      import: "./src/edge.ts",
-      types: "./src/edge.ts"
-    }
-  }
-
-  // RPC exports
+  // RPC exports (kept as these are functional, not platform-based)
   if (config.includeRPC) {
     exports["./rpc/handlers"] = {
       import: "./src/lib/rpc/handlers/index.ts",
@@ -228,8 +182,10 @@ export function generateFeatureExports(config: ExportConfig) {
 
 /**
  * Generate granular exports for infra libraries
+ *
+ * Platform-specific exports removed - rely on automatic tree-shaking
  */
-export function generateInfraExports(config: ExportConfig) {
+export function generateInfraExports() {
   const exports: ExportMap = {
     // Main barrel export
     ".": {
@@ -245,35 +201,17 @@ export function generateInfraExports(config: ExportConfig) {
     "./service": {
       import: "./src/lib/service/index.ts",
       types: "./src/lib/service/index.ts"
+    },
+    // Provider exports (wildcard for custom providers)
+    "./providers/*": {
+      import: "./src/lib/providers/*.ts",
+      types: "./src/lib/providers/*.ts"
+    },
+    // Layer exports
+    "./layers/*": {
+      import: "./src/lib/layers/*.ts",
+      types: "./src/lib/layers/*.ts"
     }
-  }
-
-  // Server exports
-  if (config.platform === "node" || config.platform === "universal" || config.includeClientServer) {
-    exports["./server"] = {
-      import: "./src/server.ts",
-      types: "./src/server.ts"
-    }
-  }
-
-  // Client exports
-  if (config.platform === "browser" || config.platform === "universal" || config.includeClientServer) {
-    exports["./client"] = {
-      import: "./src/client.ts",
-      types: "./src/client.ts"
-    }
-  }
-
-  // Provider exports (wildcard for custom providers)
-  exports["./providers/*"] = {
-    import: "./src/lib/providers/*.ts",
-    types: "./src/lib/providers/*.ts"
-  }
-
-  // Layer exports
-  exports["./layers/*"] = {
-    import: "./src/lib/layers/*.ts",
-    types: "./src/lib/layers/*.ts"
   }
 
   return exports
@@ -281,8 +219,10 @@ export function generateInfraExports(config: ExportConfig) {
 
 /**
  * Generate granular exports for provider libraries
+ *
+ * Platform-specific exports removed - rely on automatic tree-shaking
  */
-export function generateProviderExports(config: ExportConfig) {
+export function generateProviderExports() {
   const exports: ExportMap = {
     // Main barrel export
     ".": {
@@ -316,22 +256,6 @@ export function generateProviderExports(config: ExportConfig) {
     }
   }
 
-  // Server exports
-  if (config.platform === "node" || config.platform === "universal" || config.includeClientServer) {
-    exports["./server"] = {
-      import: "./src/server.ts",
-      types: "./src/server.ts"
-    }
-  }
-
-  // Client exports
-  if (config.platform === "browser" || config.platform === "universal" || config.includeClientServer) {
-    exports["./client"] = {
-      import: "./src/client.ts",
-      types: "./src/client.ts"
-    }
-  }
-
   return exports
 }
 
@@ -347,9 +271,9 @@ export function generateGranularExports(config: ExportConfig) {
     case "feature":
       return generateFeatureExports(config)
     case "infra":
-      return generateInfraExports(config)
+      return generateInfraExports()
     case "provider":
-      return generateProviderExports(config)
+      return generateProviderExports()
     default:
       // Fallback to basic exports
       return {

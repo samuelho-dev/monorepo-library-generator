@@ -36,7 +36,7 @@ export {
 export { default${className}Config, get${className}ConfigForEnvironment } from "./lib/service/config";
 
 // Service interface
-export { ${className}Service } from "./lib/service/interface";
+export { ${className}Service } from "./lib/service/service";
 
 // Memory provider (for testing)
 export {

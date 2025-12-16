@@ -142,13 +142,18 @@ export const production${className}Config: ${className}Config = {
   builder.addFunction({
     name: `validate${className}Config`,
     params: [{ name: "config", type: `${className}Config` }],
-    body: `// TODO: Add validation logic
+    body: `// Basic validation - extend as needed
+if (config.timeout !== undefined && config.timeout < 0) {
+  throw new Error('Invalid timeout: must be non-negative');
+}
+
+// TODO: Add additional validation logic as needed
 // Example:
-// if (!config.timeout || config.timeout < 0) {
-//   throw new Error('Invalid timeout: must be positive number');
+// if (config.retries !== undefined && config.retries < 0) {
+//   throw new Error('Invalid retries: must be non-negative');
 // }`,
     jsdoc:
-      `Validate configuration\n\nTODO: Add configuration validation logic\n\n@param config - Configuration to validate\n@throws Error if configuration is invalid\n\n@example\n\`\`\`typescript\nvalidate${className}Config(config);\n\`\`\``
+      `Validate configuration\n\nPerforms basic validation on configuration object.\nExtend with additional validation as needed.\n\n@param config - Configuration to validate\n@throws Error if configuration is invalid\n\n@example\n\`\`\`typescript\nconst config = get${className}ConfigForEnvironment();\nvalidate${className}Config(config);\n\`\`\``
   })
 
   return builder.toString()

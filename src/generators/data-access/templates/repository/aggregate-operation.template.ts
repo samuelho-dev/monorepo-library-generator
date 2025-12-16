@@ -28,7 +28,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
   })
   builder.addBlankLine()
 
-  builder.addImports([{ from: "effect", imports: ["Effect"] }])
+  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
   builder.addBlankLine()
 
   builder.addImports([
@@ -39,10 +39,19 @@ Bundle optimization: Import this file directly for smallest bundle size:
     },
     {
       from: "../../shared/errors",
-      imports: [`${className}RepositoryError`],
-      isTypeOnly: true
+      imports: [
+        `${className}RepositoryError`,
+        `${className}InternalError`,
+        `${className}TimeoutError`
+      ],
+      isTypeOnly: false
     }
   ])
+  builder.addBlankLine()
+
+  // Import infrastructure services
+  builder.addComment("Infrastructure services - Database for persistence")
+  builder.addRaw(`import { DatabaseService } from "@custom-repo/infra-database";`)
   builder.addBlankLine()
 
   builder.addSectionComment("Aggregate Operations Interface")
@@ -70,70 +79,77 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addSectionComment("Live Implementation")
   builder.addBlankLine()
 
-  builder.addRaw(`export const aggregateOperations: Aggregate${className}Operations = {
+  builder.addRaw(`/**
+ * Live aggregate operations implementation
+ *
+ * Uses DatabaseService for persistence with efficient database-level aggregation
+ *
+ * PRODUCTION INTEGRATION:
+ * - DatabaseService for database access via Kysely
+ * - Effect.log* methods for observability
+ * - Database-level COUNT operations for performance
+ * - Timeout protection and distributed tracing
+ */
+export const aggregateOperations: Aggregate${className}Operations = {
   count: (filter?: ${className}Filter) =>
     Effect.gen(function* () {
-      // TODO: Implement database count
-      // const database = yield* KyselyService;
-      // let query = db.selectFrom("${fileName}s")
-      //   .select((eb) => eb.fn.count("id").as("count"));
-      //
-      // if (filter?.search) {
-      //   query = query.where("name", "ilike", \`%\${filter.search}%\`);
-      // }
-      //
-      // const result = yield* database.query((db) =>
-      //   query.executeTakeFirst()
-      // );
-      //
-      // return Number(result?.count ?? 0);
+      const database = yield* DatabaseService;
 
-      return yield* Effect.dieMessage("Count operation not implemented");
-    }),
+      yield* Effect.logInfo(\`Counting ${className} entities (filter: \${JSON.stringify(filter)})\`);
 
-  exists: (id: string) =>
-    Effect.gen(function* () {
-      // TODO: Implement database exists check
-      // const database = yield* KyselyService;
-      // const result = yield* database.query((db) =>
-      //   db.selectFrom("${fileName}s")
-      //     .select("id")
-      //     .where("id", "=", id)
-      //     .executeTakeFirst()
-      // );
-      //
-      // return !!result;
+      const count = yield* database.query((db) => {
+        let query = db.selectFrom("${fileName}s").select((eb) => eb.fn.countAll().as("count"));
 
-      return yield* Effect.dieMessage("Exists operation not implemented");
-    }),
-};`)
-  builder.addBlankLine()
-
-  builder.addSectionComment("Test Implementation")
-  builder.addBlankLine()
-
-  builder.addRaw(`import { testStore } from "./create";
-
-export const testAggregateOperations: Aggregate${className}Operations = {
-  count: (filter?: ${className}Filter) =>
-    Effect.sync(() => {
-      if (!filter?.search) {
-        return testStore.size;
-      }
-
-      // Simple search implementation
-      const searchLower = filter.search.toLowerCase();
-      let count = 0;
-      for (const entity of testStore.values()) {
-        if (JSON.stringify(entity).toLowerCase().includes(searchLower)) {
-          count++;
+        // Apply filters if provided
+        if (filter?.search) {
+          query = query.where((eb) =>
+            eb.or([
+              eb("name", "ilike", \`%\${filter.search}%\`),
+            ])
+          );
         }
-      }
+
+        return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
+      });
+
+      yield* Effect.logInfo(\`Counted \${count} ${className} entities\`);
+
       return count;
-    }),
+    }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          ${className}TimeoutError.create("count", 30000)
+      }),
+      Effect.withSpan("${className}Repository.count")
+    ),
 
   exists: (id: string) =>
-    Effect.sync(() => testStore.has(id)),
+    Effect.gen(function* () {
+      const database = yield* DatabaseService;
+
+      yield* Effect.logDebug(\`Checking if ${className} exists: \${id}\`);
+
+      const result = yield* database.query((db) =>
+        db
+          .selectFrom("${fileName}s")
+          .select((eb) => eb.fn.countAll().as("count"))
+          .where("id", "=", id)
+          .executeTakeFirstOrThrow()
+          .then((result) => Number(result.count) > 0)
+      );
+
+      yield* Effect.logDebug(\`${className} exists check: \${id} = \${result}\`);
+
+      return result;
+    }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          ${className}TimeoutError.create("exists", 30000)
+      }),
+      Effect.withSpan("${className}Repository.exists")
+    ),
 };`)
 
   return builder.toString()

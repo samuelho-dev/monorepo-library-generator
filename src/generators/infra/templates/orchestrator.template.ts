@@ -24,64 +24,57 @@ import { Context, Effect, Layer } from "effect"
 ${providerImports}
 
 /**
- * ClusterOrchestrator service interface
+ * ClusterOrchestrator service
  *
- * Provides high-level cluster coordination across multiple providers
+ * Provides high-level cluster coordination across multiple providers using Effect 3.0+ Context.Tag pattern.
  */
-export interface ClusterOrchestrator {
-  /**
-   * Coordinate cluster bootstrap across all providers
-   */
-  readonly bootstrap: Effect.Effect<void, Error, ${providerDeps}>
-
-  /**
-   * Coordinate cluster health check across all providers
-   */
-  readonly healthCheck: Effect.Effect<boolean, Error, ${providerDeps}>
-
-  /**
-   * Coordinate cluster teardown across all providers
-   */
-  readonly teardown: Effect.Effect<void, Error, ${providerDeps}>
-}
-
-/**
- * ClusterOrchestrator service tag
- */
-export const ClusterOrchestrator = Context.GenericTag<ClusterOrchestrator>("@infra/ClusterOrchestrator")
-
-/**
- * ClusterOrchestrator implementation
- */
-export const makeClusterOrchestrator = Effect.gen(function* () {
-${options.providers.map((p) => `  const ${p} = yield* ${toClassName(p)}`).join("\n")}
-
-  return ClusterOrchestrator.of({
-    bootstrap: Effect.gen(function* () {
-      // TODO: Implement multi-provider bootstrap coordination
-      yield* Effect.logInfo("Coordinating cluster bootstrap")
-    }),
-
-    healthCheck: Effect.gen(function* () {
-      // TODO: Implement multi-provider health check
-      yield* Effect.logInfo("Coordinating cluster health check")
-      return true
-    }),
-
-    teardown: Effect.gen(function* () {
-      // TODO: Implement multi-provider teardown coordination
-      yield* Effect.logInfo("Coordinating cluster teardown")
-    })
-  })
-})
-
-/**
- * ClusterOrchestrator live layer
- */
-export const ClusterOrchestratorLive = Layer.effect(
+export class ClusterOrchestrator extends Context.Tag("@infra/ClusterOrchestrator")<
   ClusterOrchestrator,
-  makeClusterOrchestrator
-)
+  {
+    /**
+     * Coordinate cluster bootstrap across all providers
+     */
+    readonly bootstrap: Effect.Effect<void, Error, ${providerDeps}>
+
+    /**
+     * Coordinate cluster health check across all providers
+     */
+    readonly healthCheck: Effect.Effect<boolean, Error, ${providerDeps}>
+
+    /**
+     * Coordinate cluster teardown across all providers
+     */
+    readonly teardown: Effect.Effect<void, Error, ${providerDeps}>
+  }
+>() {
+  /**
+   * Live Layer - Production implementation
+   */
+  static readonly Live = Layer.effect(
+    this,
+    Effect.gen(function* () {
+${options.providers.map((p) => `      const ${p} = yield* ${toClassName(p)}`).join("\n")}
+
+      return {
+        bootstrap: Effect.gen(function* () {
+          // TODO: Implement multi-provider bootstrap coordination
+          yield* Effect.logInfo("Coordinating cluster bootstrap")
+        }).pipe(Effect.withSpan("ClusterOrchestrator.bootstrap")),
+
+        healthCheck: Effect.gen(function* () {
+          // TODO: Implement multi-provider health check
+          yield* Effect.logInfo("Coordinating cluster health check")
+          return true
+        }).pipe(Effect.withSpan("ClusterOrchestrator.healthCheck")),
+
+        teardown: Effect.gen(function* () {
+          // TODO: Implement multi-provider teardown coordination
+          yield* Effect.logInfo("Coordinating cluster teardown")
+        }).pipe(Effect.withSpan("ClusterOrchestrator.teardown"))
+      }
+    })
+  )
+}
 `
 }
 

@@ -1,147 +1,86 @@
 /**
- * Feature Generator MCP Tool Handler
+ * Feature Generator MCP Tool Handler (Refactored)
  *
- * Handles feature library generation via MCP protocol.
- * Uses Effect Schema for validation and existing Nx generators.
+ * Handles feature library generation via MCP protocol using unified infrastructure.
  */
 
-import { Effect, Option } from "effect"
-import { exec } from "node:child_process"
-import { promisify } from "node:util"
-import { decodeFeatureArgs } from "../schemas/feature.schema"
-import { buildGeneratorCommand, getExecutionMode } from "../utils/command-builder"
-import { formatErrorResult, formatSuccessResult } from "../utils/result-formatter"
-import { formatParseError } from "../utils/validation"
-import { detectWorkspace } from "../utils/workspace-detector"
-
-const execAsync = promisify(exec)
+import { Effect, ParseResult } from "effect"
+import { generateFeatureCore } from "../../generators/core/feature"
+import { createExecutor } from "../../infrastructure/execution/executor"
+import { formatErrorResponse, formatOutput, formatValidationError } from "../../infrastructure/output/formatter"
+import { decodeFeatureInput } from "../../infrastructure/validation/registry"
+import { ValidationError } from "../utils/validation"
+import type { McpResponse } from "../../infrastructure/output/formatter"
 
 /**
- * Handle feature generation with Effect Schema validation
+ * Create feature executor using unified infrastructure
+ */
+const featureExecutor = createExecutor(
+  "feature",
+  generateFeatureCore,
+  (validated, metadata) => {
+    const dataAccessLibrary = validated["dataAccessLibrary"] as string | undefined
+    const includeClientState = (validated["includeClientState"] as boolean | undefined) ?? false
+    return {
+      ...metadata,
+      ...(dataAccessLibrary !== undefined && { dataAccessLibrary }),
+      includeClientState
+    }
+  }
+)
+
+/**
+ * Handle feature generation with unified infrastructure
  */
 export const handleGenerateFeature = (input: unknown) =>
-  Effect.gen(function*() {
-    // 1. Validate input with Effect Schema
-    const validationResult = yield* decodeFeatureArgs(input).pipe(
-      Effect.either
+  Effect.gen(function* () {
+    // 1. Validate input using proper error channel
+    const validated = yield* decodeFeatureInput(input).pipe(
+      Effect.mapError((parseError) =>
+        new ValidationError({
+          message: ParseResult.TreeFormatter.formatErrorSync(parseError),
+          cause: parseError
+        })
+      )
     )
 
-    if (validationResult._tag === "Left") {
-      const errorMessage = formatParseError(validationResult.left)
-      return {
-        success: false,
-        message: `❌ Validation Error:\n\n${errorMessage}\n\n💡 Check your input parameters and try again.`
-      }
-    }
-
-    const args = validationResult.right
-
-    // 2. Auto-detect workspace
-    const workspaceResult = yield* detectWorkspace(args.workspaceRoot).pipe(
-      Effect.either
-    )
-
-    if (workspaceResult._tag === "Left") {
-      return {
-        success: false,
-        message: formatErrorResult(workspaceResult.left)
-      }
-    }
-
-    const workspace = workspaceResult.right
-
-    // 3. Handle dry-run mode
-    if (args.dryRun) {
+    // 2. Handle dry-run mode
+    if (validated.dryRun) {
       return {
         success: true,
         message: [
           "🔍 DRY RUN MODE",
           "",
-          `Would generate feature library: feature-${args.name}`,
+          `Would generate feature library: feature-${validated.name}`,
           "",
           "📦 Configuration:",
-          `  - Name: ${args.name}`,
-          `  - Workspace: ${workspace.root}`,
-          `  - Scope: ${workspace.scope}`,
-          `  - Type: ${workspace.type}`,
-          `  - Mode: ${getExecutionMode(workspace)}`,
-          `  - Platform: ${args.platform}`,
-          `  - Client/Server: ${args.includeClientServer}`,
-          `  - RPC: ${args.includeRPC}`,
-          `  - CQRS: ${args.includeCQRS}`,
-          `  - Edge: ${args.includeEdge}`,
+          `  - Name: ${validated.name}`,
+          `  - Data Access Library: ${validated.dataAccessLibrary || "none"}`,
+          `  - Include Client State: ${validated.includeClientState ?? false}`,
           "",
           "To actually generate files, set dryRun: false"
         ].join("\n")
       }
     }
 
-    // 4. Build Nx generate command
-    const directory = Option.getOrElse(() => "libs/feature")(args.directory)
-    const description = Option.getOrUndefined(args.description)
-    const tags = Option.getOrUndefined(args.tags)
-
-    const cliArgs: Array<string> = [
-      `--name=${args.name}`,
-      `--directory=${directory}`,
-      `--platform=${args.platform}`,
-      ...(description ? [`--description="${description}"`] : []),
-      ...(args.includeClientServer ? ["--includeClientServer=true"] : []),
-      ...(args.includeRPC ? ["--includeRPC=true"] : []),
-      ...(args.includeCQRS ? ["--includeCQRS=true"] : []),
-      ...(args.includeEdge ? ["--includeEdge=true"] : []),
-      ...(tags ? [`--tags=${tags}`] : []),
-      "--no-interactive"
-    ]
-
-    const command = buildGeneratorCommand(workspace, "feature", cliArgs)
-
-    // 5. Run generator (Nx or CLI mode based on workspace type)
-    const generatorResult = yield* Effect.tryPromise({
-      try: async () => {
-        const { stderr, stdout } = await execAsync(command, {
-          cwd: workspace.root,
-          env: { ...process.env, NX_DAEMON: "false" }
-        })
-        return { stdout, stderr }
-      },
-      catch: (error) => error
-    }).pipe(Effect.either)
-
-    if (generatorResult._tag === "Left") {
-      return {
+    // 3. Execute generator with proper error handling
+    return yield* featureExecutor
+      .execute({
+        ...validated,
+        __interfaceType: "mcp" as const
+      })
+      .pipe(
+        Effect.map((result) => formatOutput(result, "mcp")),
+        Effect.catchTag("GeneratorExecutionError", (error) =>
+          Effect.succeed(formatErrorResponse(error))
+        )
+      )
+  }).pipe(
+    // Handle validation errors at top level
+    Effect.catchTag("ValidationError", (error) =>
+      Effect.succeed({
         success: false,
-        message: formatErrorResult(generatorResult.left)
-      }
-    }
-
-    // 6. Format success response
-    const libraryName = `feature-${args.name}`
-    const projectRoot = `${Option.getOrElse(() => "libs/feature")(args.directory)}/${args.name}`
-
-    const platformExports = args.platform === "universal" || args.includeClientServer
-      ? ["server", "client"]
-      : [args.platform]
-
-    return {
-      success: true,
-      message: formatSuccessResult({
-        libraryType: "feature",
-        libraryName,
-        filesCreated: [
-          `${projectRoot}/package.json`,
-          `${projectRoot}/tsconfig.json`,
-          `${projectRoot}/src/index.ts`,
-          ...platformExports.map((p) => `${projectRoot}/src/${p}.ts`),
-          `${projectRoot}/src/lib/server/service.ts`,
-          `${projectRoot}/src/lib/server/layers.ts`
-        ],
-        workspaceType: workspace.type,
-        nextSteps: [
-          `Run \`${workspace.packageManager} install\` to install dependencies`,
-          `Import service: \`import { ${args.name}Service } from '${workspace.scope}/${libraryName}/server'\``
-        ]
-      }),
-      files: []
-    }
-  })
+        message: formatValidationError(error.message)
+      } as McpResponse)
+    )
+  )

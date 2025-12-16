@@ -1,24 +1,26 @@
 /**
- * Feature Service Interface Template
+ * Feature Service Template
  *
- * Generates server/service/interface.ts with Context.Tag definition
+ * Generates server/service/service.ts with Context.Tag definition
  *
- * @module monorepo-library-generator/feature/service/interface-template
+ * @module monorepo-library-generator/feature/service/service-template
  */
 
 import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
 import type { FeatureTemplateOptions } from "../../../../utils/shared/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
- * Generate server/service/interface.ts file
+ * Generate server/service/service.ts file
  *
  * Creates Context.Tag interface with static layers
  */
-export function generateFeatureServiceInterfaceFile(
+export function generateFeatureServiceFile(
   options: FeatureTemplateOptions
 ) {
   const builder = new TypeScriptBuilder()
   const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Service Interface`,
@@ -53,6 +55,11 @@ Bundle optimization:
       isTypeOnly: true
     }
   ])
+  builder.addBlankLine()
+
+  // Add baseline integration imports
+  builder.addComment("Baseline Integration - Repository")
+  builder.addRaw(`import { ${className}Repository } from "${scope}/data-access-${fileName}";`)
   builder.addBlankLine()
 
   // Service interface
@@ -475,33 +482,45 @@ export class ${className}Service extends Context.Tag("${className}Service")<
   /**
    * Live Layer - Production implementation
    *
-   * TODO: Add actual dependencies via Effect.gen when you need to yield
-   * Example:
-   *   Effect.gen(function* () {
-   *     const repo = yield* UserRepository;
-   *     const logger = yield* LoggingService;
-   *     return { ... }
-   *   })
+   * BASELINE INTEGRATION:
+   * - Repository is injected and ready to use
+   * - Effect.log* methods for observability
+   * - Shows proper error transformation patterns
    */
   static readonly Live = Layer.effect(
     this,
-    Effect.sync(() => {
-      // TODO: Inject dependencies using Effect.gen if you need to yield
-      // const repo = yield* UserRepository;
+    Effect.gen(function* () {
+      // Inject repository (available for use in operations below)
+      const repo = yield* ${className}Repository;
+      void repo; // Mark as available but not used in placeholder implementation
 
       return {
         exampleOperation: () =>
-          Effect.sync(() => {
-            // TODO: Implement business logic using Effect.gen if you need to yield
-            // Effect.gen(function* () {
-            //   const data = yield* repo.findAll();
-            //   return { success: true, data };
-            // })
+          Effect.gen(function* () {
+            // Log operation start (using Effect's built-in logging)
+            yield* Effect.logInfo("${className} example operation started");
 
-            return {
-              success: true
-            };
-          })
+            // Example: Using repository with error transformation
+            // const result = yield* repo.findById("example-id").pipe(
+            //   Effect.mapError((repoError) =>
+            //     new ${className}Error({
+            //       message: "Failed to fetch ${fileName}",
+            //       cause: repoError,
+            //     })
+            //   )
+            // );
+
+            // Example: Orchestrating multiple operations
+            // const data = yield* repo.findAll();
+            // yield* Effect.logInfo(\`Fetched ${fileName} data (count: \${data.total})\`);
+
+            // Placeholder: Implement your business logic here
+            yield* Effect.logInfo("${className} example operation completed");
+
+            // Note: Return type issue - ${className}Result is Record<string, never>
+            // Update lib/shared/types.ts to define proper result shape
+            return {} as ${className}Result;
+          }),
       };
     })
   );
@@ -513,16 +532,14 @@ export class ${className}Service extends Context.Tag("${className}Service")<
     this,
     {
       exampleOperation: () =>
-        Effect.succeed({
-          success: true
-        })
+        Effect.succeed({} as ${className}Result)
     }
   );
 
   /**
    * Dev Layer - Development with enhanced logging
    *
-   * Wraps Live layer with request/response logging for debugging.
+   * Same implementation as Live but with enhanced debug logging.
    * Use this layer during local development to see operation flow.
    */
   static readonly Dev = Layer.effect(
@@ -530,18 +547,34 @@ export class ${className}Service extends Context.Tag("${className}Service")<
     Effect.gen(function* () {
       yield* Effect.logInfo(\`[${className}Service] [DEV] Initializing development layer\`);
 
-      // Get actual implementation from Live layer
-      const liveService = yield* ${className}Service.Live.pipe(
-        Layer.build,
-        Effect.andThen(${className}Service)
-      );
+      // Inject repository (same as Live layer)
+      const repo = yield* ${className}Repository;
+      void repo; // Mark as available but not used in placeholder implementation
 
-      // Wrap operations with logging
+      // Return service implementation with enhanced logging
       return {
         exampleOperation: () =>
           Effect.gen(function* () {
             yield* Effect.logDebug(\`[${className}Service] [DEV] exampleOperation called\`);
-            const result = yield* liveService.exampleOperation();
+
+            // Log operation start
+            yield* Effect.logInfo("${className} example operation started [DEV MODE]");
+
+            // Example: Using repository with error transformation
+            // const result = yield* repo.findById("example-id").pipe(
+            //   Effect.tap(() => Effect.logDebug("[DEV] Repository call completed")),
+            //   Effect.mapError((repoError) =>
+            //     new ${className}Error({
+            //       message: "Failed to fetch ${fileName}",
+            //       cause: repoError,
+            //     })
+            //   )
+            // );
+
+            // Placeholder: Implement your business logic here
+            yield* Effect.logInfo("${className} example operation completed [DEV MODE]");
+
+            const result = {} as ${className}Result;
             yield* Effect.logDebug(\`[${className}Service] [DEV] exampleOperation result:\`, result);
             return result;
           })

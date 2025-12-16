@@ -48,27 +48,38 @@ TODO: Customize this file:
   builder.addRaw(`/**
  * ${className} Entity
  *
- * TODO: Replace with actual entity type/interface
- * Should include:
- * - id: unique identifier
- * - createdAt: timestamp
- * - updatedAt: timestamp
- * - domain-specific properties
+ * Represents a ${fileName} record from the database.
+ *
+ * TODO: Add your domain-specific properties here
+ *
+ * Common patterns:
+ * - Business identifiers: email, username, sku, slug, etc.
+ * - Attributes: name, title, description, status, type, etc.
+ * - Numeric values: price, quantity, rating, score, etc.
+ * - Metadata: version, tags, metadata object, settings, etc.
+ * - Relationships: userId, organizationId, parentId (foreign keys)
+ * - Flags: isActive, isPublished, isDeleted, isFeatured, etc.
+ * - Dates: publishedAt, expiresAt, completedAt, etc.
  *
  * @example
  * \`\`\`typescript
- * interface Product {
- *   id: string;
- *   name: string;
- *   price: number;
- *   createdAt: Date;
- *   updatedAt: Date;
+ * export interface Product {
+ *   readonly id: string;
+ *   readonly sku: string;
+ *   readonly name: string;
+ *   readonly description: string;
+ *   readonly price: number;
+ *   readonly category: string;
+ *   readonly inStock: boolean;
+ *   readonly tags: readonly string[];
+ *   readonly createdAt: Date;
+ *   readonly updatedAt: Date;
  * }
  * \`\`\`
  */
 export interface ${className} {
   readonly id: string;
-  // TODO: Add entity properties
+  // TODO: Add entity properties (see JSDoc examples above)
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }`)
@@ -129,25 +140,33 @@ export type ${className}UpdateInput = Partial<
   builder.addRaw(`/**
  * ${className} Filter Options
  *
- * TODO: Add domain-specific filter properties
- * Examples:
- * - status?: 'active' | 'inactive'
- * - search?: string
- * - createdAfter?: Date
- * - categories?: string[]
+ * Define filterable properties for queries.
+ *
+ * TODO: Replace with actual filter fields based on your entity properties
+ *
+ * Common patterns:
+ * - Equality filters: status, category, type, tag
+ * - Range filters: minPrice, maxPrice, minDate, maxDate
+ * - Text search: search (full-text), name (partial match), email
+ * - Array filters: ids, tags, categories (multiple values)
+ * - Boolean flags: isActive, isPublished, isDeleted
+ * - Date ranges: createdAfter, createdBefore, updatedSince
  *
  * @example
  * \`\`\`typescript
- * interface ProductFilter {
- *   status?: 'active' | 'inactive';
- *   minPrice?: number;
- *   maxPrice?: number;
- *   categoryId?: string;
+ * export interface ProductFilter {
+ *   readonly category?: string;
+ *   readonly minPrice?: number;
+ *   readonly maxPrice?: number;
+ *   readonly inStock?: boolean;
+ *   readonly tags?: readonly string[];
+ *   readonly search?: string;
+ *   readonly createdAfter?: Date;
  * }
  * \`\`\`
  */
 export interface ${className}Filter {
-  // TODO: Add filter properties
+  // TODO: Add filter properties (see JSDoc examples above)
   readonly search?: string;
 }`)
   builder.addBlankLine()

@@ -19,6 +19,15 @@ import { Data, Effect, Either } from "effect"
 import type { DotfileName } from "./dotfiles"
 
 // ==========================================
+// JSON Type Definitions
+// ==========================================
+
+type JsonPrimitive = string | number | boolean | null
+type JsonArray = ReadonlyArray<JsonValue>
+type JsonObject = { readonly [key: string]: JsonValue }
+type JsonValue = JsonPrimitive | JsonArray | JsonObject
+
+// ==========================================
 // Error Types
 // ==========================================
 
@@ -175,7 +184,7 @@ export const parseJsonSafe = (content: string) => {
  * @param effect - Effect.ts configuration object
  * @returns Merged configuration with Effect.ts taking precedence
  */
-export const deepMergeJson = (user: any, effect: any) => {
+export const deepMergeJson = (user: JsonValue, effect: JsonValue): JsonValue => {
   // Primitives and null: Effect.ts wins
   if (typeof effect !== "object" || effect === null) {
     return effect
@@ -186,25 +195,30 @@ export const deepMergeJson = (user: any, effect: any) => {
     return effect
   }
 
+  // Type guard for JsonObject
+  const isJsonObject = (val: JsonValue): val is JsonObject => {
+    return typeof val === "object" && val !== null && !Array.isArray(val)
+  }
+
+  // Effect must be an object at this point (arrays returned above)
+  if (!isJsonObject(effect)) {
+    return effect
+  }
+
   // Objects: Deep merge
-  const result = { ...user }
+  // If user is not an object, start with empty object
+  const userObj = isJsonObject(user) ? user : {}
+  const result: Record<string, JsonValue> = { ...userObj }
 
   for (const key in effect) {
     if (Object.prototype.hasOwnProperty.call(effect, key)) {
       const effectValue = effect[key]
-      const userValue = user?.[key]
+      const userValue = userObj[key]
 
-      if (
-        typeof effectValue === "object" &&
-        effectValue !== null &&
-        !Array.isArray(effectValue) &&
-        typeof userValue === "object" &&
-        userValue !== null &&
-        !Array.isArray(userValue)
-      ) {
+      if (effectValue !== undefined && userValue !== undefined && isJsonObject(effectValue) && isJsonObject(userValue)) {
         // Recursively merge nested objects
         result[key] = deepMergeJson(userValue, effectValue)
-      } else {
+      } else if (effectValue !== undefined) {
         // Effect.ts value wins (primitives, arrays, null)
         result[key] = effectValue
       }

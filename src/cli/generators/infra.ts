@@ -1,126 +1,64 @@
 /**
- * Infrastructure Generator for CLI (Effect Wrapper)
+ * Infra Generator for CLI (Refactored)
  *
- * Wrapper that integrates infrastructure generator core with Effect-based CLI.
- *
- * Two-Phase Generation:
- * 1. **Infrastructure Phase**: Uses infrastructure.ts to generate
- *    all infrastructure files (package.json, tsconfig files, vitest.config.ts, etc.)
- * 2. **Domain Phase**: Delegates to infra-generator-core.ts for domain-specific
- *    files (service, providers, configuration, etc.)
- *
- * The infrastructure generator ensures:
- * - Complete infrastructure (7 files)
- * - Consistent behavior with Nx generators
- * - Platform-aware exports (client/server/edge)
- *
- * @module monorepo-library-generator/cli/generators/infra
+ * Uses unified infrastructure for consistent generation.
  */
 
 import { Console, Effect } from "effect"
-import { generateInfraCore, type GeneratorResult } from "../../generators/core/infra"
-import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
-import { generateLibraryInfrastructure } from "../../utils/infrastructure"
-import type { PlatformType } from "../../utils/platforms"
-import { addDotfilesToLibrary } from "../../utils/shared/dotfile-generation"
+import { generateInfraCore } from "../../generators/core/infra"
+import { createExecutor } from "../../infrastructure/execution/executor"
+import { formatOutput } from "../../infrastructure/output/formatter"
 
-/**
- * Infrastructure Generator Options (CLI)
- */
 export interface InfraGeneratorOptions {
   readonly name: string
   readonly description?: string
   readonly tags?: string
-  readonly platform?: PlatformType
+  readonly infraType?: "database" | "cache" | "queue" | "logging" | "metrics" | "pubsub"
+  readonly platform?: "node" | "browser" | "universal" | "edge"
+  readonly includeClient?: boolean
+  readonly includeServer?: boolean
   readonly includeClientServer?: boolean
-  readonly includeEdge?: boolean
+  readonly projectRoot?: string
 }
 
-/**
- * Generate Infrastructure Library (CLI)
- *
- * Two-phase generation process:
- * 1. Infrastructure Phase: Generates package.json, tsconfig, project.json
- * 2. Domain Phase: Generates domain-specific files via core generator
- *
- * Uses Effect-native FileSystem operations for cross-platform compatibility.
- */
-export function generateInfra(options: InfraGeneratorOptions) {
-  return Effect.gen(function*() {
-    const workspaceRoot = yield* Effect.sync(() => process.cwd())
-    const adapter = yield* createEffectFsAdapter(workspaceRoot)
+const infraExecutor = createExecutor(
+  "infra",
+  generateInfraCore,
+  (input, metadata) => {
+    const platform = input["platform"] as "node" | "browser" | "universal" | "edge" | undefined
+    const includeClientServer = input["includeClientServer"] as boolean | undefined
+    const includeClient = input["includeClient"] as boolean | undefined
+    const includeServer = input["includeServer"] as boolean | undefined
 
-    yield* Console.log(`Creating infrastructure library: ${options.name}...`)
-
-    // Compute naming variants
-    const { names } = yield* Effect.promise(() => import("@nx/devkit"))
-    const nameVariants = names(options.name)
-
-    // Compute project identifiers
-    const projectName = `infra-${nameVariants.fileName}`
-    const projectRoot = `libs/infra/${nameVariants.fileName}`
-    const sourceRoot = `${projectRoot}/src`
-    const packageName = `@custom-repo/${projectName}`
-    const description = options.description || `${nameVariants.className} infrastructure library`
-    const platform = options.platform || "node"
-
-    // Parse tags
-    const tagsString = options.tags || `type:infra,scope:shared,platform:${platform}`
-    const tags = tagsString.split(",").map((t) => t.trim())
-
-    // Phase 1: Generate infrastructure files using infrastructure generator
-    yield* generateLibraryInfrastructure(adapter, {
-      projectName,
-      projectRoot,
-      sourceRoot,
-      packageName,
-      description,
-      libraryType: "infra",
-      platform,
-      offsetFromRoot: "../../..",
-      tags,
-      ...(options.includeClientServer !== undefined && { includeClientServer: options.includeClientServer }),
-      ...(options.includeEdge !== undefined && { includeEdgeExports: options.includeEdge })
-    })
-
-    // Add dotfiles to library
-    yield* addDotfilesToLibrary(adapter, {
-      projectRoot,
-      merge: true
-    })
-
-    // Prepare core options
-    const coreOptions = {
-      name: options.name,
-      className: nameVariants.className,
-      propertyName: nameVariants.propertyName,
-      fileName: nameVariants.fileName,
-      constantName: nameVariants.constantName,
-      projectName,
-      projectRoot,
-      sourceRoot,
-      packageName,
-      description,
-      tags: tagsString,
-      offsetFromRoot: "../../..",
-      workspaceRoot,
-      platform,
-      ...(options.includeClientServer !== undefined && { includeClientServer: options.includeClientServer }),
-      ...(options.includeEdge !== undefined && { includeEdge: options.includeEdge })
+    const result: any = {
+      ...metadata
     }
 
-    // Phase 2: Generate domain files via core generator
-    const result: GeneratorResult = yield* generateInfraCore(adapter, coreOptions)
+    if (platform !== undefined) {
+      result.platform = platform
+    }
 
-    // Display CLI output
-    yield* Console.log("✨ Infrastructure library created successfully!")
-    yield* Console.log(`  Location: ${result.projectRoot}`)
-    yield* Console.log(`  Package: ${result.packageName}`)
-    yield* Console.log(`  Files generated: ${result.filesGenerated.length}`)
-    yield* Console.log(`\nNext steps:`)
-    yield* Console.log(`  1. cd ${result.projectRoot}`)
-    yield* Console.log(`  2. Customize service implementation`)
-    yield* Console.log(`  3. pnpm install && pnpm build`)
+    if (includeClientServer !== undefined) {
+      result.includeClientServer = includeClientServer
+    } else if (includeClient && includeServer) {
+      result.includeClientServer = true
+    }
+
+    return result
+  }
+)
+
+export function generateInfra(options: InfraGeneratorOptions) {
+  return Effect.gen(function* () {
+    yield* Console.log(`Creating infra library: ${options.name}...`)
+
+    const result = yield* infraExecutor.execute({
+      ...options,
+      __interfaceType: "cli" as const
+    })
+
+    const output = formatOutput(result, "cli")
+    yield* Console.log(output)
 
     return result
   })

@@ -44,6 +44,21 @@ export interface DataAccessGeneratorSchema {
    */
   readonly description?: string
 
+  /**
+   * Tags to add to the library
+   */
+  readonly tags?: string
+
+  /**
+   * Contract library to use for domain entities
+   */
+  readonly contractLibrary?: string
+
+  /**
+   * Include cache support
+   */
+  readonly includeCache?: boolean
+
   // Dotfile generation options (Effect.ts code quality enforcement)
   // Only library-specific dotfiles (eslint.config.mjs, tsconfig.json) are added
   addDotfiles?: boolean // Default: true

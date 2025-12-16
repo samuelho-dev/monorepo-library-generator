@@ -46,7 +46,7 @@ Example:
     },
     {
       from: "../../errors",
-      imports: [`${className}NotFoundError`]
+      imports: [`${className}NotFoundError`, `${className}InternalError`, `${className}TimeoutError`]
     }
   ])
   builder.addBlankLine()
@@ -96,8 +96,20 @@ export const deleteOperations: Delete${className}Operations = {
       // });
 
       yield* Effect.logWarning(\`Delete operation called for id \${id} but not implemented\`);
-      return yield* Effect.dieMessage("Delete operation not implemented - replace with ${externalService} SDK call");
+      return yield* Effect.fail(
+        new ${className}InternalError({
+          message: "Delete operation not implemented - replace with ${externalService} SDK call"
+        })
+      );
     }).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(30),
+        onTimeout: () =>
+          new ${className}TimeoutError({
+            message: "Delete operation timed out",
+            timeout: 30000,
+          }),
+      }),
       Effect.retry(
         Schedule.exponential(Duration.millis(100)).pipe(
           Schedule.compose(Schedule.recurs(3))

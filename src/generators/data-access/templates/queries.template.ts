@@ -40,7 +40,7 @@ Encapsulates common query patterns and SQL building logic.
       isTypeOnly: true
     },
     {
-      from: "@custom-repo/types-database",
+      from: "@custom-repo/infra-database",
       imports: ["Database"],
       isTypeOnly: true
     }

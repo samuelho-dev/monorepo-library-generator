@@ -8,6 +8,7 @@
 
 import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
 import type { FeatureTemplateOptions } from "../../../utils/shared/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate server/service.ts file for feature library
@@ -17,6 +18,7 @@ import type { FeatureTemplateOptions } from "../../../utils/shared/types"
 export function generateServiceFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
   const { className, fileName, name } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header with extensive documentation
   builder.addFileHeader({
@@ -38,6 +40,17 @@ TODO: Uncomment and customize these imports based on your needs:`
     { from: "effect", imports: ["Context", "Effect", "Layer", "Schedule"] },
     { from: "../shared/errors", imports: [`${className}Error`] }
   ])
+  builder.addBlankLine()
+
+  // Add baseline integration example imports (commented)
+  builder.addComment("BASELINE INTEGRATION EXAMPLE (Uncomment to use)")
+  builder.addRaw(`// Import your data-access repository:
+// import { ${className}Repository } from "${scope}/data-access-${fileName}";
+//
+// Import infrastructure services:
+// import { LoggingService } from "${scope}/infra-logging";
+// import { CacheService } from "${scope}/infra-cache";
+// import { MetricsService } from "${scope}/infra-metrics";`)
   builder.addBlankLine()
 
   // Add example dependency imports section
@@ -75,32 +88,33 @@ TODO: Uncomment and customize these imports based on your needs:`
     this,
     Effect.gen(function* () {
       // ========================================================================
-      // Dependency Injection Examples
+      // BASELINE INTEGRATION EXAMPLE (Uncomment to use)
+      // ========================================================================
+      //
+      // // 1. Inject your repository
+      // const repo = yield* ${className}Repository;
+      //
+      // // 2. Inject infrastructure services
+      // const logger = yield* LoggingService;
+      // const cache = yield* CacheService;
+      // const metrics = yield* MetricsService;
+      //
+      // ========================================================================
+      // Additional Dependency Injection Examples
       // ========================================================================
       //
       // PATTERN: Yield dependencies using \`yield*\` operator
       // These services will be provided by Layer composition at runtime
       //
-      // Example 1: Inject a repository
-      // const userRepo = yield* UserRepository;
-      //
-      // Example 2: Inject infrastructure services
-      // const logger = yield* LoggingService;
-      // const cache = yield* CacheService;
-      //
-      // Example 3: Inject external service providers
+      // Example 1: Inject external service providers
       // const stripe = yield* StripeService;
       // const email = yield* ResendService;
       //
-      // Example 4: Inject other feature services
+      // Example 2: Inject other feature services
       // const auth = yield* AuthService;
       // const notifications = yield* NotificationService;
       //
       // ========================================================================
-
-      // TODO: Uncomment and add your actual dependencies here
-      // const logger = yield* LoggingService;
-      // const repo = yield* UserRepository;
 
       return {
         exampleOperation: () =>

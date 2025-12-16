@@ -100,11 +100,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
     })()
 
+    // Extract message from result based on type
+    let message: string
+    if (typeof result === "string") {
+      message = result
+    } else if (typeof result === "function") {
+      message = "✅ Generation completed successfully"
+    } else if (result && typeof result === "object" && "message" in result) {
+      message = result.message
+    } else {
+      message = "✅ Operation completed successfully"
+    }
+
     return {
       content: [
         {
           type: "text",
-          text: result.message
+          text: message
         }
       ]
     }

@@ -20,7 +20,7 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
   builder.addFileHeader({
     title: `${className} Service Layers`,
     description:
-      `Layer compositions for server-side dependency injection using Effect.\nProvides additional layer variants for different environments and use cases.\n\nNOTE: The primary Live and Test layers are now static members of ${className}Service\n(see ../service/interface.ts). This file provides optional additional layer variants.`,
+      `Layer compositions for server-side dependency injection using Effect.\nProvides additional layer variants for different environments and use cases.\n\nNOTE: The primary Live and Test layers are now static members of ${className}Service\n(see ../service/service.ts). This file provides optional additional layer variants.`,
     module: `@custom-repo/infra-${fileName}/layers`,
     see: [
       "https://effect.website/docs/guides/context-management for layer patterns"
@@ -31,9 +31,9 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
   builder.addImports([
     {
       from: "effect",
-      imports: ["Layer", "Effect", "Option", "Context", "Schedule"]
+      imports: ["Layer", "Effect", "Option"]
     },
-    { from: "../service/interface", imports: [`${className}Service`] }
+    { from: "../service/service", imports: [`${className}Service`] }
   ])
 
   // Section: Primary Layers Comment
@@ -93,29 +93,36 @@ export const ${className}ServiceDev = Layer.effect(
     yield* Effect.logInfo("[${className}] Development layer initialized");
 
     return {
-      get: () =>
+      get: (id: string) =>
         Effect.gen(function* () {
-          yield* Effect.logDebug(\`[${className}] DEV GET\`);
+          yield* Effect.logDebug(\`[${className}] DEV GET id=\${id}\`);
           return Option.none();
         }),
-      findByCriteria: () =>
+      findByCriteria: (
+        criteria: Record<string, unknown>,
+        skip?: number,
+        limit?: number
+      ) =>
         Effect.gen(function* () {
-          yield* Effect.logDebug(\`[${className}] DEV findByCriteria\`);
+          yield* Effect.logDebug(
+            \`[${className}] DEV findByCriteria\`,
+            { criteria, skip, limit }
+          );
           return [];
         }),
-      create: (input) =>
+      create: (input: Record<string, unknown>) =>
         Effect.gen(function* () {
           yield* Effect.logDebug(\`[${className}] DEV create\`, input);
           return { id: "dev-id", ...input };
         }),
-      update: (_, input) =>
+      update: (id: string, input: Record<string, unknown>) =>
         Effect.gen(function* () {
-          yield* Effect.logDebug(\`[${className}] DEV update\`, input);
-          return { id: "dev-id", ...input };
+          yield* Effect.logDebug(\`[${className}] DEV update id=\${id}\`, input);
+          return { id, ...input };
         }),
-      delete: () =>
+      delete: (id: string) =>
         Effect.gen(function* () {
-          yield* Effect.logDebug(\`[${className}] DEV delete\`);
+          yield* Effect.logDebug(\`[${className}] DEV delete id=\${id}\`);
         }),
       healthCheck: () =>
         Effect.gen(function* () {
@@ -236,16 +243,35 @@ export const ${className}ServiceCustom = (customConfig: {
       yield* Effect.logInfo("[${className}] Custom layer initialized with", defaults);
 
       return {
-        get: () =>
+        get: (id: string) =>
           Effect.gen(function* () {
             // Use custom config in implementation
-            yield* Effect.logDebug(\`[${className}] GET with \${defaults.timeout}ms timeout\`);
+            yield* Effect.logDebug(\`[${className}] GET id=\${id} with \${defaults.timeout}ms timeout\`);
             return Option.none();
           }),
-        findByCriteria: () => Effect.succeed([]),
-        create: (input) => Effect.succeed({ id: "custom-id", ...input }),
-        update: (_, input) => Effect.succeed({ id: "custom-id", ...input }),
-        delete: () => Effect.void,
+        findByCriteria: (
+          criteria: Record<string, unknown>,
+          skip?: number,
+          limit?: number
+        ) =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug(\`[${className}] findByCriteria\`, { criteria, skip, limit });
+            return [];
+          }),
+        create: (input: Record<string, unknown>) =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug(\`[${className}] create\`, input);
+            return { id: "custom-id", ...input };
+          }),
+        update: (id: string, input: Record<string, unknown>) =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug(\`[${className}] update id=\${id}\`, input);
+            return { id, ...input };
+          }),
+        delete: (id: string) =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug(\`[${className}] delete id=\${id}\`);
+          }),
         healthCheck: () => Effect.succeed(true),
       };
     }),
@@ -253,45 +279,44 @@ export const ${className}ServiceCustom = (customConfig: {
   builder.addBlankLine()
 
   builder.addRaw(`/**
- * Example: Layer with Retry Policy
+ * Example: Layer with Retry Policy (Code Example)
  *
  * Shows how to wrap service methods with automatic retry logic.
  * Useful for services calling flaky external APIs.
  *
- * Uses Layer.effect (NOT Layer.scoped) because retry logic doesn't require cleanup.
+ * This is a commented example - uncomment and customize as needed.
+ * Uses Layer.effect for simple retry wrapping.
  *
- * DELETE THIS if you don't need retry policies.
- */
-export const ${className}ServiceWithRetry = Layer.effect(
-  ${className}Service,
-  Effect.gen(function* () {
-    // Get base service implementation
-    const baseService = yield* ${className}Service.Live.pipe(
-      Layer.build,
-      Effect.andThen(${className}Service)
-    );
-
-    // Wrap methods with retry policy
-    const retryPolicy = {
-      times: 3,
-      schedule: Schedule.exponential("100 millis"),
-    };
-
-    return {
-      get: (id: string) =>
-        baseService.get(id).pipe(Effect.retry(retryPolicy)),
-      findByCriteria: (criteria, skip, limit) =>
-        baseService.findByCriteria(criteria, skip, limit).pipe(Effect.retry(retryPolicy)),
-      create: (input) =>
-        baseService.create(input).pipe(Effect.retry(retryPolicy)),
-      update: (id, input) =>
-        baseService.update(id, input).pipe(Effect.retry(retryPolicy)),
-      delete: (id) =>
-        baseService.delete(id).pipe(Effect.retry(retryPolicy)),
-      healthCheck: () => baseService.healthCheck(),
-    };
-  }),
-);`)
+ * @example
+ * \`\`\`typescript
+ * // Add retry logic by wrapping the Live layer
+ * export const ${className}ServiceWithRetry = Layer.effect(
+ *   ${className}Service,
+ *   Effect.gen(function* () {
+ *     const service = yield* ${className}Service;
+ *
+ *     const retryPolicy = {
+ *       times: 3,
+ *       schedule: Schedule.exponential("100 millis"),
+ *     };
+ *
+ *     return {
+ *       get: (id: string) =>
+ *         service.get(id).pipe(Effect.retry(retryPolicy)),
+ *       findByCriteria: (criteria, skip, limit) =>
+ *         service.findByCriteria(criteria, skip, limit).pipe(Effect.retry(retryPolicy)),
+ *       create: (input) =>
+ *         service.create(input).pipe(Effect.retry(retryPolicy)),
+ *       update: (id, input) =>
+ *         service.update(id, input).pipe(Effect.retry(retryPolicy)),
+ *       delete: (id) =>
+ *         service.delete(id).pipe(Effect.retry(retryPolicy)),
+ *       healthCheck: () => service.healthCheck(),
+ *     };
+ *   }),
+ * ).pipe(Layer.provide(${className}Service.Live));
+ * \`\`\`
+ */`)
   builder.addBlankLine()
 
   // Section: Layer Composition Examples

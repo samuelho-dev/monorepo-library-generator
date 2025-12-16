@@ -49,7 +49,14 @@ export class ${className}Error extends Data.TaggedError(
 
   /** Optional underlying cause */
   readonly cause?: unknown;
-}> {}`)
+}> {
+  static create(message: string, cause?: unknown) {
+    return new ${className}Error({
+      message,
+      ...(cause !== undefined ? { cause } : {}),
+    });
+  }
+}`)
   builder.addBlankLine()
 
   // NotFound error
@@ -120,7 +127,7 @@ export class ${className}ConflictError extends Data.TaggedError(
       message: conflictingId
         ? \`Resource already exists: \${conflictingId}\`
         : "Resource already exists",
-      conflictingId,
+      ...(conflictingId !== undefined ? { conflictingId } : {}),
     });
   }
 }`)

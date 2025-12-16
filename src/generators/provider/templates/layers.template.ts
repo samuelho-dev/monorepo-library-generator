@@ -15,6 +15,7 @@
 
 import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
 import type { ProviderTemplateOptions } from "../../../utils/shared/types"
+import { getPackageName } from "../../../utils/workspace-config"
 
 /**
  * Generate layers.ts file for provider library
@@ -50,9 +51,111 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   // Imports
   builder.addImport("effect", "Layer")
   builder.addImport("effect", "Effect")
-  builder.addImport("@custom-repo/infra-env", "env")
+  builder.addImport(getPackageName("env"), "env")
   builder.addImport("./service", className)
+  builder.addImport("./errors", `${className}InternalError`)
   builder.addImport("./types", `${className}Config`, true)
+  builder.addBlankLine()
+
+  // In-Memory Store Helper
+  builder.addRaw("// ".repeat(38))
+  builder.addRaw("// In-Memory Store for Baseline Implementation")
+  builder.addRaw("// ".repeat(38))
+  builder.addRaw("//")
+  builder.addRaw("// Provides a working baseline implementation using in-memory storage.")
+  builder.addRaw("// Replace with actual SDK integration as needed.")
+  builder.addRaw("//")
+  builder.addRaw("// Benefits:")
+  builder.addRaw("// - Works immediately without SDK setup")
+  builder.addRaw("// - All type errors resolved")
+  builder.addRaw("// - Demonstrates correct Effect patterns")
+  builder.addRaw("// - Easy to replace with real SDK")
+  builder.addRaw("//")
+  builder.addRaw("// ".repeat(38))
+  builder.addBlankLine()
+  builder.addRaw("/**")
+  builder.addRaw(" * Create in-memory store for baseline implementation")
+  builder.addRaw(" *")
+  builder.addRaw(" * Provides full CRUD operations without external dependencies.")
+  builder.addRaw(" * Replace with SDK integration when ready.")
+  builder.addRaw(" */")
+  builder.addRaw("function createInMemoryStore() {")
+  builder.addRaw("  // Type-safe store with standard resource fields")
+  builder.addRaw("  interface StoreItem {")
+  builder.addRaw("    readonly id: string;")
+  builder.addRaw("    readonly createdAt: Date;")
+  builder.addRaw("    readonly updatedAt: Date;")
+  builder.addRaw("    readonly [key: string]: unknown;")
+  builder.addRaw("  }")
+  builder.addBlankLine()
+  builder.addRaw("  const store = new Map<string, StoreItem>();")
+  builder.addRaw("  let idCounter = 0;")
+  builder.addBlankLine()
+  builder.addRaw("  return {")
+  builder.addRaw("    list: (params?: { page?: number; limit?: number }) =>")
+  builder.addRaw("      Effect.sync(() => {")
+  builder.addRaw("        const page = params?.page ?? 1;")
+  builder.addRaw("        const limit = params?.limit ?? 10;")
+  builder.addRaw("        const items = Array.from(store.values());")
+  builder.addRaw("        const start = (page - 1) * limit;")
+  builder.addRaw("        const end = start + limit;")
+  builder.addRaw("        return {")
+  builder.addRaw("          data: items.slice(start, end),")
+  builder.addRaw("          page,")
+  builder.addRaw("          limit,")
+  builder.addRaw("          total: items.length,")
+  builder.addRaw("        };")
+  builder.addRaw("      }),")
+  builder.addBlankLine()
+  builder.addRaw("    get: (id: string) =>")
+  builder.addRaw("      Effect.gen(function* () {")
+  builder.addRaw("        const item = store.get(id);")
+  builder.addRaw("        if (!item) {")
+  builder.addRaw(`          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
+  builder.addRaw("        }")
+  builder.addRaw("        return item;")
+  builder.addRaw("      }),")
+  builder.addBlankLine()
+  builder.addRaw("    create: (data: Omit<StoreItem, \"id\" | \"createdAt\" | \"updatedAt\">) =>")
+  builder.addRaw("      Effect.sync(() => {")
+  builder.addRaw("        const id = `item-${++idCounter}`;")
+  builder.addRaw("        const now = new Date();")
+  builder.addRaw("        const item: StoreItem = {")
+  builder.addRaw("          id,")
+  builder.addRaw("          ...data,")
+  builder.addRaw("          createdAt: now,")
+  builder.addRaw("          updatedAt: now,")
+  builder.addRaw("        };")
+  builder.addRaw("        store.set(id, item);")
+  builder.addRaw("        return item;")
+  builder.addRaw("      }),")
+  builder.addBlankLine()
+  builder.addRaw("    update: (id: string, data: Partial<Omit<StoreItem, \"id\" | \"createdAt\" | \"updatedAt\">>) =>")
+  builder.addRaw("      Effect.gen(function* () {")
+  builder.addRaw("        const item = store.get(id);")
+  builder.addRaw("        if (!item) {")
+  builder.addRaw(`          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
+  builder.addRaw("        }")
+  builder.addRaw("        const updated: StoreItem = {")
+  builder.addRaw("          ...item,")
+  builder.addRaw("          ...data,")
+  builder.addRaw("          id,  // Preserve ID")
+  builder.addRaw("          createdAt: item.createdAt,  // Preserve createdAt")
+  builder.addRaw("          updatedAt: new Date(),")
+  builder.addRaw("        };")
+  builder.addRaw("        store.set(id, updated);")
+  builder.addRaw("        return updated;")
+  builder.addRaw("      }),")
+  builder.addBlankLine()
+  builder.addRaw("    delete: (id: string) =>")
+  builder.addRaw("      Effect.gen(function* () {")
+  builder.addRaw("        const existed = store.delete(id);")
+  builder.addRaw("        if (!existed) {")
+  builder.addRaw(`          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
+  builder.addRaw("        }")
+  builder.addRaw("      }),")
+  builder.addRaw("  };")
+  builder.addRaw("}")
   builder.addBlankLine()
 
   // Resource Management Documentation
@@ -126,17 +229,20 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw("/**")
   builder.addRaw(" * Live Layer - Production environment")
   builder.addRaw(" *")
+  builder.addRaw(" * BASELINE IMPLEMENTATION: Uses in-memory store for immediate functionality.")
+  builder.addRaw(" * This provides a working service that can be replaced with SDK integration.")
+  builder.addRaw(" *")
+  builder.addRaw(" * SDK INTEGRATION STEPS:")
+  builder.addRaw(" * 1. Install SDK: npm install your-sdk")
+  builder.addRaw(" * 2. Initialize client: const client = new SDK(config)")
+  builder.addRaw(" * 3. Replace store operations with SDK calls")
+  builder.addRaw(" * 4. Add timeout wrappers: Effect.timeoutFail(sdk.call(), { duration, onTimeout })")
+  builder.addRaw(" * 5. Keep Effect.withSpan for distributed tracing")
+  builder.addRaw(" *")
   builder.addRaw(" * Uses Layer.effect for dependency injection without cleanup.")
-  builder.addRaw(" * Most SDKs (Stripe, OpenAI, Resend) don't need resource cleanup.")
+  builder.addRaw(" * Switch to Layer.scoped if SDK needs cleanup (connections, pools, etc.)")
   builder.addRaw(" *")
-  builder.addRaw(" * WHEN TO USE Layer.scoped INSTEAD:")
-  builder.addRaw(" * - Database connection pools (pg, mysql2) - needs pool.end()")
-  builder.addRaw(" * - WebSocket connections - needs ws.close()")
-  builder.addRaw(" * - File handles - needs fd.close()")
-  builder.addRaw(" * - Long-lived connections requiring cleanup")
-  builder.addRaw(" *")
-  builder.addRaw(" * See commented example below for Layer.scoped pattern.")
-  builder.addRaw(" * See EFFECT_PATTERNS.md lines 300-338 for decision tree.")
+  builder.addRaw(" * See EFFECT_PATTERNS.md for complete SDK integration guide.")
   builder.addRaw(" */")
   builder.addRaw(`export const ${className}Live = Layer.effect(`)
   builder.addRaw(`  ${className},`)
@@ -146,26 +252,21 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw(`      timeout: env.${projectConstantName}_TIMEOUT || 20000,`)
   builder.addRaw("    };")
   builder.addBlankLine()
+  builder.addRaw("    // Baseline: In-memory store (replace with SDK integration)")
+  builder.addRaw("    const store = createInMemoryStore();")
+  builder.addBlankLine()
   builder.addRaw("    // Return service implementation directly (Effect 3.0+ pattern)")
-  builder.addRaw("    return yield* Effect.succeed({")
+  builder.addRaw("    // Operations instrumented with Effect.withSpan for distributed tracing")
+  builder.addRaw("    return {")
   builder.addRaw("      config,")
-  builder.addRaw("      healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
-  builder.addRaw(
-    `      list: (params) => Effect.fail(new ${className}InternalError({ message: "list operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw(
-    `      get: (id) => Effect.fail(new ${className}InternalError({ message: "get operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw(
-    `      create: (data) => Effect.fail(new ${className}InternalError({ message: "create operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw(
-    `      update: (id, data) => Effect.fail(new ${className}InternalError({ message: "update operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw(
-    `      delete: (id) => Effect.fail(new ${className}InternalError({ message: "delete operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw("    });")
+  builder.addRaw(`      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("${className}.healthCheck")),`)
+  builder.addRaw("      // TODO: Replace store operations with SDK calls")
+  builder.addRaw(`      list: (params) => store.list(params).pipe(Effect.withSpan("${className}.list")),`)
+  builder.addRaw(`      get: (id) => store.get(id).pipe(Effect.withSpan("${className}.get")),`)
+  builder.addRaw(`      create: (data) => store.create(data).pipe(Effect.withSpan("${className}.create")),`)
+  builder.addRaw(`      update: (id, data) => store.update(id, data).pipe(Effect.withSpan("${className}.update")),`)
+  builder.addRaw(`      delete: (id) => store.delete(id).pipe(Effect.withSpan("${className}.delete")),`)
+  builder.addRaw("    };")
   builder.addRaw("  }),")
   builder.addRaw(");")
   builder.addBlankLine()
@@ -216,18 +317,35 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw("/**")
   builder.addRaw(" * Test Layer - Testing environment")
   builder.addRaw(" *")
-  builder.addRaw(" * Uses Layer.succeed for immediate mock value (Effect 3.0+ pattern)")
+  builder.addRaw(" * Uses Layer.succeed for immediate mock value (Effect 3.0+ pattern).")
+  builder.addRaw(" * Includes realistic timestamps for testing.")
   builder.addRaw(" */")
   builder.addRaw(`export const ${className}Test = Layer.succeed(`)
   builder.addRaw(`  ${className},`)
   builder.addRaw("  {")
   builder.addRaw("    config: { apiKey: \"test_key\", timeout: 1000 },")
   builder.addRaw("    healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
-  builder.addRaw("    // Mock implementations for all operations")
+  builder.addRaw("    // Mock implementations with timestamps")
   builder.addRaw("    list: () => Effect.succeed({ data: [], page: 1, limit: 10, total: 0 }),")
-  builder.addRaw("    get: (id) => Effect.succeed({ id, name: \"test\" }),")
-  builder.addRaw("    create: (data) => Effect.succeed({ id: \"test-id\", ...data }),")
-  builder.addRaw("    update: (id, data) => Effect.succeed({ id, ...data }),")
+  builder.addRaw("    get: (id) => Effect.succeed({")
+  builder.addRaw("      id,")
+  builder.addRaw("      name: \"test\",")
+  builder.addRaw("      createdAt: new Date(),")
+  builder.addRaw("      updatedAt: new Date(),")
+  builder.addRaw("    }),")
+  builder.addRaw("    create: (data) => Effect.succeed({")
+  builder.addRaw("      id: \"test-id\",")
+  builder.addRaw("      ...data,")
+  builder.addRaw("      createdAt: new Date(),")
+  builder.addRaw("      updatedAt: new Date(),")
+  builder.addRaw("    }),")
+  builder.addRaw("    update: (id, data) => Effect.succeed({")
+  builder.addRaw("      id,")
+  builder.addRaw("      name: \"test\",")
+  builder.addRaw("      ...data,")
+  builder.addRaw("      createdAt: new Date(\"2024-01-01\"),  // Mock createdAt")
+  builder.addRaw("      updatedAt: new Date(),")
+  builder.addRaw("    }),")
   builder.addRaw("    delete: (id) => Effect.void,")
   builder.addRaw("  },")
   builder.addRaw(");")
@@ -237,8 +355,8 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw("/**")
   builder.addRaw(" * Dev Layer - Development environment")
   builder.addRaw(" *")
-  builder.addRaw(" * Same as Live but with debug logging or relaxed validation.")
-  builder.addRaw(" * Uses Layer.effect (no cleanup needed for most SDKs).")
+  builder.addRaw(" * Same as Live but with debug logging and longer timeouts.")
+  builder.addRaw(" * Uses in-memory store for baseline implementation.")
   builder.addRaw(" */")
   builder.addRaw(`export const ${className}Dev = Layer.effect(`)
   builder.addRaw(`  ${className},`)
@@ -250,31 +368,22 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
   builder.addRaw("      timeout: 30000, // Longer timeout for dev")
   builder.addRaw("    };")
   builder.addBlankLine()
-  builder.addRaw("    // TODO: Initialize actual SDK client if needed")
-  builder.addRaw("    // const client = new ExternalSDK(config);")
+  builder.addRaw("    // Baseline: In-memory store (replace with SDK integration)")
+  builder.addRaw("    const store = createInMemoryStore();")
   builder.addBlankLine()
-  builder.addRaw(`    yield* Effect.logInfo(\`[${className}] [DEV] Development layer initialized\`);`)
+  builder.addRaw(`    yield* Effect.logInfo(\`[${className}] [DEV] Development layer initialized with in-memory store\`);`)
   builder.addBlankLine()
-  builder.addRaw("    // Return service implementation with debug logging")
-  builder.addRaw("    return yield* Effect.succeed({")
+  builder.addRaw("    // Return service implementation with distributed tracing")
+  builder.addRaw("    return {")
   builder.addRaw("      config,")
-  builder.addRaw("      healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
-  builder.addRaw(
-    `      list: (params) => Effect.fail(new ${className}InternalError({ message: "list operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw(
-    `      get: (id) => Effect.fail(new ${className}InternalError({ message: "get operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw(
-    `      create: (data) => Effect.fail(new ${className}InternalError({ message: "create operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw(
-    `      update: (id, data) => Effect.fail(new ${className}InternalError({ message: "update operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw(
-    `      delete: (id) => Effect.fail(new ${className}InternalError({ message: "delete operation not implemented - integrate with SDK" })),`
-  )
-  builder.addRaw("    });")
+  builder.addRaw(`      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("${className}.healthCheck")),`)
+  builder.addRaw("      // TODO: Replace store operations with SDK calls")
+  builder.addRaw(`      list: (params) => store.list(params).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] list called\`))).pipe(Effect.withSpan("${className}.list")),`)
+  builder.addRaw(`      get: (id) => store.get(id).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] get called: \${id}\`))).pipe(Effect.withSpan("${className}.get")),`)
+  builder.addRaw(`      create: (data) => store.create(data).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] create called\`))).pipe(Effect.withSpan("${className}.create")),`)
+  builder.addRaw(`      update: (id, data) => store.update(id, data).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] update called: \${id}\`))).pipe(Effect.withSpan("${className}.update")),`)
+  builder.addRaw(`      delete: (id) => store.delete(id).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] delete called: \${id}\`))).pipe(Effect.withSpan("${className}.delete")),`)
+  builder.addRaw("    };")
   builder.addRaw("  }),")
   builder.addRaw(");")
   builder.addBlankLine()
@@ -308,20 +417,20 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
     name: `make${className}Layer`,
     exported: true,
     jsdoc:
-      `make${className}Layer - Custom layer factory\n\nUse this to create a layer with custom configuration\n\nExample:\n\`\`\`typescript\nconst customLayer = make${className}Layer({\n  apiKey: "custom_key",\n  timeout: 5000,\n});\n\`\`\``,
+      `make${className}Layer - Custom layer factory\n\nUse this to create a layer with custom configuration.\nBaseline uses in-memory store - replace with SDK integration.\n\nExample:\n\`\`\`typescript\nconst customLayer = make${className}Layer({\n  apiKey: "custom_key",\n  timeout: 5000,\n});\n\`\`\``,
     params: [{ name: "config", type: `${className}Config` }],
     body: `return Layer.scoped(
   ${className},
   Effect.gen(function* () {
-    // TODO: Initialize SDK client if needed
-    // const client = new ExternalSDK(config);
+    // Baseline: In-memory store (replace with SDK integration)
+    const store = createInMemoryStore();
 
     // Register cleanup function
     yield* Effect.addFinalizer(() =>
-      Effect.logInfo(\`[${className}] [CUSTOM] Cleaning up client resources\`).pipe(
+      Effect.logInfo(\`[${className}] [CUSTOM] Cleaning up resources\`).pipe(
         Effect.andThen(
           Effect.sync(() => {
-            // TODO: Add cleanup logic
+            // TODO: Add SDK cleanup logic when integrating
             // client.close()
             // client.disconnect()
           })
@@ -333,12 +442,12 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
     return {
       config,
       healthCheck: Effect.succeed({ status: "healthy" as const }),
-      // TODO: Replace with actual SDK implementations
-      list: (params) => Effect.dieMessage("list operation not implemented - integrate with SDK"),
-      get: (id) => Effect.dieMessage("get operation not implemented - integrate with SDK"),
-      create: (data) => Effect.dieMessage("create operation not implemented - integrate with SDK"),
-      update: (id, data) => Effect.dieMessage("update operation not implemented - integrate with SDK"),
-      delete: (id) => Effect.dieMessage("delete operation not implemented - integrate with SDK"),
+      // TODO: Replace store operations with SDK implementations
+      list: (params) => store.list(params),
+      get: (id) => store.get(id),
+      create: (data) => store.create(data),
+      update: (id, data) => store.update(id, data),
+      delete: (id) => store.delete(id),
     };
   }),
 );`
