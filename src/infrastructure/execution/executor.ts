@@ -14,6 +14,7 @@
  */
 
 import type { Tree } from "@nx/devkit"
+import { addProjectConfiguration } from "@nx/devkit"
 import { Effect } from "effect"
 import { generateLibraryInfrastructure, type InfrastructureOptions } from "../../utils/infrastructure"
 import { createAdapterFromContext } from "../adapters/factory"
@@ -22,7 +23,7 @@ import { computeMetadata } from "../metadata/computation"
 import type { LibraryMetadata, LibraryType } from "../metadata/types"
 import { createWorkspaceContext } from "../workspace/context"
 import type { InterfaceType } from "../workspace/types"
-import type { CoreGeneratorFn, GeneratorResult } from "./types"
+import type { CoreGeneratorFn } from "./types"
 import { GeneratorExecutionError } from "./types"
 
 /**
@@ -133,10 +134,10 @@ export function createExecutor<
   libraryType: LibraryType,
   coreGenerator: CoreGeneratorFn<TCoreOptions>,
   inputToOptions: (validated: TInput, metadata: LibraryMetadata) => TCoreOptions
-): GeneratorExecutor<ExtendedInput<TInput>, GeneratorResult> {
+) {
   return {
     execute: (validated: ExtendedInput<TInput>) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // 1. Create workspace context
         const interfaceType = validated.__interfaceType ?? "cli"
         const context = yield* createWorkspaceContext(
@@ -167,26 +168,12 @@ export function createExecutor<
         )
 
         // 3. Compute library metadata
-        interface MetadataInput {
-          name: string
-          libraryType: LibraryType
-          directory?: string
-          description?: string
-          additionalTags?: ReadonlyArray<string>
-        }
-
-        const metadataInput: MetadataInput = {
+        const metadataInput = {
           name: validated.name,
-          libraryType
-        }
-        if (validated.directory !== undefined) {
-          metadataInput.directory = validated.directory
-        }
-        if (validated.description !== undefined) {
-          metadataInput.description = validated.description
-        }
-        if (validated.tags !== undefined) {
-          metadataInput.additionalTags = validated.tags.split(",").map((t) => t.trim())
+          libraryType,
+          ...(validated.directory !== undefined && { directory: validated.directory }),
+          ...(validated.description !== undefined && { description: validated.description }),
+          ...(validated.tags !== undefined && { additionalTags: validated.tags.split(",").map((t) => t.trim()) })
         }
 
         const metadata = computeMetadata(metadataInput, context)
@@ -199,12 +186,12 @@ export function createExecutor<
           packageName: metadata.packageName,
           libraryType,
           description: metadata.description,
-          platform: "node" as const,
+          platform: "node",
           offsetFromRoot: metadata.offsetFromRoot,
           tags: metadata.tags.split(",").map((t) => t.trim())
         }
 
-        yield* generateLibraryInfrastructure(
+        const infraResult = yield* generateLibraryInfrastructure(
           adapter,
           infraOptions
         ).pipe(
@@ -216,6 +203,21 @@ export function createExecutor<
               })
           )
         )
+
+        // 4b. Register project with Nx if in Nx mode
+        if (infraResult.requiresNxRegistration && infraResult.projectConfig && validated.__nxTree) {
+          addProjectConfiguration(
+            validated.__nxTree,
+            infraResult.projectConfig.name,
+            {
+              root: infraResult.projectConfig.root,
+              projectType: "library" as const,
+              sourceRoot: infraResult.projectConfig.sourceRoot,
+              tags: infraResult.projectConfig.tags,
+              targets: infraResult.projectConfig.targets
+            }
+          )
+        }
 
         // 5. Generate domain-specific files using core generator
         // TypeScript now knows the exact type of validated (TInput)
@@ -248,8 +250,8 @@ export function executeGenerator<TOptions>(
   coreGenerator: CoreGeneratorFn<TOptions>,
   coreOptions: TOptions,
   infrastructureOptions?: Partial<InfrastructureOptions>
-): Effect.Effect<GeneratorResult, GeneratorExecutionError> {
-  return Effect.gen(function* () {
+) {
+  return Effect.gen(function*() {
     // Generate infrastructure files
     const infraOptions: InfrastructureOptions = {
       projectRoot: metadata.projectRoot,
@@ -258,7 +260,7 @@ export function executeGenerator<TOptions>(
       packageName: metadata.packageName,
       libraryType: metadata.libraryType,
       description: metadata.description,
-      platform: "node" as const,
+      platform: "node",
       offsetFromRoot: metadata.offsetFromRoot,
       tags: metadata.tags.split(",").map((t) => t.trim()),
       ...infrastructureOptions

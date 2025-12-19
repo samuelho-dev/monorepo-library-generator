@@ -34,11 +34,8 @@ Validates data before repository operations to ensure domain constraints.
   })
   builder.addBlankLine()
 
-  // Add imports
-  // Note: Imports are type-only since they're only used in JSDoc comments and return type inference
-  builder.addImport("./types", `${className}CreateInput`, true)
-  builder.addImport("./types", `${className}UpdateInput`, true)
-  builder.addBlankLine()
+  // Note: Types are expected to be defined in ./types.ts
+  // Consumers should use those types for type checking after validation
 
   // Validation Helpers
   builder.addSectionComment("Validation Helpers")
@@ -55,7 +52,11 @@ Validates data before repository operations to ensure domain constraints.
 export function validate${className}CreateInput(
   input: unknown,
 ) {
-  throw new Error("Validation not implemented. Please implement schema validation.");
+  if (typeof input !== 'object' || input === null) {
+    throw new Error("Invalid ${className} create input: must be an object")
+  }
+  // TODO: Implement full schema validation (e.g., with Zod or Effect Schema)
+  return input
 }`)
   builder.addBlankLine()
 
@@ -70,7 +71,11 @@ export function validate${className}CreateInput(
 export function validate${className}UpdateInput(
   input: unknown,
 ) {
-  throw new Error("Validation not implemented. Please implement schema validation.");
+  if (typeof input !== 'object' || input === null) {
+    throw new Error("Invalid ${className} update input: must be an object")
+  }
+  // TODO: Implement full schema validation (e.g., with Zod or Effect Schema)
+  return input
 }`)
   builder.addBlankLine()
 
@@ -85,7 +90,11 @@ export function validate${className}UpdateInput(
 export function validate${className}Filter(
   input: unknown,
 ) {
-  throw new Error("Validation not implemented. Please implement schema validation.");
+  if (typeof input !== 'object' || input === null) {
+    throw new Error("Invalid ${className} filter: must be an object")
+  }
+  // TODO: Implement full schema validation (e.g., with Zod or Effect Schema)
+  return input
 }`)
   builder.addBlankLine()
 

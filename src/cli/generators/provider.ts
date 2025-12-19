@@ -5,20 +5,17 @@
  * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect, ParseResult } from "effect";
-import { generateProviderCore, type ProviderCoreOptions } from "../../generators/core/provider";
-import { createExecutor } from "../../infrastructure/execution/executor";
-import { formatOutput } from "../../infrastructure/output/formatter";
-import {
-  decodeProviderInput,
-  type ProviderInput
-} from "../../infrastructure/validation/registry";
+import { Console, Effect, ParseResult } from "effect"
+import { generateProviderCore, type ProviderCoreOptions } from "../../generators/core/provider"
+import { createExecutor } from "../../infrastructure/execution/executor"
+import { formatOutput } from "../../infrastructure/output/formatter"
+import { decodeProviderInput, type ProviderInput } from "../../infrastructure/validation/registry"
 
 /**
  * Provider Generator Options - imported from validation registry
  * for single source of truth
  */
-export type ProviderGeneratorOptions = ProviderInput;
+export type ProviderGeneratorOptions = ProviderInput
 
 /**
  * Provider executor with properly typed generics
@@ -38,30 +35,28 @@ const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
       "read",
       "update",
       "delete",
-      "query",
-    ],
+      "query"
+    ]
   })
-);
+)
 
 export function generateProvider(options: ProviderGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeProviderInput(options).pipe(
-      Effect.mapError((parseError) =>
-        new Error(ParseResult.TreeFormatter.formatErrorSync(parseError))
-      )
-    );
+      Effect.mapError((parseError) => new Error(ParseResult.TreeFormatter.formatErrorSync(parseError)))
+    )
 
-    yield* Console.log(`Creating provider library: ${validated.name}...`);
+    yield* Console.log(`Creating provider library: ${validated.name}...`)
 
     const result = yield* providerExecutor.execute({
       ...validated,
-      __interfaceType: "cli" as const,
-    });
+      __interfaceType: "cli"
+    })
 
-    const output = formatOutput(result, "cli");
-    yield* Console.log(output);
+    const output = formatOutput(result, "cli")
+    yield* Console.log(output)
 
-    return result;
-  });
+    return result
+  })
 }

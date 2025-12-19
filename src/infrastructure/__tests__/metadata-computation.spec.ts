@@ -4,7 +4,7 @@
  * Tests for unified metadata computation
  */
 
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { computeMetadata, computeSimpleMetadata } from "../metadata/computation"
 import type { WorkspaceContext } from "../workspace/types"
 
@@ -14,7 +14,8 @@ describe("Metadata Computation", () => {
     type: "nx",
     scope: "@test-scope",
     packageManager: "pnpm",
-    interfaceType: "cli"
+    interfaceType: "cli",
+    librariesRoot: "libs"
   }
 
   describe("computeMetadata", () => {
@@ -104,13 +105,20 @@ describe("Metadata Computation", () => {
       )
 
       expect(metadata.tags).toContain("type:contract")
-      expect(metadata.tags).toContain("scope:user")
       expect(metadata.tags).toContain("platform:universal")
+      // When scope:shared is provided in additionalTags, it replaces the default scope:user
       expect(metadata.tags).toContain("scope:shared")
+      expect(metadata.tags).not.toContain("scope:user")
     })
 
     it("should compute correct paths for all library types", () => {
-      const types = ["contract", "data-access", "feature", "provider", "infra"] as const
+      const types: ReadonlyArray<"contract" | "data-access" | "feature" | "provider" | "infra"> = [
+        "contract",
+        "data-access",
+        "feature",
+        "provider",
+        "infra"
+      ]
 
       for (const libraryType of types) {
         const metadata = computeMetadata(

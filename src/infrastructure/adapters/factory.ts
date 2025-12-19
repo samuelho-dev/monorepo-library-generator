@@ -6,15 +6,14 @@
  * @module monorepo-library-generator/infrastructure/adapters/factory
  */
 
-import type { Tree } from "@nx/devkit";
-import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { Effect } from "effect";
-import type { WorkspaceContext } from "../workspace/types";
-import { createEffectFsAdapter } from "./effect-adapter";
-import type { FileSystemAdapter } from "./filesystem";
-import { FileSystemError } from "./filesystem";
-import { createMCPAdapter } from "./mcp-adapter";
-import { createTreeAdapter } from "./tree-adapter";
+import { NodeFileSystem, NodePath } from "@effect/platform-node"
+import type { Tree } from "@nx/devkit"
+import { Effect } from "effect"
+import type { WorkspaceContext } from "../workspace/types"
+import { createEffectFsAdapter } from "./effect-adapter"
+import { FileSystemError } from "./filesystem"
+import { createMCPAdapter } from "./mcp-adapter"
+import { createTreeAdapter } from "./tree-adapter"
 
 /**
  * Adapter creation options
@@ -23,12 +22,12 @@ export interface AdapterOptions {
   /**
    * Workspace context (contains interface type and workspace root)
    */
-  readonly context: WorkspaceContext;
+  readonly context: WorkspaceContext
 
   /**
    * Nx Tree instance (only required when interfaceType === "nx")
    */
-  readonly nxTree?: Tree;
+  readonly nxTree?: Tree
 }
 
 /**
@@ -57,43 +56,43 @@ export interface AdapterOptions {
  * const adapter = yield* createAdapter({ context, nxTree: tree })
  * ```
  */
-export function createAdapter(options: AdapterOptions): Effect.Effect<FileSystemAdapter, FileSystemError> {
-  const { context, nxTree } = options;
+export function createAdapter(options: AdapterOptions) {
+  const { context, nxTree } = options
 
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     switch (context.interfaceType) {
       case "nx": {
         if (!nxTree) {
           return yield* Effect.fail(
             new FileSystemError({
               message: "Nx Tree required for Nx interface but not provided",
-              path: context.root,
+              path: context.root
             })
-          );
+          )
         }
-        return createTreeAdapter(nxTree);
+        return createTreeAdapter(nxTree)
       }
 
       case "cli": {
-        return yield* createEffectFsAdapter(context.root);
+        return yield* createEffectFsAdapter(context.root)
       }
 
       case "mcp": {
-        return createMCPAdapter(context.root);
+        return createMCPAdapter(context.root)
       }
 
       default: {
         // TypeScript exhaustiveness check
-        const _exhaustive: never = context.interfaceType;
+        const _exhaustive: never = context.interfaceType
         return yield* Effect.fail(
           new FileSystemError({
             message: `Unknown interface type: ${_exhaustive}`,
-            path: context.root,
+            path: context.root
           })
-        );
+        )
       }
     }
-  }).pipe(Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer));
+  }).pipe(Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer))
 }
 
 /**
@@ -104,10 +103,6 @@ export function createAdapter(options: AdapterOptions): Effect.Effect<FileSystem
 export function createAdapterFromContext(
   context: WorkspaceContext,
   nxTree?: Tree
-): Effect.Effect<FileSystemAdapter, FileSystemError> {
-  const options: AdapterOptions = { context };
-  if (nxTree !== undefined) {
-    (options as { context: WorkspaceContext; nxTree?: Tree }).nxTree = nxTree;
-  }
-  return createAdapter(options);
+) {
+  return createAdapter({ context, nxTree })
 }

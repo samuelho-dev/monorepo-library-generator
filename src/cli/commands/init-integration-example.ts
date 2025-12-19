@@ -13,8 +13,8 @@
  * @module cli/commands/init-integration-example
  */
 
-import { Console, Effect } from "effect"
 import { FileSystem } from "@effect/platform"
+import { Console, Effect } from "effect"
 import { getPackageName } from "../../utils/workspace-config"
 
 /**
@@ -26,7 +26,7 @@ import { getPackageName } from "../../utils/workspace-config"
  * - example/user.prisma - Example Prisma schema
  */
 export function generateIntegrationExample() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
 
     // Get dynamic package names

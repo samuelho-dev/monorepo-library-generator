@@ -1,35 +1,24 @@
 import * as effectEslint from "@effect/eslint-plugin"
 import { fixupPluginRules } from "@eslint/compat"
-import { FlatCompat } from "@eslint/eslintrc"
 import js from "@eslint/js"
+import tseslint from "@typescript-eslint/eslint-plugin"
 import tsParser from "@typescript-eslint/parser"
 import codegen from "eslint-plugin-codegen"
 import _import from "eslint-plugin-import"
 import simpleImportSort from "eslint-plugin-simple-import-sort"
 import sortDestructureKeys from "eslint-plugin-sort-destructure-keys"
-import path from "node:path"
-import { fileURLToPath } from "node:url"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all
-})
+import globals from "globals"
 
 export default [
   {
-    ignores: ["**/dist", "**/build", "**/docs", "**/*.md", "src/index.ts"]
+    ignores: ["**/dist", "**/build", "**/docs", "**/*.md", "src/index.ts", "**/node_modules"]
   },
-  ...compat.extends(
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended"
-  ),
+  js.configs.recommended,
   ...effectEslint.configs.dprint,
   {
+    files: ["src/**/*.ts", "libs/**/*.ts"],
     plugins: {
+      "@typescript-eslint": tseslint,
       import: fixupPluginRules(_import),
       "sort-destructure-keys": sortDestructureKeys,
       "simple-import-sort": simpleImportSort,
@@ -38,8 +27,12 @@ export default [
 
     languageOptions: {
       parser: tsParser,
-      ecmaVersion: 2018,
-      sourceType: "module"
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...globals.node,
+        ...globals.es2022
+      }
     },
 
     settings: {
@@ -81,8 +74,8 @@ export default [
           message: "Do not use .js, .mjs, or .cjs extensions in exports. This is a TypeScript-only monorepo - use extensionless imports."
         },
         {
-          selector: ":matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression, TSDeclareFunction)[returnType]",
-          message: "Do not use explicit return type annotations. Let TypeScript infer the return type."
+          selector: ":matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)[returnType]:not([returnType.typeAnnotation.type='TSTypePredicate'])",
+          message: "Do not use explicit return type annotations. Let TypeScript infer the return type. Exception: type predicates (x is Type) are allowed for type guards, and function overload signatures require return types."
         },
         {
           selector: "TSAsExpression:not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
@@ -113,11 +106,12 @@ export default [
       ],
 
       "no-unused-vars": "off",
+      "no-redeclare": "off",
       "prefer-rest-params": "off",
       "prefer-spread": "off",
       "import/first": "error",
       "import/newline-after-import": "error",
-      "import/no-duplicates": "error",
+      "import/no-duplicates": "off", // Disabled due to resolver issues with TypeScript
       "import/no-unresolved": "off",
       "import/order": "off",
       "simple-import-sort/imports": "off",
@@ -162,6 +156,21 @@ export default [
           "arrowFunction.useParentheses": "force"
         }
       }]
+    }
+  },
+  {
+    files: ["**/*.spec.ts", "**/*.test.ts", "**/__tests__/**/*.ts"],
+    languageOptions: {
+      globals: {
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+        vi: "readonly"
+      }
     }
   }
 ]

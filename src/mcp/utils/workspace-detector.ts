@@ -10,14 +10,14 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
 import { Effect } from "effect"
 import * as path from "node:path"
 
-// Workspace type constants for literal type inference
+// Workspace type constants
 const WORKSPACE_TYPE_NX = "nx" as const
 const WORKSPACE_TYPE_PNPM = "pnpm" as const
 const WORKSPACE_TYPE_YARN = "yarn" as const
 const WORKSPACE_TYPE_TURBOREPO = "turborepo" as const
 const WORKSPACE_TYPE_UNKNOWN = "unknown" as const
 
-// Package manager constants for literal type inference
+// Package manager constants
 const PKG_MANAGER_NPM = "npm" as const
 const PKG_MANAGER_PNPM = "pnpm" as const
 const PKG_MANAGER_YARN = "yarn" as const
@@ -96,7 +96,7 @@ const findWorkspaceRoot = (
       const pkgPath = `${currentPath}/package.json`
       const exists = yield* fs
         .exists(pkgPath)
-        .pipe(Effect.catchAll(() => Effect.succeed(false)))
+        .pipe(Effect.orElseSucceed(() => false))
 
       if (exists) {
         // Check if this is the workspace root
@@ -137,7 +137,7 @@ const isWorkspaceRoot = (
     for (const indicator of indicators) {
       const exists = yield* fs
         .exists(`${path}/${indicator}`)
-        .pipe(Effect.catchAll(() => Effect.succeed(false)))
+        .pipe(Effect.orElseSucceed(() => false))
       if (exists) return true
     }
 
@@ -145,12 +145,12 @@ const isWorkspaceRoot = (
     const pkgPath = `${path}/package.json`
     const exists = yield* fs
       .exists(pkgPath)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.orElseSucceed(() => false))
 
     if (exists) {
       const content = yield* fs
         .readFileString(pkgPath)
-        .pipe(Effect.catchAll(() => Effect.succeed("{}")))
+        .pipe(Effect.orElseSucceed(() => "{}"))
       const pkg = JSON.parse(content)
       if (pkg.workspaces) return true
     }
@@ -169,26 +169,26 @@ const detectWorkspaceType = (
     // Check for Nx
     const nxExists = yield* fs
       .exists(`${rootPath}/nx.json`)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.orElseSucceed(() => false))
     if (nxExists) return WORKSPACE_TYPE_NX
 
     // Check for pnpm
     const pnpmExists = yield* fs
       .exists(`${rootPath}/pnpm-workspace.yaml`)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.orElseSucceed(() => false))
     if (pnpmExists) return WORKSPACE_TYPE_PNPM
 
     // Check for Turborepo
     const turboExists = yield* fs
       .exists(`${rootPath}/turbo.json`)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.orElseSucceed(() => false))
     if (turboExists) return WORKSPACE_TYPE_TURBOREPO
 
     // Check for Yarn workspaces
     const pkgPath = `${rootPath}/package.json`
     const content = yield* fs
       .readFileString(pkgPath)
-      .pipe(Effect.catchAll(() => Effect.succeed("{}")))
+      .pipe(Effect.orElseSucceed(() => "{}"))
     const pkg = JSON.parse(content)
     if (pkg.workspaces && Array.isArray(pkg.workspaces)) {
       return WORKSPACE_TYPE_YARN
@@ -208,13 +208,13 @@ const detectPackageManager = (
     // Check for pnpm
     const pnpmExists = yield* fs
       .exists(`${rootPath}/pnpm-lock.yaml`)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.orElseSucceed(() => false))
     if (pnpmExists) return PKG_MANAGER_PNPM
 
     // Check for Yarn
     const yarnExists = yield* fs
       .exists(`${rootPath}/yarn.lock`)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.orElseSucceed(() => false))
     if (yarnExists) return PKG_MANAGER_YARN
 
     // Default to npm

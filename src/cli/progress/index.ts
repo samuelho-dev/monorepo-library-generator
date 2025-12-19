@@ -6,17 +6,29 @@
  * @module monorepo-library-generator/cli/progress
  */
 
-import { Console, Effect, Ref } from "effect";
+import { Console, Effect, Ref } from "effect"
 
 /**
  * Spinner frames for animated progress indicator
  */
-const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"] as const;
+const SPINNER_FRAMES: ReadonlyArray<string> = Object.freeze(["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
 
 /**
  * ANSI escape codes
  */
-const ANSI = {
+const ANSI: Readonly<{
+  clearLine: string
+  cursorUp: string
+  cursorToStart: string
+  hideCursor: string
+  showCursor: string
+  cyan: string
+  green: string
+  yellow: string
+  red: string
+  dim: string
+  reset: string
+}> = Object.freeze({
   clearLine: "\x1b[2K",
   cursorUp: "\x1b[1A",
   cursorToStart: "\x1b[0G",
@@ -27,21 +39,21 @@ const ANSI = {
   yellow: "\x1b[33m",
   red: "\x1b[31m",
   dim: "\x1b[2m",
-  reset: "\x1b[0m",
-} as const;
+  reset: "\x1b[0m"
+})
 
 /**
  * Verbosity level for output
  */
-export type Verbosity = "quiet" | "normal" | "verbose";
+export type Verbosity = "quiet" | "normal" | "verbose"
 
 /**
  * Progress context for tracking generation
  */
 export interface ProgressContext {
-  readonly verbosity: Verbosity;
-  readonly startTime: number;
-  readonly filesCreated: number;
+  readonly verbosity: Verbosity
+  readonly startTime: number
+  readonly filesCreated: number
 }
 
 /**
@@ -51,8 +63,8 @@ export function createProgressContext(verbosity: Verbosity) {
   return {
     verbosity,
     startTime: Date.now(),
-    filesCreated: 0,
-  };
+    filesCreated: 0
+  }
 }
 
 /**
@@ -64,21 +76,21 @@ export function formatPathDisplay(
 ) {
   return [
     `${ANSI.cyan}📂${ANSI.reset} Generating to: ${absolutePath}`,
-    `${ANSI.dim}📍 Relative: ${relativePath}/${ANSI.reset}`,
-  ].join("\n");
+    `${ANSI.dim}📍 Relative: ${relativePath}/${ANSI.reset}`
+  ].join("\n")
 }
 
 /**
  * Simple spinner that shows message with animated indicator
  */
 export function spinner(message: string) {
-  return Effect.gen(function* () {
-    const frameRef = yield* Ref.make(0);
+  return Effect.gen(function*() {
+    const frameRef = yield* Ref.make(0)
 
     // Start spinner
     yield* Effect.sync(() => {
-      process.stdout.write(ANSI.hideCursor);
-    });
+      process.stdout.write(ANSI.hideCursor)
+    })
 
     const interval = yield* Effect.acquireRelease(
       Effect.sync(() => {
@@ -89,24 +101,24 @@ export function spinner(message: string) {
               Effect.sync(() => {
                 process.stdout.write(
                   `${ANSI.clearLine}${ANSI.cursorToStart}${ANSI.cyan}${SPINNER_FRAMES[frame]}${ANSI.reset} ${message}`
-                );
+                )
               })
             ),
             Effect.runSync
-          );
-        }, 80);
+          )
+        }, 80)
       }),
       (interval) =>
         Effect.sync(() => {
-          clearInterval(interval);
+          clearInterval(interval)
           process.stdout.write(
             `${ANSI.clearLine}${ANSI.cursorToStart}${ANSI.showCursor}`
-          );
+          )
         })
-    );
+    )
 
-    return interval;
-  });
+    return interval
+  })
 }
 
 /**
@@ -116,38 +128,37 @@ export function withProgress<A, E, R>(
   message: string,
   effect: Effect.Effect<A, E, R>,
   verbosity: Verbosity = "normal"
-): Effect.Effect<A, E, R> {
+) {
   if (verbosity === "quiet") {
-    return effect;
+    return effect
   }
 
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     if (verbosity === "verbose") {
-      yield* Console.log(`${ANSI.dim}${message}...${ANSI.reset}`);
-      return yield* effect;
+      yield* Console.log(`${ANSI.dim}${message}...${ANSI.reset}`)
+      return yield* effect
     }
 
     // Normal mode - show spinner
-    const startTime = Date.now();
+    const startTime = Date.now()
 
     yield* Effect.sync(() => {
-      process.stdout.write(ANSI.hideCursor);
-    });
+      process.stdout.write(ANSI.hideCursor)
+    })
 
     const result = yield* Effect.onExit(effect, () =>
       Effect.sync(() => {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
         process.stdout.write(
           `${ANSI.clearLine}${ANSI.cursorToStart}${ANSI.showCursor}`
-        );
+        )
         console.log(
           `${ANSI.green}✨${ANSI.reset} ${message} ${ANSI.dim}(${elapsed}s)${ANSI.reset}`
-        );
-      })
-    );
+        )
+      }))
 
-    return result;
-  });
+    return result
+  })
 }
 
 /**
@@ -158,10 +169,10 @@ export function logFileCreation(
   verbosity: Verbosity
 ) {
   if (verbosity !== "verbose") {
-    return Effect.void;
+    return Effect.void
   }
 
-  return Console.log(`  ${ANSI.dim}Creating${ANSI.reset} ${filePath}...`);
+  return Console.log(`  ${ANSI.dim}Creating${ANSI.reset} ${filePath}...`)
 }
 
 /**
@@ -173,19 +184,19 @@ export function showSuccess(
   elapsedMs: number,
   verbosity: Verbosity
 ) {
-  const elapsed = (elapsedMs / 1000).toFixed(1);
+  const elapsed = (elapsedMs / 1000).toFixed(1)
 
   if (verbosity === "quiet") {
-    return Console.log(`${ANSI.green}✓${ANSI.reset} ${libraryName}`);
+    return Console.log(`${ANSI.green}✓${ANSI.reset} ${libraryName}`)
   }
 
   return Console.log(
     [
       "",
       `${ANSI.green}✨${ANSI.reset} Created ${fileCount} files in ${elapsed}s`,
-      `${ANSI.green}✅${ANSI.reset} Successfully generated library: ${ANSI.cyan}${libraryName}${ANSI.reset}`,
+      `${ANSI.green}✅${ANSI.reset} Successfully generated library: ${ANSI.cyan}${libraryName}${ANSI.reset}`
     ].join("\n")
-  );
+  )
 }
 
 /**
@@ -196,10 +207,10 @@ export function showError(
   verbosity: Verbosity
 ) {
   if (verbosity === "quiet") {
-    return Console.error(`${ANSI.red}✗${ANSI.reset} Error`);
+    return Console.error(`${ANSI.red}✗${ANSI.reset} Error`)
   }
 
-  return Console.error(`${ANSI.red}✗ Error:${ANSI.reset} ${message}`);
+  return Console.error(`${ANSI.red}✗ Error:${ANSI.reset} ${message}`)
 }
 
 /**
@@ -213,14 +224,14 @@ export function showGenerationStart(
   verbosity: Verbosity
 ) {
   if (verbosity === "quiet") {
-    return Effect.void;
+    return Effect.void
   }
 
   return Console.log(
     [
       formatPathDisplay(absolutePath, relativePath),
       "",
-      `${ANSI.cyan}⠋${ANSI.reset} Creating ${libraryType} library: ${libraryName}...`,
+      `${ANSI.cyan}⠋${ANSI.reset} Creating ${libraryType} library: ${libraryName}...`
     ].join("\n")
-  );
+  )
 }

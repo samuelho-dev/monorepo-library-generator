@@ -16,9 +16,6 @@ export * from "./tsconfig"
 // Build configuration utilities
 export * from "./build-config"
 
-// Dependency utilities
-export * from "./dependencies"
-
 // Platform utilities
 export * from "./platforms"
 

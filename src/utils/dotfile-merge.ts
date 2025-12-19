@@ -184,7 +184,7 @@ export const parseJsonSafe = (content: string) => {
  * @param effect - Effect.ts configuration object
  * @returns Merged configuration with Effect.ts taking precedence
  */
-export const deepMergeJson = (user: JsonValue, effect: JsonValue): JsonValue => {
+export const deepMergeJson = (user: JsonValue, effect: JsonValue) => {
   // Primitives and null: Effect.ts wins
   if (typeof effect !== "object" || effect === null) {
     return effect
@@ -195,8 +195,8 @@ export const deepMergeJson = (user: JsonValue, effect: JsonValue): JsonValue => 
     return effect
   }
 
-  // Type guard for JsonObject
-  const isJsonObject = (val: JsonValue): val is JsonObject => {
+  // Check for JsonObject
+  const isJsonObject = (val: JsonValue) => {
     return typeof val === "object" && val !== null && !Array.isArray(val)
   }
 
@@ -207,21 +207,31 @@ export const deepMergeJson = (user: JsonValue, effect: JsonValue): JsonValue => 
 
   // Objects: Deep merge
   // If user is not an object, start with empty object
-  const userObj = isJsonObject(user) ? user : {}
-  const result: Record<string, JsonValue> = { ...userObj }
+  const userObj = (isJsonObject(user) ? user : {}) as Record<string, JsonValue>
+  const effectObj = effect as Record<string, JsonValue>
+  const result: Record<string, JsonValue> = {}
 
-  for (const key in effect) {
-    if (Object.prototype.hasOwnProperty.call(effect, key)) {
-      const effectValue = effect[key]
-      const userValue = userObj[key]
+  // Copy user object properties
+  for (const key of Object.keys(userObj)) {
+    const value = userObj[key]
+    if (value !== undefined) {
+      result[key] = value
+    }
+  }
 
-      if (effectValue !== undefined && userValue !== undefined && isJsonObject(effectValue) && isJsonObject(userValue)) {
-        // Recursively merge nested objects
-        result[key] = deepMergeJson(userValue, effectValue)
-      } else if (effectValue !== undefined) {
-        // Effect.ts value wins (primitives, arrays, null)
-        result[key] = effectValue
-      }
+  // Merge/override with effect object properties
+  for (const key of Object.keys(effectObj)) {
+    const effectValue = effectObj[key]
+    const userValue = result[key]
+
+    if (
+      effectValue !== undefined && userValue !== undefined && isJsonObject(effectValue) && isJsonObject(userValue)
+    ) {
+      // Recursively merge nested objects
+      result[key] = deepMergeJson(userValue, effectValue)
+    } else if (effectValue !== undefined) {
+      // Effect.ts value wins (primitives, arrays, null)
+      result[key] = effectValue
     }
   }
 

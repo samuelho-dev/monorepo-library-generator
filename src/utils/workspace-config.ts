@@ -15,7 +15,7 @@ export const WORKSPACE_CONFIG = {
    * Package scope for all generated libraries
    * Used in package.json name field: @{scope}/{type}-{name}
    */
-  scope: "@custom-repo",
+  scope: "@myorg",
 
   /**
    * Generate standardized package name
@@ -33,7 +33,7 @@ export const WORKSPACE_CONFIG = {
    * // => "@custom-repo/infra-cache"
    * ```
    */
-  getPackageName(type: string, name: string): string {
+  getPackageName(type: string, name: string) {
     return `${this.scope}/${type}-${name}`
   },
 
@@ -42,10 +42,10 @@ export const WORKSPACE_CONFIG = {
    *
    * @returns Scope prefix with @ symbol (e.g., "@custom-repo")
    */
-  getScope(): string {
+  getScope() {
     return this.scope
   }
-} as const
+}
 
 /**
  * Type-safe helper to get package name
@@ -53,9 +53,9 @@ export const WORKSPACE_CONFIG = {
  *
  * Special case: ENV library uses simple name "@custom-repo/env" instead of "@custom-repo/env-env"
  */
-export function getPackageName(type: "env"): string;
-export function getPackageName(type: string, name: string): string;
-export function getPackageName(type: string, name?: string): string {
+export function getPackageName(type: "env"): string
+export function getPackageName(type: string, name: string): string
+export function getPackageName(type: string, name?: string) {
   // Special case for ENV library - standalone package name
   if (type === "env" && name === undefined) {
     return `${WORKSPACE_CONFIG.scope}/env`
@@ -72,6 +72,6 @@ export function getPackageName(type: string, name?: string): string {
 /**
  * Type-safe helper to get workspace scope
  */
-export function getWorkspaceScope(): string {
+export function getWorkspaceScope() {
   return WORKSPACE_CONFIG.getScope()
 }

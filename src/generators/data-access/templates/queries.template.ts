@@ -36,7 +36,7 @@ Encapsulates common query patterns and SQL building logic.
   builder.addImports([
     {
       from: "kysely",
-      imports: ["Kysely", "SelectQueryBuilder"],
+      imports: ["Kysely"],
       isTypeOnly: true
     },
     {
@@ -85,8 +85,6 @@ export interface PaginationOptions {
  */
 export function buildFindAllQuery(
   db: Kysely<Database>,
-  filters?: ${className}QueryFilters,
-  pagination?: PaginationOptions,
 ) {
   const query = db.selectFrom("${fileName}");
   return query;
@@ -125,7 +123,6 @@ export function buildFindByIdQuery(
  */
 export function buildCountQuery(
   db: Kysely<Database>,
-  filters?: ${className}QueryFilters,
 ) {
   const query = db
     .selectFrom("${fileName}")

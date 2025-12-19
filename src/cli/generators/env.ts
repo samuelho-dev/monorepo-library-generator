@@ -23,10 +23,14 @@
 
 import { Console, Effect } from "effect"
 import * as path from "node:path"
-import { generateTypesFile } from "../../generators/env/templates/types.template"
 import { generateConfigFile } from "../../generators/env/templates/config.template"
+import {
+  generateClientEntryPoint,
+  generateIndexEntryPoint,
+  generateServerEntryPoint
+} from "../../generators/env/templates/entry-points.template"
 import { generateEnvFile } from "../../generators/env/templates/env.template"
-import { generateClientEntryPoint, generateServerEntryPoint, generateIndexEntryPoint } from "../../generators/env/templates/entry-points.template"
+import { generateTypesFile } from "../../generators/env/templates/types.template"
 import { findDotEnvFile, parseDotEnvFile } from "../../generators/env/utils/parse-dotenv"
 import { createEffectFsAdapter } from "../../utils/effect-fs-adapter"
 import { getPackageName } from "../../utils/workspace-config"
@@ -70,9 +74,9 @@ export function generateEnv(options: EnvGeneratorOptions = {}) {
     )
 
     yield* Console.log(`📋 Parsed ${vars.length} environment variables`)
-    yield* Console.log(`   - Shared: ${vars.filter(v => v.context === "shared").length}`)
-    yield* Console.log(`   - Client: ${vars.filter(v => v.context === "client").length}`)
-    yield* Console.log(`   - Server: ${vars.filter(v => v.context === "server").length}`)
+    yield* Console.log(`   - Shared: ${vars.filter((v) => v.context === "shared").length}`)
+    yield* Console.log(`   - Client: ${vars.filter((v) => v.context === "client").length}`)
+    yield* Console.log(`   - Server: ${vars.filter((v) => v.context === "server").length}`)
 
     // Phase 2: Generate source files using templates
     yield* Console.log(`📝 Generating type-safe environment files...`)
@@ -114,7 +118,7 @@ export function generateEnv(options: EnvGeneratorOptions = {}) {
     const packageJson = {
       name: packageName,
       version: "0.0.1",
-      type: "module" as const,
+      type: "module",
       sideEffects: false,
       description: "Type-safe environment variable access with Effect Config",
       exports: {
@@ -251,8 +255,8 @@ node dist/bin/cli.mjs init
     yield* Console.log("")
     yield* Console.log(`📝 Environment Variables (${vars.length}):`)
     for (const v of vars) {
-      const icon = v.context === 'client' ? '🌐' : v.context === 'shared' ? '🔄' : '🔒'
-      const secretLabel = v.isSecret ? ' (secret)' : ''
+      const icon = v.context === "client" ? "🌐" : v.context === "shared" ? "🔄" : "🔒"
+      const secretLabel = v.isSecret ? " (secret)" : ""
       yield* Console.log(`   ${icon} ${v.name}: ${v.type}${secretLabel}`)
     }
 

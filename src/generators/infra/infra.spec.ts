@@ -53,7 +53,7 @@ describe("Infra Generator - Foundation", () => {
         "libs/infra/cache/package.json",
         "utf-8"
       )
-      expect(packageJsonContent).toContain("@proj/infra-cache")
+      expect(packageJsonContent).toContain("@myorg/infra-cache")
       expect(packageJsonContent).toContain("effect")
     })
 

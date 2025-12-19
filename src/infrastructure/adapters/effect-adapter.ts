@@ -7,15 +7,10 @@
  * @module monorepo-library-generator/infrastructure/adapters/effect-adapter
  */
 
-import { FileSystem, Path } from "@effect/platform";
-import { Effect } from "effect";
-import type { FileSystemAdapter } from "./filesystem";
-import {
-  DirectoryCreationError,
-  FileReadError,
-  FileSystemError,
-  FileWriteError,
-} from "./filesystem";
+import { FileSystem, Path } from "@effect/platform"
+import { Effect } from "effect"
+import type { FileSystemAdapter } from "./filesystem"
+import { DirectoryCreationError, FileReadError, FileSystemError, FileWriteError } from "./filesystem"
 
 /**
  * Effect FileSystem Adapter Implementation
@@ -25,10 +20,10 @@ import {
  */
 class EffectFsAdapterImpl implements FileSystemAdapter {
   constructor(
-    private readonly workspaceRoot: string,
-    private readonly fs: FileSystem.FileSystem,
-    private readonly pathService: Path.Path,
-    private readonly mode: "nx" | "effect" = "effect"
+    readonly workspaceRoot: string,
+    readonly fs: FileSystem.FileSystem,
+    readonly pathService: Path.Path,
+    readonly mode: "nx" | "effect" = "effect"
   ) {}
 
   /**
@@ -39,10 +34,10 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   writeFile(path: string, content: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
-      : this.pathService.resolve(path);
+      : this.pathService.resolve(path)
 
     // Create parent directory
-    const parentDir = this.pathService.dirname(absolutePath);
+    const parentDir = this.pathService.dirname(absolutePath)
     const createDir = this.fs
       .makeDirectory(parentDir, { recursive: true })
       .pipe(
@@ -50,10 +45,10 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
           (error) =>
             new DirectoryCreationError({
               path: parentDir,
-              cause: error,
+              cause: error
             })
         )
-      );
+      )
 
     // Write file
     const writeFile = this.fs.writeFileString(absolutePath, content).pipe(
@@ -62,15 +57,15 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
           new FileWriteError({
             path: absolutePath,
             content,
-            cause: error,
+            cause: error
           })
       )
-    );
+    )
 
-    return Effect.gen(function* () {
-      yield* createDir;
-      yield* writeFile;
-    });
+    return Effect.gen(function*() {
+      yield* createDir
+      yield* writeFile
+    })
   }
 
   /**
@@ -79,17 +74,17 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   readFile(path: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
-      : this.pathService.resolve(path);
+      : this.pathService.resolve(path)
 
     return this.fs.readFileString(absolutePath).pipe(
       Effect.mapError(
         (error) =>
           new FileReadError({
             path: absolutePath,
-            cause: error,
+            cause: error
           })
       )
-    );
+    )
   }
 
   /**
@@ -98,7 +93,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   exists(path: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
-      : this.pathService.resolve(path);
+      : this.pathService.resolve(path)
 
     return this.fs.exists(absolutePath).pipe(
       Effect.mapError(
@@ -106,10 +101,10 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
           new FileSystemError({
             message: `Failed to check existence of: ${absolutePath}`,
             path: absolutePath,
-            cause: error,
+            cause: error
           })
       )
-    );
+    )
   }
 
   /**
@@ -118,17 +113,17 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   makeDirectory(path: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
-      : this.pathService.resolve(path);
+      : this.pathService.resolve(path)
 
     return this.fs.makeDirectory(absolutePath, { recursive: true }).pipe(
       Effect.mapError(
         (error) =>
           new DirectoryCreationError({
             path: absolutePath,
-            cause: error,
+            cause: error
           })
       )
-    );
+    )
   }
 
   /**
@@ -137,7 +132,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   listDirectory(path: string) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
-      : this.pathService.resolve(path);
+      : this.pathService.resolve(path)
 
     return this.fs.readDirectory(absolutePath).pipe(
       Effect.mapError(
@@ -145,10 +140,10 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
           new FileSystemError({
             message: `Failed to list directory: ${absolutePath}`,
             path: absolutePath,
-            cause: error,
+            cause: error
           })
       )
-    );
+    )
   }
 
   /**
@@ -157,7 +152,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
   remove(path: string, options?: { recursive?: boolean }) {
     const absolutePath = this.pathService.isAbsolute(path)
       ? path
-      : this.pathService.resolve(path);
+      : this.pathService.resolve(path)
 
     return this.fs
       .remove(absolutePath, { recursive: options?.recursive ?? false })
@@ -167,24 +162,24 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
             new FileSystemError({
               message: `Failed to delete: ${absolutePath}`,
               path: absolutePath,
-              cause: error,
+              cause: error
             })
         )
-      );
+      )
   }
 
   /**
    * Get workspace root
    */
   getWorkspaceRoot() {
-    return this.workspaceRoot;
+    return this.workspaceRoot
   }
 
   /**
    * Get mode (always 'effect' for EffectFsAdapter)
    */
   getMode() {
-    return this.mode;
+    return this.mode
   }
 }
 
@@ -198,10 +193,10 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
  * @returns Effect that provides FileSystemAdapter
  */
 export function createEffectFsAdapter(workspaceRoot: string) {
-  return Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const pathService = yield* Path.Path;
+  return Effect.gen(function*() {
+    const fs = yield* FileSystem.FileSystem
+    const pathService = yield* Path.Path
 
-    return new EffectFsAdapterImpl(workspaceRoot, fs, pathService);
-  });
+    return new EffectFsAdapterImpl(workspaceRoot, fs, pathService)
+  })
 }

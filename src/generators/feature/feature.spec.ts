@@ -276,7 +276,7 @@ describe("feature generator", () => {
         tree.read("libs/feature/payment/package.json", "utf-8") || "{}"
       )
 
-      expect(packageJson.name).toBe("@proj/feature-payment")
+      expect(packageJson.name).toBe("@myorg/feature-payment")
       expect(packageJson.type).toBe("module")
 
       // Effect peer dependency
@@ -572,7 +572,7 @@ describe("feature generator", () => {
 
       const readme = tree.read("libs/feature/payment/README.md", "utf-8")
 
-      expect(readme).toContain("# @proj/feature-payment")
+      expect(readme).toContain("# @myorg/feature-payment")
       expect(readme).toContain("Payment processing feature")
       expect(readme).toContain("## Installation")
       expect(readme).toContain("## Usage")
@@ -586,7 +586,7 @@ describe("feature generator", () => {
 
       const claude = tree.read("libs/feature/payment/CLAUDE.md", "utf-8")
 
-      expect(claude).toContain("# @proj/feature-payment")
+      expect(claude).toContain("# @myorg/feature-payment")
       expect(claude).toContain("AI-optimized reference")
       expect(claude).toContain("## Quick Reference")
       expect(claude).toContain("## Import Patterns")

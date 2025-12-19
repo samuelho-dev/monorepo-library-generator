@@ -50,22 +50,61 @@ export function generateClientLayersFile(options: InfraTemplateOptions) {
  * Browser-safe implementation of ${className}Service.
  * Uses only browser APIs and client-side data sources.
  *
+ * BASELINE: Uses in-memory Map for client-side storage.
+ * Replace with localStorage/IndexedDB for persistence.
+ *
  * Defined as static member: ${className}Service.ClientLive
  */
-${className}Service.ClientLive = Layer.effect(
+${className}Service.ClientLive = Layer.sync(
   ${className}Service,
-  Effect.gen(function* () {
-    // TODO: Inject browser-specific dependencies
-    // Example: localStorage, IndexedDB, etc.
+  () => {
+    // In-memory store for baseline client implementation
+    const store = new Map<string, { id: string; [key: string]: unknown }>();
+    let idCounter = 0;
 
     return {
-      get: (id: string) => {
-        // TODO: Implement browser-safe get operation
-        return Effect.succeed(Option.none());
-      },
-      // TODO: Implement client methods
+      get: (id: string) =>
+        Effect.sync(() => {
+          const item = store.get(id);
+          return item ? Option.some(item) : Option.none();
+        }),
+
+      findByCriteria: (criteria: Record<string, unknown>, skip = 0, limit = 10) =>
+        Effect.sync(() => {
+          const items = Array.from(store.values())
+            .filter((item) =>
+              Object.entries(criteria).every(
+                ([key, value]) => item[key] === value
+              )
+            )
+            .slice(skip, skip + limit);
+          return items;
+        }),
+
+      create: (input: Record<string, unknown>) =>
+        Effect.sync(() => {
+          const id = \`client-\${++idCounter}\`;
+          const item = { id, ...input, createdAt: new Date() };
+          store.set(id, item);
+          return item;
+        }),
+
+      update: (id: string, input: Record<string, unknown>) =>
+        Effect.sync(() => {
+          const existing = store.get(id);
+          const updated = { ...existing, ...input, id, updatedAt: new Date() };
+          store.set(id, updated);
+          return updated;
+        }),
+
+      delete: (id: string) =>
+        Effect.sync(() => {
+          store.delete(id);
+        }),
+
+      healthCheck: () => Effect.succeed(true),
     };
-  })
+  }
 );`)
   builder.addBlankLine()
 

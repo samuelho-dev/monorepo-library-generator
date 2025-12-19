@@ -174,7 +174,7 @@ export function createTaggedErrorClass(config: TaggedErrorConfig) {
             .map((line) => `    ${line}`)
             .join("\n")
 
-          return `static ${method.name}(${params}): ${method.returnType} {\n${indentedBody}\n  }`
+          return `static ${method.name}(${params}) {\n${indentedBody}\n  }`
         })
         .join("\n\n  ")
     : ""

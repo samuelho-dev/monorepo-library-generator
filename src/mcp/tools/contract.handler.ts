@@ -6,10 +6,10 @@
  */
 
 import { Effect, ParseResult } from "effect"
-import { generateContractCore, type ContractCoreOptions } from "../../generators/core/contract"
+import { type ContractCoreOptions, generateContractCore } from "../../generators/core/contract"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatErrorResponse, formatOutput, formatValidationError } from "../../infrastructure/output/formatter"
-import { decodeContractInput, type ContractInput } from "../../infrastructure/validation/registry"
+import { type ContractInput, decodeContractInput } from "../../infrastructure/validation/registry"
 import { ValidationError } from "../utils/validation"
 
 /**
@@ -34,7 +34,7 @@ const contractExecutor = createExecutor<ContractInput, ContractCoreOptions>(
  * After: ~40 lines with direct core generator invocation using proper Effect patterns
  */
 export const handleGenerateContract = (input: unknown) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // 1. Validate input with Effect Schema using proper error channel
     const validated = yield* decodeContractInput(input).pipe(
       Effect.mapError((parseError) =>
@@ -69,13 +69,11 @@ export const handleGenerateContract = (input: unknown) =>
     return yield* contractExecutor
       .execute({
         ...validated,
-        __interfaceType: "mcp" as const
+        __interfaceType: "mcp"
       })
       .pipe(
         Effect.map((result) => formatOutput(result, "mcp")),
-        Effect.catchTag("GeneratorExecutionError", (error) =>
-          Effect.succeed(formatErrorResponse(error))
-        )
+        Effect.catchTag("GeneratorExecutionError", (error) => Effect.succeed(formatErrorResponse(error)))
       )
   }).pipe(
     // Handle validation errors at top level
@@ -83,6 +81,5 @@ export const handleGenerateContract = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      })
-    )
+      }))
   )

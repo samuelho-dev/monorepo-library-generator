@@ -62,22 +62,18 @@ export function generateServiceSpecFile(options: ProviderTemplateOptions) {
   builder.addRaw(
     " * - ❌ DON'T use manual Effect.runPromise (use it.scoped instead)"
   )
-  builder.addRaw(" * ")
+  builder.addRaw(" *")
   builder.addRaw(" * Layer Isolation:")
   builder.addRaw(" * - Tests use Layer.fresh for consistency across all generators")
   builder.addRaw(" * - Providers are usually stateless but isolation prevents edge cases")
   builder.addRaw(" * - Minimal performance overhead for reliable tests")
   builder.addRaw(" */")
-  builder.addBlankLine()
 
-  // Imports
-  builder.addImport("effect", "Effect")
-  builder.addImport("effect", "Layer")
-  builder.addImport("@effect/vitest", "describe")
-  builder.addImport("@effect/vitest", "expect")
-  builder.addImport("@effect/vitest", "it")
-  builder.addImport("./service", className)
-  builder.addImport("./layers", `${className}Live`)
+  // Imports - ordered for dprint: @effect/vitest, effect, then local (./layers before ./service)
+  builder.addRaw(`import { describe, expect, it } from "@effect/vitest"`)
+  builder.addRaw(`import { Effect, Layer } from "effect"`)
+  builder.addRaw(`import { ${className}Live } from "./layers"`)
+  builder.addRaw(`import { ${className} } from "./service"`)
   builder.addBlankLine()
 
   // Describe block
@@ -310,12 +306,11 @@ export function generateServiceSpecFile(options: ProviderTemplateOptions) {
   builder.addRaw("   */")
   builder.addBlankLine()
   builder.addRaw("  it.scoped(\"service is defined\", () =>")
-  builder.addRaw("    Effect.gen(function* () {")
-  builder.addRaw(`      const service = yield* ${className};`)
-  builder.addRaw("      expect(service).toBeDefined();")
-  builder.addRaw(`    }).pipe(Effect.provide(Layer.fresh(${className}Live)))`)
-  builder.addRaw("  );")
-  builder.addRaw("});")
+  builder.addRaw("    Effect.gen(function*() {")
+  builder.addRaw(`      const service = yield* ${className}`)
+  builder.addRaw("      expect(service).toBeDefined()")
+  builder.addRaw(`    }).pipe(Effect.provide(Layer.fresh(${className}Live))))`)
+  builder.addRaw("})")
   builder.addBlankLine()
 
   return builder.toString()

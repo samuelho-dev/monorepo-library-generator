@@ -5,10 +5,10 @@
  */
 
 import { Effect, ParseResult } from "effect"
-import { generateDataAccessCore, type DataAccessCoreOptions } from "../../generators/core/data-access"
+import { type DataAccessCoreOptions, generateDataAccessCore } from "../../generators/core/data-access"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatErrorResponse, formatOutput, formatValidationError } from "../../infrastructure/output/formatter"
-import { decodeDataAccessInput, type DataAccessInput } from "../../infrastructure/validation/registry"
+import { type DataAccessInput, decodeDataAccessInput } from "../../infrastructure/validation/registry"
 import { ValidationError } from "../utils/validation"
 
 /**
@@ -29,7 +29,7 @@ const dataAccessExecutor = createExecutor<DataAccessInput, DataAccessCoreOptions
  * Handle data-access generation with unified infrastructure
  */
 export const handleGenerateDataAccess = (input: unknown) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // 1. Validate input using proper error channel
     const validated = yield* decodeDataAccessInput(input).pipe(
       Effect.mapError((parseError) =>
@@ -63,13 +63,11 @@ export const handleGenerateDataAccess = (input: unknown) =>
     return yield* dataAccessExecutor
       .execute({
         ...validated,
-        __interfaceType: "mcp" as const
+        __interfaceType: "mcp"
       })
       .pipe(
         Effect.map((result) => formatOutput(result, "mcp")),
-        Effect.catchTag("GeneratorExecutionError", (error) =>
-          Effect.succeed(formatErrorResponse(error))
-        )
+        Effect.catchTag("GeneratorExecutionError", (error) => Effect.succeed(formatErrorResponse(error)))
       )
   }).pipe(
     // Handle validation errors at top level
@@ -77,6 +75,5 @@ export const handleGenerateDataAccess = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      })
-    )
+      }))
   )

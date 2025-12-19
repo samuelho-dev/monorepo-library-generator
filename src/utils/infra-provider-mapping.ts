@@ -21,12 +21,19 @@ export const INFRA_PROVIDER_MAP = {
   metrics: "effect-metrics",
   queue: "effect-queue",
   pubsub: "effect-pubsub"
-} as const
+}
 
 /**
  * Type-safe keys for infrastructure libraries
  */
 export type InfraName = keyof typeof INFRA_PROVIDER_MAP
+
+/**
+ * Type guard to check if a string is a valid InfraName
+ */
+function isInfraName(name: string): name is InfraName {
+  return name in INFRA_PROVIDER_MAP
+}
 
 /**
  * Get provider name for infrastructure library
@@ -36,9 +43,9 @@ export type InfraName = keyof typeof INFRA_PROVIDER_MAP
  */
 export function getProviderForInfra(
   infraName: string
-): string | undefined {
-  if (infraName in INFRA_PROVIDER_MAP) {
-    return INFRA_PROVIDER_MAP[infraName as InfraName]
+) {
+  if (isInfraName(infraName)) {
+    return INFRA_PROVIDER_MAP[infraName]
   }
   return undefined
 }
@@ -53,7 +60,7 @@ export function getProviderForInfra(
 export function getProviderPackageName(
   infraName: string,
   scope: string
-): string | undefined {
+) {
   const provider = getProviderForInfra(infraName)
   return provider ? `${scope}/provider-${provider}` : undefined
 }
@@ -66,7 +73,7 @@ export function getProviderPackageName(
  */
 export function getProviderClassName(
   infraName: string
-): string | undefined {
+) {
   const provider = getProviderForInfra(infraName)
   if (!provider) return undefined
 
@@ -85,6 +92,6 @@ export function getProviderClassName(
  * @param infraName - Infrastructure library name
  * @returns true if mapping exists
  */
-export function hasProviderMapping(infraName: string): boolean {
+export function hasProviderMapping(infraName: string) {
   return infraName in INFRA_PROVIDER_MAP
 }

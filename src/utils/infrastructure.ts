@@ -255,12 +255,9 @@ function generatePackageJsonFile(
     const exports = generateGranularExports(exportConfig)
 
     // Build dependencies based on library type
+    // Note: Provider libraries use in-memory baseline implementation that doesn't require
+    // external dependencies. When users integrate real SDKs, they add dependencies then.
     const dependencies = (() => {
-      // Provider libraries depend on env for configuration
-      if (options.libraryType === "provider") {
-        return { [getPackageName("env")]: "*" }
-      }
-
       // Infrastructure libraries depend on their matching provider
       if (options.libraryType === "infra") {
         // Extract infrastructure name from projectName
@@ -274,13 +271,14 @@ function generatePackageJsonFile(
           const providerName = getProviderForInfra(infraName)
           if (providerName) {
             return {
-              [getPackageName("provider", providerName)]: "*"
+              [getPackageName("provider", providerName)]: "workspace:*"
             }
           }
         }
       }
 
-      // Other library types have no dependencies
+      // Provider, contract, and other library types have no workspace dependencies
+      // The baseline implementation is fully self-contained with in-memory storage
       return undefined
     })()
 
@@ -358,12 +356,15 @@ function generateTsConfigFiles(
       .replace(/\/+/g, "/") // Collapse multiple slashes to single slash
 
     // Generate tsconfig.json (base)
+    // Note: Explicitly specify types to include only what's needed
+    // This avoids issues with stub type packages like @types/minimatch
     const baseTsConfig = {
       extends: `${normalizedOffset}/tsconfig.base.json`,
       compilerOptions: {
         outDir: "./dist",
         rootDir: "./src",
-        verbatimModuleSyntax: true // Preserve import/export for optimal tree-shaking
+        verbatimModuleSyntax: true, // Preserve import/export for optimal tree-shaking
+        types: ["node"] // Explicitly include only node types (for crypto, etc.)
       },
       include: ["src/**/*.ts"],
       exclude: ["node_modules", "dist", "**/*.spec.ts"],
@@ -543,7 +544,7 @@ function createProjectConfiguration(
   return {
     name: options.projectName,
     root: options.projectRoot,
-    projectType: "library" as const,
+    projectType: "library",
     sourceRoot,
     tags: options.tags,
     targets: {

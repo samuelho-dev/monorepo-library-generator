@@ -4,7 +4,7 @@
  * Tests for unified workspace context creation and detection
  */
 
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { createWorkspaceContextExplicit } from "../workspace/context"
 
 describe("Workspace Context", () => {
@@ -23,7 +23,8 @@ describe("Workspace Context", () => {
         type: "nx",
         scope: "@test-scope",
         packageManager: "pnpm",
-        interfaceType: "mcp"
+        interfaceType: "mcp",
+        librariesRoot: "libs"
       })
     })
 

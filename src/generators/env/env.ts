@@ -22,12 +22,16 @@
 import type { Tree } from "@nx/devkit"
 import { formatFiles, logger } from "@nx/devkit"
 import * as path from "node:path"
-import { generateTypesFile } from "./templates/types.template"
-import { generateConfigFile } from "./templates/config.template"
-import { generateEnvFile } from "./templates/env.template"
-import { generateClientEntryPoint, generateServerEntryPoint, generateIndexEntryPoint } from "./templates/entry-points.template"
-import { findDotEnvFile, parseDotEnvFile } from "./utils/parse-dotenv"
 import type { EnvGeneratorSchema } from "./schema"
+import { generateConfigFile } from "./templates/config.template"
+import {
+  generateClientEntryPoint,
+  generateIndexEntryPoint,
+  generateServerEntryPoint
+} from "./templates/entry-points.template"
+import { generateEnvFile } from "./templates/env.template"
+import { generateTypesFile } from "./templates/types.template"
+import { findDotEnvFile, parseDotEnvFile } from "./utils/parse-dotenv"
 
 /**
  * Environment Library Generator for Nx Workspaces
@@ -54,7 +58,7 @@ export default async function envGenerator(
   if (!tree.exists(projectRoot)) {
     throw new Error(
       `Environment library not found at ${projectRoot}. ` +
-      `Run 'pnpm exec monorepo-library-generator init' first to create the workspace structure.`
+        `Run 'pnpm exec monorepo-library-generator init' first to create the workspace structure.`
     )
   }
 
@@ -67,9 +71,9 @@ export default async function envGenerator(
     : parseDotEnvFile("") // Will use defaults
 
   logger.info(`📋 Parsed ${vars.length} environment variables`)
-  logger.info(`   - Shared: ${vars.filter(v => v.context === "shared").length}`)
-  logger.info(`   - Client: ${vars.filter(v => v.context === "client").length}`)
-  logger.info(`   - Server: ${vars.filter(v => v.context === "server").length}`)
+  logger.info(`   - Shared: ${vars.filter((v) => v.context === "shared").length}`)
+  logger.info(`   - Client: ${vars.filter((v) => v.context === "client").length}`)
+  logger.info(`   - Server: ${vars.filter((v) => v.context === "server").length}`)
 
   // Phase 2: Generate source files using templates
   logger.info(`📝 Generating type-safe environment files...`)
@@ -152,7 +156,13 @@ const apiSecret = env.API_SECRET
    - ✅ Tree-shakeable entry points
 
 📝 Environment Variables:
-${vars.map(v => `   ${v.context === 'client' ? '🌐' : v.context === 'shared' ? '🔄' : '🔒'} ${v.name}: ${v.type}${v.isSecret ? ' (secret)' : ''}`).join('\n')}
+${
+      vars.map((v) =>
+        `   ${v.context === "client" ? "🌐" : v.context === "shared" ? "🔄" : "🔒"} ${v.name}: ${v.type}${
+          v.isSecret ? " (secret)" : ""
+        }`
+      ).join("\n")
+    }
 
 💡 Next Steps:
 1. Create or update your .env file in the workspace root

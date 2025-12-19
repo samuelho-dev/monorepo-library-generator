@@ -19,11 +19,8 @@ describe("Contract Generator - Foundation", () => {
     it("should generate all base files", async () => {
       await contractGenerator(tree, { name: "product" })
 
-      // Granular entities structure
-      expect(tree.exists("libs/contract/product/src/lib/entities/product.ts")).toBe(
-        true
-      )
-      expect(tree.exists("libs/contract/product/src/lib/entities/index.ts")).toBe(
+      // Generated types directory (placeholder for prisma-effect-kysely output)
+      expect(tree.exists("libs/contract/product/src/lib/generated/index.ts")).toBe(
         true
       )
       expect(tree.exists("libs/contract/product/src/lib/errors.ts")).toBe(
@@ -223,16 +220,17 @@ describe("Contract Generator - Exports", () => {
   })
 
   describe("Conditional Exports in index.ts", () => {
-    it("should export entities in all cases", async () => {
+    it("should export generated types in all cases", async () => {
       await contractGenerator(tree, { name: "product" })
 
       const indexContent = tree.read("libs/contract/product/src/index.ts", "utf-8")
-      expect(indexContent).toContain("from './lib/entities'")
+      // Generated types are exported from ./lib/generated (prisma-effect-kysely integration)
+      expect(indexContent).toContain("./lib/generated")
 
-      // Verify parse/encode functions exist in entities/product.ts
-      const entitiesContent = tree.read("libs/contract/product/src/lib/entities/product.ts", "utf-8")
-      expect(entitiesContent).toContain("parseProduct")
-      expect(entitiesContent).toContain("encodeProduct")
+      // Verify placeholder generated/index.ts exists with schema placeholder
+      const generatedContent = tree.read("libs/contract/product/src/lib/generated/index.ts", "utf-8")
+      expect(generatedContent).toContain("Product")
+      expect(generatedContent).toContain("Schema.Struct")
     })
 
     it("should export CQRS files when includeCQRS=true", async () => {

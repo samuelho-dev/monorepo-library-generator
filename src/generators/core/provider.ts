@@ -13,34 +13,28 @@
  * @module monorepo-library-generator/generators/core/provider-generator-core
  */
 
-import { Effect } from "effect";
-import type { FileSystemAdapter } from "../../utils/filesystem-adapter";
-import type { PlatformType } from "../../utils/platforms";
-import type {
-  Platform,
-  ProviderTemplateOptions,
-} from "../../utils/shared/types";
-import {
-  generateTypesOnlyFile,
-  type TypesOnlyExportOptions,
-} from "../../utils/templates/types-only-exports.template";
+import { Effect } from "effect"
+import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
+import type { PlatformType } from "../../utils/platforms"
+import type { Platform, ProviderTemplateOptions } from "../../utils/shared/types"
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates/types-only-exports.template"
 import {
   generateErrorsFile,
   generateIndexFile,
   generateLayersFile,
   generateServiceSpecFile,
   generateTypesFile,
-  generateValidationFile,
-} from "../provider/templates/index";
+  generateValidationFile
+} from "../provider/templates/index"
 import {
   generateProviderCreateOperationFile,
   generateProviderDeleteOperationFile,
   generateProviderOperationsIndexFile,
   generateProviderQueryOperationFile,
-  generateProviderServiceIndexFile,
   generateProviderServiceFile,
-  generateProviderUpdateOperationFile,
-} from "../provider/templates/service/index";
+  generateProviderServiceIndexFile,
+  generateProviderUpdateOperationFile
+} from "../provider/templates/service/index"
 
 /**
  * Provider Generator Core Options
@@ -55,25 +49,25 @@ import {
  * @property platform - Target platform (node, browser, edge, universal)
  */
 export interface ProviderCoreOptions {
-  readonly name: string;
-  readonly className: string;
-  readonly propertyName: string;
-  readonly fileName: string;
-  readonly constantName: string;
-  readonly projectName: string;
-  readonly projectRoot: string;
-  readonly sourceRoot: string;
-  readonly packageName: string;
-  readonly description: string;
-  readonly tags: string;
-  readonly offsetFromRoot: string;
-  readonly workspaceRoot?: string;
-  readonly externalService: string;
-  readonly platform: PlatformType;
-  readonly providerType?: "sdk" | "cli" | "http" | "graphql";
-  readonly cliCommand?: string;
-  readonly baseUrl?: string;
-  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none";
+  readonly name: string
+  readonly className: string
+  readonly propertyName: string
+  readonly fileName: string
+  readonly constantName: string
+  readonly projectName: string
+  readonly projectRoot: string
+  readonly sourceRoot: string
+  readonly packageName: string
+  readonly description: string
+  readonly tags: string
+  readonly offsetFromRoot: string
+  readonly workspaceRoot?: string
+  readonly externalService: string
+  readonly platform: PlatformType
+  readonly providerType?: "sdk" | "cli" | "http" | "graphql"
+  readonly cliCommand?: string
+  readonly baseUrl?: string
+  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
 }
 
 /**
@@ -82,11 +76,11 @@ export interface ProviderCoreOptions {
  * Metadata returned after successful generation.
  */
 export interface GeneratorResult {
-  readonly projectName: string;
-  readonly projectRoot: string;
-  readonly sourceRoot: string;
-  readonly packageName: string;
-  readonly filesGenerated: Array<string>;
+  readonly projectName: string
+  readonly projectRoot: string
+  readonly sourceRoot: string
+  readonly packageName: string
+  readonly filesGenerated: Array<string>
 }
 
 /**
@@ -106,14 +100,14 @@ export function generateProviderCore(
   adapter: FileSystemAdapter,
   options: ProviderCoreOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Map PlatformType to Platform for template options (internal mapping)
     const platformMapping: Record<PlatformType, Platform> = {
       node: "server",
       browser: "client",
       edge: "edge",
-      universal: "universal",
-    };
+      universal: "universal"
+    }
 
     // Assemble template options from pre-computed metadata
     const templateOptions: ProviderTemplateOptions = {
@@ -135,19 +129,19 @@ export function generateProviderCore(
       providerType: options.providerType || "sdk",
       ...(options.cliCommand && { cliCommand: options.cliCommand }),
       ...(options.baseUrl && { baseUrl: options.baseUrl }),
-      ...(options.authType && { authType: options.authType }),
-    };
+      ...(options.authType && { authType: options.authType })
+    }
 
     // Generate all domain files
-    const filesGenerated: Array<string> = [];
-    const sourceLibPath = `${options.sourceRoot}/lib`;
+    const filesGenerated: Array<string> = []
+    const sourceLibPath = `${options.sourceRoot}/lib`
 
     // Generate barrel exports
     yield* adapter.writeFile(
       `${options.sourceRoot}/index.ts`,
       generateIndexFile(templateOptions)
-    );
-    filesGenerated.push(`${options.sourceRoot}/index.ts`);
+    )
+    filesGenerated.push(`${options.sourceRoot}/index.ts`)
 
     // Generate types.ts for type-only exports (zero runtime overhead)
     const typesOnlyOptions: TypesOnlyExportOptions = {
@@ -155,26 +149,25 @@ export function generateProviderCore(
       className: options.className,
       fileName: options.fileName,
       packageName: options.packageName,
-      platform:
-        options.platform === "node"
-          ? "server"
-          : options.platform === "browser"
-          ? "client"
-          : "universal",
-    };
-    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions);
-    const workspaceRoot = adapter.getWorkspaceRoot();
+      platform: options.platform === "node"
+        ? "server"
+        : options.platform === "browser"
+        ? "client"
+        : "universal"
+    }
+    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
+    const workspaceRoot = adapter.getWorkspaceRoot()
     yield* adapter.writeFile(
       `${workspaceRoot}/${options.sourceRoot}/types.ts`,
       typesOnlyContent
-    );
-    filesGenerated.push(`${options.sourceRoot}/types.ts`);
+    )
+    filesGenerated.push(`${options.sourceRoot}/types.ts`)
 
     // Generate CLAUDE.md with bundle optimization guidance
-    const providerType = options.providerType || "sdk";
+    const providerType = options.providerType || "sdk"
 
     // Generate provider-type-specific documentation
-    let claudeDoc = "";
+    let claudeDoc = ""
 
     if (providerType === "cli") {
       claudeDoc = `# ${templateOptions.packageName}
@@ -183,15 +176,11 @@ ${templateOptions.description}
 
 ## Quick Reference
 
-This is an AI-optimized reference for ${
-        templateOptions.externalService
-      }, a CLI wrapper provider library following Effect-based service patterns.
+This is an AI-optimized reference for ${templateOptions.externalService}, a CLI wrapper provider library following Effect-based service patterns.
 
 ## Provider Type: CLI Wrapper
 
-This provider wraps the \`${
-        options.cliCommand || "cli-command"
-      }\` command-line tool using Effect's Command API.
+This provider wraps the \`${options.cliCommand || "cli-command"}\` command-line tool using Effect's Command API.
 
 ## Architecture
 
@@ -208,9 +197,7 @@ This provider wraps the \`${
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { CommandResult, ${templateOptions.className}Config } from '${
-        templateOptions.packageName
-      }/types';
+import type { CommandResult, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
 
 // Service import
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
@@ -237,7 +224,7 @@ Effect.gen(function* () {
 3. **Testing** (\`lib/layers.ts\`):
    - Test layer uses Layer.succeed with mock implementations
    - No actual CLI execution in tests
-`;
+`
     } else if (providerType === "http") {
       claudeDoc = `# ${templateOptions.packageName}
 
@@ -245,15 +232,11 @@ ${templateOptions.description}
 
 ## Quick Reference
 
-This is an AI-optimized reference for ${
-        templateOptions.externalService
-      }, an HTTP/REST API provider library following Effect-based service patterns.
+This is an AI-optimized reference for ${templateOptions.externalService}, an HTTP/REST API provider library following Effect-based service patterns.
 
 ## Provider Type: HTTP/REST API
 
-This provider integrates with ${
-        templateOptions.externalService
-      } HTTP API using Effect's HttpClient.
+This provider integrates with ${templateOptions.externalService} HTTP API using Effect's HttpClient.
 
 ## Architecture
 
@@ -270,9 +253,7 @@ This provider integrates with ${
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { Resource, ${templateOptions.className}Config } from '${
-        templateOptions.packageName
-      }/types';
+import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
 
 // Service import
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
@@ -304,7 +285,7 @@ Effect.gen(function* () {
    - HttpError: HTTP status code errors (4xx, 5xx)
    - NetworkError: Connection failures
    - RateLimitError: Rate limiting with retry-after
-`;
+`
     } else if (providerType === "graphql") {
       claudeDoc = `# ${templateOptions.packageName}
 
@@ -312,15 +293,11 @@ ${templateOptions.description}
 
 ## Quick Reference
 
-This is an AI-optimized reference for ${
-        templateOptions.externalService
-      }, a GraphQL API provider library following Effect-based service patterns.
+This is an AI-optimized reference for ${templateOptions.externalService}, a GraphQL API provider library following Effect-based service patterns.
 
 ## Provider Type: GraphQL API
 
-This provider integrates with ${
-        templateOptions.externalService
-      } GraphQL API using Effect's HttpClient.
+This provider integrates with ${templateOptions.externalService} GraphQL API using Effect's HttpClient.
 
 ## Architecture
 
@@ -337,9 +314,7 @@ This provider integrates with ${
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { Resource, ${templateOptions.className}Config } from '${
-        templateOptions.packageName
-      }/types';
+import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
 
 // Service import
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
@@ -383,7 +358,7 @@ Effect.gen(function* () {
    - GraphQLError: GraphQL operation errors with error array
    - HttpError: HTTP-level errors (network, status codes)
    - ValidationError: Schema validation failures
-`;
+`
     } else {
       // SDK provider (default)
       claudeDoc = `# ${templateOptions.packageName}
@@ -392,9 +367,7 @@ ${templateOptions.description}
 
 ## Quick Reference
 
-This is an AI-optimized reference for ${
-        templateOptions.externalService
-      }, a provider library following Effect-based service patterns with granular bundle optimization.
+This is an AI-optimized reference for ${templateOptions.externalService}, a provider library following Effect-based service patterns with granular bundle optimization.
 
 ## Architecture
 
@@ -418,24 +391,16 @@ This is an AI-optimized reference for ${
 
 \`\`\`typescript
 // 1. Granular operation import (smallest bundle ~3-5 KB)
-import { createOperations } from '${
-        templateOptions.packageName
-      }/service/operations/create';
+import { createOperations } from '${templateOptions.packageName}/service/operations/create';
 
 // 2. Type-only import (zero runtime ~0.3 KB)
-import type { Resource, ${templateOptions.className}Config } from '${
-        templateOptions.packageName
-      }/types';
+import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
 
 // 3. Operation category (~8-10 KB)
-import { createOperations, queryOperations } from '${
-        templateOptions.packageName
-      }/service/operations';
+import { createOperations, queryOperations } from '${templateOptions.packageName}/service/operations';
 
 // 4. Full service (~12-15 KB)
-import { ${templateOptions.className} } from '${
-        templateOptions.packageName
-      }/service';
+import { ${templateOptions.className} } from '${templateOptions.packageName}/service';
 
 // 5. Package barrel (largest ~18-20 KB)
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
@@ -464,9 +429,7 @@ import { ${templateOptions.className} } from '${templateOptions.packageName}';
 
 \`\`\`typescript
 // Granular import for optimal bundle size
-import { createOperations } from '${
-        templateOptions.packageName
-      }/service/operations/create';
+import { createOperations } from '${templateOptions.packageName}/service/operations/create';
 import type { Resource } from '${templateOptions.packageName}/types';
 
 // Use directly without full service
@@ -507,9 +470,7 @@ This allows you to:
 
 ### Replacing with Real SDK
 
-Follow these steps to integrate with the actual ${
-        templateOptions.externalService
-      } SDK:
+Follow these steps to integrate with the actual ${templateOptions.externalService} SDK:
 
 #### 1. Install SDK Package
 
@@ -584,9 +545,7 @@ export const ${templateOptions.className}Live = Layer.scoped(
 
     // Initialize SDK with cleanup
     const client = yield* Effect.acquireRelease(
-      Effect.tryPromise(() => ${
-        templateOptions.externalService
-      }SDK.connect(config)),
+      Effect.tryPromise(() => ${templateOptions.externalService}SDK.connect(config)),
       (client) => Effect.sync(() => client.close())
     );
 
@@ -615,9 +574,7 @@ list: (params) =>
       cause: error
     })
   }).pipe(
-    Effect.tap(() => Effect.logDebug("[${
-      templateOptions.className
-    }] list called", params)),
+    Effect.tap(() => Effect.logDebug("[${templateOptions.className}] list called", params)),
     Effect.timeoutFail({ /* ... */ }),
     Effect.withSpan("${templateOptions.className}.list")
   ),
@@ -628,9 +585,7 @@ list: (params) =>
 Replace in-memory store in \`make${templateOptions.className}Layer\`:
 
 \`\`\`typescript
-export function make${templateOptions.className}Layer(config: ${
-        templateOptions.className
-      }Config) {
+export function make${templateOptions.className}Layer(config: ${templateOptions.className}Config) {
   return Layer.scoped(
     ${templateOptions.className},
     Effect.gen(function* () {
@@ -668,102 +623,102 @@ export function make${templateOptions.className}Layer(config: ${
 3. **Use Live layer in production**
 
 The baseline implementation remains useful for unit tests and demonstrations.
-`;
+`
     }
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
       claudeDoc
-    );
-    filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`);
+    )
+    filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`)
 
     // Generate all provider-specific files
     yield* adapter.writeFile(
       `${sourceLibPath}/errors.ts`,
       generateErrorsFile(templateOptions)
-    );
-    filesGenerated.push(`${sourceLibPath}/errors.ts`);
+    )
+    filesGenerated.push(`${sourceLibPath}/errors.ts`)
 
     yield* adapter.writeFile(
       `${sourceLibPath}/types.ts`,
       generateTypesFile(templateOptions)
-    );
-    filesGenerated.push(`${sourceLibPath}/types.ts`);
+    )
+    filesGenerated.push(`${sourceLibPath}/types.ts`)
 
     yield* adapter.writeFile(
       `${sourceLibPath}/validation.ts`,
       generateValidationFile(templateOptions)
-    );
-    filesGenerated.push(`${sourceLibPath}/validation.ts`);
+    )
+    filesGenerated.push(`${sourceLibPath}/validation.ts`)
 
     // Generate service directory structure for granular imports
-    const servicePath = `${sourceLibPath}/service`;
-    yield* adapter.makeDirectory(servicePath);
+    const servicePath = `${sourceLibPath}/service`
+    yield* adapter.makeDirectory(servicePath)
 
     // Generate service definition (lightweight Context.Tag with static layers)
     yield* adapter.writeFile(
       `${servicePath}/service.ts`,
       generateProviderServiceFile(templateOptions)
-    );
-    filesGenerated.push(`${servicePath}/service.ts`);
+    )
+    filesGenerated.push(`${servicePath}/service.ts`)
 
     // Conditional: Only generate operations for SDK providers
     // CLI/HTTP/GraphQL providers have operations defined in interface.ts
     if (providerType === "sdk") {
-      const operationsPath = `${servicePath}/operations`;
-      yield* adapter.makeDirectory(operationsPath);
+      const operationsPath = `${servicePath}/operations`
+      yield* adapter.makeDirectory(operationsPath)
 
       // Generate operation files (split for optimal tree-shaking)
       yield* adapter.writeFile(
         `${operationsPath}/create.ts`,
         generateProviderCreateOperationFile(templateOptions)
-      );
-      filesGenerated.push(`${operationsPath}/create.ts`);
+      )
+      filesGenerated.push(`${operationsPath}/create.ts`)
 
       yield* adapter.writeFile(
         `${operationsPath}/query.ts`,
         generateProviderQueryOperationFile(templateOptions)
-      );
-      filesGenerated.push(`${operationsPath}/query.ts`);
+      )
+      filesGenerated.push(`${operationsPath}/query.ts`)
 
       yield* adapter.writeFile(
         `${operationsPath}/update.ts`,
         generateProviderUpdateOperationFile(templateOptions)
-      );
-      filesGenerated.push(`${operationsPath}/update.ts`);
+      )
+      filesGenerated.push(`${operationsPath}/update.ts`)
 
       yield* adapter.writeFile(
         `${operationsPath}/delete.ts`,
         generateProviderDeleteOperationFile(templateOptions)
-      );
-      filesGenerated.push(`${operationsPath}/delete.ts`);
+      )
+      filesGenerated.push(`${operationsPath}/delete.ts`)
 
       // Generate operations barrel export
       yield* adapter.writeFile(
         `${operationsPath}/index.ts`,
         generateProviderOperationsIndexFile(templateOptions)
-      );
-      filesGenerated.push(`${operationsPath}/index.ts`);
+      )
+      filesGenerated.push(`${operationsPath}/index.ts`)
     }
 
     // Generate service barrel export
     yield* adapter.writeFile(
       `${servicePath}/index.ts`,
       generateProviderServiceIndexFile(templateOptions)
-    );
-    filesGenerated.push(`${servicePath}/index.ts`);
+    )
+    filesGenerated.push(`${servicePath}/index.ts`)
 
     yield* adapter.writeFile(
       `${sourceLibPath}/layers.ts`,
       generateLayersFile(templateOptions)
-    );
-    filesGenerated.push(`${sourceLibPath}/layers.ts`);
+    )
+    filesGenerated.push(`${sourceLibPath}/layers.ts`)
 
     yield* adapter.writeFile(
       `${sourceLibPath}/service.spec.ts`,
       generateServiceSpecFile(templateOptions)
-    );
-    filesGenerated.push(`${sourceLibPath}/service.spec.ts`);
+    )
+    filesGenerated.push(`${sourceLibPath}/service.spec.ts`)
 
     // Platform-specific export files removed - rely on automatic tree-shaking
     // All exports are now handled through the main index.ts
@@ -773,7 +728,7 @@ The baseline implementation remains useful for unit tests and demonstrations.
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       packageName: options.packageName,
-      filesGenerated,
-    };
-  });
+      filesGenerated
+    }
+  })
 }

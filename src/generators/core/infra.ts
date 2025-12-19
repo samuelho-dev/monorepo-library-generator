@@ -24,9 +24,9 @@ import {
   generateEdgeLayersFile,
   generateErrorsFile,
   generateIndexFile,
-  generateServiceFile,
   generateMemoryProviderFile,
   generateServerLayersFile,
+  generateServiceFile,
   generateUseHookFile
 } from "../infra/templates/index"
 import { generateProviderConsolidation } from "./provider-consolidation"
@@ -338,7 +338,6 @@ function MyComponent() {
         yield* adapter.writeFile(`${layersLibPath}/edge-layers.ts`, edgeLayersContent)
         filesGenerated.push(`${layersLibPath}/edge-layers.ts`)
       }
-
     }
 
     // Generate provider consolidation (conditional)

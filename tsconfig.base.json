@@ -32,22 +32,22 @@
       "ES2022"
     ],
     "paths": {
-      "@custom-repo/contract-*": [
+      "@myorg/contract-*": [
         "libs/contract/*/src/index.ts"
       ],
-      "@custom-repo/data-access-*": [
+      "@myorg/data-access-*": [
         "libs/data-access/*/src/index.ts"
       ],
-      "@custom-repo/feature-*": [
+      "@myorg/feature-*": [
         "libs/feature/*/src/index.ts"
       ],
-      "@custom-repo/infra-*": [
+      "@myorg/infra-*": [
         "libs/infra/*/src/index.ts"
       ],
-      "@custom-repo/provider-*": [
+      "@myorg/provider-*": [
         "libs/provider/*/src/index.ts"
       ],
-      "@custom-repo/env": [
+      "@myorg/env": [
         "libs/env/src/index.ts"
       ]
     }

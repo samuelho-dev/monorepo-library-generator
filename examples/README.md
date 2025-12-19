@@ -57,14 +57,14 @@ model User {
 }
 ```
 
-**Generates**: `@custom-repo/contract-user`
+**Generates**: `@myorg/contract-user`
 - Types: `User`, `CreateUserInput`, `UpdateUserInput`
 - Schemas: `UserSchema`, `CreateUserInputSchema`
 - Events: `UserCreated`, `UserUpdated`
 
 ### 2. Provider Layer (Kysely)
 
-**Already generated**: `@custom-repo/provider-kysely`
+**Already generated**: `@myorg/provider-kysely`
 
 Provides low-level database operations:
 - `get(id)` - Retrieve by ID
@@ -74,11 +74,11 @@ Provides low-level database operations:
 
 ### 3. Infrastructure Layer (Database)
 
-**Already generated**: `@custom-repo/infra-database`
+**Already generated**: `@myorg/infra-database`
 
 **Auto-integrates with provider**:
 ```typescript
-import { Kysely } from "@custom-repo/provider-kysely"
+import { Kysely } from "@myorg/provider-kysely"
 
 export class DatabaseService extends Context.Tag(...)<...>() {
   static readonly Live = Layer.scoped(this, Effect.gen(function* () {
@@ -99,8 +99,8 @@ export class DatabaseService extends Context.Tag(...)<...>() {
 **Generate with**: `mlg generate data-access user`
 
 ```typescript
-import { DatabaseService } from "@custom-repo/infra-database"
-import { UserSchema } from "@custom-repo/contract-user"
+import { DatabaseService } from "@myorg/infra-database"
+import { UserSchema } from "@myorg/contract-user"
 
 export class UserRepository extends Context.Tag(...)<...>() {
   static readonly Live = Layer.effect(this, Effect.gen(function* () {
@@ -120,7 +120,7 @@ export class UserRepository extends Context.Tag(...)<...>() {
 **Generate with**: `mlg generate feature user-management`
 
 ```typescript
-import { UserRepository } from "@custom-repo/data-access-user"
+import { UserRepository } from "@myorg/data-access-user"
 
 export class UserService extends Context.Tag(...)<...>() {
   static readonly Live = Layer.effect(this, Effect.gen(function* () {

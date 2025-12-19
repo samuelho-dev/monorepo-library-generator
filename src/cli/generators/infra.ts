@@ -9,10 +9,7 @@ import { Console, Effect, ParseResult } from "effect"
 import { generateInfraCore, type InfraCoreOptions } from "../../generators/core/infra"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatOutput } from "../../infrastructure/output/formatter"
-import {
-  decodeInfraInput,
-  type InfraInput
-} from "../../infrastructure/validation/registry"
+import { decodeInfraInput, type InfraInput } from "../../infrastructure/validation/registry"
 
 /**
  * Infra Generator Options - imported from validation registry
@@ -39,19 +36,17 @@ const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
 )
 
 export function generateInfra(options: InfraGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeInfraInput(options).pipe(
-      Effect.mapError((parseError) =>
-        new Error(ParseResult.TreeFormatter.formatErrorSync(parseError))
-      )
+      Effect.mapError((parseError) => new Error(ParseResult.TreeFormatter.formatErrorSync(parseError)))
     )
 
     yield* Console.log(`Creating infra library: ${validated.name}...`)
 
     const result = yield* infraExecutor.execute({
       ...validated,
-      __interfaceType: "cli" as const
+      __interfaceType: "cli"
     })
 
     const output = formatOutput(result, "cli")

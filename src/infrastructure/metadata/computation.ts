@@ -6,10 +6,10 @@
  * @module monorepo-library-generator/infrastructure/metadata/computation
  */
 
-import { offsetFromRoot as computeOffsetFromRoot } from "@nx/devkit";
-import { createNamingVariants } from "../../utils/naming";
-import type { WorkspaceContext } from "../workspace/types";
-import type { LibraryType, MetadataInput } from "./types";
+import { offsetFromRoot as computeOffsetFromRoot } from "@nx/devkit"
+import { createNamingVariants } from "../../utils/naming"
+import type { WorkspaceContext } from "../workspace/types"
+import type { LibraryType, MetadataInput } from "./types"
 
 /**
  * Get default directory for library type
@@ -25,9 +25,9 @@ function getDefaultDirectory(libraryType: LibraryType, librariesRoot = "libs") {
     feature: `${librariesRoot}/feature`,
     provider: `${librariesRoot}/provider`,
     infra: `${librariesRoot}/infra`,
-    util: `${librariesRoot}/util`,
-  };
-  return directories[libraryType];
+    util: `${librariesRoot}/util`
+  }
+  return directories[libraryType]
 }
 
 /**
@@ -42,11 +42,11 @@ function getDefaultDirectory(libraryType: LibraryType, librariesRoot = "libs") {
  * createDomainName("api") // => "Api"
  * ```
  */
-function createDomainName(fileName: string): string {
+function createDomainName(fileName: string) {
   return fileName
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    .join(" ")
 }
 
 /**
@@ -68,15 +68,23 @@ function buildTags(
   fileName: string,
   additionalTags?: ReadonlyArray<string>
 ) {
-  const baseTags = [`type:${libraryType}`, `scope:${fileName}`];
+  // Check if a custom scope tag is already provided in additionalTags
+  const hasCustomScope = additionalTags?.some((tag) => tag.startsWith("scope:"))
+
+  const baseTags = [`type:${libraryType}`]
+
+  // Only add default scope:${fileName} if no custom scope was provided
+  if (!hasCustomScope) {
+    baseTags.push(`scope:${fileName}`)
+  }
 
   if (additionalTags) {
     for (const tag of additionalTags) {
-      baseTags.push(tag);
+      baseTags.push(tag)
     }
   }
 
-  return baseTags.join(",");
+  return baseTags.join(",")
 }
 
 /**
@@ -125,29 +133,29 @@ export function computeMetadata(
   context: WorkspaceContext
 ) {
   // Get all naming variants using Nx utility
-  const nameVariants = createNamingVariants(input.name);
-  const fileName = nameVariants.fileName; // kebab-case
+  const nameVariants = createNamingVariants(input.name)
+  const fileName = nameVariants.fileName // kebab-case
 
   // Get directory (use default if not provided)
-  const directory = input.directory || getDefaultDirectory(input.libraryType);
+  const directory = input.directory || getDefaultDirectory(input.libraryType)
 
   // Compute paths
-  const projectRoot = `${directory}/${fileName}`;
-  const sourceRoot = `${projectRoot}/src`;
-  const distRoot = `dist/${directory}/${fileName}`;
+  const projectRoot = `${directory}/${fileName}`
+  const sourceRoot = `${projectRoot}/src`
+  const distRoot = `dist/${directory}/${fileName}`
 
   // Compute project identifiers
-  const projectName = `${input.libraryType}-${fileName}`;
-  const packageName = `${context.scope}/${projectName}`;
+  const projectName = `${input.libraryType}-${fileName}`
+  const packageName = `${context.scope}/${projectName}`
 
   // Compute domain name (use description or derive from fileName)
-  const domainName = input.description || createDomainName(fileName);
+  const domainName = input.description || createDomainName(fileName)
 
   // Build tags
-  const tags = buildTags(input.libraryType, fileName, input.additionalTags);
+  const tags = buildTags(input.libraryType, fileName, input.additionalTags)
 
   // Compute offset from root (for Nx template substitutions)
-  const offsetFromRoot = computeOffsetFromRoot(projectRoot);
+  const offsetFromRoot = computeOffsetFromRoot(projectRoot)
 
   return {
     // Required by Nx template substitutions
@@ -174,8 +182,8 @@ export function computeMetadata(
 
     // Metadata
     description: domainName,
-    libraryType: input.libraryType,
-  };
+    libraryType: input.libraryType
+  }
 }
 
 /**
@@ -192,7 +200,7 @@ export function computeSimpleMetadata(
   const input = {
     name,
     libraryType,
-    ...(description !== undefined && { description }),
-  };
-  return computeMetadata(input, context);
+    ...(description !== undefined && { description })
+  }
+  return computeMetadata(input, context)
 }

@@ -8,7 +8,6 @@
 
 import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder";
 import type { ProviderTemplateOptions } from "../../../../utils/shared/types";
-import { getPackageName } from "../../../../utils/workspace-config";
 
 /**
  * Generate service/service.ts file
@@ -38,7 +37,7 @@ Import only the operations you need for smallest bundle size.
 
 Bundle optimization:
   - Granular import: import { createOperations } from './operations/create'
-  - Full service: import { ${className} } from './interface'`
+  - Full service: import { ${className} } from './service'`
     : `Provider Type: ${providerType}`
 }`,
     module: `@custom-repo/provider-${fileName}/service`,
@@ -52,10 +51,6 @@ Bundle optimization:
   }
 
   builder.addImports([{ from: "effect", imports: effectImports }]);
-  builder.addBlankLine();
-
-  // Import env for configuration
-  builder.addImports([{ from: getPackageName("env"), imports: ["env"] }]);
   builder.addBlankLine();
 
   // Add platform imports for HTTP/GraphQL
@@ -262,28 +257,31 @@ export interface ${className}ServiceInterface {
   /**
    * Health check - verifies service connectivity
    */
-  readonly healthCheck;
+  readonly healthCheck: Effect.Effect<
+    HealthCheckResult,
+    ${className}ServiceError
+  >;
 
   /**
    * List resources with pagination support
    */
   readonly list: (
     params?: ListParams
-  );
+  ) => Effect.Effect<PaginatedResult<Resource>, ${className}ServiceError>;
 
   /**
    * Get resource by ID
    */
   readonly get: (
     id: string
-  );
+  ) => Effect.Effect<Resource, ${className}ServiceError>;
 
   /**
    * Create new resource
    */
   readonly create: (
     data: Omit<Resource, "id" | "createdAt" | "updatedAt">
-  );
+  ) => Effect.Effect<Resource, ${className}ServiceError>;
 
   /**
    * Update existing resource
@@ -291,14 +289,14 @@ export interface ${className}ServiceInterface {
   readonly update: (
     id: string,
     data: Partial<Omit<Resource, "id" | "createdAt" | "updatedAt">>
-  );
+  ) => Effect.Effect<Resource, ${className}ServiceError>;
 
   /**
    * Delete resource
    */
   readonly delete: (
     id: string
-  );
+  ) => Effect.Effect<void, ${className}ServiceError>;
 
   // ==========================================================================
   // TODO: Stream-Based Operations for Large-Scale API Interactions
@@ -812,8 +810,8 @@ export class ${className} extends Context.Tag("${className}")<
 
       // Configuration from environment variables
       const config: ${className}Config = {
-        apiKey: env.${options.constantName}_API_KEY,
-        timeout: env.${options.constantName}_TIMEOUT || 20000,
+        apiKey: process.env["${options.constantName}_API_KEY"] ?? "baseline_api_key",
+        timeout: Number(process.env["${options.constantName}_TIMEOUT"]) || 20000,
       };
 
       return {
@@ -830,59 +828,113 @@ export class ${className} extends Context.Tag("${className}")<
   /**
    * Test Layer - Placeholder implementation
    *
-   * Uses Layer.succeed for deterministic testing.
-   * No dynamic imports - all operations are plain functions for proper Layer.fresh isolation.
+   * Uses Layer.sync for deterministic testing with in-memory store.
+   * Each Layer.fresh creates isolated state for test independence.
    *
-   * IMPORTANT: This provides placeholder implementations that guide you to provide your own mocks.
+   * Provides a fully functional baseline implementation for testing.
    * Customize via Layer.succeed(${className}, \\{ ...your mock implementations \\})
-   * or use ${className}.Dev for a working implementation.
+   * for specific test scenarios.
    */
-  static readonly Test = Layer.succeed(
+  static readonly Test = Layer.sync(
     this,
-    {
-      // Configuration can be provided with test values
-      config: { apiKey: "test-key", timeout: 1000 },
+    () => {
+      // In-memory store for test isolation
+      const store = new Map<string, Resource>();
+      let idCounter = 0;
 
-      // Health check returns a simple success with literal type
-      healthCheck: Effect.succeed({ status: "healthy" as const }),
+      return {
+        // Configuration with test values
+        config: { apiKey: "test-key", timeout: 1000 },
 
-      // Mock implementations - customize for your tests
-      // Returns empty/default values for testing
-      list: (params) => Effect.succeed({
-        data: [],
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 10,
-        total: 0,
-      }),
+        // Health check returns success
+        healthCheck: Effect.succeed({ status: "healthy" as const }),
 
-      // Returns NotFoundError - demonstrates typed error handling
-      get: (id) => Effect.fail(
-        new ${className}NotFoundError({
-          message: \`Test mock: resource \${id} not found\`,
-          resourceId: id,
-          resourceType: "Resource",
-        })
-      ),
+        // List with pagination
+        list: (params) =>
+          Effect.sync(() => {
+            const page = params?.page ?? 1;
+            const limit = params?.limit ?? 10;
+            const items = Array.from(store.values());
+            const start = (page - 1) * limit;
+            const end = start + limit;
+            return {
+              data: items.slice(start, end),
+              page,
+              limit,
+              total: items.length,
+            };
+          }),
 
-      // Returns mock created resource
-      create: (data) => Effect.succeed({
-        id: "test-id",
-        ...data,
-        createdAt: new Date("2024-01-01T00:00:00Z"),
-        updatedAt: new Date("2024-01-01T00:00:00Z"),
-      }),
+        // Get by ID with proper error handling
+        get: (id) =>
+          Effect.gen(function* () {
+            const item = store.get(id);
+            if (!item) {
+              return yield* Effect.fail(
+                new ${className}NotFoundError({
+                  message: \`Resource \${id} not found\`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+            return item;
+          }),
 
-      // Returns mock updated resource
-      update: (id, data) => Effect.succeed({
-        id,
-        name: "test-resource",
-        ...data,
-        createdAt: new Date("2024-01-01T00:00:00Z"),
-        updatedAt: new Date("2024-01-01T00:00:00Z"),
-      }),
+        // Create with generated ID
+        create: (data) =>
+          Effect.sync(() => {
+            const id = \`test-\${++idCounter}\`;
+            const now = new Date();
+            const item: Resource = {
+              id,
+              ...data,
+              createdAt: now,
+              updatedAt: now,
+            };
+            store.set(id, item);
+            return item;
+          }),
 
-      // Returns void (success)
-      delete: (id) => Effect.void,
+        // Update existing resource
+        update: (id, data) =>
+          Effect.gen(function* () {
+            const item = store.get(id);
+            if (!item) {
+              return yield* Effect.fail(
+                new ${className}NotFoundError({
+                  message: \`Resource \${id} not found\`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+            const updated: Resource = {
+              ...item,
+              ...data,
+              id,
+              createdAt: item.createdAt,
+              updatedAt: new Date(),
+            };
+            store.set(id, updated);
+            return updated;
+          }),
+
+        // Delete with existence check
+        delete: (id) =>
+          Effect.gen(function* () {
+            const existed = store.delete(id);
+            if (!existed) {
+              return yield* Effect.fail(
+                new ${className}NotFoundError({
+                  message: \`Resource \${id} not found\`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+          }),
+      };
     }
   );
 

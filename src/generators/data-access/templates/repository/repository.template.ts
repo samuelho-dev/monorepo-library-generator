@@ -40,6 +40,21 @@ ARCHITECTURE PATTERN:
   ])
   builder.addBlankLine()
 
+  // Import entity and error types from shared
+  builder.addImports([
+    {
+      from: "../shared/types",
+      imports: [`${className}`],
+      isTypeOnly: true
+    },
+    {
+      from: "../shared/errors",
+      imports: [`${className}RepositoryError`],
+      isTypeOnly: true
+    }
+  ])
+  builder.addBlankLine()
+
   // Import operation types
   builder.addComment("Import all operation types")
   builder.addImports([
@@ -255,13 +270,13 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
 
       // Read operations - return empty results or None
       // Customize these mocks for your specific test scenarios
-      findById: (id) => Effect.succeed(Option.none()),
+      findById: () => Effect.succeed(Option.none()),
 
-      findMany: (criteria) => Effect.succeed([]),
+      findMany: () => Effect.succeed([]),
 
       findAll: () => Effect.succeed([]),
 
-      findByCriteria: (criteria) => Effect.succeed([]),
+      findByCriteria: () => Effect.succeed([]),
 
       // Update operations - return mock updated entity
       update: (id, input) =>
@@ -273,17 +288,17 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
           updatedAt: new Date(),
         }),
 
-      updateMany: (criteria, input) => Effect.succeed(0),
+      updateMany: () => Effect.succeed(0),
 
       // Delete operations - return success
-      delete: (id) => Effect.void,
+      delete: () => Effect.void,
 
-      deleteMany: (criteria) => Effect.succeed(0),
+      deleteMany: () => Effect.succeed(0),
 
       // Aggregate operations - simple defaults
       count: () => Effect.succeed(0),
 
-      exists: (id) => Effect.succeed(false),
+      exists: () => Effect.succeed(false),
 
       // Stream operation - empty stream
       streamAll: () => Stream.empty,

@@ -4,8 +4,11 @@
   "exclude": ["src/**/*.spec.ts", "src/dotfiles/**/*"],
   "compilerOptions": {
     "types": ["node"],
-    "outDir": "build/src",
+    "outDir": "build/esm",
     "tsBuildInfoFile": ".tsbuildinfo/src.tsbuildinfo",
-    "rootDir": "src"
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "exactOptionalPropertyTypes": false
   }
 }

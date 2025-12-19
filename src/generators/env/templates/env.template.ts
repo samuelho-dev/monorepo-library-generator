@@ -33,9 +33,7 @@ export function generateEnvFile(_vars: ParsedEnvVar[]): string {
   builder.addImport("./config", "clientConfig")
   builder.addImport("./config", "serverConfig")
   builder.addImport("./config", "envConfig")
-  builder.addImport("./types", "ClientEnv", true)
-  builder.addImport("./types", "ServerEnv", true)
-  builder.addImport("./types", "Env", true)
+  // Note: Type imports removed - let TypeScript infer types from runtime values
   builder.addBlankLine()
 
   // Context detection
@@ -89,7 +87,7 @@ export function generateEnvFile(_vars: ParsedEnvVar[]): string {
   builder.addRaw(" * @param content - .env file content")
   builder.addRaw(" * @returns Record of environment variables")
   builder.addRaw(" */")
-  builder.addRaw("function parseDotEnv(content: string): Record<string, string> {")
+  builder.addRaw("function parseDotEnv(content: string) {")
   builder.addRaw("  const result: Record<string, string> = {}")
   builder.addRaw('  content.split("\\n").forEach(line => {')
   builder.addRaw('    const match = line.match(/^([^=:#]+)=(.*)$/)')
@@ -134,18 +132,18 @@ export function generateEnvFile(_vars: ParsedEnvVar[]): string {
   builder.addRaw(" */")
   builder.addRaw("export const serverEnv = isServer")
   builder.addRaw("  ? runtime.runSync(serverConfig)")
-  builder.addRaw("  : ({} as ServerEnv)")
+  builder.addRaw("  : {}")
   builder.addBlankLine()
 
   builder.addRaw("/**")
   builder.addRaw(" * Complete environment (client + server)")
   builder.addRaw(" *")
   builder.addRaw(" * Server: All variables available")
-  builder.addRaw(" * Client: Only PUBLIC_ variables (cast for type compatibility)")
+  builder.addRaw(" * Client: Only PUBLIC_ variables")
   builder.addRaw(" */")
   builder.addRaw("export const env = isServer")
   builder.addRaw("  ? runtime.runSync(envConfig)")
-  builder.addRaw("  : (clientEnv as unknown as Env)")
+  builder.addRaw("  : clientEnv")
   builder.addBlankLine()
 
   return builder.toString()

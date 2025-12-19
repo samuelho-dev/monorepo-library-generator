@@ -39,11 +39,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
     },
     {
       from: "../../shared/errors",
-      imports: [
-        `${className}RepositoryError`,
-        `${className}InternalError`,
-        `${className}TimeoutError`
-      ],
+      imports: [`${className}TimeoutError`],
       isTypeOnly: false
     }
   ])

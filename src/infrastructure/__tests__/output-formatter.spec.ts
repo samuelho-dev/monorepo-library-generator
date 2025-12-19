@@ -4,9 +4,9 @@
  * Tests for universal output formatting
  */
 
-import { describe, it, expect } from "vitest"
-import { formatOutput, formatErrorResponse, formatValidationError } from "../output/formatter"
+import { describe, expect, it } from "vitest"
 import type { GeneratorResult } from "../execution/types"
+import { formatErrorResponse, formatOutput, formatValidationError } from "../output/formatter"
 
 describe("Output Formatter", () => {
   const mockResult: GeneratorResult = {

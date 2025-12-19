@@ -7,9 +7,9 @@
  * @module cli/commands/init-prisma
  */
 
-import { Console, Effect } from "effect"
 import { FileSystem } from "@effect/platform"
 import * as Path from "@effect/platform/Path"
+import { Console, Effect } from "effect"
 
 /**
  * Scaffold Prisma directory structure for multi-file schema organization
@@ -21,7 +21,7 @@ import * as Path from "@effect/platform/Path"
  * - prisma/README.md - Documentation for Prisma usage
  */
 export function scaffoldPrismaStructure() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
     const path = yield* Path.Path
 

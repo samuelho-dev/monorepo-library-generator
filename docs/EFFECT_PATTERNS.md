@@ -7451,7 +7451,7 @@ Event sourcing captures all changes to application state as a sequence of events
 Use `Schema.TaggedRequest` for commands and `Schema.Struct` for events:
 
 ```typescript
-import { Schema } from "@effect/schema";
+import { Schema } from "effect";
 import { Effect, Data } from "effect";
 
 // Command (request to change state)
@@ -7772,14 +7772,14 @@ export class UserQueryService extends Context.Tag("UserQueryService")<
 
 ## RPC + Schema Integration
 
-Effect RPC enables type-safe client-server communication with automatic serialization and validation using `@effect/schema` and `@effect/rpc`.
+Effect RPC enables type-safe client-server communication with automatic serialization and validation using Effect's Schema module and `@effect/rpc`.
 
 ### Request/Response Schema Patterns
 
 Define RPC requests and responses with full type safety:
 
 ```typescript
-import { Schema } from "@effect/schema";
+import { Schema } from "effect";
 import { Rpc } from "@effect/rpc";
 
 // Request schema with validation
@@ -8220,7 +8220,7 @@ Manage environment-specific configuration with Effect's Config system and Contex
 
 ```typescript
 import { Config, Context, Effect, Layer } from "effect";
-import { Schema } from "@effect/schema";
+import { Schema } from "effect";
 
 // Define config schema
 export class AppConfigSchema extends Schema.Struct({
@@ -8339,7 +8339,7 @@ export class DatabaseConfigService extends Context.Tag("DatabaseConfigService")<
 **Best Practices**:
 - ✅ Use Config.secret for sensitive values (never logged)
 - ✅ Provide defaults with Config.withDefault
-- ✅ Validate all config with @effect/schema
+- ✅ Validate all config with Effect Schema
 - ✅ Use Config.all for loading multiple values atomically
 - ✅ Derive service configs from app config for consistency
 
@@ -8609,7 +8609,7 @@ delete: (id) =>
 ### Schema Validation Errors
 
 ```typescript
-import { Schema } from "@effect/schema";
+import { Schema } from "effect";
 
 const UserSchema = Schema.Struct({
   email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),

@@ -61,7 +61,7 @@ describe("Data Access Library Generator", () => {
         tree.read(`${projectRoot}/package.json`, "utf-8") || ""
       )
 
-      expect(packageJson.name).toBe("@proj/data-access-product")
+      expect(packageJson.name).toBe("@myorg/data-access-product")
       expect(packageJson.version).toBeDefined()
     })
 
@@ -503,7 +503,7 @@ describe("Data Access Library Generator", () => {
         tree.read(`${paymentProjectRoot}/package.json`, "utf-8") || ""
       )
 
-      expect(packageJson.name).toBe("@proj/data-access-payment-gateway")
+      expect(packageJson.name).toBe("@myorg/data-access-payment-gateway")
     })
 
     it("should handle custom description", async () => {
@@ -519,7 +519,7 @@ describe("Data Access Library Generator", () => {
       )
 
       // Custom description may or may not be in generated package.json depending on utility
-      expect(packageJson.name).toBe("@proj/data-access-product")
+      expect(packageJson.name).toBe("@myorg/data-access-product")
     })
 
     it("should not generate platform-specific exports (client, edge, server)", async () => {

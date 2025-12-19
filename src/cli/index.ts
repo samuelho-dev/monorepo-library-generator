@@ -19,8 +19,8 @@ import { generateDomain } from "./generators/domain"
 import { generateFeature } from "./generators/feature"
 import { generateInfra } from "./generators/infra"
 import { generateProvider } from "./generators/provider"
-import { runInteractiveMode } from "./interactive"
 import { getCommandHelp } from "./help/commands"
+import { runInteractiveMode } from "./interactive"
 
 /**
  * Common arguments used across all generate commands
@@ -83,16 +83,14 @@ const contractCommand = Command.make(
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({ description, includeCQRS, includeRPC, name, quiet, tags, verbose }) => {
+  ({ description, includeCQRS, includeRPC, name, tags }) => {
     const desc = Option.getOrUndefined(description)
     return generateContract({
       name,
       ...(desc && { description: desc }),
       tags,
       includeCQRS,
-      includeRPC,
-      verbose,
-      quiet
+      includeRPC
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating contract: ${error}`).pipe(
@@ -119,14 +117,12 @@ const dataAccessCommand = Command.make(
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({ description, name, quiet, tags, verbose }) => {
+  ({ description, name, tags }) => {
     const desc = Option.getOrUndefined(description)
     return generateDataAccess({
       name,
       ...(desc && { description: desc }),
-      tags,
-      verbose,
-      quiet
+      tags
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating data-access: ${error}`).pipe(
@@ -189,7 +185,19 @@ const featureCommand = Command.make(
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({ description, includeCQRS, includeClientServer, includeEdge, includeRPC, name, platform, quiet, scope, tags, verbose }) => {
+  (
+    {
+      description,
+      includeCQRS,
+      includeClientServer,
+      includeEdge,
+      includeRPC,
+      name,
+      platform,
+      scope,
+      tags
+    }
+  ) => {
     const desc = Option.getOrUndefined(description)
     const scopeValue = Option.getOrUndefined(scope)
     const platformValue = Option.getOrUndefined(platform)
@@ -211,9 +219,7 @@ const featureCommand = Command.make(
       ...(includeCS === true && { includeClientServer: includeCS }),
       ...(includeRPCVal === true && { includeRPC: includeRPCVal }),
       ...(includeCQRSVal === true && { includeCQRS: includeCQRSVal }),
-      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal }),
-      verbose,
-      quiet
+      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal })
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating feature: ${error}`).pipe(
@@ -243,7 +249,7 @@ const infraCommand = Command.make(
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({ description, includeClientServer, includeEdge, name, platform, quiet, tags, verbose }) => {
+  ({ description, includeClientServer, includeEdge, name, platform, tags }) => {
     const desc = Option.getOrUndefined(description)
     const platformValue = Option.getOrUndefined(platform)
     const includeCS = Option.getOrUndefined(includeClientServer)
@@ -256,9 +262,7 @@ const infraCommand = Command.make(
       ...(platformValue && { platform: platformValue }),
       // Only include boolean flags if they are explicitly true (flag was provided)
       ...(includeCS === true && { includeClientServer: includeCS }),
-      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal }),
-      verbose,
-      quiet
+      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal })
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating infra: ${error}`).pipe(
@@ -291,7 +295,7 @@ const providerCommand = Command.make(
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({ description, externalService, name, platform, quiet, tags, verbose }) => {
+  ({ description, externalService, name, platform, tags }) => {
     const desc = Option.getOrUndefined(description)
     const platformValue = Option.getOrUndefined(platform)
 
@@ -300,9 +304,7 @@ const providerCommand = Command.make(
       externalService,
       ...(desc && { description: desc }),
       tags,
-      ...(platformValue && { platform: platformValue }),
-      verbose,
-      quiet
+      ...(platformValue && { platform: platformValue })
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating provider: ${error}`).pipe(
@@ -343,7 +345,19 @@ const domainCommand = Command.make(
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({ description, includeCache, includeClientServer, includeCQRS, includeEdge, includeRPC, name, quiet, scope, tags, verbose }) => {
+  (
+    {
+      description,
+      includeCQRS,
+      includeCache,
+      includeClientServer,
+      includeEdge,
+      includeRPC,
+      name,
+      scope,
+      tags
+    }
+  ) => {
     const desc = Option.getOrUndefined(description)
     const scopeValue = Option.getOrUndefined(scope)
     const includeCacheVal = Option.getOrUndefined(includeCache)
@@ -362,9 +376,7 @@ const domainCommand = Command.make(
       ...(includeCS === true && { includeClientServer: includeCS }),
       ...(includeRPCVal === true && { includeRPC: includeRPCVal }),
       ...(includeCQRSVal === true && { includeCQRS: includeCQRSVal }),
-      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal }),
-      verbose,
-      quiet
+      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal })
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating domain: ${error}`).pipe(

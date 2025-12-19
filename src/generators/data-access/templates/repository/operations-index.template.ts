@@ -38,24 +38,24 @@ For convenience, import from this barrel:
   builder.addBlankLine()
 
   builder.addRaw(`// Create operations
-export type { Create${className}Operations } from "./create";
-export { createOperations, testCreateOperations } from "./create";
+export type { Create${className}Operations } from "./create"
+export { createOperations } from "./create"
 
 // Read operations
-export type { Read${className}Operations } from "./read";
-export { readOperations, testReadOperations } from "./read";
+export type { Read${className}Operations } from "./read"
+export { readOperations } from "./read"
 
 // Update operations
-export type { Update${className}Operations } from "./update";
-export { updateOperations, testUpdateOperations } from "./update";
+export type { Update${className}Operations } from "./update"
+export { updateOperations } from "./update"
 
 // Delete operations
-export type { Delete${className}Operations } from "./delete";
-export { deleteOperations, testDeleteOperations } from "./delete";
+export type { Delete${className}Operations } from "./delete"
+export { deleteOperations } from "./delete"
 
 // Aggregate operations
-export type { Aggregate${className}Operations } from "./aggregate";
-export { aggregateOperations, testAggregateOperations } from "./aggregate";`)
+export type { Aggregate${className}Operations } from "./aggregate"
+export { aggregateOperations } from "./aggregate"`)
 
   return builder.toString()
 }

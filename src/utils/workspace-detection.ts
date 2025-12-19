@@ -246,7 +246,7 @@ function detectLibrariesRoot(
     // 1. Check nx.json for workspaceLayout.libsDir
     if (hasNxJson) {
       const nxJsonContent = yield* adapter.readFile(`${workspaceRoot}/nx.json`).pipe(
-        Effect.catchAll(() => Effect.succeed("{}"))
+        Effect.orElseSucceed(() => "{}")
       )
 
       try {
@@ -311,7 +311,7 @@ export function detectWorkspaceConfig(
 
     // Read root package.json
     const packageJsonContent = yield* adapter.readFile(`${workspaceRoot}/package.json`).pipe(
-      Effect.catchAll(() => Effect.succeed("{}"))
+      Effect.orElseSucceed(() => "{}")
     )
 
     const packageJson: {

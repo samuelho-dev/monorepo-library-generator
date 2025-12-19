@@ -11,8 +11,8 @@
  * @module cli/commands/init-workspace-files
  */
 
-import { Console, Effect } from "effect"
 import { FileSystem } from "@effect/platform"
+import { Console, Effect } from "effect"
 import { WORKSPACE_CONFIG } from "../../utils/workspace-config"
 
 /**
@@ -51,7 +51,7 @@ export interface WorkspaceOptions {
  * - Consistent package manager behavior
  */
 export function generateWorkspaceFiles(options: WorkspaceOptions = {}) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
     const name = options.name ?? "my-effect-monorepo"
     const includeNx = options.includeNx ?? true
@@ -117,38 +117,36 @@ export function generateWorkspaceFiles(options: WorkspaceOptions = {}) {
       devDependencies: {
         // Nx (if included)
         ...(includeNx && {
-          "@nx/js": "^20.2.2",
-          "@nx/vite": "^20.2.2",
-          nx: "^20.2.2"
+          "@nx/js": "^22.3.1",
+          "@nx/vite": "^22.3.1",
+          nx: "^22.3.1"
         }),
 
         // TypeScript
-        "@types/node": "^22.10.2",
-        typescript: "^5.7.2",
+        "@types/node": "^25.0.3",
+        typescript: "^5.9.3",
 
         // Testing
-        vitest: "^4.0.15",
-        "@vitest/ui": "^4.0.15",
+        vitest: "^3.2.4",
+        "@vitest/ui": "^3.2.4",
 
         // Linting & Formatting
-        "@typescript-eslint/eslint-plugin": "^8.18.2",
-        "@typescript-eslint/parser": "^8.18.2",
-        eslint: "^9.17.0",
-        prettier: "^3.4.2",
+        "@typescript-eslint/eslint-plugin": "^8.50.0",
+        "@typescript-eslint/parser": "^8.50.0",
+        eslint: "^9.39.2",
+        prettier: "^3.7.4",
 
         // Prisma
-        prisma: "^6.2.1",
+        prisma: "^7.2.0",
         "prisma-effect-kysely": "latest"
       },
       dependencies: {
         // Effect runtime
-        effect: "^3.19.9",
-        "@effect/platform": "^0.93.6",
-        "@effect/platform-node": "^0.100.0",
-        "@effect/schema": "^0.75.5",
-
+        effect: "^3.19.12",
+        "@effect/platform": "^0.93.8",
+        "@effect/platform-node": "^0.103.0",
         // Prisma client
-        "@prisma/client": "^6.2.1"
+        "@prisma/client": "^7.2.0"
       },
       packageManager: packageManager === "pnpm" ? "pnpm@9.15.0" : undefined
     }
@@ -178,9 +176,8 @@ packages:
     }
 
     // 3. Generate .npmrc
-    const npmrcContent =
-      packageManager === "pnpm"
-        ? `# pnpm configuration
+    const npmrcContent = packageManager === "pnpm"
+      ? `# pnpm configuration
 # See: https://pnpm.io/npmrc
 
 # Workspace settings
@@ -197,7 +194,7 @@ link-workspace-packages=true
 # Parallel execution
 workspace-concurrency=10
 `
-        : `# npm/yarn configuration
+      : `# npm/yarn configuration
 
 # Use workspace protocol for internal dependencies
 link-workspace-packages=true
@@ -210,6 +207,9 @@ link-workspace-packages=true
     const scope = WORKSPACE_CONFIG.getScope()
     const tsconfigBase = {
       compilerOptions: {
+        // Required for path mappings
+        baseUrl: ".",
+
         // Module system
         module: "ESNext",
         moduleResolution: "bundler",

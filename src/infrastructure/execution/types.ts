@@ -7,8 +7,7 @@
  */
 
 import { Data, type Effect } from "effect"
-import type { FileSystemAdapter } from "../adapters/filesystem"
-import type { FileSystemErrors } from "../adapters/filesystem"
+import type { FileSystemAdapter, FileSystemErrors } from "../adapters/filesystem"
 
 /**
  * Generator Result

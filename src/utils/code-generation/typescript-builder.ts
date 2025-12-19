@@ -244,7 +244,7 @@ export class TypeScriptBuilder {
         }
         const readonlyModifier = prop.readonly ? "readonly " : ""
         this.lines.push(
-          `  static ${readonlyModifier}${prop.name}: ${prop.type} = ${prop.value};`
+          `  static ${readonlyModifier}${prop.name}: ${prop.type} = ${prop.value}`
         )
         this.lines.push("")
       }
@@ -260,7 +260,7 @@ export class TypeScriptBuilder {
         const readonlyModifier = field.readonly ? "readonly " : ""
         const optionalModifier = field.optional ? "?" : ""
         this.lines.push(
-          `  ${visibility} ${readonlyModifier}${field.name}${optionalModifier}: ${field.type};`
+          `  ${visibility} ${readonlyModifier}${field.name}${optionalModifier}: ${field.type}`
         )
       }
       this.lines.push("")
@@ -351,7 +351,7 @@ export class TypeScriptBuilder {
       const readonlyModifier = prop.readonly ? "readonly " : ""
       const optionalModifier = prop.optional ? "?" : ""
       this.lines.push(
-        `  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type};`
+        `  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type}`
       )
     }
 
@@ -375,7 +375,7 @@ export class TypeScriptBuilder {
       : ""
 
     this.lines.push(
-      `${exported}type ${config.name}${typeParams} = ${config.type};`
+      `${exported}type ${config.name}${typeParams} = ${config.type}`
     )
     this.lines.push("")
 
@@ -444,7 +444,7 @@ export class TypeScriptBuilder {
     const typeAnnotation = type ? `: ${type}` : ""
 
     this.lines.push(
-      `${exportKeyword}const ${name}${typeAnnotation} = ${value};`
+      `${exportKeyword}const ${name}${typeAnnotation} = ${value}`
     )
     this.lines.push("")
 
@@ -469,7 +469,7 @@ export class TypeScriptBuilder {
     const sortedImports = Array.from(this.imports.entries()).sort((a, b) => a[0].localeCompare(b[0]))
     for (const [from, names] of sortedImports) {
       const sortedNames = Array.from(names).sort()
-      importLines.push(`import { ${sortedNames.join(", ")} } from "${from}";`)
+      importLines.push(`import { ${sortedNames.join(", ")} } from "${from}"`)
     }
 
     // Generate type-only imports (sorted by module name)
@@ -479,7 +479,7 @@ export class TypeScriptBuilder {
     for (const [from, names] of sortedTypeImports) {
       const sortedNames = Array.from(names).sort()
       importLines.push(
-        `import type { ${sortedNames.join(", ")} } from "${from}";`
+        `import type { ${sortedNames.join(", ")} } from "${from}"`
       )
     }
 

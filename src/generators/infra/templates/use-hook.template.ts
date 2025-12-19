@@ -63,7 +63,7 @@ export interface Use${className}State {
   builder.addFunction({
     name: `use${className}`,
     params: [],
-    returnType: `Use${className}State`,
+    // ESLint: no explicit return type - let TypeScript infer it
     body: `const [data, setData] = useState<unknown | null>(null);
 const [error, setError] = useState<Error | null>(null);
 const [isLoading, setIsLoading] = useState(false);
@@ -73,9 +73,10 @@ const refetch = useCallback(async () => {
   setError(null);
 
   try {
-    // TODO: Fetch data from service
+    // BASELINE: Set placeholder data
+    // TODO: Replace with actual service call
     // const result = await serviceCall();
-    // setData(result);
+    setData({ status: "baseline", timestamp: new Date().toISOString() });
   } catch (err) {
     setError(
       err instanceof Error ? err : new Error(String(err))

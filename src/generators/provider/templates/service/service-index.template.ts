@@ -44,8 +44,8 @@ Import options (from most optimal to most convenient):
   builder.addSectionComment("Re-export service interface and tag")
   builder.addBlankLine()
 
-  builder.addRaw(`export { ${className} } from "./interface";
-export type { ${className}ServiceInterface } from "./interface";`)
+  builder.addRaw(`export { ${className} } from "./service";
+export type { ${className}ServiceInterface } from "./service";`)
 
   return builder.toString()
 }

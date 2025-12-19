@@ -1,0 +1,24 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "incremental": true,
+  "typescript": {
+    "indentWidth": 2,
+    "lineWidth": 120,
+    "semiColons": "asi",
+    "quoteStyle": "alwaysDouble",
+    "trailingCommas": "never",
+    "operatorPosition": "maintain",
+    "arrowFunction.useParentheses": "force"
+  },
+  "includes": ["**/*.ts"],
+  "excludes": [
+    "**/dist",
+    "**/build",
+    "**/docs",
+    "**/*.md",
+    "**/node_modules"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.93.3.wasm"
+  ]
+}

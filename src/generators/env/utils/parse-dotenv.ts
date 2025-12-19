@@ -12,9 +12,9 @@ export interface ParsedEnvVar {
   name: string
   type: "string" | "number" | "boolean"
   isPublic: boolean
-  isSecret: boolean        // *_SECRET, *_KEY, DATABASE_URL, REDIS_URL
+  isSecret: boolean // *_SECRET, *_KEY, DATABASE_URL, REDIS_URL
   context: "client" | "server" | "shared"
-  hasDefault?: string | undefined      // For Config.withDefault()
+  hasDefault?: string | undefined // For Config.withDefault()
 }
 
 /**
@@ -23,7 +23,7 @@ export interface ParsedEnvVar {
  * @param filePath - Absolute path to .env file
  * @returns Array of parsed environment variables
  */
-export function parseDotEnvFile(filePath: string): ParsedEnvVar[] {
+export function parseDotEnvFile(filePath: string): Array<ParsedEnvVar> {
   // Check if .env file exists
   if (!fs.existsSync(filePath)) {
     console.log(`No .env file found at ${filePath}, using defaults`)
@@ -32,7 +32,7 @@ export function parseDotEnvFile(filePath: string): ParsedEnvVar[] {
 
   try {
     const content = fs.readFileSync(filePath, "utf-8")
-    const vars: ParsedEnvVar[] = []
+    const vars: Array<ParsedEnvVar> = []
 
     for (const line of content.split("\n")) {
       const trimmed = line.trim()
@@ -54,8 +54,10 @@ export function parseDotEnvFile(filePath: string): ParsedEnvVar[] {
       // Remove quotes if present
       const cleanValue = value.replace(/^["']|["']$/g, "")
 
-      const isPublic = name.startsWith("PUBLIC_") || name.startsWith("NEXT_PUBLIC_") || name.startsWith("VITE_") || name === "NODE_ENV"
-      const isSecret = name.endsWith("_SECRET") || name.endsWith("_KEY") || name === "DATABASE_URL" || name === "REDIS_URL"
+      const isPublic = name.startsWith("PUBLIC_") || name.startsWith("NEXT_PUBLIC_") || name.startsWith("VITE_") ||
+        name === "NODE_ENV"
+      const isSecret = name.endsWith("_SECRET") || name.endsWith("_KEY") || name === "DATABASE_URL" ||
+        name === "REDIS_URL"
 
       vars.push({
         name,
@@ -86,7 +88,7 @@ export function parseDotEnvFile(filePath: string): ParsedEnvVar[] {
  * @param value - String value from .env file
  * @returns Inferred type
  */
-function inferType(value: string): "string" | "number" | "boolean" {
+function inferType(value: string) {
   // Boolean values
   if (value === "true" || value === "false") {
     return "boolean"
@@ -106,7 +108,7 @@ function inferType(value: string): "string" | "number" | "boolean" {
  *
  * @returns Array of default environment variables
  */
-export function getDefaultEnvVars(): ParsedEnvVar[] {
+export function getDefaultEnvVars(): Array<ParsedEnvVar> {
   return [
     // Node environment (shared)
     { name: "NODE_ENV", type: "string", isPublic: true, isSecret: false, context: "shared", hasDefault: "development" },
@@ -145,7 +147,7 @@ export function getDefaultEnvVars(): ParsedEnvVar[] {
  * @param workspaceRoot - Absolute path to workspace root
  * @returns Absolute path to .env file, or null if not found
  */
-export function findDotEnvFile(workspaceRoot: string): string | null {
+export function findDotEnvFile(workspaceRoot: string) {
   const possiblePaths = [
     path.join(workspaceRoot, ".env"),
     path.join(workspaceRoot, ".env.local"),

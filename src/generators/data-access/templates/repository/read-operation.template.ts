@@ -39,21 +39,12 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addImports([
     {
       from: "../../shared/types",
-      imports: [
-        `${className}`,
-        `${className}Filter`,
-        `PaginationOptions`,
-        `PaginatedResponse`,
-      ],
+      imports: [`${className}Filter`, `PaginationOptions`],
       isTypeOnly: true,
     },
     {
       from: "../../shared/errors",
-      imports: [
-        `${className}RepositoryError`,
-        `${className}InternalError`,
-        `${className}TimeoutError`,
-      ],
+      imports: [`${className}TimeoutError`],
       isTypeOnly: false,
     },
   ]);

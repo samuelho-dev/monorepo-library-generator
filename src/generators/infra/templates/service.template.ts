@@ -8,11 +8,12 @@
 
 import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
 import type { InfraTemplateOptions } from "../../../utils/shared/types"
-import {
-  hasProviderMapping,
-  getProviderClassName,
-  getProviderPackageName
-} from "../../../utils/infra-provider-mapping"
+// Provider mapping utilities - available for future integration
+// import {
+//   hasProviderMapping,
+//   getProviderClassName,
+//   getProviderPackageName
+// } from "../../../utils/infra-provider-mapping"
 
 /**
  * Generate service file for infrastructure service
@@ -21,14 +22,13 @@ export function generateServiceFile(options: InfraTemplateOptions) {
   const builder = new TypeScriptBuilder()
   const { className, fileName, includeClientServer } = options
 
-  // Check if this infrastructure has a provider mapping
-  const hasProvider = hasProviderMapping(fileName)
-  const providerClassName = hasProvider
-    ? getProviderClassName(fileName)
-    : undefined
-  const providerPackage = hasProvider
-    ? getProviderPackageName(fileName, "@custom-repo")
-    : undefined
+  // BASELINE: Disable provider integration for self-contained implementation
+  // Provider integration can be added manually when needed
+  // To enable provider mapping, uncomment the imports above and set:
+  // const hasProvider = hasProviderMapping(fileName)
+  const hasProvider = false  // Baseline: self-contained in-memory implementation
+  const providerClassName: string | undefined = undefined
+  const providerPackage: string | undefined = undefined
 
   // Check if this is a database infrastructure
   const isDatabaseInfra = fileName === "database"
@@ -54,7 +54,8 @@ export function generateServiceFile(options: InfraTemplateOptions) {
         `${className}InternalError`
       ]
     },
-    { from: "./errors", imports: [`${className}Error`], isTypeOnly: true }
+    // Use ServiceError union type for interface (compatible with all error subtypes)
+    { from: "./errors", imports: [`${className}ServiceError`], isTypeOnly: true }
   ])
 
   // Add provider import if mapping exists
@@ -100,7 +101,7 @@ export class ${className}Service extends Context.Tag(
       id: string
     ) => Effect.Effect<
       Option.Option<unknown>,
-      ${className}Error,
+      ${className}ServiceError,
       never
     >;
 
@@ -121,7 +122,7 @@ export class ${className}Service extends Context.Tag(
       criteria: Record<string, unknown>,
       skip?: number,
       limit?: number
-    ) => Effect.Effect<readonly unknown[], ${className}Error, never>;
+    ) => Effect.Effect<readonly unknown[], ${className}ServiceError, never>;
 
     /**
      * Create new item
@@ -136,7 +137,7 @@ export class ${className}Service extends Context.Tag(
      */
     readonly create: (
       input: Record<string, unknown>
-    ) => Effect.Effect<unknown, ${className}Error, never>;
+    ) => Effect.Effect<unknown, ${className}ServiceError, never>;
 
     /**
      * Update existing item
@@ -153,7 +154,7 @@ export class ${className}Service extends Context.Tag(
     readonly update: (
       id: string,
       input: Record<string, unknown>
-    ) => Effect.Effect<unknown, ${className}Error, never>;
+    ) => Effect.Effect<unknown, ${className}ServiceError, never>;
 
     /**
      * Delete item by ID
@@ -166,7 +167,7 @@ export class ${className}Service extends Context.Tag(
      * yield* service.delete("id-123");
      * \`\`\`
      */
-    readonly delete: (id: string) => Effect.Effect<void, ${className}Error, never>;
+    readonly delete: (id: string) => Effect.Effect<void, ${className}ServiceError, never>;
 
     /**
      * Health check for monitoring and readiness probes
@@ -249,25 +250,29 @@ ${hasProvider && providerClassName ? `      // When using a provider, resource a
       //       Effect.catchAll(() => Effect.void) // Ignore cleanup errors
       //     )
       // );` : `      const resource = yield* Effect.acquireRelease(
-        Effect.gen(function* () {
-          // Acquire phase: Initialize resource
-          // yield* logger.info("${className} service initializing");
+        Effect.sync(() => {
+          // Acquire phase: Initialize resource (sync baseline)
+          // For async initialization with dependencies, use Effect.gen with yield*
+          //
+          // Example with Effect.gen (for async/with deps):
+          // Effect.gen(function* () {
+          //   yield* logger.info("${className} service initializing");
+          //   const pool = yield* Effect.tryPromise({
+          //     try: () => createConnectionPool(config),
+          //     catch: (error) => new ${className}InitializationError({
+          //       message: "Failed to create connection pool",
+          //       cause: error
+          //     })
+          //   });
+          //   return pool;
+          // })
 
-          // Replace with actual resource initialization:
-          // const pool = yield* Effect.tryPromise({
-          //   try: () => createConnectionPool(config),
-          //   catch: (error) => new ${className}InitializationError({
-          //     message: "Failed to create connection pool",
-          //     cause: error
-          //   })
-          // });
-
-          // For demonstration, return a mock resource
+          // Baseline: Return mock resource (sync)
           return {
             isConnected: true,
             query: async (id: string) => ({ id, data: "example" }),
             close: async () => { /* cleanup */ }
-          };
+          }
         }),
         (resource) =>
           // Release phase: Cleanup resource
@@ -665,23 +670,29 @@ ${hasProvider && providerClassName ? `      // When using a provider, resource a
           }).pipe(Effect.withSpan("${className}.delete")),
 
         healthCheck: () =>
-          Effect.gen(function* () {
-            ${
+          ${
               hasProvider && providerClassName
-                ? `// Delegate to provider
-            return yield* provider.healthCheck();`
-                : `// Check resource health
-            const isHealthy = resource.isConnected;
+                ? `Effect.gen(function* () {
+            // Delegate to provider
+            return yield* provider.healthCheck();
+          })`
+                : `Effect.sync(() => {
+            // Check resource health (sync baseline)
+            // For async health checks, use Effect.gen with yield*
+            //
+            // Example with Effect.gen (for async health check):
+            // Effect.gen(function* () {
+            //   const result = yield* Effect.tryPromise({
+            //     try: () => resource.query("health"),
+            //     catch: () => false as const
+            //   }).pipe(Effect.catchAll(() => Effect.succeed(false as const)));
+            //   return result;
+            // })
 
-            // Optionally: Perform actual health check query
-            // const result = yield* Effect.tryPromise({
-            //   try: () => resource.query("health"),
-            //   catch: () => false as const
-            // }).pipe(Effect.catchAll(() => Effect.succeed(false as const)));
-
-            return isHealthy;`
-            }
-          }).pipe(Effect.withSpan("${className}.healthCheck"))${
+            // Baseline: Return sync health status
+            return resource.isConnected;
+          })`
+            }.pipe(Effect.withSpan("${className}.healthCheck"))${
             isDatabaseInfra
               ? `
 

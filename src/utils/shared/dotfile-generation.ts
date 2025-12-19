@@ -29,6 +29,8 @@ export interface GeneratorDotfileOptions {
  * @param options - Dotfile generation options
  * @returns Effect with copy results
  */
+const LIBRARY_DOTFILES: ReadonlyArray<DotfileName> = ["eslint.config.mjs", "tsconfig.json"]
+
 export const addDotfilesToLibrary = (
   adapter: FileSystemAdapter,
   options: GeneratorDotfileOptions
@@ -41,7 +43,7 @@ export const addDotfilesToLibrary = (
       targetDir: projectRoot,
       overwrite,
       merge,
-      include: ["eslint.config.mjs", "tsconfig.json"] satisfies ReadonlyArray<DotfileName>
+      include: LIBRARY_DOTFILES
     }
 
     // Copy dotfiles with merge support

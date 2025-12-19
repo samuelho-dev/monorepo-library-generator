@@ -19,7 +19,7 @@ import {
   FileWriteError as WriteError
 } from "./filesystem"
 
-// Mode constant for literal type inference
+// Mode constant
 const ADAPTER_MODE_EFFECT = "effect" as const
 
 /**

@@ -6,10 +6,10 @@
  * @module monorepo-library-generator/cli/interactive/prompts
  */
 
-import { Prompt } from "@effect/cli";
-import { colors } from "./ui/colors";
-import { formatTargetDirectory } from "./ui/progress";
-import { LIBRARY_TYPES, type LibraryType, type WizardOptions } from "./types";
+import { Prompt } from "@effect/cli"
+import { LIBRARY_TYPES, type LibraryType, type WizardBooleanKey } from "./types"
+import { colors } from "./ui/colors"
+import { formatTargetDirectory } from "./ui/progress"
 
 /**
  * Prompt for selecting library type
@@ -18,13 +18,15 @@ export function selectLibraryType(
   librariesRoot: string
 ) {
   return Prompt.select({
-    message: `What type of library do you want to generate?\n  ${colors.muted(`Target: ${librariesRoot}/<type>/<name>`)}`,
+    message: `What type of library do you want to generate?\n  ${
+      colors.muted(`Target: ${librariesRoot}/<type>/<name>`)
+    }`,
     choices: LIBRARY_TYPES.map((info) => ({
       title: `${info.label.padEnd(14)} ${colors.muted(`- ${info.description}`)}`,
-      value: info.type,
+      value: info.type
     })),
-    maxPerPage: 7,
-  });
+    maxPerPage: 7
+  })
 }
 
 /**
@@ -35,18 +37,10 @@ export function enterLibraryName(
   libraryType: string
 ) {
   return Prompt.text({
-    message: `Enter library name:\n  ${colors.muted(`Will generate to: ${formatTargetDirectory(librariesRoot, libraryType, undefined)}`)}`,
-    validate: (input) => {
-      const trimmed = input.trim();
-      if (!trimmed) {
-        return "Library name is required";
-      }
-      if (!/^[a-z][a-z0-9-]*$/.test(trimmed)) {
-        return "Name must be lowercase, start with letter, contain only letters, numbers, and hyphens";
-      }
-      return undefined;
-    },
-  });
+    message: `Enter library name:\n  ${
+      colors.muted(`Will generate to: ${formatTargetDirectory(librariesRoot, libraryType, undefined)}`)
+    }`
+  })
 }
 
 /**
@@ -54,15 +48,8 @@ export function enterLibraryName(
  */
 export function enterExternalService() {
   return Prompt.text({
-    message: "Enter external service name (e.g., stripe, twilio, sendgrid):",
-    validate: (input) => {
-      const trimmed = input.trim();
-      if (!trimmed) {
-        return "External service name is required";
-      }
-      return undefined;
-    },
-  });
+    message: "Enter external service name (e.g., stripe, twilio, sendgrid):"
+  })
 }
 
 /**
@@ -71,8 +58,8 @@ export function enterExternalService() {
 export function confirmCQRS() {
   return Prompt.confirm({
     message: "Include CQRS patterns? (commands, queries, projections)",
-    initial: false,
-  });
+    initial: false
+  })
 }
 
 /**
@@ -81,8 +68,8 @@ export function confirmCQRS() {
 export function confirmRPC() {
   return Prompt.confirm({
     message: "Include RPC definitions?",
-    initial: false,
-  });
+    initial: false
+  })
 }
 
 /**
@@ -91,8 +78,8 @@ export function confirmRPC() {
 export function confirmClientServer() {
   return Prompt.confirm({
     message: "Include client and server exports?",
-    initial: false,
-  });
+    initial: false
+  })
 }
 
 /**
@@ -101,8 +88,8 @@ export function confirmClientServer() {
 export function confirmEdge() {
   return Prompt.confirm({
     message: "Include edge runtime support?",
-    initial: false,
-  });
+    initial: false
+  })
 }
 
 /**
@@ -111,23 +98,26 @@ export function confirmEdge() {
 export function confirmCache() {
   return Prompt.confirm({
     message: "Include cache integration?",
-    initial: false,
-  });
+    initial: false
+  })
 }
 
 /**
  * Prompt for selecting platform
  */
+type PlatformChoice = { title: string; value: "universal" | "node" | "browser" | "edge" }
+
 export function selectPlatform() {
+  const choices: Array<PlatformChoice> = [
+    { title: "Universal  - Works everywhere", value: "universal" },
+    { title: "Node       - Server-side only", value: "node" },
+    { title: "Browser    - Client-side only", value: "browser" },
+    { title: "Edge       - Edge runtime optimized", value: "edge" }
+  ]
   return Prompt.select({
     message: "Select target platform:",
-    choices: [
-      { title: "Universal  - Works everywhere", value: "universal" as const },
-      { title: "Node       - Server-side only", value: "node" as const },
-      { title: "Browser    - Client-side only", value: "browser" as const },
-      { title: "Edge       - Edge runtime optimized", value: "edge" as const },
-    ],
-  });
+    choices
+  })
 }
 
 /**
@@ -136,8 +126,8 @@ export function selectPlatform() {
 export function enterDescription() {
   return Prompt.text({
     message: "Enter description (optional, press Enter to skip):",
-    default: "",
-  });
+    default: ""
+  })
 }
 
 /**
@@ -146,8 +136,8 @@ export function enterDescription() {
 export function enterTags() {
   return Prompt.text({
     message: "Enter comma-separated tags (optional, press Enter to skip):",
-    default: "",
-  });
+    default: ""
+  })
 }
 
 /**
@@ -159,8 +149,16 @@ export function confirmGeneration(
 ) {
   return Prompt.confirm({
     message: `Generate ${fileCount} files to ${colors.cyan(targetDirectory)}?`,
-    initial: true,
-  });
+    initial: true
+  })
+}
+
+/**
+ * Option prompt definition
+ */
+export interface OptionPrompt {
+  readonly key: WizardBooleanKey
+  readonly prompt: ReturnType<typeof confirmCQRS>
 }
 
 /**
@@ -169,35 +167,38 @@ export function confirmGeneration(
 export function getOptionsForType(
   libraryType: LibraryType
 ) {
-  switch (libraryType) {
-    case "contract":
-      return [
-        { key: "includeCQRS", prompt: confirmCQRS() },
-        { key: "includeRPC", prompt: confirmRPC() },
-      ];
-    case "feature":
-      return [
-        { key: "includeClientServer", prompt: confirmClientServer() },
-        { key: "includeCQRS", prompt: confirmCQRS() },
-        { key: "includeRPC", prompt: confirmRPC() },
-        { key: "includeEdge", prompt: confirmEdge() },
-      ];
-    case "infra":
-      return [
-        { key: "includeClientServer", prompt: confirmClientServer() },
-        { key: "includeEdge", prompt: confirmEdge() },
-      ];
-    case "domain":
-      return [
-        { key: "includeCache", prompt: confirmCache() },
-        { key: "includeClientServer", prompt: confirmClientServer() },
-        { key: "includeCQRS", prompt: confirmCQRS() },
-        { key: "includeRPC", prompt: confirmRPC() },
-        { key: "includeEdge", prompt: confirmEdge() },
-      ];
-    case "data-access":
-    case "provider":
-    default:
-      return [];
-  }
+  const options: ReadonlyArray<OptionPrompt> = (() => {
+    switch (libraryType) {
+      case "contract":
+        return [
+          { key: "includeCQRS", prompt: confirmCQRS() },
+          { key: "includeRPC", prompt: confirmRPC() }
+        ]
+      case "feature":
+        return [
+          { key: "includeClientServer", prompt: confirmClientServer() },
+          { key: "includeCQRS", prompt: confirmCQRS() },
+          { key: "includeRPC", prompt: confirmRPC() },
+          { key: "includeEdge", prompt: confirmEdge() }
+        ]
+      case "infra":
+        return [
+          { key: "includeClientServer", prompt: confirmClientServer() },
+          { key: "includeEdge", prompt: confirmEdge() }
+        ]
+      case "domain":
+        return [
+          { key: "includeCache", prompt: confirmCache() },
+          { key: "includeClientServer", prompt: confirmClientServer() },
+          { key: "includeCQRS", prompt: confirmCQRS() },
+          { key: "includeRPC", prompt: confirmRPC() },
+          { key: "includeEdge", prompt: confirmEdge() }
+        ]
+      case "data-access":
+      case "provider":
+      default:
+        return []
+    }
+  })()
+  return options
 }

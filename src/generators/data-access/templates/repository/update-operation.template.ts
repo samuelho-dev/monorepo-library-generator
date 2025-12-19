@@ -34,17 +34,12 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addImports([
     {
       from: "../../shared/types",
-      imports: [`${className}`, `${className}UpdateInput`],
+      imports: [`${className}UpdateInput`],
       isTypeOnly: true
     },
     {
       from: "../../shared/errors",
-      imports: [
-        `${className}RepositoryError`,
-        `${className}NotFoundError`,
-        `${className}InternalError`,
-        `${className}TimeoutError`
-      ]
+      imports: [`${className}NotFoundError`, `${className}TimeoutError`]
     }
   ])
   builder.addBlankLine()

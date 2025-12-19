@@ -20,10 +20,10 @@ import { Console, Effect } from "effect"
 import { generateEnv } from "../generators/env"
 import { generateInfra } from "../generators/infra"
 import { generateProvider } from "../generators/provider"
-import { initWorkspace, type InitWorkspaceOptions } from "./init-workspace"
-import { scaffoldPrismaStructure } from "./init-prisma"
-import { generateWorkspaceFiles } from "./init-workspace-files"
 import { generateIntegrationExample } from "./init-integration-example"
+import { scaffoldPrismaStructure } from "./init-prisma"
+import { initWorkspace, type InitWorkspaceOptions } from "./init-workspace"
+import { generateWorkspaceFiles } from "./init-workspace-files"
 
 /**
  * Monorepo initialization options
@@ -53,80 +53,91 @@ export interface InitOptions extends InitWorkspaceOptions {
  *
  * These wrap Effect built-ins with tracing and consistent interfaces
  */
-const BUILTIN_PROVIDERS = [
-  {
+interface BuiltinProvider {
+  readonly name: string
+  readonly externalService: string
+  readonly description: string
+}
+
+const BUILTIN_PROVIDERS: ReadonlyArray<BuiltinProvider> = Object.freeze([
+  Object.freeze({
     name: "effect-cache",
     externalService: "Effect.Cache",
     description: "Effect.Cache provider for caching operations"
-  },
-  {
+  }),
+  Object.freeze({
     name: "effect-logger",
     externalService: "Effect.Logger",
     description: "Effect.Logger provider for logging operations"
-  },
-  {
+  }),
+  Object.freeze({
     name: "effect-metrics",
     externalService: "Effect.Metrics",
     description: "Effect.Metrics provider for metrics collection with Supervisor"
-  },
-  {
+  }),
+  Object.freeze({
     name: "effect-queue",
     externalService: "Effect.Queue",
     description: "Effect.Queue provider for queue operations"
-  },
-  {
+  }),
+  Object.freeze({
     name: "effect-pubsub",
     externalService: "Effect.PubSub",
     description: "Effect.PubSub provider for pub/sub messaging"
-  },
-  {
+  }),
+  Object.freeze({
     name: "kysely",
     externalService: "Kysely",
     description: "Kysely provider for type-safe database queries with migrations"
-  }
-] as const
+  })
+])
 
 /**
  * Built-in infrastructure libraries to generate
  *
  * These orchestrate provider libraries and provide unified interfaces
  */
-const BUILTIN_INFRA = [
-  {
+interface BuiltinInfra {
+  readonly name: string
+  readonly description: string
+}
+
+const BUILTIN_INFRA: ReadonlyArray<BuiltinInfra> = Object.freeze([
+  Object.freeze({
     name: "env",
     description: "Environment variable access with type-safe configuration"
-  },
-  {
+  }),
+  Object.freeze({
     name: "cache",
     description: "Cache orchestration infrastructure (coordinates cache providers)"
-  },
-  {
+  }),
+  Object.freeze({
     name: "database",
     description: "Database orchestration infrastructure (coordinates database providers like Kysely)"
-  },
-  {
+  }),
+  Object.freeze({
     name: "logging",
     description: "Logging orchestration infrastructure (coordinates logging providers)"
-  },
-  {
+  }),
+  Object.freeze({
     name: "metrics",
     description: "Metrics orchestration infrastructure with Supervisor for fiber tracking"
-  },
-  {
+  }),
+  Object.freeze({
     name: "queue",
     description: "Queue orchestration infrastructure with Supervisor for background workers"
-  },
-  {
+  }),
+  Object.freeze({
     name: "pubsub",
     description: "PubSub orchestration infrastructure (coordinates pubsub providers)"
-  }
-] as const
+  })
+])
 
 /**
  * Generate all built-in provider libraries
  */
 function generateBuiltinProviders() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     yield* Console.log("📦 Generating built-in provider libraries...")
     yield* Console.log("")
 
@@ -153,7 +164,7 @@ function generateBuiltinProviders() {
  * Generate all built-in infrastructure libraries
  */
 function generateBuiltinInfra() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     yield* Console.log("📦 Generating built-in infrastructure libraries...")
     yield* Console.log("")
 
@@ -201,7 +212,7 @@ function generateBuiltinInfra() {
  * caching, logging, metrics, queues, and pub/sub out of the box.
  */
 export function init(options: InitOptions = {}) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const includeProviders = options.includeProviders ?? true
     const includeInfra = options.includeInfra ?? true
     const includePrisma = options.includePrisma ?? false
@@ -261,16 +272,12 @@ export function init(options: InitOptions = {}) {
 
     if (includeProviders) {
       yield* Console.log(`  ✓ Provider libraries (${BUILTIN_PROVIDERS.length}):`)
-      BUILTIN_PROVIDERS.forEach((p) =>
-        Console.log(`    - provider-${p.name}`)
-      )
+      BUILTIN_PROVIDERS.forEach((p) => Console.log(`    - provider-${p.name}`))
     }
 
     if (includeInfra) {
       yield* Console.log(`  ✓ Infrastructure libraries (${BUILTIN_INFRA.length}):`)
-      BUILTIN_INFRA.forEach((i) =>
-        Console.log(`    - ${i.name === "env" ? "env" : `infra-${i.name}`}`)
-      )
+      BUILTIN_INFRA.forEach((i) => Console.log(`    - ${i.name === "env" ? "env" : `infra-${i.name}`}`))
     }
 
     yield* Console.log("  ✓ Integration example:")

@@ -34,11 +34,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addImports([
     {
       from: "../../shared/errors",
-      imports: [
-        `${className}RepositoryError`,
-        `${className}InternalError`,
-        `${className}TimeoutError`
-      ],
+      imports: [`${className}TimeoutError`],
       isTypeOnly: false
     }
   ])

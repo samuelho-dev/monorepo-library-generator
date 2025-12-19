@@ -36,10 +36,7 @@ import {
   generateServiceSpecFile,
   generateTypesFile
 } from "../feature/templates/index"
-import {
-  generateFeatureServiceIndexFile,
-  generateFeatureServiceFile
-} from "../feature/templates/service/index"
+import { generateFeatureServiceFile, generateFeatureServiceIndexFile } from "../feature/templates/service/index"
 import { generateSubServices } from "./sub-services"
 
 /**

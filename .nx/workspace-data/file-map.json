@@ -2,22 +2,22 @@
   "version": "6.0",
   "nxVersion": "20.8.3",
   "pathMappings": {
-    "@custom-repo/contract-*": [
+    "@myorg/contract-*": [
       "libs/contract/*/src/index.ts"
     ],
-    "@custom-repo/data-access-*": [
+    "@myorg/data-access-*": [
       "libs/data-access/*/src/index.ts"
     ],
-    "@custom-repo/feature-*": [
+    "@myorg/feature-*": [
       "libs/feature/*/src/index.ts"
     ],
-    "@custom-repo/infra-*": [
+    "@myorg/infra-*": [
       "libs/infra/*/src/index.ts"
     ],
-    "@custom-repo/provider-*": [
+    "@myorg/provider-*": [
       "libs/provider/*/src/index.ts"
     ],
-    "@custom-repo/env": [
+    "@myorg/env": [
       "libs/env/src/index.ts"
     ]
   },
@@ -355,7 +355,7 @@
         },
         {
           "file": "docs/EFFECT_PATTERNS.md",
-          "hash": "1545013666314736335"
+          "hash": "16063812104124077511"
         },
         {
           "file": "docs/EXAMPLES.md",
@@ -402,21 +402,32 @@
           "hash": "5115874052659306607"
         },
         {
+          "file": "dprint.json",
+          "hash": "1811230518208964344"
+        },
+        {
           "file": "eslint.config.mjs",
-          "hash": "8228166712048684173",
+          "hash": "8017354559301860057",
           "deps": [
-            "npm:@eslint/eslintrc",
+            "npm:@effect/eslint-plugin",
+            "npm:@eslint/compat",
             "npm:@eslint/js",
-            "npm:@typescript-eslint/parser"
+            "npm:@typescript-eslint/eslint-plugin",
+            "npm:@typescript-eslint/parser",
+            "npm:eslint-plugin-codegen",
+            "npm:eslint-plugin-import",
+            "npm:eslint-plugin-simple-import-sort",
+            "npm:eslint-plugin-sort-destructure-keys",
+            "npm:globals"
           ]
         },
         {
           "file": "examples/README.md",
-          "hash": "4452521531138118890"
+          "hash": "8560306061897038189"
         },
         {
           "file": "examples/app.ts",
-          "hash": "8569727529824775462",
+          "hash": "3964826893284627515",
           "deps": [
             "npm:effect"
           ]
@@ -439,8 +450,11 @@
         },
         {
           "file": "package.json",
-          "hash": "12138580598079277161",
+          "hash": "1444239753187256469",
           "deps": [
+            "npm:@effect/eslint-plugin",
+            "npm:@eslint/compat",
+            "npm:@eslint/js",
             "npm:@nx/js",
             "npm:@nx/vite",
             "npm:@types/node",
@@ -448,6 +462,11 @@
             "npm:@typescript-eslint/parser",
             "npm:@vitest/ui",
             "npm:eslint",
+            "npm:eslint-plugin-codegen",
+            "npm:eslint-plugin-import",
+            "npm:eslint-plugin-simple-import-sort",
+            "npm:eslint-plugin-sort-destructure-keys",
+            "npm:globals",
             "npm:nx",
             "npm:prettier",
             "npm:prisma",
@@ -469,7 +488,7 @@
         },
         {
           "file": "pnpm-lock.yaml",
-          "hash": "5811396650780120670"
+          "hash": "15041139250718439944"
         },
         {
           "file": "pnpm-workspace.yaml",
@@ -477,7 +496,7 @@
         },
         {
           "file": "scripts/bundle-cli.mjs",
-          "hash": "945783998920224865",
+          "hash": "18426423890487488447",
           "deps": [
             "npm:esbuild"
           ]
@@ -503,15 +522,15 @@
         },
         {
           "file": "src/cli/commands/init-integration-example.ts",
-          "hash": "8031624740675390764",
+          "hash": "1081468763971748472",
           "deps": [
-            "npm:effect",
-            "npm:@effect/platform"
+            "npm:@effect/platform",
+            "npm:effect"
           ]
         },
         {
           "file": "src/cli/commands/init-prisma.spec.ts",
-          "hash": "18000627463781403694",
+          "hash": "11230491944668383480",
           "deps": [
             "npm:@effect/platform-node",
             "npm:effect"
@@ -519,18 +538,18 @@
         },
         {
           "file": "src/cli/commands/init-prisma.ts",
-          "hash": "13020939014041181988",
+          "hash": "5299079921664841117",
           "deps": [
-            "npm:effect",
-            "npm:@effect/platform"
+            "npm:@effect/platform",
+            "npm:effect"
           ]
         },
         {
           "file": "src/cli/commands/init-workspace-files.ts",
-          "hash": "2186439134192245243",
+          "hash": "3893694251988521431",
           "deps": [
-            "npm:effect",
-            "npm:@effect/platform"
+            "npm:@effect/platform",
+            "npm:effect"
           ]
         },
         {
@@ -542,63 +561,74 @@
         },
         {
           "file": "src/cli/commands/init.ts",
-          "hash": "4968013922021144875",
+          "hash": "7929203695381261633",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/cli/generators/contract.ts",
-          "hash": "2081096616349163650",
+          "hash": "17042126197278396357",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/cli/generators/data-access.ts",
-          "hash": "13337790240944970886",
+          "hash": "648069504359341638",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/cli/generators/domain.ts",
-          "hash": "12687299472538739619",
+          "hash": "1325632035397153191",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/cli/generators/env.ts",
-          "hash": "13617310499237254526",
+          "hash": "4538764586611948826",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/cli/generators/feature.ts",
-          "hash": "1716668512239388772",
+          "hash": "8807608343217371264",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/cli/generators/infra.ts",
-          "hash": "16041946365334408668",
+          "hash": "15269497431238550861",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/cli/generators/provider.ts",
-          "hash": "17111201267859419717",
+          "hash": "1533407365458090877",
           "deps": [
             "npm:effect"
           ]
         },
         {
+          "file": "src/cli/help/commands.ts",
+          "hash": "7881552237024363186"
+        },
+        {
+          "file": "src/cli/help/index.ts",
+          "hash": "18238567196722803766",
+          "deps": [
+            "npm:@effect/cli"
+          ]
+        },
+        {
           "file": "src/cli/index.ts",
-          "hash": "3032001049148550020",
+          "hash": "9198725584888526362",
           "deps": [
             "npm:@effect/cli",
             "npm:@effect/platform-node",
@@ -607,40 +637,52 @@
         },
         {
           "file": "src/cli/interactive/file-preview.ts",
-          "hash": "7287121267525871519"
+          "hash": "13621013112486580148"
         },
         {
           "file": "src/cli/interactive/index.ts",
-          "hash": "3780853950460946523",
+          "hash": "4310071725451215283",
           "deps": [
-            "npm:effect",
-            "npm:@effect/platform"
+            "npm:effect"
           ]
         },
         {
           "file": "src/cli/interactive/prompts.ts",
-          "hash": "10248773614352616663",
+          "hash": "15432083476372565594",
           "deps": [
             "npm:@effect/cli"
           ]
         },
         {
           "file": "src/cli/interactive/types.ts",
-          "hash": "10311684225038723584"
+          "hash": "16043204267643742696"
         },
         {
           "file": "src/cli/interactive/ui/colors.ts",
-          "hash": "8081638395661805116"
+          "hash": "3208443755802011296"
         },
         {
           "file": "src/cli/interactive/ui/progress.ts",
-          "hash": "9480138483458735221"
+          "hash": "10449060837574699928"
         },
         {
           "file": "src/cli/interactive/wizard.ts",
-          "hash": "1372814631683358671",
+          "hash": "14824809444067762420",
           "deps": [
-            "npm:@effect/platform",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/progress/generator-progress.ts",
+          "hash": "777448827547868324",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/progress/index.ts",
+          "hash": "3446456530833698678",
+          "deps": [
             "npm:effect"
           ]
         },
@@ -669,8 +711,41 @@
           "hash": "17289767070987101918"
         },
         {
+          "file": "src/generators/__integration__/compilation.spec.ts",
+          "hash": "3789459712475472243",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/__integration__/linting.spec.ts",
+          "hash": "5859475093199255324",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/__integration__/utils/compiler.ts",
+          "hash": "7611037692371125481",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:typescript"
+          ]
+        },
+        {
+          "file": "src/generators/__integration__/utils/index.ts",
+          "hash": "13635667192081065712"
+        },
+        {
+          "file": "src/generators/__integration__/utils/linter.ts",
+          "hash": "7802719447539958576",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
           "file": "src/generators/__tests__/effect-patterns.spec.ts",
-          "hash": "7425344226838341718",
+          "hash": "12993640104062133449",
           "deps": [
             "npm:@nx/devkit"
           ]
@@ -685,14 +760,14 @@
         },
         {
           "file": "src/generators/contract/contract.spec.ts",
-          "hash": "3431686576162812863",
+          "hash": "4684136639609991988",
           "deps": [
             "npm:@nx/devkit"
           ]
         },
         {
           "file": "src/generators/contract/contract.ts",
-          "hash": "16618463903708655791",
+          "hash": "8155945972735336439",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -756,28 +831,28 @@
         },
         {
           "file": "src/generators/core/contract.ts",
-          "hash": "7851250725738015236",
+          "hash": "10291099497730099253",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/generators/core/data-access.ts",
-          "hash": "16588382164682204989",
+          "hash": "6941709497156754141",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/generators/core/feature.ts",
-          "hash": "14588225997743401554",
+          "hash": "1562876662399961222",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/generators/core/infra.ts",
-          "hash": "12706187399111948832",
+          "hash": "10282108938718093841",
           "deps": [
             "npm:effect"
           ]
@@ -791,7 +866,7 @@
         },
         {
           "file": "src/generators/core/provider.ts",
-          "hash": "5495776546083975531",
+          "hash": "16962330448740637808",
           "deps": [
             "npm:effect"
           ]
@@ -809,14 +884,14 @@
         },
         {
           "file": "src/generators/data-access/data-access.spec.ts",
-          "hash": "8581071347584271289",
+          "hash": "4262316185657620347",
           "deps": [
             "npm:@nx/devkit"
           ]
         },
         {
           "file": "src/generators/data-access/data-access.ts",
-          "hash": "17133024643570296544",
+          "hash": "17269828916703478735",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -844,7 +919,7 @@
         },
         {
           "file": "src/generators/data-access/templates/layers-spec.template.ts",
-          "hash": "7663713216781260415"
+          "hash": "12093684851511894443"
         },
         {
           "file": "src/generators/data-access/templates/layers.template.ts",
@@ -852,11 +927,11 @@
         },
         {
           "file": "src/generators/data-access/templates/queries.template.ts",
-          "hash": "1816778014882770663"
+          "hash": "3158522773958912192"
         },
         {
           "file": "src/generators/data-access/templates/repository-spec.template.ts",
-          "hash": "15273529033231624618"
+          "hash": "11067116695815279351"
         },
         {
           "file": "src/generators/data-access/templates/repository.template.ts",
@@ -864,15 +939,15 @@
         },
         {
           "file": "src/generators/data-access/templates/repository/aggregate-operation.template.ts",
-          "hash": "17346352001824848470"
+          "hash": "18301364091788359191"
         },
         {
           "file": "src/generators/data-access/templates/repository/create-operation.template.ts",
-          "hash": "12286251463674305683"
+          "hash": "12753448741639083820"
         },
         {
           "file": "src/generators/data-access/templates/repository/delete-operation.template.ts",
-          "hash": "7655502453371919612"
+          "hash": "1238835710580812006"
         },
         {
           "file": "src/generators/data-access/templates/repository/index.ts",
@@ -880,23 +955,23 @@
         },
         {
           "file": "src/generators/data-access/templates/repository/operations-index.template.ts",
-          "hash": "5378912914572773844"
+          "hash": "9451251361915888169"
         },
         {
           "file": "src/generators/data-access/templates/repository/read-operation.template.ts",
-          "hash": "11827199305176832358"
+          "hash": "2134422569415978596"
         },
         {
           "file": "src/generators/data-access/templates/repository/repository-index.template.ts",
-          "hash": "5388682790821425790"
+          "hash": "7371077028333611647"
         },
         {
           "file": "src/generators/data-access/templates/repository/repository.template.ts",
-          "hash": "1917476733790772054"
+          "hash": "12678302430124639345"
         },
         {
           "file": "src/generators/data-access/templates/repository/update-operation.template.ts",
-          "hash": "18423633254898190719"
+          "hash": "13101585865162161593"
         },
         {
           "file": "src/generators/data-access/templates/types.template.ts",
@@ -904,11 +979,11 @@
         },
         {
           "file": "src/generators/data-access/templates/validation.template.ts",
-          "hash": "17015573754253424609"
+          "hash": "6836747199396887998"
         },
         {
           "file": "src/generators/env/env.ts",
-          "hash": "11569671406401318510",
+          "hash": "11642839744518753651",
           "deps": [
             "npm:@nx/devkit"
           ]
@@ -919,7 +994,7 @@
         },
         {
           "file": "src/generators/env/templates/config.template.ts",
-          "hash": "16515436381151718410"
+          "hash": "6860573256749184217"
         },
         {
           "file": "src/generators/env/templates/entry-points.template.ts",
@@ -927,7 +1002,7 @@
         },
         {
           "file": "src/generators/env/templates/env.template.ts",
-          "hash": "7565814834280010068"
+          "hash": "14648983906466125830"
         },
         {
           "file": "src/generators/env/templates/index.template.ts",
@@ -947,30 +1022,22 @@
         },
         {
           "file": "src/generators/env/utils/parse-dotenv.ts",
-          "hash": "17385470787707288902"
+          "hash": "5850666846260825745"
         },
         {
           "file": "src/generators/feature/README.md",
           "hash": "12554864478997797838"
         },
         {
-          "file": "src/generators/feature/feature.old.ts",
-          "hash": "6607481389348686144",
-          "deps": [
-            "npm:@nx/devkit",
-            "npm:effect"
-          ]
-        },
-        {
           "file": "src/generators/feature/feature.spec.ts",
-          "hash": "16803427901391734409",
+          "hash": "16956118752212635517",
           "deps": [
             "npm:@nx/devkit"
           ]
         },
         {
           "file": "src/generators/feature/feature.ts",
-          "hash": "4999979857543577544",
+          "hash": "9389333160460384473",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -1010,7 +1077,7 @@
         },
         {
           "file": "src/generators/feature/templates/index.ts",
-          "hash": "17653364243999343385"
+          "hash": "2980736936706534353"
         },
         {
           "file": "src/generators/feature/templates/layers.template.ts",
@@ -1039,10 +1106,6 @@
         {
           "file": "src/generators/feature/templates/service-spec.template.ts",
           "hash": "612654497855929231"
-        },
-        {
-          "file": "src/generators/feature/templates/service.template.ts",
-          "hash": "6882005161632826524"
         },
         {
           "file": "src/generators/feature/templates/service/index.ts",
@@ -1085,23 +1148,15 @@
           "hash": "18432443867625268191"
         },
         {
-          "file": "src/generators/infra/infra.old.ts",
-          "hash": "8629434770397709945",
-          "deps": [
-            "npm:@nx/devkit",
-            "npm:effect"
-          ]
-        },
-        {
           "file": "src/generators/infra/infra.spec.ts",
-          "hash": "1783068676107900107",
+          "hash": "9961376370957824737",
           "deps": [
             "npm:@nx/devkit"
           ]
         },
         {
           "file": "src/generators/infra/infra.ts",
-          "hash": "14250747225908839206",
+          "hash": "8062896297969413583",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -1117,7 +1172,7 @@
         },
         {
           "file": "src/generators/infra/templates/client-layers.template.ts",
-          "hash": "16657922527392080051"
+          "hash": "3237973988106702820"
         },
         {
           "file": "src/generators/infra/templates/client.template.ts",
@@ -1173,11 +1228,11 @@
         },
         {
           "file": "src/generators/infra/templates/service.template.ts",
-          "hash": "8352756578971648294"
+          "hash": "12673659723415157738"
         },
         {
           "file": "src/generators/infra/templates/use-hook.template.ts",
-          "hash": "6690120233306850446"
+          "hash": "17049809271078275648"
         },
         {
           "file": "src/generators/provider/README.md",
@@ -1185,14 +1240,14 @@
         },
         {
           "file": "src/generators/provider/provider.spec.ts",
-          "hash": "5984943216727868801",
+          "hash": "17167353556910081120",
           "deps": [
             "npm:@nx/devkit"
           ]
         },
         {
           "file": "src/generators/provider/provider.ts",
-          "hash": "15033996624306494897",
+          "hash": "6609817489021024649",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -1224,11 +1279,11 @@
         },
         {
           "file": "src/generators/provider/templates/index.ts",
-          "hash": "18143618210493448435"
+          "hash": "55494786803132741"
         },
         {
           "file": "src/generators/provider/templates/layers.template.ts",
-          "hash": "5999522065240811458"
+          "hash": "6424710049105412220"
         },
         {
           "file": "src/generators/provider/templates/server.template.ts",
@@ -1236,11 +1291,7 @@
         },
         {
           "file": "src/generators/provider/templates/service-spec.template.ts",
-          "hash": "8249698108610447406"
-        },
-        {
-          "file": "src/generators/provider/templates/service.template.ts",
-          "hash": "4089758773611602221"
+          "hash": "14327779891341302973"
         },
         {
           "file": "src/generators/provider/templates/service/create-operation.template.ts",
@@ -1264,11 +1315,11 @@
         },
         {
           "file": "src/generators/provider/templates/service/service-index.template.ts",
-          "hash": "12600889156244123200"
+          "hash": "9920458718392300321"
         },
         {
           "file": "src/generators/provider/templates/service/service.template.ts",
-          "hash": "9999845856787604391"
+          "hash": "11004722916830177567"
         },
         {
           "file": "src/generators/provider/templates/service/update-operation.template.ts",
@@ -1288,28 +1339,28 @@
         },
         {
           "file": "src/infrastructure/__tests__/metadata-computation.spec.ts",
-          "hash": "9847447999628571027",
+          "hash": "6427525923505183860",
           "deps": [
             "npm:vitest"
           ]
         },
         {
           "file": "src/infrastructure/__tests__/output-formatter.spec.ts",
-          "hash": "12137612849584510109",
+          "hash": "7589526300508299221",
           "deps": [
             "npm:vitest"
           ]
         },
         {
           "file": "src/infrastructure/__tests__/workspace-context.spec.ts",
-          "hash": "6258669805431174552",
+          "hash": "4232724155452970474",
           "deps": [
             "npm:vitest"
           ]
         },
         {
           "file": "src/infrastructure/adapters/effect-adapter.ts",
-          "hash": "329801094508792496",
+          "hash": "15652616757090314310",
           "deps": [
             "npm:@effect/platform",
             "npm:effect"
@@ -1317,10 +1368,10 @@
         },
         {
           "file": "src/infrastructure/adapters/factory.ts",
-          "hash": "9661956919572663559",
+          "hash": "7444369027890694673",
           "deps": [
-            "npm:@nx/devkit",
             "npm:@effect/platform-node",
+            "npm:@nx/devkit",
             "npm:effect"
           ]
         },
@@ -1337,7 +1388,7 @@
         },
         {
           "file": "src/infrastructure/adapters/mcp-adapter.ts",
-          "hash": "14139562571367345946",
+          "hash": "11813733174564469203",
           "deps": [
             "npm:@effect/platform",
             "npm:@effect/platform-node",
@@ -1354,7 +1405,7 @@
         },
         {
           "file": "src/infrastructure/execution/executor.ts",
-          "hash": "16917224572534063321",
+          "hash": "1052251641386551604",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -1366,7 +1417,7 @@
         },
         {
           "file": "src/infrastructure/execution/types.ts",
-          "hash": "5551845900108938832",
+          "hash": "2457286276400246197",
           "deps": [
             "npm:effect"
           ]
@@ -1377,7 +1428,7 @@
         },
         {
           "file": "src/infrastructure/metadata/computation.ts",
-          "hash": "362036341328776526",
+          "hash": "6537369679402736940",
           "deps": [
             "npm:@nx/devkit"
           ]
@@ -1392,7 +1443,7 @@
         },
         {
           "file": "src/infrastructure/output/formatter.ts",
-          "hash": "14046225176789087671"
+          "hash": "16057876108312075099"
         },
         {
           "file": "src/infrastructure/output/index.ts",
@@ -1411,14 +1462,14 @@
         },
         {
           "file": "src/infrastructure/workspace/context.ts",
-          "hash": "8794474271496236940",
+          "hash": "8366164509979201861",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/infrastructure/workspace/detector.ts",
-          "hash": "5046795830323915172",
+          "hash": "17796923717385024788",
           "deps": [
             "npm:@effect/platform",
             "npm:@effect/platform-node",
@@ -1482,55 +1533,41 @@
           "file": "src/mcp/server.ts",
           "hash": "13761560172524177589",
           "deps": [
+            "npm:@modelcontextprotocol/sdk",
             "npm:effect"
           ]
         },
         {
           "file": "src/mcp/services/workspace.service.ts",
-          "hash": "3909503851059892536",
-          "deps": [
-            "npm:effect"
-          ]
-        },
-        {
-          "file": "src/mcp/tools/contract.handler.old.ts",
-          "hash": "2736738929231636769",
+          "hash": "500806556034540086",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/mcp/tools/contract.handler.ts",
-          "hash": "8960875994614559774",
+          "hash": "1846135044442468368",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/mcp/tools/data-access.handler.ts",
-          "hash": "3348190988625301484",
+          "hash": "7702069786130216053",
           "deps": [
             "npm:effect"
           ]
         },
         {
-          "file": "src/mcp/tools/dual-mode.spec.ts",
-          "hash": "819455663258743365",
-          "deps": [
-            "npm:effect",
-            "npm:vitest"
-          ]
-        },
-        {
           "file": "src/mcp/tools/feature.handler.ts",
-          "hash": "14095228847581962352",
+          "hash": "1868287610001062954",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/mcp/tools/infra.handler.ts",
-          "hash": "16190644370076328990",
+          "hash": "18291972377578840102",
           "deps": [
             "npm:effect"
           ]
@@ -1545,7 +1582,7 @@
         },
         {
           "file": "src/mcp/tools/provider.handler.ts",
-          "hash": "17323062928468058506",
+          "hash": "17759611196265264274",
           "deps": [
             "npm:effect"
           ]
@@ -1573,28 +1610,19 @@
           ]
         },
         {
-          "file": "src/mcp/utils/filesystem-adapter-mcp.ts",
-          "hash": "3899670637708327746",
-          "deps": [
-            "npm:@effect/platform",
-            "npm:@effect/platform-node",
-            "npm:effect"
-          ]
-        },
-        {
           "file": "src/mcp/utils/result-formatter.ts",
           "hash": "12509315198795267273"
         },
         {
           "file": "src/mcp/utils/validation.ts",
-          "hash": "15528412203533377503",
+          "hash": "5183600422508064578",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/mcp/utils/workspace-detector.ts",
-          "hash": "13584933749949253798",
+          "hash": "7367509304361309948",
           "deps": [
             "npm:@effect/platform",
             "npm:@effect/platform-node",
@@ -1622,7 +1650,7 @@
         },
         {
           "file": "src/utils/code-generation/error-templates.ts",
-          "hash": "17245408648888093271"
+          "hash": "13041344916918978056"
         },
         {
           "file": "src/utils/code-generation/type-templates.ts",
@@ -1630,25 +1658,18 @@
         },
         {
           "file": "src/utils/code-generation/typescript-builder.ts",
-          "hash": "5299387554053152369"
-        },
-        {
-          "file": "src/utils/dependencies.ts",
-          "hash": "11893105176710656112",
-          "deps": [
-            "npm:@nx/devkit"
-          ]
+          "hash": "10210501277449345415"
         },
         {
           "file": "src/utils/dotfile-merge.ts",
-          "hash": "12227692140914361215",
+          "hash": "3122871612132884049",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/utils/dotfiles.ts",
-          "hash": "5902324946564080323",
+          "hash": "7413413149870684241",
           "deps": [
             "npm:effect"
           ]
@@ -1685,15 +1706,15 @@
         },
         {
           "file": "src/utils/index.ts",
-          "hash": "706602949136120196"
+          "hash": "5487632017290943135"
         },
         {
           "file": "src/utils/infra-provider-mapping.ts",
-          "hash": "10669950650694790113"
+          "hash": "1375220001188588014"
         },
         {
           "file": "src/utils/infrastructure.spec.ts",
-          "hash": "17153498127847851581",
+          "hash": "18131846051185332551",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -1701,14 +1722,14 @@
         },
         {
           "file": "src/utils/infrastructure.ts",
-          "hash": "12172956825839052966",
+          "hash": "14461646402630151802",
           "deps": [
             "npm:effect"
           ]
         },
         {
           "file": "src/utils/library-metadata.ts",
-          "hash": "5213327050073499160",
+          "hash": "14847530242491989482",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -1728,7 +1749,7 @@
         },
         {
           "file": "src/utils/shared/dotfile-generation.ts",
-          "hash": "10983513494080249055",
+          "hash": "1843914002628976924",
           "deps": [
             "npm:effect"
           ]
@@ -1765,11 +1786,11 @@
         },
         {
           "file": "src/utils/workspace-config.ts",
-          "hash": "14244358806816142784"
+          "hash": "17041217599604443436"
         },
         {
           "file": "src/utils/workspace-detection.ts",
-          "hash": "1177307420414462414",
+          "hash": "17757595347973766511",
           "deps": [
             "npm:@nx/devkit",
             "npm:effect"
@@ -1781,11 +1802,7 @@
         },
         {
           "file": "tsconfig.base.json",
-          "hash": "13053991165975993559"
-        },
-        {
-          "file": "tsconfig.build.json",
-          "hash": "12556512068202573533"
+          "hash": "13587127330111294828"
         },
         {
           "file": "tsconfig.json",
@@ -1797,7 +1814,7 @@
         },
         {
           "file": "tsconfig.src.json",
-          "hash": "6037368928337657495"
+          "hash": "6495239379135584390"
         },
         {
           "file": "tsconfig.test.json",

@@ -119,8 +119,8 @@ export const getDotfileTemplatePath = (name: DotfileName) => {
 /**
  * Get metadata for all available dotfiles
  */
-export const getAllDotfiles = () =>
-  [
+export const getAllDotfiles = () => {
+  const dotfiles: Array<DotfileMetadata> = [
     {
       name: ".editorconfig",
       templatePath: getDotfileTemplatePath(".editorconfig"),
@@ -156,7 +156,9 @@ export const getAllDotfiles = () =>
       description: "Recommended VSCode extensions for Effect.ts projects",
       required: false
     }
-  ] satisfies Array<DotfileMetadata>
+  ]
+  return dotfiles
+}
 
 /**
  * Copy a single dotfile to the target directory with merge support
@@ -354,7 +356,7 @@ export const validateDotfiles = (
       { concurrency: "unbounded" }
     )
 
-    const typedResults = validationResults 
+    const typedResults = validationResults
     const missing = typedResults.filter((r) => !r.exists)
 
     if (missing.length > 0) {

@@ -4,7 +4,7 @@
  * Effect Schema validation helpers for MCP tool handlers.
  */
 
-import { Data, ParseResult } from "effect";
+import { Data, ParseResult } from "effect"
 
 /**
  * Validation Error
@@ -13,8 +13,8 @@ import { Data, ParseResult } from "effect";
  * Preserves the original ParseResult.ParseError for debugging.
  */
 export class ValidationError extends Data.TaggedError("ValidationError")<{
-  readonly message: string;
-  readonly cause?: ParseResult.ParseError;
+  readonly message: string
+  readonly cause?: ParseResult.ParseError
 }> {}
 
 /**
@@ -23,5 +23,5 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
  * Uses TreeFormatter for properly structured, user-friendly error messages.
  */
 export const formatParseError = (error: ParseResult.ParseError) => {
-  return ParseResult.TreeFormatter.formatErrorSync(error);
-};
+  return ParseResult.TreeFormatter.formatErrorSync(error)
+}

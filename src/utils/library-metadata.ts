@@ -195,7 +195,7 @@ export function computeLibraryMetadata(
 
   return {
     // Required by BaseTemplateSubstitutions
-    tmpl: "" as const,
+    tmpl: "",
     name: schema.name,
     offsetFromRoot: computeOffsetFromRoot(projectRoot),
     tags,

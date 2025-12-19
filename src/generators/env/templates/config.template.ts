@@ -25,9 +25,7 @@ export function generateConfigFile(vars: ParsedEnvVar[]): string {
 
   // Imports
   builder.addImport("effect", "Config")
-  builder.addImport("./types", "ClientEnv", true)
-  builder.addImport("./types", "ServerEnv", true)
-  builder.addImport("./types", "Env", true)
+  // Import types only if needed (when there are vars for that context)
   builder.addBlankLine()
 
   // Separate vars by context
@@ -46,9 +44,9 @@ export function generateConfigFile(vars: ParsedEnvVar[]): string {
 
   const allClientVars = [...sharedVars, ...clientVars]
 
-  // Handle empty client config
+  // Handle empty client config - use empty object with inferred type
   if (allClientVars.length === 0) {
-    builder.addRaw("export const clientConfig = Config.succeed({} as ClientEnv)")
+    builder.addRaw("export const clientConfig = Config.succeed({})")
   } else {
     // Use object syntax for Config.all
     builder.addRaw("export const clientConfig = Config.all({")
@@ -73,9 +71,9 @@ export function generateConfigFile(vars: ParsedEnvVar[]): string {
   builder.addRaw(" * Includes secrets protected with Config.redacted().")
   builder.addRaw(" */")
 
-  // Handle empty server config
+  // Handle empty server config - use empty object with inferred type
   if (serverVars.length === 0) {
-    builder.addRaw("export const serverConfig = Config.succeed({} as ServerEnv)")
+    builder.addRaw("export const serverConfig = Config.succeed({})")
   } else {
     // Use object syntax for Config.all
     builder.addRaw("export const serverConfig = Config.all({")
@@ -102,7 +100,7 @@ export function generateConfigFile(vars: ParsedEnvVar[]): string {
   builder.addRaw("  client: clientConfig,")
   builder.addRaw("  server: serverConfig")
   builder.addRaw("}).pipe(")
-  builder.addRaw("  Config.map(({ client, server }) => ({ ...client, ...server } as Env))")
+  builder.addRaw("  Config.map(({ client, server }) => ({ ...client, ...server }))")
   builder.addRaw(")")
   builder.addBlankLine()
 

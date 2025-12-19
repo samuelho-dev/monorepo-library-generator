@@ -11,8 +11,8 @@ import { detectWorkspace } from "../utils/workspace-detector"
 
 // Constants for test mocks
 const TEST_SCOPE = "@test"
-const TEST_WORKSPACE_TYPE = "nx" as const
-const TEST_PKG_MANAGER = "pnpm" as const
+const TEST_WORKSPACE_TYPE = "nx"
+const TEST_PKG_MANAGER = "pnpm"
 
 /**
  * WorkspaceService interface

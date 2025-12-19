@@ -12,10 +12,10 @@
  */
 
 import { Console, Effect } from "effect"
+import { getPackageName } from "../../utils/workspace-config"
 import { generateContract } from "./contract"
 import { generateDataAccess } from "./data-access"
 import { generateFeature } from "./feature"
-import { getPackageName } from "../../utils/workspace-config"
 
 /**
  * Domain Generator Options (CLI)
@@ -50,11 +50,12 @@ export interface DomainGeneratorOptions {
  * ```
  */
 export function generateDomain(options: DomainGeneratorOptions) {
-  return Effect.gen(function* () {
-    const { name, description, tags, scope, includeCache, includeClientServer, includeRPC, includeCQRS, includeEdge } = options
+  return Effect.gen(function*() {
+    const { description, includeCQRS, includeCache, includeClientServer, includeEdge, includeRPC, name, scope, tags } =
+      options
 
     yield* Console.log(`\n🏗️  Generating complete domain: ${name}`)
-    yield* Console.log("=" .repeat(60))
+    yield* Console.log("=".repeat(60))
 
     // Step 1: Generate Contract Library
     yield* Console.log("\n📦 Step 1/3: Generating contract library...")

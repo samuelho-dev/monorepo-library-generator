@@ -34,8 +34,8 @@ import {
   generateRepositoryAggregateOperationFile,
   generateRepositoryCreateOperationFile,
   generateRepositoryDeleteOperationFile,
-  generateRepositoryIndexFile,
   generateRepositoryFile,
+  generateRepositoryIndexFile,
   generateRepositoryOperationsIndexFile,
   generateRepositoryReadOperationFile,
   generateRepositoryUpdateOperationFile

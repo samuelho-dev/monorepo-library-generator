@@ -7,9 +7,9 @@
 import type { Tree } from "@nx/devkit"
 import { formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
-import { generateContractCore, type ContractCoreOptions } from "../core/contract"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatOutput } from "../../infrastructure/output/formatter"
+import { type ContractCoreOptions, generateContractCore } from "../core/contract"
 import type { ContractGeneratorSchema } from "./schema"
 
 /**
@@ -75,7 +75,7 @@ export default async function contractGenerator(
       ...(schema.includeCQRS !== undefined && { includeCQRS: schema.includeCQRS }),
       ...(schema.includeRPC !== undefined && { includeRPC: schema.includeRPC }),
       ...(entities !== undefined && { entities }),
-      __interfaceType: "nx" as const,
+      __interfaceType: "nx",
       __nxTree: tree
     })
   )
