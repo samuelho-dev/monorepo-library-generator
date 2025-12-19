@@ -21,10 +21,9 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        uses: ./.github/actions/setup
-      - name: Build
-        run: bun run build
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1

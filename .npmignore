@@ -1,37 +1,36 @@
 # Source files (only dist is published)
 src/
+build/
+scripts/
 libs/
 packages/
+examples/
 
 # Test files
 **/*.spec.ts
 **/*.test.ts
-test-nx-method.ts
-generate-test-libs.ts
-TESTING_REPORT.md
+vitest.config*.ts
 
 # Config files
 tsconfig*.json
-vitest.config*.ts
 eslint.config.mjs
 .eslintrc*
+dprint.json
 
 # CI/CD
 .github/
 .nx/
 .changeset/
 
-# Build artifacts
-build/
-
 # Development
 *.md
 !README.md
 !CHANGELOG.md
-!PUBLISHING.md
 .vscode/
 .idea/
 .DS_Store
+.claude/
+docs/
 
 # Git
 .git/
@@ -41,8 +40,18 @@ build/
 # Package manager
 node_modules/
 pnpm-lock.yaml
+bun.lock
 .pnpm/
+
+# Nix
+flake.nix
+flake.lock
+.direnv/
+.envrc
 
 # Testing
 coverage/
 .vitest/
+
+# Environment
+.env*

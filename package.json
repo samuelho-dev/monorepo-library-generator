@@ -1,66 +1,75 @@
 {
-  "name": "my-effect-monorepo",
-  "version": "0.0.1",
-  "private": true,
+  "name": "@samuelho-dev/monorepo-library-generator",
+  "version": "1.5.3",
+  "description": "Effect-based CLI for generating libraries in Effect-native monorepos",
   "type": "module",
-  "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=9.0.0"
+  "bin": {
+    "mlg": "./dist/bin/cli.mjs"
   },
+  "files": [
+    "dist/"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/samuelho-dev/monorepo-library-generator"
+  },
+  "keywords": [
+    "effect",
+    "monorepo",
+    "generator",
+    "cli",
+    "typescript"
+  ],
+  "author": "Samuel Ho",
+  "license": "MIT",
   "scripts": {
-    "build": "nx run-many --target=build --all",
-    "build:affected": "nx affected --target=build",
-    "test": "nx run-many --target=test --all",
-    "test:affected": "nx affected --target=test",
+    "build": "tsc -p tsconfig.src.json && node scripts/bundle-cli.mjs",
+    "build:watch": "tsc -p tsconfig.src.json --watch",
+    "test": "vitest run",
     "test:ci": "vitest run --config vitest.config.ci.ts",
     "test:watch": "vitest --watch",
-    "lint": "nx run-many --target=lint --all",
-    "lint:fix": "nx run-many --target=lint --all --fix",
-    "typecheck": "nx run-many --target=typecheck --all",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "typecheck": "tsc --noEmit",
     "check": "tsc --noEmit",
-    "codegen": "echo 'No codegen needed'",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "prisma:reset": "prisma migrate reset",
-    "clean": "nx reset && rm -rf node_modules dist .nx",
+    "clean": "rm -rf dist build .tsbuildinfo",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "prepublishOnly": "bun run build",
     "ci:version": "changeset version",
-    "ci:publish": "changeset publish"
-  },
-  "devDependencies": {
-    "@changesets/cli": "^2.27.11",
-    "@effect/eslint-plugin": "^0.3.2",
-    "@eslint/compat": "^2.0.0",
-    "@eslint/js": "^9.39.2",
-    "@nx/js": "^20.2.2",
-    "@nx/vite": "^20.2.2",
-    "@types/node": "^22.10.2",
-    "@typescript-eslint/eslint-plugin": "^8.50.0",
-    "@typescript-eslint/parser": "^8.50.0",
-    "@vitest/ui": "^4.0.15",
-    "eslint": "^9.17.0",
-    "eslint-plugin-codegen": "^0.34.1",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-plugin-sort-destructure-keys": "^2.0.0",
-    "globals": "^16.5.0",
-    "nx": "^20.2.2",
-    "prettier": "^3.4.2",
-    "prisma": "^6.2.1",
-    "prisma-effect-kysely": "latest",
-    "typescript": "^5.7.2",
-    "vitest": "^4.0.15"
+    "ci:publish": "bun publish --access public"
   },
   "dependencies": {
     "@effect/cli": "^0.72.1",
     "@effect/platform": "^0.93.6",
     "@effect/platform-node": "^0.100.0",
     "@effect/schema": "^0.75.5",
-    "@modelcontextprotocol/sdk": "^1.25.1",
-    "@prisma/client": "^6.2.1",
-    "effect": "^3.19.9"
+    "@nx/devkit": "^22.3.1",
+    "effect": "^3.19.9",
+    "nx": "^22.3.1"
   },
-  "packageManager": "pnpm@9.15.0"
+  "devDependencies": {
+    "@changesets/cli": "^2.27.11",
+    "@effect/eslint-plugin": "^0.3.2",
+    "@eslint/compat": "^2.0.0",
+    "@eslint/js": "^9.39.2",
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.50.0",
+    "@typescript-eslint/parser": "^8.50.0",
+    "@vitest/ui": "^4.0.15",
+    "esbuild": "^0.24.2",
+    "eslint": "^9.17.0",
+    "eslint-plugin-codegen": "^0.34.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-sort-destructure-keys": "^2.0.0",
+    "globals": "^16.5.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.15"
+  }
 }

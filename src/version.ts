@@ -1,8 +1,10 @@
 /**
  * Version information
  *
- * Auto-generated from package.json by scripts/generate-version.mjs
- * DO NOT EDIT MANUALLY - This file is regenerated on every build
+ * This constant is replaced at build time by esbuild with the actual version
+ * from package.json using the define option.
  */
 
-export const VERSION = "1.5.3"
+declare const __VERSION__: string
+
+export const VERSION = typeof __VERSION__ !== "undefined" ? __VERSION__ : "0.0.0-dev"
