@@ -6,12 +6,11 @@
  * @module monorepo-library-generator/infrastructure/workspace/detector
  */
 
-import { FileSystem } from "@effect/platform"
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
-import { Effect } from "effect"
-import * as path from "node:path"
-import type { PackageManager, WorkspaceType } from "./types"
-import { WorkspaceDetectionError } from "./types"
+import { FileSystem } from "@effect/platform";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import { Effect } from "effect";
+import * as path from "node:path";
+import { WorkspaceDetectionError } from "./types";
 
 /**
  * Find workspace root by traversing up directory tree
@@ -24,35 +23,35 @@ export const findWorkspaceRoot = (
   startPath: string
 ) =>
   Effect.gen(function* () {
-    let currentPath = startPath
-    const maxDepth = 10
-    let depth = 0
+    let currentPath = startPath;
+    const maxDepth = 10;
+    let depth = 0;
 
     while (depth < maxDepth) {
-      const pkgPath = `${currentPath}/package.json`
+      const pkgPath = `${currentPath}/package.json`;
       const exists = yield* fs
         .exists(pkgPath)
-        .pipe(Effect.catchAll(() => Effect.succeed(false)))
+        .pipe(Effect.catchAll(() => Effect.succeed(false)));
 
       if (exists) {
         // Check if this is the workspace root
-        const isRoot = yield* isWorkspaceRoot(fs, currentPath)
-        if (isRoot) return currentPath
+        const isRoot = yield* isWorkspaceRoot(fs, currentPath);
+        if (isRoot) return currentPath;
       }
 
       // Go up one level
-      const parent = path.dirname(currentPath)
-      if (parent === currentPath) break
-      currentPath = parent
-      depth++
+      const parent = path.dirname(currentPath);
+      if (parent === currentPath) break;
+      currentPath = parent;
+      depth++;
     }
 
     return yield* Effect.fail(
       new WorkspaceDetectionError(
         `Could not find workspace root from ${startPath}`
       )
-    )
-  })
+    );
+  });
 
 /**
  * Check if directory is workspace root
@@ -64,42 +63,39 @@ export const findWorkspaceRoot = (
  * - turbo.json (Turborepo)
  * - package.json with workspaces field (Yarn/npm workspaces)
  */
-export const isWorkspaceRoot = (
-  fs: FileSystem.FileSystem,
-  dirPath: string
-) =>
+export const isWorkspaceRoot = (fs: FileSystem.FileSystem, dirPath: string) =>
   Effect.gen(function* () {
     // Check for workspace indicators
     const indicators = [
       "nx.json",
       "pnpm-workspace.yaml",
       "lerna.json",
-      "turbo.json"
-    ]
+      "turbo.json",
+    ];
 
     for (const indicator of indicators) {
       const exists = yield* fs
         .exists(`${dirPath}/${indicator}`)
-        .pipe(Effect.catchAll(() => Effect.succeed(false)))
-      if (exists) return true
+        .pipe(Effect.catchAll(() => Effect.succeed(false)));
+      if (exists) return true;
     }
 
     // Check package.json for workspaces field
-    const pkgPath = `${dirPath}/package.json`
+    const pkgPath = `${dirPath}/package.json`;
     const exists = yield* fs
       .exists(pkgPath)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.catchAll(() => Effect.succeed(false)));
 
     if (exists) {
       const content = yield* fs
         .readFileString(pkgPath)
-        .pipe(Effect.catchAll(() => Effect.succeed("{}")))
-      const pkg = JSON.parse(content)
-      if (pkg.workspaces) return true
+        .pipe(Effect.catchAll(() => Effect.succeed("{}")));
+      const pkg = JSON.parse(content);
+      if (pkg.workspaces) return true;
     }
 
-    return false
-  })
+    return false;
+  });
 
 /**
  * Detect workspace type (nx or standalone)
@@ -111,20 +107,20 @@ export const isWorkspaceRoot = (
 export const detectWorkspaceType = (
   fs: FileSystem.FileSystem,
   rootPath: string
-): Effect.Effect<WorkspaceType, WorkspaceDetectionError> =>
+) =>
   Effect.gen(function* () {
     // Check for Nx
     const nxExists = yield* fs
       .exists(`${rootPath}/nx.json`)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.catchAll(() => Effect.succeed(false)));
 
     if (nxExists) {
-      return "nx" as const
+      return "nx" as const;
     }
 
     // All other workspace types are considered "standalone"
-    return "standalone" as const
-  })
+    return "standalone" as const;
+  });
 
 /**
  * Detect package manager (pnpm, yarn, or npm)
@@ -137,23 +133,23 @@ export const detectWorkspaceType = (
 export const detectPackageManager = (
   fs: FileSystem.FileSystem,
   rootPath: string
-): Effect.Effect<PackageManager, WorkspaceDetectionError> =>
+) =>
   Effect.gen(function* () {
     // Check for pnpm
     const pnpmExists = yield* fs
       .exists(`${rootPath}/pnpm-lock.yaml`)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
-    if (pnpmExists) return "pnpm" as const
+      .pipe(Effect.catchAll(() => Effect.succeed(false)));
+    if (pnpmExists) return "pnpm" as const;
 
     // Check for Yarn
     const yarnExists = yield* fs
       .exists(`${rootPath}/yarn.lock`)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
-    if (yarnExists) return "yarn" as const
+      .pipe(Effect.catchAll(() => Effect.succeed(false)));
+    if (yarnExists) return "yarn" as const;
 
     // Default to npm
-    return "npm" as const
-  })
+    return "npm" as const;
+  });
 
 /**
  * Extract scope from package.json name field
@@ -164,12 +160,12 @@ export const detectPackageManager = (
  * - "no-scope" -> "@myorg" (default)
  */
 export const extractScope = (packageName?: string): string => {
-  if (!packageName) return "@myorg"
+  if (!packageName) return "@myorg";
   if (packageName.startsWith("@")) {
-    return packageName.split("/")[0] || "@myorg"
+    return packageName.split("/")[0] || "@myorg";
   }
-  return "@myorg"
-}
+  return "@myorg";
+};
 
 /**
  * Read package.json scope from workspace root
@@ -177,23 +173,108 @@ export const extractScope = (packageName?: string): string => {
 export const readScope = (
   fs: FileSystem.FileSystem,
   rootPath: string
-): Effect.Effect<string, WorkspaceDetectionError> =>
+) =>
   Effect.gen(function* () {
-    const pkgPath = `${rootPath}/package.json`
-    const content = yield* fs.readFileString(pkgPath).pipe(
-      Effect.catchAll((error) =>
-        Effect.fail(
-          new WorkspaceDetectionError(
-            `Could not read package.json at ${pkgPath}`,
-            error
+    const pkgPath = `${rootPath}/package.json`;
+    const content = yield* fs
+      .readFileString(pkgPath)
+      .pipe(
+        Effect.catchAll((error) =>
+          Effect.fail(
+            new WorkspaceDetectionError(
+              `Could not read package.json at ${pkgPath}`,
+              error
+            )
           )
         )
-      )
-    )
+      );
 
-    const pkg = JSON.parse(content)
-    return extractScope(pkg.name)
-  })
+    const pkg = JSON.parse(content);
+    return extractScope(pkg.name);
+  });
+
+/**
+ * Library type subdirectories to check for
+ * These indicate an established library structure
+ */
+const LIBRARY_TYPE_SUBDIRS = [
+  "contract",
+  "data-access",
+  "feature",
+  "infra",
+  "provider",
+  "util",
+] as const;
+
+/**
+ * Check if a directory has any library type subdirectories
+ *
+ * Used to validate that a candidate libraries root actually contains
+ * library type directories (contract, data-access, feature, etc.)
+ */
+const hasLibraryTypeSubdirs = (
+  fs: FileSystem.FileSystem,
+  dirPath: string
+) =>
+  Effect.gen(function* () {
+    for (const subdir of LIBRARY_TYPE_SUBDIRS) {
+      const exists = yield* fs
+        .exists(`${dirPath}/${subdir}`)
+        .pipe(Effect.catchAll(() => Effect.succeed(false)));
+      if (exists) return true;
+    }
+    return false;
+  });
+
+/**
+ * Detect libraries root directory structure
+ *
+ * Scans workspace root to find where libraries are stored.
+ * Priority order: packages/libs > libs > packages > src/libs
+ *
+ * Returns the relative path from workspace root to libraries directory.
+ *
+ * @example
+ * // Workspace with packages/libs/contract/user
+ * detectLibrariesRoot(fs, "/project") // Effect.succeed("packages/libs")
+ *
+ * // Workspace with libs/contract/user
+ * detectLibrariesRoot(fs, "/project") // Effect.succeed("libs")
+ *
+ * // New workspace with nothing yet
+ * detectLibrariesRoot(fs, "/project") // Effect.succeed("libs") (default)
+ */
+export const detectLibrariesRoot = (
+  fs: FileSystem.FileSystem,
+  rootPath: string
+) =>
+  Effect.gen(function* () {
+    const candidates = ["packages/libs", "libs", "packages", "src/libs"];
+
+    for (const candidate of candidates) {
+      const candidatePath = `${rootPath}/${candidate}`;
+      const exists = yield* fs
+        .exists(candidatePath)
+        .pipe(Effect.catchAll(() => Effect.succeed(false)));
+
+      if (exists) {
+        // Check if it has library type subdirectories
+        const hasTypes = yield* hasLibraryTypeSubdirs(fs, candidatePath);
+        if (hasTypes) return candidate;
+      }
+    }
+
+    // If no established structure found, check which candidate directory exists
+    for (const candidate of candidates) {
+      const exists = yield* fs
+        .exists(`${rootPath}/${candidate}`)
+        .pipe(Effect.catchAll(() => Effect.succeed(false)));
+      if (exists) return candidate;
+    }
+
+    // Default fallback for new projects
+    return "libs";
+  });
 
 /**
  * Auto-detect complete workspace context
@@ -202,24 +283,28 @@ export const readScope = (
  */
 export const detectWorkspaceContext = (startPath: string) =>
   Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem
+    const fs = yield* FileSystem.FileSystem;
 
     // Find workspace root
-    const rootPath = yield* findWorkspaceRoot(fs, startPath)
+    const rootPath = yield* findWorkspaceRoot(fs, startPath);
 
     // Detect workspace type
-    const type = yield* detectWorkspaceType(fs, rootPath)
+    const type = yield* detectWorkspaceType(fs, rootPath);
 
     // Read scope from package.json
-    const scope = yield* readScope(fs, rootPath)
+    const scope = yield* readScope(fs, rootPath);
 
     // Detect package manager
-    const packageManager = yield* detectPackageManager(fs, rootPath)
+    const packageManager = yield* detectPackageManager(fs, rootPath);
+
+    // Detect libraries root directory
+    const librariesRoot = yield* detectLibrariesRoot(fs, rootPath);
 
     return {
       root: rootPath,
       type,
       scope,
-      packageManager
-    }
-  }).pipe(Effect.provide(NodeFileSystem.layer))
+      packageManager,
+      librariesRoot,
+    };
+  }).pipe(Effect.provide(NodeFileSystem.layer));

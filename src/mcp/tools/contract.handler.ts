@@ -6,30 +6,25 @@
  */
 
 import { Effect, ParseResult } from "effect"
-import { generateContractCore } from "../../generators/core/contract"
+import { generateContractCore, type ContractCoreOptions } from "../../generators/core/contract"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatErrorResponse, formatOutput, formatValidationError } from "../../infrastructure/output/formatter"
-import { decodeContractInput } from "../../infrastructure/validation/registry"
+import { decodeContractInput, type ContractInput } from "../../infrastructure/validation/registry"
 import { ValidationError } from "../utils/validation"
-import type { McpResponse } from "../../infrastructure/output/formatter"
 
 /**
  * Create contract executor using unified infrastructure
+ * Explicit type parameters ensure type safety without assertions
  */
-const contractExecutor = createExecutor(
+const contractExecutor = createExecutor<ContractInput, ContractCoreOptions>(
   "contract",
   generateContractCore,
-  (validated, metadata) => {
-    const entities = validated["entities"] as ReadonlyArray<string> | undefined
-    const includeCQRS = (validated["includeCQRS"] as boolean | undefined) ?? false
-    const includeRPC = (validated["includeRPC"] as boolean | undefined) ?? false
-    return {
-      ...metadata,
-      ...(entities !== undefined && { entities }),
-      includeCQRS,
-      includeRPC
-    }
-  }
+  (validated, metadata) => ({
+    ...metadata,
+    includeCQRS: validated.includeCQRS ?? false,
+    includeRPC: validated.includeRPC ?? false,
+    ...(validated.entities !== undefined && { entities: validated.entities })
+  })
 )
 
 /**
@@ -88,6 +83,6 @@ export const handleGenerateContract = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      } as McpResponse)
+      })
     )
   )

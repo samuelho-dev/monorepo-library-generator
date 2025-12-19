@@ -1,174 +1,162 @@
 {
-  "env": {
+  ".": {
     "root": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "name": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "tags": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "tags.npm:private": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.targetGroups": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js.packageName": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js.packageVersion": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js.packageExports": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js.packageMain": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js.isInPackageManagerWorkspaces": [
-      "env/package.json",
-      "nx/core/package-json"
+      "vitest.config.ts",
+      "@nx/vite/plugin"
     ],
     "targets": [
-      "env/package.json",
-      "nx/core/package-json"
-    ],
-    "$schema": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "sourceRoot": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "projectType": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "tags.scope:shared": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "tags.type:infra": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "tags.platform:universal": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.executor": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.outputs": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.dependsOn": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options.outputPath": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options.main": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options.tsConfig": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options.assets": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options.clean": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.executor": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.outputs": [
-      "env/project.json",
-      "nx/core/project-json"
+      "vitest.config.ts",
+      "@nx/vite/plugin"
     ],
     "targets.test": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.test.executor": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.test.outputs": [
-      "env/project.json",
-      "nx/core/project-json"
+      "vitest.config.ts",
+      "@nx/vite/plugin"
     ],
     "targets.test.options": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.test.options.config": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.test.options.passWithNoTests": [
-      "env/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.cache": [
-      "nx.json",
-      "nx/target-defaults"
-    ],
-    "targets.build.parallelism": [
-      "nx.json",
-      "nx/target-defaults"
-    ],
-    "targets.lint.cache": [
-      "nx.json",
-      "nx/target-defaults"
-    ],
-    "targets.lint.parallelism": [
-      "nx.json",
-      "nx/target-defaults"
+      "vitest.config.ts",
+      "@nx/vite/plugin"
     ],
     "targets.test.cache": [
       "nx.json",
       "nx/target-defaults"
     ],
+    "targets.test.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.outputs": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.metadata": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.executor": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.options.cwd": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.options.command": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.metadata.technologies": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.metadata.technologies.0": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.metadata.description": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.metadata.help": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.metadata.help.command": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.test.metadata.help.example": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.typecheck.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.typecheck.options": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.executor": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options.cwd": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options.command": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.description": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.technologies.0": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help.command": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.metadata.help.example": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build-deps": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build-deps.dependsOn": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.dependsOn": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.executor": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.options": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.watch-deps.options.command": [
+      "vitest.config.ts",
+      "@nx/vite/plugin"
+    ],
     "targets.test.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.typecheck.parallelism": [
       "nx.json",
       "nx/target-defaults"
     ]

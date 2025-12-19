@@ -5,31 +5,27 @@
  */
 
 import { Effect, ParseResult } from "effect"
-import { generateInfraCore } from "../../generators/core/infra"
+import { generateInfraCore, type InfraCoreOptions } from "../../generators/core/infra"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatErrorResponse, formatOutput, formatValidationError } from "../../infrastructure/output/formatter"
-import { decodeInfraInput } from "../../infrastructure/validation/registry"
+import { decodeInfraInput, type InfraInput } from "../../infrastructure/validation/registry"
 import { ValidationError } from "../utils/validation"
-import type { McpResponse } from "../../infrastructure/output/formatter"
 
 /**
  * Create infra executor using unified infrastructure
+ * Explicit type parameters ensure type safety without assertions
  */
-const infraExecutor = createExecutor(
+const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
   "infra",
   generateInfraCore,
   (validated, metadata) => {
-    const platform = validated["platform"] as "node" | "browser" | "universal" | "edge" | undefined
-    const includeClient = validated["includeClient"] as boolean | undefined
-    const includeServer = validated["includeServer"] as boolean | undefined
-    const result: any = { ...metadata }
-    if (platform !== undefined) {
-      result.platform = platform
+    const includeClientServer = validated.includeClient && validated.includeServer ? true : undefined
+    return {
+      ...metadata,
+      ...(validated.platform !== undefined && { platform: validated.platform }),
+      ...(includeClientServer !== undefined && { includeClientServer }),
+      ...(validated.includeEdge !== undefined && { includeEdge: validated.includeEdge })
     }
-    if (includeClient && includeServer) {
-      result.includeClientServer = true
-    }
-    return result
   }
 )
 
@@ -86,6 +82,6 @@ export const handleGenerateInfra = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      } as McpResponse)
+      })
     )
   )

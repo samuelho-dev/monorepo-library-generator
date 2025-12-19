@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/provider/service/service-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
-import { getPackageName } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder";
+import type { ProviderTemplateOptions } from "../../../../utils/shared/types";
+import { getPackageName } from "../../../../utils/workspace-config";
 
 /**
  * Generate service/service.ts file
@@ -16,8 +16,14 @@ import { getPackageName } from "../../../../utils/workspace-config"
  * Creates Context.Tag interface with static layers using dynamic imports
  */
 export function generateProviderServiceFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, cliCommand, externalService, fileName, providerType = "sdk" } = options
+  const builder = new TypeScriptBuilder();
+  const {
+    className,
+    cliCommand,
+    externalService,
+    fileName,
+    providerType = "sdk",
+  } = options;
 
   builder.addFileHeader({
     title: `${className} Service Interface`,
@@ -26,72 +32,80 @@ export function generateProviderServiceFile(options: ProviderTemplateOptions) {
 External Service: ${externalService}
 
 ${
-      providerType === "sdk"
-        ? `Operations are split into separate files for optimal tree-shaking.
+  providerType === "sdk"
+    ? `Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.
 
 Bundle optimization:
   - Granular import: import { createOperations } from './operations/create'
   - Full service: import { ${className} } from './interface'`
-        : `Provider Type: ${providerType}`
-    }`,
-    module: `@custom-repo/provider-${fileName}/service`
-  })
-  builder.addBlankLine()
+    : `Provider Type: ${providerType}`
+}`,
+    module: `@custom-repo/provider-${fileName}/service`,
+  });
+  builder.addBlankLine();
 
   // Add imports based on provider type
-  const effectImports = ["Context", "Effect", "Layer"]
+  const effectImports = ["Context", "Effect", "Layer"];
   if (providerType === "cli") {
-    effectImports.push("Command")
+    effectImports.push("Command");
   }
 
-  builder.addImports([{ from: "effect", imports: effectImports }])
-  builder.addBlankLine()
+  builder.addImports([{ from: "effect", imports: effectImports }]);
+  builder.addBlankLine();
 
   // Import env for configuration
-  builder.addImports([{ from: getPackageName("env"), imports: ["env"] }])
-  builder.addBlankLine()
+  builder.addImports([{ from: getPackageName("env"), imports: ["env"] }]);
+  builder.addBlankLine();
 
   // Add platform imports for HTTP/GraphQL
   if (providerType === "http" || providerType === "graphql") {
     builder.addImports([
-      { from: "@effect/platform", imports: ["HttpClient", "HttpClientRequest", "HttpClientResponse"] }
-    ])
+      {
+        from: "@effect/platform",
+        imports: ["HttpClient", "HttpClientRequest", "HttpClientResponse"],
+      },
+    ]);
     if (providerType === "http") {
-      builder.addImports([{ from: "@effect/platform", imports: ["HttpBody"] }])
+      builder.addImports([{ from: "@effect/platform", imports: ["HttpBody"] }]);
     }
-    builder.addImports([{ from: "effect", imports: ["Schedule"] }])
-    builder.addBlankLine()
+    builder.addImports([{ from: "effect", imports: ["Schedule"] }]);
+    builder.addBlankLine();
   }
 
   // Import shared types and errors - conditional based on provider type
-  const typeImports = [`${className}Config`]
+  const typeImports = [`${className}Config`];
   if (providerType === "cli") {
-    typeImports.push("CommandResult")
+    typeImports.push("CommandResult");
   } else {
-    typeImports.push("Resource", "ListParams", "PaginatedResult", "HealthCheckResult")
+    typeImports.push(
+      "Resource",
+      "ListParams",
+      "PaginatedResult",
+      "HealthCheckResult"
+    );
   }
 
   builder.addImports([
     {
       from: "../types",
       imports: typeImports,
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
       from: "../errors",
       imports: [`${className}ServiceError`],
-      isTypeOnly: true
-    }
-  ])
+      isTypeOnly: true,
+    },
+  ]);
 
   // Import NotFoundError as value for Test layer usage
   builder.addImports([
     {
       from: "../errors",
-      imports: [`${className}NotFoundError`]
-    }
-  ])
+      imports: [`${className}NotFoundError`],
+    },
+  ]);
 
   // HTTP/GraphQL providers need ResourceSchema as a value import (not type-only)
   // for HttpClientResponse.schemaBodyJson() validation
@@ -99,15 +113,15 @@ Bundle optimization:
     builder.addImports([
       {
         from: "../types",
-        imports: ["ResourceSchema"]
-      }
-    ])
+        imports: ["ResourceSchema"],
+      },
+    ]);
   }
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Service interface - conditional based on provider type
-  builder.addSectionComment("Service Interface")
-  builder.addBlankLine()
+  builder.addSectionComment("Service Interface");
+  builder.addBlankLine();
 
   if (providerType === "cli") {
     // CLI Provider Interface
@@ -136,8 +150,8 @@ export interface ${className}ServiceInterface {
   /**
    * Get command version
    */
-  readonly version: Effect.Effect<string, ${className}ServiceError>;
-}`)
+  readonly version;
+}`);
   } else if (providerType === "http") {
     // HTTP Provider Interface
     builder.addRaw(`/**
@@ -160,33 +174,33 @@ export interface ${className}ServiceInterface {
   /**
    * Health check - verifies API connectivity
    */
-  readonly healthCheck: Effect.Effect<HealthCheckResult, ${className}ServiceError>;
+  readonly healthCheck;
 
   /**
    * GET request
    */
-  readonly get: (path: string) => Effect.Effect<Resource, ${className}ServiceError>;
+  readonly get: (path: string);
 
   /**
    * POST request
    */
-  readonly post: (path: string, body: unknown) => Effect.Effect<Resource, ${className}ServiceError>;
+  readonly post: (path: string, body: unknown);
 
   /**
    * PUT request
    */
-  readonly put: (path: string, body: unknown) => Effect.Effect<Resource, ${className}ServiceError>;
+  readonly put: (path: string, body: unknown);
 
   /**
    * DELETE request
    */
-  readonly delete: (path: string) => Effect.Effect<void, ${className}ServiceError>;
+  readonly delete: (path: string);
 
   /**
    * List resources with pagination
    */
-  readonly list: (params?: ListParams) => Effect.Effect<PaginatedResult<Resource>, ${className}ServiceError>;
-}`)
+  readonly list: (params?: ListParams);
+}`);
   } else if (providerType === "graphql") {
     // GraphQL Provider Interface
     builder.addRaw(`/**
@@ -208,7 +222,7 @@ export interface ${className}ServiceInterface {
   /**
    * Health check - verifies GraphQL endpoint connectivity
    */
-  readonly healthCheck: Effect.Effect<HealthCheckResult, ${className}ServiceError>;
+  readonly healthCheck;
 
   /**
    * Execute GraphQL query
@@ -216,7 +230,7 @@ export interface ${className}ServiceInterface {
   readonly query: <T>(
     query: string,
     variables?: Record<string, unknown>
-  ) => Effect.Effect<T, ${className}ServiceError>;
+  );
 
   /**
    * Execute GraphQL mutation
@@ -224,8 +238,8 @@ export interface ${className}ServiceInterface {
   readonly mutation: <T>(
     mutation: string,
     variables?: Record<string, unknown>
-  ) => Effect.Effect<T, ${className}ServiceError>;
-}`)
+  );
+}`);
   } else {
     // SDK Provider Interface (original)
     builder.addRaw(`/**
@@ -248,28 +262,28 @@ export interface ${className}ServiceInterface {
   /**
    * Health check - verifies service connectivity
    */
-  readonly healthCheck: Effect.Effect<HealthCheckResult, ${className}ServiceError>;
+  readonly healthCheck;
 
   /**
    * List resources with pagination support
    */
   readonly list: (
     params?: ListParams
-  ) => Effect.Effect<PaginatedResult<Resource>, ${className}ServiceError>;
+  );
 
   /**
    * Get resource by ID
    */
   readonly get: (
     id: string
-  ) => Effect.Effect<Resource, ${className}ServiceError>;
+  );
 
   /**
    * Create new resource
    */
   readonly create: (
     data: Omit<Resource, "id" | "createdAt" | "updatedAt">
-  ) => Effect.Effect<Resource, ${className}ServiceError>;
+  );
 
   /**
    * Update existing resource
@@ -277,14 +291,14 @@ export interface ${className}ServiceInterface {
   readonly update: (
     id: string,
     data: Partial<Omit<Resource, "id" | "createdAt" | "updatedAt">>
-  ) => Effect.Effect<Resource, ${className}ServiceError>;
+  );
 
   /**
    * Delete resource
    */
   readonly delete: (
     id: string
-  ) => Effect.Effect<void, ${className}ServiceError>;
+  );
 
   // ==========================================================================
   // TODO: Stream-Based Operations for Large-Scale API Interactions
@@ -449,13 +463,13 @@ export interface ${className}ServiceInterface {
   //
   // See EFFECT_PATTERNS.md "Streaming & Queuing Patterns" for comprehensive examples.
   // See PROVIDER.md for provider-specific Stream integration patterns.
-}`)
+}`);
   }
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Context.Tag
-  builder.addSectionComment("Context.Tag")
-  builder.addBlankLine()
+  builder.addSectionComment("Context.Tag");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * ${className} Service Tag
@@ -474,7 +488,7 @@ export interface ${className}ServiceInterface {
 export class ${className} extends Context.Tag("${className}")<
   ${className},
   ${className}ServiceInterface
->() {`)
+>() {`);
 
   // Add conditional Live layer implementation
   if (providerType === "cli") {
@@ -506,7 +520,7 @@ export class ${className} extends Context.Tag("${className}")<
 
       return { config, execute, version }
     })
-  )`)
+  )`);
   } else if (providerType === "http") {
     // HTTP Live Layer
     builder.addRaw(`  /**
@@ -611,7 +625,7 @@ export class ${className} extends Context.Tag("${className}")<
 
       return { config, healthCheck, get, post, put, delete: del, list }
     })
-  )`)
+  )`);
   } else if (providerType === "graphql") {
     // GraphQL Live Layer
     builder.addRaw(`  /**
@@ -669,7 +683,7 @@ export class ${className} extends Context.Tag("${className}")<
               }))
             }
 
-            return Effect.succeed(validated.data as T)
+            return Effect.succeed(validated.data)
           })
         )
 
@@ -685,7 +699,7 @@ export class ${className} extends Context.Tag("${className}")<
         mutation: execute
       }
     })
-  )`)
+  )`);
   } else {
     // SDK Live Layer (original implementation)
     builder.addRaw(`  /**
@@ -856,7 +870,7 @@ export class ${className} extends Context.Tag("${className}")<
         ...data,
         createdAt: new Date("2024-01-01T00:00:00Z"),
         updatedAt: new Date("2024-01-01T00:00:00Z"),
-      } as Resource),
+      }),
 
       // Returns mock updated resource
       update: (id, data) => Effect.succeed({
@@ -865,7 +879,7 @@ export class ${className} extends Context.Tag("${className}")<
         ...data,
         createdAt: new Date("2024-01-01T00:00:00Z"),
         updatedAt: new Date("2024-01-01T00:00:00Z"),
-      } as Resource),
+      }),
 
       // Returns void (success)
       delete: (id) => Effect.void,
@@ -941,8 +955,8 @@ export class ${className} extends Context.Tag("${className}")<
       };
     })
   );
-}`)
+}`);
   }
 
-  return builder.toString()
+  return builder.toString();
 }

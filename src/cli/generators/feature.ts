@@ -2,37 +2,53 @@
  * Feature Generator for CLI (Refactored)
  *
  * Uses unified infrastructure for consistent generation.
+ * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect } from "effect"
-import { generateFeatureCore } from "../../generators/core/feature"
+import { Console, Effect, ParseResult } from "effect"
+import { generateFeatureCore, type FeatureCoreOptions } from "../../generators/core/feature"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatOutput } from "../../infrastructure/output/formatter"
+import {
+  decodeFeatureInput,
+  type FeatureInput
+} from "../../infrastructure/validation/registry"
 
-export interface FeatureGeneratorOptions {
-  readonly name: string
-  readonly description?: string
-  readonly tags?: string
-  readonly dataAccessLibrary?: string
-  readonly includeClientState?: boolean
-}
+/**
+ * Feature Generator Options - imported from validation registry
+ * for single source of truth
+ */
+export type FeatureGeneratorOptions = FeatureInput
 
-const featureExecutor = createExecutor(
+const featureExecutor = createExecutor<FeatureInput, FeatureCoreOptions>(
   "feature",
   generateFeatureCore,
-  (input, metadata) => ({
+  (validated, metadata) => ({
     ...metadata,
-    dataAccessLibrary: input["dataAccessLibrary"] as string | undefined,
-    includeClientState: (input["includeClientState"] as boolean | undefined) ?? false
+    ...(validated.dataAccessLibrary !== undefined && { dataAccessLibrary: validated.dataAccessLibrary }),
+    includeClientState: validated.includeClientState ?? false,
+    ...(validated.scope !== undefined && { scope: validated.scope }),
+    ...(validated.platform !== undefined && { platform: validated.platform }),
+    ...(validated.includeClientServer !== undefined && { includeClientServer: validated.includeClientServer }),
+    includeRPC: validated.includeRPC ?? false,
+    includeCQRS: validated.includeCQRS ?? false,
+    includeEdge: validated.includeEdge ?? false
   })
 )
 
 export function generateFeature(options: FeatureGeneratorOptions) {
   return Effect.gen(function* () {
-    yield* Console.log(`Creating feature library: ${options.name}...`)
+    // Validate input with Effect Schema (like MCP does)
+    const validated = yield* decodeFeatureInput(options).pipe(
+      Effect.mapError((parseError) =>
+        new Error(ParseResult.TreeFormatter.formatErrorSync(parseError))
+      )
+    )
+
+    yield* Console.log(`Creating feature library: ${validated.name}...`)
 
     const result = yield* featureExecutor.execute({
-      ...options,
+      ...validated,
       __interfaceType: "cli" as const
     })
 

@@ -133,6 +133,48 @@ export class FeatureInputSchema extends Schema.Class<FeatureInputSchema>("Featur
       title: "Include Client State",
       description: "Include client-side state management (@effect-atom)"
     })
+  ),
+
+  scope: Schema.optional(
+    Schema.String.annotations({
+      title: "Scope",
+      description: "Custom scope for the feature library"
+    })
+  ),
+
+  platform: Schema.optional(
+    Schema.Literal("node", "browser", "universal", "edge").annotations({
+      title: "Platform",
+      description: "Target platform for the feature"
+    })
+  ),
+
+  includeClientServer: Schema.optional(
+    Schema.Boolean.annotations({
+      title: "Include Client/Server",
+      description: "Generate client-side hooks and state management"
+    })
+  ),
+
+  includeRPC: Schema.optional(
+    Schema.Boolean.annotations({
+      title: "Include RPC",
+      description: "Generate RPC router and handlers"
+    })
+  ),
+
+  includeCQRS: Schema.optional(
+    Schema.Boolean.annotations({
+      title: "Include CQRS",
+      description: "Generate CQRS structure with placeholders"
+    })
+  ),
+
+  includeEdge: Schema.optional(
+    Schema.Boolean.annotations({
+      title: "Include Edge",
+      description: "Generate edge middleware"
+    })
   )
 }) {}
 
@@ -171,10 +213,19 @@ export class ProviderInputSchema extends Schema.Class<ProviderInputSchema>("Prov
 export class InfraInputSchema extends Schema.Class<InfraInputSchema>("InfraInput")({
   ...BaseGeneratorFields,
 
-  infraType: Schema.Literal("database", "cache", "queue", "logging", "metrics", "pubsub").annotations({
-    title: "Infrastructure Type",
-    description: "Type of infrastructure library to generate"
-  }),
+  infraType: Schema.optional(
+    Schema.Literal("database", "cache", "queue", "logging", "metrics", "pubsub").annotations({
+      title: "Infrastructure Type",
+      description: "Type of infrastructure library to generate"
+    })
+  ),
+
+  platform: Schema.optional(
+    Schema.Literal("node", "browser", "universal", "edge").annotations({
+      title: "Platform",
+      description: "Target platform for the infrastructure"
+    })
+  ),
 
   includeClient: Schema.optional(
     Schema.Boolean.annotations({
@@ -187,6 +238,20 @@ export class InfraInputSchema extends Schema.Class<InfraInputSchema>("InfraInput
     Schema.Boolean.annotations({
       title: "Include Server",
       description: "Generate server implementation (Node.js specific)"
+    })
+  ),
+
+  includeClientServer: Schema.optional(
+    Schema.Boolean.annotations({
+      title: "Include Client/Server",
+      description: "Generate both client and server implementations"
+    })
+  ),
+
+  includeEdge: Schema.optional(
+    Schema.Boolean.annotations({
+      title: "Include Edge",
+      description: "Generate edge runtime support"
     })
   )
 }) {}

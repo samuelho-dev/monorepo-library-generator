@@ -1459,13 +1459,13 @@ export class StripeService extends Context.Tag('StripeService')<
 const mockPayment = {
   id: 'test',
   amount: 1000,
-} as Stripe.PaymentIntent; // Compiler can't catch missing required fields!
+}; // Compiler can't catch missing required fields!
 
 // ❌ WRONG - Partial mock with assertion
 return {
   id: 'test',
   status: 'succeeded',
-} as PaymentIntent; // Missing required fields won't be caught
+}; // Missing required fields won't be caught
 ```
 
 **When to Use Each Approach**:
@@ -3333,8 +3333,8 @@ interface PaginatedResponse<T> {
 // Create stream from paginated API
 const paginatedStream = <T>(
   fetchPage: (cursor: string | null) => Effect.Effect<PaginatedResponse<T>, Error>
-): Stream.Stream<T, Error> =>
-  Stream.unfoldEffect(null as string | null, (cursor) =>
+) =>
+  Stream.unfoldEffect(null , (cursor) =>
     Effect.gen(function* () {
       const response = yield* fetchPage(cursor);
 

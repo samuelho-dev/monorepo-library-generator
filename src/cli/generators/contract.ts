@@ -2,44 +2,38 @@
  * Contract Generator for CLI (Refactored)
  *
  * Uses unified infrastructure for consistent generation across all interfaces.
+ * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect } from "effect"
-import { generateContractCore } from "../../generators/core/contract"
-import { createExecutor } from "../../infrastructure/execution/executor"
-import { formatOutput } from "../../infrastructure/output/formatter"
+import { Console, Effect, ParseResult } from "effect";
+import { generateContractCore, type ContractCoreOptions } from "../../generators/core/contract";
+import { createExecutor } from "../../infrastructure/execution/executor";
+import { formatOutput } from "../../infrastructure/output/formatter";
+import {
+  decodeContractInput,
+  type ContractInput
+} from "../../infrastructure/validation/registry";
 
 /**
- * Contract Generator Options (CLI)
+ * Contract Generator Options - imported from validation registry
+ * for single source of truth
  */
-export interface ContractGeneratorOptions {
-  readonly name: string
-  readonly description?: string
-  readonly tags?: string
-  readonly includeCQRS?: boolean
-  readonly includeRPC?: boolean
-  readonly entities?: ReadonlyArray<string>
-}
+export type ContractGeneratorOptions = ContractInput;
 
 /**
  * Create contract executor using unified infrastructure
+ * Explicit type parameters ensure type safety without assertions
  */
-const contractExecutor = createExecutor(
+const contractExecutor = createExecutor<ContractInput, ContractCoreOptions>(
   "contract",
   generateContractCore,
-  (input, metadata) => {
-    const entities = input["entities"] as ReadonlyArray<string> | undefined
-    const result: any = {
-      ...metadata,
-      includeCQRS: (input["includeCQRS"] as boolean | undefined) ?? false,
-      includeRPC: (input["includeRPC"] as boolean | undefined) ?? false
-    }
-    if (entities !== undefined) {
-      result.entities = entities
-    }
-    return result
-  }
-)
+  (validated, metadata) => ({
+    ...metadata,
+    includeCQRS: validated.includeCQRS ?? false,
+    includeRPC: validated.includeRPC ?? false,
+    ...(validated.entities !== undefined && { entities: validated.entities })
+  })
+);
 
 /**
  * Generate Contract Library (CLI)
@@ -49,18 +43,25 @@ const contractExecutor = createExecutor(
  */
 export function generateContract(options: ContractGeneratorOptions) {
   return Effect.gen(function* () {
-    yield* Console.log(`Creating contract library: ${options.name}...`)
+    // Validate input with Effect Schema (like MCP does)
+    const validated = yield* decodeContractInput(options).pipe(
+      Effect.mapError((parseError) =>
+        new Error(ParseResult.TreeFormatter.formatErrorSync(parseError))
+      )
+    );
+
+    yield* Console.log(`Creating contract library: ${validated.name}...`);
 
     // Execute using unified infrastructure
     const result = yield* contractExecutor.execute({
-      ...options,
-      __interfaceType: "cli" as const
-    })
+      ...validated,
+      __interfaceType: "cli" as const,
+    });
 
     // Format and display output
-    const output = formatOutput(result, "cli")
-    yield* Console.log(output)
+    const output = formatOutput(result, "cli");
+    yield* Console.log(output);
 
-    return result
-  })
+    return result;
+  });
 }

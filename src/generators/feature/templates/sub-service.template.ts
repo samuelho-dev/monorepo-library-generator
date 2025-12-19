@@ -22,12 +22,12 @@ export interface ${options.className} {
   /**
    * Execute ${options.serviceName} operation
    */
-  readonly execute: Effect.Effect<void, ${options.className}Error, never>
+  readonly execute
 
   /**
    * Validate ${options.serviceName} configuration
    */
-  readonly validate: Effect.Effect<boolean, ${options.className}Error, never>
+  readonly validate
 }
 
 /**

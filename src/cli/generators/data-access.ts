@@ -2,49 +2,53 @@
  * Data-Access Generator for CLI (Refactored)
  *
  * Uses unified infrastructure for consistent generation.
+ * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect } from "effect"
-import { generateDataAccessCore } from "../../generators/core/data-access"
-import { createExecutor } from "../../infrastructure/execution/executor"
-import { formatOutput } from "../../infrastructure/output/formatter"
+import { Console, Effect, ParseResult } from "effect";
+import { generateDataAccessCore, type DataAccessCoreOptions } from "../../generators/core/data-access";
+import { createExecutor } from "../../infrastructure/execution/executor";
+import { formatOutput } from "../../infrastructure/output/formatter";
+import {
+  decodeDataAccessInput,
+  type DataAccessInput
+} from "../../infrastructure/validation/registry";
 
-export interface DataAccessGeneratorOptions {
-  readonly name: string
-  readonly description?: string
-  readonly tags?: string
-  readonly contractLibrary?: string
-  readonly includeCache?: boolean
-}
+/**
+ * Data-Access Generator Options - imported from validation registry
+ * for single source of truth
+ */
+export type DataAccessGeneratorOptions = DataAccessInput;
 
-const dataAccessExecutor = createExecutor(
+const dataAccessExecutor = createExecutor<DataAccessInput, DataAccessCoreOptions>(
   "data-access",
   generateDataAccessCore,
-  (input, metadata) => {
-    const contractLibrary = input["contractLibrary"] as string | undefined
-    const result: any = {
-      ...metadata,
-      includeCache: (input["includeCache"] as boolean | undefined) ?? false
-    }
-    if (contractLibrary !== undefined) {
-      result.contractLibrary = contractLibrary
-    }
-    return result
-  }
-)
+  (validated, metadata) => ({
+    ...metadata,
+    includeCache: validated.includeCache ?? false,
+    ...(validated.contractLibrary !== undefined && { contractLibrary: validated.contractLibrary })
+  })
+);
 
 export function generateDataAccess(options: DataAccessGeneratorOptions) {
   return Effect.gen(function* () {
-    yield* Console.log(`Creating data-access library: ${options.name}...`)
+    // Validate input with Effect Schema (like MCP does)
+    const validated = yield* decodeDataAccessInput(options).pipe(
+      Effect.mapError((parseError) =>
+        new Error(ParseResult.TreeFormatter.formatErrorSync(parseError))
+      )
+    );
+
+    yield* Console.log(`Creating data-access library: ${validated.name}...`);
 
     const result = yield* dataAccessExecutor.execute({
-      ...options,
-      __interfaceType: "cli" as const
-    })
+      ...validated,
+      __interfaceType: "cli" as const,
+    });
 
-    const output = formatOutput(result, "cli")
-    yield* Console.log(output)
+    const output = formatOutput(result, "cli");
+    yield* Console.log(output);
 
-    return result
-  })
+    return result;
+  });
 }

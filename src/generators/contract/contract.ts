@@ -7,29 +7,37 @@
 import type { Tree } from "@nx/devkit"
 import { formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
-import { generateContractCore } from "../core/contract"
+import { generateContractCore, type ContractCoreOptions } from "../core/contract"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatOutput } from "../../infrastructure/output/formatter"
 import type { ContractGeneratorSchema } from "./schema"
 
 /**
- * Create contract executor using unified infrastructure
+ * Nx-specific input type for the executor
+ * Extends the base schema with normalized entities (already parsed from string)
  */
-const contractExecutor = createExecutor(
+interface NxContractInput {
+  readonly name: string
+  readonly description?: string
+  readonly tags?: string
+  readonly includeCQRS?: boolean
+  readonly includeRPC?: boolean
+  readonly entities?: ReadonlyArray<string>
+}
+
+/**
+ * Create contract executor using unified infrastructure
+ * Explicit type parameters ensure type safety without assertions
+ */
+const contractExecutor = createExecutor<NxContractInput, ContractCoreOptions>(
   "contract",
   generateContractCore,
-  (input, metadata) => {
-    const entities = input["entities"] as ReadonlyArray<string> | undefined
-    const result: any = {
-      ...metadata,
-      includeCQRS: (input["includeCQRS"] as boolean | undefined) ?? false,
-      includeRPC: (input["includeRPC"] as boolean | undefined) ?? false
-    }
-    if (entities !== undefined) {
-      result.entities = entities
-    }
-    return result
-  }
+  (validated, metadata) => ({
+    ...metadata,
+    includeCQRS: validated.includeCQRS ?? false,
+    includeRPC: validated.includeRPC ?? false,
+    ...(validated.entities !== undefined && { entities: validated.entities })
+  })
 )
 
 /**
@@ -58,14 +66,15 @@ export default async function contractGenerator(
   }
 
   // Execute using unified infrastructure
+  // Use spread pattern for optional properties to satisfy exactOptionalPropertyTypes
   const result = await Effect.runPromise(
     contractExecutor.execute({
       name: schema.name,
-      description: schema.description,
-      tags: schema.tags,
-      includeCQRS: schema.includeCQRS,
-      includeRPC: schema.includeRPC,
-      entities,
+      ...(schema.description !== undefined && { description: schema.description }),
+      ...(schema.tags !== undefined && { tags: schema.tags }),
+      ...(schema.includeCQRS !== undefined && { includeCQRS: schema.includeCQRS }),
+      ...(schema.includeRPC !== undefined && { includeRPC: schema.includeRPC }),
+      ...(entities !== undefined && { entities }),
       __interfaceType: "nx" as const,
       __nxTree: tree
     })
@@ -80,5 +89,5 @@ export default async function contractGenerator(
   await formatFiles(tree)
 
   // Return callback (Nx convention)
-  return formatOutput(result, "nx") as () => void
+  return formatOutput(result, "nx")
 }

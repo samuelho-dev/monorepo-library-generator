@@ -1,1550 +1,1828 @@
 {
   "version": "6.0",
-  "nxVersion": "22.1.3",
+  "nxVersion": "20.8.3",
   "pathMappings": {
     "@custom-repo/contract-*": [
-      "libs/contract/*/src"
+      "libs/contract/*/src/index.ts"
     ],
     "@custom-repo/data-access-*": [
-      "libs/data-access/*/src"
+      "libs/data-access/*/src/index.ts"
     ],
     "@custom-repo/feature-*": [
-      "libs/feature/*/src"
+      "libs/feature/*/src/index.ts"
     ],
     "@custom-repo/infra-*": [
-      "libs/infra/*/src"
+      "libs/infra/*/src/index.ts"
     ],
     "@custom-repo/provider-*": [
-      "libs/provider/*/src"
+      "libs/provider/*/src/index.ts"
     ],
     "@custom-repo/env": [
-      "libs/env/src"
+      "libs/env/src/index.ts"
     ]
   },
-  "nxJsonPlugins": [],
+  "nxJsonPlugins": [
+    {
+      "name": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test"
+      }
+    }
+  ],
   "fileMap": {
     "projectFileMap": {
-      "env": [
+      "my-effect-monorepo": [
         {
-          "file": "env/README.md",
-          "hash": "17216307510074070772"
+          "file": ".changeset/config.json",
+          "hash": "5328983116918796618"
         },
         {
-          "file": "env/eslint.config.mjs",
-          "hash": "10007856484418064127"
+          "file": ".claude/agents/.meta/agent-audit.md",
+          "hash": "2173700922962345205"
         },
         {
-          "file": "env/package.json",
-          "hash": "13390176456434695620",
+          "file": ".claude/agents/.meta/agent-coordination-protocol.md",
+          "hash": "2513812191533426475"
+        },
+        {
+          "file": ".claude/agents/.meta/agent-patterns.md",
+          "hash": "3624608977529058091"
+        },
+        {
+          "file": ".claude/agents/.meta/mcp-integration-template.md",
+          "hash": "1479119289860687812"
+        },
+        {
+          "file": ".claude/agents/.meta/model-cost-analysis.md",
+          "hash": "6795503243659373878"
+        },
+        {
+          "file": ".claude/agents/.meta/template-standard.md",
+          "hash": "7277420554387620636"
+        },
+        {
+          "file": ".claude/agents/agent-architect.md",
+          "hash": "9056788436426808053"
+        },
+        {
+          "file": ".claude/agents/ai-architecture-specialist.md",
+          "hash": "6268069955812612614"
+        },
+        {
+          "file": ".claude/agents/ai-engineer.md",
+          "hash": "282370682829092003"
+        },
+        {
+          "file": ".claude/agents/api-documenter.md",
+          "hash": "16640514550768817606"
+        },
+        {
+          "file": ".claude/agents/argocd-gitops-expert.md",
+          "hash": "4313716822325692013"
+        },
+        {
+          "file": ".claude/agents/backend-architect.md",
+          "hash": "720733240281980634"
+        },
+        {
+          "file": ".claude/agents/bun-expert-developer.md",
+          "hash": "10298381026989001065"
+        },
+        {
+          "file": ".claude/agents/claude-code-architect.md",
+          "hash": "17517421713818750468"
+        },
+        {
+          "file": ".claude/agents/cli-architect.md",
+          "hash": "12248241972925473527"
+        },
+        {
+          "file": ".claude/agents/code-reviewer.md",
+          "hash": "2379403951172807948"
+        },
+        {
+          "file": ".claude/agents/context-manager.md",
+          "hash": "4314675013023960631"
+        },
+        {
+          "file": ".claude/agents/debugger.md",
+          "hash": "8587394201093058012"
+        },
+        {
+          "file": ".claude/agents/deployment-engineer.md",
+          "hash": "15531525861635385358"
+        },
+        {
+          "file": ".claude/agents/devops-engineer.md",
+          "hash": "14164067475358023558"
+        },
+        {
+          "file": ".claude/agents/devpod-expert.md",
+          "hash": "14809307348633252767"
+        },
+        {
+          "file": ".claude/agents/docs-architect.md",
+          "hash": "9198926431977937807"
+        },
+        {
+          "file": ".claude/agents/dx-optimizer.md",
+          "hash": "9268953151045092323"
+        },
+        {
+          "file": ".claude/agents/effect-architecture-specialist.md",
+          "hash": "4929685909340986071"
+        },
+        {
+          "file": ".claude/agents/error-detective.md",
+          "hash": "11689663623992865762"
+        },
+        {
+          "file": ".claude/agents/javascript-pro.md",
+          "hash": "510710756999221540"
+        },
+        {
+          "file": ".claude/agents/k8s-infrastructure-expert.md",
+          "hash": "15505905908756161285"
+        },
+        {
+          "file": ".claude/agents/kysely-query-architect.md",
+          "hash": "586815406321135503"
+        },
+        {
+          "file": ".claude/agents/legacy-modernizer.md",
+          "hash": "1384790479493621360"
+        },
+        {
+          "file": ".claude/agents/litellm-expert.md",
+          "hash": "4897053416096771050"
+        },
+        {
+          "file": ".claude/agents/mcp-architect.md",
+          "hash": "11796799371922586967"
+        },
+        {
+          "file": ".claude/agents/mermaid-expert.md",
+          "hash": "11160316505675584201"
+        },
+        {
+          "file": ".claude/agents/mutagen-remote-dev-expert.md",
+          "hash": "958939643440627894"
+        },
+        {
+          "file": ".claude/agents/nx-monorepo-architect.md",
+          "hash": "16332878168497575734"
+        },
+        {
+          "file": ".claude/agents/performance-engineer.md",
+          "hash": "16141648085331239386"
+        },
+        {
+          "file": ".claude/agents/prisma-expert.md",
+          "hash": "9135428591286251610"
+        },
+        {
+          "file": ".claude/agents/prompt-engineer.md",
+          "hash": "17747059298621872581"
+        },
+        {
+          "file": ".claude/agents/python-backend-architect.md",
+          "hash": "14808525330535671443"
+        },
+        {
+          "file": ".claude/agents/python-pro.md",
+          "hash": "10885964927008130231"
+        },
+        {
+          "file": ".claude/agents/reference-builder.md",
+          "hash": "15437038880621300020"
+        },
+        {
+          "file": ".claude/agents/search-specialist.md",
+          "hash": "8861412000990202975"
+        },
+        {
+          "file": ".claude/agents/tailscale-network-engineer.md",
+          "hash": "6757190343654784816"
+        },
+        {
+          "file": ".claude/agents/test-automater.md",
+          "hash": "626208405177121980"
+        },
+        {
+          "file": ".claude/agents/test-engineer-nx-effect.md",
+          "hash": "14858927335032671721"
+        },
+        {
+          "file": ".claude/agents/typescript-pro.md",
+          "hash": "927925000728850306"
+        },
+        {
+          "file": ".claude/agents/typescript-type-safety-expert.md",
+          "hash": "2570805762578854620"
+        },
+        {
+          "file": ".claude/commands/create-command.md",
+          "hash": "13846558890580344413"
+        },
+        {
+          "file": ".claude/commands/create-documentation.md",
+          "hash": "12382406254465240242"
+        },
+        {
+          "file": ".claude/commands/create-execution.md",
+          "hash": "2541087987063911779"
+        },
+        {
+          "file": ".claude/commands/debug.md",
+          "hash": "3752139429864199790"
+        },
+        {
+          "file": ".claude/commands/generate-tests.md",
+          "hash": "15351864188369441118"
+        },
+        {
+          "file": ".claude/commands/refine-commands.md",
+          "hash": "17142847793026706213"
+        },
+        {
+          "file": ".claude/commands/refineagents.md",
+          "hash": "9707633943246254592"
+        },
+        {
+          "file": ".claude/commands/security-hardening.md",
+          "hash": "12152923954708834630"
+        },
+        {
+          "file": ".claude/commands/validate-library.md",
+          "hash": "2843901623236596188"
+        },
+        {
+          "file": ".claude/commands/validate-plan.md",
+          "hash": "17934220219375503992"
+        },
+        {
+          "file": ".editorconfig",
+          "hash": "10183032302308180143"
+        },
+        {
+          "file": ".envrc",
+          "hash": "7934611523180163109"
+        },
+        {
+          "file": ".github/ISSUE_TEMPLATE/bug_report.md",
+          "hash": "13058841707655608181"
+        },
+        {
+          "file": ".github/ISSUE_TEMPLATE/feature_request.md",
+          "hash": "6024196300014871803"
+        },
+        {
+          "file": ".github/PULL_REQUEST_TEMPLATE.md",
+          "hash": "6956224550859045057"
+        },
+        {
+          "file": ".github/actions/setup/action.yml",
+          "hash": "15128830905033993418"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "hash": "2890124539687273795"
+        },
+        {
+          "file": ".github/workflows/release.yml",
+          "hash": "3607016578808022108"
+        },
+        {
+          "file": ".github/workflows/snapshot.yml",
+          "hash": "12287289820941439932"
+        },
+        {
+          "file": ".gitignore",
+          "hash": "11374082240009118904"
+        },
+        {
+          "file": ".npmignore",
+          "hash": "10631093982038995087"
+        },
+        {
+          "file": ".npmrc",
+          "hash": "15579146414963548860"
+        },
+        {
+          "file": ".vscode/extensions.json",
+          "hash": "14379891829209375557"
+        },
+        {
+          "file": ".vscode/settings.json",
+          "hash": "14133022383238357577"
+        },
+        {
+          "file": "CHANGELOG.md",
+          "hash": "2307425630170001356"
+        },
+        {
+          "file": "EXECUTION-COMPLETE.md",
+          "hash": "13525032964401170651"
+        },
+        {
+          "file": "LIBRARY_MIGRATION_COMPLETE.md",
+          "hash": "7379719609105936032"
+        },
+        {
+          "file": "LICENSE",
+          "hash": "15773211985747942655"
+        },
+        {
+          "file": "README.md",
+          "hash": "12932569698084546665"
+        },
+        {
+          "file": "REFACTORING_VERIFICATION.md",
+          "hash": "2837011252788797337"
+        },
+        {
+          "file": "docs/ARCHITECTURE_OVERVIEW.md",
+          "hash": "15191479967609817922"
+        },
+        {
+          "file": "docs/DATA-ACCESS.md",
+          "hash": "4913711633750832584"
+        },
+        {
+          "file": "docs/DOTFILES_ENFORCEMENT.md",
+          "hash": "5096826888009023405"
+        },
+        {
+          "file": "docs/EFFECT_PATTERNS.md",
+          "hash": "1545013666314736335"
+        },
+        {
+          "file": "docs/EXAMPLES.md",
+          "hash": "2615151687705726095"
+        },
+        {
+          "file": "docs/EXPORT_PATTERNS.md",
+          "hash": "5025536427775577157"
+        },
+        {
+          "file": "docs/FEATURE.md",
+          "hash": "14441645130358440821"
+        },
+        {
+          "file": "docs/GENERATOR.md",
+          "hash": "2156705762686982975"
+        },
+        {
+          "file": "docs/INFRA.md",
+          "hash": "10916271298584330563"
+        },
+        {
+          "file": "docs/MCP_USAGE_GUIDE.md",
+          "hash": "9380934072277289511"
+        },
+        {
+          "file": "docs/NX_STANDARDS.md",
+          "hash": "15177757298232808752"
+        },
+        {
+          "file": "docs/PROVIDER.md",
+          "hash": "6350166093462016052"
+        },
+        {
+          "file": "docs/README.md",
+          "hash": "7513253486012758682"
+        },
+        {
+          "file": "docs/TESTING_PATTERNS.md",
+          "hash": "11316555329347101746"
+        },
+        {
+          "file": "docs/contract.md",
+          "hash": "5115874052659306607"
+        },
+        {
+          "file": "eslint.config.mjs",
+          "hash": "8228166712048684173",
           "deps": [
-            "npm:tslib",
+            "npm:@eslint/eslintrc",
+            "npm:@eslint/js",
+            "npm:@typescript-eslint/parser"
+          ]
+        },
+        {
+          "file": "examples/README.md",
+          "hash": "4452521531138118890"
+        },
+        {
+          "file": "examples/app.ts",
+          "hash": "8569727529824775462",
+          "deps": [
             "npm:effect"
           ]
         },
         {
-          "file": "env/project.json",
-          "hash": "11355774165324012678"
+          "file": "examples/user.prisma",
+          "hash": "782805806041645940"
         },
         {
-          "file": "env/src/index.ts",
-          "hash": "1716712857787923099"
+          "file": "flake.lock",
+          "hash": "6223326973455177632"
         },
         {
-          "file": "env/src/lib/env.ts",
-          "hash": "11752226734582312955"
+          "file": "flake.nix",
+          "hash": "5278872866010000124"
         },
         {
-          "file": "env/src/lib/layers.ts",
-          "hash": "4670030002730313051"
+          "file": "nx.json",
+          "hash": "14029694425114770995"
         },
         {
-          "file": "env/src/lib/service.ts",
-          "hash": "12145288496641175961"
+          "file": "package.json",
+          "hash": "12138580598079277161",
+          "deps": [
+            "npm:@nx/js",
+            "npm:@nx/vite",
+            "npm:@types/node",
+            "npm:@typescript-eslint/eslint-plugin",
+            "npm:@typescript-eslint/parser",
+            "npm:@vitest/ui",
+            "npm:eslint",
+            "npm:nx",
+            "npm:prettier",
+            "npm:prisma",
+            "npm:prisma-effect-kysely",
+            "npm:typescript",
+            "npm:vitest",
+            "npm:@effect/cli",
+            "npm:@effect/platform",
+            "npm:@effect/platform-node",
+            "npm:@effect/schema",
+            "npm:@modelcontextprotocol/sdk",
+            "npm:@prisma/client",
+            "npm:effect"
+          ]
         },
         {
-          "file": "env/tsconfig.json",
-          "hash": "13803272115177108772"
+          "file": "patches/@changesets__get-github-info@0.6.0.patch",
+          "hash": "9839557208228595635"
         },
         {
-          "file": "env/tsconfig.lib.json",
-          "hash": "4016739431044309915"
+          "file": "pnpm-lock.yaml",
+          "hash": "5811396650780120670"
         },
         {
-          "file": "env/tsconfig.spec.json",
-          "hash": "6783129069655822369"
+          "file": "pnpm-workspace.yaml",
+          "hash": "10720603250817740763"
         },
         {
-          "file": "env/vitest.config.ts",
-          "hash": "14426766131345522765"
+          "file": "scripts/bundle-cli.mjs",
+          "hash": "945783998920224865",
+          "deps": [
+            "npm:esbuild"
+          ]
+        },
+        {
+          "file": "scripts/bundle-mcp.mjs",
+          "hash": "17541433099394524365",
+          "deps": [
+            "npm:esbuild"
+          ]
+        },
+        {
+          "file": "scripts/generate-version.mjs",
+          "hash": "14224616177375801213"
+        },
+        {
+          "file": "scripts/post-build.mjs",
+          "hash": "4753281222971100046"
+        },
+        {
+          "file": "src/AGENTS.md",
+          "hash": "17968709236518741058"
+        },
+        {
+          "file": "src/cli/commands/init-integration-example.ts",
+          "hash": "8031624740675390764",
+          "deps": [
+            "npm:effect",
+            "npm:@effect/platform"
+          ]
+        },
+        {
+          "file": "src/cli/commands/init-prisma.spec.ts",
+          "hash": "18000627463781403694",
+          "deps": [
+            "npm:@effect/platform-node",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/commands/init-prisma.ts",
+          "hash": "13020939014041181988",
+          "deps": [
+            "npm:effect",
+            "npm:@effect/platform"
+          ]
+        },
+        {
+          "file": "src/cli/commands/init-workspace-files.ts",
+          "hash": "2186439134192245243",
+          "deps": [
+            "npm:effect",
+            "npm:@effect/platform"
+          ]
+        },
+        {
+          "file": "src/cli/commands/init-workspace.ts",
+          "hash": "4593599865745000319",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/commands/init.ts",
+          "hash": "4968013922021144875",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/generators/contract.ts",
+          "hash": "2081096616349163650",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/generators/data-access.ts",
+          "hash": "13337790240944970886",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/generators/domain.ts",
+          "hash": "12687299472538739619",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/generators/env.ts",
+          "hash": "13617310499237254526",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/generators/feature.ts",
+          "hash": "1716668512239388772",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/generators/infra.ts",
+          "hash": "16041946365334408668",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/generators/provider.ts",
+          "hash": "17111201267859419717",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/index.ts",
+          "hash": "3032001049148550020",
+          "deps": [
+            "npm:@effect/cli",
+            "npm:@effect/platform-node",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/cli/interactive/file-preview.ts",
+          "hash": "7287121267525871519"
+        },
+        {
+          "file": "src/cli/interactive/index.ts",
+          "hash": "3780853950460946523",
+          "deps": [
+            "npm:effect",
+            "npm:@effect/platform"
+          ]
+        },
+        {
+          "file": "src/cli/interactive/prompts.ts",
+          "hash": "10248773614352616663",
+          "deps": [
+            "npm:@effect/cli"
+          ]
+        },
+        {
+          "file": "src/cli/interactive/types.ts",
+          "hash": "10311684225038723584"
+        },
+        {
+          "file": "src/cli/interactive/ui/colors.ts",
+          "hash": "8081638395661805116"
+        },
+        {
+          "file": "src/cli/interactive/ui/progress.ts",
+          "hash": "9480138483458735221"
+        },
+        {
+          "file": "src/cli/interactive/wizard.ts",
+          "hash": "1372814631683358671",
+          "deps": [
+            "npm:@effect/platform",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/dotfiles/.editorconfig.template",
+          "hash": "10183032302308180143"
+        },
+        {
+          "file": "src/dotfiles/.vscode-extensions.template.json",
+          "hash": "14379891829209375557"
+        },
+        {
+          "file": "src/dotfiles/.vscode-settings.template.json",
+          "hash": "14133022383238357577"
+        },
+        {
+          "file": "src/dotfiles/eslint.config.template.mjs",
+          "hash": "13956557015198780009"
+        },
+        {
+          "file": "src/dotfiles/tsconfig.template.json",
+          "hash": "7657020349934226501"
+        },
+        {
+          "file": "src/generators.json",
+          "hash": "17289767070987101918"
+        },
+        {
+          "file": "src/generators/__tests__/effect-patterns.spec.ts",
+          "hash": "7425344226838341718",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/contract/README.md",
+          "hash": "13012470526456553110"
+        },
+        {
+          "file": "src/generators/contract/config.ts",
+          "hash": "3201155634115631878"
+        },
+        {
+          "file": "src/generators/contract/contract.spec.ts",
+          "hash": "3431686576162812863",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/contract/contract.ts",
+          "hash": "16618463903708655791",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/contract/schema.json",
+          "hash": "15814510126627385586"
+        },
+        {
+          "file": "src/generators/contract/schema.ts",
+          "hash": "10112825902359696388"
+        },
+        {
+          "file": "src/generators/contract/templates/commands.template.ts",
+          "hash": "9742072072834436607"
+        },
+        {
+          "file": "src/generators/contract/templates/entities.template.ts",
+          "hash": "17975574159482000850"
+        },
+        {
+          "file": "src/generators/contract/templates/entity-barrel.template.ts",
+          "hash": "18381621215076913571"
+        },
+        {
+          "file": "src/generators/contract/templates/entity-file.template.ts",
+          "hash": "14958956474550077288"
+        },
+        {
+          "file": "src/generators/contract/templates/errors.template.ts",
+          "hash": "3497789781979536893"
+        },
+        {
+          "file": "src/generators/contract/templates/events.template.ts",
+          "hash": "17773580707847193875"
+        },
+        {
+          "file": "src/generators/contract/templates/index.template.ts",
+          "hash": "15678562825071300785"
+        },
+        {
+          "file": "src/generators/contract/templates/ports.template.ts",
+          "hash": "11710243226465285795"
+        },
+        {
+          "file": "src/generators/contract/templates/projections.template.ts",
+          "hash": "1287053819886793073"
+        },
+        {
+          "file": "src/generators/contract/templates/queries.template.ts",
+          "hash": "4817190525506405211"
+        },
+        {
+          "file": "src/generators/contract/templates/rpc.template.ts",
+          "hash": "11392596408841921779"
+        },
+        {
+          "file": "src/generators/contract/templates/types-only.template.ts",
+          "hash": "4485252133248282218"
+        },
+        {
+          "file": "src/generators/core/contract.ts",
+          "hash": "7851250725738015236",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/core/data-access.ts",
+          "hash": "16588382164682204989",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/core/feature.ts",
+          "hash": "14588225997743401554",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/core/infra.ts",
+          "hash": "12706187399111948832",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/core/provider-consolidation.ts",
+          "hash": "6606452596818501653",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/core/provider.ts",
+          "hash": "5495776546083975531",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/core/sub-services.ts",
+          "hash": "16668987798644323494",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/data-access/README.md",
+          "hash": "6467607471890917592"
+        },
+        {
+          "file": "src/generators/data-access/data-access.spec.ts",
+          "hash": "8581071347584271289",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/data-access/data-access.ts",
+          "hash": "17133024643570296544",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/data-access/schema.json",
+          "hash": "9133322545722341299"
+        },
+        {
+          "file": "src/generators/data-access/schema.ts",
+          "hash": "400813023344677370"
+        },
+        {
+          "file": "src/generators/data-access/templates/errors.template.ts",
+          "hash": "16999867349786879194"
+        },
+        {
+          "file": "src/generators/data-access/templates/index.template.ts",
+          "hash": "12196650286112913351"
+        },
+        {
+          "file": "src/generators/data-access/templates/index.ts",
+          "hash": "13008888721217609521"
+        },
+        {
+          "file": "src/generators/data-access/templates/layers-spec.template.ts",
+          "hash": "7663713216781260415"
+        },
+        {
+          "file": "src/generators/data-access/templates/layers.template.ts",
+          "hash": "10046464701843108390"
+        },
+        {
+          "file": "src/generators/data-access/templates/queries.template.ts",
+          "hash": "1816778014882770663"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository-spec.template.ts",
+          "hash": "15273529033231624618"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository.template.ts",
+          "hash": "17698979344073448166"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/aggregate-operation.template.ts",
+          "hash": "17346352001824848470"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/create-operation.template.ts",
+          "hash": "12286251463674305683"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/delete-operation.template.ts",
+          "hash": "7655502453371919612"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/index.ts",
+          "hash": "9367790005847748073"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/operations-index.template.ts",
+          "hash": "5378912914572773844"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/read-operation.template.ts",
+          "hash": "11827199305176832358"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/repository-index.template.ts",
+          "hash": "5388682790821425790"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/repository.template.ts",
+          "hash": "1917476733790772054"
+        },
+        {
+          "file": "src/generators/data-access/templates/repository/update-operation.template.ts",
+          "hash": "18423633254898190719"
+        },
+        {
+          "file": "src/generators/data-access/templates/types.template.ts",
+          "hash": "1388735540274668950"
+        },
+        {
+          "file": "src/generators/data-access/templates/validation.template.ts",
+          "hash": "17015573754253424609"
+        },
+        {
+          "file": "src/generators/env/env.ts",
+          "hash": "11569671406401318510",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/env/schema.ts",
+          "hash": "5589054406798941198"
+        },
+        {
+          "file": "src/generators/env/templates/config.template.ts",
+          "hash": "16515436381151718410"
+        },
+        {
+          "file": "src/generators/env/templates/entry-points.template.ts",
+          "hash": "15595377407844224762"
+        },
+        {
+          "file": "src/generators/env/templates/env.template.ts",
+          "hash": "7565814834280010068"
+        },
+        {
+          "file": "src/generators/env/templates/index.template.ts",
+          "hash": "2563198978853802953"
+        },
+        {
+          "file": "src/generators/env/templates/parse.template.ts",
+          "hash": "587656266219877541"
+        },
+        {
+          "file": "src/generators/env/templates/schema.template.ts",
+          "hash": "17337889632672479669"
+        },
+        {
+          "file": "src/generators/env/templates/types.template.ts",
+          "hash": "14732115163922666290"
+        },
+        {
+          "file": "src/generators/env/utils/parse-dotenv.ts",
+          "hash": "17385470787707288902"
+        },
+        {
+          "file": "src/generators/feature/README.md",
+          "hash": "12554864478997797838"
+        },
+        {
+          "file": "src/generators/feature/feature.old.ts",
+          "hash": "6607481389348686144",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/feature/feature.spec.ts",
+          "hash": "16803427901391734409",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/feature/feature.ts",
+          "hash": "4999979857543577544",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/feature/schema.json",
+          "hash": "4155236452258490032"
+        },
+        {
+          "file": "src/generators/feature/schema.ts",
+          "hash": "10829437125782952122"
+        },
+        {
+          "file": "src/generators/feature/templates/atoms-index.template.ts",
+          "hash": "1403160732402347185"
+        },
+        {
+          "file": "src/generators/feature/templates/atoms.template.ts",
+          "hash": "16813688676162667105"
+        },
+        {
+          "file": "src/generators/feature/templates/errors.template.ts",
+          "hash": "15281135804876530880"
+        },
+        {
+          "file": "src/generators/feature/templates/hooks-index.template.ts",
+          "hash": "14666784480501156723"
+        },
+        {
+          "file": "src/generators/feature/templates/hooks.template.ts",
+          "hash": "11272955781538886778"
+        },
+        {
+          "file": "src/generators/feature/templates/index.template.ts",
+          "hash": "838953875687800921"
+        },
+        {
+          "file": "src/generators/feature/templates/index.ts",
+          "hash": "17653364243999343385"
+        },
+        {
+          "file": "src/generators/feature/templates/layers.template.ts",
+          "hash": "6196518566055096084"
+        },
+        {
+          "file": "src/generators/feature/templates/middleware.template.ts",
+          "hash": "16567795780532336506"
+        },
+        {
+          "file": "src/generators/feature/templates/rpc-errors.template.ts",
+          "hash": "1947848182227421396"
+        },
+        {
+          "file": "src/generators/feature/templates/rpc-handlers.template.ts",
+          "hash": "10522507118189448370"
+        },
+        {
+          "file": "src/generators/feature/templates/rpc.template.ts",
+          "hash": "8042498646571843769"
+        },
+        {
+          "file": "src/generators/feature/templates/schemas.template.ts",
+          "hash": "12718451459411984157"
+        },
+        {
+          "file": "src/generators/feature/templates/service-spec.template.ts",
+          "hash": "612654497855929231"
+        },
+        {
+          "file": "src/generators/feature/templates/service.template.ts",
+          "hash": "6882005161632826524"
+        },
+        {
+          "file": "src/generators/feature/templates/service/index.ts",
+          "hash": "587342214321016713"
+        },
+        {
+          "file": "src/generators/feature/templates/service/service-index.template.ts",
+          "hash": "12250195564004245246"
+        },
+        {
+          "file": "src/generators/feature/templates/service/service.template.ts",
+          "hash": "16573775285825592717"
+        },
+        {
+          "file": "src/generators/feature/templates/sub-service-errors.template.ts",
+          "hash": "16356652198810478721"
+        },
+        {
+          "file": "src/generators/feature/templates/sub-service-index.template.ts",
+          "hash": "16097165769828999740"
+        },
+        {
+          "file": "src/generators/feature/templates/sub-service-layers.template.ts",
+          "hash": "15845701196398489447"
+        },
+        {
+          "file": "src/generators/feature/templates/sub-service-types.template.ts",
+          "hash": "1373637865250228888"
+        },
+        {
+          "file": "src/generators/feature/templates/sub-service.template.ts",
+          "hash": "4417573211547858248"
+        },
+        {
+          "file": "src/generators/feature/templates/types.template.ts",
+          "hash": "4739164234411736857"
+        },
+        {
+          "file": "src/generators/infra/README.md",
+          "hash": "18432443867625268191"
+        },
+        {
+          "file": "src/generators/infra/infra.old.ts",
+          "hash": "8629434770397709945",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/infra/infra.spec.ts",
+          "hash": "1783068676107900107",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/infra/infra.ts",
+          "hash": "14250747225908839206",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/infra/schema.json",
+          "hash": "10543796204344532232"
+        },
+        {
+          "file": "src/generators/infra/schema.ts",
+          "hash": "3111342711228858332"
+        },
+        {
+          "file": "src/generators/infra/templates/client-layers.template.ts",
+          "hash": "16657922527392080051"
+        },
+        {
+          "file": "src/generators/infra/templates/client.template.ts",
+          "hash": "6762656277009126078"
+        },
+        {
+          "file": "src/generators/infra/templates/config.template.ts",
+          "hash": "14669908869961011470"
+        },
+        {
+          "file": "src/generators/infra/templates/edge-layers.template.ts",
+          "hash": "8799900849620688007"
+        },
+        {
+          "file": "src/generators/infra/templates/edge.template.ts",
+          "hash": "4582686047806918510"
+        },
+        {
+          "file": "src/generators/infra/templates/errors.template.ts",
+          "hash": "12452349909382384790"
+        },
+        {
+          "file": "src/generators/infra/templates/index.template.ts",
+          "hash": "6223200332218897604"
+        },
+        {
+          "file": "src/generators/infra/templates/index.ts",
+          "hash": "12266110964101130266"
+        },
+        {
+          "file": "src/generators/infra/templates/memory-provider.template.ts",
+          "hash": "5945020807352022844"
+        },
+        {
+          "file": "src/generators/infra/templates/orchestrator.template.ts",
+          "hash": "17962346595593155329"
+        },
+        {
+          "file": "src/generators/infra/templates/provider-consolidation-index.template.ts",
+          "hash": "18084544793406087236"
+        },
+        {
+          "file": "src/generators/infra/templates/provider-consolidation-layers.template.ts",
+          "hash": "18408240090805707581"
+        },
+        {
+          "file": "src/generators/infra/templates/server-layers.template.ts",
+          "hash": "1990339483619482224"
+        },
+        {
+          "file": "src/generators/infra/templates/server.template.ts",
+          "hash": "7368990441236851055"
+        },
+        {
+          "file": "src/generators/infra/templates/service.template.ts",
+          "hash": "8352756578971648294"
+        },
+        {
+          "file": "src/generators/infra/templates/use-hook.template.ts",
+          "hash": "6690120233306850446"
+        },
+        {
+          "file": "src/generators/provider/README.md",
+          "hash": "2478429132889058961"
+        },
+        {
+          "file": "src/generators/provider/provider.spec.ts",
+          "hash": "5984943216727868801",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/generators/provider/provider.ts",
+          "hash": "15033996624306494897",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/generators/provider/schema.json",
+          "hash": "1926129601412811562"
+        },
+        {
+          "file": "src/generators/provider/schema.ts",
+          "hash": "3026352072703795201"
+        },
+        {
+          "file": "src/generators/provider/templates/client.template.ts",
+          "hash": "1801809465635979026"
+        },
+        {
+          "file": "src/generators/provider/templates/edge.template.ts",
+          "hash": "10333649706865511490"
+        },
+        {
+          "file": "src/generators/provider/templates/errors.template.ts",
+          "hash": "250591605637266442"
+        },
+        {
+          "file": "src/generators/provider/templates/index.template.ts",
+          "hash": "17471056051332496734"
+        },
+        {
+          "file": "src/generators/provider/templates/index.ts",
+          "hash": "18143618210493448435"
+        },
+        {
+          "file": "src/generators/provider/templates/layers.template.ts",
+          "hash": "5999522065240811458"
+        },
+        {
+          "file": "src/generators/provider/templates/server.template.ts",
+          "hash": "7612093475268524838"
+        },
+        {
+          "file": "src/generators/provider/templates/service-spec.template.ts",
+          "hash": "8249698108610447406"
+        },
+        {
+          "file": "src/generators/provider/templates/service.template.ts",
+          "hash": "4089758773611602221"
+        },
+        {
+          "file": "src/generators/provider/templates/service/create-operation.template.ts",
+          "hash": "10166403800492491908"
+        },
+        {
+          "file": "src/generators/provider/templates/service/delete-operation.template.ts",
+          "hash": "9014050020852773275"
+        },
+        {
+          "file": "src/generators/provider/templates/service/index.ts",
+          "hash": "8566283968248142935"
+        },
+        {
+          "file": "src/generators/provider/templates/service/operations-index.template.ts",
+          "hash": "9378216905979491438"
+        },
+        {
+          "file": "src/generators/provider/templates/service/query-operation.template.ts",
+          "hash": "1919157434755651389"
+        },
+        {
+          "file": "src/generators/provider/templates/service/service-index.template.ts",
+          "hash": "12600889156244123200"
+        },
+        {
+          "file": "src/generators/provider/templates/service/service.template.ts",
+          "hash": "9999845856787604391"
+        },
+        {
+          "file": "src/generators/provider/templates/service/update-operation.template.ts",
+          "hash": "12794280288045612861"
+        },
+        {
+          "file": "src/generators/provider/templates/types.template.ts",
+          "hash": "620636903736659335"
+        },
+        {
+          "file": "src/generators/provider/templates/validation.template.ts",
+          "hash": "2698714148321483884"
+        },
+        {
+          "file": "src/index.ts",
+          "hash": "4055606894390288348"
+        },
+        {
+          "file": "src/infrastructure/__tests__/metadata-computation.spec.ts",
+          "hash": "9847447999628571027",
+          "deps": [
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "src/infrastructure/__tests__/output-formatter.spec.ts",
+          "hash": "12137612849584510109",
+          "deps": [
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "src/infrastructure/__tests__/workspace-context.spec.ts",
+          "hash": "6258669805431174552",
+          "deps": [
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "src/infrastructure/adapters/effect-adapter.ts",
+          "hash": "329801094508792496",
+          "deps": [
+            "npm:@effect/platform",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/adapters/factory.ts",
+          "hash": "9661956919572663559",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:@effect/platform-node",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/adapters/filesystem.ts",
+          "hash": "8603951311118874612",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/adapters/index.ts",
+          "hash": "4813521744247699912"
+        },
+        {
+          "file": "src/infrastructure/adapters/mcp-adapter.ts",
+          "hash": "14139562571367345946",
+          "deps": [
+            "npm:@effect/platform",
+            "npm:@effect/platform-node",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/adapters/tree-adapter.ts",
+          "hash": "8137796310835008658",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/execution/executor.ts",
+          "hash": "16917224572534063321",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/execution/index.ts",
+          "hash": "16665515494667275864"
+        },
+        {
+          "file": "src/infrastructure/execution/types.ts",
+          "hash": "5551845900108938832",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/index.ts",
+          "hash": "2073984480265827069"
+        },
+        {
+          "file": "src/infrastructure/metadata/computation.ts",
+          "hash": "362036341328776526",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/infrastructure/metadata/index.ts",
+          "hash": "475686742720829396"
+        },
+        {
+          "file": "src/infrastructure/metadata/types.ts",
+          "hash": "1810270318152827112"
+        },
+        {
+          "file": "src/infrastructure/output/formatter.ts",
+          "hash": "14046225176789087671"
+        },
+        {
+          "file": "src/infrastructure/output/index.ts",
+          "hash": "9551759464222814049"
+        },
+        {
+          "file": "src/infrastructure/validation/index.ts",
+          "hash": "7274469034832577548"
+        },
+        {
+          "file": "src/infrastructure/validation/registry.ts",
+          "hash": "5297694914743182370",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/workspace/context.ts",
+          "hash": "8794474271496236940",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/workspace/detector.ts",
+          "hash": "5046795830323915172",
+          "deps": [
+            "npm:@effect/platform",
+            "npm:@effect/platform-node",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/infrastructure/workspace/index.ts",
+          "hash": "7512855503440332612"
+        },
+        {
+          "file": "src/infrastructure/workspace/types.ts",
+          "hash": "13725419875524132141",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/schemas/contract.schema.ts",
+          "hash": "4497159248913434900",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/schemas/data-access.schema.ts",
+          "hash": "15543883392230043481",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/schemas/feature.schema.ts",
+          "hash": "15480141263233269084",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/schemas/infra.schema.ts",
+          "hash": "10414627673556596542",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/schemas/init-workspace.schema.ts",
+          "hash": "10260728506342177834",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/schemas/provider.schema.ts",
+          "hash": "10424110589194502522",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/server.ts",
+          "hash": "13761560172524177589",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/services/workspace.service.ts",
+          "hash": "3909503851059892536",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/contract.handler.old.ts",
+          "hash": "2736738929231636769",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/contract.handler.ts",
+          "hash": "8960875994614559774",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/data-access.handler.ts",
+          "hash": "3348190988625301484",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/dual-mode.spec.ts",
+          "hash": "819455663258743365",
+          "deps": [
+            "npm:effect",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/feature.handler.ts",
+          "hash": "14095228847581962352",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/infra.handler.ts",
+          "hash": "16190644370076328990",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/init-workspace.handler.ts",
+          "hash": "17413604233460605523",
+          "deps": [
+            "npm:@effect/platform-node",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/provider.handler.ts",
+          "hash": "17323062928468058506",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/tools/types.ts",
+          "hash": "10764441727417728833"
+        },
+        {
+          "file": "src/mcp/utils/command-builder.spec.ts",
+          "hash": "6907023452726924362",
+          "deps": [
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "src/mcp/utils/command-builder.ts",
+          "hash": "15281343673601044438"
+        },
+        {
+          "file": "src/mcp/utils/dry-run.ts",
+          "hash": "15191436500452160753",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/utils/filesystem-adapter-mcp.ts",
+          "hash": "3899670637708327746",
+          "deps": [
+            "npm:@effect/platform",
+            "npm:@effect/platform-node",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/utils/result-formatter.ts",
+          "hash": "12509315198795267273"
+        },
+        {
+          "file": "src/mcp/utils/validation.ts",
+          "hash": "15528412203533377503",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/mcp/utils/workspace-detector.ts",
+          "hash": "13584933749949253798",
+          "deps": [
+            "npm:@effect/platform",
+            "npm:@effect/platform-node",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/scripts/validate-generators.ts",
+          "hash": "9726495263029080237"
+        },
+        {
+          "file": "src/utils/build-config.ts",
+          "hash": "16142111097592897673",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/utils/code-generation/barrel-exports.ts",
+          "hash": "7727149346612488713"
+        },
+        {
+          "file": "src/utils/code-generation/effect-patterns.ts",
+          "hash": "10958539541520774283"
+        },
+        {
+          "file": "src/utils/code-generation/error-templates.ts",
+          "hash": "17245408648888093271"
+        },
+        {
+          "file": "src/utils/code-generation/type-templates.ts",
+          "hash": "12613041813177912615"
+        },
+        {
+          "file": "src/utils/code-generation/typescript-builder.ts",
+          "hash": "5299387554053152369"
+        },
+        {
+          "file": "src/utils/dependencies.ts",
+          "hash": "11893105176710656112",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/utils/dotfile-merge.ts",
+          "hash": "12227692140914361215",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/dotfiles.ts",
+          "hash": "5902324946564080323",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/effect-fs-adapter.ts",
+          "hash": "15043686748866953936",
+          "deps": [
+            "npm:@effect/platform",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/exports.ts",
+          "hash": "7835616385982684118"
+        },
+        {
+          "file": "src/utils/file-splitter.ts",
+          "hash": "18272583988870530447"
+        },
+        {
+          "file": "src/utils/filesystem-adapter.ts",
+          "hash": "7852135201599087117",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/generators.ts",
+          "hash": "143061958137162695",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/utils/index.ts",
+          "hash": "706602949136120196"
+        },
+        {
+          "file": "src/utils/infra-provider-mapping.ts",
+          "hash": "10669950650694790113"
+        },
+        {
+          "file": "src/utils/infrastructure.spec.ts",
+          "hash": "17153498127847851581",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/infrastructure.ts",
+          "hash": "12172956825839052966",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/library-metadata.ts",
+          "hash": "5213327050073499160",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/naming.ts",
+          "hash": "9766387618702624335"
+        },
+        {
+          "file": "src/utils/platforms.ts",
+          "hash": "16896677962894021121"
+        },
+        {
+          "file": "src/utils/shared/base-config.ts",
+          "hash": "3193798487634060616"
+        },
+        {
+          "file": "src/utils/shared/dotfile-generation.ts",
+          "hash": "10983513494080249055",
+          "deps": [
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/shared/types.ts",
+          "hash": "8473560195463394419"
+        },
+        {
+          "file": "src/utils/templates.ts",
+          "hash": "13780568559049372597",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/utils/templates/types-only-exports.template.ts",
+          "hash": "9654593471760639565"
+        },
+        {
+          "file": "src/utils/tree-adapter.ts",
+          "hash": "4324731602498331641",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/utils/tsconfig.ts",
+          "hash": "4799163489871662203",
+          "deps": [
+            "npm:@nx/devkit"
+          ]
+        },
+        {
+          "file": "src/utils/workspace-config.ts",
+          "hash": "14244358806816142784"
+        },
+        {
+          "file": "src/utils/workspace-detection.ts",
+          "hash": "1177307420414462414",
+          "deps": [
+            "npm:@nx/devkit",
+            "npm:effect"
+          ]
+        },
+        {
+          "file": "src/version.ts",
+          "hash": "15775900802796681184"
+        },
+        {
+          "file": "tsconfig.base.json",
+          "hash": "13053991165975993559"
+        },
+        {
+          "file": "tsconfig.build.json",
+          "hash": "12556512068202573533"
+        },
+        {
+          "file": "tsconfig.json",
+          "hash": "8905742838887668695"
+        },
+        {
+          "file": "tsconfig.spec.json",
+          "hash": "5276639005343751933"
+        },
+        {
+          "file": "tsconfig.src.json",
+          "hash": "6037368928337657495"
+        },
+        {
+          "file": "tsconfig.test.json",
+          "hash": "10557114348565679963"
+        },
+        {
+          "file": "vitest.config.ci.ts",
+          "hash": "17863837902073128115",
+          "deps": [
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "vitest.config.local.ts",
+          "hash": "14256499378797679899",
+          "deps": [
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "vitest.config.ts",
+          "hash": "2798322055986190244"
         }
       ]
     },
-    "nonProjectFiles": [
-      {
-        "file": ".changeset/config.json",
-        "hash": "5328983116918796618"
-      },
-      {
-        "file": ".claude/agents/.meta/agent-audit.md",
-        "hash": "2173700922962345205"
-      },
-      {
-        "file": ".claude/agents/.meta/agent-coordination-protocol.md",
-        "hash": "2513812191533426475"
-      },
-      {
-        "file": ".claude/agents/.meta/agent-patterns.md",
-        "hash": "3624608977529058091"
-      },
-      {
-        "file": ".claude/agents/.meta/mcp-integration-template.md",
-        "hash": "1479119289860687812"
-      },
-      {
-        "file": ".claude/agents/.meta/model-cost-analysis.md",
-        "hash": "6795503243659373878"
-      },
-      {
-        "file": ".claude/agents/.meta/template-standard.md",
-        "hash": "7277420554387620636"
-      },
-      {
-        "file": ".claude/agents/agent-architect.md",
-        "hash": "9056788436426808053"
-      },
-      {
-        "file": ".claude/agents/ai-architecture-specialist.md",
-        "hash": "6268069955812612614"
-      },
-      {
-        "file": ".claude/agents/ai-engineer.md",
-        "hash": "282370682829092003"
-      },
-      {
-        "file": ".claude/agents/api-documenter.md",
-        "hash": "16640514550768817606"
-      },
-      {
-        "file": ".claude/agents/argocd-gitops-expert.md",
-        "hash": "4313716822325692013"
-      },
-      {
-        "file": ".claude/agents/backend-architect.md",
-        "hash": "720733240281980634"
-      },
-      {
-        "file": ".claude/agents/bun-expert-developer.md",
-        "hash": "10298381026989001065"
-      },
-      {
-        "file": ".claude/agents/claude-code-architect.md",
-        "hash": "17517421713818750468"
-      },
-      {
-        "file": ".claude/agents/cli-architect.md",
-        "hash": "12248241972925473527"
-      },
-      {
-        "file": ".claude/agents/code-reviewer.md",
-        "hash": "5828673833479995592"
-      },
-      {
-        "file": ".claude/agents/context-manager.md",
-        "hash": "4314675013023960631"
-      },
-      {
-        "file": ".claude/agents/debugger.md",
-        "hash": "8587394201093058012"
-      },
-      {
-        "file": ".claude/agents/deployment-engineer.md",
-        "hash": "15531525861635385358"
-      },
-      {
-        "file": ".claude/agents/devops-engineer.md",
-        "hash": "14164067475358023558"
-      },
-      {
-        "file": ".claude/agents/devpod-expert.md",
-        "hash": "14809307348633252767"
-      },
-      {
-        "file": ".claude/agents/docs-architect.md",
-        "hash": "9198926431977937807"
-      },
-      {
-        "file": ".claude/agents/dx-optimizer.md",
-        "hash": "9268953151045092323"
-      },
-      {
-        "file": ".claude/agents/effect-architecture-specialist.md",
-        "hash": "4929685909340986071"
-      },
-      {
-        "file": ".claude/agents/error-detective.md",
-        "hash": "11689663623992865762"
-      },
-      {
-        "file": ".claude/agents/javascript-pro.md",
-        "hash": "510710756999221540"
-      },
-      {
-        "file": ".claude/agents/k8s-infrastructure-expert.md",
-        "hash": "15505905908756161285"
-      },
-      {
-        "file": ".claude/agents/kysely-query-architect.md",
-        "hash": "586815406321135503"
-      },
-      {
-        "file": ".claude/agents/legacy-modernizer.md",
-        "hash": "1384790479493621360"
-      },
-      {
-        "file": ".claude/agents/litellm-expert.md",
-        "hash": "4897053416096771050"
-      },
-      {
-        "file": ".claude/agents/mcp-architect.md",
-        "hash": "11796799371922586967"
-      },
-      {
-        "file": ".claude/agents/mermaid-expert.md",
-        "hash": "11160316505675584201"
-      },
-      {
-        "file": ".claude/agents/mutagen-remote-dev-expert.md",
-        "hash": "958939643440627894"
-      },
-      {
-        "file": ".claude/agents/nx-monorepo-architect.md",
-        "hash": "16332878168497575734"
-      },
-      {
-        "file": ".claude/agents/performance-engineer.md",
-        "hash": "16141648085331239386"
-      },
-      {
-        "file": ".claude/agents/prisma-expert.md",
-        "hash": "9135428591286251610"
-      },
-      {
-        "file": ".claude/agents/prompt-engineer.md",
-        "hash": "17747059298621872581"
-      },
-      {
-        "file": ".claude/agents/python-backend-architect.md",
-        "hash": "14808525330535671443"
-      },
-      {
-        "file": ".claude/agents/python-pro.md",
-        "hash": "10885964927008130231"
-      },
-      {
-        "file": ".claude/agents/reference-builder.md",
-        "hash": "15437038880621300020"
-      },
-      {
-        "file": ".claude/agents/search-specialist.md",
-        "hash": "8861412000990202975"
-      },
-      {
-        "file": ".claude/agents/tailscale-network-engineer.md",
-        "hash": "6757190343654784816"
-      },
-      {
-        "file": ".claude/agents/test-automater.md",
-        "hash": "626208405177121980"
-      },
-      {
-        "file": ".claude/agents/test-engineer-nx-effect.md",
-        "hash": "14858927335032671721"
-      },
-      {
-        "file": ".claude/agents/typescript-pro.md",
-        "hash": "927925000728850306"
-      },
-      {
-        "file": ".claude/agents/typescript-type-safety-expert.md",
-        "hash": "2570805762578854620"
-      },
-      {
-        "file": ".claude/commands/create-command.md",
-        "hash": "13846558890580344413"
-      },
-      {
-        "file": ".claude/commands/create-documentation.md",
-        "hash": "12382406254465240242"
-      },
-      {
-        "file": ".claude/commands/create-execution.md",
-        "hash": "2541087987063911779"
-      },
-      {
-        "file": ".claude/commands/debug.md",
-        "hash": "3752139429864199790"
-      },
-      {
-        "file": ".claude/commands/generate-tests.md",
-        "hash": "15351864188369441118"
-      },
-      {
-        "file": ".claude/commands/refine-commands.md",
-        "hash": "17142847793026706213"
-      },
-      {
-        "file": ".claude/commands/refineagents.md",
-        "hash": "9707633943246254592"
-      },
-      {
-        "file": ".claude/commands/security-hardening.md",
-        "hash": "12152923954708834630"
-      },
-      {
-        "file": ".claude/commands/validate-library.md",
-        "hash": "2843901623236596188"
-      },
-      {
-        "file": ".claude/commands/validate-plan.md",
-        "hash": "17934220219375503992"
-      },
-      {
-        "file": ".editorconfig",
-        "hash": "11434409010236780527"
-      },
-      {
-        "file": ".envrc",
-        "hash": "7934611523180163109"
-      },
-      {
-        "file": ".github/ISSUE_TEMPLATE/bug_report.md",
-        "hash": "13058841707655608181"
-      },
-      {
-        "file": ".github/ISSUE_TEMPLATE/feature_request.md",
-        "hash": "6024196300014871803"
-      },
-      {
-        "file": ".github/PULL_REQUEST_TEMPLATE.md",
-        "hash": "6956224550859045057"
-      },
-      {
-        "file": ".github/actions/setup/action.yml",
-        "hash": "15128830905033993418"
-      },
-      {
-        "file": ".github/workflows/check.yml",
-        "hash": "2890124539687273795"
-      },
-      {
-        "file": ".github/workflows/release.yml",
-        "hash": "3607016578808022108"
-      },
-      {
-        "file": ".github/workflows/snapshot.yml",
-        "hash": "12287289820941439932"
-      },
-      {
-        "file": ".gitignore",
-        "hash": "11374082240009118904"
-      },
-      {
-        "file": ".npmignore",
-        "hash": "10631093982038995087"
-      },
-      {
-        "file": ".npmrc",
-        "hash": "47277114159027173"
-      },
-      {
-        "file": ".vscode/extensions.json",
-        "hash": "11574343236011742316"
-      },
-      {
-        "file": ".vscode/settings.json",
-        "hash": "11573417813174646934"
-      },
-      {
-        "file": "CHANGELOG.md",
-        "hash": "2307425630170001356"
-      },
-      {
-        "file": "LIBRARY_MIGRATION_COMPLETE.md",
-        "hash": "7379719609105936032"
-      },
-      {
-        "file": "LICENSE",
-        "hash": "15773211985747942655"
-      },
-      {
-        "file": "README.md",
-        "hash": "12932569698084546665"
-      },
-      {
-        "file": "REFACTORING_VERIFICATION.md",
-        "hash": "2837011252788797337"
-      },
-      {
-        "file": "docs/ARCHITECTURE_OVERVIEW.md",
-        "hash": "15191479967609817922"
-      },
-      {
-        "file": "docs/DATA-ACCESS.md",
-        "hash": "4913711633750832584"
-      },
-      {
-        "file": "docs/DOTFILES_ENFORCEMENT.md",
-        "hash": "5096826888009023405"
-      },
-      {
-        "file": "docs/EFFECT_PATTERNS.md",
-        "hash": "11805558672626958395"
-      },
-      {
-        "file": "docs/EXAMPLES.md",
-        "hash": "2615151687705726095"
-      },
-      {
-        "file": "docs/EXPORT_PATTERNS.md",
-        "hash": "5025536427775577157"
-      },
-      {
-        "file": "docs/FEATURE.md",
-        "hash": "14441645130358440821"
-      },
-      {
-        "file": "docs/GENERATOR.md",
-        "hash": "2156705762686982975"
-      },
-      {
-        "file": "docs/INFRA.md",
-        "hash": "10916271298584330563"
-      },
-      {
-        "file": "docs/MCP_USAGE_GUIDE.md",
-        "hash": "9380934072277289511"
-      },
-      {
-        "file": "docs/NX_STANDARDS.md",
-        "hash": "15177757298232808752"
-      },
-      {
-        "file": "docs/PROVIDER.md",
-        "hash": "8578717933492194727"
-      },
-      {
-        "file": "docs/README.md",
-        "hash": "7513253486012758682"
-      },
-      {
-        "file": "docs/TESTING_PATTERNS.md",
-        "hash": "11316555329347101746"
-      },
-      {
-        "file": "docs/contract.md",
-        "hash": "5115874052659306607"
-      },
-      {
-        "file": "eslint.config.mjs",
-        "hash": "8228166712048684173"
-      },
-      {
-        "file": "flake.lock",
-        "hash": "6223326973455177632"
-      },
-      {
-        "file": "flake.nix",
-        "hash": "5278872866010000124"
-      },
-      {
-        "file": "nx.json",
-        "hash": "13025066683576053061"
-      },
-      {
-        "file": "package.json",
-        "hash": "3332363713752893954"
-      },
-      {
-        "file": "patches/@changesets__get-github-info@0.6.0.patch",
-        "hash": "9839557208228595635"
-      },
-      {
-        "file": "pnpm-lock.yaml",
-        "hash": "16157891133161123664"
-      },
-      {
-        "file": "scripts/bundle-cli.mjs",
-        "hash": "1560118125508235522"
-      },
-      {
-        "file": "scripts/bundle-mcp.mjs",
-        "hash": "17541433099394524365"
-      },
-      {
-        "file": "scripts/generate-version.mjs",
-        "hash": "14224616177375801213"
-      },
-      {
-        "file": "scripts/post-build.mjs",
-        "hash": "4753281222971100046"
-      },
-      {
-        "file": "src/AGENTS.md",
-        "hash": "17968709236518741058"
-      },
-      {
-        "file": "src/cli/commands/init-integration-example.ts",
-        "hash": "8031624740675390764"
-      },
-      {
-        "file": "src/cli/commands/init-prisma.spec.ts",
-        "hash": "18000627463781403694"
-      },
-      {
-        "file": "src/cli/commands/init-prisma.ts",
-        "hash": "13020939014041181988"
-      },
-      {
-        "file": "src/cli/commands/init-workspace-files.ts",
-        "hash": "2186439134192245243"
-      },
-      {
-        "file": "src/cli/commands/init-workspace.ts",
-        "hash": "4593599865745000319"
-      },
-      {
-        "file": "src/cli/commands/init.ts",
-        "hash": "5561231361966297504"
-      },
-      {
-        "file": "src/cli/generators/contract.old.ts",
-        "hash": "4380659652665910318"
-      },
-      {
-        "file": "src/cli/generators/contract.ts",
-        "hash": "17283091801797572002"
-      },
-      {
-        "file": "src/cli/generators/data-access.old.ts",
-        "hash": "621415873486389462"
-      },
-      {
-        "file": "src/cli/generators/data-access.ts",
-        "hash": "13638781873406401301"
-      },
-      {
-        "file": "src/cli/generators/domain.ts",
-        "hash": "12687299472538739619"
-      },
-      {
-        "file": "src/cli/generators/env.ts",
-        "hash": "11565202900432004685"
-      },
-      {
-        "file": "src/cli/generators/feature.old.ts",
-        "hash": "2131280879496022701"
-      },
-      {
-        "file": "src/cli/generators/feature.ts",
-        "hash": "2583813501748424280"
-      },
-      {
-        "file": "src/cli/generators/infra.old.ts",
-        "hash": "10705418711054761214"
-      },
-      {
-        "file": "src/cli/generators/infra.ts",
-        "hash": "15252090883292409766"
-      },
-      {
-        "file": "src/cli/generators/provider.old.ts",
-        "hash": "1373044381862823173"
-      },
-      {
-        "file": "src/cli/generators/provider.ts",
-        "hash": "15732534727078347865"
-      },
-      {
-        "file": "src/cli/index.ts",
-        "hash": "8097789083684545018"
-      },
-      {
-        "file": "src/dotfiles/.editorconfig.template",
-        "hash": "10183032302308180143"
-      },
-      {
-        "file": "src/dotfiles/.vscode-extensions.template.json",
-        "hash": "14379891829209375557"
-      },
-      {
-        "file": "src/dotfiles/.vscode-settings.template.json",
-        "hash": "14133022383238357577"
-      },
-      {
-        "file": "src/dotfiles/eslint.config.template.mjs",
-        "hash": "13956557015198780009"
-      },
-      {
-        "file": "src/dotfiles/tsconfig.template.json",
-        "hash": "7657020349934226501"
-      },
-      {
-        "file": "src/generators.json",
-        "hash": "17289767070987101918"
-      },
-      {
-        "file": "src/generators/__tests__/effect-patterns.spec.ts",
-        "hash": "7425344226838341718"
-      },
-      {
-        "file": "src/generators/contract/README.md",
-        "hash": "13012470526456553110"
-      },
-      {
-        "file": "src/generators/contract/config.ts",
-        "hash": "3201155634115631878"
-      },
-      {
-        "file": "src/generators/contract/contract.old.ts",
-        "hash": "8670159613752230053"
-      },
-      {
-        "file": "src/generators/contract/contract.spec.ts",
-        "hash": "3431686576162812863"
-      },
-      {
-        "file": "src/generators/contract/contract.ts",
-        "hash": "6755195934932871187"
-      },
-      {
-        "file": "src/generators/contract/schema.json",
-        "hash": "15814510126627385586"
-      },
-      {
-        "file": "src/generators/contract/schema.ts",
-        "hash": "10112825902359696388"
-      },
-      {
-        "file": "src/generators/contract/templates/commands.template.ts",
-        "hash": "9742072072834436607"
-      },
-      {
-        "file": "src/generators/contract/templates/entities.template.ts",
-        "hash": "17975574159482000850"
-      },
-      {
-        "file": "src/generators/contract/templates/entity-barrel.template.ts",
-        "hash": "18381621215076913571"
-      },
-      {
-        "file": "src/generators/contract/templates/entity-file.template.ts",
-        "hash": "14958956474550077288"
-      },
-      {
-        "file": "src/generators/contract/templates/errors.template.ts",
-        "hash": "3497789781979536893"
-      },
-      {
-        "file": "src/generators/contract/templates/events.template.ts",
-        "hash": "17773580707847193875"
-      },
-      {
-        "file": "src/generators/contract/templates/index.template.ts",
-        "hash": "15678562825071300785"
-      },
-      {
-        "file": "src/generators/contract/templates/ports.template.ts",
-        "hash": "11710243226465285795"
-      },
-      {
-        "file": "src/generators/contract/templates/projections.template.ts",
-        "hash": "1287053819886793073"
-      },
-      {
-        "file": "src/generators/contract/templates/queries.template.ts",
-        "hash": "4817190525506405211"
-      },
-      {
-        "file": "src/generators/contract/templates/rpc.template.ts",
-        "hash": "11392596408841921779"
-      },
-      {
-        "file": "src/generators/contract/templates/types-only.template.ts",
-        "hash": "4485252133248282218"
-      },
-      {
-        "file": "src/generators/core/contract.ts",
-        "hash": "7851250725738015236"
-      },
-      {
-        "file": "src/generators/core/data-access.ts",
-        "hash": "16588382164682204989"
-      },
-      {
-        "file": "src/generators/core/feature.ts",
-        "hash": "8255804284238661968"
-      },
-      {
-        "file": "src/generators/core/infra.ts",
-        "hash": "12706187399111948832"
-      },
-      {
-        "file": "src/generators/core/provider-consolidation.ts",
-        "hash": "6606452596818501653"
-      },
-      {
-        "file": "src/generators/core/provider.ts",
-        "hash": "2874927164967128261"
-      },
-      {
-        "file": "src/generators/core/sub-services.ts",
-        "hash": "16668987798644323494"
-      },
-      {
-        "file": "src/generators/data-access/README.md",
-        "hash": "6467607471890917592"
-      },
-      {
-        "file": "src/generators/data-access/data-access.old.ts",
-        "hash": "15683549612027785436"
-      },
-      {
-        "file": "src/generators/data-access/data-access.spec.ts",
-        "hash": "8581071347584271289"
-      },
-      {
-        "file": "src/generators/data-access/data-access.ts",
-        "hash": "3964807756453933538"
-      },
-      {
-        "file": "src/generators/data-access/schema.json",
-        "hash": "9133322545722341299"
-      },
-      {
-        "file": "src/generators/data-access/schema.ts",
-        "hash": "400813023344677370"
-      },
-      {
-        "file": "src/generators/data-access/templates/errors.template.ts",
-        "hash": "16999867349786879194"
-      },
-      {
-        "file": "src/generators/data-access/templates/index.template.ts",
-        "hash": "12196650286112913351"
-      },
-      {
-        "file": "src/generators/data-access/templates/index.ts",
-        "hash": "13008888721217609521"
-      },
-      {
-        "file": "src/generators/data-access/templates/layers-spec.template.ts",
-        "hash": "7663713216781260415"
-      },
-      {
-        "file": "src/generators/data-access/templates/layers.template.ts",
-        "hash": "10046464701843108390"
-      },
-      {
-        "file": "src/generators/data-access/templates/queries.template.ts",
-        "hash": "1816778014882770663"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository-spec.template.ts",
-        "hash": "2505302025857133659"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository.template.ts",
-        "hash": "17698979344073448166"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/aggregate-operation.template.ts",
-        "hash": "11332101399279176486"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/create-operation.template.ts",
-        "hash": "15957772963478515508"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/delete-operation.template.ts",
-        "hash": "5812476637555681922"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/index.ts",
-        "hash": "9367790005847748073"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/operations-index.template.ts",
-        "hash": "5378912914572773844"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/read-operation.template.ts",
-        "hash": "17666968255914282801"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/repository-index.template.ts",
-        "hash": "5388682790821425790"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/repository.template.ts",
-        "hash": "1917476733790772054"
-      },
-      {
-        "file": "src/generators/data-access/templates/repository/update-operation.template.ts",
-        "hash": "3471166139645869976"
-      },
-      {
-        "file": "src/generators/data-access/templates/types.template.ts",
-        "hash": "1388735540274668950"
-      },
-      {
-        "file": "src/generators/data-access/templates/validation.template.ts",
-        "hash": "17015573754253424609"
-      },
-      {
-        "file": "src/generators/env/env.ts",
-        "hash": "15557922766900606310"
-      },
-      {
-        "file": "src/generators/env/schema.ts",
-        "hash": "5589054406798941198"
-      },
-      {
-        "file": "src/generators/env/templates/config.template.ts",
-        "hash": "17503635788869379792"
-      },
-      {
-        "file": "src/generators/env/templates/entry-points.template.ts",
-        "hash": "5392666366442804264"
-      },
-      {
-        "file": "src/generators/env/templates/env.template.ts",
-        "hash": "9763991626694666317"
-      },
-      {
-        "file": "src/generators/env/templates/index.template.ts",
-        "hash": "2563198978853802953"
-      },
-      {
-        "file": "src/generators/env/templates/parse.template.ts",
-        "hash": "587656266219877541"
-      },
-      {
-        "file": "src/generators/env/templates/schema.template.ts",
-        "hash": "17337889632672479669"
-      },
-      {
-        "file": "src/generators/env/templates/types.template.ts",
-        "hash": "852897739782139656"
-      },
-      {
-        "file": "src/generators/env/utils/parse-dotenv.ts",
-        "hash": "15674006313075707103"
-      },
-      {
-        "file": "src/generators/feature/README.md",
-        "hash": "12554864478997797838"
-      },
-      {
-        "file": "src/generators/feature/feature.old.ts",
-        "hash": "6607481389348686144"
-      },
-      {
-        "file": "src/generators/feature/feature.spec.ts",
-        "hash": "16803427901391734409"
-      },
-      {
-        "file": "src/generators/feature/feature.ts",
-        "hash": "13743343851990958656"
-      },
-      {
-        "file": "src/generators/feature/schema.json",
-        "hash": "4155236452258490032"
-      },
-      {
-        "file": "src/generators/feature/schema.ts",
-        "hash": "10829437125782952122"
-      },
-      {
-        "file": "src/generators/feature/templates/atoms-index.template.ts",
-        "hash": "1403160732402347185"
-      },
-      {
-        "file": "src/generators/feature/templates/atoms.template.ts",
-        "hash": "16813688676162667105"
-      },
-      {
-        "file": "src/generators/feature/templates/errors.template.ts",
-        "hash": "15281135804876530880"
-      },
-      {
-        "file": "src/generators/feature/templates/hooks-index.template.ts",
-        "hash": "14666784480501156723"
-      },
-      {
-        "file": "src/generators/feature/templates/hooks.template.ts",
-        "hash": "11272955781538886778"
-      },
-      {
-        "file": "src/generators/feature/templates/index.template.ts",
-        "hash": "838953875687800921"
-      },
-      {
-        "file": "src/generators/feature/templates/index.ts",
-        "hash": "17653364243999343385"
-      },
-      {
-        "file": "src/generators/feature/templates/layers.template.ts",
-        "hash": "6196518566055096084"
-      },
-      {
-        "file": "src/generators/feature/templates/middleware.template.ts",
-        "hash": "16567795780532336506"
-      },
-      {
-        "file": "src/generators/feature/templates/rpc-errors.template.ts",
-        "hash": "1947848182227421396"
-      },
-      {
-        "file": "src/generators/feature/templates/rpc-handlers.template.ts",
-        "hash": "10522507118189448370"
-      },
-      {
-        "file": "src/generators/feature/templates/rpc.template.ts",
-        "hash": "8042498646571843769"
-      },
-      {
-        "file": "src/generators/feature/templates/schemas.template.ts",
-        "hash": "12718451459411984157"
-      },
-      {
-        "file": "src/generators/feature/templates/service-spec.template.ts",
-        "hash": "612654497855929231"
-      },
-      {
-        "file": "src/generators/feature/templates/service.template.ts",
-        "hash": "6882005161632826524"
-      },
-      {
-        "file": "src/generators/feature/templates/service/index.ts",
-        "hash": "587342214321016713"
-      },
-      {
-        "file": "src/generators/feature/templates/service/service-index.template.ts",
-        "hash": "12250195564004245246"
-      },
-      {
-        "file": "src/generators/feature/templates/service/service.template.ts",
-        "hash": "16573775285825592717"
-      },
-      {
-        "file": "src/generators/feature/templates/sub-service-errors.template.ts",
-        "hash": "16356652198810478721"
-      },
-      {
-        "file": "src/generators/feature/templates/sub-service-index.template.ts",
-        "hash": "16097165769828999740"
-      },
-      {
-        "file": "src/generators/feature/templates/sub-service-layers.template.ts",
-        "hash": "15845701196398489447"
-      },
-      {
-        "file": "src/generators/feature/templates/sub-service-types.template.ts",
-        "hash": "1373637865250228888"
-      },
-      {
-        "file": "src/generators/feature/templates/sub-service.template.ts",
-        "hash": "17795598399892685326"
-      },
-      {
-        "file": "src/generators/feature/templates/types.template.ts",
-        "hash": "4739164234411736857"
-      },
-      {
-        "file": "src/generators/infra/README.md",
-        "hash": "18432443867625268191"
-      },
-      {
-        "file": "src/generators/infra/infra.old.ts",
-        "hash": "8629434770397709945"
-      },
-      {
-        "file": "src/generators/infra/infra.spec.ts",
-        "hash": "1783068676107900107"
-      },
-      {
-        "file": "src/generators/infra/infra.ts",
-        "hash": "1588134889371499665"
-      },
-      {
-        "file": "src/generators/infra/schema.json",
-        "hash": "10543796204344532232"
-      },
-      {
-        "file": "src/generators/infra/schema.ts",
-        "hash": "3111342711228858332"
-      },
-      {
-        "file": "src/generators/infra/templates/client-layers.template.ts",
-        "hash": "16657922527392080051"
-      },
-      {
-        "file": "src/generators/infra/templates/client.template.ts",
-        "hash": "6762656277009126078"
-      },
-      {
-        "file": "src/generators/infra/templates/config.template.ts",
-        "hash": "14669908869961011470"
-      },
-      {
-        "file": "src/generators/infra/templates/edge-layers.template.ts",
-        "hash": "8799900849620688007"
-      },
-      {
-        "file": "src/generators/infra/templates/edge.template.ts",
-        "hash": "4582686047806918510"
-      },
-      {
-        "file": "src/generators/infra/templates/errors.template.ts",
-        "hash": "12452349909382384790"
-      },
-      {
-        "file": "src/generators/infra/templates/index.template.ts",
-        "hash": "6223200332218897604"
-      },
-      {
-        "file": "src/generators/infra/templates/index.ts",
-        "hash": "12266110964101130266"
-      },
-      {
-        "file": "src/generators/infra/templates/memory-provider.template.ts",
-        "hash": "5945020807352022844"
-      },
-      {
-        "file": "src/generators/infra/templates/orchestrator.template.ts",
-        "hash": "17962346595593155329"
-      },
-      {
-        "file": "src/generators/infra/templates/provider-consolidation-index.template.ts",
-        "hash": "18084544793406087236"
-      },
-      {
-        "file": "src/generators/infra/templates/provider-consolidation-layers.template.ts",
-        "hash": "18408240090805707581"
-      },
-      {
-        "file": "src/generators/infra/templates/server-layers.template.ts",
-        "hash": "1990339483619482224"
-      },
-      {
-        "file": "src/generators/infra/templates/server.template.ts",
-        "hash": "7368990441236851055"
-      },
-      {
-        "file": "src/generators/infra/templates/service.template.ts",
-        "hash": "11607163539650169920"
-      },
-      {
-        "file": "src/generators/infra/templates/use-hook.template.ts",
-        "hash": "6690120233306850446"
-      },
-      {
-        "file": "src/generators/provider/README.md",
-        "hash": "2478429132889058961"
-      },
-      {
-        "file": "src/generators/provider/provider.old.ts",
-        "hash": "258347299888378599"
-      },
-      {
-        "file": "src/generators/provider/provider.spec.ts",
-        "hash": "5984943216727868801"
-      },
-      {
-        "file": "src/generators/provider/provider.ts",
-        "hash": "8835882446277996251"
-      },
-      {
-        "file": "src/generators/provider/schema.json",
-        "hash": "1926129601412811562"
-      },
-      {
-        "file": "src/generators/provider/schema.ts",
-        "hash": "3026352072703795201"
-      },
-      {
-        "file": "src/generators/provider/templates/client.template.ts",
-        "hash": "1801809465635979026"
-      },
-      {
-        "file": "src/generators/provider/templates/edge.template.ts",
-        "hash": "10333649706865511490"
-      },
-      {
-        "file": "src/generators/provider/templates/errors.template.ts",
-        "hash": "250591605637266442"
-      },
-      {
-        "file": "src/generators/provider/templates/index.template.ts",
-        "hash": "17471056051332496734"
-      },
-      {
-        "file": "src/generators/provider/templates/index.ts",
-        "hash": "18143618210493448435"
-      },
-      {
-        "file": "src/generators/provider/templates/layers.template.ts",
-        "hash": "14998616633087398379"
-      },
-      {
-        "file": "src/generators/provider/templates/server.template.ts",
-        "hash": "7612093475268524838"
-      },
-      {
-        "file": "src/generators/provider/templates/service-spec.template.ts",
-        "hash": "8249698108610447406"
-      },
-      {
-        "file": "src/generators/provider/templates/service.template.ts",
-        "hash": "4089758773611602221"
-      },
-      {
-        "file": "src/generators/provider/templates/service/create-operation.template.ts",
-        "hash": "5460166252360211599"
-      },
-      {
-        "file": "src/generators/provider/templates/service/delete-operation.template.ts",
-        "hash": "3699178858968271370"
-      },
-      {
-        "file": "src/generators/provider/templates/service/index.ts",
-        "hash": "8566283968248142935"
-      },
-      {
-        "file": "src/generators/provider/templates/service/operations-index.template.ts",
-        "hash": "9378216905979491438"
-      },
-      {
-        "file": "src/generators/provider/templates/service/query-operation.template.ts",
-        "hash": "548929780614403235"
-      },
-      {
-        "file": "src/generators/provider/templates/service/service-index.template.ts",
-        "hash": "12600889156244123200"
-      },
-      {
-        "file": "src/generators/provider/templates/service/service.template.ts",
-        "hash": "15106563152134096747"
-      },
-      {
-        "file": "src/generators/provider/templates/service/update-operation.template.ts",
-        "hash": "6120199136023045135"
-      },
-      {
-        "file": "src/generators/provider/templates/types.template.ts",
-        "hash": "620636903736659335"
-      },
-      {
-        "file": "src/generators/provider/templates/validation.template.ts",
-        "hash": "2698714148321483884"
-      },
-      {
-        "file": "src/index.ts",
-        "hash": "4055606894390288348"
-      },
-      {
-        "file": "src/infrastructure/__tests__/metadata-computation.spec.ts",
-        "hash": "9847447999628571027"
-      },
-      {
-        "file": "src/infrastructure/__tests__/output-formatter.spec.ts",
-        "hash": "12137612849584510109"
-      },
-      {
-        "file": "src/infrastructure/__tests__/workspace-context.spec.ts",
-        "hash": "6258669805431174552"
-      },
-      {
-        "file": "src/infrastructure/adapters/effect-adapter.ts",
-        "hash": "5280296891075850309"
-      },
-      {
-        "file": "src/infrastructure/adapters/factory.ts",
-        "hash": "9494655337460899351"
-      },
-      {
-        "file": "src/infrastructure/adapters/filesystem.ts",
-        "hash": "8603951311118874612"
-      },
-      {
-        "file": "src/infrastructure/adapters/index.ts",
-        "hash": "4813521744247699912"
-      },
-      {
-        "file": "src/infrastructure/adapters/mcp-adapter.ts",
-        "hash": "14139562571367345946"
-      },
-      {
-        "file": "src/infrastructure/adapters/tree-adapter.ts",
-        "hash": "8137796310835008658"
-      },
-      {
-        "file": "src/infrastructure/execution/executor.ts",
-        "hash": "4086363913144766594"
-      },
-      {
-        "file": "src/infrastructure/execution/index.ts",
-        "hash": "16665515494667275864"
-      },
-      {
-        "file": "src/infrastructure/execution/types.ts",
-        "hash": "5551845900108938832"
-      },
-      {
-        "file": "src/infrastructure/index.ts",
-        "hash": "2073984480265827069"
-      },
-      {
-        "file": "src/infrastructure/metadata/computation.ts",
-        "hash": "11026508101727371652"
-      },
-      {
-        "file": "src/infrastructure/metadata/index.ts",
-        "hash": "475686742720829396"
-      },
-      {
-        "file": "src/infrastructure/metadata/types.ts",
-        "hash": "1810270318152827112"
-      },
-      {
-        "file": "src/infrastructure/output/formatter.ts",
-        "hash": "12555049457312289839"
-      },
-      {
-        "file": "src/infrastructure/output/index.ts",
-        "hash": "9551759464222814049"
-      },
-      {
-        "file": "src/infrastructure/validation/index.ts",
-        "hash": "7274469034832577548"
-      },
-      {
-        "file": "src/infrastructure/validation/registry.ts",
-        "hash": "11713333530659523381"
-      },
-      {
-        "file": "src/infrastructure/workspace/context.ts",
-        "hash": "10252435801325283503"
-      },
-      {
-        "file": "src/infrastructure/workspace/detector.ts",
-        "hash": "17253901730246048731"
-      },
-      {
-        "file": "src/infrastructure/workspace/index.ts",
-        "hash": "7512855503440332612"
-      },
-      {
-        "file": "src/infrastructure/workspace/types.ts",
-        "hash": "11440570215565297382"
-      },
-      {
-        "file": "src/mcp/schemas/contract.schema.ts",
-        "hash": "4497159248913434900"
-      },
-      {
-        "file": "src/mcp/schemas/data-access.schema.ts",
-        "hash": "15543883392230043481"
-      },
-      {
-        "file": "src/mcp/schemas/feature.schema.ts",
-        "hash": "15480141263233269084"
-      },
-      {
-        "file": "src/mcp/schemas/infra.schema.ts",
-        "hash": "10414627673556596542"
-      },
-      {
-        "file": "src/mcp/schemas/init-workspace.schema.ts",
-        "hash": "10260728506342177834"
-      },
-      {
-        "file": "src/mcp/schemas/provider.schema.ts",
-        "hash": "10424110589194502522"
-      },
-      {
-        "file": "src/mcp/server.ts",
-        "hash": "13761560172524177589"
-      },
-      {
-        "file": "src/mcp/services/workspace.service.ts",
-        "hash": "3909503851059892536"
-      },
-      {
-        "file": "src/mcp/tools/contract.handler.old.ts",
-        "hash": "2736738929231636769"
-      },
-      {
-        "file": "src/mcp/tools/contract.handler.ts",
-        "hash": "562351632124200073"
-      },
-      {
-        "file": "src/mcp/tools/data-access.handler.old.ts",
-        "hash": "10420815127672053085"
-      },
-      {
-        "file": "src/mcp/tools/data-access.handler.ts",
-        "hash": "17411752740605832081"
-      },
-      {
-        "file": "src/mcp/tools/dual-mode.spec.ts",
-        "hash": "13232174901446429365"
-      },
-      {
-        "file": "src/mcp/tools/dual-mode.spec.ts.bak",
-        "hash": "12263095429179231611"
-      },
-      {
-        "file": "src/mcp/tools/dual-mode.spec.ts.bak2",
-        "hash": "2417632180346936080"
-      },
-      {
-        "file": "src/mcp/tools/dual-mode.spec.ts.bak3",
-        "hash": "10359817058509904345"
-      },
-      {
-        "file": "src/mcp/tools/dual-mode.spec.ts.bak4",
-        "hash": "16811121444558365767"
-      },
-      {
-        "file": "src/mcp/tools/dual-mode.spec.ts.bak5",
-        "hash": "14255139989973531598"
-      },
-      {
-        "file": "src/mcp/tools/feature.handler.old.ts",
-        "hash": "2468542670950946586"
-      },
-      {
-        "file": "src/mcp/tools/feature.handler.ts",
-        "hash": "7157003393757643372"
-      },
-      {
-        "file": "src/mcp/tools/infra.handler.old.ts",
-        "hash": "1064004044537878886"
-      },
-      {
-        "file": "src/mcp/tools/infra.handler.ts",
-        "hash": "6240475448475060700"
-      },
-      {
-        "file": "src/mcp/tools/init-workspace.handler.ts",
-        "hash": "17413604233460605523"
-      },
-      {
-        "file": "src/mcp/tools/provider.handler.old.ts",
-        "hash": "17028808581503302661"
-      },
-      {
-        "file": "src/mcp/tools/provider.handler.ts",
-        "hash": "7718785934736437330"
-      },
-      {
-        "file": "src/mcp/tools/types.ts",
-        "hash": "10764441727417728833"
-      },
-      {
-        "file": "src/mcp/utils/command-builder.spec.ts",
-        "hash": "6907023452726924362"
-      },
-      {
-        "file": "src/mcp/utils/command-builder.ts",
-        "hash": "15281343673601044438"
-      },
-      {
-        "file": "src/mcp/utils/dry-run.ts",
-        "hash": "15191436500452160753"
-      },
-      {
-        "file": "src/mcp/utils/filesystem-adapter-mcp.ts",
-        "hash": "3899670637708327746"
-      },
-      {
-        "file": "src/mcp/utils/result-formatter.ts",
-        "hash": "12509315198795267273"
-      },
-      {
-        "file": "src/mcp/utils/validation.ts",
-        "hash": "2045908405290722731"
-      },
-      {
-        "file": "src/mcp/utils/workspace-detector.ts",
-        "hash": "13584933749949253798"
-      },
-      {
-        "file": "src/scripts/validate-generators.ts",
-        "hash": "9726495263029080237"
-      },
-      {
-        "file": "src/utils/build-config.ts",
-        "hash": "16142111097592897673"
-      },
-      {
-        "file": "src/utils/code-generation/barrel-exports.ts",
-        "hash": "7727149346612488713"
-      },
-      {
-        "file": "src/utils/code-generation/effect-patterns.ts",
-        "hash": "10958539541520774283"
-      },
-      {
-        "file": "src/utils/code-generation/error-templates.ts",
-        "hash": "17245408648888093271"
-      },
-      {
-        "file": "src/utils/code-generation/type-templates.ts",
-        "hash": "12613041813177912615"
-      },
-      {
-        "file": "src/utils/code-generation/typescript-builder.ts",
-        "hash": "5299387554053152369"
-      },
-      {
-        "file": "src/utils/dependencies.ts",
-        "hash": "11893105176710656112"
-      },
-      {
-        "file": "src/utils/dotfile-merge.ts",
-        "hash": "12227692140914361215"
-      },
-      {
-        "file": "src/utils/dotfiles.ts",
-        "hash": "13196679094550891168"
-      },
-      {
-        "file": "src/utils/effect-fs-adapter.ts",
-        "hash": "15043686748866953936"
-      },
-      {
-        "file": "src/utils/exports.ts",
-        "hash": "7835616385982684118"
-      },
-      {
-        "file": "src/utils/file-splitter.ts",
-        "hash": "18272583988870530447"
-      },
-      {
-        "file": "src/utils/filesystem-adapter.ts",
-        "hash": "7852135201599087117"
-      },
-      {
-        "file": "src/utils/generators.ts",
-        "hash": "143061958137162695"
-      },
-      {
-        "file": "src/utils/index.ts",
-        "hash": "706602949136120196"
-      },
-      {
-        "file": "src/utils/infra-provider-mapping.ts",
-        "hash": "11035618972669875655"
-      },
-      {
-        "file": "src/utils/infrastructure.spec.ts",
-        "hash": "17153498127847851581"
-      },
-      {
-        "file": "src/utils/infrastructure.ts",
-        "hash": "7399649022174566478"
-      },
-      {
-        "file": "src/utils/library-metadata.ts",
-        "hash": "5213327050073499160"
-      },
-      {
-        "file": "src/utils/naming.ts",
-        "hash": "9766387618702624335"
-      },
-      {
-        "file": "src/utils/platforms.ts",
-        "hash": "16896677962894021121"
-      },
-      {
-        "file": "src/utils/shared/base-config.ts",
-        "hash": "3193798487634060616"
-      },
-      {
-        "file": "src/utils/shared/dotfile-generation.ts",
-        "hash": "10983513494080249055"
-      },
-      {
-        "file": "src/utils/shared/types.ts",
-        "hash": "8473560195463394419"
-      },
-      {
-        "file": "src/utils/templates.ts",
-        "hash": "13780568559049372597"
-      },
-      {
-        "file": "src/utils/templates/types-only-exports.template.ts",
-        "hash": "9654593471760639565"
-      },
-      {
-        "file": "src/utils/tree-adapter.ts",
-        "hash": "4324731602498331641"
-      },
-      {
-        "file": "src/utils/tsconfig.ts",
-        "hash": "8974823981924577807"
-      },
-      {
-        "file": "src/utils/workspace-config.ts",
-        "hash": "12679577456359028308"
-      },
-      {
-        "file": "src/utils/workspace-detection.ts",
-        "hash": "1177307420414462414"
-      },
-      {
-        "file": "src/version.ts",
-        "hash": "15775900802796681184"
-      },
-      {
-        "file": "tsconfig.base.json",
-        "hash": "908370259441052593"
-      },
-      {
-        "file": "tsconfig.build.json",
-        "hash": "12556512068202573533"
-      },
-      {
-        "file": "tsconfig.json",
-        "hash": "8905742838887668695"
-      },
-      {
-        "file": "tsconfig.spec.json",
-        "hash": "5276639005343751933"
-      },
-      {
-        "file": "tsconfig.src.json",
-        "hash": "6037368928337657495"
-      },
-      {
-        "file": "tsconfig.test.json",
-        "hash": "10557114348565679963"
-      },
-      {
-        "file": "vitest.config.ci.ts",
-        "hash": "17863837902073128115"
-      },
-      {
-        "file": "vitest.config.local.ts",
-        "hash": "14256499378797679899"
-      },
-      {
-        "file": "vitest.config.ts",
-        "hash": "2798322055986190244"
-      }
-    ]
-  },
-  "externalNodesHash": "3749958589731782785"
+    "nonProjectFiles": []
+  }
 }

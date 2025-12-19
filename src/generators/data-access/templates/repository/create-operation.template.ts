@@ -81,7 +81,7 @@ export interface Create${className}Operations {
    */
   create(
     input: ${className}CreateInput
-  ): Effect.Effect<${className}, ${className}RepositoryError>;
+  );
 
   /**
    * Create multiple ${className} entities in batch
@@ -100,7 +100,7 @@ export interface Create${className}Operations {
    */
   createMany(
     inputs: ReadonlyArray<${className}CreateInput>
-  ): Effect.Effect<ReadonlyArray<${className}>, ${className}RepositoryError>;
+  );
 }`)
   builder.addBlankLine()
 

@@ -2,60 +2,65 @@
  * Infra Library Generator (Nx Wrapper - Refactored)
  */
 
-import type { Tree } from "@nx/devkit"
-import { formatFiles } from "@nx/devkit"
-import { Effect } from "effect"
-import { generateInfraCore } from "../core/infra"
-import { createExecutor } from "../../infrastructure/execution/executor"
-import { formatOutput } from "../../infrastructure/output/formatter"
-import type { InfraGeneratorSchema } from "./schema"
+import type { Tree } from "@nx/devkit";
+import { formatFiles } from "@nx/devkit";
+import { Effect } from "effect";
+import { generateInfraCore, type InfraCoreOptions } from "../core/infra";
+import { createExecutor } from "../../infrastructure/execution/executor";
+import { formatOutput } from "../../infrastructure/output/formatter";
+import type { InfraGeneratorSchema } from "./schema";
 
-const infraExecutor = createExecutor(
+/**
+ * Nx-specific input type for the executor
+ */
+interface NxInfraInput {
+  readonly name: string
+  readonly description?: string
+  readonly tags?: string
+  readonly platform?: "node" | "browser" | "universal" | "edge"
+  readonly includeClient?: boolean
+  readonly includeServer?: boolean
+}
+
+/**
+ * Create infra executor with explicit type parameters
+ */
+const infraExecutor = createExecutor<NxInfraInput, InfraCoreOptions>(
   "infra",
   generateInfraCore,
-  (input, metadata) => {
-    const platform = input["platform"] as "node" | "browser" | "universal" | "edge" | undefined
-    const includeClient = input["includeClient"] as boolean | undefined
-    const includeServer = input["includeServer"] as boolean | undefined
-
-    const result: any = {
-      ...metadata
+  (validated, metadata) => {
+    const includeClientServer = validated.includeClient && validated.includeServer ? true : undefined
+    return {
+      ...metadata,
+      ...(validated.platform !== undefined && { platform: validated.platform }),
+      ...(includeClientServer !== undefined && { includeClientServer })
     }
-
-    if (platform !== undefined) {
-      result.platform = platform
-    }
-
-    if (includeClient && includeServer) {
-      result.includeClientServer = true
-    }
-
-    return result
   }
-)
+);
 
 export default async function infraGenerator(
   tree: Tree,
   schema: InfraGeneratorSchema
 ) {
   if (!schema.name || schema.name.trim() === "") {
-    throw new Error("Infra name is required and cannot be empty")
+    throw new Error("Infra name is required and cannot be empty");
   }
 
+  // Use spread pattern for optional properties to satisfy exactOptionalPropertyTypes
   const result = await Effect.runPromise(
     infraExecutor.execute({
       name: schema.name,
-      description: schema.description,
-      tags: schema.tags,
-      platform: schema.platform,
-      includeClient: schema.includeClient,
-      includeServer: schema.includeServer,
+      ...(schema.description !== undefined && { description: schema.description }),
+      ...(schema.tags !== undefined && { tags: schema.tags }),
+      ...(schema.platform !== undefined && { platform: schema.platform }),
+      ...(schema.includeClient !== undefined && { includeClient: schema.includeClient }),
+      ...(schema.includeServer !== undefined && { includeServer: schema.includeServer }),
       __interfaceType: "nx" as const,
-      __nxTree: tree
+      __nxTree: tree,
     })
-  )
+  );
 
-  await formatFiles(tree)
+  await formatFiles(tree);
 
-  return formatOutput(result, "nx") as () => void
+  return formatOutput(result, "nx");
 }

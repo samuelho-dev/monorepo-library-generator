@@ -62,14 +62,8 @@ export function generateServiceFile(options: InfraTemplateOptions) {
     builder.addImport(providerPackage, providerClassName)
   }
 
-  // Add Kysely type imports and KyselyService for database infrastructure
-  if (isDatabaseInfra) {
-    builder.addImports([
-      { from: "kysely", imports: ["Kysely"], isTypeOnly: true },
-      { from: "@custom-repo/types-database", imports: ["Database"], isTypeOnly: true },
-      { from: "../providers/kysely-provider", imports: ["KyselyService"] }
-    ])
-  }
+  // Database infrastructure: Kysely integration should be added by user
+  // with their specific database schema types
 
   // Section: Service Context.Tag Definition
   builder.addSectionComment(
@@ -188,57 +182,11 @@ export class ${className}Service extends Context.Tag(
       isDatabaseInfra
         ? `
 
-    /**
-     * Execute a raw Kysely query
-     *
-     * Provides direct access to the Kysely query builder for complex queries
-     * that cannot be expressed through the standard CRUD operations.
-     *
-     * @param fn - Function that receives a Kysely instance and returns a Promise
-     * @returns Effect that succeeds with query result
-     *
-     * @example
-     * \`\`\`typescript
-     * const users = yield* service.query((db) =>
-     *   db.selectFrom("users")
-     *     .where("status", "=", "active")
-     *     .selectAll()
-     *     .execute()
-     * );
-     * \`\`\`
-     */
-    readonly query: <A>(
-      fn: (db: Kysely<Database>) => Promise<A>
-    ) => Effect.Effect<A, ${className}Error, never>;
-
-    /**
-     * Execute an effect within a database transaction
-     *
-     * Creates a transaction scope where all database operations are atomic.
-     * If the effect fails or is interrupted, the transaction is automatically rolled back.
-     * On success, the transaction is committed.
-     *
-     * The provided effect receives a transaction-scoped ${className}Service where all
-     * operations execute within the transaction context.
-     *
-     * @param fn - Effect to execute within the transaction scope
-     * @returns Effect that succeeds with the result of the transaction
-     *
-     * @example
-     * \`\`\`typescript
-     * const result = yield* service.transaction(
-     *   Effect.gen(function* () {
-     *     const txService = yield* ${className}Service;
-     *     const user = yield* txService.create({ name: "Alice" });
-     *     const profile = yield* txService.create({ userId: user.id });
-     *     return { user, profile };
-     *   })
-     * );
-     * \`\`\`
-     */
-    readonly transaction: <A, E>(
-      fn: Effect.Effect<A, E, ${className}Service>
-    ) => Effect.Effect<A, ${className}Error | E, never>;`
+    // TODO: Add database-specific operations here
+    // For Kysely integration, add query and transaction methods with your schema type:
+    //
+    // readonly query: <A>(fn: (db: Kysely<YourDatabaseSchema>) => Promise<A>);
+    // readonly transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>);`
         : ""
     }
   }
@@ -264,8 +212,8 @@ export class ${className}Service extends Context.Tag(
       // const logger = yield* LoggingService;
       ${hasProvider && providerClassName ? `const provider = yield* ${providerClassName};` : `// const provider = yield* ProviderService; // Replace with actual provider`}
 ${isDatabaseInfra ? `
-      // Inject Kysely service for type-safe query builder access
-      const kysely = yield* KyselyService<Database>();` : ""}
+      // Note: For database operations, implement your Kysely provider integration here
+      // Example: const kysely = yield* KyselyProvider;` : ""}
 
       // 2. Acquire Resources with Effect.acquireRelease
       // Example: Connection pool that needs cleanup
@@ -735,44 +683,29 @@ ${hasProvider && providerClassName ? `      // When using a provider, resource a
             }
           }).pipe(Effect.withSpan("${className}.healthCheck"))${
             isDatabaseInfra
-              ? `,
+              ? `
 
-        query: <A>(fn: (db: Kysely<Database>) => Promise<A>) =>
-          kysely.query(fn).pipe(Effect.withSpan("${className}.query")),
-
-        transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
-          Effect.gen(function* () {
-            // Execute transaction using Kysely's transaction support
-            return yield* kysely.query((db) =>
-              db.transaction().execute(async (trx) => {
-                // Create a transaction-scoped Kysely service
-                const txKyselyService = KyselyService<Database>();
-                const txKyselyLayer = Layer.succeed(txKyselyService, {
-                  query: <T>(queryFn: (db: Kysely<Database>) => Promise<T>) =>
-                    Effect.tryPromise({
-                      try: () => queryFn(trx as unknown as Kysely<Database>),
-                      catch: (error) =>
-                        new ${className}InternalError({
-                          message: \`Transaction query failed: \${String(error)}\`,
-                          cause: error,
-                        }),
-                    }),
-                  transaction: () =>
-                    Effect.fail(
-                      new ${className}InternalError({
-                        message: "Nested transactions not supported",
-                        cause: new Error("Cannot start a transaction within a transaction"),
-                      })
-                    ),
-                });
-
-                // Provide the transaction-scoped Kysely service and run fn
-                return await Effect.runPromise(
-                  fn.pipe(Effect.provide(txKyselyLayer))
-                );
-              })
-            );
-          }).pipe(Effect.withSpan("${className}.transaction"))`
+        // TODO: Add database query and transaction operations with your database schema type
+        // Example implementation:
+        //
+        // query: <A>(fn: (db: Kysely<YourDatabaseSchema>) => Promise<A>) =>
+        //   kysely.query(fn).pipe(Effect.withSpan("${className}.query")),
+        //
+        // transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
+        //   Effect.gen(function* () {
+        //     return yield* kysely.query((db) =>
+        //       db.transaction().execute(async (trx) => {
+        //         const txKyselyLayer = Layer.succeed(kysely, {
+        //           query: <T>(queryFn: (db: Kysely<YourDatabaseSchema>) => Promise<T>) =>
+        //             Effect.tryPromise({
+        //               try: () => queryFn(trx),
+        //               catch: (error) => new ${className}InternalError({ message: "Transaction query failed", cause: error })
+        //             })
+        //         });
+        //         return await Effect.runPromise(fn.pipe(Effect.provide(txKyselyLayer)));
+        //       })
+        //     );
+        //   }).pipe(Effect.withSpan("${className}.transaction"))`
               : ""
           }
       };
@@ -820,31 +753,14 @@ ${hasProvider && providerClassName ? `      // When using a provider, resource a
         return true;
       })${
       isDatabaseInfra
-        ? `,
-    query: <A>(fn: (db: Kysely<Database>) => Promise<A>) =>
-      Effect.gen(function* () {
-        // Mock Kysely instance for testing
-        const mockDb = {} as Kysely<Database>;
-        return yield* Effect.tryPromise({
-          try: () => fn(mockDb),
-          catch: (error) => new ${className}InternalError({
-            message: "Test query execution failed",
-            cause: error
-          })
-        });
-      }),
-    transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
-      Effect.gen(function* () {
-        // For testing, just execute the effect with the test service
-        return yield* fn.pipe(
-          Effect.provideService(${className}Service, ${className}Service.Test.pipe(
-            Layer.build,
-            Effect.scoped,
-            Effect.flatMap(() => ${className}Service),
-            Effect.runSync
-          ))
-        );
-      })`
+        ? `
+
+    // TODO: Add test mock implementations for database query and transaction operations
+    // Example:
+    // query: <A>(fn: (db: Kysely<YourDatabaseSchema>) => Promise<A>) =>
+    //   Effect.succeed({}),
+    // transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
+    //   fn.pipe(Effect.provideService(${className}Service, ${className}Service.Test))`
         : ""
     }
   });
@@ -919,23 +835,24 @@ ${hasProvider && providerClassName ? `      // When using a provider, resource a
             return result;
           })${
             isDatabaseInfra
-              ? `,
+              ? `
 
-        query: <A>(fn: (db: Kysely<Database>) => Promise<A>) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug(\`[${className}Service] [DEV] query called\`);
-            const result = yield* liveService.query(fn);
-            yield* Effect.logDebug(\`[${className}Service] [DEV] query result:\`, result);
-            return result;
-          }),
-
-        transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug(\`[${className}Service] [DEV] transaction started\`);
-            const result = yield* liveService.transaction(fn);
-            yield* Effect.logDebug(\`[${className}Service] [DEV] transaction completed\`);
-            return result;
-          })`
+        // TODO: Add development layer wrappers for database query and transaction operations
+        // Example:
+        // query: <A>(fn: (db: Kysely<YourDatabaseSchema>) => Promise<A>) =>
+        //   Effect.gen(function* () {
+        //     yield* Effect.logDebug(\`[${className}Service] [DEV] query called\`);
+        //     const result = yield* liveService.query(fn);
+        //     yield* Effect.logDebug(\`[${className}Service] [DEV] query result:\`, result);
+        //     return result;
+        //   }),
+        // transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
+        //   Effect.gen(function* () {
+        //     yield* Effect.logDebug(\`[${className}Service] [DEV] transaction started\`);
+        //     const result = yield* liveService.transaction(fn);
+        //     yield* Effect.logDebug(\`[${className}Service] [DEV] transaction completed\`);
+        //     return result;
+        //   })`
               : ""
           }
       };

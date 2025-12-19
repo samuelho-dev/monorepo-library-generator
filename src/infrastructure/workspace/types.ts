@@ -37,6 +37,11 @@ export interface WorkspaceContext {
   readonly scope: string
   readonly packageManager: PackageManager
   readonly interfaceType: InterfaceType
+  /**
+   * Relative path from workspace root to libraries directory
+   * Examples: "libs", "packages/libs", "packages", "src/libs"
+   */
+  readonly librariesRoot: string
 }
 
 /**
@@ -47,7 +52,8 @@ export const WorkspaceContextSchema = Schema.Struct({
   type: Schema.Literal("nx", "standalone"),
   scope: Schema.String,
   packageManager: Schema.Literal("pnpm", "npm", "yarn"),
-  interfaceType: Schema.Literal("mcp", "cli", "nx")
+  interfaceType: Schema.Literal("mcp", "cli", "nx"),
+  librariesRoot: Schema.String
 })
 
 /**

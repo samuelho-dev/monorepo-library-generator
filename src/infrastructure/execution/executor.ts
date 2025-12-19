@@ -28,26 +28,41 @@ import { GeneratorExecutionError } from "./types"
 /**
  * Generator Executor Interface
  *
- * Encapsulates the complete generator execution pipeline
+ * Encapsulates the complete generator execution pipeline.
+ *
+ * Generic over both input and result types to maintain type safety throughout
+ * the execution flow.
  */
 export interface GeneratorExecutor<TInput, TResult> {
   readonly execute: (input: TInput) => Effect.Effect<TResult, GeneratorExecutionError>
 }
 
 /**
- * Extended input with interface metadata
+ * Base fields that all validated inputs must have
  *
- * Internal type that adds __interfaceType and __nxTree to user input
+ * These fields are present in all Schema-validated inputs and are used
+ * by the executor for workspace context creation and metadata computation.
  */
-interface ExtendedInput {
-  readonly __interfaceType?: InterfaceType
-  readonly __nxTree?: Tree
-  readonly workspaceRoot?: string | undefined
+interface BaseValidatedInput {
   readonly name: string
+  readonly workspaceRoot?: string | undefined
   readonly directory?: string | undefined
   readonly description?: string | undefined
   readonly tags?: string | undefined
-  readonly [key: string]: unknown
+}
+
+/**
+ * Extended input with interface metadata
+ *
+ * Generic type that preserves the specific validated input type while adding
+ * internal metadata fields (__interfaceType, __nxTree).
+ *
+ * This allows the executor to receive properly typed inputs from Schema validation
+ * without losing type information through index signatures.
+ */
+type ExtendedInput<TInput extends BaseValidatedInput> = TInput & {
+  readonly __interfaceType?: InterfaceType
+  readonly __nxTree?: Tree
 }
 
 /**
@@ -62,58 +77,65 @@ interface ExtendedInput {
  * 4. Generates infrastructure files (package.json, tsconfig, etc.)
  * 5. Invokes core generator (domain-specific files)
  *
+ * Type Parameters:
+ * - TInput: The validated input type from Effect Schema (e.g., ProviderInput, ContractInput)
+ * - TCoreOptions: The core generator options type (e.g., ProviderCoreOptions, ContractCoreOptions)
+ *
+ * The generic types are properly constrained to preserve type information from Schema validation
+ * through to the core generator, eliminating the need for type assertions.
+ *
  * @param libraryType - Type of library being generated (contract, data-access, etc.)
  * @param coreGenerator - Core generator function to invoke
- * @param inputToOptions - Function to convert input + metadata to core generator options
+ * @param inputToOptions - Function to convert validated input + metadata to core generator options
  * @returns GeneratorExecutor that can be called with user input
  *
  * @example
  * ```typescript
- * // Create contract executor
- * const contractExecutor = createExecutor(
- *   "contract",
- *   generateContractCore,
- *   (input, metadata) => ({
+ * // Create provider executor with proper types
+ * const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
+ *   "provider",
+ *   generateProviderCore,
+ *   (validated, metadata) => ({
  *     ...metadata,
- *     includeCQRS: input.includeCQRS,
- *     includeRPC: input.includeRPC,
- *     entities: input.entities
+ *     externalService: validated.externalService,  // TypeScript knows this exists!
+ *     platform: validated.platform ?? "node",       // No type assertion needed!
+ *     operations: validated.operations
  *   })
  * )
  *
  * // Use in MCP handler
- * const result = yield* contractExecutor.execute({
- *   name: "user",
- *   includeCQRS: true,
+ * const result = yield* providerExecutor.execute({
+ *   name: "stripe",
+ *   externalService: "stripe",
+ *   platform: "node",
  *   __interfaceType: "mcp"
  * })
  *
  * // Use in CLI command
- * const result = yield* contractExecutor.execute({
- *   name: "user",
- *   includeCQRS: true,
+ * const result = yield* providerExecutor.execute({
+ *   ...validated,  // Already validated by Schema
  *   __interfaceType: "cli"
  * })
  *
  * // Use in Nx generator
- * const result = yield* contractExecutor.execute({
+ * const result = yield* providerExecutor.execute({
  *   name: schema.name,
- *   includeCQRS: schema.includeCQRS,
+ *   externalService: schema.externalService,
  *   __interfaceType: "nx",
  *   __nxTree: tree
  * })
  * ```
  */
 export function createExecutor<
-  TValidated extends ExtendedInput,
-  TOptions
+  TInput extends BaseValidatedInput,
+  TCoreOptions
 >(
   libraryType: LibraryType,
-  coreGenerator: CoreGeneratorFn<TOptions>,
-  inputToOptions: (validated: TValidated, metadata: LibraryMetadata) => TOptions
-): GeneratorExecutor<TValidated, GeneratorResult> {
+  coreGenerator: CoreGeneratorFn<TCoreOptions>,
+  inputToOptions: (validated: TInput, metadata: LibraryMetadata) => TCoreOptions
+): GeneratorExecutor<ExtendedInput<TInput>, GeneratorResult> {
   return {
-    execute: (validated: TValidated) =>
+    execute: (validated: ExtendedInput<TInput>) =>
       Effect.gen(function* () {
         // 1. Create workspace context
         const interfaceType = validated.__interfaceType ?? "cli"
@@ -196,6 +218,8 @@ export function createExecutor<
         )
 
         // 5. Generate domain-specific files using core generator
+        // TypeScript now knows the exact type of validated (TInput)
+        // No type assertion needed - the generic preserves the specific type!
         const coreOptions = inputToOptions(validated, metadata)
         const result = yield* coreGenerator(adapter, coreOptions).pipe(
           Effect.mapError(

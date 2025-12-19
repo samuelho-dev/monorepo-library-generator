@@ -5,28 +5,24 @@
  */
 
 import { Effect, ParseResult } from "effect"
-import { generateDataAccessCore } from "../../generators/core/data-access"
+import { generateDataAccessCore, type DataAccessCoreOptions } from "../../generators/core/data-access"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatErrorResponse, formatOutput, formatValidationError } from "../../infrastructure/output/formatter"
-import { decodeDataAccessInput } from "../../infrastructure/validation/registry"
+import { decodeDataAccessInput, type DataAccessInput } from "../../infrastructure/validation/registry"
 import { ValidationError } from "../utils/validation"
-import type { McpResponse } from "../../infrastructure/output/formatter"
 
 /**
  * Create data-access executor using unified infrastructure
+ * Explicit type parameters ensure type safety without assertions
  */
-const dataAccessExecutor = createExecutor(
+const dataAccessExecutor = createExecutor<DataAccessInput, DataAccessCoreOptions>(
   "data-access",
   generateDataAccessCore,
-  (validated, metadata) => {
-    const contractLibrary = validated["contractLibrary"] as string | undefined
-    const includeCache = (validated["includeCache"] as boolean | undefined) ?? false
-    return {
-      ...metadata,
-      ...(contractLibrary !== undefined && { contractLibrary }),
-      includeCache
-    }
-  }
+  (validated, metadata) => ({
+    ...metadata,
+    includeCache: validated.includeCache ?? false,
+    ...(validated.contractLibrary !== undefined && { contractLibrary: validated.contractLibrary })
+  })
 )
 
 /**
@@ -81,6 +77,6 @@ export const handleGenerateDataAccess = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      } as McpResponse)
+      })
     )
   )

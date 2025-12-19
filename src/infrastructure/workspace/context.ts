@@ -6,10 +6,9 @@
  * @module monorepo-library-generator/infrastructure/workspace/context
  */
 
-import { Effect } from "effect"
-import { detectWorkspaceContext } from "./detector"
-import type { InterfaceType, WorkspaceContext } from "./types"
-import { WorkspaceDetectionError } from "./types"
+import { Effect } from "effect";
+import { detectWorkspaceContext } from "./detector";
+import type { InterfaceType, WorkspaceContext } from "./types";
 
 /**
  * Create unified workspace context from root path
@@ -41,18 +40,18 @@ import { WorkspaceDetectionError } from "./types"
 export function createWorkspaceContext(
   rootPath: string | undefined,
   interfaceType: InterfaceType
-): Effect.Effect<WorkspaceContext, WorkspaceDetectionError> {
+) {
   return Effect.gen(function* () {
-    const startPath = rootPath ?? process.cwd()
+    const startPath = rootPath ?? process.cwd();
 
     // Auto-detect workspace properties
-    const detected = yield* detectWorkspaceContext(startPath)
+    const detected = yield* detectWorkspaceContext(startPath);
 
     return {
       ...detected,
-      interfaceType
-    }
-  })
+      interfaceType,
+    };
+  });
 }
 
 /**
@@ -65,13 +64,15 @@ export function createWorkspaceContextExplicit(
   type: WorkspaceContext["type"],
   scope: string,
   packageManager: WorkspaceContext["packageManager"],
-  interfaceType: InterfaceType
+  interfaceType: InterfaceType,
+  librariesRoot: string = "libs"
 ): WorkspaceContext {
   return {
     root,
     type,
     scope,
     packageManager,
-    interfaceType
-  }
+    interfaceType,
+    librariesRoot,
+  };
 }

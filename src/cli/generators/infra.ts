@@ -2,58 +2,55 @@
  * Infra Generator for CLI (Refactored)
  *
  * Uses unified infrastructure for consistent generation.
+ * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect } from "effect"
-import { generateInfraCore } from "../../generators/core/infra"
+import { Console, Effect, ParseResult } from "effect"
+import { generateInfraCore, type InfraCoreOptions } from "../../generators/core/infra"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatOutput } from "../../infrastructure/output/formatter"
+import {
+  decodeInfraInput,
+  type InfraInput
+} from "../../infrastructure/validation/registry"
 
-export interface InfraGeneratorOptions {
-  readonly name: string
-  readonly description?: string
-  readonly tags?: string
-  readonly infraType?: "database" | "cache" | "queue" | "logging" | "metrics" | "pubsub"
-  readonly platform?: "node" | "browser" | "universal" | "edge"
-  readonly includeClient?: boolean
-  readonly includeServer?: boolean
-  readonly includeClientServer?: boolean
-  readonly projectRoot?: string
-}
+/**
+ * Infra Generator Options - imported from validation registry
+ * for single source of truth
+ */
+export type InfraGeneratorOptions = InfraInput
 
-const infraExecutor = createExecutor(
+const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
   "infra",
   generateInfraCore,
-  (input, metadata) => {
-    const platform = input["platform"] as "node" | "browser" | "universal" | "edge" | undefined
-    const includeClientServer = input["includeClientServer"] as boolean | undefined
-    const includeClient = input["includeClient"] as boolean | undefined
-    const includeServer = input["includeServer"] as boolean | undefined
-
-    const result: any = {
-      ...metadata
+  (validated, metadata) => {
+    let includeClientServer = validated.includeClientServer
+    if (includeClientServer === undefined && validated.includeClient && validated.includeServer) {
+      includeClientServer = true
     }
 
-    if (platform !== undefined) {
-      result.platform = platform
+    return {
+      ...metadata,
+      ...(validated.platform !== undefined && { platform: validated.platform }),
+      ...(includeClientServer !== undefined && { includeClientServer }),
+      ...(validated.includeEdge !== undefined && { includeEdge: validated.includeEdge })
     }
-
-    if (includeClientServer !== undefined) {
-      result.includeClientServer = includeClientServer
-    } else if (includeClient && includeServer) {
-      result.includeClientServer = true
-    }
-
-    return result
   }
 )
 
 export function generateInfra(options: InfraGeneratorOptions) {
   return Effect.gen(function* () {
-    yield* Console.log(`Creating infra library: ${options.name}...`)
+    // Validate input with Effect Schema (like MCP does)
+    const validated = yield* decodeInfraInput(options).pipe(
+      Effect.mapError((parseError) =>
+        new Error(ParseResult.TreeFormatter.formatErrorSync(parseError))
+      )
+    )
+
+    yield* Console.log(`Creating infra library: ${validated.name}...`)
 
     const result = yield* infraExecutor.execute({
-      ...options,
+      ...validated,
       __interfaceType: "cli" as const
     })
 

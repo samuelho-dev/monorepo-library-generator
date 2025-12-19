@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/service/query-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder";
+import type { ProviderTemplateOptions } from "../../../../utils/shared/types";
 
 /**
  * Generate service/operations/query.ts file
@@ -17,8 +17,8 @@ import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
 export function generateProviderQueryOperationFile(
   options: ProviderTemplateOptions
 ) {
-  const builder = new TypeScriptBuilder()
-  const { className, externalService, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, externalService, fileName } = options;
 
   builder.addFileHeader({
     title: `${className} Query Operations`,
@@ -28,41 +28,45 @@ Bundle optimization: Import only this file for query operations (~4-5 KB vs ~18 
 
 Example:
   import { queryOperations } from '@scope/provider-${fileName}/service/operations/query';`,
-    module: `@custom-repo/provider-${fileName}/service/operations`
-  })
-  builder.addBlankLine()
+    module: `@custom-repo/provider-${fileName}/service/operations`,
+  });
+  builder.addBlankLine();
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Schedule", "Duration"] }
-  ])
-  builder.addBlankLine()
+    { from: "effect", imports: ["Effect", "Schedule", "Duration"] },
+  ]);
+  builder.addBlankLine();
 
   builder.addImports([
     {
       from: "../../types",
       imports: ["Resource", "ListParams", "PaginatedResult"],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
       from: "../../errors",
       imports: [`${className}ServiceError`],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
       from: "../../errors",
-      imports: [`${className}NotFoundError`, `${className}InternalError`, `${className}TimeoutError`]
-    }
-  ])
-  builder.addBlankLine()
+      imports: [
+        `${className}NotFoundError`,
+        `${className}InternalError`,
+        `${className}TimeoutError`,
+      ],
+    },
+  ]);
+  builder.addBlankLine();
 
   // Import test store from create.ts
-  builder.addImport("./create", "testStore")
-  builder.addBlankLine()
+  builder.addImport("./create", "testStore");
+  builder.addBlankLine();
 
   // Operation interface
-  builder.addSectionComment("Query Operations Interface")
-  builder.addBlankLine()
+  builder.addSectionComment("Query Operations Interface");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Query Operations Interface
@@ -87,12 +91,12 @@ export interface Query${className}Operations {
   readonly get: (
     id: string
   ) => Effect.Effect<Resource, ${className}ServiceError>;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // Live implementation
-  builder.addSectionComment("Live Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment("Live Implementation");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Query Operations - Live Implementation
@@ -107,7 +111,7 @@ export const queryOperations: Query${className}Operations = {
       // const client = yield* ${externalService}Client;
       // const result = yield* Effect.tryPromise({
       //   try: () => client.list(params),
-      //   catch: (error) => map${className}Error(error as Error)
+      //   catch: (error) => map${className}Error(error)
       // });
       // return result;
 
@@ -141,7 +145,7 @@ export const queryOperations: Query${className}Operations = {
       // const client = yield* ${externalService}Client;
       // const result = yield* Effect.tryPromise({
       //   try: () => client.get(id),
-      //   catch: (error) => map${className}Error(error as Error)
+      //   catch: (error) => map${className}Error(error)
       // });
       // return result;
 
@@ -166,12 +170,12 @@ export const queryOperations: Query${className}Operations = {
         )
       )
     )
-};`)
-  builder.addBlankLine()
+};`);
+  builder.addBlankLine();
 
   // Test implementation
-  builder.addSectionComment("Test Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment("Test Implementation");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Query Operations - Test Implementation
@@ -211,7 +215,7 @@ export const testQueryOperations: Query${className}Operations = {
       }
       return resource;
     })
-};`)
+};`);
 
-  return builder.toString()
+  return builder.toString();
 }

@@ -1145,7 +1145,7 @@ describe("StripeService", () => {
   // Inline minimal mock - just the fields you need
   const mockStripeSDK = {
     paymentIntents: {
-      create: (params: any) =>
+      create: (params) =>
         Promise.resolve({
           id: "pi_test_123",
           client_secret: "secret_test",
@@ -1595,8 +1595,6 @@ export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeServic
 ```
 
 ### ⚠️ CRITICAL: When to Use Runtime Preservation in Providers
-
-**Rule: ANY callback-based SDK pattern MUST preserve runtime.** This is not optional.
 
 #### ✅ **CRITICAL - Must preserve runtime:**
 

@@ -59,7 +59,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
    * @param id - Entity identifier
    * @returns Effect that succeeds when entity is deleted
    */
-  delete(id: string): Effect.Effect<void, ${className}RepositoryError>;
+  delete(id: string);
 
   /**
    * Delete multiple ${className} entities by IDs
@@ -69,7 +69,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
    */
   deleteMany(
     ids: ReadonlyArray<string>
-  ): Effect.Effect<void, ${className}RepositoryError>;
+  );
 }`)
   builder.addBlankLine()
 

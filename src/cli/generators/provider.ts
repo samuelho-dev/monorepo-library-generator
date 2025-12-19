@@ -2,45 +2,66 @@
  * Provider Generator for CLI (Refactored)
  *
  * Uses unified infrastructure for consistent generation.
+ * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect } from "effect"
-import { generateProviderCore } from "../../generators/core/provider"
-import { createExecutor } from "../../infrastructure/execution/executor"
-import { formatOutput } from "../../infrastructure/output/formatter"
+import { Console, Effect, ParseResult } from "effect";
+import { generateProviderCore, type ProviderCoreOptions } from "../../generators/core/provider";
+import { createExecutor } from "../../infrastructure/execution/executor";
+import { formatOutput } from "../../infrastructure/output/formatter";
+import {
+  decodeProviderInput,
+  type ProviderInput
+} from "../../infrastructure/validation/registry";
 
-export interface ProviderGeneratorOptions {
-  readonly name: string
-  readonly description?: string
-  readonly tags?: string
-  readonly externalService: string
-  readonly platform?: "node" | "browser" | "universal" | "edge"
-  readonly operations?: ReadonlyArray<"create" | "read" | "update" | "delete" | "query">
-}
+/**
+ * Provider Generator Options - imported from validation registry
+ * for single source of truth
+ */
+export type ProviderGeneratorOptions = ProviderInput;
 
-const providerExecutor = createExecutor(
+/**
+ * Provider executor with properly typed generics
+ *
+ * No type assertions needed - the executor preserves the ProviderInput type
+ * throughout the flow, allowing TypeScript to verify all field access.
+ */
+const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
   "provider",
   generateProviderCore,
-  (input, metadata) => ({
+  (validated, metadata) => ({
     ...metadata,
-    externalService: input["externalService"] as string,
-    platform: (input["platform"] as "node" | "browser" | "universal" | "edge") || "node",
-    operations: input["operations"] || ["create", "read", "update", "delete", "query"]
+    externalService: validated.externalService,
+    platform: validated.platform ?? "node",
+    operations: validated.operations ?? [
+      "create",
+      "read",
+      "update",
+      "delete",
+      "query",
+    ],
   })
-)
+);
 
 export function generateProvider(options: ProviderGeneratorOptions) {
   return Effect.gen(function* () {
-    yield* Console.log(`Creating provider library: ${options.name}...`)
+    // Validate input with Effect Schema (like MCP does)
+    const validated = yield* decodeProviderInput(options).pipe(
+      Effect.mapError((parseError) =>
+        new Error(ParseResult.TreeFormatter.formatErrorSync(parseError))
+      )
+    );
+
+    yield* Console.log(`Creating provider library: ${validated.name}...`);
 
     const result = yield* providerExecutor.execute({
-      ...options,
-      __interfaceType: "cli" as const
-    })
+      ...validated,
+      __interfaceType: "cli" as const,
+    });
 
-    const output = formatOutput(result, "cli")
-    yield* Console.log(output)
+    const output = formatOutput(result, "cli");
+    yield* Console.log(output);
 
-    return result
-  })
+    return result;
+  });
 }

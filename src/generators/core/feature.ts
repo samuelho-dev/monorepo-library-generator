@@ -79,6 +79,8 @@ export interface FeatureCoreOptions {
   readonly includeEdge?: boolean
   readonly includeSubServices?: boolean
   readonly subServices?: string
+  readonly dataAccessLibrary?: string
+  readonly includeClientState?: boolean
 }
 
 /**

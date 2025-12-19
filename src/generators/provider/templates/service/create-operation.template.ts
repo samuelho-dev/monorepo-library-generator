@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/service/create-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder";
+import type { ProviderTemplateOptions } from "../../../../utils/shared/types";
 
 /**
  * Generate service/operations/create.ts file
@@ -17,8 +17,8 @@ import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
 export function generateProviderCreateOperationFile(
   options: ProviderTemplateOptions
 ) {
-  const builder = new TypeScriptBuilder()
-  const { className, externalService, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, externalService, fileName } = options;
 
   builder.addFileHeader({
     title: `${className} Create Operations`,
@@ -28,37 +28,37 @@ Bundle optimization: Import only this file for create operations (~3-4 KB vs ~18
 
 Example:
   import { createOperations } from '@scope/provider-${fileName}/service/operations/create';`,
-    module: `@custom-repo/provider-${fileName}/service/operations`
-  })
-  builder.addBlankLine()
+    module: `@custom-repo/provider-${fileName}/service/operations`,
+  });
+  builder.addBlankLine();
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Schedule", "Duration"] }
-  ])
-  builder.addBlankLine()
+    { from: "effect", imports: ["Effect", "Schedule", "Duration"] },
+  ]);
+  builder.addBlankLine();
 
   builder.addImports([
     {
       from: "../../types",
       imports: ["Resource"],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
       from: "../../errors",
       imports: [`${className}ServiceError`],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
       from: "../../errors",
-      imports: [`${className}InternalError`, `${className}TimeoutError`]
-    }
-  ])
-  builder.addBlankLine()
+      imports: [`${className}InternalError`, `${className}TimeoutError`],
+    },
+  ]);
+  builder.addBlankLine();
 
   // Operation interface
-  builder.addSectionComment("Create Operations Interface")
-  builder.addBlankLine()
+  builder.addSectionComment("Create Operations Interface");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Create Operations Interface
@@ -73,12 +73,12 @@ export interface Create${className}Operations {
   readonly create: (
     data: Omit<Resource, "id" | "createdAt" | "updatedAt">
   ) => Effect.Effect<Resource, ${className}ServiceError>;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // Live implementation
-  builder.addSectionComment("Live Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment("Live Implementation");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Create Operations - Live Implementation
@@ -93,7 +93,7 @@ export const createOperations: Create${className}Operations = {
       // const client = yield* ${externalService}Client;
       // const result = yield* Effect.tryPromise({
       //   try: () => client.create(data),
-      //   catch: (error) => map${className}Error(error as Error)
+      //   catch: (error) => map${className}Error(error)
       // });
       // return result;
 
@@ -119,12 +119,12 @@ export const createOperations: Create${className}Operations = {
         )
       )
     )
-};`)
-  builder.addBlankLine()
+};`);
+  builder.addBlankLine();
 
   // Test implementation
-  builder.addSectionComment("Test Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment("Test Implementation");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Shared test store
@@ -152,7 +152,7 @@ export const testCreateOperations: Create${className}Operations = {
       testStore.set(id, resource);
       return resource;
     })
-};`)
+};`);
 
-  return builder.toString()
+  return builder.toString();
 }

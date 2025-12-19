@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/data-access/repository/read-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder";
+import type { DataAccessTemplateOptions } from "../../../../utils/shared/types";
 
 /**
  * Generate repository/operations/read.ts file
@@ -17,8 +17,8 @@ import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
 export function generateRepositoryReadOperationFile(
   options: DataAccessTemplateOptions
 ) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
 
   builder.addFileHeader({
     title: `${className} Read Operations`,
@@ -26,13 +26,15 @@ export function generateRepositoryReadOperationFile(
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { readOperations } from '@scope/data-access-${fileName}/repository/operations/read'`,
-    module: `@custom-repo/data-access-${fileName}/repository/operations`
-  })
-  builder.addBlankLine()
+    module: `@custom-repo/data-access-${fileName}/repository/operations`,
+  });
+  builder.addBlankLine();
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Effect", "Option", "Duration"] }])
-  builder.addBlankLine()
+  builder.addImports([
+    { from: "effect", imports: ["Effect", "Option", "Duration"] },
+  ]);
+  builder.addBlankLine();
 
   builder.addImports([
     {
@@ -41,31 +43,35 @@ Bundle optimization: Import this file directly for smallest bundle size:
         `${className}`,
         `${className}Filter`,
         `PaginationOptions`,
-        `PaginatedResponse`
+        `PaginatedResponse`,
       ],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
       from: "../../shared/errors",
       imports: [
         `${className}RepositoryError`,
         `${className}InternalError`,
-        `${className}TimeoutError`
+        `${className}TimeoutError`,
       ],
-      isTypeOnly: false
-    }
-  ])
-  builder.addBlankLine()
+      isTypeOnly: false,
+    },
+  ]);
+  builder.addBlankLine();
 
   // Import infrastructure services
-  builder.addComment("Infrastructure services - Cache for performance, Database for persistence")
-  builder.addRaw(`import { CacheService } from "@custom-repo/infra-cache";`)
-  builder.addRaw(`import { DatabaseService } from "@custom-repo/infra-database";`)
-  builder.addBlankLine()
+  builder.addComment(
+    "Infrastructure services - Cache for performance, Database for persistence"
+  );
+  builder.addRaw(`import { CacheService } from "@custom-repo/infra-cache";`);
+  builder.addRaw(
+    `import { DatabaseService } from "@custom-repo/infra-database";`
+  );
+  builder.addBlankLine();
 
   // Operation interface
-  builder.addSectionComment("Read Operations Interface")
-  builder.addBlankLine()
+  builder.addSectionComment("Read Operations Interface");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Read operations for ${className} repository
@@ -88,7 +94,7 @@ export interface Read${className}Operations {
    */
   findById(
     id: string
-  ): Effect.Effect<Option.Option<${className}>, ${className}RepositoryError>;
+  );
 
   /**
    * Find all ${className} entities matching filters
@@ -109,7 +115,7 @@ export interface Read${className}Operations {
   findAll(
     filter?: ${className}Filter,
     pagination?: PaginationOptions
-  ): Effect.Effect<PaginatedResponse<${className}>, ${className}RepositoryError>;
+  );
 
   /**
    * Find one ${className} entity matching filter
@@ -125,13 +131,13 @@ export interface Read${className}Operations {
    */
   findOne(
     filter: ${className}Filter
-  ): Effect.Effect<Option.Option<${className}>, ${className}RepositoryError>;
-}`)
-  builder.addBlankLine()
+  );
+}`);
+  builder.addBlankLine();
 
   // Live implementation
-  builder.addSectionComment("Live Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment("Live Implementation");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Live read operations implementation
@@ -157,7 +163,7 @@ export const readOperations: Read${className}Operations = {
       const cached = yield* cache.get(cacheKey);
       if (Option.isSome(cached)) {
         yield* Effect.logDebug(\`Cache hit for ${fileName}:\${id}\`);
-        return Option.some(cached.value as ${className});
+        return Option.some(cached.value);
       }
 
       // Cache miss - query database
@@ -286,7 +292,7 @@ export const readOperations: Read${className}Operations = {
       }),
       Effect.withSpan("${className}Repository.findOne")
     ),
-};`)
+};`);
 
-  return builder.toString()
+  return builder.toString();
 }

@@ -57,7 +57,7 @@ export interface AdapterOptions {
  * const adapter = yield* createAdapter({ context, nxTree: tree })
  * ```
  */
-export function createAdapter(options: AdapterOptions) {
+export function createAdapter(options: AdapterOptions): Effect.Effect<FileSystemAdapter, FileSystemError> {
   const { context, nxTree } = options;
 
   return Effect.gen(function* () {
@@ -104,10 +104,10 @@ export function createAdapter(options: AdapterOptions) {
 export function createAdapterFromContext(
   context: WorkspaceContext,
   nxTree?: Tree
-) {
-  const options: any = { context };
+): Effect.Effect<FileSystemAdapter, FileSystemError> {
+  const options: AdapterOptions = { context };
   if (nxTree !== undefined) {
-    options.nxTree = nxTree;
+    (options as { context: WorkspaceContext; nxTree?: Tree }).nxTree = nxTree;
   }
   return createAdapter(options);
 }

@@ -478,7 +478,7 @@ class OrderService {
 
   async createOrder(orderData: CreateOrderDTO): Promise<Order> {
     const span = trace.getTracer('order-service').startSpan('createOrder');
-    const correlationId = context.active().getValue('correlationId') as string;
+    const correlationId = context.active().getValue('correlationId')
 
     try {
       this.logger.info(

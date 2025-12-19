@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/data-access/repository-spec-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder";
+import type { DataAccessTemplateOptions } from "../../../utils/shared/types";
 
 /**
  * Generate repository.spec.ts file for data-access library
@@ -18,8 +18,8 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  * - Test structure with it.scoped
  */
 export function generateRepositorySpecFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className } = options
+  const builder = new TypeScriptBuilder();
+  const { className } = options;
 
   // Add file header with testing guidelines
   builder.addFileHeader({
@@ -50,15 +50,15 @@ Layer Isolation:
 - All tests use Layer.fresh for isolated in-memory storage
 - Repositories often use Map/Set for test state - needs fresh instances
 - Prevents test interference from accumulated state`,
-    module: "@custom-repo/data-access"
-  })
+    module: "@custom-repo/data-access",
+  });
 
   // Add imports
   builder.addImports([
     { from: "@effect/vitest", imports: ["describe", "expect", "it"] },
-    { from: "effect", imports: ["Effect", "Layer"] }
-  ])
-  builder.addBlankLine()
+    { from: "effect", imports: ["Effect", "Layer"] },
+  ]);
+  builder.addBlankLine();
 
   // Add describe block with TODO examples
   builder.addRaw(`describe("${className} Repository", () => {
@@ -402,7 +402,7 @@ Layer Isolation:
    *
    *     // Filter and count active entities
    *     const activeCount = yield* repo.streamAll({ batchSize: 10 }).pipe(
-   *       Stream.filter((entity: any) => entity.status === "active"),
+   *       Stream.filter((entity) => entity.status === "active"),
    *       Stream.runCount
    *     );
    *
@@ -450,7 +450,7 @@ Layer Isolation:
     expect(true).toBe(true);
   });
 });
-`)
+`);
 
-  return builder.toString()
+  return builder.toString();
 }

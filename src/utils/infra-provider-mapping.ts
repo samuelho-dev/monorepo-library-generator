@@ -37,7 +37,10 @@ export type InfraName = keyof typeof INFRA_PROVIDER_MAP
 export function getProviderForInfra(
   infraName: string
 ): string | undefined {
-  return INFRA_PROVIDER_MAP[infraName as InfraName]
+  if (infraName in INFRA_PROVIDER_MAP) {
+    return INFRA_PROVIDER_MAP[infraName as InfraName]
+  }
+  return undefined
 }
 
 /**

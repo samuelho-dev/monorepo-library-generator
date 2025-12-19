@@ -354,14 +354,7 @@ export const validateDotfiles = (
       { concurrency: "unbounded" }
     )
 
-    interface ValidationResult {
-      readonly dotfile: DotfileName
-      readonly exists: boolean
-      readonly path: string
-      readonly required: boolean
-    }
-
-    const typedResults = validationResults as ReadonlyArray<ValidationResult>
+    const typedResults = validationResults 
     const missing = typedResults.filter((r) => !r.exists)
 
     if (missing.length > 0) {

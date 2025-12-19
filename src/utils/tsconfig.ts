@@ -222,6 +222,7 @@ export function generateBaseTsConfig(options: TsConfigOptions) {
   return {
     extends: `${offsetFromRoot}/tsconfig.base.json`,
     compilerOptions: {
+      baseUrl: ".",
       module: "esnext",
       forceConsistentCasingInFileNames: true,
       strict: true,

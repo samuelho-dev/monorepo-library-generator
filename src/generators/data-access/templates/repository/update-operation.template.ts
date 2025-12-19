@@ -68,7 +68,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
   update(
     id: string,
     input: ${className}UpdateInput
-  ): Effect.Effect<${className}, ${className}RepositoryError>;
+  );
 }`)
   builder.addBlankLine()
 

@@ -64,7 +64,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
    * @param filter - Optional filter criteria
    * @returns Effect that succeeds with count
    */
-  count(filter?: ${className}Filter): Effect.Effect<number, ${className}RepositoryError>;
+  count(filter?: ${className}Filter);
 
   /**
    * Check if ${className} entity exists by ID
@@ -72,7 +72,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
    * @param id - Entity identifier
    * @returns Effect that succeeds with boolean
    */
-  exists(id: string): Effect.Effect<boolean, ${className}RepositoryError>;
+  exists(id: string);
 }`)
   builder.addBlankLine()
 

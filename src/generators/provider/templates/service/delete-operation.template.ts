@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/service/delete-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder";
+import type { ProviderTemplateOptions } from "../../../../utils/shared/types";
 
 /**
  * Generate service/operations/delete.ts file
@@ -17,8 +17,8 @@ import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
 export function generateProviderDeleteOperationFile(
   options: ProviderTemplateOptions
 ) {
-  const builder = new TypeScriptBuilder()
-  const { className, externalService, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, externalService, fileName } = options;
 
   builder.addFileHeader({
     title: `${className} Delete Operations`,
@@ -28,36 +28,40 @@ Bundle optimization: Import only this file for delete operations (~2-3 KB vs ~18
 
 Example:
   import { deleteOperations } from '@scope/provider-${fileName}/service/operations/delete';`,
-    module: `@custom-repo/provider-${fileName}/service/operations`
-  })
-  builder.addBlankLine()
+    module: `@custom-repo/provider-${fileName}/service/operations`,
+  });
+  builder.addBlankLine();
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Schedule", "Duration"] }
-  ])
-  builder.addBlankLine()
+    { from: "effect", imports: ["Effect", "Schedule", "Duration"] },
+  ]);
+  builder.addBlankLine();
 
   builder.addImports([
     {
       from: "../../errors",
       imports: [`${className}ServiceError`],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
       from: "../../errors",
-      imports: [`${className}NotFoundError`, `${className}InternalError`, `${className}TimeoutError`]
-    }
-  ])
-  builder.addBlankLine()
+      imports: [
+        `${className}NotFoundError`,
+        `${className}InternalError`,
+        `${className}TimeoutError`,
+      ],
+    },
+  ]);
+  builder.addBlankLine();
 
   // Import test store from create.ts
-  builder.addImport("./create", "testStore")
-  builder.addBlankLine()
+  builder.addImport("./create", "testStore");
+  builder.addBlankLine();
 
   // Operation interface
-  builder.addSectionComment("Delete Operations Interface")
-  builder.addBlankLine()
+  builder.addSectionComment("Delete Operations Interface");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Delete Operations Interface
@@ -72,12 +76,12 @@ export interface Delete${className}Operations {
   readonly delete: (
     id: string
   ) => Effect.Effect<void, ${className}ServiceError>;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // Live implementation
-  builder.addSectionComment("Live Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment("Live Implementation");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Delete Operations - Live Implementation
@@ -92,7 +96,7 @@ export const deleteOperations: Delete${className}Operations = {
       // const client = yield* ${externalService}Client;
       // yield* Effect.tryPromise({
       //   try: () => client.delete(id),
-      //   catch: (error) => map${className}Error(error as Error)
+      //   catch: (error) => map${className}Error(error)
       // });
 
       yield* Effect.logWarning(\`Delete operation called for id \${id} but not implemented\`);
@@ -116,12 +120,12 @@ export const deleteOperations: Delete${className}Operations = {
         )
       )
     )
-};`)
-  builder.addBlankLine()
+};`);
+  builder.addBlankLine();
 
   // Test implementation
-  builder.addSectionComment("Test Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment("Test Implementation");
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Delete Operations - Test Implementation
@@ -145,7 +149,7 @@ export const testDeleteOperations: Delete${className}Operations = {
 
       testStore.delete(id);
     })
-};`)
+};`);
 
-  return builder.toString()
+  return builder.toString();
 }

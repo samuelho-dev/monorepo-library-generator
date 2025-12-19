@@ -5,18 +5,32 @@
 import type { Tree } from "@nx/devkit"
 import { formatFiles } from "@nx/devkit"
 import { Effect } from "effect"
-import { generateFeatureCore } from "../core/feature"
+import { generateFeatureCore, type FeatureCoreOptions } from "../core/feature"
 import { createExecutor } from "../../infrastructure/execution/executor"
 import { formatOutput } from "../../infrastructure/output/formatter"
 import type { FeatureGeneratorSchema } from "./schema"
 
-const featureExecutor = createExecutor(
+/**
+ * Nx-specific input type for the executor
+ */
+interface NxFeatureInput {
+  readonly name: string
+  readonly description?: string
+  readonly tags?: string
+  readonly dataAccessLibrary?: string
+  readonly includeClientState?: boolean
+}
+
+/**
+ * Create feature executor with explicit type parameters
+ */
+const featureExecutor = createExecutor<NxFeatureInput, FeatureCoreOptions>(
   "feature",
   generateFeatureCore,
-  (input, metadata) => ({
+  (validated, metadata) => ({
     ...metadata,
-    dataAccessLibrary: input["dataAccessLibrary"] as string | undefined,
-    includeClientState: (input["includeClientState"] as boolean | undefined) ?? false
+    ...(validated.dataAccessLibrary !== undefined && { dataAccessLibrary: validated.dataAccessLibrary }),
+    includeClientState: validated.includeClientState ?? false
   })
 )
 
@@ -28,13 +42,14 @@ export default async function featureGenerator(
     throw new Error("Feature name is required and cannot be empty")
   }
 
+  // Use spread pattern for optional properties to satisfy exactOptionalPropertyTypes
   const result = await Effect.runPromise(
     featureExecutor.execute({
       name: schema.name,
-      description: schema.description,
-      tags: schema.tags,
-      dataAccessLibrary: schema.dataAccessLibrary,
-      includeClientState: schema.includeClientState,
+      ...(schema.description !== undefined && { description: schema.description }),
+      ...(schema.tags !== undefined && { tags: schema.tags }),
+      ...(schema.dataAccessLibrary !== undefined && { dataAccessLibrary: schema.dataAccessLibrary }),
+      ...(schema.includeClientState !== undefined && { includeClientState: schema.includeClientState }),
       __interfaceType: "nx" as const,
       __nxTree: tree
     })
@@ -42,5 +57,5 @@ export default async function featureGenerator(
 
   await formatFiles(tree)
 
-  return formatOutput(result, "nx") as () => void
+  return formatOutput(result, "nx")
 }

@@ -27,24 +27,26 @@
   "devDependencies": {
     "@nx/js": "^20.2.2",
     "@nx/vite": "^20.2.2",
-    "nx": "^20.2.2",
     "@types/node": "^22.10.2",
-    "typescript": "^5.7.2",
-    "vitest": "^4.0.15",
-    "@vitest/ui": "^4.0.15",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
+    "@vitest/ui": "^4.0.15",
     "eslint": "^9.17.0",
+    "nx": "^20.2.2",
     "prettier": "^3.4.2",
     "prisma": "^6.2.1",
-    "prisma-effect-kysely": "latest"
+    "prisma-effect-kysely": "latest",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.15"
   },
   "dependencies": {
-    "effect": "^3.19.9",
+    "@effect/cli": "^0.72.1",
     "@effect/platform": "^0.93.6",
     "@effect/platform-node": "^0.100.0",
     "@effect/schema": "^0.75.5",
-    "@prisma/client": "^6.2.1"
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@prisma/client": "^6.2.1",
+    "effect": "^3.19.9"
   },
   "packageManager": "pnpm@9.15.0"
 }
