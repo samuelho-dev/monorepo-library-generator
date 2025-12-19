@@ -29,8 +29,8 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: bunx @changesets/cli version
-          publish: bunx @changesets/cli publish
+          version: bun run ci:version
+          publish: bun run ci:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
