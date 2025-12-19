@@ -1,21 +1,18 @@
 name: Setup
-description: Perform standard setup and install dependencies using pnpm.
+description: Perform standard setup and install dependencies using Bun.
 inputs:
-  node-version:
-    description: The version of Node.js to install
+  bun-version:
+    description: The version of Bun to install
     required: true
-    default: 20.16.0
+    default: latest
 
 runs:
   using: composite
   steps:
-    - name: Install pnpm
-      uses: pnpm/action-setup@v3
-    - name: Install node
-      uses: actions/setup-node@v4
+    - name: Install Bun
+      uses: oven-sh/setup-bun@v2
       with:
-        cache: pnpm
-        node-version: ${{ inputs.node-version }}
+        bun-version: ${{ inputs.bun-version }}
     - name: Install dependencies
       shell: bash
-      run: pnpm install
+      run: bun install
