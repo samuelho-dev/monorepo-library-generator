@@ -25,6 +25,10 @@
   ],
   "author": "Samuel Ho",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc -p tsconfig.src.json && node scripts/bundle-cli.mjs",
     "build:watch": "tsc -p tsconfig.src.json --watch",
