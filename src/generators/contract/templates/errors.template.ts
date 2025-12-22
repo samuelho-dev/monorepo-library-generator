@@ -7,8 +7,7 @@
  * @module monorepo-library-generator/contract/errors-template
  */
 
-import { EffectPatterns } from '../../../utils/code-builder';
-import { TypeScriptBuilder } from '../../../utils/code-builder';
+import { EffectPatterns, TypeScriptBuilder } from '../../../utils/code-builder';
 import type { ContractTemplateOptions } from '../../../utils/types';
 import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 

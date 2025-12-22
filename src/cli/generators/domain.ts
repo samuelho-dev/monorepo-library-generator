@@ -28,7 +28,7 @@ import { generateProvider } from './provider';
 /**
  * Check if a library directory exists
  */
-function libraryExists(libraryPath: string): boolean {
+function libraryExists(libraryPath: string) {
   const fullPath = path.join(process.cwd(), libraryPath);
   return fs.existsSync(fullPath);
 }
@@ -205,7 +205,7 @@ export function generateDomain(options: DomainGeneratorOptions) {
     yield* Console.log(`✅ Feature library created: libs/feature/${name}`);
 
     // Success Summary
-    yield* Console.log('\n' + '='.repeat(60));
+    yield* Console.log(`\n${'='.repeat(60)}`);
     yield* Console.log(`\n✨ Domain "${name}" created successfully!`);
     yield* Console.log('\n📦 Generated Libraries:');
     yield* Console.log(`   1. libs/contract/${name}      - ${getPackageName('contract', name)}`);
@@ -226,6 +226,6 @@ export function generateDomain(options: DomainGeneratorOptions) {
     yield* Console.log(`   cd libs/data-access/${name}`);
     yield* Console.log('   pnpm test');
 
-    yield* Console.log('\n' + '='.repeat(60));
+    yield* Console.log(`\n${'='.repeat(60)}`);
   });
 }

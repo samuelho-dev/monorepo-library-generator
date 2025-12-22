@@ -71,7 +71,7 @@ export function generateEntitiesFile(options: ContractTemplateOptions) {
   builder.addComment(`  ${className}Select,`);
   builder.addComment(`  ${className}Insert,`);
   builder.addComment(`  ${className}Update,`);
-  builder.addComment(`} from \"${scope}/infra-database\";`);
+  builder.addComment(`} from "${scope}/infra-database";`);
   builder.addBlankLine();
 
   // ============================================================================

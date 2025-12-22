@@ -8,7 +8,7 @@
 import type { Tree } from '@nx/devkit';
 import { readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import featureGenerator from './feature';
+import { featureGenerator } from './feature';
 
 describe('feature generator', () => {
   let tree: Tree;
@@ -235,9 +235,9 @@ describe('feature generator', () => {
       expect(config.projectType).toBe('library');
 
       // Build target with batch mode
-      expect(config.targets?.['build']).toBeDefined();
-      expect(config.targets?.['build']?.executor).toBe('@nx/js:tsc');
-      expect(config.targets?.['build']?.options?.batch).toBe(true);
+      expect(config.targets?.build).toBeDefined();
+      expect(config.targets?.build?.executor).toBe('@nx/js:tsc');
+      expect(config.targets?.build?.options?.batch).toBe(true);
     });
 
     it('should include client entry point for includeClientServer', async () => {
@@ -250,7 +250,7 @@ describe('feature generator', () => {
 
       // Platform barrel exports removed - no additional entry points needed
       // Modern bundlers handle tree-shaking automatically
-      expect(config.targets?.['build']).toBeDefined();
+      expect(config.targets?.build).toBeDefined();
     });
   });
 
@@ -337,15 +337,17 @@ describe('feature generator', () => {
       expect(serviceContent).toContain('Layer.');
     });
 
-    it('should use Data.TaggedError in errors.ts', async () => {
+    it('should use Schema.TaggedError in errors.ts', async () => {
       await featureGenerator(tree, {
         name: 'payment',
       });
 
       const errorsContent = tree.read('libs/feature/payment/src/lib/shared/errors.ts', 'utf-8');
 
-      expect(errorsContent).toContain('Data.TaggedError');
+      // Uses Schema.TaggedError for RPC serialization compatibility
+      expect(errorsContent).toContain('Schema.TaggedError');
       expect(errorsContent).toContain('class PaymentError');
+      expect(errorsContent).toContain('PaymentErrorCodes');
     });
 
     it('should use RpcGroup.make with class-based Rpc definitions when includeRPC=true', async () => {
@@ -379,11 +381,12 @@ describe('feature generator', () => {
       expect(handlersContent).toContain('GetPayment:');
       expect(handlersContent).toContain('ListPayment:');
       expect(handlersContent).toContain('CreatePayment:');
-      // Shows how to access middleware context
+      // Uses Context.Tag for auth (CurrentUser, RequestMetaTag)
       expect(handlersContent).toContain('CurrentUser');
+      expect(handlersContent).toContain('RequestMetaTag');
     });
 
-    it('should use Schema.TaggedError in RPC errors when includeRPC=true', async () => {
+    it('should re-export errors from shared in RPC errors when includeRPC=true', async () => {
       await featureGenerator(tree, {
         name: 'payment',
         includeRPC: true,
@@ -391,8 +394,10 @@ describe('feature generator', () => {
 
       const errorsContent = tree.read('libs/feature/payment/src/lib/rpc/errors.ts', 'utf-8');
 
-      expect(errorsContent).toContain('Schema.TaggedError');
-      expect(errorsContent).toContain('PaymentRpcError');
+      // RPC errors re-export from shared - single source of truth
+      expect(errorsContent).toContain('export { PaymentError');
+      expect(errorsContent).toContain('PaymentErrorCodes');
+      expect(errorsContent).toContain('../shared/errors');
     });
 
     it('should use Atom.make in client atoms when includeClientServer=true', async () => {

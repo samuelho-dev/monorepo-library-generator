@@ -88,10 +88,7 @@ export const isWorkspaceRoot = (fs: FileSystem.FileSystem, dirPath: string) =>
  * - "nx" = Nx-managed workspace (has nx.json)
  * - "standalone" = Other workspace types (pnpm, yarn, turborepo, or plain)
  */
-export const detectWorkspaceType = (
-  fs: FileSystem.FileSystem,
-  rootPath: string,
-): Effect.Effect<'nx' | 'standalone', never, never> =>
+export const detectWorkspaceType = (fs: FileSystem.FileSystem, rootPath: string) =>
   Effect.gen(function* () {
     // Check for Nx
     const nxExists = yield* fs
@@ -114,10 +111,7 @@ export const detectWorkspaceType = (
  * 2. yarn.lock -> yarn
  * 3. default -> npm
  */
-export const detectPackageManager = (
-  fs: FileSystem.FileSystem,
-  rootPath: string,
-): Effect.Effect<'pnpm' | 'yarn' | 'npm', never, never> =>
+export const detectPackageManager = (fs: FileSystem.FileSystem, rootPath: string) =>
   Effect.gen(function* () {
     // Check for pnpm
     const pnpmExists = yield* fs

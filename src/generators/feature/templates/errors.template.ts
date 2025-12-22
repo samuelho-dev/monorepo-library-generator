@@ -3,6 +3,9 @@
  *
  * Generates shared/errors.ts file for feature libraries.
  *
+ * Uses Schema.TaggedError for all errors - works both internally
+ * and at RPC boundaries without error mapping.
+ *
  * @module monorepo-library-generator/feature/errors-template
  */
 
@@ -13,7 +16,11 @@ import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 /**
  * Generate shared/errors.ts file for feature library
  *
- * Creates domain-specific error classes using Data.TaggedError pattern.
+ * Creates domain-specific error classes using Schema.TaggedError pattern.
+ * Schema.TaggedError is used because:
+ * - It's serializable (works at RPC boundaries)
+ * - It works as domain errors internally
+ * - It eliminates error mapping between layers
  */
 export function generateErrorsFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder();
@@ -23,33 +30,52 @@ export function generateErrorsFile(options: FeatureTemplateOptions) {
   // Add file header
   builder.addFileHeader({
     title: `${className} Errors`,
-    description: 'Domain errors using Data.TaggedError pattern.',
+    description: `Domain errors using Schema.TaggedError pattern.
+
+Schema.TaggedError is used for all errors because:
+- Serializable at RPC boundaries
+- Works as internal domain errors
+- No error mapping needed between layers`,
     module: `${scope}/feature-${name}/shared/errors`,
   });
 
   // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Data'] }]);
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
   builder.addBlankLine();
 
-  // Add main error class
-  builder.addClass({
-    exported: true,
-    className: `${className}Error`,
-    extends: `Data.TaggedError("${className}Error")<{
-  readonly message: string;
-  readonly cause?: unknown;
-}>`,
-  });
-  builder.addBlankLine();
+  // Add main error class using Schema.TaggedError
+  builder.addRaw(`/**
+ * ${className} Error
+ *
+ * Primary error type for ${name} operations.
+ * Uses Schema.TaggedError for RPC serialization compatibility.
+ */
+export class ${className}Error extends Schema.TaggedError<${className}Error>()(
+  "${className}Error",
+  {
+    message: Schema.String,
+    code: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  }
+) {}
 
-  // Add TODO comments for additional errors
-  builder.addComment('TODO: Add domain-specific errors');
-  builder.addComment('Example:');
-  builder.addComment(
-    `// export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{`,
-  );
-  builder.addComment('//   readonly id: string;');
-  builder.addComment('// }> {}');
+/**
+ * Error codes for ${name} operations
+ *
+ * Use these codes with ${className}Error for type-safe error handling:
+ * - NOT_FOUND: Entity not found
+ * - VALIDATION_ERROR: Invalid input data
+ * - CONFLICT: Operation conflicts with existing state
+ * - INTERNAL_ERROR: Unexpected internal error
+ */
+export const ${className}ErrorCodes = {
+  NOT_FOUND: "NOT_FOUND",
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  CONFLICT: "CONFLICT",
+  INTERNAL_ERROR: "INTERNAL_ERROR",
+} as const;
+
+export type ${className}ErrorCode = (typeof ${className}ErrorCodes)[keyof typeof ${className}ErrorCodes];`);
   builder.addBlankLine();
 
   return builder.toString();

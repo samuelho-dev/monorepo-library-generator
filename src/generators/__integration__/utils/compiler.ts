@@ -27,11 +27,7 @@ export interface CompilationResult {
  * It doesn't do full type checking since module resolution in virtual
  * trees is complex and would require mocking the entire project.
  */
-export function compileTreeFiles(
-  tree: Tree,
-  projectRoot: string,
-  _compilerOptions?: ts.CompilerOptions,
-) {
+export function compileTreeFiles(tree: Tree, projectRoot: string) {
   const files = collectTypeScriptFiles(tree, projectRoot);
   if (files.length === 0) {
     return {
@@ -58,8 +54,9 @@ export function compileTreeFiles(
 
     // Get syntax diagnostics (parse errors)
     // parseDiagnostics is an internal property, use type assertion
+
     const syntaxDiags =
-      (sourceFile as unknown as { parseDiagnostics?: ts.Diagnostic[] }).parseDiagnostics || [];
+      (sourceFile as unknown as { parseDiagnostics?: Array<ts.Diagnostic> }).parseDiagnostics || [];
     for (const diag of syntaxDiags) {
       const pos =
         diag.start !== undefined
@@ -89,9 +86,9 @@ function collectTypeScriptFiles(tree: Tree, projectRoot: string) {
         files.push(path);
       }
     } else {
-      tree.children(path).forEach((child) => {
+      for (const child of tree.children(path)) {
         visit(`${path}/${child}`);
-      });
+      }
     }
   };
 

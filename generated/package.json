@@ -1,0 +1,47 @@
+{
+  "name": "my-effect-monorepo",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "nx run-many --target=build --all",
+    "build:affected": "nx affected --target=build",
+    "test": "nx run-many --target=test --all",
+    "test:affected": "nx affected --target=test",
+    "test:watch": "vitest --watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "nx run-many --target=typecheck --all",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:reset": "prisma migrate reset",
+    "clean": "nx reset && rm -rf node_modules dist .nx",
+    "format:check": "biome format ."
+  },
+  "devDependencies": {
+    "@nx/js": "^22.3.1",
+    "@nx/vite": "^22.3.1",
+    "nx": "^22.3.1",
+    "@types/node": "^25.0.3",
+    "typescript": "^5.9.3",
+    "@effect/vitest": "^0.16.0",
+    "vitest": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "@biomejs/biome": "^2.3.10",
+    "prisma": "^7.2.0",
+    "prisma-effect-kysely": "latest"
+  },
+  "dependencies": {
+    "effect": "^3.19.12",
+    "@effect/platform": "^0.93.8",
+    "@effect/platform-node": "^0.103.0",
+    "@prisma/client": "^7.2.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

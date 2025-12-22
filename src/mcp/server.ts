@@ -13,7 +13,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable no-restricted-syntax */
-import { Effect } from 'effect';
+import { Console, Effect } from 'effect';
 import { VERSION } from '../version';
 
 // Tool definitions (with JSON Schema from Effect)
@@ -133,10 +133,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 /**
- * Error handler
+ * Error handler - logs server errors to stderr using Effect logging
  */
 server.onerror = (error) => {
-  console.error('[MCP Server Error]', error);
+  Effect.runSync(
+    Console.error(`[MCP Server Error] ${error instanceof Error ? error.message : String(error)}`),
+  );
 };
 
 /**
@@ -145,26 +147,14 @@ server.onerror = (error) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-
-  // Log to stderr (stdout is used for MCP protocol)
-  console.error('✅ Monorepo Library Generator MCP Server (Effect-based)');
-  console.error(`📦 Version: ${VERSION}`);
-  console.error('⚡ Using Effect Schema for validation (NO ZOD)');
-  console.error('🔧 Available tools: 6 (1 workspace + 5 generators)');
-  console.error('');
-  console.error('Tools:');
-  console.error('  - init_workspace (NEW)');
-  console.error('  - generate_contract');
-  console.error('  - generate_data_access');
-  console.error('  - generate_feature');
-  console.error('  - generate_infra');
-  console.error('  - generate_provider');
-  console.error('');
-  console.error('Ready to accept MCP requests...');
 }
 
 // Start server
 main().catch((error) => {
-  console.error('Failed to start MCP server:', error);
+  Effect.runSync(
+    Console.error(
+      `[MCP Server] Fatal error: ${error instanceof Error ? error.message : String(error)}`,
+    ),
+  );
   process.exit(1);
 });

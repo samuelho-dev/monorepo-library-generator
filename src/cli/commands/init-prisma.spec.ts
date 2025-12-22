@@ -5,7 +5,7 @@
  * Uses Effect's in-memory file system for isolated testing.
  */
 
-import { FileSystem, Path } from '@effect/platform';
+import { FileSystem } from '@effect/platform';
 import { NodePath } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { describe, expect, it } from 'vitest';
@@ -18,7 +18,8 @@ function makeTestFileSystem() {
   const files = new Map<string, string>();
   const directories = new Set<string>();
 
-  const testFs: FileSystem.FileSystem = {
+  // eslint-disable-next-line no-restricted-syntax -- satisfies cannot replace full interface implementation
+  const testFs = {
     access: () => Effect.void,
     copy: () => Effect.void,
     copyFile: () => Effect.void,
@@ -77,7 +78,7 @@ function makeTestFileSystem() {
 describe('init-prisma', () => {
   describe('scaffoldPrismaStructure', () => {
     it('should create prisma directory structure', async () => {
-      const { layer, directories } = makeTestFileSystem();
+      const { directories, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -87,7 +88,7 @@ describe('init-prisma', () => {
     });
 
     it('should create schema.prisma with correct configuration', async () => {
-      const { layer, files } = makeTestFileSystem();
+      const { files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -105,7 +106,7 @@ describe('init-prisma', () => {
     });
 
     it('should create .gitkeep files in empty directories', async () => {
-      const { layer, files } = makeTestFileSystem();
+      const { files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -115,7 +116,7 @@ describe('init-prisma', () => {
     });
 
     it('should create README.md with documentation', async () => {
-      const { layer, files } = makeTestFileSystem();
+      const { files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -132,7 +133,7 @@ describe('init-prisma', () => {
     });
 
     it('should create .env file with DATABASE_URL template', async () => {
-      const { layer, files } = makeTestFileSystem();
+      const { files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -144,7 +145,7 @@ describe('init-prisma', () => {
     });
 
     it('should include multi-schema preview feature in schema.prisma', async () => {
-      const { layer, files } = makeTestFileSystem();
+      const { files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -154,7 +155,7 @@ describe('init-prisma', () => {
     });
 
     it('should reference monorepo-library-generator in schema.prisma', async () => {
-      const { layer, files } = makeTestFileSystem();
+      const { files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -166,7 +167,7 @@ describe('init-prisma', () => {
     });
 
     it('should create complete file structure in one call', async () => {
-      const { layer, files, directories } = makeTestFileSystem();
+      const { directories, files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -182,7 +183,7 @@ describe('init-prisma', () => {
     });
 
     it('should include usage instructions in README', async () => {
-      const { layer, files } = makeTestFileSystem();
+      const { files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
@@ -195,7 +196,7 @@ describe('init-prisma', () => {
     });
 
     it('should explain domain detection in README', async () => {
-      const { layer, files } = makeTestFileSystem();
+      const { files, layer } = makeTestFileSystem();
       const testLayer = Layer.merge(layer, NodePath.layer);
 
       await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));

@@ -6,12 +6,12 @@
  * @module monorepo-library-generator/data-access/types-template
  */
 
+import { TypeScriptBuilder } from '../../../utils/code-builder';
 import {
   addPaginatedResponse,
   addPaginationOptions,
   addSortDirection,
 } from '../../../utils/templates';
-import { TypeScriptBuilder } from '../../../utils/code-builder';
 import type { DataAccessTemplateOptions } from '../../../utils/types';
 import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
@@ -26,7 +26,7 @@ import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
  */
 export function generateTypesFile(options: DataAccessTemplateOptions) {
   const builder = new TypeScriptBuilder();
-  const { className, fileName, contractLibrary } = options;
+  const { className, contractLibrary, fileName } = options;
   const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header

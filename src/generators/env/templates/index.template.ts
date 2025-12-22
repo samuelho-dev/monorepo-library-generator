@@ -14,7 +14,7 @@ import { TypeScriptBuilder } from '../../../utils/code-builder';
  *
  * Provides a single import path: `import { env } from '@workspace/env'`
  */
-export function generateIndexFile(): string {
+export function generateIndexFile() {
   const builder = new TypeScriptBuilder();
 
   // File header

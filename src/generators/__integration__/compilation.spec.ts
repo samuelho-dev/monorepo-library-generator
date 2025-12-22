@@ -9,11 +9,11 @@
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import contractGenerator from '../contract/contract';
-import dataAccessGenerator from '../data-access/data-access';
-import featureGenerator from '../feature/feature';
-import infraGenerator from '../infra/infra';
-import providerGenerator from '../provider/provider';
+import { contractGenerator } from '../contract/contract';
+import { dataAccessGenerator } from '../data-access/data-access';
+import { featureGenerator } from '../feature/feature';
+import { infraGenerator } from '../infra/infra';
+import { providerGenerator } from '../provider/provider';
 import { compileTreeFiles } from './utils/compiler';
 
 // ============================================================================
@@ -31,9 +31,6 @@ describe('Contract Generator - Compilation', () => {
     await contractGenerator(tree, { name: 'product' });
 
     const result = compileTreeFiles(tree, 'libs/contract/product/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -42,9 +39,6 @@ describe('Contract Generator - Compilation', () => {
     await contractGenerator(tree, { name: 'order', includeCQRS: true });
 
     const result = compileTreeFiles(tree, 'libs/contract/order/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -52,9 +46,6 @@ describe('Contract Generator - Compilation', () => {
     await contractGenerator(tree, { name: 'user', includeRPC: true });
 
     const result = compileTreeFiles(tree, 'libs/contract/user/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -66,9 +57,6 @@ describe('Contract Generator - Compilation', () => {
     });
 
     const result = compileTreeFiles(tree, 'libs/contract/payment/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -88,9 +76,6 @@ describe('Data Access Generator - Compilation', () => {
     await dataAccessGenerator(tree, { name: 'product' });
 
     const result = compileTreeFiles(tree, 'libs/data-access/product/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -99,9 +84,6 @@ describe('Data Access Generator - Compilation', () => {
     await dataAccessGenerator(tree, { name: 'order', includeCQRS: true });
 
     const result = compileTreeFiles(tree, 'libs/data-access/order/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -112,9 +94,6 @@ describe('Data Access Generator - Compilation', () => {
     });
 
     const result = compileTreeFiles(tree, 'libs/data-access/user/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -134,9 +113,6 @@ describe('Feature Generator - Compilation', () => {
     await featureGenerator(tree, { name: 'product' });
 
     const result = compileTreeFiles(tree, 'libs/feature/product/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -148,9 +124,6 @@ describe('Feature Generator - Compilation', () => {
     });
 
     const result = compileTreeFiles(tree, 'libs/feature/order/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -170,9 +143,6 @@ describe('Infrastructure Generator - Compilation', () => {
     await infraGenerator(tree, { name: 'cache' });
 
     const result = compileTreeFiles(tree, 'libs/infra/cache/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -181,9 +151,6 @@ describe('Infrastructure Generator - Compilation', () => {
     await infraGenerator(tree, { name: 'storage', includeClientServer: true });
 
     const result = compileTreeFiles(tree, 'libs/infra/storage/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -191,9 +158,6 @@ describe('Infrastructure Generator - Compilation', () => {
     await infraGenerator(tree, { name: 'config', includeEdge: true });
 
     const result = compileTreeFiles(tree, 'libs/infra/config/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -205,9 +169,6 @@ describe('Infrastructure Generator - Compilation', () => {
     });
 
     const result = compileTreeFiles(tree, 'libs/infra/metrics/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -227,9 +188,6 @@ describe('Provider Generator - Compilation', () => {
     await providerGenerator(tree, { name: 'stripe', externalService: 'Stripe API' });
 
     const result = compileTreeFiles(tree, 'libs/provider/stripe/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -242,9 +200,6 @@ describe('Provider Generator - Compilation', () => {
     });
 
     const result = compileTreeFiles(tree, 'libs/provider/twilio/src');
-    if (!result.success) {
-      console.error('Compilation errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });

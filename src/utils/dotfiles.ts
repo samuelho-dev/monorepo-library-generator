@@ -19,12 +19,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Data, Effect, Either } from 'effect';
 import { type FileSystemAdapter, FileSystemError } from './filesystem';
-import type {
-  FileSplitConfig,
-  LibraryType,
-  RepositoryOperationType,
-  ServiceOperationType,
-} from './types';
+import type { FileSplitConfig, LibraryType, RepositoryOperationType } from './types';
 
 // ============================================================================
 // JSON Type Definitions (for merge operations)
@@ -264,8 +259,8 @@ export const deepMergeJson = (user: JsonValue, effect: JsonValue) => {
     return effect;
   }
 
-  // Check for JsonObject
-  const isJsonObject = (val: JsonValue) => {
+  // Check for JsonObject - type predicate for proper type narrowing
+  const isJsonObject = (val: JsonValue): val is JsonObject => {
     return typeof val === 'object' && val !== null && !Array.isArray(val);
   };
 
@@ -273,9 +268,9 @@ export const deepMergeJson = (user: JsonValue, effect: JsonValue) => {
     return effect;
   }
 
-  // Objects: Deep merge
-  const userObj = (isJsonObject(user) ? user : {}) as Record<string, JsonValue>;
-  const effectObj = effect as Record<string, JsonValue>;
+  // Objects: Deep merge - type narrowing done by isJsonObject predicate
+  const userObj = isJsonObject(user) ? user : {};
+  const effectObj = effect;
   const result: Record<string, JsonValue> = {};
 
   // Copy user object properties
@@ -359,7 +354,7 @@ export const mergeJsonConfig = (userContent: string, effectContent: string) => {
   }
 
   const merged = deepMergeJson(userParsed.right, effectParsed.right);
-  return Either.right(JSON.stringify(merged, null, 2) + '\n');
+  return Either.right(`${JSON.stringify(merged, null, 2)}\n`);
 };
 
 /**
@@ -390,7 +385,7 @@ export const mergeVscodeExtensions = (userContent: string, effectContent: string
     : [];
 
   const merged = Array.from(new Set([...userRecs, ...effectRecs]));
-  return Either.right(JSON.stringify({ recommendations: merged }, null, 2) + '\n');
+  return Either.right(`${JSON.stringify({ recommendations: merged }, null, 2)}\n`);
 };
 
 /**
@@ -690,7 +685,7 @@ export const copyAllDotfiles = (fs: FileSystemAdapter, options: DotfileOptions) 
       if (options.include && !options.include.includes(dotfile.name)) {
         return false;
       }
-      if (options.exclude && options.exclude.includes(dotfile.name)) {
+      if (options.exclude?.includes(dotfile.name)) {
         return false;
       }
       return true;

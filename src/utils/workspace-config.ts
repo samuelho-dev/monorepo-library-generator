@@ -14,7 +14,7 @@ import * as path from 'node:path';
  * Detect workspace scope by reading package.json from workspace root.
  * Traverses up from current directory to find workspace root.
  */
-function detectScope(): string {
+function detectScope() {
   const DEFAULT_SCOPE = '@myorg';
 
   try {
@@ -37,7 +37,7 @@ function detectScope(): string {
         const hasWorkspaces = Boolean(pkg.workspaces);
 
         if (nxExists || pnpmExists || lernaExists || turboExists || hasWorkspaces) {
-          if (pkg.name && pkg.name.startsWith('@')) {
+          if (pkg.name?.startsWith('@')) {
             return pkg.name.split('/')[0] || DEFAULT_SCOPE;
           }
           return DEFAULT_SCOPE;
@@ -56,8 +56,8 @@ function detectScope(): string {
   return DEFAULT_SCOPE;
 }
 
-// Cache the detected scope (computed once on module load)
-const detectedScope = detectScope();
+// Scope is now detected dynamically on each call to support running CLI
+// from different workspaces without stale cached values
 
 /**
  * Workspace-wide configuration constants
@@ -69,7 +69,8 @@ export const WORKSPACE_CONFIG = {
    * Dynamically detected from workspace root package.json
    */
   get scope() {
-    return detectedScope;
+    // Detect scope dynamically on each access to support different workspaces
+    return detectScope();
   },
 
   /**

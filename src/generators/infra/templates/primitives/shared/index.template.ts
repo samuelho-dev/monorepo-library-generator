@@ -69,7 +69,7 @@ export {
 /**
  * Get service-specific exports based on concern type
  */
-function getServiceExports(className: string, concern: string): string {
+function getServiceExports(className: string, concern: string) {
   switch (concern) {
     case 'cache':
       return `  type CacheHandle,
@@ -105,7 +105,7 @@ function getServiceExports(className: string, concern: string): string {
 /**
  * Get layer export based on concern type
  */
-function getLayerExport(className: string, concern: string): string | null {
+function getLayerExport(className: string, concern: string) {
   switch (concern) {
     case 'cache':
       return `// Redis-backed distributed layer

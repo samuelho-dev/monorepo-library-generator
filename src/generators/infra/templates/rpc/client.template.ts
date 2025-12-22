@@ -25,10 +25,9 @@ export function generateRpcClientFile(options: InfraTemplateOptions) {
     description: `RPC client for calling remote services.
 
 Provides:
-- Type-safe RPC calls from any RpcGroup
+- Type-safe RPC calls
 - Automatic retry with exponential backoff
 - Request/response interceptors
-- Streaming support
 
 Works in browser and Node.js environments.`,
     module: `${scope}/infra-${fileName}/client`,
@@ -36,8 +35,7 @@ Works in browser and Node.js environments.`,
   });
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Duration', 'Schedule', 'Option'] },
-    { from: '@effect/rpc', imports: ['RpcClient', 'RpcResolver'] },
+    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Duration', 'Option'] },
     { from: '@effect/platform', imports: ['HttpClient', 'HttpClientRequest'] },
     { from: './errors', imports: ['RpcInfraError'] },
   ]);
@@ -119,13 +117,12 @@ export class RpcClientConfigTag extends Context.Tag("RpcClientConfig")<
  * @example
  * \`\`\`typescript
  * import { ${className}Client } from "${scope}/infra-${fileName}/client";
- * import { UserRpcs } from "${scope}/feature-user/rpc";
  *
  * const program = Effect.gen(function* () {
  *   const client = yield* ${className}Client;
  *
  *   // Call an RPC operation
- *   const user = yield* client.call(UserRpcs, "getUser", { id: "123" });
+ *   const user = yield* client.call("getUser", { id: "123" });
  * });
  * \`\`\`
  */
@@ -135,21 +132,14 @@ export class ${className}Client extends Context.Tag(
   ${className}Client,
   {
     /**
-     * Call an RPC operation
+     * Call an RPC operation by name
      *
-     * @param group - RPC group class
      * @param operation - Operation name
      * @param payload - Request payload
      */
-    readonly call: <
-      G extends { readonly _tag: string },
-      Op extends string,
-      P,
-      R
-    >(
-      group: { new(): G; readonly _tag: string },
-      operation: Op,
-      payload: P
+    readonly call: <R>(
+      operation: string,
+      payload: unknown
     ) => Effect.Effect<R, RpcInfraError>
 
     /**
@@ -164,11 +154,6 @@ export class ${className}Client extends Context.Tag(
         headers?: Record<string, string>
       }
     ) => Effect.Effect<R, RpcInfraError>
-
-    /**
-     * Get underlying HTTP client for advanced use cases
-     */
-    readonly getHttpClient: () => Effect.Effect<typeof HttpClient.HttpClient.Service>
 
     /**
      * Health check
@@ -195,18 +180,8 @@ export class ${className}Client extends Context.Tag(
         ...config.headers
       }
 
-      // Retry schedule
-      const retrySchedule = config.retry
-        ? Schedule.exponential(
-            Duration.decode(config.retry.initialDelay ?? "100 millis"),
-            2
-          ).pipe(
-            Schedule.whileOutput(Duration.lessThanOrEqualTo(
-              Duration.decode(config.retry.maxDelay ?? "5 seconds")
-            )),
-            Schedule.upTo(config.retry.maxAttempts ?? 3)
-          )
-        : Schedule.never
+      // Retry configuration
+      const maxRetries = config.retry?.maxAttempts ?? 0
 
       const makeRequest = <R>(
         operation: string,
@@ -215,11 +190,11 @@ export class ${className}Client extends Context.Tag(
       ): Effect.Effect<R, RpcInfraError> =>
         Effect.gen(function* () {
           // Get auth token if provider exists
-          const authHeader: Record<string, string> = {}
+          const authHeader: { Authorization?: string } = {}
           if (config.getAuthToken) {
             const token = yield* config.getAuthToken()
             if (Option.isSome(token)) {
-              authHeader["Authorization"] = \`Bearer \${token.value}\`
+              authHeader.Authorization = \`Bearer \${token.value}\`
             }
           }
 
@@ -230,23 +205,34 @@ export class ${className}Client extends Context.Tag(
               ...authHeader,
               ...customHeaders
             }),
-            HttpClientRequest.jsonBody({
+            HttpClientRequest.bodyJson({
               operation,
               payload
             })
           )
 
-          // Execute with timeout and retry
-          const response = yield* httpClient.execute(request).pipe(
-            Effect.timeout(Duration.decode(config.timeout ?? "30 seconds")),
-            Effect.retry(retrySchedule),
+          // Execute with timeout
+          const response = yield* Effect.flatMap(
+            request,
+            (req) => httpClient.execute(req)
+          ).pipe(
+            Effect.timeoutFail({
+              duration: Duration.decode(config.timeout ?? "30 seconds"),
+              onTimeout: () => new RpcInfraError({
+                message: "Request timeout",
+                code: "TIMEOUT"
+              })
+            }),
+            maxRetries > 0 ? Effect.retry({ times: maxRetries }) : (e) => e,
             Effect.catchAll((error) =>
-              Effect.fail(
-                new RpcInfraError({
-                  message: \`RPC call failed: \${error}\`,
-                  code: "NETWORK_ERROR"
-                })
-              )
+              error instanceof RpcInfraError
+                ? Effect.fail(error)
+                : Effect.fail(
+                    new RpcInfraError({
+                      message: \`RPC call failed: \${error}\`,
+                      code: "NETWORK_ERROR"
+                    })
+                  )
             )
           )
 
@@ -273,10 +259,11 @@ export class ${className}Client extends Context.Tag(
 
           // Check for RPC-level error
           if (body && typeof body === "object" && "error" in body) {
+            const errorBody = body as { error?: { message?: string; code?: string } }
             return yield* Effect.fail(
               new RpcInfraError({
-                message: (body as any).error.message ?? "Unknown RPC error",
-                code: (body as any).error.code ?? "RPC_ERROR"
+                message: errorBody.error?.message ?? "Unknown RPC error",
+                code: errorBody.error?.code ?? "RPC_ERROR"
               })
             )
           }
@@ -285,11 +272,8 @@ export class ${className}Client extends Context.Tag(
         })
 
       return {
-        call: <G, Op extends string, P, R>(
-          group: { new(): G; readonly _tag: string },
-          operation: Op,
-          payload: P
-        ) => makeRequest<R>(\`\${group._tag}.\${operation}\`, payload),
+        call: <R>(operation: string, payload: unknown) =>
+          makeRequest<R>(operation, payload),
 
         callWithOptions: <R>(
           operation: string,
@@ -299,15 +283,21 @@ export class ${className}Client extends Context.Tag(
             skipRetry?: boolean
             headers?: Record<string, string>
           }
-        ) =>
-          makeRequest<R>(operation, payload, options?.headers).pipe(
-            options?.skipRetry ? Effect.retry(Schedule.never) : Effect.identity,
-            options?.timeout
-              ? Effect.timeout(Duration.decode(options.timeout))
-              : Effect.identity
-          ),
-
-        getHttpClient: () => Effect.succeed(httpClient),
+        ) => {
+          const effect = makeRequest<R>(operation, payload, options?.headers)
+          if (options?.timeout) {
+            return effect.pipe(
+              Effect.timeoutFail({
+                duration: Duration.decode(options.timeout),
+                onTimeout: () => new RpcInfraError({
+                  message: "Request timeout",
+                  code: "TIMEOUT"
+                })
+              })
+            )
+          }
+          return effect
+        },
 
         healthCheck: () =>
           makeRequest<{ status: string }>("_health", {}).pipe(
@@ -329,19 +319,14 @@ export class ${className}Client extends Context.Tag(
     mockResponses: Record<string, unknown> = {}
   ) =>
     Layer.succeed(${className}Client, {
-      call: <G, Op extends string, P, R>(
-        group: { new(): G; readonly _tag: string },
-        operation: Op,
-        _payload: P
-      ) => {
-        const key = \`\${group._tag}.\${operation}\`
-        const response = mockResponses[key]
+      call: <R>(operation: string, _payload: unknown) => {
+        const response = mockResponses[operation]
         if (response !== undefined) {
           return Effect.succeed(response as R)
         }
         return Effect.fail(
           new RpcInfraError({
-            message: \`No mock for \${key}\`,
+            message: \`No mock for \${operation}\`,
             code: "NO_MOCK"
           })
         )
@@ -359,9 +344,6 @@ export class ${className}Client extends Context.Tag(
           })
         )
       },
-
-      getHttpClient: () =>
-        Effect.die(new Error("HttpClient not available in test mode")),
 
       healthCheck: () => Effect.succeed(true)
     })
@@ -387,7 +369,7 @@ export class ${className}Client extends Context.Tag(
  *
  * const program = Effect.gen(function* () {
  *   const client = yield* ${className}Client;
- *   return yield* client.call(UserRpcs, "getUser", { id: "123" });
+ *   return yield* client.call("getUser", { id: "123" });
  * }).pipe(Effect.provide(clientLayer));
  * \`\`\`
  */
@@ -396,38 +378,6 @@ export const createRpcClientLayer = (config: RpcClientConfig) =>
     ${className}Client.Http,
     Layer.succeed(RpcClientConfigTag, config)
   )
-`);
-
-  builder.addSectionComment('React Hook (Client-Side)');
-
-  builder.addRaw(`/**
- * React hook for RPC calls
- *
- * Note: Requires React 18+ and a React-Effect bridge.
- *
- * @example
- * \`\`\`typescript
- * // In a React component
- * const { data, error, loading, execute } = useRpc(
- *   UserRpcs,
- *   "getUser",
- *   { id: "123" }
- * );
- *
- * // Or with manual trigger
- * const { execute } = useRpc(UserRpcs, "createUser");
- * const handleSubmit = () => execute({ name: "John" });
- * \`\`\`
- */
-// export const useRpc = <G, Op extends string, P, R>(
-//   group: { new(): G; readonly _tag: string },
-//   operation: Op,
-//   payload?: P,
-//   options?: { immediate?: boolean }
-// ) => {
-//   // Implementation would use React.useState, React.useEffect
-//   // and Effect.runPromise with the client
-// }
 `);
 
   return builder.toString();

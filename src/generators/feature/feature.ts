@@ -50,7 +50,7 @@ const featureExecutor = createExecutor<NxFeatureInput, FeatureCoreOptions>(
   }),
 );
 
-export default async function featureGenerator(tree: Tree, schema: FeatureGeneratorSchema) {
+export async function featureGenerator(tree: Tree, schema: FeatureGeneratorSchema) {
   if (!schema.name || schema.name.trim() === '') {
     throw new Error('Feature name is required and cannot be empty');
   }

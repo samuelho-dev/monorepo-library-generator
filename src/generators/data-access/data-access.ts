@@ -35,7 +35,7 @@ const dataAccessExecutor = createExecutor<NxDataAccessInput, DataAccessCoreOptio
   }),
 );
 
-export default async function dataAccessGenerator(tree: Tree, schema: DataAccessGeneratorSchema) {
+export async function dataAccessGenerator(tree: Tree, schema: DataAccessGeneratorSchema) {
   if (!schema.name || schema.name.trim() === '') {
     throw new Error('Data-access name is required and cannot be empty');
   }

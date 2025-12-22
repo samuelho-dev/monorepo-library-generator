@@ -45,6 +45,7 @@ Protected vs Public:
 
   builder.addImports([
     { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Option', 'Schema'] },
+    { from: '@effect/platform', imports: ['Headers'] },
     { from: '@effect/rpc', imports: ['RpcMiddleware'] },
   ]);
 
@@ -221,14 +222,60 @@ export const AuthMiddlewareLive = Layer.effect(
 )
 
 /**
- * Extract bearer token from headers
+ * Authentication method used
  */
-const extractBearerToken = (headers: Headers): Option.Option<string> => {
-  const auth = headers.get("authorization")
-  if (auth?.startsWith("Bearer ")) {
-    return Option.some(auth.slice(7))
+export type AuthMethod = "bearer" | "api-key" | "service-role"
+
+/**
+ * Extended user data with auth method
+ */
+export interface AuthenticatedUserData extends CurrentUserData {
+  readonly authMethod: AuthMethod
+}
+
+/**
+ * AuthMethod Context Tag
+ *
+ * Indicates how the user was authenticated.
+ */
+export class AuthMethodContext extends Context.Tag("@${fileName}/AuthMethod")<
+  AuthMethodContext,
+  AuthMethod
+>() {}
+
+/**
+ * Extract authentication from headers (priority: API key > Bearer token)
+ *
+ * Uses @effect/platform Headers.get() for type-safe header access.
+ */
+const extractAuth = (headers: Headers.Headers): Option.Option<{ type: AuthMethod; token: string }> => {
+  // Priority 1: API Key (x-api-key header)
+  const apiKey = Headers.get(headers, "x-api-key")
+  if (Option.isSome(apiKey)) {
+    return Option.some({ type: "api-key" as const, token: apiKey.value })
   }
+
+  // Priority 2: Bearer Token
+  const auth = Headers.get(headers, "authorization")
+  if (Option.isSome(auth) && auth.value.startsWith("Bearer ")) {
+    return Option.some({ type: "bearer" as const, token: auth.value.slice(7) })
+  }
+
+  // Priority 3: Service Role (internal service-to-service)
+  const serviceRole = Headers.get(headers, "x-service-role")
+  if (Option.isSome(serviceRole)) {
+    return Option.some({ type: "service-role" as const, token: serviceRole.value })
+  }
+
   return Option.none()
+}
+
+/**
+ * Extract bearer token from headers (legacy helper)
+ */
+const extractBearerToken = (headers: Headers.Headers): Option.Option<string> => {
+  const auth = extractAuth(headers)
+  return Option.map(auth, (a) => a.token)
 }
 `);
 
@@ -311,10 +358,10 @@ export const RequestMetaMiddlewareLive = Layer.succeed(
   RequestMetaMiddleware,
   ({ headers }) =>
     Effect.succeed({
-      requestId: headers.get("x-request-id") ?? crypto.randomUUID(),
+      requestId: headers["x-request-id"] ?? crypto.randomUUID(),
       timestamp: new Date(),
-      source: headers.get("x-forwarded-for") ?? "unknown",
-      headers: Object.fromEntries(headers.entries())
+      source: headers["x-forwarded-for"] ?? "unknown",
+      headers: headers as Record<string, string>
     } satisfies RequestMetadata)
 )
 `);

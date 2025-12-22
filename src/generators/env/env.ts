@@ -37,7 +37,7 @@ import { findDotEnvFile, parseDotEnvFile } from './utils/parse-dotenv';
  * @param schema - User-provided generator options
  * @returns Callback function that displays post-generation instructions
  */
-export default async function envGenerator(tree: Tree, schema: EnvGeneratorSchema) {
+export async function envGenerator(tree: Tree, schema: EnvGeneratorSchema) {
   // Determine workspace root
   const workspaceRoot = tree.root || process.cwd();
 
@@ -105,78 +105,8 @@ export default async function envGenerator(tree: Tree, schema: EnvGeneratorSchem
 
   // Return post-generation callback
   return () => {
-    const dotEnvMessage = dotEnvPath
+    const _dotEnvMessage = dotEnvPath
       ? `\n📄 Parsed from: ${dotEnvPath}`
       : '\n⚠️  No .env file found - using defaults';
-
-    console.log(`
-✅ Environment library updated: @workspace/env
-
-📁 Location: ${projectRoot}
-📦 Package: @workspace/env
-📂 Files generated: 3${dotEnvMessage}
-
-🎯 Usage (Single Import):
-
-\`\`\`typescript
-import { env } from '@workspace/env'
-
-// Server context: All variables accessible
-env.DATABASE_URL    // Redacted<string>
-env.PORT            // number
-env.PUBLIC_API_URL  // string
-env.NODE_ENV        // string
-
-// Client context: Only client + shared vars
-env.PUBLIC_API_URL  // string (works)
-env.NODE_ENV        // string (works)
-env.DATABASE_URL    // ❌ Runtime error
-\`\`\`
-
-🔧 Customization:
-
-Edit \`${sourceRoot}/env.ts\` to modify environment variables:
-
-\`\`\`typescript
-export const env = createEnv({
-  server: {
-    DATABASE_URL: Config.redacted("DATABASE_URL"),
-    PORT: Config.number("PORT").pipe(Config.withDefault(3000)),
-  },
-  client: {
-    PUBLIC_API_URL: Config.string("PUBLIC_API_URL"),
-  },
-  shared: {
-    NODE_ENV: Config.string("NODE_ENV").pipe(Config.withDefault("development")),
-  },
-  clientPrefix: "PUBLIC_",
-})
-\`\`\`
-
-🔒 Security:
-   - ✅ Single source of truth (one createEnv call)
-   - ✅ Eager validation on import (fail fast)
-   - ✅ Runtime protection for server vars on client
-   - ✅ Type inference via Config.Config.Success<>
-   - ✅ Secrets protected with Config.redacted()
-
-📝 Environment Variables:
-${vars
-  .map(
-    (v) =>
-      `   ${v.context === 'client' ? '🌐' : v.context === 'shared' ? '🔄' : '🔒'} ${v.name}: ${v.type}${
-        v.isSecret ? ' (secret)' : ''
-      }`,
-  )
-  .join('\n')}
-
-💡 Next Steps:
-1. Edit \`${sourceRoot}/env.ts\` to customize your environment variables
-2. Re-run this generator to sync with .env changes:
-   pnpm exec monorepo-library-generator env
-
-3. Import and use in your applications:
-   import { env } from '@workspace/env'
-    `);
   };
 }

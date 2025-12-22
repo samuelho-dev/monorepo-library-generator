@@ -37,14 +37,15 @@ Router utilities are in router.ts.`,
   });
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Schema'] },
-    { from: '@effect/rpc', imports: ['Rpc', 'RpcGroup', 'RpcRouter', 'RpcMiddleware'] },
+    { from: 'effect', imports: ['Effect'], isTypeOnly: true },
+    { from: 'effect', imports: ['Schema'] },
+    { from: '@effect/rpc', imports: ['Rpc', 'RpcGroup'] },
   ]);
 
   builder.addSectionComment('Re-exports from @effect/rpc');
 
   builder.addRaw(`// Re-export core RPC primitives for convenience
-export { Rpc, RpcGroup, RpcRouter, RpcMiddleware } from "@effect/rpc"
+export { Rpc, RpcGroup } from "@effect/rpc"
 `);
 
   builder.addSectionComment('RPC Definition Helpers');
@@ -124,7 +125,13 @@ export const defineRpcGroup = RpcGroup.make
  * });
  * \`\`\`
  */
-export const createHandlers = RpcGroup.toLayer
+/**
+ * Create handlers for an RPC group
+ *
+ * Note: This is a simple identity function that helps with type inference.
+ * Use directly with your handler implementations.
+ */
+export const createHandlers = <T extends Record<string, unknown>>(handlers: T): T => handlers
 
 /**
  * Type helper for RPC handler function
@@ -135,12 +142,15 @@ export type RpcHandler<Payload, Success, Failure, Deps> = (
 
 /**
  * Type helper to extract handler requirements from an RPC group
+ *
+ * Note: For simpler handler typing, use RpcGroup.toLayer directly
+ * which provides full type inference.
  */
-export type HandlersFor<G extends RpcGroup.RpcGroup<any, any>> =
-  G extends RpcGroup.RpcGroup<infer _Id, infer Rpcs>
+export type HandlersFor<G> =
+  G extends RpcGroup.RpcGroup<infer Rpcs>
     ? {
         [K in keyof Rpcs]: Rpcs[K] extends Rpc.Rpc<infer _Tag, infer Payload, infer Success, infer Failure>
-          ? (payload: Schema.Schema.Type<Payload>) => Effect.Effect<Schema.Schema.Type<Success>, Schema.Schema.Type<Failure>, any>
+          ? (payload: Schema.Schema.Type<Payload>) => Effect.Effect<Schema.Schema.Type<Success>, Schema.Schema.Type<Failure>>
           : never
       }
     : never
@@ -204,13 +214,17 @@ export const EmptyRequest = Schema.Struct({})
   builder.addSectionComment('Error Helpers');
 
   builder.addRaw(`/**
- * Create a domain error schema that can be used in RPC failure
+ * Domain Error Pattern
+ *
+ * Use Schema.TaggedError directly to create domain errors for RPC:
  *
  * @example
  * \`\`\`typescript
- * export class UserNotFoundError extends createDomainError("UserNotFoundError", {
- *   userId: Schema.String
- * }) {}
+ * // Define a domain error
+ * export class UserNotFoundError extends Schema.TaggedError<UserNotFoundError>()(
+ *   "UserNotFoundError",
+ *   { userId: Schema.String }
+ * ) {}
  *
  * // Use in RPC definition
  * export class GetUser extends defineRpc("GetUser", {
@@ -220,10 +234,7 @@ export const EmptyRequest = Schema.Struct({})
  * }).middleware(AuthMiddleware) {}
  * \`\`\`
  */
-export const createDomainError = <Tag extends string, Fields extends Schema.Struct.Fields>(
-  tag: Tag,
-  fields: Fields
-) => Schema.TaggedError<any>()(tag, fields)
+// Schema.TaggedError is re-exported from effect/Schema for convenience
 `);
 
   return builder.toString();

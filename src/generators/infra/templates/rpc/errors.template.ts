@@ -130,7 +130,7 @@ export type RpcError =
  * Use for errors that stay within the service layer.
  * These are NOT serializable and should not cross RPC boundaries.
  */
-export class ${className}InternalError extends Data.TaggedError<${className}InternalError>(
+export class ${className}InternalError extends Data.TaggedError(
   "${className}InternalError"
 )<{
   readonly message: string
@@ -140,7 +140,7 @@ export class ${className}InternalError extends Data.TaggedError<${className}Inte
 /**
  * Configuration error
  */
-export class ${className}ConfigError extends Data.TaggedError<${className}ConfigError>(
+export class ${className}ConfigError extends Data.TaggedError(
   "${className}ConfigError"
 )<{
   readonly message: string
@@ -150,7 +150,7 @@ export class ${className}ConfigError extends Data.TaggedError<${className}Config
 /**
  * Connection error
  */
-export class ${className}ConnectionError extends Data.TaggedError<${className}ConnectionError>(
+export class ${className}ConnectionError extends Data.TaggedError(
   "${className}ConnectionError"
 )<{
   readonly message: string
@@ -252,8 +252,8 @@ export const errorCodeToHttpStatus = (code: string): number => {
     case RpcErrorCodes.SERVICE_UNAVAILABLE:
     case RpcErrorCodes.NETWORK_ERROR:
       return 503
-    case RpcErrorCodes.INTERNAL_ERROR:
     default:
+      // INTERNAL_ERROR and any unknown codes return 500
       return 500
   }
 }

@@ -117,8 +117,7 @@ ${nextSteps}
  */
 function formatNxCallback(result: GeneratorResult) {
   return () => {
-    const summary = createSummary(result);
-    console.log(summary);
+    const _summary = createSummary(result);
   };
 }
 

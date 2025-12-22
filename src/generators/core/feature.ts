@@ -16,13 +16,10 @@
  */
 
 import { Effect } from 'effect';
-import type { FileSystemAdapter } from '../../utils/filesystem';
 import { computePlatformConfiguration, type PlatformType } from '../../utils/build';
+import type { FileSystemAdapter } from '../../utils/filesystem';
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates';
 import type { FeatureTemplateOptions } from '../../utils/types';
-import {
-  generateTypesOnlyFile,
-  type TypesOnlyExportOptions,
-} from '../../utils/templates';
 import {
   generateAtomsFile,
   generateAtomsIndexFile,
@@ -396,13 +393,13 @@ const server = ${templateOptions.fileName}Handlers.pipe(
         // Track generated sub-service files
         const servicesPath = `${serverPath}/services`;
         filesGenerated.push(`${servicesPath}/index.ts`);
-        subServicesList.forEach((serviceName) => {
+        for (const serviceName of subServicesList) {
           filesGenerated.push(`${servicesPath}/${serviceName}/index.ts`);
           filesGenerated.push(`${servicesPath}/${serviceName}/service.ts`);
           filesGenerated.push(`${servicesPath}/${serviceName}/layers.ts`);
           filesGenerated.push(`${servicesPath}/${serviceName}/errors.ts`);
           filesGenerated.push(`${servicesPath}/${serviceName}/types.ts`);
-        });
+        }
       }
     }
 

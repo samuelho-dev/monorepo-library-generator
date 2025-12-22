@@ -48,7 +48,7 @@ const infraExecutor = createExecutor<NxInfraInput, InfraCoreOptions>(
   },
 );
 
-export default async function infraGenerator(tree: Tree, schema: InfraGeneratorSchema) {
+export async function infraGenerator(tree: Tree, schema: InfraGeneratorSchema) {
   if (!schema.name || schema.name.trim() === '') {
     throw new Error('Infra name is required and cannot be empty');
   }

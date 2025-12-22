@@ -10,9 +10,9 @@
  * @module monorepo-library-generator/build
  */
 
+import { join, relative } from 'node:path';
 import type { ProjectGraph, TargetConfiguration, Tree } from '@nx/devkit';
 import { createProjectGraphAsync, readProjectConfiguration } from '@nx/devkit';
-import { join, relative } from 'path';
 import type { LibraryType, PlatformType } from './types';
 
 // Re-export types for convenience
@@ -158,7 +158,7 @@ export interface ExportConfig {
  * 2. Platform defaults apply if `includeClientServer` is undefined
  * 3. data-access and contract libraries never generate platform-specific exports
  */
-export function resolvePlatformExports(options: PlatformExportOptions): PlatformExports {
+export function resolvePlatformExports(options: PlatformExportOptions) {
   // Library types that don't support platform-specific exports
   const supportsPlatformExports =
     options.libraryType !== 'data-access' && options.libraryType !== 'contract';
@@ -187,7 +187,7 @@ export function resolvePlatformExports(options: PlatformExportOptions): Platform
 /**
  * Check if a library type supports platform-specific exports
  */
-export function hasPlatformExports(libraryType: LibraryType): boolean {
+export function hasPlatformExports(libraryType: LibraryType) {
   return libraryType !== 'data-access' && libraryType !== 'contract';
 }
 
@@ -200,7 +200,7 @@ export function computePlatformConfiguration(
     readonly defaultPlatform: PlatformType;
     readonly libraryType: LibraryType;
   },
-): PlatformConfiguration {
+) {
   const platform = input.platform ?? defaults.defaultPlatform;
 
   const { shouldGenerateClient, shouldGenerateServer } = resolvePlatformExports({
@@ -224,7 +224,7 @@ export function computePlatformConfiguration(
 /**
  * Generate additional entry points based on library type and options
  */
-function getAdditionalEntryPoints(options: BuildConfigOptions): Array<string> {
+function getAdditionalEntryPoints(options: BuildConfigOptions) {
   const {
     additionalEntryPoints = [],
     includeClientServer,
@@ -331,7 +331,7 @@ export function createTypecheckTarget(projectRoot: string) {
 /**
  * Create complete target configuration object
  */
-export function createStandardTargets(options: BuildConfigOptions): Record<string, TargetConfiguration> {
+export function createStandardTargets(options: BuildConfigOptions) {
   const targets: Record<string, TargetConfiguration> = {
     build: createBuildTarget(options),
     lint: createLintTarget(options.projectRoot),
@@ -376,7 +376,6 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
     const project = graph.nodes[projectName];
 
     if (!project) {
-      console.warn(`Project ${projectName} not found in project graph`);
       return { references: [], dependencies: [] };
     }
 
@@ -402,7 +401,6 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
 
         const depTsConfigPath = join(targetConfig.root, 'tsconfig.lib.json');
         if (!tree.exists(depTsConfigPath)) {
-          console.warn(`tsconfig.lib.json not found for ${dep.target} at ${depTsConfigPath}`);
           continue;
         }
 
@@ -416,8 +414,7 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
 
         references.push({ path: relativePath });
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.warn(`Could not read configuration for ${dep.target}: ${message}. Skipping.`);
+        const _message = error instanceof Error ? error.message : String(error);
         continue;
       }
     }
@@ -438,11 +435,8 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
       errorMessage.includes('createProjectGraphAsync') ||
       errorMessage.includes('nx.json')
     ) {
-      console.log(`NX not detected for ${projectName}. Skipping automatic project references.`);
       return { references: [], dependencies: [] };
     }
-
-    console.error(`Error computing project references for ${projectName}:`, errorMessage);
     return { references: [], dependencies: [] };
   }
 }
@@ -555,7 +549,7 @@ export function generateSpecTsConfig(options: TsConfigOptions) {
 /**
  * Get platform-specific type definitions
  */
-function getPlatformTypes(platform: PlatformType): Array<string> {
+function getPlatformTypes(platform: PlatformType) {
   switch (platform) {
     case 'node':
       return ['node'];
@@ -599,13 +593,13 @@ export async function addTsConfigFiles(tree: Tree, options: TsConfigOptions) {
   const { dependencies, references } = await computeProjectReferences(tree, projectName);
 
   const baseTsConfig = generateBaseTsConfig(options);
-  tree.write(join(projectRoot, 'tsconfig.json'), JSON.stringify(baseTsConfig, null, 2) + '\n');
+  tree.write(join(projectRoot, 'tsconfig.json'), `${JSON.stringify(baseTsConfig, null, 2)}\n`);
 
   const libTsConfig = generateLibTsConfig(options, references);
-  tree.write(join(projectRoot, 'tsconfig.lib.json'), JSON.stringify(libTsConfig, null, 2) + '\n');
+  tree.write(join(projectRoot, 'tsconfig.lib.json'), `${JSON.stringify(libTsConfig, null, 2)}\n`);
 
   const specTsConfig = generateSpecTsConfig(options);
-  tree.write(join(projectRoot, 'tsconfig.spec.json'), JSON.stringify(specTsConfig, null, 2) + '\n');
+  tree.write(join(projectRoot, 'tsconfig.spec.json'), `${JSON.stringify(specTsConfig, null, 2)}\n`);
 
   return { references, dependencies };
 }
@@ -613,7 +607,7 @@ export async function addTsConfigFiles(tree: Tree, options: TsConfigOptions) {
 /**
  * Get offset from project root to workspace root
  */
-export function getOffsetFromRoot(projectRoot: string): string {
+export function getOffsetFromRoot(projectRoot: string) {
   const depth = projectRoot.split('/').length;
   return depth === 1 ? './' : '../'.repeat(depth);
 }
@@ -625,7 +619,7 @@ export function getOffsetFromRoot(projectRoot: string): string {
 /**
  * Generate granular exports for contract libraries
  */
-export function generateContractExports(config: ExportConfig): ExportMap {
+export function generateContractExports(config: ExportConfig) {
   const exports: ExportMap = {
     '.': { import: './src/index.ts', types: './src/index.ts' },
     './types': { import: './src/types.ts', types: './src/types.ts' },
@@ -634,8 +628,14 @@ export function generateContractExports(config: ExportConfig): ExportMap {
   };
 
   if (config.hasEntities) {
-    exports['./entities'] = { import: './src/lib/entities/index.ts', types: './src/lib/entities/index.ts' };
-    exports['./entities/*'] = { import: './src/lib/entities/*.ts', types: './src/lib/entities/*.ts' };
+    exports['./entities'] = {
+      import: './src/lib/entities/index.ts',
+      types: './src/lib/entities/index.ts',
+    };
+    exports['./entities/*'] = {
+      import: './src/lib/entities/*.ts',
+      types: './src/lib/entities/*.ts',
+    };
   }
 
   exports['./events'] = { import: './src/lib/events.ts', types: './src/lib/events.ts' };
@@ -646,16 +646,28 @@ export function generateContractExports(config: ExportConfig): ExportMap {
 /**
  * Generate granular exports for data-access libraries
  */
-export function generateDataAccessExports(): ExportMap {
+export function generateDataAccessExports() {
   return {
     '.': { import: './src/index.ts', types: './src/index.ts' },
     './types': { import: './src/types.ts', types: './src/types.ts' },
-    './repository': { import: './src/lib/repository/index.ts', types: './src/lib/repository/index.ts' },
-    './repository/operations': { import: './src/lib/repository/operations/index.ts', types: './src/lib/repository/operations/index.ts' },
-    './repository/operations/*': { import: './src/lib/repository/operations/*.ts', types: './src/lib/repository/operations/*.ts' },
+    './repository': {
+      import: './src/lib/repository/index.ts',
+      types: './src/lib/repository/index.ts',
+    },
+    './repository/operations': {
+      import: './src/lib/repository/operations/index.ts',
+      types: './src/lib/repository/operations/index.ts',
+    },
+    './repository/operations/*': {
+      import: './src/lib/repository/operations/*.ts',
+      types: './src/lib/repository/operations/*.ts',
+    },
     './queries': { import: './src/lib/queries/index.ts', types: './src/lib/queries/index.ts' },
     './queries/*': { import: './src/lib/queries/*.ts', types: './src/lib/queries/*.ts' },
-    './validation': { import: './src/lib/validation/index.ts', types: './src/lib/validation/index.ts' },
+    './validation': {
+      import: './src/lib/validation/index.ts',
+      types: './src/lib/validation/index.ts',
+    },
     './validation/*': { import: './src/lib/validation/*.ts', types: './src/lib/validation/*.ts' },
     './layers': { import: './src/lib/layers/index.ts', types: './src/lib/layers/index.ts' },
     './layers/*': { import: './src/lib/layers/*.ts', types: './src/lib/layers/*.ts' },
@@ -665,15 +677,21 @@ export function generateDataAccessExports(): ExportMap {
 /**
  * Generate granular exports for feature libraries
  */
-export function generateFeatureExports(config: ExportConfig): ExportMap {
+export function generateFeatureExports(config: ExportConfig) {
   const exports: ExportMap = {
     '.': { import: './src/index.ts', types: './src/index.ts' },
     './types': { import: './src/types.ts', types: './src/types.ts' },
   };
 
   if (config.includeRPC) {
-    exports['./rpc/handlers'] = { import: './src/lib/rpc/handlers/index.ts', types: './src/lib/rpc/handlers/index.ts' };
-    exports['./rpc/handlers/*'] = { import: './src/lib/rpc/handlers/*.ts', types: './src/lib/rpc/handlers/*.ts' };
+    exports['./rpc/handlers'] = {
+      import: './src/lib/rpc/handlers/index.ts',
+      types: './src/lib/rpc/handlers/index.ts',
+    };
+    exports['./rpc/handlers/*'] = {
+      import: './src/lib/rpc/handlers/*.ts',
+      types: './src/lib/rpc/handlers/*.ts',
+    };
   }
 
   return exports;
@@ -682,7 +700,7 @@ export function generateFeatureExports(config: ExportConfig): ExportMap {
 /**
  * Generate granular exports for infra libraries
  */
-export function generateInfraExports(): ExportMap {
+export function generateInfraExports() {
   return {
     '.': { import: './src/index.ts', types: './src/index.ts' },
     './types': { import: './src/types.ts', types: './src/types.ts' },
@@ -695,12 +713,15 @@ export function generateInfraExports(): ExportMap {
 /**
  * Generate granular exports for provider libraries
  */
-export function generateProviderExports(): ExportMap {
+export function generateProviderExports() {
   return {
     '.': { import: './src/index.ts', types: './src/index.ts' },
     './types': { import: './src/types.ts', types: './src/types.ts' },
     './service': { import: './src/lib/service/index.ts', types: './src/lib/service/index.ts' },
-    './service/*': { import: './src/lib/service/operations/*.ts', types: './src/lib/service/operations/*.ts' },
+    './service/*': {
+      import: './src/lib/service/operations/*.ts',
+      types: './src/lib/service/operations/*.ts',
+    },
     './errors': { import: './src/lib/errors.ts', types: './src/lib/errors.ts' },
     './validation': { import: './src/lib/validation.ts', types: './src/lib/validation.ts' },
   };
@@ -709,7 +730,7 @@ export function generateProviderExports(): ExportMap {
 /**
  * Generate granular exports based on library type
  */
-export function generateGranularExports(config: ExportConfig): ExportMap {
+export function generateGranularExports(config: ExportConfig) {
   switch (config.libraryType) {
     case 'contract':
       return generateContractExports(config);
@@ -729,14 +750,14 @@ export function generateGranularExports(config: ExportConfig): ExportMap {
 /**
  * Merge exports with granular exports, prioritizing granular exports
  */
-export function mergeExports(baseExports: ExportMap, granularExports: ExportMap): ExportMap {
+export function mergeExports(baseExports: ExportMap, granularExports: ExportMap) {
   return { ...baseExports, ...granularExports };
 }
 
 /**
  * Validate export paths exist
  */
-export function validateExportPaths(exports: ExportMap): Array<string> {
+export function validateExportPaths(exports: ExportMap) {
   const errors: Array<string> = [];
 
   for (const [key, value] of Object.entries(exports)) {
@@ -754,7 +775,7 @@ export function validateExportPaths(exports: ExportMap): Array<string> {
 /**
  * Get export path for specific import
  */
-export function getExportPathForImport(exports: ExportMap, importPath: string): string | undefined {
+export function getExportPathForImport(exports: ExportMap, importPath: string) {
   if (exports[importPath]) {
     return importPath;
   }
@@ -762,7 +783,7 @@ export function getExportPathForImport(exports: ExportMap, importPath: string): 
   for (const key of Object.keys(exports)) {
     if (key.endsWith('/*')) {
       const basePath = key.slice(0, -2);
-      if (importPath.startsWith(basePath + '/')) {
+      if (importPath.startsWith(`${basePath}/`)) {
         return key;
       }
     }
@@ -774,7 +795,7 @@ export function getExportPathForImport(exports: ExportMap, importPath: string): 
 /**
  * Generate import example documentation for README
  */
-export function generateImportExamples(config: ExportConfig): string {
+export function generateImportExamples(config: ExportConfig) {
   const examples: Array<string> = [];
 
   switch (config.libraryType) {
@@ -803,7 +824,11 @@ export function generateImportExamples(config: ExportConfig): string {
       );
       break;
     case 'feature':
-      if (config.platform === 'browser' || config.platform === 'universal' || config.includeClientServer) {
+      if (
+        config.platform === 'browser' ||
+        config.platform === 'universal' ||
+        config.includeClientServer
+      ) {
         examples.push(
           '// Granular hook import',
           "import { useUser } from '@scope/feature-user/client/hooks/use-user'",
@@ -812,7 +837,11 @@ export function generateImportExamples(config: ExportConfig): string {
           "import type { UserData } from '@scope/feature-user/types'",
         );
       }
-      if (config.platform === 'node' || config.platform === 'universal' || config.includeClientServer) {
+      if (
+        config.platform === 'node' ||
+        config.platform === 'universal' ||
+        config.includeClientServer
+      ) {
         examples.push(
           '// Granular service operation',
           "import { createUser } from '@scope/feature-user/server/service/create-user'",

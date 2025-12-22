@@ -90,6 +90,11 @@ const BUILTIN_PROVIDERS: ReadonlyArray<BuiltinProvider> = Object.freeze([
     externalService: 'Kysely',
     description: 'Kysely provider for type-safe database queries with migrations',
   }),
+  Object.freeze({
+    name: 'supabase',
+    externalService: 'Supabase',
+    description: 'Supabase provider for auth, storage, and client operations',
+  }),
 ]);
 
 /**
@@ -131,6 +136,19 @@ const BUILTIN_INFRA: ReadonlyArray<BuiltinInfra> = Object.freeze([
   Object.freeze({
     name: 'pubsub',
     description: 'PubSub orchestration infrastructure (coordinates pubsub providers)',
+  }),
+  Object.freeze({
+    name: 'auth',
+    description:
+      'Auth infrastructure with session/token verification and RPC middleware integration',
+  }),
+  Object.freeze({
+    name: 'storage',
+    description: 'Storage infrastructure for file operations (coordinates storage providers)',
+  }),
+  Object.freeze({
+    name: 'rpc',
+    description: 'RPC infrastructure with @effect/rpc middleware, transport, and router',
   }),
 ]);
 
@@ -273,14 +291,16 @@ export function init(options: InitOptions = {}) {
 
     if (includeProviders) {
       yield* Console.log(`  ✓ Provider libraries (${BUILTIN_PROVIDERS.length}):`);
-      BUILTIN_PROVIDERS.forEach((p) => Console.log(`    - provider-${p.name}`));
+      for (const p of BUILTIN_PROVIDERS) {
+        yield* Console.log(`    - provider-${p.name}`);
+      }
     }
 
     if (includeInfra) {
       yield* Console.log(`  ✓ Infrastructure libraries (${BUILTIN_INFRA.length}):`);
-      BUILTIN_INFRA.forEach((i) =>
-        Console.log(`    - ${i.name === 'env' ? 'env' : `infra-${i.name}`}`),
-      );
+      for (const i of BUILTIN_INFRA) {
+        yield* Console.log(`    - ${i.name === 'env' ? 'env' : `infra-${i.name}`}`);
+      }
     }
 
     yield* Console.log('  ✓ Integration example:');

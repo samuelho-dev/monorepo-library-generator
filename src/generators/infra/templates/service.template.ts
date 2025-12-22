@@ -206,7 +206,11 @@ export class ${className}Service extends Context.Tag(
       // Uncomment and customize based on your service needs:
       // const config = yield* ${className}Config;
       // const logger = yield* LoggingService;
-      ${hasProvider && providerClassName ? `const provider = yield* ${providerClassName};` : `// const provider = yield* ProviderService; // Replace with actual provider`}
+      ${
+        hasProvider && providerClassName
+          ? `const provider = yield* ${providerClassName};`
+          : `// const provider = yield* ProviderService; // Replace with actual provider`
+      }
 ${
   isDatabaseInfra
     ? `

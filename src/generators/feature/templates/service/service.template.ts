@@ -74,6 +74,7 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       Effect.mapError((error) =>
         new ${className}Error({
           message: \`Failed to get ${fileName}: \${id}\`,
+          code: "INTERNAL_ERROR",
           cause: error,
         })
       )
@@ -99,6 +100,7 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
         Effect.mapError((error) =>
           new ${className}Error({
             message: "Failed to find ${fileName} records",
+            code: "INTERNAL_ERROR",
             cause: error,
           })
         )
@@ -115,6 +117,7 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       Effect.mapError((error) =>
         new ${className}Error({
           message: "Failed to count ${fileName} records",
+          code: "INTERNAL_ERROR",
           cause: error,
         })
       )
@@ -131,6 +134,7 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       Effect.mapError((error) =>
         new ${className}Error({
           message: "Failed to create ${fileName}",
+          code: "INTERNAL_ERROR",
           cause: error,
         })
       )
@@ -149,6 +153,7 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       Effect.mapError((error) =>
         new ${className}Error({
           message: \`Failed to update ${fileName}: \${id}\`,
+          code: "INTERNAL_ERROR",
           cause: error,
         })
       )
@@ -164,6 +169,7 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       Effect.mapError((error) =>
         new ${className}Error({
           message: \`Failed to delete ${fileName}: \${id}\`,
+          code: "INTERNAL_ERROR",
           cause: error,
         })
       )
@@ -180,6 +186,7 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       Effect.mapError((error) =>
         new ${className}Error({
           message: \`Failed to check existence: \${id}\`,
+          code: "INTERNAL_ERROR",
           cause: error,
         })
       )

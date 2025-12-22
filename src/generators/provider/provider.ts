@@ -27,7 +27,7 @@ const providerExecutor = createExecutor<ProviderGeneratorSchema, ProviderCoreOpt
   }),
 );
 
-export default async function providerGenerator(tree: Tree, schema: ProviderGeneratorSchema) {
+export async function providerGenerator(tree: Tree, schema: ProviderGeneratorSchema) {
   if (!schema.name || schema.name.trim() === '') {
     throw new Error('Provider name is required and cannot be empty');
   }

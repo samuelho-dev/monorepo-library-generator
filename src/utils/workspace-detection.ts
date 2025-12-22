@@ -83,7 +83,7 @@ function detectEffectNative(tree: Tree) {
     const hasEffectBuildUtils = packageJson.devDependencies?.['@effect/build-utils'] !== undefined;
 
     // Check for Effect-style scripts (codegen using build-utils)
-    const hasEffectScripts = packageJson.scripts?.['codegen']?.includes('build-utils') === true;
+    const hasEffectScripts = packageJson.scripts?.codegen?.includes('build-utils') === true;
 
     return hasEffectBuildUtils || hasEffectScripts;
   } catch {

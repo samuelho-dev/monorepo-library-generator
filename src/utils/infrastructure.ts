@@ -22,11 +22,10 @@
  */
 
 import { Effect } from 'effect';
-import type { LibraryType } from './build';
+import type { LibraryType, PlatformType } from './build';
 import { type ExportConfig, generateGranularExports } from './build';
 import type { FileSystemAdapter } from './filesystem';
 import { getProviderForInfra, hasProviderMapping } from './infra-provider-mapping';
-import type { PlatformType } from './build';
 import { getPackageName } from './workspace-config';
 
 /**
@@ -281,6 +280,11 @@ function generatePackageJsonFile(
         return { ...base, kysely: '*' };
       }
 
+      // Supabase provider needs @supabase/supabase-js for the SDK
+      if (options.libraryType === 'provider' && options.projectName.includes('supabase')) {
+        return { ...base, '@supabase/supabase-js': '^2' };
+      }
+
       // Data-access libraries need kysely for query building
       if (options.libraryType === 'data-access') {
         return { ...base, kysely: '*' };
@@ -313,7 +317,7 @@ function generatePackageJsonFile(
 
     // Write package.json
     const packageJsonPath = `${workspaceRoot}/${options.projectRoot}/package.json`;
-    yield* adapter.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+    yield* adapter.writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
   });
 }
 
@@ -366,7 +370,7 @@ function generateTsConfigFiles(
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${options.projectRoot}/tsconfig.json`,
-      JSON.stringify(baseTsConfig, null, 2) + '\n',
+      `${JSON.stringify(baseTsConfig, null, 2)}\n`,
     );
     filesGenerated.push(`${options.projectRoot}/tsconfig.json`);
 
@@ -389,7 +393,7 @@ function generateTsConfigFiles(
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${options.projectRoot}/tsconfig.lib.json`,
-      JSON.stringify(libTsConfig, null, 2) + '\n',
+      `${JSON.stringify(libTsConfig, null, 2)}\n`,
     );
     filesGenerated.push(`${options.projectRoot}/tsconfig.lib.json`);
 
@@ -406,7 +410,7 @@ function generateTsConfigFiles(
 
       yield* adapter.writeFile(
         `${workspaceRoot}/${options.projectRoot}/tsconfig.spec.json`,
-        JSON.stringify(specTsConfig, null, 2) + '\n',
+        `${JSON.stringify(specTsConfig, null, 2)}\n`,
       );
       filesGenerated.push(`${options.projectRoot}/tsconfig.spec.json`);
     }
@@ -525,7 +529,7 @@ function createProjectConfiguration(options: InfrastructureOptions, sourceRoot: 
   }
 
   // Build targets object conditionally (exclude test for contract libraries)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const targets: { [targetName: string]: any } = {
     build: {
       executor: '@nx/js:tsc',

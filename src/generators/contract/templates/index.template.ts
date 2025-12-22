@@ -7,13 +7,13 @@
  * @module monorepo-library-generator/contract/index-template
  */
 
+import { TypeScriptBuilder } from '../../../utils/code-builder';
 import {
   addConditionalExports,
   type ConditionalExport,
   type ExportSection,
   generateExportSections,
 } from '../../../utils/templates';
-import { TypeScriptBuilder } from '../../../utils/code-builder';
 import type { ContractTemplateOptions } from '../../../utils/types';
 
 /**

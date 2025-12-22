@@ -12,12 +12,12 @@
  * @module monorepo-library-generator/templates
  */
 
+import * as path from 'node:path';
 import type { Tree } from '@nx/devkit';
 import { generateFiles } from '@nx/devkit';
-import * as path from 'path';
+import type { TypeScriptBuilder } from './code-builder';
 import { createNamingVariants } from './naming';
 import type { LibraryType, NamingVariants } from './types';
-import type { TypeScriptBuilder } from './code-builder';
 
 // Re-export TypeScriptBuilder from code-builder for convenience
 export { TypeScriptBuilder } from './code-builder';
@@ -91,12 +91,12 @@ export function cleanupConditionalFiles(
   projectRoot: string,
   filesToRemove: Array<string>,
 ) {
-  filesToRemove.forEach((file) => {
+  for (const file of filesToRemove) {
     const filePath = path.join(projectRoot, file);
     if (tree.exists(filePath)) {
       tree.delete(filePath);
     }
-  });
+  }
 }
 
 /**
@@ -299,7 +299,7 @@ export function createTaggedErrorClass(config: ErrorClassConfig) {
   "${tagName}"
 )<{
 ${fieldDefs}
-}>${methodDefs ? ' {' + methodDefs + '\n}' : ' {}'}`;
+}>${methodDefs ? ` {${methodDefs}\n}` : ' {}'}`;
 }
 
 /**
@@ -738,7 +738,12 @@ export function addPaginatedResponse(
   if (!(includeHasMore || includeNextCursor)) {
     properties.push(
       { name: 'skip', type: 'number', readonly: true, jsdoc: 'Number of records skipped' },
-      { name: 'limit', type: 'number', readonly: true, jsdoc: 'Maximum number of records returned' },
+      {
+        name: 'limit',
+        type: 'number',
+        readonly: true,
+        jsdoc: 'Maximum number of records returned',
+      },
     );
   }
 
@@ -812,7 +817,12 @@ export function addSortInterface(builder: TypeScriptBuilder, config: SortInterfa
   const properties = [{ name: 'field', type: 'string', readonly: true, jsdoc: 'Field to sort by' }];
 
   if (includeDirection) {
-    properties.push({ name: 'direction', type: 'SortDirection', readonly: true, jsdoc: 'Sort direction' });
+    properties.push({
+      name: 'direction',
+      type: 'SortDirection',
+      readonly: true,
+      jsdoc: 'Sort direction',
+    });
   }
 
   builder.addInterface({
@@ -1141,21 +1151,31 @@ export type * from "./lib/shared/types";
 // ============================================================================
 
 export type * from "./lib/shared/errors";
-${hasServer ? `
+${
+  hasServer
+    ? `
 // ============================================================================
 // Server Types
 // ============================================================================
 
 // Service interface types
 export type * from "./lib/server/service/service";
-` : ''}${includeRPC ? `
+`
+    : ''
+}${
+  includeRPC
+    ? `
 // ============================================================================
 // RPC Types
 // ============================================================================
 
 export type * from "./lib/rpc/rpc";
 export type * from "./lib/rpc/errors";
-` : ''}${hasClient ? `
+`
+    : ''
+}${
+  hasClient
+    ? `
 // ============================================================================
 // Client Types
 // ============================================================================
@@ -1165,12 +1185,19 @@ export type * from "./lib/client/hooks/index";
 
 // Atom types (state shapes)
 export type * from "./lib/client/atoms/index";
-` : ''}
+`
+    : ''
+}
 `;
 }
 
 /**
  * Generate types.ts file for provider libraries
+ *
+ * Note: Different providers have different structures. This generates
+ * a types.ts that works for most providers. Specialized providers
+ * like Supabase may have different file structures (e.g., service/client.ts,
+ * service/auth.ts instead of service/service.ts).
  */
 export function generateProviderTypesOnly(options: TypesOnlyExportOptions) {
   const { packageName } = options;
@@ -1192,7 +1219,7 @@ export function generateProviderTypesOnly(options: TypesOnlyExportOptions) {
 // Service Types
 // ============================================================================
 
-export type * from "./lib/service/service";
+export type * from "./lib/service/index";
 
 // ============================================================================
 // Shared Types
@@ -1205,12 +1232,6 @@ export type * from "./lib/types";
 // ============================================================================
 
 export type * from "./lib/errors";
-
-// ============================================================================
-// Validation Types
-// ============================================================================
-
-export type * from "./lib/validation";
 `;
 }
 

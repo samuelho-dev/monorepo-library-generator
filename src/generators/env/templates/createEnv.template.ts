@@ -18,7 +18,7 @@ import { TypeScriptBuilder } from '../../../utils/code-builder';
  * - Uses Effect Config for loading and type inference
  * - Returns a Proxy that protects server vars on client
  */
-export function generateCreateEnvFile(): string {
+export function generateCreateEnvFile() {
   const builder = new TypeScriptBuilder();
 
   // File header
@@ -230,7 +230,9 @@ export function generateCreateEnvFile(): string {
   builder.addRaw('  for (const key of Object.keys(client)) {');
   builder.addRaw('    if (!key.startsWith(clientPrefix)) {');
   builder.addRaw('      throw new Error(');
-  builder.addRaw('        `Client env var "${key}" must start with "${clientPrefix}". Either rename to "${clientPrefix}${key}" or move to server config.`');
+  builder.addRaw(
+    '        `Client env var "${key}" must start with "${clientPrefix}". Either rename to "${clientPrefix}${key}" or move to server config.`',
+  );
   builder.addRaw('      )');
   builder.addRaw('    }');
   builder.addRaw('  }');
@@ -249,7 +251,9 @@ export function generateCreateEnvFile(): string {
   builder.addRaw('      get(target, prop) {');
   builder.addRaw('        if (typeof prop === "string" && serverKeys.has(prop)) {');
   builder.addRaw('          throw new Error(');
-  builder.addRaw('            `Cannot access server-only env var "${prop}" on the client. This variable is only available in server context.`');
+  builder.addRaw(
+    '            `Cannot access server-only env var "${prop}" on the client. This variable is only available in server context.`',
+  );
   builder.addRaw('          )');
   builder.addRaw('        }');
   builder.addRaw('        return target[prop as keyof typeof target]');

@@ -154,11 +154,8 @@ export function withProgress<A, E, R>(
 
     const result = yield* Effect.onExit(effect, () =>
       Effect.sync(() => {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        const _elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         process.stdout.write(`${ANSI.clearLine}${ANSI.cursorToStart}${ANSI.showCursor}`);
-        console.log(
-          `${ANSI.green}✨${ANSI.reset} ${message} ${ANSI.dim}(${elapsed}s)${ANSI.reset}`,
-        );
       }),
     );
 

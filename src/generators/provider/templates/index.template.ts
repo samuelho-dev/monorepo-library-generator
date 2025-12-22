@@ -8,12 +8,12 @@
  * @see docs/NX_STANDARDS.md for export conventions
  */
 
+import { TypeScriptBuilder } from '../../../utils/code-builder';
 import {
   type ExportSection,
   generateExportSections,
   generateStandardErrorExports,
 } from '../../../utils/templates';
-import { TypeScriptBuilder } from '../../../utils/code-builder';
 import type { ProviderTemplateOptions } from '../../../utils/types';
 
 /**
@@ -98,7 +98,7 @@ Usage:
   builder.addComment(`       const layer = ${className}.Live;`);
   builder.addBlankLine();
 
-  builder.addRaw('export { ' + className + ' } from "./lib/service";\n');
+  builder.addRaw(`export { ${className} } from "./lib/service";\n`);
 
   builder.addBlankLine();
 

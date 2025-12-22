@@ -15,7 +15,7 @@ import type { ParsedEnvVar } from '../utils/parse-dotenv';
  *
  * This is scaffolded from the .env file and can be customized by the user.
  */
-export function generateEnvScaffoldFile(vars: ParsedEnvVar[]): string {
+export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
   const builder = new TypeScriptBuilder();
 
   // File header
@@ -124,8 +124,8 @@ export function generateEnvScaffoldFile(vars: ParsedEnvVar[]): string {
 /**
  * Generate Config call for a variable
  */
-function generateConfigCall(varDef: ParsedEnvVar): string {
-  const { name, type, isSecret, hasDefault } = varDef;
+function generateConfigCall(varDef: ParsedEnvVar) {
+  const { hasDefault, isSecret, name, type } = varDef;
 
   // Choose Config method based on type and secret status
   let configMethod: string;
@@ -140,7 +140,6 @@ function generateConfigCall(varDef: ParsedEnvVar): string {
       case 'boolean':
         configMethod = `Config.boolean("${name}")`;
         break;
-      case 'string':
       default:
         configMethod = `Config.string("${name}")`;
         break;

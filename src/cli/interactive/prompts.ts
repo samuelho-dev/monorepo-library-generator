@@ -184,8 +184,6 @@ export function getOptionsForType(libraryType: LibraryType) {
           { key: 'includeRPC', prompt: confirmRPC() },
           { key: 'includeEdge', prompt: confirmEdge() },
         ];
-      case 'data-access':
-      case 'provider':
       default:
         return [];
     }

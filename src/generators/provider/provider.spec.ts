@@ -8,7 +8,7 @@
 import type { Tree } from '@nx/devkit';
 import { readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import providerGenerator from './provider';
+import { providerGenerator } from './provider';
 
 describe('provider generator', () => {
   let tree: Tree;
@@ -103,13 +103,13 @@ describe('provider generator', () => {
       expect(config.tags).toContain('scope:stripe');
 
       // Build target with vitest (not jest) - provider.md line 1432
-      expect(config.targets?.['test']).toBeDefined();
-      expect(config.targets?.['test']?.executor).toBe('@nx/vite:test');
+      expect(config.targets?.test).toBeDefined();
+      expect(config.targets?.test?.executor).toBe('@nx/vite:test');
 
       // Build target with batch mode - provider.md line 1423
-      expect(config.targets?.['build']).toBeDefined();
-      expect(config.targets?.['build']?.executor).toBe('@nx/js:tsc');
-      expect(config.targets?.['build']?.options?.batch).toBe(true);
+      expect(config.targets?.build).toBeDefined();
+      expect(config.targets?.build?.executor).toBe('@nx/js:tsc');
+      expect(config.targets?.build?.options?.batch).toBe(true);
     });
 
     it('should include client entry point for universal platform', async () => {
@@ -124,7 +124,7 @@ describe('provider generator', () => {
 
       // Verify project configuration exists
       expect(config.name).toBe('provider-analytics');
-      expect(config.targets?.['build']).toBeDefined();
+      expect(config.targets?.build).toBeDefined();
     });
 
     it('should configure correct tags for platform and service', async () => {

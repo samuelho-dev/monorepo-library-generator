@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider-templates
  */
 
-import { generateStandardErrorExports } from '../../../utils/templates';
 import { TypeScriptBuilder } from '../../../utils/code-builder';
+import { generateStandardErrorExports } from '../../../utils/templates';
 import type { ProviderTemplateOptions } from '../../../utils/types';
 
 /**

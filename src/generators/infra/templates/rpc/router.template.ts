@@ -37,9 +37,8 @@ See middleware.ts for AuthMiddleware usage.`,
   });
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Context'] },
-    { from: '@effect/rpc', imports: ['RpcRouter', 'RpcGroup'] },
-    { from: './errors', imports: ['RpcInfraError'] },
+    { from: 'effect', imports: ['Effect'] },
+    { from: 'effect', imports: ['Layer'], isTypeOnly: true },
   ]);
 
   builder.addSectionComment('Router Composition');
@@ -185,51 +184,109 @@ export type RpcRequiredLayers<R> = R extends Layer.Layer<infer _A, infer _E, inf
  */
 
 /**
- * Simplified App Router handler factory
- *
- * Creates Next.js route handlers with proper error handling.
+ * RPC handler map type
  */
-export const createAppRouterHandler = <R extends RpcRouter.RpcRouter<any, any>>(options: {
+export type RpcHandlerMap = Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, unknown>>
+
+/**
+ * Combine multiple handler maps into one
+ *
+ * @example
+ * \`\`\`typescript
+ * const allHandlers = combineHandlers(
+ *   userHandlers,
+ *   productHandlers,
+ *   orderHandlers
+ * );
+ * \`\`\`
+ */
+export const combineHandlers = <T extends RpcHandlerMap>(
+  ...handlers: ReadonlyArray<T>
+): T => Object.assign({}, ...handlers) as T
+
+/**
+ * Options for creating a Next.js RPC handler
+ */
+export interface NextRpcHandlerOptions<R, E> {
   /**
-   * The RPC router instance
+   * RPC handler map
    */
-  router: R
+  readonly handlers: RpcHandlerMap
 
   /**
-   * Combined layer providing all handlers and middleware
+   * Combined layer providing all dependencies
    */
-  layer: Layer.Layer<any, any, any>
+  readonly layer: Layer.Layer<R, E, never>
 
   /**
    * Custom error handler
    */
-  onError?: (error: unknown) => Response
+  readonly onError?: (error: unknown) => Response
 
   /**
    * Router configuration
    */
-  config?: RouterConfig
-}) => {
-  const config = { ...defaultRouterConfig, ...options.config }
+  readonly config?: RouterConfig
+}
 
-  // Cached layer merge - only computed once
-  let runnable: Effect.Effect<any, any, any> | null = null
+/**
+ * Create a Next.js route handler for RPC
+ *
+ * @example
+ * \`\`\`typescript
+ * // app/api/rpc/route.ts
+ * import { createNextRpcHandler } from "@scope/infra-rpc/router";
+ *
+ * const handler = createNextRpcHandler({
+ *   handlers: allHandlers,
+ *   layer: appLayer,
+ * });
+ *
+ * export const POST = handler.POST;
+ * export const GET = handler.GET;
+ * \`\`\`
+ */
+/**
+ * Next.js RPC handler result
+ */
+export interface NextRpcHandler {
+  readonly POST: (request: Request) => Promise<Response>
+  readonly GET: () => Response
+}
+
+export const createNextRpcHandler = <R, E>(
+  options: NextRpcHandlerOptions<R, E>
+): NextRpcHandler => {
+  const config = { ...defaultRouterConfig, ...options.config }
 
   const execute = async (request: Request) => {
     try {
-      const body = await request.json()
+      const body = await request.json() as { operation?: string; payload?: unknown }
+      const operation = body.operation
+      const payload = body.payload
 
-      // Lazy initialization of runnable
-      if (!runnable) {
-        // Create the effect that will handle requests
-        runnable = Effect.gen(function* () {
-          // This is a simplified version
-          // Real implementation uses @effect/rpc-http RpcServer
-          return { success: true, body }
-        }).pipe(Effect.provide(options.layer))
+      if (!operation || typeof operation !== "string") {
+        return Response.json(
+          { _tag: "RpcInfraError", message: "Missing operation", code: "INVALID_REQUEST" },
+          { status: 400 }
+        )
       }
 
-      const result = await Effect.runPromise(runnable)
+      const handler = options.handlers[operation]
+      if (!handler) {
+        return Response.json(
+          { _tag: "RpcInfraError", message: \`Unknown operation: \${operation}\`, code: "NOT_FOUND" },
+          { status: 404 }
+        )
+      }
+
+      // Build runnable effect by providing the layer
+      const runnableEffect = Effect.provide(
+        handler(payload) as Effect.Effect<unknown, unknown, R>,
+        options.layer
+      )
+
+      const result = await Effect.runPromise(runnableEffect)
       return Response.json(result)
     } catch (error) {
       if (options.onError) {
@@ -264,44 +321,78 @@ export const createAppRouterHandler = <R extends RpcRouter.RpcRouter<any, any>>(
   builder.addSectionComment('Server Actions Integration');
 
   builder.addRaw(`/**
- * Create a Server Action from an RPC handler
+ * Create a Server Action from an Effect handler
  *
- * For Next.js Server Actions pattern.
+ * For Next.js Server Actions pattern. Takes a handler function
+ * and a fully-satisfied layer, returns an async function.
+ *
+ * On success, the promise resolves with the result.
+ * On failure, the promise rejects with the typed error.
  *
  * @example
  * \`\`\`typescript
  * // app/actions/user.ts
  * "use server";
  *
+ * import { Effect, Layer } from "effect";
  * import { createServerAction } from "@scope/infra-rpc/router";
- * import { GetUser, CreateUser } from "@scope/contract-user/rpc";
- * import { UserHandlers } from "@scope/feature-user/rpc";
- * import { AuthMiddlewareLive } from "@scope/infra-rpc/middleware";
+ * import { UserRepository } from "@scope/data-access-user";
+ * import { DatabaseLive } from "@scope/provider-database";
  *
- * const layer = Layer.mergeAll(UserHandlers, AuthMiddlewareLive);
+ * // Define the handler with typed payload
+ * const getUserHandler = (input: { id: string }) =>
+ *   Effect.gen(function* () {
+ *     const repo = yield* UserRepository;
+ *     return yield* repo.findById(input.id);
+ *   });
  *
- * export const getUser = createServerAction(GetUser, layer);
- * export const createUser = createServerAction(CreateUser, layer);
+ * // Create fully-satisfied layer (no remaining requirements)
+ * const layer = UserRepository.Live.pipe(
+ *   Layer.provide(DatabaseLive)
+ * );
+ *
+ * // Export as Server Action
+ * export const getUser = createServerAction(getUserHandler, layer);
  * \`\`\`
  */
-export const createServerAction = <
-  Req,
-  Res,
-  Err,
-  R
->(
-  _rpc: { payload: Req; success: Res; failure: Err },
-  layer: Layer.Layer<any, any, R>
-) => {
-  return async (payload: Req): Promise<Res> => {
-    // This is a simplified version
-    // Real implementation would use the Rpc definition properly
-    const effect = Effect.gen(function* () {
-      // Execute handler from layer
-      return payload as unknown as Res
-    }).pipe(Effect.provide(layer as any))
+export const createServerAction = <Payload, Success, Failure, R>(
+  handler: (payload: Payload) => Effect.Effect<Success, Failure, R>,
+  layer: Layer.Layer<R, never, never>
+): ((payload: Payload) => Promise<Success>) => {
+  return (payload: Payload): Promise<Success> => {
+    const program = handler(payload).pipe(Effect.provide(layer))
+    return Effect.runPromise(program)
+  }
+}
 
-    return Effect.runPromise(effect as Effect.Effect<Res, never, never>)
+/**
+ * Create a Server Action that returns Exit instead of throwing
+ *
+ * Use this when you want to handle errors explicitly in the client.
+ *
+ * @example
+ * \`\`\`typescript
+ * import { Exit } from "effect";
+ * import { createServerActionSafe } from "@scope/infra-rpc/router";
+ *
+ * export const getUser = createServerActionSafe(getUserHandler, layer);
+ *
+ * // In client component
+ * const result = await getUser({ id: "123" });
+ * if (Exit.isSuccess(result)) {
+ *   console.log(result.value);
+ * } else {
+ *   console.error(result.cause);
+ * }
+ * \`\`\`
+ */
+export const createServerActionSafe = <Payload, Success, Failure, R>(
+  handler: (payload: Payload) => Effect.Effect<Success, Failure, R>,
+  layer: Layer.Layer<R, never, never>
+) => {
+  return (payload: Payload) => {
+    const program = handler(payload).pipe(Effect.provide(layer))
+    return Effect.runPromiseExit(program)
   }
 }
 `);
@@ -336,7 +427,7 @@ export interface HealthCheckResponse {
  * });
  * \`\`\`
  */
-export const createHealthCheck = (options?: {
+export const healthCheck = (options?: {
   version?: string
   checks?: Record<string, () => Effect.Effect<"ok", unknown>>
 }): Effect.Effect<HealthCheckResponse> =>
@@ -344,7 +435,7 @@ export const createHealthCheck = (options?: {
     const timestamp = new Date().toISOString()
     let status: "ok" | "degraded" | "error" = "ok"
 
-    const checks: Record<string, { status: "ok" | "error"; latencyMs?: number; message?: string }> = {}
+    const checksResult: Record<string, { status: "ok" | "error"; latencyMs?: number; message?: string }> = {}
 
     if (options?.checks) {
       for (const [name, check] of Object.entries(options.checks)) {
@@ -357,20 +448,35 @@ export const createHealthCheck = (options?: {
             message: e instanceof Error ? e.message : "Check failed"
           }))
         )
-        checks[name] = result
+        checksResult[name] = result
         if (result.status === "error") {
           status = "degraded"
         }
       }
     }
 
-    return {
+    // Build response with only defined properties (exactOptionalPropertyTypes)
+    const response: HealthCheckResponse = {
       status,
-      timestamp,
-      version: options?.version,
-      checks: Object.keys(checks).length > 0 ? checks : undefined
+      timestamp
     }
+
+    if (options?.version !== undefined) {
+      (response as { version: string }).version = options.version
+    }
+
+    if (Object.keys(checksResult).length > 0) {
+      (response as { checks: typeof checksResult }).checks = checksResult
+    }
+
+    return response
   })
+
+/**
+ * Alias for healthCheck
+ * @deprecated Use healthCheck instead
+ */
+export const createHealthCheck = healthCheck
 `);
 
   return builder.toString();

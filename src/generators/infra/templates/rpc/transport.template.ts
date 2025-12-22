@@ -1,7 +1,10 @@
 /**
  * RPC Transport Template
  *
- * Generates transport layer for RPC operations (HTTP, WebSocket, etc.)
+ * Generates transport layer for RPC operations (HTTP).
+ *
+ * Transport Types:
+ * - HTTP: Standard request/response over HTTP for cross-process/network calls
  *
  * @module monorepo-library-generator/infra-templates/rpc
  */
@@ -13,7 +16,8 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 /**
  * Generate RPC transport file
  *
- * Creates HTTP handlers and WebSocket transport for RPC operations.
+ * Creates transport implementations for RPC:
+ * - HTTP for external clients and cross-process calls
  */
 export function generateRpcTransportFile(options: InfraTemplateOptions) {
   const builder = new TypeScriptBuilder();
@@ -22,31 +26,62 @@ export function generateRpcTransportFile(options: InfraTemplateOptions) {
 
   builder.addFileHeader({
     title: `${className} Transport`,
-    description: `RPC transport implementations.
+    description: `RPC transport implementations for HTTP communication.
 
-Provides:
-- HTTP transport (request/response)
-- WebSocket transport (bidirectional streaming)
-- Server handler for Next.js/Express
-- Client transport configuration
+Architecture:
+- HTTP Transport: Standard HTTP for external clients/cross-process calls
 
-Uses @effect/rpc with Effect Platform.`,
+All transports share the same handler definitions - only the transport layer differs.`,
     module: `${scope}/infra-${fileName}/transport`,
-    see: ['EFFECT_PATTERNS.md for transport patterns'],
+    see: ['@effect/rpc documentation for transport details'],
   });
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Stream'] },
-    { from: '@effect/rpc', imports: ['RpcRouter'] },
-    { from: '@effect/rpc-http', imports: ['HttpRpcRouter', 'HttpRpcRouterNoStream'] },
+    {
+      from: 'effect',
+      imports: ['Effect', 'Layer', 'Context'],
+    },
     {
       from: '@effect/platform',
-      imports: ['HttpServer', 'HttpServerRequest', 'HttpServerResponse'],
+      imports: ['HttpClient', 'HttpClientRequest'],
     },
-    { from: './core', imports: [`${className}Service`] },
-    { from: './middleware', imports: ['RpcMiddlewareStack', 'makeRequestMetaLayer'] },
     { from: './errors', imports: ['RpcInfraError'] },
   ]);
+
+  builder.addSectionComment('Transport Types');
+
+  builder.addRaw(`/**
+ * Transport mode determines how RPC calls are executed
+ */
+export type TransportMode = "http"
+
+/**
+ * Base transport configuration
+ */
+export interface TransportConfig {
+  readonly mode: TransportMode
+}
+
+/**
+ * HTTP transport config - for cross-process/network calls
+ */
+export interface HttpTransportConfig extends TransportConfig {
+  readonly mode: "http"
+  /**
+   * Base URL for RPC endpoint
+   */
+  readonly baseUrl: string
+  /**
+   * Custom headers to include
+   */
+  readonly headers?: Record<string, string>
+}
+
+/**
+ * Combined transport config union
+ */
+export type RpcTransportConfig = HttpTransportConfig
+`);
 
   builder.addSectionComment('HTTP Transport');
 
@@ -61,209 +96,230 @@ export interface HttpTransportOptions {
   readonly basePath?: string
 
   /**
-   * Enable streaming responses
-   * @default false
-   */
-  readonly streaming?: boolean
-
-  /**
    * Custom error mapper
    */
   readonly mapError?: (error: unknown) => RpcInfraError
 }
 
 /**
- * Create HTTP request handler for RPC
- *
- * Use with Next.js API routes, Express, or any HTTP server.
- *
- * @example
- * \`\`\`typescript
- * // Next.js App Router: app/api/rpc/[...path]/route.ts
- * import { createHttpHandler } from "${scope}/infra-${fileName}/transport";
- * import { UserRpcs, UserHandlers } from "${scope}/feature-user/rpc";
- *
- * const handler = createHttpHandler({
- *   groups: [{ group: UserRpcs, handlers: UserHandlers }],
- *   basePath: "/api/rpc"
- * });
- *
- * export const POST = handler;
- * \`\`\`
+ * HTTP RPC Client Configuration
  */
-export const createHttpHandler = (options: {
-  groups: Array<{
-    group: any
-    handlers: Record<string, (payload: any) => Effect.Effect<any, any, any>>
-  }>
-  transport?: HttpTransportOptions
-  middleware?: Layer.Layer<any, any, any>
-}) =>
-  Effect.gen(function* () {
-    const basePath = options.transport?.basePath ?? "/rpc"
+export interface HttpRpcClientConfig {
+  /**
+   * Base URL for RPC endpoint
+   * @example "https://api.example.com/rpc"
+   */
+  readonly baseUrl: string
 
-    // Build router from groups
-    const routerEntries = options.groups.map(({ group, handlers }) => {
-      // Create handler implementations for the group
-      return group.handlers(handlers)
-    })
+  /**
+   * Default headers to include with every request
+   * @example { "x-api-key": "secret-key" }
+   */
+  readonly headers?: Record<string, string>
 
-    // Combine all handlers into router
-    const router = RpcRouter.make(...routerEntries)
-
-    // Create HTTP router
-    const httpRouter = options.transport?.streaming
-      ? HttpRpcRouter.toHttpApp(router)
-      : HttpRpcRouterNoStream.toHttpApp(router)
-
-    // Apply middleware if provided
-    const finalApp = options.middleware
-      ? httpRouter.pipe(Effect.provide(options.middleware))
-      : httpRouter
-
-    return finalApp
-  })
+  /**
+   * Request timeout in milliseconds
+   * @default 30000
+   */
+  readonly timeout?: number
+}
 
 /**
- * Next.js App Router handler factory
+ * HTTP RPC Client
+ *
+ * Makes RPC calls via HTTP transport.
+ * Use for calling external services or cross-process communication.
  *
  * @example
  * \`\`\`typescript
- * // app/api/rpc/[...path]/route.ts
- * import { createNextHandler } from "${scope}/infra-${fileName}/transport";
- *
- * export const { GET, POST } = createNextHandler({
- *   groups: [UserRpcs, ProductRpcs],
- *   handlers: { ...UserHandlers, ...ProductHandlers }
+ * // Configure HTTP client
+ * const HttpClientLive = HttpRpcClient.layer({
+ *   baseUrl: "https://api.example.com/rpc",
+ *   headers: { "x-api-key": env.API_KEY }
  * });
+ *
+ * // Use in Effect
+ * const program = Effect.gen(function* () {
+ *   const client = yield* HttpRpcClient;
+ *   const user = yield* client.call("getUser", { id: "123" });
+ *   return user;
+ * }).pipe(Effect.provide(HttpClientLive));
  * \`\`\`
  */
-export const createNextHandler = (options: {
-  groups: Array<any>
-  handlers: Record<string, (payload: any) => Effect.Effect<any, any, any>>
-  middleware?: Layer.Layer<any, any, any>
-}) => {
-  // Build router from all groups
-  const router = RpcRouter.make(...options.groups)
+export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
+  HttpRpcClient,
+  {
+    /**
+     * Execute an RPC call via HTTP transport
+     */
+    readonly call: <R>(
+      operation: string,
+      payload: unknown,
+      options?: { headers?: Record<string, string> }
+    ) => Effect.Effect<R, RpcInfraError, HttpClient.HttpClient>
+  }
+>() {
+  /**
+   * Create layer with configuration
+   */
+  static layer(config: HttpRpcClientConfig): Layer.Layer<HttpRpcClient> {
+    return Layer.succeed(HttpRpcClient, {
+      call: <R>(
+        operation: string,
+        payload: unknown,
+        options?: { headers?: Record<string, string> }
+      ) =>
+        Effect.gen(function* () {
+          const httpClient = yield* HttpClient.HttpClient
 
-  // Attach handlers
-  const routerWithHandlers = router.handlers(options.handlers)
+          // Build request
+          const request = HttpClientRequest.post(config.baseUrl).pipe(
+            HttpClientRequest.setHeaders({
+              "Content-Type": "application/json",
+              ...config.headers,
+              ...options?.headers
+            }),
+            HttpClientRequest.bodyJson({
+              operation,
+              payload
+            })
+          )
 
-  // Create HTTP handler
-  const httpApp = HttpRpcRouterNoStream.toHttpApp(routerWithHandlers)
-
-  // Export handlers for Next.js
-  return {
-    GET: () => new Response("RPC endpoint - use POST", { status: 405 }),
-    POST: async (request: Request) => {
-      const result = await Effect.runPromise(
-        httpApp.pipe(
-          Effect.provide(options.middleware ?? Layer.empty),
-          Effect.catchAll((error) =>
-            Effect.succeed(
-              new Response(JSON.stringify({ error: String(error) }), {
-                status: 500,
-                headers: { "Content-Type": "application/json" }
-              })
+          // Execute request
+          const response = yield* Effect.flatMap(
+            request,
+            (req) => httpClient.execute(req)
+          ).pipe(
+            Effect.timeout(config.timeout ?? 30000),
+            Effect.catchAll((error) =>
+              Effect.fail(
+                new RpcInfraError({
+                  message: \`RPC call failed: \${String(error)}\`,
+                  code: "NETWORK_ERROR"
+                })
+              )
             )
           )
-        )
-      )
-      return result
-    }
+
+          // Parse response
+          if (response.status !== 200) {
+            return yield* Effect.fail(
+              new RpcInfraError({
+                message: \`RPC error: HTTP \${response.status}\`,
+                code: "HTTP_ERROR"
+              })
+            )
+          }
+
+          const body = yield* response.json.pipe(
+            Effect.catchAll(() =>
+              Effect.fail(
+                new RpcInfraError({
+                  message: "Failed to parse RPC response",
+                  code: "PARSE_ERROR"
+                })
+              )
+            )
+          )
+
+          // Check for RPC-level error
+          if (body && typeof body === "object" && "error" in body) {
+            const errorBody = body as { error?: { message?: string; code?: string } }
+            return yield* Effect.fail(
+              new RpcInfraError({
+                message: errorBody.error?.message ?? "Unknown RPC error",
+                code: errorBody.error?.code ?? "RPC_ERROR"
+              })
+            )
+          }
+
+          return body as R
+        }).pipe(
+          Effect.withSpan(\`HttpRpc.\${operation}\`)
+        ) as Effect.Effect<R, RpcInfraError, HttpClient.HttpClient>
+    })
   }
+
+  /**
+   * Test layer - returns mock responses
+   */
+  static readonly Test = Layer.succeed(HttpRpcClient, {
+    call: <R>() => Effect.succeed({} as R)
+  })
 }
 `);
 
-  builder.addSectionComment('WebSocket Transport');
+  builder.addSectionComment('Next.js Handler Factory');
 
   builder.addRaw(`/**
- * WebSocket transport options
- */
-export interface WebSocketTransportOptions {
-  /**
-   * Ping interval for keepalive
-   * @default 30000 (30 seconds)
-   */
-  readonly pingInterval?: number
-
-  /**
-   * Maximum message size in bytes
-   * @default 1048576 (1MB)
-   */
-  readonly maxMessageSize?: number
-
-  /**
-   * Enable binary encoding
-   * @default false
-   */
-  readonly binary?: boolean
-}
-
-/**
- * Create WebSocket transport for bidirectional RPC
+ * Next.js App Router handler factory
  *
- * Useful for:
- * - Real-time subscriptions
- * - Streaming responses
- * - Long-running operations
+ * Creates HTTP handlers for Next.js App Router API routes.
  *
  * @example
  * \`\`\`typescript
- * const wsTransport = createWebSocketTransport({
- *   router,
- *   options: { pingInterval: 30000 }
+ * // app/api/rpc/route.ts
+ * import { createNextHandler } from "${scope}/infra-${fileName}/transport";
+ * import { UserHandlers } from "${scope}/feature-user/rpc";
+ *
+ * export const { POST } = createNextHandler({
+ *   handlers: UserHandlers,
  * });
  * \`\`\`
  */
-export const createWebSocketTransport = (options: {
-  router: RpcRouter.RpcRouter<any, any>
-  transport?: WebSocketTransportOptions
-}) =>
-  Effect.gen(function* () {
-    // WebSocket transport implementation
-    // Uses Effect's Stream for bidirectional communication
+/**
+ * Next.js handler result type
+ */
+export interface NextHandler {
+  readonly GET: () => Response
+  readonly POST: (request: Request) => Promise<Response>
+}
 
-    return {
-      handleConnection: (ws: WebSocket) =>
-        Effect.gen(function* () {
-          // Set up ping/pong keepalive
-          const pingInterval = options.transport?.pingInterval ?? 30000
+export const createNextHandler = <R>(options: {
+  handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>
+  layers?: Layer.Layer<R, never, never>
+}): NextHandler => {
+  return {
+    GET: () => new Response("RPC endpoint - use POST", { status: 405 }),
+    POST: async (request: Request): Promise<Response> => {
+      try {
+        const body = await request.json() as { operation?: string; payload?: unknown }
+        const { operation, payload } = body
 
-          // Handle incoming messages
-          const messageStream = Stream.async<string>((emit) => {
-            ws.onmessage = (event) => {
-              emit.single(event.data as string)
-            }
-            ws.onclose = () => {
-              emit.end()
-            }
-            ws.onerror = (error) => {
-              emit.fail(new RpcInfraError({
-                message: "WebSocket error",
-                code: "WS_ERROR"
-              }))
-            }
-          })
-
-          // Process messages through router
-          yield* Stream.runForEach(messageStream, (message) =>
-            Effect.gen(function* () {
-              try {
-                const request = JSON.parse(message)
-                // Execute through router
-                // const response = yield* router.execute(request);
-                // ws.send(JSON.stringify(response));
-              } catch (error) {
-                ws.send(JSON.stringify({
-                  error: "Invalid message format"
-                }))
-              }
-            })
+        if (!operation || typeof operation !== "string") {
+          return new Response(
+            JSON.stringify({ error: { message: "Missing operation", code: "BAD_REQUEST" } }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
           )
+        }
+
+        const handler = options.handlers[operation]
+        if (!handler) {
+          return new Response(
+            JSON.stringify({ error: { message: \`Unknown operation: \${operation}\`, code: "NOT_FOUND" } }),
+            { status: 404, headers: { "Content-Type": "application/json" } }
+          )
+        }
+
+        const effect = handler(payload).pipe(
+          options.layers ? Effect.provide(options.layers) : (e) => e as Effect.Effect<unknown, unknown, never>
+        )
+
+        const result = await Effect.runPromise(effect as Effect.Effect<unknown, never, never>)
+        return new Response(JSON.stringify(result), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
         })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Internal server error"
+        return new Response(
+          JSON.stringify({ error: { message, code: "INTERNAL_ERROR" } }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        )
+      }
     }
-  })
+  }
+}
 `);
 
   builder.addSectionComment('Transport Utilities');
@@ -305,6 +361,120 @@ export const errorResponse = (error: RpcInfraError): Response =>
     error.code === "RATE_LIMITED" ? 429 :
     500
   )
+`);
+
+  builder.addSectionComment('Unified RPC Client');
+
+  builder.addRaw(`/**
+ * RPC Client
+ *
+ * Unified RPC client that uses HTTP transport.
+ *
+ * @example
+ * \`\`\`typescript
+ * // HTTP transport
+ * const HttpClientLive = RpcTransportClient.layer({
+ *   mode: "http",
+ *   baseUrl: "https://api.example.com/rpc"
+ * });
+ *
+ * const program = Effect.gen(function* () {
+ *   const client = yield* RpcTransportClient;
+ *   return yield* client.call("getUser", { id: "123" });
+ * });
+ * \`\`\`
+ */
+export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
+  RpcTransportClient,
+  {
+    readonly call: <R>(
+      operation: string,
+      payload: unknown
+    ) => Effect.Effect<R, RpcInfraError>
+  }
+>() {
+  /**
+   * Create layer from transport configuration
+   */
+  static layer(config: RpcTransportConfig): Layer.Layer<RpcTransportClient, never, HttpClient.HttpClient> {
+    return Layer.effect(
+      RpcTransportClient,
+      Effect.gen(function* () {
+        const httpClient = yield* HttpClient.HttpClient
+        return {
+          call: <R>(
+            operation: string,
+            payload: unknown
+          ) =>
+            Effect.gen(function* () {
+              // Build request
+              const request = HttpClientRequest.post(config.baseUrl).pipe(
+                HttpClientRequest.setHeaders({
+                  "Content-Type": "application/json",
+                  ...config.headers
+                }),
+                HttpClientRequest.bodyJson({
+                  operation,
+                  payload
+                })
+              )
+
+              // Execute request
+              const response = yield* Effect.flatMap(
+                request,
+                (req) => httpClient.execute(req)
+              ).pipe(
+                Effect.catchAll((error) =>
+                  Effect.fail(
+                    new RpcInfraError({
+                      message: \`RPC call failed: \${String(error)}\`,
+                      code: "NETWORK_ERROR"
+                    })
+                  )
+                )
+              )
+
+              // Parse response
+              if (response.status !== 200) {
+                return yield* Effect.fail(
+                  new RpcInfraError({
+                    message: \`RPC error: HTTP \${response.status}\`,
+                    code: "HTTP_ERROR"
+                  })
+                )
+              }
+
+              const body = yield* response.json.pipe(
+                Effect.catchAll(() =>
+                  Effect.fail(
+                    new RpcInfraError({
+                      message: "Failed to parse RPC response",
+                      code: "PARSE_ERROR"
+                    })
+                  )
+                )
+              )
+
+              // Check for RPC-level error
+              if (body && typeof body === "object" && "error" in body) {
+                const errorBody = body as { error?: { message?: string; code?: string } }
+                return yield* Effect.fail(
+                  new RpcInfraError({
+                    message: errorBody.error?.message ?? "Unknown RPC error",
+                    code: errorBody.error?.code ?? "RPC_ERROR"
+                  })
+                )
+              }
+
+              return body as R
+            }).pipe(
+              Effect.withSpan(\`RpcTransportClient.\${operation}\`)
+            ) as Effect.Effect<R, RpcInfraError>
+        }
+      })
+    )
+  }
+}
 `);
 
   return builder.toString();

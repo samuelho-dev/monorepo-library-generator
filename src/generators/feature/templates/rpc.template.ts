@@ -5,11 +5,17 @@
  *
  * Uses native @effect/rpc with RpcMiddleware.Tag for per-RPC auth.
  *
+ * RPC Definition Pattern:
+ * - Rpc.make() for defining request/response schemas
+ * - .middleware(AuthMiddleware) for protected routes (optional)
+ * - RpcGroup.make() to group related operations
+ *
  * @module monorepo-library-generator/feature/rpc-template
  */
 
 import { TypeScriptBuilder } from '../../../utils/code-builder';
 import type { FeatureTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate rpc/rpc.ts file for feature library
@@ -19,7 +25,8 @@ import type { FeatureTemplateOptions } from '../../../utils/types';
  */
 export function generateRpcFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder();
-  const { className, name, fileName } = options;
+  const { className, fileName, name } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
   builder.addFileHeader({
@@ -27,25 +34,28 @@ export function generateRpcFile(options: FeatureTemplateOptions) {
     description: `RPC interface for ${name} operations.
 
 Uses native @effect/rpc patterns:
-- Rpc.make() for RPC definitions
+- Rpc.make() for RPC definitions with typed payloads
 - .middleware(AuthMiddleware) for protected routes
 - RpcGroup.make() to group related operations
 
 Protected vs Public Routes:
-- Protected: Add .middleware(AuthMiddleware) after Rpc.make()
-- Public: No middleware - public by default`,
+- Protected: Uses protectedHandler in handlers.ts - requires auth
+- Public: Uses publicHandler in handlers.ts - no auth required
+
+Note: Middleware is applied at the handler level via handler factories,
+not at the RPC definition level. This gives more flexibility.`,
   });
 
   // Add imports
   builder.addImports([
     { from: '@effect/rpc', imports: ['Rpc', 'RpcGroup'] },
     { from: 'effect', imports: ['Schema'] },
-    { from: './errors', imports: [`${className}RpcError`] },
+    { from: './errors', imports: [`${className}Error`] },
   ]);
 
-  // Add infra-rpc middleware import comment
-  builder.addRaw(`// Import AuthMiddleware for protected routes:
-// import { AuthMiddleware, AuthError } from "@scope/infra-rpc/middleware";
+  // Add AuthError import for error union types
+  builder.addRaw(`// Import auth errors for protected routes
+import { AuthError } from "${scope}/infra-auth";
 `);
   builder.addBlankLine();
 
@@ -124,85 +134,90 @@ export const SuccessResponse = Schema.Struct({
   builder.addRaw(`/**
  * RPC operations for ${name}
  *
- * Each operation is defined with Rpc.make() and can have middleware attached.
+ * Each operation is defined with Rpc.make().
+ * Handler factories (protectedHandler/publicHandler) determine auth.
  *
- * Protected Routes (require auth):
- * - Add .middleware(AuthMiddleware) to require authentication
- * - Handler will have access to CurrentUser via yield* CurrentUser
- *
- * Public Routes (no auth required):
- * - Don't add middleware - it's public by default
+ * Error Types:
+ * - Public routes: Only ${className}Error
+ * - Protected routes: Schema.Union(${className}Error, AuthError)
+ *   (AuthError can occur if auth middleware fails)
  *
  * @example
  * \`\`\`typescript
- * // Protected route
- * class Create${className} extends Rpc.make("Create${className}", {
- *   payload: Create${className}Request,
- *   success: ${className}Response,
- *   error: Schema.Union(${className}RpcError, AuthError),
- * }).middleware(AuthMiddleware) {}
+ * // Handler for public route (no auth required)
+ * Get${className}: publicHandler(({ ctx, input }) =>
+ *   Effect.gen(function* () {
+ *     const { id } = input;
+ *     // ctx.user is null for public routes
+ *     return yield* fetchById(id);
+ *   })
+ * )
  *
- * // Public route
- * class Get${className} extends Rpc.make("Get${className}", {
- *   payload: Get${className}Request,
- *   success: ${className}Response,
- *   error: ${className}RpcError,
- * }) {}
+ * // Handler for protected route (auth required)
+ * Create${className}: protectedHandler(({ ctx, input }) =>
+ *   Effect.gen(function* () {
+ *     const { name } = input;
+ *     const userId = ctx.user.id; // Guaranteed to exist
+ *     return yield* createWithOwner(name, userId);
+ *   })
+ * )
  * \`\`\`
  */
 
 /**
  * Get ${name} by ID (Public)
+ *
+ * No authentication required.
  */
 export class Get${className} extends Rpc.make("Get${className}", {
   payload: Get${className}Request,
   success: ${className}Response,
-  error: ${className}RpcError,
+  error: ${className}Error,
 }) {}
 
 /**
  * List ${name}s with pagination (Public)
+ *
+ * No authentication required.
  */
 export class List${className} extends Rpc.make("List${className}", {
   payload: List${className}Request,
   success: List${className}Response,
-  error: ${className}RpcError,
+  error: ${className}Error,
 }) {}
 
 /**
- * Create new ${name} (Protected - uncomment .middleware to enable auth)
+ * Create new ${name} (Protected)
  *
- * @example To make protected, import AuthMiddleware and add:
- * \`\`\`typescript
- * export class Create${className} extends Rpc.make(...).middleware(AuthMiddleware) {}
- * \`\`\`
+ * Requires authentication. Can return AuthError.
  */
 export class Create${className} extends Rpc.make("Create${className}", {
   payload: Create${className}Request,
   success: ${className}Response,
-  error: ${className}RpcError,
+  error: Schema.Union(${className}Error, AuthError),
 }) {}
-// To protect: .middleware(AuthMiddleware)
 
 /**
- * Update ${name} (Protected - uncomment .middleware to enable auth)
+ * Update ${name} (Protected)
+ *
+ * Requires authentication. Can return AuthError.
  */
 export class Update${className} extends Rpc.make("Update${className}", {
   payload: Update${className}Request,
   success: ${className}Response,
-  error: ${className}RpcError,
+  error: Schema.Union(${className}Error, AuthError),
 }) {}
-// To protect: .middleware(AuthMiddleware)
 
 /**
- * Delete ${name} (Protected - uncomment .middleware to enable auth)
+ * Delete ${name} (Protected)
+ *
+ * Requires authentication. Can return AuthError.
  */
 export class Delete${className} extends Rpc.make("Delete${className}", {
   payload: Delete${className}Request,
   success: SuccessResponse,
-  error: ${className}RpcError,
+  error: Schema.Union(${className}Error, AuthError),
 }) {}
-// To protect: .middleware(AuthMiddleware)
 `);
 
   builder.addSectionComment('RPC Group');
@@ -215,10 +230,19 @@ export class Delete${className} extends Rpc.make("Delete${className}", {
  * @example
  * \`\`\`typescript
  * import { RpcRouter } from "@effect/rpc";
- * import { ${className}Rpcs } from "@scope/contract-${fileName}/rpc";
+ * import { createNextHandler } from "${scope}/infra-rpc/transport";
+ * import { ${className}Rpcs } from "${scope}/feature-${fileName}/rpc";
+ * import { ${className}Handlers } from "${scope}/feature-${fileName}/rpc/handlers";
  *
- * // Create router with multiple groups
- * const router = RpcRouter.make(${className}Rpcs, OtherRpcs);
+ * // Create Next.js handler
+ * export const { POST } = createNextHandler({
+ *   groups: [${className}Rpcs],
+ *   handlers: ${className}Handlers,
+ *   layers: Layer.mergeAll(
+ *     AuthMiddlewareLive,
+ *     ${className}Service.Live
+ *   )
+ * });
  * \`\`\`
  */
 export const ${className}Rpcs = RpcGroup.make(

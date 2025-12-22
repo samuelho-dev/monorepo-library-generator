@@ -17,12 +17,9 @@
 import { Effect } from 'effect';
 import type { FileSystemAdapter } from '../../utils/filesystem';
 import { parseTags } from '../../utils/generators';
-import type { DataAccessTemplateOptions } from '../../utils/types';
 // Import type-only exports template
-import {
-  generateTypesOnlyFile,
-  type TypesOnlyExportOptions,
-} from '../../utils/templates';
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates';
+import type { DataAccessTemplateOptions } from '../../utils/types';
 import { getPackageName } from '../../utils/workspace-config';
 import { generateErrorsFile } from '../data-access/templates/errors.template';
 import { generateIndexFile } from '../data-access/templates/index.template';

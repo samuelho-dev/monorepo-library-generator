@@ -125,21 +125,21 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
     // - Type annotations in variable declarations
     const functionReturnTypePattern =
       /(?:^|\n)\s*(?:export\s+)?function\s+\w+\s*\([^)]*\)\s*:\s*[^{]+\s*\{/g;
-    let match;
-    while ((match = functionReturnTypePattern.exec(content)) !== null) {
+    for (const match of content.matchAll(functionReturnTypePattern)) {
       // Skip if it's a type predicate (x is Type)
       if (match[0].includes(' is ')) continue;
       // Skip if it's inside a comment block
-      const beforeMatch = content.substring(0, match.index);
+      const matchIndex = match.index ?? 0;
+      const beforeMatch = content.substring(0, matchIndex);
       const lastCommentStart = beforeMatch.lastIndexOf('/*');
       const lastCommentEnd = beforeMatch.lastIndexOf('*/');
       if (lastCommentStart > lastCommentEnd) continue;
       // Skip if line starts with // or *
       const lineStart = beforeMatch.lastIndexOf('\n');
-      const lineContent = content.substring(lineStart + 1, match.index + match[0].length);
+      const lineContent = content.substring(lineStart + 1, matchIndex + match[0].length);
       if (lineContent.trim().startsWith('//') || lineContent.trim().startsWith('*')) continue;
 
-      const lineNum = content.substring(0, match.index).split('\n').length;
+      const lineNum = content.substring(0, matchIndex).split('\n').length;
       errors.push({
         file: filePath,
         line: lineNum,
@@ -166,9 +166,9 @@ function collectTypeScriptFiles(tree: Tree, projectRoot: string) {
         files.push(path);
       }
     } else {
-      tree.children(path).forEach((child) => {
+      for (const child of tree.children(path)) {
         visit(`${path}/${child}`);
-      });
+      }
     }
   };
 

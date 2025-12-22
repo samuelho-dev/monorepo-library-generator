@@ -25,7 +25,9 @@ export function generateTypesOnlyFile(options: TypesOnlyOptions) {
 
   // All entity types come from the database types file
   const entityExports = `// Entity types from database schema
-export type { ${entities.join(', ')}, ${entities.map((e) => `${e}Id`).join(', ')}, ${entities.map((e) => `${e}Insert`).join(', ')}, ${entities.map((e) => `${e}Update`).join(', ')} } from "./lib/types/database";`;
+export type { ${entities.join(', ')}, ${entities.map((e) => `${e}Id`).join(', ')}, ${entities
+    .map((e) => `${e}Insert`)
+    .join(', ')}, ${entities.map((e) => `${e}Update`).join(', ')} } from "./lib/types/database";`;
 
   return `/**
  * Type-Only Exports

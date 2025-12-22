@@ -16,8 +16,8 @@ import { FileSystem, Path } from '@effect/platform';
 import { NodeFileSystem, NodePath } from '@effect/platform-node';
 import type { Tree } from '@nx/devkit';
 import { Context, Data, Effect } from 'effect';
+import type { WorkspaceContext } from '../infrastructure/workspace/types';
 import { copyAllDotfiles, type DotfileName } from './dotfiles';
-import type { InterfaceType, WorkspaceContext } from '../infrastructure/workspace/types';
 
 // ============================================================================
 // Error Types
@@ -470,7 +470,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 }
 
-export function createMCPAdapter(workspaceRoot: string): FileSystemAdapter {
+export function createMCPAdapter(workspaceRoot: string) {
   return new MCPFileSystemAdapter(workspaceRoot);
 }
 
@@ -647,7 +647,7 @@ export class TreeAdapter implements FileSystemAdapter {
    */
   private toRelativePath(path: string) {
     const workspaceRoot = this.tree.root;
-    if (path.startsWith(workspaceRoot + '/')) {
+    if (path.startsWith(`${workspaceRoot}/`)) {
       return path.slice(workspaceRoot.length + 1);
     }
     if (path.startsWith(workspaceRoot)) {
@@ -794,7 +794,7 @@ export interface EnvVarToInject {
  * @param vars - Array of environment variables to inject
  * @returns Effect that succeeds with void or fails with file system errors
  */
-export function injectEnvVars(adapter: FileSystemAdapter, vars: readonly EnvVarToInject[]) {
+export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<EnvVarToInject>) {
   return Effect.gen(function* () {
     const workspaceRoot = adapter.getWorkspaceRoot();
     const envFilePath = `${workspaceRoot}/libs/env/src/env.ts`;
@@ -848,8 +848,8 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: readonly EnvVarT
 
           // Trim trailing whitespace and ensure no double comma
           const trimmed = beforeBrace.trimEnd();
-          const withComma = trimmed.endsWith(',') ? trimmed : trimmed + ',';
-          const newServerSection = withComma + '\n' + makeConfigLine(v) + '\n  ' + afterBrace;
+          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`;
+          const newServerSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`;
 
           updatedContent = updatedContent.replace(serverSection, newServerSection);
         }
@@ -871,8 +871,8 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: readonly EnvVarT
           const afterBrace = clientSection.slice(closingBrace);
 
           const trimmed = beforeBrace.trimEnd();
-          const withComma = trimmed.endsWith(',') ? trimmed : trimmed + ',';
-          const newClientSection = withComma + '\n' + makeConfigLine(v) + '\n  ' + afterBrace;
+          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`;
+          const newClientSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`;
 
           updatedContent = updatedContent.replace(clientSection, newClientSection);
         }
@@ -894,8 +894,8 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: readonly EnvVarT
           const afterBrace = sharedSection.slice(closingBrace);
 
           const trimmed = beforeBrace.trimEnd();
-          const withComma = trimmed.endsWith(',') ? trimmed : trimmed + ',';
-          const newSharedSection = withComma + '\n' + makeConfigLine(v) + '\n  ' + afterBrace;
+          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`;
+          const newSharedSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`;
 
           updatedContent = updatedContent.replace(sharedSection, newSharedSection);
         }

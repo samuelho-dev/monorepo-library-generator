@@ -14,13 +14,10 @@
  */
 
 import { Effect } from 'effect';
-import { injectEnvVars, type FileSystemAdapter } from '../../utils/filesystem';
 import type { PlatformType } from '../../utils/build';
+import { type FileSystemAdapter, injectEnvVars } from '../../utils/filesystem';
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates';
 import type { Platform, ProviderTemplateOptions } from '../../utils/types';
-import {
-  generateTypesOnlyFile,
-  type TypesOnlyExportOptions,
-} from '../../utils/templates';
 import {
   generateErrorsFile,
   generateIndexFile,
@@ -37,6 +34,16 @@ import {
 } from '../provider/templates/service/index';
 import { generateKyselyProviderServiceFile } from '../provider/templates/service/kysely-service.template';
 import { generateKyselyProviderServiceIndexFile } from '../provider/templates/service/kysely-service-index.template';
+import {
+  generateSupabaseAuthServiceFile,
+  generateSupabaseClientServiceFile,
+  generateSupabaseErrorsFile,
+  generateSupabaseIndexFile,
+  generateSupabaseServiceIndexFile,
+  generateSupabaseSpecFile,
+  generateSupabaseStorageServiceFile,
+  generateSupabaseTypesFile,
+} from '../provider/templates/supabase/index';
 
 /**
  * Provider Generator Core Options
@@ -135,15 +142,19 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
     const filesGenerated: Array<string> = [];
     const sourceLibPath = `${options.sourceRoot}/lib`;
 
-    // Detect if this is the Kysely provider (special case with dedicated templates)
+    // Detect if this is a special provider with dedicated templates
     const isKyselyProvider = options.name === 'kysely' || options.externalService === 'Kysely';
+    const isSupabaseProvider =
+      options.name === 'supabase' || options.externalService === 'Supabase';
 
-    // Generate barrel exports - Kysely uses specialized template
+    // Generate barrel exports - special providers use specialized templates
     yield* adapter.writeFile(
       `${options.sourceRoot}/index.ts`,
       isKyselyProvider
         ? generateKyselyIndexFile(templateOptions)
-        : generateIndexFile(templateOptions),
+        : isSupabaseProvider
+          ? generateSupabaseIndexFile(templateOptions)
+          : generateIndexFile(templateOptions),
     );
     filesGenerated.push(`${options.sourceRoot}/index.ts`);
 
@@ -639,56 +650,91 @@ The baseline implementation remains useful for unit tests and demonstrations.
       `${sourceLibPath}/errors.ts`,
       isKyselyProvider
         ? generateKyselyErrorsFile(templateOptions)
-        : generateErrorsFile(templateOptions),
+        : isSupabaseProvider
+          ? generateSupabaseErrorsFile(templateOptions)
+          : generateErrorsFile(templateOptions),
     );
     filesGenerated.push(`${sourceLibPath}/errors.ts`);
 
-    yield* adapter.writeFile(`${sourceLibPath}/types.ts`, generateTypesFile(templateOptions));
+    yield* adapter.writeFile(
+      `${sourceLibPath}/types.ts`,
+      isSupabaseProvider
+        ? generateSupabaseTypesFile(templateOptions)
+        : generateTypesFile(templateOptions),
+    );
     filesGenerated.push(`${sourceLibPath}/types.ts`);
 
-    yield* adapter.writeFile(
-      `${sourceLibPath}/validation.ts`,
-      generateValidationFile(templateOptions),
-    );
-    filesGenerated.push(`${sourceLibPath}/validation.ts`);
+    // Supabase doesn't need validation.ts (uses Effect Schema in types.ts)
+    if (!isSupabaseProvider) {
+      yield* adapter.writeFile(
+        `${sourceLibPath}/validation.ts`,
+        generateValidationFile(templateOptions),
+      );
+      filesGenerated.push(`${sourceLibPath}/validation.ts`);
+    }
 
     // Generate service directory structure for granular imports
     const servicePath = `${sourceLibPath}/service`;
     yield* adapter.makeDirectory(servicePath);
 
-    // Generate service definition (lightweight Context.Tag with static layers)
-    yield* adapter.writeFile(
-      `${servicePath}/service.ts`,
-      isKyselyProvider
-        ? generateKyselyProviderServiceFile(templateOptions)
-        : generateProviderServiceFile(templateOptions),
-    );
-    filesGenerated.push(`${servicePath}/service.ts`);
+    // Supabase has multiple service files (client, auth, storage)
+    if (isSupabaseProvider) {
+      yield* adapter.writeFile(
+        `${servicePath}/client.ts`,
+        generateSupabaseClientServiceFile(templateOptions),
+      );
+      filesGenerated.push(`${servicePath}/client.ts`);
+
+      yield* adapter.writeFile(
+        `${servicePath}/auth.ts`,
+        generateSupabaseAuthServiceFile(templateOptions),
+      );
+      filesGenerated.push(`${servicePath}/auth.ts`);
+
+      yield* adapter.writeFile(
+        `${servicePath}/storage.ts`,
+        generateSupabaseStorageServiceFile(templateOptions),
+      );
+      filesGenerated.push(`${servicePath}/storage.ts`);
+    } else {
+      // Generate service definition (lightweight Context.Tag with static layers)
+      yield* adapter.writeFile(
+        `${servicePath}/service.ts`,
+        isKyselyProvider
+          ? generateKyselyProviderServiceFile(templateOptions)
+          : generateProviderServiceFile(templateOptions),
+      );
+      filesGenerated.push(`${servicePath}/service.ts`);
+    }
 
     // Note: SDK operation templates (CRUD) were removed in favor of
     // Effect-based service patterns with Context.Tag and Layer composition.
     // The service.ts file now contains the full service interface.
     // For SDK providers, operations are defined directly in the service template.
 
-    // Generate service barrel export - Kysely uses specialized template
+    // Generate service barrel export - special providers use specialized templates
     yield* adapter.writeFile(
       `${servicePath}/index.ts`,
       isKyselyProvider
         ? generateKyselyProviderServiceIndexFile(templateOptions)
-        : generateProviderServiceIndexFile(templateOptions),
+        : isSupabaseProvider
+          ? generateSupabaseServiceIndexFile(templateOptions)
+          : generateProviderServiceIndexFile(templateOptions),
     );
     filesGenerated.push(`${servicePath}/index.ts`);
 
-    // Kysely provider has layers defined as static members on the service class
+    // Kysely and Supabase providers have layers defined as static members on service classes
     // Other providers use a separate layers.ts file
-    if (!isKyselyProvider) {
+    if (!(isKyselyProvider || isSupabaseProvider)) {
       yield* adapter.writeFile(`${sourceLibPath}/layers.ts`, generateLayersFile(templateOptions));
       filesGenerated.push(`${sourceLibPath}/layers.ts`);
     }
 
     yield* adapter.writeFile(
       `${sourceLibPath}/service.spec.ts`,
-      generateServiceSpecFile(templateOptions),
+      isSupabaseProvider
+        ? generateSupabaseSpecFile(templateOptions)
+        : generateServiceSpecFile(templateOptions),
     );
     filesGenerated.push(`${sourceLibPath}/service.spec.ts`);
 
@@ -696,8 +742,16 @@ The baseline implementation remains useful for unit tests and demonstrations.
     // All exports are now handled through the main index.ts
 
     // Inject environment variables for this provider (except for built-in providers)
-    // Built-in providers (kysely, effect-cache, etc.) are handled by init command
-    const builtInProviders = ['kysely', 'effect-cache', 'effect-logger', 'effect-metrics', 'effect-queue', 'effect-pubsub'];
+    // Built-in providers (kysely, supabase, effect-cache, etc.) are handled by init command
+    const builtInProviders = [
+      'kysely',
+      'supabase',
+      'effect-cache',
+      'effect-logger',
+      'effect-metrics',
+      'effect-queue',
+      'effect-pubsub',
+    ];
     if (!builtInProviders.includes(options.name)) {
       yield* injectEnvVars(adapter, [
         { name: `${options.constantName}_API_KEY`, type: 'redacted', context: 'server' },

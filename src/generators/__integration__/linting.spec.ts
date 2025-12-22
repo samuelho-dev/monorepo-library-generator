@@ -9,11 +9,11 @@
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import contractGenerator from '../contract/contract';
-import dataAccessGenerator from '../data-access/data-access';
-import featureGenerator from '../feature/feature';
-import infraGenerator from '../infra/infra';
-import providerGenerator from '../provider/provider';
+import { contractGenerator } from '../contract/contract';
+import { dataAccessGenerator } from '../data-access/data-access';
+import { featureGenerator } from '../feature/feature';
+import { infraGenerator } from '../infra/infra';
+import { providerGenerator } from '../provider/provider';
 import { lintTreeFiles } from './utils/linter';
 
 // ============================================================================
@@ -31,9 +31,6 @@ describe('Contract Generator - Linting', () => {
     await contractGenerator(tree, { name: 'product' });
 
     const result = lintTreeFiles(tree, 'libs/contract/product/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -42,9 +39,6 @@ describe('Contract Generator - Linting', () => {
     await contractGenerator(tree, { name: 'order', includeCQRS: true });
 
     const result = lintTreeFiles(tree, 'libs/contract/order/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -52,9 +46,6 @@ describe('Contract Generator - Linting', () => {
     await contractGenerator(tree, { name: 'user', includeRPC: true });
 
     const result = lintTreeFiles(tree, 'libs/contract/user/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -66,9 +57,6 @@ describe('Contract Generator - Linting', () => {
     });
 
     const result = lintTreeFiles(tree, 'libs/contract/payment/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -88,9 +76,6 @@ describe('Data Access Generator - Linting', () => {
     await dataAccessGenerator(tree, { name: 'product' });
 
     const result = lintTreeFiles(tree, 'libs/data-access/product/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -99,9 +84,6 @@ describe('Data Access Generator - Linting', () => {
     await dataAccessGenerator(tree, { name: 'order', includeCQRS: true });
 
     const result = lintTreeFiles(tree, 'libs/data-access/order/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -112,9 +94,6 @@ describe('Data Access Generator - Linting', () => {
     });
 
     const result = lintTreeFiles(tree, 'libs/data-access/user/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -134,9 +113,6 @@ describe('Feature Generator - Linting', () => {
     await featureGenerator(tree, { name: 'product' });
 
     const result = lintTreeFiles(tree, 'libs/feature/product/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -148,9 +124,6 @@ describe('Feature Generator - Linting', () => {
     });
 
     const result = lintTreeFiles(tree, 'libs/feature/order/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -170,9 +143,6 @@ describe('Infrastructure Generator - Linting', () => {
     await infraGenerator(tree, { name: 'cache' });
 
     const result = lintTreeFiles(tree, 'libs/infra/cache/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -181,9 +151,6 @@ describe('Infrastructure Generator - Linting', () => {
     await infraGenerator(tree, { name: 'storage', includeClientServer: true });
 
     const result = lintTreeFiles(tree, 'libs/infra/storage/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -191,9 +158,6 @@ describe('Infrastructure Generator - Linting', () => {
     await infraGenerator(tree, { name: 'config', includeEdge: true });
 
     const result = lintTreeFiles(tree, 'libs/infra/config/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 
@@ -205,9 +169,6 @@ describe('Infrastructure Generator - Linting', () => {
     });
 
     const result = lintTreeFiles(tree, 'libs/infra/metrics/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -227,9 +188,6 @@ describe('Provider Generator - Linting', () => {
     await providerGenerator(tree, { name: 'stripe', externalService: 'Stripe API' });
 
     const result = lintTreeFiles(tree, 'libs/provider/stripe/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
     expect(result.fileCount).toBeGreaterThan(0);
   });
@@ -242,9 +200,6 @@ describe('Provider Generator - Linting', () => {
     });
 
     const result = lintTreeFiles(tree, 'libs/provider/twilio/src');
-    if (!result.success) {
-      console.error('Lint errors:', result.errors);
-    }
     expect(result.success).toBe(true);
   });
 });
@@ -281,9 +236,6 @@ describe('Specific Lint Rules', () => {
       for (const lib of libs) {
         const result = lintTreeFiles(tree, lib);
         const typeAssertionErrors = result.errors.filter((e) => e.rule === 'no-type-assertion');
-        if (typeAssertionErrors.length > 0) {
-          console.error(`Type assertion errors in ${lib}:`, typeAssertionErrors);
-        }
         expect(typeAssertionErrors).toHaveLength(0);
       }
     });
@@ -295,9 +247,6 @@ describe('Specific Lint Rules', () => {
 
       const result = lintTreeFiles(tree, 'libs/contract/test/src');
       const extensionErrors = result.errors.filter((e) => e.rule === 'no-file-extension');
-      if (extensionErrors.length > 0) {
-        console.error('File extension errors:', extensionErrors);
-      }
       expect(extensionErrors).toHaveLength(0);
     });
   });
@@ -314,9 +263,6 @@ describe('Specific Lint Rules', () => {
         ...result1.errors.filter((e) => e.rule === 'no-effect-do'),
         ...result2.errors.filter((e) => e.rule === 'no-effect-do'),
       ];
-      if (doErrors.length > 0) {
-        console.error('Effect.Do errors:', doErrors);
-      }
       expect(doErrors).toHaveLength(0);
     });
   });
@@ -333,9 +279,6 @@ describe('Specific Lint Rules', () => {
         ...result1.errors.filter((e) => e.rule === 'yield-star-required'),
         ...result2.errors.filter((e) => e.rule === 'yield-star-required'),
       ];
-      if (yieldErrors.length > 0) {
-        console.error('Yield* errors:', yieldErrors);
-      }
       expect(yieldErrors).toHaveLength(0);
     });
   });

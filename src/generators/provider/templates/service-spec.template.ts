@@ -20,10 +20,7 @@ import type { ProviderTemplateOptions } from '../../../utils/types';
  */
 export function generateServiceSpecFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder();
-  const { className, externalService, fileName } = options;
-
-  // Detect if this is Kysely provider (uses static layers instead of separate layers.ts)
-  const isKyselyProvider = externalService === 'Kysely';
+  const { className, fileName } = options;
 
   // File header
   builder.addFileHeader({
@@ -87,7 +84,9 @@ Testing Guidelines:
   builder.addRaw(`        const service = yield* ${className}TestService`);
   builder.addRaw(`        const config = yield* service.getConfig()`);
   builder.addRaw(`        expect(config).toEqual({ timeout: 5000 })`);
-  builder.addRaw(`      }).pipe(Effect.provide(Layer.fresh(create${className}TestLayer({ timeout: 5000 })))))`);
+  builder.addRaw(
+    `      }).pipe(Effect.provide(Layer.fresh(create${className}TestLayer({ timeout: 5000 })))))`,
+  );
   builder.addRaw(`  })`);
   builder.addBlankLine();
 
@@ -103,7 +102,9 @@ Testing Guidelines:
   builder.addRaw(`          Layer.fresh(`);
   builder.addRaw(`            Layer.merge(`);
   builder.addRaw(`              create${className}TestLayer(),`);
-  builder.addRaw(`              Layer.succeed(Context.GenericTag<{ version: string }>("Version"), {`);
+  builder.addRaw(
+    `              Layer.succeed(Context.GenericTag<{ version: string }>("Version"), {`,
+  );
   builder.addRaw(`                version: "1.0.0"`);
   builder.addRaw(`              })`);
   builder.addRaw(`            )`);
@@ -128,7 +129,9 @@ Testing Guidelines:
 
   // Layer Types tests
   builder.addRaw(`  describe("Layer Types", () => {`);
-  builder.addRaw(`    it.scoped("should work with Layer.succeed for synchronous initialization", () => {`);
+  builder.addRaw(
+    `    it.scoped("should work with Layer.succeed for synchronous initialization", () => {`,
+  );
   builder.addRaw(`      const syncLayer = Layer.succeed(${className}TestService, {`);
   builder.addRaw(`        getName: () => Effect.succeed("sync-${fileName}"),`);
   builder.addRaw(`        getConfig: () => Effect.succeed({})`);

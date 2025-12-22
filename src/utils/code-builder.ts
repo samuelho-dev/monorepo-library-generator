@@ -265,9 +265,9 @@ export class TypeScriptBuilder {
    */
   addComment(text: string, style: 'line' | 'section' | 'block' = 'line') {
     if (style === 'section') {
-      this.lines.push('// ' + '='.repeat(76));
+      this.lines.push(`// ${'='.repeat(76)}`);
       this.lines.push(`// ${text}`);
-      this.lines.push('// ' + '='.repeat(76));
+      this.lines.push(`// ${'='.repeat(76)}`);
     } else if (style === 'block') {
       this.lines.push('/**');
       this.lines.push(` * ${text}`);
@@ -677,11 +677,11 @@ ${methods}
     // Generate dependency yields if specified
     const dependencyYields =
       config.dependencies && config.dependencies.length > 0
-        ? config.dependencies
+        ? `${config.dependencies
             .map(
               (dep) => `    const ${dep.charAt(0).toLowerCase() + dep.slice(1)} = yield* ${dep};`,
             )
-            .join('\n') + '\n\n'
+            .join('\n')}\n\n`
         : '';
 
     const implementation = config.implementation.trim();
@@ -690,9 +690,9 @@ ${methods}
     ${config.serviceName},
     Effect.gen(function* () {
 ${dependencyYields}${implementation
-      .split('\n')
-      .map((line) => `      ${line}`)
-      .join('\n')}
+  .split('\n')
+  .map((line) => `      ${line}`)
+  .join('\n')}
     })
   );`;
   }

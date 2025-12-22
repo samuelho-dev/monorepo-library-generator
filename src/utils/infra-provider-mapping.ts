@@ -45,6 +45,8 @@ export type InfraConcernType =
   | 'queue'
   | 'pubsub'
   | 'rpc'
+  | 'auth'
+  | 'storage'
   | 'generic';
 
 /**
@@ -72,6 +74,13 @@ const CONCERN_KEYWORDS: Record<string, InfraConcernType> = {
   rpc: 'rpc',
   api: 'rpc',
   remote: 'rpc',
+  auth: 'auth',
+  authentication: 'auth',
+  authorization: 'auth',
+  storage: 'storage',
+  file: 'storage',
+  blob: 'storage',
+  upload: 'storage',
 };
 
 /**
@@ -80,7 +89,7 @@ const CONCERN_KEYWORDS: Record<string, InfraConcernType> = {
  * @param name - Library name (e.g., "cache", "my-queue-service")
  * @returns Detected concern type or "generic" if no match
  */
-export function detectInfraConcern(name: string): InfraConcernType {
+export function detectInfraConcern(name: string) {
   const lowerName = name.toLowerCase();
 
   for (const [keyword, concern] of Object.entries(CONCERN_KEYWORDS)) {
@@ -176,5 +185,15 @@ export function hasProviderMapping(infraName: string) {
  */
 export function usesEffectPrimitives(infraName: string) {
   const concern = detectInfraConcern(infraName);
-  return ['cache', 'database', 'logging', 'metrics', 'queue', 'pubsub', 'rpc'].includes(concern);
+  return [
+    'cache',
+    'database',
+    'logging',
+    'metrics',
+    'queue',
+    'pubsub',
+    'rpc',
+    'auth',
+    'storage',
+  ].includes(concern);
 }

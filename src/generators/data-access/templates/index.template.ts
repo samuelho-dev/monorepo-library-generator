@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/data-access/index-template
  */
 
-import { generateStandardErrorExports } from '../../../utils/templates';
 import { TypeScriptBuilder } from '../../../utils/code-builder';
+import { generateStandardErrorExports } from '../../../utils/templates';
 import type { DataAccessTemplateOptions } from '../../../utils/types';
 import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 

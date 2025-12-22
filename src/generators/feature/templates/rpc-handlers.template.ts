@@ -4,48 +4,55 @@
  * Generates rpc/handlers.ts file for feature libraries.
  *
  * Uses RpcGroup.toLayer for type-safe handler registration.
+ * Handler input types flow from RPC definitions - no explicit annotations.
  *
  * @module monorepo-library-generator/feature/rpc-handlers-template
  */
 
 import { TypeScriptBuilder } from '../../../utils/code-builder';
 import type { FeatureTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate rpc/handlers.ts file for feature library
  *
- * Creates RPC handler implementations using RpcGroup.toLayer pattern.
- * Handlers have access to middleware context from infra-rpc.
+ * Creates RPC handler implementations using RpcGroup.toLayer.
+ * Types flow from RPC definitions automatically.
  */
 export function generateRpcHandlersFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder();
   const { className, name } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
   builder.addFileHeader({
     title: `${className} RPC Handlers`,
     description: `Handler implementations for ${name} RPC operations.
 
-Uses RpcGroup.toLayer for type-safe handler registration:
-- Handlers are a Layer that provides implementations
-- Access CurrentUser from protected routes via yield* CurrentUser
-- Use getHandlerContext for better DX (single yield for all context)`,
+Uses RpcGroup.toLayer pattern - input types flow from RPC definitions.
+No explicit type annotations needed on handler parameters.
+
+Context Access:
+- CurrentUser: Authenticated user (for protected routes)
+- RequestMetaTag: Request metadata (requestId, etc.)
+- AuthMethodTag: Auth method used`,
   });
 
-  // Add imports
+  // Add imports - use unified error type from shared/errors
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Option'] },
-    {
-      from: './rpc',
-      imports: [`${className}Rpcs`],
-    },
-    { from: './errors', imports: [`${className}RpcError`] },
+    { from: 'effect', imports: ['Effect', 'Option'] },
+    { from: './rpc', imports: [`${className}Rpcs`] },
     { from: '../server/service', imports: [`${className}Service`] },
+    { from: '../shared/errors', imports: [`${className}Error`] },
   ]);
 
-  // Add infra-rpc middleware import comment
-  builder.addRaw(`// Import middleware context from infra-rpc for protected routes:
-// import { CurrentUser, getHandlerContext } from "@scope/infra-rpc/middleware";
+  // Add infra-auth context imports
+  builder.addRaw(`// Context services from infra-auth
+import {
+  CurrentUser,
+  RequestMetaTag,
+  AuthMethodTag,
+} from "${scope}/infra-auth";
 
 /**
  * Entity type for mapping service results to RPC responses
@@ -65,167 +72,165 @@ interface ${className}Entity {
   builder.addRaw(`/**
  * ${className} RPC Handlers Layer
  *
- * Provides handler implementations for ${className}Rpcs.
- * Use RpcGroup.toLayer for type-safe registration.
+ * Implements handlers for ${className}Rpcs using RpcGroup.toLayer.
+ * Input types are inferred from RPC definitions - no annotations needed.
  *
  * @example
  * \`\`\`typescript
- * // In app layer composition:
- * const appLayer = Layer.mergeAll(
- *   ${className}Handlers,
- *   OtherHandlers,
- *   AuthMiddlewareLive
- * );
+ * import { ${className}HandlersLayer } from "${scope}/feature-${name}/rpc";
+ * import { Layer } from "effect";
  *
- * // Create HTTP app
- * const httpApp = RpcServer.toHttpApp(router).pipe(
- *   Effect.provide(appLayer)
+ * // Compose with service layers
+ * const appLayer = Layer.mergeAll(
+ *   ${className}HandlersLayer,
+ *   ${className}Service.Live,
+ *   AuthMiddlewareLive,
  * );
  * \`\`\`
  */
-export const ${className}Handlers = ${className}Rpcs.toLayer({
+export const ${className}HandlersLayer = ${className}Rpcs.toLayer({
   /**
-   * Get a single ${name} by ID
+   * Get ${name} by ID (Public)
    */
-  Get${className}: ({ id }) =>
+  Get${className}: (input) =>
     Effect.gen(function* () {
-      // Access service from context
+      const meta = yield* RequestMetaTag;
+
+      yield* Effect.logDebug("Get${className} request", {
+        id: input.id,
+        requestId: meta.requestId,
+      });
+
       const service = yield* ${className}Service;
+      const result = yield* service.get(input.id);
 
-      // Execute service operation
-      const result = yield* service.get(id);
-
-      // Handle not found
       if (Option.isNone(result)) {
-        return yield* Effect.fail(
-          new ${className}RpcError({
-            message: \`${name} not found: \${id}\`,
-            code: "NOT_FOUND",
-          })
-        );
+        return yield* new ${className}Error({
+          message: \`${name} not found: \${input.id}\`,
+          code: "NOT_FOUND",
+        });
       }
 
-      // Map domain result to RPC response
       const entity = result.value as ${className}Entity;
       return {
         id: entity.id,
         name: entity.name ?? "${name}",
-        createdAt: entity.createdAt?.toISOString() ?? new Date().toISOString(),
+        createdAt: entity.createdAt ?? new Date(),
       };
     }),
 
   /**
-   * List ${name}s with pagination
+   * List ${name}s with pagination (Public)
    */
-  List${className}: ({ page, pageSize }) =>
+  List${className}: (input) =>
     Effect.gen(function* () {
+      const meta = yield* RequestMetaTag;
+
+      yield* Effect.logDebug("List${className} request", {
+        page: input.page,
+        pageSize: input.pageSize,
+        requestId: meta.requestId,
+      });
+
       const service = yield* ${className}Service;
+      const offset = ((input.page ?? 1) - 1) * (input.pageSize ?? 20);
+      const limit = input.pageSize ?? 20;
 
-      // Calculate offset from page
-      const offset = (page - 1) * pageSize;
-
-      // Execute service operation with pagination
-      const items = yield* service.findByCriteria({}, offset, pageSize);
+      const items = yield* service.findByCriteria({}, offset, limit);
       const total = yield* service.count({});
 
-      // Map domain results to RPC response
       return {
-        items: items.map((item) => {
+        items: items.map((item: unknown) => {
           const entity = item as ${className}Entity;
           return {
             id: entity.id,
             name: entity.name ?? "${name}",
-            createdAt: entity.createdAt?.toISOString() ?? new Date().toISOString(),
+            createdAt: entity.createdAt ?? new Date(),
           };
         }),
         total,
-        page,
-        pageSize,
+        page: input.page ?? 1,
+        pageSize: limit,
       };
     }),
 
   /**
-   * Create a new ${name}
-   *
-   * For protected routes, access CurrentUser:
-   * \`\`\`typescript
-   * const user = yield* CurrentUser;
-   * // or use DX helper:
-   * const ctx = yield* getHandlerContext;
-   * ctx.user.id; // authenticated user ID
-   * \`\`\`
+   * Create ${name} (Protected - requires CurrentUser)
    */
-  Create${className}: ({ name }) =>
+  Create${className}: (input) =>
     Effect.gen(function* () {
-      // For protected routes, access authenticated user:
-      // const user = yield* CurrentUser;
-      // or: const ctx = yield* getHandlerContext;
+      const user = yield* CurrentUser;
+      const authMethod = yield* AuthMethodTag;
+
+      yield* Effect.logInfo(\`Create${className} by user \${user.id} (\${user.email}) via \${authMethod}\`);
 
       const service = yield* ${className}Service;
+      const result = yield* service.create({
+        name: input.name,
+        createdBy: user.id,
+      });
 
-      // Execute service operation
-      const result = yield* service.create({ name });
       const created = result as ${className}Entity;
-
-      // Map domain result to RPC response
       return {
         id: created.id,
-        name: created.name ?? name,
-        createdAt: created.createdAt?.toISOString() ?? new Date().toISOString(),
+        name: created.name ?? input.name,
+        createdAt: created.createdAt ?? new Date(),
       };
     }),
 
   /**
-   * Update an existing ${name}
+   * Update ${name} (Protected)
    */
-  Update${className}: ({ id, name }) =>
+  Update${className}: (input) =>
     Effect.gen(function* () {
-      const service = yield* ${className}Service;
+      const user = yield* CurrentUser;
 
-      // Execute service operation
-      const updated = yield* service.update(id, { name });
+      yield* Effect.logInfo(\`Update${className} \${input.id} by user \${user.id}\`);
+
+      const service = yield* ${className}Service;
+      const updated = yield* service.update(input.id, {
+        name: input.name,
+        updatedBy: user.id,
+      });
 
       if (Option.isNone(updated)) {
-        return yield* Effect.fail(
-          new ${className}RpcError({
-            message: \`${name} not found: \${id}\`,
-            code: "NOT_FOUND",
-          })
-        );
+        return yield* new ${className}Error({
+          message: \`${name} not found: \${input.id}\`,
+          code: "NOT_FOUND",
+        });
       }
 
-      // Map domain result to RPC response
       const entity = updated.value as ${className}Entity;
       return {
         id: entity.id,
-        name: entity.name ?? name,
-        createdAt: entity.createdAt?.toISOString() ?? new Date().toISOString(),
+        name: entity.name ?? input.name,
+        createdAt: entity.createdAt ?? new Date(),
       };
     }),
 
   /**
-   * Delete a ${name}
+   * Delete ${name} (Protected)
    */
-  Delete${className}: ({ id }) =>
+  Delete${className}: (input) =>
     Effect.gen(function* () {
-      const service = yield* ${className}Service;
+      const user = yield* CurrentUser;
 
-      // Execute service operation
-      yield* service.delete(id);
+      yield* Effect.logInfo(\`Delete${className} \${input.id} by user \${user.id}\`);
+
+      const service = yield* ${className}Service;
+      yield* service.delete(input.id);
 
       return { success: true as const };
     }),
 });
 `);
 
-  builder.addSectionComment('Handler Type Export');
+  builder.addSectionComment('Type Export');
 
   builder.addRaw(`/**
  * Type for ${className} handlers layer
- *
- * Useful for testing and type inference.
  */
-export type ${className}HandlersType = typeof ${className}Handlers;
+export type ${className}HandlersLayerType = typeof ${className}HandlersLayer;
 `);
 
   return builder.toString();

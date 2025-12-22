@@ -23,10 +23,9 @@ export interface ParsedEnvVar {
  * @param filePath - Absolute path to .env file
  * @returns Array of parsed environment variables
  */
-export function parseDotEnvFile(filePath: string): Array<ParsedEnvVar> {
+export function parseDotEnvFile(filePath: string) {
   // Check if .env file exists
   if (!fs.existsSync(filePath)) {
-    console.log(`No .env file found at ${filePath}, using defaults`);
     return getDefaultEnvVars();
   }
 
@@ -44,7 +43,7 @@ export function parseDotEnvFile(filePath: string): Array<ParsedEnvVar> {
 
       // Parse KEY=value format
       const match = trimmed.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
-      if (!(match && match[1]) || match[2] === undefined) {
+      if (!match?.[1] || match[2] === undefined) {
         continue;
       }
 
@@ -77,14 +76,10 @@ export function parseDotEnvFile(filePath: string): Array<ParsedEnvVar> {
     }
 
     if (vars.length === 0) {
-      console.log(`.env file is empty, using defaults`);
       return getDefaultEnvVars();
     }
-
-    console.log(`Parsed ${vars.length} environment variables from .env`);
     return vars;
-  } catch (error) {
-    console.error(`Error parsing .env file: ${error}`);
+  } catch (_error) {
     return getDefaultEnvVars();
   }
 }
@@ -102,7 +97,7 @@ function inferType(value: string) {
   }
 
   // Numeric values
-  if (value !== '' && !isNaN(Number(value))) {
+  if (value !== '' && !Number.isNaN(Number(value))) {
     return 'number';
   }
 
@@ -214,6 +209,29 @@ export function getDefaultEnvVars(): Array<ParsedEnvVar> {
       context: 'server',
     },
 
+    // Supabase provider variables
+    {
+      name: 'SUPABASE_URL',
+      type: 'string',
+      isPublic: false,
+      isSecret: false,
+      context: 'server',
+    },
+    {
+      name: 'SUPABASE_ANON_KEY',
+      type: 'string',
+      isPublic: false,
+      isSecret: true,
+      context: 'server',
+    },
+    {
+      name: 'SUPABASE_SERVICE_ROLE_KEY',
+      type: 'string',
+      isPublic: false,
+      isSecret: true,
+      context: 'server',
+    },
+
     // Client-safe variables (PUBLIC_ prefix)
     { name: 'PUBLIC_API_URL', type: 'string', isPublic: true, isSecret: false, context: 'client' },
     {
@@ -243,7 +261,6 @@ export function findDotEnvFile(workspaceRoot: string) {
 
   for (const envPath of possiblePaths) {
     if (fs.existsSync(envPath)) {
-      console.log(`Found .env file at: ${envPath}`);
       return envPath;
     }
   }

@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { generateStandardErrorExports } from '../../../utils/templates';
 import { TypeScriptBuilder } from '../../../utils/code-builder';
+import { generateStandardErrorExports } from '../../../utils/templates';
 import type { InfraTemplateOptions } from '../../../utils/types';
 import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 

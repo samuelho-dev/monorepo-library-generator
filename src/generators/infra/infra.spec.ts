@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import infraGenerator from './infra';
+import { infraGenerator } from './infra';
 
 // ============================================================================
 // PHASE 1: Foundation Tests (Schema & Base Files)

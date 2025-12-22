@@ -119,7 +119,7 @@ export const production${className}Config: ${className}Config = {
       {
         name: 'env',
         type: 'string',
-        defaultValue: 'process.env["NODE_ENV"] || \'development\'',
+        defaultValue: 'process.env.NODE_ENV || \'development\'',
       },
     ],
     body: `switch (env) {
@@ -131,7 +131,7 @@ export const production${className}Config: ${className}Config = {
   default:
     return development${className}Config;
 }`,
-    jsdoc: `Get configuration for environment\n\n@param env - Environment name ('development', 'test', 'production')\n@returns Configuration for the environment\n\n@example\n\`\`\`typescript\nconst config = get${className}ConfigForEnvironment(process.env["NODE_ENV"]);\n\`\`\``,
+    jsdoc: `Get configuration for environment\n\n@param env - Environment name ('development', 'test', 'production')\n@returns Configuration for the environment\n\n@example\n\`\`\`typescript\nconst config = get${className}ConfigForEnvironment(process.env.NODE_ENV);\n\`\`\``,
   });
 
   // Section: Configuration Validation

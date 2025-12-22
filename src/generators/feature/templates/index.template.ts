@@ -11,9 +11,9 @@
  * @see docs/NX_STANDARDS.md for export conventions
  */
 
+import { TypeScriptBuilder } from '../../../utils/code-builder';
 import type { ExportSection } from '../../../utils/templates';
 import { generateExportSections } from '../../../utils/templates';
-import { TypeScriptBuilder } from '../../../utils/code-builder';
 import type { FeatureTemplateOptions } from '../../../utils/types';
 import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 

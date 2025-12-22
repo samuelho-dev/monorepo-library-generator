@@ -2,6 +2,7 @@
  * RPC Errors Template
  *
  * Generates rpc/errors.ts file for feature libraries.
+ * Re-exports from shared/errors for RPC consumers.
  *
  * @module monorepo-library-generator/feature/rpc-errors-template
  */
@@ -12,40 +13,27 @@ import type { FeatureTemplateOptions } from '../../../utils/types';
 /**
  * Generate rpc/errors.ts file for feature library
  *
- * Creates schema-based errors for RPC boundary.
+ * Re-exports errors from shared/errors.ts for RPC consumers.
+ * All errors use Schema.TaggedError so they work at RPC boundaries.
  */
 export function generateRpcErrorsFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder();
-  const { className, name } = options;
+  const { className } = options;
 
   // Add file header
   builder.addFileHeader({
     title: `${className} RPC Errors`,
-    description: `Schema-based errors for RPC boundary.
-Use Schema.TaggedError for errors that need to cross RPC boundaries.`,
+    description: `Re-exports errors from shared/errors for RPC consumers.
+
+All errors use Schema.TaggedError - no separate RPC error types needed.
+This ensures a single source of truth for error definitions.`,
   });
 
-  // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
-  builder.addBlankLine();
-
-  // Add RPC error class
-  builder.addRaw(`/**
- * RPC Error for ${name}
- *
- * Use this error type at the RPC boundary for serializable errors.
- */
-export class ${className}RpcError extends Schema.TaggedError<${className}RpcError>()(
-  "${className}RpcError",
-  {
-    message: Schema.String,
-    code: Schema.String,
-  }
-) {}`);
-  builder.addBlankLine();
-
-  builder.addComment('Note: Use Schema.TaggedError ONLY for RPC boundaries');
-  builder.addComment('For domain errors, use Data.TaggedError in ../shared/errors.ts');
+  // Re-export from shared errors
+  builder.addRaw(`// Re-export all errors from shared/errors
+// All errors use Schema.TaggedError for RPC compatibility
+export { ${className}Error, ${className}ErrorCodes } from "../shared/errors";
+export type { ${className}ErrorCode } from "../shared/errors";`);
   builder.addBlankLine();
 
   return builder.toString();

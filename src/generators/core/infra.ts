@@ -14,14 +14,18 @@
  */
 
 import { Effect } from 'effect';
+import { computePlatformConfiguration, type PlatformType } from '../../utils/build';
 import type { FileSystemAdapter } from '../../utils/filesystem';
 import { detectInfraConcern, usesEffectPrimitives } from '../../utils/infra-provider-mapping';
-import { computePlatformConfiguration, type PlatformType } from '../../utils/build';
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates';
 import type { InfraTemplateOptions } from '../../utils/types';
 import {
-  generateTypesOnlyFile,
-  type TypesOnlyExportOptions,
-} from '../../utils/templates';
+  generateAuthErrorsFile,
+  generateAuthIndexFile,
+  generateAuthMiddlewareFile,
+  generateAuthServiceFile,
+  generateAuthTypesFile,
+} from '../infra/templates/auth';
 import { generateDatabaseServiceFile } from '../infra/templates/database-service.template';
 import {
   generateClientLayersFile,
@@ -53,10 +57,17 @@ import {
   generateRpcClientFile,
   generateRpcCoreFile,
   generateRpcErrorsFile,
+  generateRpcIndexFile,
   generateRpcMiddlewareFile,
   generateRpcRouterFile,
   generateRpcTransportFile,
 } from '../infra/templates/rpc';
+import {
+  generateStorageErrorsFile,
+  generateStorageIndexFile,
+  generateStorageServiceFile,
+  generateStorageTypesFile,
+} from '../infra/templates/storage';
 import { generateProviderConsolidation } from './provider-consolidation';
 
 /**
@@ -462,6 +473,49 @@ function MyComponent() {
           filesGenerated.push(`${serviceLibPath}/router.ts`);
           break;
 
+        case 'auth':
+          // Auth infrastructure generates service, middleware, and types
+          yield* adapter.writeFile(
+            `${serviceLibPath}/service.ts`,
+            generateAuthServiceFile(templateOptions),
+          );
+          filesGenerated.push(`${serviceLibPath}/service.ts`);
+          yield* adapter.writeFile(
+            `${serviceLibPath}/middleware.ts`,
+            generateAuthMiddlewareFile(templateOptions),
+          );
+          filesGenerated.push(`${serviceLibPath}/middleware.ts`);
+          yield* adapter.writeFile(
+            `${serviceLibPath}/errors.ts`,
+            generateAuthErrorsFile(templateOptions),
+          );
+          filesGenerated.push(`${serviceLibPath}/errors.ts`);
+          yield* adapter.writeFile(
+            `${serviceLibPath}/types.ts`,
+            generateAuthTypesFile(templateOptions),
+          );
+          filesGenerated.push(`${serviceLibPath}/types.ts`);
+          break;
+
+        case 'storage':
+          // Storage infrastructure generates service and types
+          yield* adapter.writeFile(
+            `${serviceLibPath}/service.ts`,
+            generateStorageServiceFile(templateOptions),
+          );
+          filesGenerated.push(`${serviceLibPath}/service.ts`);
+          yield* adapter.writeFile(
+            `${serviceLibPath}/errors.ts`,
+            generateStorageErrorsFile(templateOptions),
+          );
+          filesGenerated.push(`${serviceLibPath}/errors.ts`);
+          yield* adapter.writeFile(
+            `${serviceLibPath}/types.ts`,
+            generateStorageTypesFile(templateOptions),
+          );
+          filesGenerated.push(`${serviceLibPath}/types.ts`);
+          break;
+
         default:
           // Should not reach here for known primitives
           yield* adapter.writeFile(
@@ -564,10 +618,24 @@ function MyComponent() {
       }
     } else {
       // Generate standard index file (barrel exports) when not consolidating providers
-      // Use primitive-specific index for Effect primitive concerns
-      const indexContent = isPrimitiveConcern
-        ? generatePrimitiveIndexFile(templateOptions)
-        : generateIndexFile(templateOptions);
+      // Use concern-specific index templates where available
+      let indexContent: string;
+      if (concern === 'auth') {
+        // Auth has specialized index with handler factories (protectedHandler, publicHandler)
+        indexContent = generateAuthIndexFile(templateOptions);
+      } else if (concern === 'rpc') {
+        // RPC has specialized index with client, transport, router, middleware
+        indexContent = generateRpcIndexFile(templateOptions);
+      } else if (concern === 'storage') {
+        // Storage has specialized index with proper error exports
+        indexContent = generateStorageIndexFile(templateOptions);
+      } else if (isPrimitiveConcern) {
+        // Other primitives use generic primitive index
+        indexContent = generatePrimitiveIndexFile(templateOptions);
+      } else {
+        // Non-primitive concerns use generic index
+        indexContent = generateIndexFile(templateOptions);
+      }
       yield* adapter.writeFile(`${options.sourceRoot}/index.ts`, indexContent);
       filesGenerated.push(`${options.sourceRoot}/index.ts`);
     }

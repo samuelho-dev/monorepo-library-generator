@@ -46,7 +46,7 @@ const contractExecutor = createExecutor<NxContractInput, ContractCoreOptions>(
  * Before: ~140 lines with manual metadata computation
  * After: ~50 lines using unified executor
  */
-export default async function contractGenerator(tree: Tree, schema: ContractGeneratorSchema) {
+export async function contractGenerator(tree: Tree, schema: ContractGeneratorSchema) {
   // Validate required fields
   if (!schema.name || schema.name.trim() === '') {
     throw new Error('Contract name is required and cannot be empty');

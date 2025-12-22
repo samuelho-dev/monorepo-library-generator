@@ -1,27 +1,27 @@
 {
   "generators": {
     "contract": {
-      "factory": "./generators/contract/contract",
+      "factory": "./generators/contract/contract#contractGenerator",
       "schema": "./generators/contract/schema.json",
       "description": "Generate a contract library with entities, events, ports, and errors following Effect-based architecture"
     },
     "provider": {
-      "factory": "./generators/provider/provider",
+      "factory": "./generators/provider/provider#providerGenerator",
       "schema": "./generators/provider/schema.json",
       "description": "Generate a provider library with Effect-based architecture for external service integration"
     },
     "data-access": {
-      "factory": "./generators/data-access/data-access",
+      "factory": "./generators/data-access/data-access#dataAccessGenerator",
       "schema": "./generators/data-access/schema.json",
       "description": "Generate a repository-oriented data access library with Effect patterns"
     },
     "feature": {
-      "factory": "./generators/feature/feature",
+      "factory": "./generators/feature/feature#featureGenerator",
       "schema": "./generators/feature/schema.json",
       "description": "Generate a feature library with Effect-based architecture"
     },
     "infra": {
-      "factory": "./generators/infra/infra",
+      "factory": "./generators/infra/infra#infraGenerator",
       "schema": "./generators/infra/schema.json",
       "description": "Generate an infrastructure library with Effect-based architecture"
     }

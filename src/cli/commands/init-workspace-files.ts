@@ -124,7 +124,7 @@ export function generateWorkspaceFiles(options: WorkspaceOptions = {}) {
         '@vitest/ui': '^3.2.4',
 
         // Linting & Formatting
-        '@biomejs/biome': '^1.9.4',
+        '@biomejs/biome': '^2.3.10',
 
         // Prisma
         prisma: '^7.2.0',
@@ -141,7 +141,7 @@ export function generateWorkspaceFiles(options: WorkspaceOptions = {}) {
       packageManager: packageManager === 'pnpm' ? 'pnpm@9.15.0' : undefined,
     };
 
-    yield* fs.writeFileString('package.json', JSON.stringify(packageJson, null, 2) + '\n');
+    yield* fs.writeFileString('package.json', `${JSON.stringify(packageJson, null, 2)}\n`);
 
     yield* Console.log('  ✓ Created package.json');
 
@@ -256,7 +256,7 @@ link-workspace-packages=true
       exclude: ['node_modules', 'dist', 'build', '.nx'],
     };
 
-    yield* fs.writeFileString('tsconfig.base.json', JSON.stringify(tsconfigBase, null, 2) + '\n');
+    yield* fs.writeFileString('tsconfig.base.json', `${JSON.stringify(tsconfigBase, null, 2)}\n`);
     yield* Console.log('  ✓ Created tsconfig.base.json');
 
     // 5. Generate nx.json (if includeNx is true)
@@ -302,13 +302,14 @@ link-workspace-packages=true
         ],
       };
 
-      yield* fs.writeFileString('nx.json', JSON.stringify(nxJson, null, 2) + '\n');
+      yield* fs.writeFileString('nx.json', `${JSON.stringify(nxJson, null, 2)}\n`);
       yield* Console.log('  ✓ Created nx.json');
     }
 
     // 6. Generate biome.json (workspace-level linting & formatting)
+    // Uses Biome v2 configuration format
     const biomeConfig = {
-      $schema: 'https://biomejs.dev/schemas/1.9.4/schema.json',
+      $schema: 'https://biomejs.dev/schemas/2.3.10/schema.json',
       vcs: {
         enabled: true,
         clientKind: 'git',
@@ -316,7 +317,16 @@ link-workspace-packages=true
       },
       files: {
         ignoreUnknown: true,
-        ignore: ['node_modules', 'dist', 'build', '.nx', 'coverage', '*.generated.ts'],
+        // In Biome v2, use 'includes' with negation patterns instead of 'ignore'
+        includes: [
+          '**/*',
+          '!**/node_modules/**',
+          '!**/dist/**',
+          '!**/build/**',
+          '!**/.nx/**',
+          '!**/coverage/**',
+          '!**/*.generated.ts',
+        ],
       },
       formatter: {
         enabled: true,
@@ -324,32 +334,30 @@ link-workspace-packages=true
         indentWidth: 2,
         lineWidth: 100,
       },
-      organizeImports: {
-        enabled: true,
+      // In Biome v2, organizeImports moved to assist.actions.source
+      assist: {
+        actions: {
+          source: {
+            organizeImports: 'on',
+          },
+        },
       },
       linter: {
         enabled: true,
         rules: {
           recommended: true,
-          complexity: {
-            noForEach: 'off', // Effect.ts uses forEach patterns
-            noBannedTypes: 'off', // Allow {} type for Effect patterns
-          },
           correctness: {
             noUnusedVariables: 'error',
             noUnusedImports: 'error',
           },
           style: {
-            noNonNullAssertion: 'warn', // Prefer Effect error handling
+            noNonNullAssertion: 'warn',
             useConst: 'error',
-            useImportType: 'error', // Enforce type-only imports
+            useImportType: 'error',
+            useTemplate: 'error',
           },
           suspicious: {
-            noExplicitAny: 'warn', // Prefer proper typing with Effect
-            noConfusingVoidType: 'off', // Effect uses void extensively
-          },
-          nursery: {
-            noRestrictedImports: 'off',
+            noExplicitAny: 'error',
           },
         },
       },
@@ -362,7 +370,7 @@ link-workspace-packages=true
       },
     };
 
-    yield* fs.writeFileString('biome.json', JSON.stringify(biomeConfig, null, 2) + '\n');
+    yield* fs.writeFileString('biome.json', `${JSON.stringify(biomeConfig, null, 2)}\n`);
     yield* Console.log('  ✓ Created biome.json');
 
     // 7. Generate .gitignore if it doesn't exist

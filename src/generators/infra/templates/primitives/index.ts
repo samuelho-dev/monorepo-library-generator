@@ -14,31 +14,16 @@
  */
 
 // Cache primitive templates
-export {
-  generateCacheInterfaceFile,
-  generateCacheRedisLayerFile,
-} from './cache';
+export { generateCacheInterfaceFile, generateCacheRedisLayerFile } from './cache';
 // Logging primitive templates
-export {
-  generateLoggingInterfaceFile,
-  generateLoggingOtelLayerFile,
-} from './logging';
+export { generateLoggingInterfaceFile, generateLoggingOtelLayerFile } from './logging';
 // Metrics primitive templates
-export {
-  generateMetricsInterfaceFile,
-  generateMetricsOtelLayerFile,
-} from './metrics';
+export { generateMetricsInterfaceFile, generateMetricsOtelLayerFile } from './metrics';
 // PubSub primitive templates
-export {
-  generatePubSubInterfaceFile,
-  generatePubSubRedisLayerFile,
-} from './pubsub';
+export { generatePubSubInterfaceFile, generatePubSubRedisLayerFile } from './pubsub';
 
 // Queue primitive templates
-export {
-  generateQueueInterfaceFile,
-  generateQueueRedisLayerFile,
-} from './queue';
+export { generateQueueInterfaceFile, generateQueueRedisLayerFile } from './queue';
 // Shared utilities and templates
 export {
   generatePrimitiveErrorsFile,

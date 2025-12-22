@@ -7,11 +7,8 @@
  * @module monorepo-library-generator/data-access/errors-template
  */
 
-import {
-  createErrorUnionType,
-  createTypeGuardFunctions,
-} from '../../../utils/templates';
 import { TypeScriptBuilder } from '../../../utils/code-builder';
+import { createErrorUnionType, createTypeGuardFunctions } from '../../../utils/templates';
 import type { DataAccessTemplateOptions } from '../../../utils/types';
 import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 

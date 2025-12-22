@@ -12,8 +12,8 @@
 
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import infraGenerator from '../infra/infra';
-import providerGenerator from '../provider/provider';
+import { infraGenerator } from '../infra/infra';
+import { providerGenerator } from '../provider/provider';
 
 describe('Effect Architecture Pattern Validation', () => {
   let tree: Tree;

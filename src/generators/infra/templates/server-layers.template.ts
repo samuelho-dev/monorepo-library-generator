@@ -105,14 +105,14 @@ export const ${className}ServiceDev = Layer.effect(
       ) =>
         Effect.gen(function* () {
           yield* Effect.logDebug(
-            \`[${className}] DEV findByCriteria\`,
+            "[${className}] DEV findByCriteria",
             { criteria, skip, limit }
           );
           return [];
         }),
       create: (input: Record<string, unknown>) =>
         Effect.gen(function* () {
-          yield* Effect.logDebug(\`[${className}] DEV create\`, input);
+          yield* Effect.logDebug("[${className}] DEV create", input);
           return { id: "dev-id", ...input };
         }),
       update: (id: string, input: Record<string, unknown>) =>
@@ -126,7 +126,7 @@ export const ${className}ServiceDev = Layer.effect(
         }),
       healthCheck: () =>
         Effect.gen(function* () {
-          yield* Effect.logDebug(\`[${className}] DEV healthCheck\`);
+          yield* Effect.logDebug("[${className}] DEV healthCheck");
           return true;
         }),
     };
@@ -253,12 +253,12 @@ export const ${className}ServiceCustom = (customConfig: {
           limit?: number
         ) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug(\`[${className}] findByCriteria\`, { criteria, skip, limit });
+            yield* Effect.logDebug("[${className}] findByCriteria", { criteria, skip, limit });
             return [];
           }),
         create: (input: Record<string, unknown>) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug(\`[${className}] create\`, input);
+            yield* Effect.logDebug("[${className}] create", input);
             return { id: "custom-id", ...input };
           }),
         update: (id: string, input: Record<string, unknown>) =>
