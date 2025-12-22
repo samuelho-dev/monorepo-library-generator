@@ -9,11 +9,11 @@
     "ignoreUnknown": true,
     "includes": [
       "**/*",
-      "!**/node_modules/**",
-      "!**/dist/**",
-      "!**/build/**",
-      "!**/.nx/**",
-      "!**/coverage/**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.nx",
+      "!**/coverage",
       "!**/*.generated.ts"
     ]
   },

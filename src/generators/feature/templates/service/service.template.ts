@@ -25,20 +25,14 @@ export function generateFeatureServiceFile(options: FeatureTemplateOptions) {
     description: `Context.Tag definition for ${className}Service.
 
 Operations are split into separate files for optimal tree-shaking.
-Import only the operations you need for smallest bundle size.
-
-Bundle optimization:
-  - Granular import: import { createOperations } from './operations/create-${fileName}'
-  - Full service: import { ${className}Service } from './interface'`,
+Import only the operations you need for smallest bundle size.`,
     module: `${scope}/feature-${fileName}/server/service`,
   });
   builder.addBlankLine();
 
-  // Add imports
   builder.addImports([{ from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Option'] }]);
   builder.addBlankLine();
 
-  // Import shared errors
   builder.addImports([
     {
       from: '../../shared/errors',
@@ -47,28 +41,15 @@ Bundle optimization:
   ]);
   builder.addBlankLine();
 
-  // Repository integration - pre-wired for data-access library
   builder.addSectionComment('Repository Integration');
-  builder.addRaw(`import { ${className}Repository } from "${scope}/data-access-${fileName}";`);
+  builder.addRaw(`import { ${className}Repository } from "${scope}/data-access-${fileName}";
+import { DatabaseService } from "${scope}/infra-database";`);
   builder.addBlankLine();
 
-  // Service implementation - types are inferred from implementation
   builder.addSectionComment('Service Implementation');
   builder.addBlankLine();
 
-  builder.addRaw(`/**
- * Service implementation factory
- *
- * Creates the service operations using the provided repository.
- * Types are inferred from implementation - no explicit interface needed.
- */
-const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Repository>) => ({
-  /**
-   * Get a single ${fileName} by ID
-   *
-   * @param id - The ${fileName} ID
-   * @returns Option of ${fileName} entity
-   */
+  builder.addRaw(`const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Repository>) => ({
   get: (id: string) =>
     repo.findById(id).pipe(
       Effect.mapError((error) =>
@@ -80,14 +61,6 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       )
     ),
 
-  /**
-   * Find ${fileName} records by criteria with pagination
-   *
-   * @param criteria - Filter criteria
-   * @param offset - Number of records to skip
-   * @param limit - Maximum records to return
-   * @returns Array of ${fileName} entities
-   */
   findByCriteria: (
     criteria: Record<string, unknown>,
     offset: number,
@@ -106,12 +79,6 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
         )
       ),
 
-  /**
-   * Count ${fileName} records matching criteria
-   *
-   * @param criteria - Filter criteria
-   * @returns Number of matching records
-   */
   count: (criteria: Record<string, unknown>) =>
     repo.count(criteria as Parameters<typeof repo.count>[0]).pipe(
       Effect.mapError((error) =>
@@ -123,12 +90,6 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       )
     ),
 
-  /**
-   * Create a new ${fileName}
-   *
-   * @param input - Creation data
-   * @returns Created ${fileName} entity
-   */
   create: (input: Record<string, unknown>) =>
     repo.create(input as Parameters<typeof repo.create>[0]).pipe(
       Effect.mapError((error) =>
@@ -140,13 +101,6 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       )
     ),
 
-  /**
-   * Update an existing ${fileName}
-   *
-   * @param id - The ${fileName} ID
-   * @param input - Update data
-   * @returns Option of updated ${fileName} entity
-   */
   update: (id: string, input: Record<string, unknown>) =>
     repo.update(id, input as Parameters<typeof repo.update>[1]).pipe(
       Effect.map(Option.some),
@@ -159,11 +113,6 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       )
     ),
 
-  /**
-   * Delete a ${fileName} by ID
-   *
-   * @param id - The ${fileName} ID
-   */
   delete: (id: string) =>
     repo.delete(id).pipe(
       Effect.mapError((error) =>
@@ -175,12 +124,6 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
       )
     ),
 
-  /**
-   * Check if a ${fileName} exists
-   *
-   * @param id - The ${fileName} ID
-   * @returns Boolean indicating existence
-   */
   exists: (id: string) =>
     repo.exists(id).pipe(
       Effect.mapError((error) =>
@@ -193,36 +136,16 @@ const createServiceImpl = (repo: Effect.Effect.Success<typeof ${className}Reposi
     ),
 } as const);
 
-/**
- * Type alias derived from implementation
- * This ensures the interface always matches the implementation.
- */
 export type ${className}ServiceInterface = ReturnType<typeof createServiceImpl>;`);
   builder.addBlankLine();
 
-  // Context.Tag
   builder.addSectionComment('Context.Tag');
   builder.addBlankLine();
 
-  builder.addRaw(`/**
- * ${className} Service Tag
- *
- * Access via: yield* ${className}Service
- *
- * Static layers:
- * - ${className}Service.Live - Production with repository dependencies
- * - ${className}Service.Test - Uses repository Test layer for in-memory testing
- */
-export class ${className}Service extends Context.Tag("${className}Service")<
+  builder.addRaw(`export class ${className}Service extends Context.Tag("${className}Service")<
   ${className}Service,
   ${className}ServiceInterface
 >() {
-  /**
-   * Live Layer - Production implementation
-   *
-   * Pre-wired with ${className}Repository.
-   * Requires ${className}Repository.Live layer to be provided.
-   */
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function* () {
@@ -231,19 +154,15 @@ export class ${className}Service extends Context.Tag("${className}Service")<
     })
   );
 
-  /**
-   * Test Layer - In-memory implementation
-   *
-   * Pre-wired with ${className}Repository.Test layer.
-   * No external dependencies required.
-   */
-  static readonly Test = Layer.effect(
-    this,
-    Effect.gen(function* () {
-      const repo = yield* ${className}Repository;
-      return createServiceImpl(repo);
-    })
-  ).pipe(Layer.provide(${className}Repository.Test));
+  static readonly Layer = ${className}Service.Live.pipe(
+    Layer.provide(${className}Repository.Live),
+    Layer.provide(DatabaseService.Live)
+  );
+
+  static readonly TestLayer = ${className}Service.Live.pipe(
+    Layer.provide(${className}Repository.Live),
+    Layer.provide(DatabaseService.Test)
+  );
 }`);
 
   return builder.toString();

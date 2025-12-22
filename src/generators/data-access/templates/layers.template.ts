@@ -13,10 +13,7 @@ import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 /**
  * Generate server/layers.ts file for data-access library
  *
- * Creates Effect layer compositions including:
- * - Live layer (production)
- * - Test layer (in-memory)
- * - Auto layer (environment-based selection)
+ * Creates Effect layer compositions with infrastructure dependencies
  */
 export function generateLayersFile(options: DataAccessTemplateOptions) {
   const builder = new TypeScriptBuilder();
@@ -24,91 +21,72 @@ export function generateLayersFile(options: DataAccessTemplateOptions) {
   const domainName = propertyName;
   const scope = WORKSPACE_CONFIG.getScope();
 
-  // Add file header
   builder.addFileHeader({
     title: `${className} Data Access Layers`,
     description: `Effect layer compositions for dependency injection of ${domainName} repositories.
-Provides Live, Test, and Auto environment-based layer selection.
 
 @see https://effect.website/docs/guides/context-management for layer composition`,
     module: `${scope}/data-access-${fileName}/server`,
   });
   builder.addBlankLine();
 
-  // Add imports
   builder.addImports([
+    { from: 'effect', imports: ['Layer'] },
     { from: '../repository', imports: [`${className}Repository`] },
-    { from: `${scope}/env`, imports: ['env'] },
+    { from: `${scope}/infra-database`, imports: ['DatabaseService'] },
   ]);
   builder.addBlankLine();
 
-  // Environment-Specific Layers
-  builder.addSectionComment('Environment-Specific Layers');
+  builder.addSectionComment('Layer Compositions');
   builder.addBlankLine();
 
-  // Live Layer
   builder.addRaw(`/**
  * ${className} Repository Live Layer
  *
- * Production environment layer.
- * Provides ${className}Repository with all required dependencies.
+ * Production layer with DatabaseService dependency.
+ * Compose with DatabaseService.Live for production use.
  *
- * If your repository implementation needs infrastructure services
- * (like KyselyService or LoggingService), uncomment the dependencies
- * in the repository.template.ts file and ensure they're provided when
- * using this layer in your application.
+ * @example
+ * \`\`\`typescript
+ * const RepositoryLayer = ${className}RepositoryLive.pipe(
+ *   Layer.provide(DatabaseService.Live)
+ * );
+ * \`\`\`
  */
-export const ${className}RepositoryLive = ${className}Repository.Live;`);
-  builder.addBlankLine();
+export const ${className}RepositoryLive = ${className}Repository.Live;
 
-  // Test Layer
-  builder.addRaw(`/**
+/**
+ * ${className} Repository with Database Layer
+ *
+ * Fully composed layer for production use.
+ * Includes DatabaseService.Live dependency.
+ */
+export const ${className}RepositoryLayer = ${className}Repository.Live.pipe(
+  Layer.provide(DatabaseService.Live)
+);
+
+/**
  * ${className} Repository Test Layer
  *
- * Testing environment layer using in-memory storage.
- * Provides isolated ${className}Repository for test cases.
+ * For testing, compose with DatabaseService.Test:
  *
- * This layer is self-contained and requires no additional dependencies.
- *
- * Usage in tests:
+ * @example
  * \`\`\`typescript
- * import { ${className}RepositoryTest } from "${scope}/data-access-${fileName}/server";
+ * const TestLayer = ${className}Repository.Live.pipe(
+ *   Layer.provide(DatabaseService.Test)
+ * );
  *
- * describe("${className} Repository", () => {
- *   it("should find entity by id", () =>
- *     Effect.gen(function* () {
- *       const repo = yield* ${className}Repository;
- *       // ... test operations
- *     }).pipe(Effect.provide(${className}RepositoryTest))
- *   );
- * });
+ * it.scoped("should work", () =>
+ *   Effect.gen(function* () {
+ *     const repo = yield* ${className}Repository;
+ *     // test operations
+ *   }).pipe(Effect.provide(TestLayer))
+ * );
  * \`\`\`
  */
-export const ${className}RepositoryTest = ${className}Repository.Test;`);
-  builder.addBlankLine();
-
-  // Auto Layer
-  builder.addRaw(`/**
- * ${className} Repository Auto Layer
- *
- * Automatically selects appropriate layer based on NODE_ENV.
- * - test: Uses in-memory layer for test isolation
- * - production/development: Uses live layer with real infrastructure
- *
- * Usage:
- * \`\`\`typescript
- * // Automatically picks correct layer based on environment
- * Effect.provide(${className}RepositoryAuto)
- * \`\`\`
- */
-export const ${className}RepositoryAuto = (() => {
-  switch (env.NODE_ENV) {
-    case "test":
-      return ${className}RepositoryTest;
-    default:
-      return ${className}RepositoryLive;
-  }
-})();`);
+export const ${className}RepositoryTestLayer = ${className}Repository.Live.pipe(
+  Layer.provide(DatabaseService.Test)
+);`);
   builder.addBlankLine();
 
   return builder.toString();

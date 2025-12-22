@@ -15,7 +15,7 @@
  * - Effect.gen accesses services via yield*
  */
 
-import { Effect, Layer, Console, Context, Ref } from "effect"
+import { Console, Context, Effect, Layer, Ref } from "effect";
 
 // ============================================================================
 // LAYER 1: CONTRACT (Domain Types)
@@ -33,11 +33,11 @@ import { Effect, Layer, Console, Context, Ref } from "effect"
  * User domain type (would be generated from Prisma schema)
  */
 interface User {
-  readonly id: string
-  readonly email: string
-  readonly name: string | null
-  readonly createdAt: Date
-  readonly updatedAt: Date
+  readonly id: string;
+  readonly email: string;
+  readonly name: string | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
 // ============================================================================
@@ -55,7 +55,7 @@ interface User {
  * In production, this would be replaced by the actual Kysely provider
  */
 interface UserStore {
-  readonly users: Map<string, User>
+  readonly users: Map<string, User>;
 }
 
 class UserStoreService extends Context.Tag("UserStoreService")<
@@ -63,10 +63,7 @@ class UserStoreService extends Context.Tag("UserStoreService")<
   Ref.Ref<UserStore>
 >() {}
 
-const UserStoreLive = Layer.effect(
-  UserStoreService,
-  Ref.make<UserStore>({ users: new Map() })
-)
+const UserStoreLive = Layer.effect(UserStoreService, Ref.make<UserStore>({ users: new Map() }));
 
 // ============================================================================
 // LAYER 3: INFRASTRUCTURE (Repository Pattern)
@@ -83,9 +80,9 @@ const UserStoreLive = Layer.effect(
  * User repository interface
  */
 interface UserRepositoryInterface {
-  readonly create: (email: string, name: string | null) => Effect.Effect<User>
-  readonly findByEmail: (email: string) => Effect.Effect<User | null>
-  readonly findById: (id: string) => Effect.Effect<User | null>
+  readonly create: (email: string, name: string | null) => Effect.Effect<User>;
+  readonly findByEmail: (email: string) => Effect.Effect<User | null>;
+  readonly findById: (id: string) => Effect.Effect<User | null>;
 }
 
 class UserRepository extends Context.Tag("UserRepository")<
@@ -96,44 +93,44 @@ class UserRepository extends Context.Tag("UserRepository")<
 const UserRepositoryLive = Layer.effect(
   UserRepository,
   Effect.gen(function* () {
-    const storeRef = yield* UserStoreService
+    const storeRef = yield* UserStoreService;
 
     return {
       create: (email: string, name: string | null) =>
         Effect.gen(function* () {
-          const store = yield* Ref.get(storeRef)
-          const now = new Date()
+          const store = yield* Ref.get(storeRef);
+          const now = new Date();
           const user: User = {
             id: crypto.randomUUID(),
             email,
             name,
             createdAt: now,
             updatedAt: now,
-          }
-          store.users.set(user.id, user)
-          yield* Ref.set(storeRef, store)
-          return user
+          };
+          store.users.set(user.id, user);
+          yield* Ref.set(storeRef, store);
+          return user;
         }),
 
       findByEmail: (email: string) =>
         Effect.gen(function* () {
-          const store = yield* Ref.get(storeRef)
+          const store = yield* Ref.get(storeRef);
           for (const user of store.users.values()) {
             if (user.email === email) {
-              return user
+              return user;
             }
           }
-          return null
+          return null;
         }),
 
       findById: (id: string) =>
         Effect.gen(function* () {
-          const store = yield* Ref.get(storeRef)
-          return store.users.get(id) ?? null
+          const store = yield* Ref.get(storeRef);
+          return store.users.get(id) ?? null;
         }),
-    }
-  })
-)
+    };
+  }),
+);
 
 // ============================================================================
 // LAYER 4: FEATURE (Business Logic)
@@ -146,8 +143,8 @@ const UserRepositoryLive = Layer.effect(
  * User service interface - business logic operations
  */
 interface UserServiceInterface {
-  readonly createUser: (email: string, name?: string) => Effect.Effect<User>
-  readonly getUserByEmail: (email: string) => Effect.Effect<User | null>
+  readonly createUser: (email: string, name?: string) => Effect.Effect<User>;
+  readonly getUserByEmail: (email: string) => Effect.Effect<User | null>;
 }
 
 class UserService extends Context.Tag("UserService")<UserService, UserServiceInterface>() {}
@@ -155,31 +152,31 @@ class UserService extends Context.Tag("UserService")<UserService, UserServiceInt
 const UserServiceLive = Layer.effect(
   UserService,
   Effect.gen(function* () {
-    const repo = yield* UserRepository
+    const repo = yield* UserRepository;
 
     return {
       createUser: (email: string, name?: string) =>
         Effect.gen(function* () {
-          yield* Console.log(`📝 Creating user: ${email}`)
-          const user = yield* repo.create(email, name ?? null)
-          yield* Console.log(`✅ User created: ${user.id}`)
-          return user
+          yield* Console.log(`📝 Creating user: ${email}`);
+          const user = yield* repo.create(email, name ?? null);
+          yield* Console.log(`✅ User created: ${user.id}`);
+          return user;
         }),
 
       getUserByEmail: (email: string) =>
         Effect.gen(function* () {
-          yield* Console.log(`🔍 Finding user: ${email}`)
-          const user = yield* repo.findByEmail(email)
+          yield* Console.log(`🔍 Finding user: ${email}`);
+          const user = yield* repo.findByEmail(email);
           if (user) {
-            yield* Console.log(`✅ User found: ${user.id}`)
+            yield* Console.log(`✅ User found: ${user.id}`);
           } else {
-            yield* Console.log(`❌ User not found: ${email}`)
+            yield* Console.log(`❌ User not found: ${email}`);
           }
-          return user
+          return user;
         }),
-    }
-  })
-)
+    };
+  }),
+);
 
 // ============================================================================
 // COMPLETE LAYER COMPOSITION
@@ -203,44 +200,41 @@ const UserServiceLive = Layer.effect(
  */
 const AppLayer = UserServiceLive.pipe(
   Layer.provide(UserRepositoryLive),
-  Layer.provide(UserStoreLive)
-)
+  Layer.provide(UserStoreLive),
+);
 
 // ============================================================================
 // EXAMPLE APPLICATION
 // ============================================================================
 
 const program = Effect.gen(function* () {
-  const userService = yield* UserService
+  const userService = yield* UserService;
 
-  yield* Console.log("\n🚀 Starting User Management Example\n")
-  yield* Console.log(`${"=".repeat(51)}\n`)
+  yield* Console.log("\n🚀 Starting User Management Example\n");
+  yield* Console.log(`${"=".repeat(51)}\n`);
 
   // Create a user
-  yield* Console.log("📋 Step 1: Create User")
-  const newUser = yield* userService.createUser(
-    "alice@example.com",
-    "Alice Smith"
-  )
-  yield* Console.log(`   User ID: ${newUser.id}\n`)
+  yield* Console.log("📋 Step 1: Create User");
+  const newUser = yield* userService.createUser("alice@example.com", "Alice Smith");
+  yield* Console.log(`   User ID: ${newUser.id}\n`);
 
   // Find the user
-  yield* Console.log("📋 Step 2: Find User by Email")
-  const foundUser = yield* userService.getUserByEmail("alice@example.com")
+  yield* Console.log("📋 Step 2: Find User by Email");
+  const foundUser = yield* userService.getUserByEmail("alice@example.com");
   if (foundUser) {
-    yield* Console.log(`   Found: ${foundUser.name} (${foundUser.email})\n`)
+    yield* Console.log(`   Found: ${foundUser.name} (${foundUser.email})\n`);
   }
 
   // Try to find non-existent user
-  yield* Console.log("📋 Step 3: Find Non-Existent User")
-  const notFound = yield* userService.getUserByEmail("bob@example.com")
-  yield* Console.log(`   Result: ${notFound ? "Found" : "Not found"}\n`)
+  yield* Console.log("📋 Step 3: Find Non-Existent User");
+  const notFound = yield* userService.getUserByEmail("bob@example.com");
+  yield* Console.log(`   Result: ${notFound ? "Found" : "Not found"}\n`);
 
-  yield* Console.log("=".repeat(51))
-  yield* Console.log("\n✅ Example completed successfully!\n")
+  yield* Console.log("=".repeat(51));
+  yield* Console.log("\n✅ Example completed successfully!\n");
 
-  return "Success"
-})
+  return "Success";
+});
 
 // ============================================================================
 // RUN THE APPLICATION
@@ -291,4 +285,4 @@ const program = Effect.gen(function* () {
  * 5. Replace simulated layers with actual generated libraries
  */
 
-export { program, AppLayer }
+export { program, AppLayer };

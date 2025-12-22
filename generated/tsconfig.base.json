@@ -28,34 +28,15 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "paths": {
-      "@myorg/contract-*": [
-        "libs/contract/*/src/index.ts"
-      ],
-      "@myorg/data-access-*": [
-        "libs/data-access/*/src/index.ts"
-      ],
-      "@myorg/feature-*": [
-        "libs/feature/*/src/index.ts"
-      ],
-      "@myorg/infra-*": [
-        "libs/infra/*/src/index.ts"
-      ],
-      "@myorg/provider-*": [
-        "libs/provider/*/src/index.ts"
-      ],
-      "@myorg/env": [
-        "libs/env/src/index.ts"
-      ]
+      "@myorg/contract-*": ["libs/contract/*/src/index.ts"],
+      "@myorg/data-access-*": ["libs/data-access/*/src/index.ts"],
+      "@myorg/feature-*": ["libs/feature/*/src/index.ts"],
+      "@myorg/infra-*": ["libs/infra/*/src/index.ts"],
+      "@myorg/provider-*": ["libs/provider/*/src/index.ts"],
+      "@myorg/env": ["libs/env/src/index.ts"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    ".nx"
-  ]
+  "exclude": ["node_modules", "dist", "build", ".nx"]
 }

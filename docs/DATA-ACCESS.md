@@ -1902,7 +1902,7 @@ export const ProductRepositoryLive = Layer.effect(
 findById: (id) =>
   Effect.gen(function* () {
     const result = yield* database.query(/* ... */);
-    return result as Product; // Contract expects Option.Option<Product>
+    return result
   });
 ```
 

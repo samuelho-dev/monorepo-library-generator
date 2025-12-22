@@ -317,14 +317,14 @@ link-workspace-packages=true
       },
       files: {
         ignoreUnknown: true,
-        // In Biome v2, use 'includes' with negation patterns instead of 'ignore'
+        // In Biome v2.2+, folder ignores don't need trailing /**
         includes: [
           '**/*',
-          '!**/node_modules/**',
-          '!**/dist/**',
-          '!**/build/**',
-          '!**/.nx/**',
-          '!**/coverage/**',
+          '!**/node_modules',
+          '!**/dist',
+          '!**/build',
+          '!**/.nx',
+          '!**/coverage',
           '!**/*.generated.ts',
         ],
       },
