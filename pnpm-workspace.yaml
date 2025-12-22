@@ -2,6 +2,9 @@
 # See: https://pnpm.io/workspaces
 
 packages:
+  # Root package (CLI)
+  - '.'
+
   # All libraries
   - 'libs/**'
 
