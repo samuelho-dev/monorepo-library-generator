@@ -1,4 +1,4 @@
-import { Data, Effect } from "effect";
+import { Data, Effect } from "effect"
 
 /**
  * effect-metrics - Error Types
@@ -6,6 +6,7 @@ import { Data, Effect } from "effect";
  * CRITICAL: Use Data.TaggedError (NOT manual classes)
  * Reference: provider.md lines 716-766
  */
+
 
 /**
  * Base EffectMetrics Error
@@ -65,9 +66,7 @@ export class EffectMetricsTimeoutError extends Data.TaggedError("EffectMetricsTi
 /**
  * Authentication Error - for auth failures
  */
-export class EffectMetricsAuthenticationError extends Data.TaggedError(
-  "EffectMetricsAuthenticationError",
-)<{
+export class EffectMetricsAuthenticationError extends Data.TaggedError("EffectMetricsAuthenticationError")<{
   readonly message: string;
   readonly cause?: unknown;
 }> {}
@@ -215,7 +214,9 @@ export function mapEffectMetricsError(error: unknown) {
 /**
  * Helper: Run Effect.Metrics operation with error mapping
  */
-export function runEffectMetricsOperation<A>(operation: () => Promise<A>) {
+export function runEffectMetricsOperation<A>(
+  operation: () => Promise<A>,
+) {
   return Effect.tryPromise({
     try: operation,
     catch: mapEffectMetricsError,

@@ -20,9 +20,11 @@ Import options (from most optimal to most convenient):
  * @module @myorg/provider-effect-queue/service
  */
 
+
 // ============================================================================
 // Re-export service interface and tag
 // ============================================================================
 
-export type { EffectQueueServiceInterface } from "./service";
+
 export { EffectQueue } from "./service";
+export type { EffectQueueServiceInterface } from "./service";

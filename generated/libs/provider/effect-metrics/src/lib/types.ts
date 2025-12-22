@@ -55,15 +55,15 @@ export interface ServiceMetadata {
   /**
    * Service name
    */
-  readonly name: string;
+  readonly name: string
   /**
    * Service version
    */
-  readonly version: string;
+  readonly version: string
   /**
    * Environment
    */
-  readonly environment: "production" | "development" | "test";
+  readonly environment: "production" | "development" | "test"
 }
 
 /**
@@ -73,15 +73,15 @@ export interface PaginationOptions {
   /**
    * Maximum number of items to return
    */
-  readonly limit?: number;
+  readonly limit?: number
   /**
    * Number of items to skip
    */
-  readonly offset?: number;
+  readonly offset?: number
   /**
    * Cursor for cursor-based pagination
    */
-  readonly cursor?: string;
+  readonly cursor?: string
 }
 
 /**
@@ -91,19 +91,19 @@ export interface PaginatedResponse<T> {
   /**
    * Data items
    */
-  readonly data: readonly T[];
+  readonly data: readonly T[]
   /**
    * Total number of items
    */
-  readonly total: number;
+  readonly total: number
   /**
    * Whether there are more items
    */
-  readonly hasMore: boolean;
+  readonly hasMore: boolean
   /**
    * Cursor for next page
    */
-  readonly nextCursor?: string;
+  readonly nextCursor?: string
 }
 
 /**
@@ -113,11 +113,11 @@ export interface SortOptions {
   /**
    * Field to sort by
    */
-  readonly field: string;
+  readonly field: string
   /**
    * Sort direction
    */
-  readonly direction: "asc" | "desc";
+  readonly direction: "asc" | "desc"
 }
 
 /**
@@ -127,7 +127,7 @@ export interface FilterOptions {
   /**
    * Dynamic filter fields
    */
-  [key: string]: unknown;
+  [key: string]: unknown
 }
 
 /**
@@ -137,13 +137,13 @@ export interface QueryOptions {
   /**
    * Pagination options
    */
-  readonly pagination?: PaginationOptions;
+  readonly pagination?: PaginationOptions
   /**
    * Sort options
    */
-  readonly sort?: SortOptions;
+  readonly sort?: SortOptions
   /**
    * Filter options
    */
-  readonly filters?: FilterOptions;
+  readonly filters?: FilterOptions
 }

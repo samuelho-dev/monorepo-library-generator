@@ -17,8 +17,8 @@ Layers are available as static members on the service class.
 export {
   PubsubService,
   type TopicHandle,
-  type TopicOptions,
-} from "./lib/service/service";
+  type TopicOptions
+} from "./lib/service/service"
 
 // ============================================================================
 // Error Types
@@ -26,13 +26,13 @@ export {
 
 // Error types for error handling
 export {
+  PubsubServiceError,
+  PubsubInternalError,
   PubsubConfigError,
   PubsubConnectionError,
-  type PubsubError,
-  PubsubInternalError,
-  PubsubServiceError,
   PubsubTimeoutError,
-} from "./lib/service/errors";
+  type PubsubError
+} from "./lib/service/errors"
 
 // ============================================================================
 // Additional Layers
@@ -41,6 +41,6 @@ export {
 // Redis-backed distributed layer
 export {
   PubsubRedisLayer,
-  type RedisPubSubClient,
   RedisPubSubClientTag,
-} from "./lib/layers/redis-layer";
+  type RedisPubSubClient
+} from "./lib/layers/redis-layer"

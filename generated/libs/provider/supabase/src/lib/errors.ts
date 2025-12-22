@@ -1,4 +1,4 @@
-import { Data } from "effect";
+import { Data } from "effect"
 
 /**
  * Supabase Provider Errors
@@ -13,9 +13,12 @@ All errors extend Data.TaggedError for:
  * @module @myorg/provider-supabase/errors
  */
 
+
+
 // ============================================================================
 // Base Error Type
 // ============================================================================
+
 
 /**
  * Base Supabase error
@@ -32,6 +35,7 @@ export class SupabaseError extends Data.TaggedError("SupabaseError")<{
 // Connection Errors
 // ============================================================================
 
+
 /**
  * Supabase connection/initialization error
  *
@@ -46,6 +50,7 @@ export class SupabaseConnectionError extends Data.TaggedError("SupabaseConnectio
 // Authentication Errors
 // ============================================================================
 
+
 /**
  * Supabase authentication error
  *
@@ -53,14 +58,7 @@ export class SupabaseConnectionError extends Data.TaggedError("SupabaseConnectio
  */
 export class SupabaseAuthError extends Data.TaggedError("SupabaseAuthError")<{
   readonly message: string;
-  readonly operation:
-    | "signIn"
-    | "signOut"
-    | "signUp"
-    | "verifyToken"
-    | "refreshToken"
-    | "getSession"
-    | "getUser";
+  readonly operation: "signIn" | "signOut" | "signUp" | "verifyToken" | "refreshToken" | "getSession" | "getUser";
   readonly cause?: unknown;
 }> {}
 
@@ -69,9 +67,7 @@ export class SupabaseAuthError extends Data.TaggedError("SupabaseAuthError")<{
  *
  * Thrown when provided credentials are invalid.
  */
-export class SupabaseInvalidCredentialsError extends Data.TaggedError(
-  "SupabaseInvalidCredentialsError",
-)<{
+export class SupabaseInvalidCredentialsError extends Data.TaggedError("SupabaseInvalidCredentialsError")<{
   readonly message: string;
   readonly cause?: unknown;
 }> {}
@@ -101,6 +97,7 @@ export class SupabaseTokenError extends Data.TaggedError("SupabaseTokenError")<{
 // Storage Errors
 // ============================================================================
 
+
 /**
  * Supabase storage error
  *
@@ -108,15 +105,7 @@ export class SupabaseTokenError extends Data.TaggedError("SupabaseTokenError")<{
  */
 export class SupabaseStorageError extends Data.TaggedError("SupabaseStorageError")<{
   readonly message: string;
-  readonly operation:
-    | "upload"
-    | "download"
-    | "delete"
-    | "list"
-    | "move"
-    | "copy"
-    | "createBucket"
-    | "deleteBucket";
+  readonly operation: "upload" | "download" | "delete" | "list" | "move" | "copy" | "createBucket" | "deleteBucket";
   readonly bucket?: string;
   readonly path?: string;
   readonly cause?: unknown;
@@ -148,6 +137,7 @@ export class SupabaseBucketNotFoundError extends Data.TaggedError("SupabaseBucke
 // ============================================================================
 // Error Union Type
 // ============================================================================
+
 
 /**
  * Union of all Supabase provider errors

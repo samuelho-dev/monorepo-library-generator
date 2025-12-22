@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Database Errors
@@ -28,8 +28,8 @@ export class DatabaseServiceError extends Schema.TaggedError<DatabaseServiceErro
   "DatabaseServiceError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 // ============================================================================
@@ -45,8 +45,8 @@ export class DatabaseInternalError extends Schema.TaggedError<DatabaseInternalEr
   "DatabaseInternalError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -56,8 +56,8 @@ export class DatabaseConfigError extends Schema.TaggedError<DatabaseConfigError>
   "DatabaseConfigError",
   {
     message: Schema.String,
-    field: Schema.optional(Schema.String),
-  },
+    field: Schema.optional(Schema.String)
+  }
 ) {}
 
 /**
@@ -68,8 +68,8 @@ export class DatabaseConnectionError extends Schema.TaggedError<DatabaseConnecti
   {
     message: Schema.String,
     endpoint: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -79,8 +79,8 @@ export class DatabaseTimeoutError extends Schema.TaggedError<DatabaseTimeoutErro
   "DatabaseTimeoutError",
   {
     message: Schema.String,
-    timeoutMs: Schema.optional(Schema.Number),
-  },
+    timeoutMs: Schema.optional(Schema.Number)
+  }
 ) {}
 
 // ============================================================================
@@ -102,4 +102,4 @@ export type DatabaseError =
   | DatabaseInternalError
   | DatabaseConfigError
   | DatabaseConnectionError
-  | DatabaseTimeoutError;
+  | DatabaseTimeoutError

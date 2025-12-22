@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Metric, MetricBoundaries } from "effect";
+import { Context, Effect, Layer, Metric, MetricBoundaries } from "effect"
 
 /**
  * Metrics Service
@@ -31,17 +31,17 @@ export interface CounterHandle {
   /**
    * Increment counter by 1
    */
-  readonly increment: Effect.Effect<void>;
+  readonly increment: Effect.Effect<void>
 
   /**
    * Increment counter by specified amount
    */
-  readonly incrementBy: (value: number) => Effect.Effect<void>;
+  readonly incrementBy: (value: number) => Effect.Effect<void>
 
   /**
    * Get current counter value
    */
-  readonly get: Effect.Effect<number>;
+  readonly get: Effect.Effect<number>
 }
 
 /**
@@ -51,32 +51,32 @@ export interface GaugeHandle {
   /**
    * Set gauge to specific value
    */
-  readonly set: (value: number) => Effect.Effect<void>;
+  readonly set: (value: number) => Effect.Effect<void>
 
   /**
    * Increment gauge by 1
    */
-  readonly increment: Effect.Effect<void>;
+  readonly increment: Effect.Effect<void>
 
   /**
    * Increment gauge by specified amount
    */
-  readonly incrementBy: (value: number) => Effect.Effect<void>;
+  readonly incrementBy: (value: number) => Effect.Effect<void>
 
   /**
    * Decrement gauge by 1
    */
-  readonly decrement: Effect.Effect<void>;
+  readonly decrement: Effect.Effect<void>
 
   /**
    * Decrement gauge by specified amount
    */
-  readonly decrementBy: (value: number) => Effect.Effect<void>;
+  readonly decrementBy: (value: number) => Effect.Effect<void>
 
   /**
    * Get current gauge value
    */
-  readonly get: Effect.Effect<number>;
+  readonly get: Effect.Effect<number>
 }
 
 /**
@@ -86,7 +86,7 @@ export interface HistogramHandle {
   /**
    * Record a value in the histogram
    */
-  readonly record: (value: number) => Effect.Effect<void>;
+  readonly record: (value: number) => Effect.Effect<void>
 
   /**
    * Time an effect and record the duration
@@ -96,7 +96,7 @@ export interface HistogramHandle {
    * const result = yield* histogram.timer(processRequest);
    * ```
    */
-  readonly timer: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  readonly timer: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
 }
 
 /**
@@ -106,12 +106,12 @@ export interface MetricOptions {
   /**
    * Metric description
    */
-  readonly description?: string;
+  readonly description?: string
 
   /**
    * Additional labels/tags
    */
-  readonly labels?: Record<string, string>;
+  readonly labels?: Record<string, string>
 }
 
 /**
@@ -122,7 +122,7 @@ export interface HistogramOptions extends MetricOptions {
    * Custom bucket boundaries
    * @default [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
    */
-  readonly boundaries?: readonly number[];
+  readonly boundaries?: readonly number[]
 }
 
 /**
@@ -131,7 +131,9 @@ export interface HistogramOptions extends MetricOptions {
  * Metrics infrastructure using Effect.Metric primitive.
  * Provides counters, gauges, and histograms with OpenTelemetry support.
  */
-export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsService")<
+export class MetricsService extends Context.Tag(
+  "@myorg/infra-metrics/MetricsService"
+)<
   MetricsService,
   {
     /**
@@ -149,7 +151,10 @@ export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsSer
      * yield* requestCounter.increment;
      * ```
      */
-    readonly counter: (name: string, options?: MetricOptions) => Effect.Effect<CounterHandle>;
+    readonly counter: (
+      name: string,
+      options?: MetricOptions
+    ) => Effect.Effect<CounterHandle>
 
     /**
      * Create a gauge metric
@@ -167,7 +172,10 @@ export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsSer
      * yield* activeConnections.decrement;
      * ```
      */
-    readonly gauge: (name: string, options?: MetricOptions) => Effect.Effect<GaugeHandle>;
+    readonly gauge: (
+      name: string,
+      options?: MetricOptions
+    ) => Effect.Effect<GaugeHandle>
 
     /**
      * Create a histogram metric
@@ -187,8 +195,8 @@ export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsSer
      */
     readonly histogram: (
       name: string,
-      options?: HistogramOptions,
-    ) => Effect.Effect<HistogramHandle>;
+      options?: HistogramOptions
+    ) => Effect.Effect<HistogramHandle>
   }
 >() {
   // ===========================================================================
@@ -204,8 +212,8 @@ export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsSer
     counter: (name: string, options?: MetricOptions) =>
       Effect.sync(() => {
         const counter = Metric.counter(name, {
-          description: options?.description,
-        });
+          description: options?.description
+        })
 
         return {
           increment: Metric.increment(counter),
@@ -214,19 +222,19 @@ export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsSer
             Effect.map((state) => {
               // MetricState is a union type - counter state has a "count" property
               if ("count" in state) {
-                return state.count;
+                return state.count
               }
-              return 0;
-            }),
-          ),
-        } satisfies CounterHandle;
+              return 0
+            })
+          )
+        } satisfies CounterHandle
       }),
 
     gauge: (name: string, options?: MetricOptions) =>
       Effect.sync(() => {
         const gauge = Metric.gauge(name, {
-          description: options?.description,
-        });
+          description: options?.description
+        })
 
         return {
           set: (value: number) => Metric.set(gauge, value),
@@ -237,12 +245,12 @@ export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsSer
           get: Metric.value(gauge).pipe(
             Effect.map((state) => {
               if ("value" in state) {
-                return state.value;
+                return state.value
               }
-              return 0;
-            }),
-          ),
-        } satisfies GaugeHandle;
+              return 0
+            })
+          )
+        } satisfies GaugeHandle
       }),
 
     histogram: (name: string, options?: HistogramOptions) =>
@@ -251,27 +259,23 @@ export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsSer
         // Note: Custom boundaries require calculating linear/exponential params
         // For custom buckets, prefer using linear() or exponential() constructors
         const boundaries = options?.boundaries
-          ? MetricBoundaries.linear({
-              start: options.boundaries[0] ?? 0.005,
-              width: 0.05,
-              count: options.boundaries.length,
-            })
-          : MetricBoundaries.exponential({ start: 0.005, factor: 2, count: 11 });
-        const histogram = Metric.histogram(name, boundaries);
+          ? MetricBoundaries.linear({ start: options.boundaries[0] ?? 0.005, width: 0.05, count: options.boundaries.length })
+          : MetricBoundaries.exponential({ start: 0.005, factor: 2, count: 11 })
+        const histogram = Metric.histogram(name, boundaries)
 
         return {
           record: (value: number) => Metric.update(histogram, value),
           timer: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
             Effect.gen(function* () {
-              const start = Date.now();
-              const result = yield* effect;
-              const duration = (Date.now() - start) / 1000; // Convert to seconds
-              yield* Metric.update(histogram, duration);
-              return result;
-            }),
-        } satisfies HistogramHandle;
-      }),
-  });
+              const start = Date.now()
+              const result = yield* effect
+              const duration = (Date.now() - start) / 1000 // Convert to seconds
+              yield* Metric.update(histogram, duration)
+              return result
+            })
+        } satisfies HistogramHandle
+      })
+  })
 
   // ===========================================================================
   // Static Test Layer
@@ -284,76 +288,55 @@ export class MetricsService extends Context.Tag("@myorg/infra-metrics/MetricsSer
    */
   static readonly Test = Layer.sync(this, () => {
     // Store metrics by name for test assertions
-    const counters = new Map<string, { count: number }>();
-    const gauges = new Map<string, { value: number }>();
-    const histograms = new Map<string, { values: number[] }>();
+    const counters = new Map<string, { count: number }>()
+    const gauges = new Map<string, { value: number }>()
+    const histograms = new Map<string, { values: number[] }>()
 
     return {
       counter: (name: string) =>
         Effect.sync(() => {
-          const state = counters.get(name) ?? { count: 0 };
-          counters.set(name, state);
+          const state = counters.get(name) ?? { count: 0 }
+          counters.set(name, state)
 
           return {
-            increment: Effect.sync(() => {
-              state.count++;
-            }),
-            incrementBy: (value: number) =>
-              Effect.sync(() => {
-                state.count += value;
-              }),
-            get: Effect.sync(() => state.count),
-          } satisfies CounterHandle;
+            increment: Effect.sync(() => { state.count++ }),
+            incrementBy: (value: number) => Effect.sync(() => { state.count += value }),
+            get: Effect.sync(() => state.count)
+          } satisfies CounterHandle
         }),
 
       gauge: (name: string) =>
         Effect.sync(() => {
-          const state = gauges.get(name) ?? { value: 0 };
-          gauges.set(name, state);
+          const state = gauges.get(name) ?? { value: 0 }
+          gauges.set(name, state)
 
           return {
-            set: (v: number) =>
-              Effect.sync(() => {
-                state.value = v;
-              }),
-            increment: Effect.sync(() => {
-              state.value++;
-            }),
-            incrementBy: (v: number) =>
-              Effect.sync(() => {
-                state.value += v;
-              }),
-            decrement: Effect.sync(() => {
-              state.value--;
-            }),
-            decrementBy: (v: number) =>
-              Effect.sync(() => {
-                state.value -= v;
-              }),
-            get: Effect.sync(() => state.value),
-          } satisfies GaugeHandle;
+            set: (v: number) => Effect.sync(() => { state.value = v }),
+            increment: Effect.sync(() => { state.value++ }),
+            incrementBy: (v: number) => Effect.sync(() => { state.value += v }),
+            decrement: Effect.sync(() => { state.value-- }),
+            decrementBy: (v: number) => Effect.sync(() => { state.value -= v }),
+            get: Effect.sync(() => state.value)
+          } satisfies GaugeHandle
         }),
 
       histogram: (name: string) =>
         Effect.sync(() => {
-          const state = histograms.get(name) ?? { values: [] };
-          histograms.set(name, state);
+          const state = histograms.get(name) ?? { values: [] }
+          histograms.set(name, state)
 
           return {
-            record: (value: number) =>
-              Effect.sync(() => {
-                state.values.push(value);
-              }),
+            record: (value: number) => Effect.sync(() => { state.values.push(value) }),
             timer: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
               Effect.gen(function* () {
-                const start = Date.now();
-                const result = yield* effect;
-                const duration = (Date.now() - start) / 1000;
-                state.values.push(duration);
-                return result;
-              }),
-          } satisfies HistogramHandle;
-        }),
-    };
-  });
+                const start = Date.now()
+                const result = yield* effect
+                const duration = (Date.now() - start) / 1000
+                state.values.push(duration)
+                return result
+              })
+          } satisfies HistogramHandle
+        })
+    }
+  })
 }

@@ -1,6 +1,6 @@
-import { env } from "@myorg/env";
-import { Context, Effect, Layer, Redacted } from "effect";
-import { SupabaseConnectionError, SupabaseError } from "../errors";
+import { SupabaseConnectionError, SupabaseError } from "../errors"
+import { env } from "@myorg/env"
+import { Context, Effect, Layer, Redacted } from "effect"
 
 /**
  * SupabaseClient Service
@@ -19,12 +19,14 @@ Architecture:
  * @see https://supabase.com/docs for Supabase documentation
  */
 
-import { createClient, type SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js";
+
 import type { SupabaseConfig } from "../types";
+import { createClient, type SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js";
 
 // ============================================================================
 // Service Interface
 // ============================================================================
+
 
 /**
  * SupabaseClient Service Interface
@@ -55,6 +57,7 @@ export interface SupabaseClientServiceInterface {
 // ============================================================================
 // Context.Tag
 // ============================================================================
+
 
 /**
  * SupabaseClient Service Tag
@@ -110,7 +113,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
               new SupabaseConnectionError({
                 message: "Supabase health check failed",
                 cause: error,
-              }),
+              })
             );
           }
           return true;
@@ -126,45 +129,45 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
    * pre-validated values.
    */
   static readonly Live = Layer.sync(SupabaseClient, () => {
-    // Read from centralized env library (already validated at startup)
-    const url = env.SUPABASE_URL;
-    const anonKey = Redacted.value(env.SUPABASE_ANON_KEY);
-    const serviceRoleKey = Redacted.value(env.SUPABASE_SERVICE_ROLE_KEY);
+      // Read from centralized env library (already validated at startup)
+      const url = env.SUPABASE_URL
+      const anonKey = Redacted.value(env.SUPABASE_ANON_KEY)
+      const serviceRoleKey = Redacted.value(env.SUPABASE_SERVICE_ROLE_KEY)
 
-    const config: SupabaseConfig = {
-      url,
-      anonKey,
-      serviceRoleKey,
-    };
+      const config: SupabaseConfig = {
+        url,
+        anonKey,
+        serviceRoleKey,
+      }
 
-    const client = createClient(config.url, config.anonKey);
+      const client = createClient(config.url, config.anonKey);
 
-    return {
-      config,
+      return {
+        config,
 
-      getClient: () => Effect.succeed(client),
+        getClient: () => Effect.succeed(client),
 
-      healthCheck: () =>
-        Effect.gen(function* () {
-          const { error } = yield* Effect.tryPromise({
-            try: () => client.auth.getSession(),
-            catch: (error) =>
-              new SupabaseConnectionError({
-                message: "Failed to connect to Supabase",
-                cause: error,
-              }),
-          });
-          if (error && error.status !== 400) {
-            return yield* Effect.fail(
-              new SupabaseConnectionError({
-                message: "Supabase health check failed",
-                cause: error,
-              }),
-            );
-          }
-          return true;
-        }),
-    };
+        healthCheck: () =>
+          Effect.gen(function* () {
+            const { error } = yield* Effect.tryPromise({
+              try: () => client.auth.getSession(),
+              catch: (error) =>
+                new SupabaseConnectionError({
+                  message: "Failed to connect to Supabase",
+                  cause: error,
+                }),
+            });
+            if (error && error.status !== 400) {
+              return yield* Effect.fail(
+                new SupabaseConnectionError({
+                  message: "Supabase health check failed",
+                  cause: error,
+                })
+              );
+            }
+            return true;
+          }),
+      };
   });
 
   /**
@@ -183,7 +186,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
       Effect.fail(
         new SupabaseError({
           message: "Test layer does not provide a real client. Use make() for integration tests.",
-        }),
+        })
       ),
 
     healthCheck: () => Effect.succeed(true),
@@ -200,9 +203,9 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
       yield* Effect.logDebug("[SupabaseClient] Initializing dev client...");
 
       // Read from centralized env library
-      const url = env.SUPABASE_URL;
-      const anonKey = Redacted.value(env.SUPABASE_ANON_KEY);
-      const serviceRoleKey = Redacted.value(env.SUPABASE_SERVICE_ROLE_KEY);
+      const url = env.SUPABASE_URL
+      const anonKey = Redacted.value(env.SUPABASE_ANON_KEY)
+      const serviceRoleKey = Redacted.value(env.SUPABASE_SERVICE_ROLE_KEY)
 
       const config: SupabaseConfig = { url, anonKey, serviceRoleKey };
 
@@ -224,6 +227,6 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
             return true;
           }),
       };
-    }),
+    })
   );
 }

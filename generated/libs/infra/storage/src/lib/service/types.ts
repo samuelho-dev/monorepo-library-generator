@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Storage Infrastructure Types
@@ -10,17 +10,20 @@ Re-exports types from provider-supabase and adds storage-specific types.
  * @module @myorg/infra-storage/types
  */
 
+
+
 // ============================================================================
 // Re-exports from Provider
 // ============================================================================
 
+
 // Re-export storage types from provider-supabase
 export type {
-  DownloadOptions,
-  SignedUrlOptions,
   StorageBucket,
   StorageFile,
   UploadOptions,
+  DownloadOptions,
+  SignedUrlOptions,
 } from "@myorg/provider-supabase";
 
 export {
@@ -31,6 +34,7 @@ export {
 // ============================================================================
 // Storage Configuration
 // ============================================================================
+
 
 /**
  * Storage service configuration
@@ -71,6 +75,7 @@ export const StorageConfigSchema = Schema.Struct({
 // Operation Types
 // ============================================================================
 
+
 /**
  * Upload result
  */
@@ -99,8 +104,8 @@ export interface ListFilesOptions {
   readonly offset?: number;
   readonly prefix?: string;
   readonly sortBy?: {
-    readonly column: "name" | "created_at" | "updated_at";
-    readonly order: "asc" | "desc";
+    readonly column: 'name' | 'created_at' | 'updated_at';
+    readonly order: 'asc' | 'desc';
   };
 }
 

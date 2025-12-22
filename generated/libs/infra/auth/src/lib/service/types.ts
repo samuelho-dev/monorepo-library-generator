@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Auth Infrastructure Types
@@ -11,15 +11,18 @@ for middleware and RPC integration.
  * @module @myorg/infra-auth/types
  */
 
+
+
 // ============================================================================
 // Re-exports from Provider
 // ============================================================================
 
+
 // Re-export user and session types from provider-supabase
 export type {
-  AuthMethod,
   AuthUser,
   SupabaseSession,
+  AuthMethod,
 } from "@myorg/provider-supabase";
 
 export {
@@ -33,6 +36,7 @@ import { AuthUserSchema as ProviderAuthUserSchema } from "@myorg/provider-supaba
 // ============================================================================
 // RPC Auth Context Types
 // ============================================================================
+
 
 /**
  * Authentication context for RPC handlers
@@ -76,13 +80,15 @@ export const AuthContextSchema = Schema.Struct({
 // HTTP Headers
 // ============================================================================
 
-export type { Headers as RequestHeaders } from "@effect/platform";
+
 // Re-export Headers from @effect/platform for type-safe header access
 export { Headers } from "@effect/platform";
+export type { Headers as RequestHeaders } from "@effect/platform";
 
 // ============================================================================
 // Request Metadata
 // ============================================================================
+
 
 /**
  * Request metadata extracted from HTTP headers

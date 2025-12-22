@@ -273,7 +273,7 @@ const extractAuth = (headers: Headers.Headers): Option.Option<{ type: AuthMethod
 /**
  * Extract bearer token from headers (legacy helper)
  */
-const extractBearerToken = (headers: Headers.Headers): Option.Option<string> => {
+const extractBearerToken = (headers: Headers.Headers) => {
   const auth = extractAuth(headers)
   return Option.map(auth, (a) => a.token)
 }

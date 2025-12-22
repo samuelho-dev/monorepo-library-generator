@@ -13,10 +13,12 @@ For granular imports, import directly from service modules.
  * @module @myorg/provider-supabase/service
  */
 
-// Authentication
-export { SupabaseAuth, type SupabaseAuthServiceInterface } from "./auth";
+
 // Core client
 export { SupabaseClient, type SupabaseClientServiceInterface } from "./client";
+
+// Authentication
+export { SupabaseAuth, type SupabaseAuthServiceInterface } from "./auth";
 
 // Storage
 export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./storage";

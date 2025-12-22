@@ -175,7 +175,7 @@ export class ${className}ConnectionError extends Data.TaggedError(
  * });
  * \`\`\`
  */
-export const mapToRpcError = (error: unknown): RpcError => {
+export const mapToRpcError = (error: unknown) => {
   if (error instanceof ${className}InternalError) {
     return new RpcInfraError({
       message: error.message,

@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Logging Errors
@@ -28,8 +28,8 @@ export class LoggingServiceError extends Schema.TaggedError<LoggingServiceError>
   "LoggingServiceError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 // ============================================================================
@@ -45,8 +45,8 @@ export class LoggingInternalError extends Schema.TaggedError<LoggingInternalErro
   "LoggingInternalError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -56,8 +56,8 @@ export class LoggingConfigError extends Schema.TaggedError<LoggingConfigError>()
   "LoggingConfigError",
   {
     message: Schema.String,
-    field: Schema.optional(Schema.String),
-  },
+    field: Schema.optional(Schema.String)
+  }
 ) {}
 
 /**
@@ -68,8 +68,8 @@ export class LoggingConnectionError extends Schema.TaggedError<LoggingConnection
   {
     message: Schema.String,
     endpoint: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -79,8 +79,8 @@ export class LoggingTimeoutError extends Schema.TaggedError<LoggingTimeoutError>
   "LoggingTimeoutError",
   {
     message: Schema.String,
-    timeoutMs: Schema.optional(Schema.Number),
-  },
+    timeoutMs: Schema.optional(Schema.Number)
+  }
 ) {}
 
 // ============================================================================
@@ -102,4 +102,4 @@ export type LoggingError =
   | LoggingInternalError
   | LoggingConfigError
   | LoggingConnectionError
-  | LoggingTimeoutError;
+  | LoggingTimeoutError

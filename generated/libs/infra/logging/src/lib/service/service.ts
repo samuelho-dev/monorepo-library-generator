@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer } from "effect"
 
 /**
  * Logging Service
@@ -28,7 +28,7 @@ Effect Logger Features:
 /**
  * Log context for structured logging
  */
-export type LogContext = Record<string, unknown>;
+export type LogContext = Record<string, unknown>
 
 /**
  * Logger operations interface
@@ -39,53 +39,53 @@ export interface LoggingOperations {
   /**
    * Log at TRACE level
    */
-  readonly trace: (message: string, context?: LogContext) => Effect.Effect<void>;
+  readonly trace: (message: string, context?: LogContext) => Effect.Effect<void>
 
   /**
    * Log at DEBUG level
    */
-  readonly debug: (message: string, context?: LogContext) => Effect.Effect<void>;
+  readonly debug: (message: string, context?: LogContext) => Effect.Effect<void>
 
   /**
    * Log at INFO level
    */
-  readonly info: (message: string, context?: LogContext) => Effect.Effect<void>;
+  readonly info: (message: string, context?: LogContext) => Effect.Effect<void>
 
   /**
    * Log at WARN level
    */
-  readonly warn: (message: string, context?: LogContext) => Effect.Effect<void>;
+  readonly warn: (message: string, context?: LogContext) => Effect.Effect<void>
 
   /**
    * Log at ERROR level
    */
-  readonly error: (message: string, context?: LogContext) => Effect.Effect<void>;
+  readonly error: (message: string, context?: LogContext) => Effect.Effect<void>
 
   /**
    * Log at FATAL level
    */
-  readonly fatal: (message: string, context?: LogContext) => Effect.Effect<void>;
+  readonly fatal: (message: string, context?: LogContext) => Effect.Effect<void>
 
   /**
    * Create child logger with inherited context
    */
-  readonly child: (context: LogContext) => Effect.Effect<LoggingOperations>;
+  readonly child: (context: LogContext) => Effect.Effect<LoggingOperations>
 
   /**
    * Execute effect within a named span for distributed tracing
    */
   readonly withSpan: <A, E, R>(
     name: string,
-    effect: Effect.Effect<A, E, R>,
-  ) => Effect.Effect<A, E, R>;
+    effect: Effect.Effect<A, E, R>
+  ) => Effect.Effect<A, E, R>
 
   /**
    * Execute effect with additional log annotations
    */
   readonly withContext: <A, E, R>(
     context: LogContext,
-    effect: Effect.Effect<A, E, R>,
-  ) => Effect.Effect<A, E, R>;
+    effect: Effect.Effect<A, E, R>
+  ) => Effect.Effect<A, E, R>
 }
 
 /**
@@ -102,7 +102,9 @@ export interface LoggingOperations {
  * }).pipe(Effect.provide(LoggingService.Live));
  * ```
  */
-export class LoggingService extends Context.Tag("@myorg/infra-logging/LoggingService")<
+export class LoggingService extends Context.Tag(
+  "@myorg/infra-logging/LoggingService"
+)<
   LoggingService,
   LoggingOperations
 >() {
@@ -116,7 +118,7 @@ export class LoggingService extends Context.Tag("@myorg/infra-logging/LoggingSer
    * Uses Effect's built-in logging with structured annotations.
    * Integrates with OpenTelemetry when OTEL layer is provided.
    */
-  static readonly Live = Layer.succeed(this, LoggingService.makeLogger({}));
+  static readonly Live = Layer.succeed(this, LoggingService.makeLogger({}))
 
   // ===========================================================================
   // Static Test Layer
@@ -135,10 +137,17 @@ export class LoggingService extends Context.Tag("@myorg/infra-logging/LoggingSer
     warn: (_message: string, _context?: LogContext) => Effect.void,
     error: (_message: string, _context?: LogContext) => Effect.void,
     fatal: (_message: string, _context?: LogContext) => Effect.void,
-    child: (context: LogContext) => Effect.succeed(LoggingService.makeLogger(context)),
-    withSpan: <A, E, R>(_name: string, effect: Effect.Effect<A, E, R>) => effect,
-    withContext: <A, E, R>(_context: LogContext, effect: Effect.Effect<A, E, R>) => effect,
-  });
+    child: (context: LogContext) =>
+      Effect.succeed(LoggingService.makeLogger(context)),
+    withSpan: <A, E, R>(
+      _name: string,
+      effect: Effect.Effect<A, E, R>
+    ) => effect,
+    withContext: <A, E, R>(
+      _context: LogContext,
+      effect: Effect.Effect<A, E, R>
+    ) => effect
+  })
 
   // ===========================================================================
   // Static Dev Layer
@@ -149,7 +158,7 @@ export class LoggingService extends Context.Tag("@myorg/infra-logging/LoggingSer
    *
    * Formats logs for human readability during development.
    */
-  static readonly Dev = Layer.succeed(this, LoggingService.makeLogger({}));
+  static readonly Dev = Layer.succeed(this, LoggingService.makeLogger({}))
 
   // ===========================================================================
   // Helper: Make Logger Instance
@@ -159,23 +168,22 @@ export class LoggingService extends Context.Tag("@myorg/infra-logging/LoggingSer
    * Create logger instance with optional base context
    */
   static makeLogger(baseContext: LogContext): LoggingOperations {
-    const log =
-      (level: "trace" | "debug" | "info" | "warn" | "error" | "fatal") =>
+    const log = (level: "trace" | "debug" | "info" | "warn" | "error" | "fatal") =>
       (message: string, context?: LogContext) => {
-        const mergedContext = { ...baseContext, ...context };
+        const mergedContext = { ...baseContext, ...context }
         const logFn = {
           trace: Effect.logTrace,
           debug: Effect.logDebug,
           info: Effect.logInfo,
           warn: Effect.logWarning,
           error: Effect.logError,
-          fatal: Effect.logFatal,
-        }[level];
+          fatal: Effect.logFatal
+        }[level]
 
         return Object.keys(mergedContext).length > 0
           ? logFn(message).pipe(Effect.annotateLogs(mergedContext))
-          : logFn(message);
-      };
+          : logFn(message)
+      }
 
     return {
       trace: log("trace"),
@@ -192,7 +200,7 @@ export class LoggingService extends Context.Tag("@myorg/infra-logging/LoggingSer
         effect.pipe(Effect.withSpan(name)),
 
       withContext: <A, E, R>(context: LogContext, effect: Effect.Effect<A, E, R>) =>
-        effect.pipe(Effect.annotateLogs({ ...baseContext, ...context })),
-    };
+        effect.pipe(Effect.annotateLogs({ ...baseContext, ...context }))
+    }
   }
 }

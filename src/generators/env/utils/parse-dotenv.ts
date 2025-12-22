@@ -17,6 +17,20 @@ export interface ParsedEnvVar {
   hasDefault?: string | undefined; // For Config.withDefault()
 }
 
+const envVar = (
+  name: string,
+  type: ParsedEnvVar['type'],
+  context: ParsedEnvVar['context'],
+  options: { isPublic?: boolean; isSecret?: boolean; hasDefault?: string } = {},
+) => ({
+  name,
+  type,
+  isPublic: options.isPublic ?? false,
+  isSecret: options.isSecret ?? false,
+  context,
+  ...(options.hasDefault !== undefined ? { hasDefault: options.hasDefault } : {}),
+});
+
 /**
  * Parse .env file and extract variable definitions
  *
@@ -107,140 +121,40 @@ function inferType(value: string) {
 
 /**
  * Default environment variables when no .env file exists
- *
- * @returns Array of default environment variables
  */
-export function getDefaultEnvVars(): Array<ParsedEnvVar> {
+export function getDefaultEnvVars() {
   return [
     // Node environment (shared)
-    {
-      name: 'NODE_ENV',
-      type: 'string',
-      isPublic: true,
-      isSecret: false,
-      context: 'shared',
-      hasDefault: 'development',
-    },
+    envVar('NODE_ENV', 'string', 'shared', { isPublic: true, hasDefault: 'development' }),
 
     // Server-only variables
-    { name: 'DATABASE_URL', type: 'string', isPublic: false, isSecret: true, context: 'server' },
-    { name: 'API_SECRET', type: 'string', isPublic: false, isSecret: true, context: 'server' },
-    { name: 'REDIS_URL', type: 'string', isPublic: false, isSecret: true, context: 'server' },
-    {
-      name: 'PORT',
-      type: 'number',
-      isPublic: false,
-      isSecret: false,
-      context: 'server',
-      hasDefault: '3000',
-    },
+    envVar('DATABASE_URL', 'string', 'server', { isSecret: true }),
+    envVar('API_SECRET', 'string', 'server', { isSecret: true }),
+    envVar('REDIS_URL', 'string', 'server', { isSecret: true }),
+    envVar('PORT', 'number', 'server', { hasDefault: '3000' }),
 
     // Provider-specific variables (built-in providers)
-    { name: 'KYSELY_API_KEY', type: 'string', isPublic: false, isSecret: true, context: 'server' },
-    { name: 'KYSELY_TIMEOUT', type: 'number', isPublic: false, isSecret: false, context: 'server' },
-    {
-      name: 'EFFECT_CACHE_API_KEY',
-      type: 'string',
-      isPublic: false,
-      isSecret: true,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_CACHE_TIMEOUT',
-      type: 'number',
-      isPublic: false,
-      isSecret: false,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_LOGGER_API_KEY',
-      type: 'string',
-      isPublic: false,
-      isSecret: true,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_LOGGER_TIMEOUT',
-      type: 'number',
-      isPublic: false,
-      isSecret: false,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_METRICS_API_KEY',
-      type: 'string',
-      isPublic: false,
-      isSecret: true,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_METRICS_TIMEOUT',
-      type: 'number',
-      isPublic: false,
-      isSecret: false,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_QUEUE_API_KEY',
-      type: 'string',
-      isPublic: false,
-      isSecret: true,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_QUEUE_TIMEOUT',
-      type: 'number',
-      isPublic: false,
-      isSecret: false,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_PUBSUB_API_KEY',
-      type: 'string',
-      isPublic: false,
-      isSecret: true,
-      context: 'server',
-    },
-    {
-      name: 'EFFECT_PUBSUB_TIMEOUT',
-      type: 'number',
-      isPublic: false,
-      isSecret: false,
-      context: 'server',
-    },
+    envVar('KYSELY_API_KEY', 'string', 'server', { isSecret: true }),
+    envVar('KYSELY_TIMEOUT', 'number', 'server'),
+    envVar('EFFECT_CACHE_API_KEY', 'string', 'server', { isSecret: true }),
+    envVar('EFFECT_CACHE_TIMEOUT', 'number', 'server'),
+    envVar('EFFECT_LOGGER_API_KEY', 'string', 'server', { isSecret: true }),
+    envVar('EFFECT_LOGGER_TIMEOUT', 'number', 'server'),
+    envVar('EFFECT_METRICS_API_KEY', 'string', 'server', { isSecret: true }),
+    envVar('EFFECT_METRICS_TIMEOUT', 'number', 'server'),
+    envVar('EFFECT_QUEUE_API_KEY', 'string', 'server', { isSecret: true }),
+    envVar('EFFECT_QUEUE_TIMEOUT', 'number', 'server'),
+    envVar('EFFECT_PUBSUB_API_KEY', 'string', 'server', { isSecret: true }),
+    envVar('EFFECT_PUBSUB_TIMEOUT', 'number', 'server'),
 
     // Supabase provider variables
-    {
-      name: 'SUPABASE_URL',
-      type: 'string',
-      isPublic: false,
-      isSecret: false,
-      context: 'server',
-    },
-    {
-      name: 'SUPABASE_ANON_KEY',
-      type: 'string',
-      isPublic: false,
-      isSecret: true,
-      context: 'server',
-    },
-    {
-      name: 'SUPABASE_SERVICE_ROLE_KEY',
-      type: 'string',
-      isPublic: false,
-      isSecret: true,
-      context: 'server',
-    },
+    envVar('SUPABASE_URL', 'string', 'server'),
+    envVar('SUPABASE_ANON_KEY', 'string', 'server', { isSecret: true }),
+    envVar('SUPABASE_SERVICE_ROLE_KEY', 'string', 'server', { isSecret: true }),
 
     // Client-safe variables (PUBLIC_ prefix)
-    { name: 'PUBLIC_API_URL', type: 'string', isPublic: true, isSecret: false, context: 'client' },
-    {
-      name: 'PUBLIC_FEATURE_FLAG',
-      type: 'boolean',
-      isPublic: true,
-      isSecret: false,
-      context: 'client',
-    },
+    envVar('PUBLIC_API_URL', 'string', 'client', { isPublic: true }),
+    envVar('PUBLIC_FEATURE_FLAG', 'boolean', 'client', { isPublic: true }),
   ];
 }
 

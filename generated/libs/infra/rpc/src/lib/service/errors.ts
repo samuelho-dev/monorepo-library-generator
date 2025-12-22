@@ -1,4 +1,4 @@
-import { Data, Schema } from "effect";
+import { Data, Schema } from "effect"
 
 /**
  * Rpc Errors
@@ -28,11 +28,14 @@ Note: AuthError is defined in middleware.ts for co-location with AuthMiddleware.
  * Use for errors that need to cross RPC boundaries.
  * This is serializable and can be sent over the wire.
  */
-export class RpcInfraError extends Schema.TaggedError<RpcInfraError>()("RpcInfraError", {
-  message: Schema.String,
-  code: Schema.String,
-  details: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-}) {}
+export class RpcInfraError extends Schema.TaggedError<RpcInfraError>()(
+  "RpcInfraError",
+  {
+    message: Schema.String,
+    code: Schema.String,
+    details: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+  }
+) {}
 
 /**
  * Rate limit error
@@ -41,8 +44,8 @@ export class RpcRateLimitError extends Schema.TaggedError<RpcRateLimitError>()(
   "RpcRateLimitError",
   {
     message: Schema.String,
-    retryAfter: Schema.Number, // Seconds until retry allowed
-  },
+    retryAfter: Schema.Number // Seconds until retry allowed
+  }
 ) {}
 
 /**
@@ -56,29 +59,35 @@ export class RpcValidationError extends Schema.TaggedError<RpcValidationError>()
     issues: Schema.Array(
       Schema.Struct({
         path: Schema.Array(Schema.String),
-        message: Schema.String,
-      }),
-    ),
-  },
+        message: Schema.String
+      })
+    )
+  }
 ) {}
 
 /**
  * Not found error
  */
-export class RpcNotFoundError extends Schema.TaggedError<RpcNotFoundError>()("RpcNotFoundError", {
-  message: Schema.String,
-  resource: Schema.String,
-  id: Schema.optional(Schema.String),
-}) {}
+export class RpcNotFoundError extends Schema.TaggedError<RpcNotFoundError>()(
+  "RpcNotFoundError",
+  {
+    message: Schema.String,
+    resource: Schema.String,
+    id: Schema.optional(Schema.String)
+  }
+) {}
 
 /**
  * Timeout error
  */
-export class RpcTimeoutError extends Schema.TaggedError<RpcTimeoutError>()("RpcTimeoutError", {
-  message: Schema.String,
-  operation: Schema.String,
-  timeoutMs: Schema.Number,
-}) {}
+export class RpcTimeoutError extends Schema.TaggedError<RpcTimeoutError>()(
+  "RpcTimeoutError",
+  {
+    message: Schema.String,
+    operation: Schema.String,
+    timeoutMs: Schema.Number
+  }
+) {}
 
 /**
  * Union of all RPC infrastructure errors (excluding AuthError which is in middleware.ts)
@@ -88,7 +97,7 @@ export type RpcError =
   | RpcRateLimitError
   | RpcValidationError
   | RpcNotFoundError
-  | RpcTimeoutError;
+  | RpcTimeoutError
 
 // ============================================================================
 // Domain-Level Errors (Data.TaggedError)
@@ -100,26 +109,32 @@ export type RpcError =
  * Use for errors that stay within the service layer.
  * These are NOT serializable and should not cross RPC boundaries.
  */
-export class RpcInternalError extends Data.TaggedError("RpcInternalError")<{
-  readonly message: string;
-  readonly cause?: unknown;
+export class RpcInternalError extends Data.TaggedError(
+  "RpcInternalError"
+)<{
+  readonly message: string
+  readonly cause?: unknown
 }> {}
 
 /**
  * Configuration error
  */
-export class RpcConfigError extends Data.TaggedError("RpcConfigError")<{
-  readonly message: string;
-  readonly key?: string;
+export class RpcConfigError extends Data.TaggedError(
+  "RpcConfigError"
+)<{
+  readonly message: string
+  readonly key?: string
 }> {}
 
 /**
  * Connection error
  */
-export class RpcConnectionError extends Data.TaggedError("RpcConnectionError")<{
-  readonly message: string;
-  readonly endpoint?: string;
-  readonly cause?: unknown;
+export class RpcConnectionError extends Data.TaggedError(
+  "RpcConnectionError"
+)<{
+  readonly message: string
+  readonly endpoint?: string
+  readonly cause?: unknown
 }> {}
 
 // ============================================================================
@@ -140,34 +155,34 @@ export class RpcConnectionError extends Data.TaggedError("RpcConnectionError")<{
  * });
  * ```
  */
-export const mapToRpcError = (error: unknown): RpcError => {
+export const mapToRpcError = (error: unknown) => {
   if (error instanceof RpcInternalError) {
     return new RpcInfraError({
       message: error.message,
-      code: "INTERNAL_ERROR",
-    });
+      code: "INTERNAL_ERROR"
+    })
   }
 
   if (error instanceof RpcConfigError) {
     return new RpcInfraError({
       message: "Configuration error",
-      code: "CONFIG_ERROR",
-    });
+      code: "CONFIG_ERROR"
+    })
   }
 
   if (error instanceof RpcConnectionError) {
     return new RpcInfraError({
       message: "Service unavailable",
-      code: "SERVICE_UNAVAILABLE",
-    });
+      code: "SERVICE_UNAVAILABLE"
+    })
   }
 
   // Unknown error
   return new RpcInfraError({
     message: error instanceof Error ? error.message : "Unknown error",
-    code: "UNKNOWN_ERROR",
-  });
-};
+    code: "UNKNOWN_ERROR"
+  })
+}
 
 /**
  * Error codes for HTTP status mapping
@@ -190,8 +205,8 @@ export const RpcErrorCodes = {
   // RPC-specific
   GROUP_NOT_FOUND: "GROUP_NOT_FOUND",
   OPERATION_NOT_FOUND: "OPERATION_NOT_FOUND",
-  PARSE_ERROR: "PARSE_ERROR",
-} as const;
+  PARSE_ERROR: "PARSE_ERROR"
+} as const
 
 /**
  * Map error code to HTTP status
@@ -201,24 +216,24 @@ export const errorCodeToHttpStatus = (code: string): number => {
     case RpcErrorCodes.BAD_REQUEST:
     case RpcErrorCodes.VALIDATION_ERROR:
     case RpcErrorCodes.PARSE_ERROR:
-      return 400;
+      return 400
     case RpcErrorCodes.UNAUTHORIZED:
-      return 401;
+      return 401
     case RpcErrorCodes.FORBIDDEN:
-      return 403;
+      return 403
     case RpcErrorCodes.NOT_FOUND:
     case RpcErrorCodes.GROUP_NOT_FOUND:
     case RpcErrorCodes.OPERATION_NOT_FOUND:
-      return 404;
+      return 404
     case RpcErrorCodes.RATE_LIMITED:
-      return 429;
+      return 429
     case RpcErrorCodes.TIMEOUT:
-      return 504;
+      return 504
     case RpcErrorCodes.SERVICE_UNAVAILABLE:
     case RpcErrorCodes.NETWORK_ERROR:
-      return 503;
+      return 503
     default:
       // INTERNAL_ERROR and any unknown codes return 500
-      return 500;
+      return 500
   }
-};
+}

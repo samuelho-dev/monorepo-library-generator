@@ -132,7 +132,7 @@ export interface PublicHandlerContext {
  *
  * Uses @effect/platform Headers.get() for type-safe header access.
  */
-export function extractRequestMeta(headers: Headers.Headers): RequestMeta {
+export function extractRequestMeta(headers: Headers.Headers) {
   return {
     requestId: Headers.get(headers, "x-request-id").pipe(Option.getOrElse(() => crypto.randomUUID())),
     userAgent: Headers.get(headers, "user-agent").pipe(Option.getOrElse(() => "unknown")),

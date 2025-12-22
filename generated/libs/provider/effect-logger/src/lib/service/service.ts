@@ -1,13 +1,7 @@
-import { Context, Effect, Layer, Redacted } from "effect";
-import type { EffectLoggerServiceError } from "../errors";
-import { EffectLoggerNotFoundError } from "../errors";
-import type {
-  EffectLoggerConfig,
-  HealthCheckResult,
-  ListParams,
-  PaginatedResult,
-  Resource,
-} from "../types";
+import { EffectLoggerNotFoundError } from "../errors"
+import { Context, Effect, Layer, Redacted } from "effect"
+import type { EffectLoggerServiceError } from "../errors"
+import type { EffectLoggerConfig, HealthCheckResult, ListParams, PaginatedResult, Resource } from "../types"
 
 /**
  * EffectLogger Service Interface
@@ -26,9 +20,13 @@ Bundle optimization:
  * @module @myorg/provider-effect-logger/service
  */
 
+
+
+
 // ============================================================================
 // Service Interface
 // ============================================================================
+
 
 /**
  * EffectLogger Service Interface
@@ -50,25 +48,30 @@ export interface EffectLoggerServiceInterface {
   /**
    * Health check - verifies service connectivity
    */
-  readonly healthCheck: Effect.Effect<HealthCheckResult, EffectLoggerServiceError>;
+  readonly healthCheck: Effect.Effect<
+    HealthCheckResult,
+    EffectLoggerServiceError
+  >;
 
   /**
    * List resources with pagination support
    */
   readonly list: (
-    params?: ListParams,
+    params?: ListParams
   ) => Effect.Effect<PaginatedResult<Resource>, EffectLoggerServiceError>;
 
   /**
    * Get resource by ID
    */
-  readonly get: (id: string) => Effect.Effect<Resource, EffectLoggerServiceError>;
+  readonly get: (
+    id: string
+  ) => Effect.Effect<Resource, EffectLoggerServiceError>;
 
   /**
    * Create new resource
    */
   readonly create: (
-    data: Omit<Resource, "id" | "createdAt" | "updatedAt">,
+    data: Omit<Resource, "id" | "createdAt" | "updatedAt">
   ) => Effect.Effect<Resource, EffectLoggerServiceError>;
 
   /**
@@ -76,13 +79,15 @@ export interface EffectLoggerServiceInterface {
    */
   readonly update: (
     id: string,
-    data: Partial<Omit<Resource, "id" | "createdAt" | "updatedAt">>,
+    data: Partial<Omit<Resource, "id" | "createdAt" | "updatedAt">>
   ) => Effect.Effect<Resource, EffectLoggerServiceError>;
 
   /**
    * Delete resource
    */
-  readonly delete: (id: string) => Effect.Effect<void, EffectLoggerServiceError>;
+  readonly delete: (
+    id: string
+  ) => Effect.Effect<void, EffectLoggerServiceError>;
 
   // ==========================================================================
   // TODO: Stream-Based Operations for Large-Scale API Interactions
@@ -253,6 +258,7 @@ export interface EffectLoggerServiceInterface {
 // Context.Tag
 // ============================================================================
 
+
 /**
  * EffectLogger Service Tag
  *
@@ -342,7 +348,7 @@ export class EffectLogger extends Context.Tag("EffectLogger")<
                   message: `Resource ${id} not found`,
                   resourceId: id,
                   resourceType: "Resource",
-                }),
+                })
               );
             }
             return item;
@@ -371,7 +377,7 @@ export class EffectLogger extends Context.Tag("EffectLogger")<
                   message: `Resource ${id} not found`,
                   resourceId: id,
                   resourceType: "Resource",
-                }),
+                })
               );
             }
             const updated: Resource = {
@@ -394,12 +400,12 @@ export class EffectLogger extends Context.Tag("EffectLogger")<
                   message: `Resource ${id} not found`,
                   resourceId: id,
                   resourceType: "Resource",
-                }),
+                })
               );
             }
           }),
       };
-    }),
+    })
   );
 
   /**
@@ -412,105 +418,108 @@ export class EffectLogger extends Context.Tag("EffectLogger")<
    * Customize via Layer.succeed(EffectLogger, \{ ...your mock implementations \})
    * for specific test scenarios.
    */
-  static readonly Test = Layer.sync(EffectLogger, () => {
-    // In-memory store for test isolation
-    const store = new Map<string, Resource>();
-    let idCounter = 0;
+  static readonly Test = Layer.sync(
+    EffectLogger,
+    () => {
+      // In-memory store for test isolation
+      const store = new Map<string, Resource>();
+      let idCounter = 0;
 
-    return {
-      // Configuration with test values
-      config: { apiKey: "test-key", timeout: 1000 },
+      return {
+        // Configuration with test values
+        config: { apiKey: "test-key", timeout: 1000 },
 
-      // Health check returns success
-      healthCheck: Effect.succeed({ status: "healthy" as const }),
+        // Health check returns success
+        healthCheck: Effect.succeed({ status: "healthy" as const }),
 
-      // List with pagination
-      list: (params) =>
-        Effect.sync(() => {
-          const page = params?.page ?? 1;
-          const limit = params?.limit ?? 10;
-          const items = Array.from(store.values());
-          const start = (page - 1) * limit;
-          const end = start + limit;
-          return {
-            data: items.slice(start, end),
-            page,
-            limit,
-            total: items.length,
-          };
-        }),
+        // List with pagination
+        list: (params) =>
+          Effect.sync(() => {
+            const page = params?.page ?? 1;
+            const limit = params?.limit ?? 10;
+            const items = Array.from(store.values());
+            const start = (page - 1) * limit;
+            const end = start + limit;
+            return {
+              data: items.slice(start, end),
+              page,
+              limit,
+              total: items.length,
+            };
+          }),
 
-      // Get by ID with proper error handling
-      get: (id) =>
-        Effect.gen(function* () {
-          const item = store.get(id);
-          if (!item) {
-            return yield* Effect.fail(
-              new EffectLoggerNotFoundError({
-                message: `Resource ${id} not found`,
-                resourceId: id,
-                resourceType: "Resource",
-              }),
-            );
-          }
-          return item;
-        }),
+        // Get by ID with proper error handling
+        get: (id) =>
+          Effect.gen(function* () {
+            const item = store.get(id);
+            if (!item) {
+              return yield* Effect.fail(
+                new EffectLoggerNotFoundError({
+                  message: `Resource ${id} not found`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+            return item;
+          }),
 
-      // Create with generated ID
-      create: (data) =>
-        Effect.sync(() => {
-          const id = `test-${++idCounter}`;
-          const now = new Date();
-          const item: Resource = {
-            id,
-            ...data,
-            createdAt: now,
-            updatedAt: now,
-          };
-          store.set(id, item);
-          return item;
-        }),
+        // Create with generated ID
+        create: (data) =>
+          Effect.sync(() => {
+            const id = `test-${++idCounter}`;
+            const now = new Date();
+            const item: Resource = {
+              id,
+              ...data,
+              createdAt: now,
+              updatedAt: now,
+            };
+            store.set(id, item);
+            return item;
+          }),
 
-      // Update existing resource
-      update: (id, data) =>
-        Effect.gen(function* () {
-          const item = store.get(id);
-          if (!item) {
-            return yield* Effect.fail(
-              new EffectLoggerNotFoundError({
-                message: `Resource ${id} not found`,
-                resourceId: id,
-                resourceType: "Resource",
-              }),
-            );
-          }
-          const updated: Resource = {
-            ...item,
-            ...data,
-            id,
-            createdAt: item.createdAt,
-            updatedAt: new Date(),
-          };
-          store.set(id, updated);
-          return updated;
-        }),
+        // Update existing resource
+        update: (id, data) =>
+          Effect.gen(function* () {
+            const item = store.get(id);
+            if (!item) {
+              return yield* Effect.fail(
+                new EffectLoggerNotFoundError({
+                  message: `Resource ${id} not found`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+            const updated: Resource = {
+              ...item,
+              ...data,
+              id,
+              createdAt: item.createdAt,
+              updatedAt: new Date(),
+            };
+            store.set(id, updated);
+            return updated;
+          }),
 
-      // Delete with existence check
-      delete: (id) =>
-        Effect.gen(function* () {
-          const existed = store.delete(id);
-          if (!existed) {
-            return yield* Effect.fail(
-              new EffectLoggerNotFoundError({
-                message: `Resource ${id} not found`,
-                resourceId: id,
-                resourceType: "Resource",
-              }),
-            );
-          }
-        }),
-    };
-  });
+        // Delete with existence check
+        delete: (id) =>
+          Effect.gen(function* () {
+            const existed = store.delete(id);
+            if (!existed) {
+              return yield* Effect.fail(
+                new EffectLoggerNotFoundError({
+                  message: `Resource ${id} not found`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+          }),
+      };
+    }
+  );
 
   /**
    * Dev Layer - Development with enhanced logging
@@ -526,7 +535,7 @@ export class EffectLogger extends Context.Tag("EffectLogger")<
       // Get actual implementation from Live layer
       const liveService = yield* EffectLogger.Live.pipe(
         Layer.build,
-        Effect.map(Context.unsafeGet(EffectLogger)),
+        Effect.map(Context.unsafeGet(EffectLogger))
       );
 
       // Wrap all operations with logging
@@ -544,10 +553,7 @@ export class EffectLogger extends Context.Tag("EffectLogger")<
           Effect.gen(function* () {
             console.log("[EffectLogger] [DEV] list called with:", params);
             const result = yield* liveService.list(params);
-            console.log("[EffectLogger] [DEV] list result:", {
-              count: result.data.length,
-              total: result.total,
-            });
+            console.log("[EffectLogger] [DEV] list result:", { count: result.data.length, total: result.total });
             return result;
           }),
 
@@ -580,8 +586,8 @@ export class EffectLogger extends Context.Tag("EffectLogger")<
             console.log("[EffectLogger] [DEV] delete called with id:", id);
             yield* liveService.delete(id);
             console.log("[EffectLogger] [DEV] delete completed");
-          }),
+          })
       };
-    }),
+    })
   );
 }

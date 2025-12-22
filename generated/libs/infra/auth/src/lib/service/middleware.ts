@@ -1,4 +1,4 @@
-import { Context, Effect, Option } from "effect";
+import { Context, Effect, Option } from "effect"
 
 /**
  * Auth Middleware for RPC
@@ -16,22 +16,27 @@ This middleware is consumed by infra-rpc.
  * @module @myorg/infra-auth/middleware
  */
 
+
 import { Headers } from "@effect/platform";
 import type { AuthUser } from "@myorg/provider-supabase";
-import { UnauthorizedError } from "./errors";
 import { AuthService } from "./service";
+import { UnauthorizedError } from "./errors";
 import type { AuthContext, RequestMeta } from "./types";
 
 // ============================================================================
 // RPC Context Tags
 // ============================================================================
 
+
 /**
  * Current authenticated user
  *
  * Available in protected handlers after auth middleware runs.
  */
-export class CurrentUser extends Context.Tag("CurrentUser")<CurrentUser, AuthUser>() {}
+export class CurrentUser extends Context.Tag("CurrentUser")<
+  CurrentUser,
+  AuthUser
+>() {}
 
 /**
  * Optional current user
@@ -48,14 +53,20 @@ export class OptionalUser extends Context.Tag("OptionalUser")<
  *
  * Available in all handlers after auth middleware runs.
  */
-export class AuthContextTag extends Context.Tag("AuthContext")<AuthContextTag, AuthContext>() {}
+export class AuthContextTag extends Context.Tag("AuthContext")<
+  AuthContextTag,
+  AuthContext
+>() {}
 
 /**
  * Request metadata
  *
  * Contains request ID, user agent, client IP, etc.
  */
-export class RequestMetaTag extends Context.Tag("RequestMeta")<RequestMetaTag, RequestMeta>() {}
+export class RequestMetaTag extends Context.Tag("RequestMeta")<
+  RequestMetaTag,
+  RequestMeta
+>() {}
 
 /**
  * Auth method used for this request
@@ -68,6 +79,7 @@ export class AuthMethodTag extends Context.Tag("AuthMethod")<
 // ============================================================================
 // Handler Context Types
 // ============================================================================
+
 
 /**
  * Context available in protected handlers
@@ -95,21 +107,20 @@ export interface PublicHandlerContext {
 // Middleware Implementations
 // ============================================================================
 
+
 /**
  * Extract request metadata from headers
  *
  * Uses @effect/platform Headers.get() for type-safe header access.
  */
-export function extractRequestMeta(headers: Headers.Headers): RequestMeta {
+export function extractRequestMeta(headers: Headers.Headers) {
   return {
-    requestId: Headers.get(headers, "x-request-id").pipe(
-      Option.getOrElse(() => crypto.randomUUID()),
-    ),
+    requestId: Headers.get(headers, "x-request-id").pipe(Option.getOrElse(() => crypto.randomUUID())),
     userAgent: Headers.get(headers, "user-agent").pipe(Option.getOrElse(() => "unknown")),
     clientIp: Headers.get(headers, "x-forwarded-for").pipe(
       Option.map((v) => v.split(",")[0]?.trim() ?? "unknown"),
       Option.orElse(() => Headers.get(headers, "x-real-ip")),
-      Option.getOrElse(() => "unknown"),
+      Option.getOrElse(() => "unknown")
     ),
     origin: Headers.get(headers, "origin").pipe(Option.getOrElse(() => "unknown")),
   };
@@ -141,7 +152,7 @@ export function createAuthMiddleware(headers: Headers.Headers) {
       return yield* Effect.fail(
         new UnauthorizedError({
           message: "Authentication required",
-        }),
+        })
       );
     }
 
@@ -180,9 +191,9 @@ export function createAuthMiddleware(headers: Headers.Headers) {
 export function createPublicMiddleware(headers: Headers.Headers) {
   return Effect.gen(function* () {
     const authService = yield* AuthService;
-    const authContextOpt = yield* authService
-      .buildAuthContext(headers)
-      .pipe(Effect.catchAll(() => Effect.succeed(Option.none<AuthContext>())));
+    const authContextOpt = yield* authService.buildAuthContext(headers).pipe(
+      Effect.catchAll(() => Effect.succeed(Option.none<AuthContext>()))
+    );
 
     const meta = extractRequestMeta(headers);
 
@@ -207,6 +218,7 @@ export function createPublicMiddleware(headers: Headers.Headers) {
 // Handler Factories
 // ============================================================================
 
+
 /**
  * Create a protected handler with bundled context
  *
@@ -227,8 +239,9 @@ export function createPublicMiddleware(headers: Headers.Headers) {
  * );
  * ```
  */
-export const protectedHandler =
-  <I, O, E, R>(fn: (args: { ctx: ProtectedHandlerContext; input: I }) => Effect.Effect<O, E, R>) =>
+export const protectedHandler = <I, O, E, R>(
+  fn: (args: { ctx: ProtectedHandlerContext; input: I }) => Effect.Effect<O, E, R>
+) =>
   (payload: I) =>
     Effect.gen(function* () {
       const user = yield* CurrentUser;
@@ -266,8 +279,8 @@ export const protectedHandler =
  * ```
  */
 export const publicHandler = <I, O, E, R>(
-  fn: (args: { ctx: PublicHandlerContext; input: I }) => Effect.Effect<O, E, R>,
-): ((payload: I) => Effect.Effect<O, E, R | OptionalUser | RequestMetaTag | AuthMethodTag>) => {
+  fn: (args: { ctx: PublicHandlerContext; input: I }) => Effect.Effect<O, E, R>
+): (payload: I) => Effect.Effect<O, E, R | OptionalUser | RequestMetaTag | AuthMethodTag> => {
   return (payload: I) =>
     Effect.gen(function* () {
       const userOpt = yield* OptionalUser;

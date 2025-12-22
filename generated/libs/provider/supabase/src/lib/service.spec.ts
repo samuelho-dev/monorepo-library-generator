@@ -1,5 +1,5 @@
-import { Effect, Layer, Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { Effect, Layer, Option } from "effect"
+import { describe, expect, it } from "vitest"
 
 /**
  * Supabase Provider Tests
@@ -16,14 +16,16 @@ Total: 24 tests covering Effect layer patterns.
  * @module @myorg/provider-supabase/tests
  */
 
-import { SupabaseError } from "./errors";
-import { SupabaseAuth } from "./service/auth";
+
 import { SupabaseClient } from "./service/client";
+import { SupabaseAuth } from "./service/auth";
 import { SupabaseStorage } from "./service/storage";
+import { SupabaseError } from "./errors";
 
 // ============================================================================
 // SupabaseClient Tests
 // ============================================================================
+
 
 describe("SupabaseClient", () => {
   // Test 1: Service Interface
@@ -37,7 +39,9 @@ describe("SupabaseClient", () => {
         return true;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseClient.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseClient.Test))
+      );
       expect(result).toBe(true);
     });
   });
@@ -83,7 +87,7 @@ describe("SupabaseClient", () => {
           config: { url: "https://async.supabase.co", anonKey: "async-key" },
           getClient: () => Effect.fail(new SupabaseError({ message: "Not implemented" })),
           healthCheck: () => Effect.succeed(true),
-        }),
+        })
       );
 
       const program = Effect.gen(function* () {
@@ -114,8 +118,8 @@ describe("SupabaseClient", () => {
           () =>
             Effect.sync(() => {
               finalized = true;
-            }),
-        ),
+            })
+        )
       );
 
       const program = Effect.gen(function* () {
@@ -124,7 +128,7 @@ describe("SupabaseClient", () => {
       });
 
       const result = await Effect.runPromise(
-        Effect.scoped(program.pipe(Effect.provide(scopedLayer))),
+        Effect.scoped(program.pipe(Effect.provide(scopedLayer)))
       );
       expect(result).toBe("https://scoped.supabase.co");
       expect(initialized).toBe(true);
@@ -146,7 +150,7 @@ describe("SupabaseClient", () => {
             getClient: () => Effect.fail(new SupabaseError({ message: "Not implemented" })),
             healthCheck: () => Effect.succeed(true),
           };
-        }),
+        })
       );
 
       const program = Effect.gen(function* () {
@@ -170,7 +174,9 @@ describe("SupabaseClient", () => {
         return yield* client.healthCheck();
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseClient.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseClient.Test))
+      );
       expect(result).toBe(true);
     });
   });
@@ -201,6 +207,7 @@ describe("SupabaseClient", () => {
 // SupabaseAuth Tests
 // ============================================================================
 
+
 describe("SupabaseAuth", () => {
   // Test 1: Service Interface
   describe("Service Interface", () => {
@@ -216,7 +223,9 @@ describe("SupabaseAuth", () => {
         return true;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseAuth.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseAuth.Test))
+      );
       expect(result).toBe(true);
     });
   });
@@ -233,7 +242,9 @@ describe("SupabaseAuth", () => {
         return result;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseAuth.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseAuth.Test))
+      );
       expect(result.user).toBeDefined();
       expect(result.user.id).toBe("test-user-id");
     });
@@ -249,7 +260,9 @@ describe("SupabaseAuth", () => {
         return result;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseAuth.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseAuth.Test))
+      );
       expect(result.user).toBeDefined();
       expect(result.user.id).toBe("new-user-id");
     });
@@ -262,7 +275,9 @@ describe("SupabaseAuth", () => {
         return user;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseAuth.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseAuth.Test))
+      );
       expect(result.id).toBe("test-user-id");
       expect(result.email).toBe("test@example.com");
     });
@@ -277,7 +292,9 @@ describe("SupabaseAuth", () => {
         return session;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseAuth.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseAuth.Test))
+      );
       expect(Option.isSome(result)).toBe(true);
       if (Option.isSome(result)) {
         expect(result.value.access_token).toBe("test-access-token");
@@ -292,7 +309,9 @@ describe("SupabaseAuth", () => {
         return user;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseAuth.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseAuth.Test))
+      );
       expect(Option.isSome(result)).toBe(true);
     });
   });
@@ -306,7 +325,9 @@ describe("SupabaseAuth", () => {
         return true;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseAuth.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseAuth.Test))
+      );
       expect(result).toBe(true);
     });
   });
@@ -320,7 +341,9 @@ describe("SupabaseAuth", () => {
         return user;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseAuth.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseAuth.Test))
+      );
       expect(result.id).toBe("test-user-id");
       expect(result.role).toBe("authenticated");
     });
@@ -330,6 +353,7 @@ describe("SupabaseAuth", () => {
 // ============================================================================
 // SupabaseStorage Tests
 // ============================================================================
+
 
 describe("SupabaseStorage", () => {
   // Test 1: Service Interface
@@ -346,7 +370,9 @@ describe("SupabaseStorage", () => {
         return true;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseStorage.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseStorage.Test))
+      );
       expect(result).toBe(true);
     });
   });
@@ -359,12 +385,14 @@ describe("SupabaseStorage", () => {
         const result = yield* storage.upload(
           "test-bucket",
           "test-file.txt",
-          new Blob(["test content"]),
+          new Blob(["test content"])
         );
         return result;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseStorage.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseStorage.Test))
+      );
       expect(result.name).toBe("test-file.txt");
     });
 
@@ -379,7 +407,9 @@ describe("SupabaseStorage", () => {
         return blob;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseStorage.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseStorage.Test))
+      );
       expect(result).toBeInstanceOf(Blob);
     });
 
@@ -392,7 +422,9 @@ describe("SupabaseStorage", () => {
         return files;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseStorage.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseStorage.Test))
+      );
       expect(Array.isArray(result)).toBe(true);
     });
 
@@ -405,7 +437,9 @@ describe("SupabaseStorage", () => {
         return true;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseStorage.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseStorage.Test))
+      );
       expect(result).toBe(true);
     });
   });
@@ -421,7 +455,9 @@ describe("SupabaseStorage", () => {
         return url;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseStorage.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseStorage.Test))
+      );
       expect(result).toContain("test-bucket");
     });
 
@@ -433,7 +469,9 @@ describe("SupabaseStorage", () => {
         return url;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseStorage.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseStorage.Test))
+      );
       expect(result).toContain("public-bucket");
       expect(result).toContain("file.txt");
     });
@@ -460,7 +498,9 @@ describe("SupabaseStorage", () => {
         return true;
       });
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(SupabaseStorage.Test)));
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(SupabaseStorage.Test))
+      );
       expect(result).toBe(true);
     });
   });

@@ -16,37 +16,42 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type { EffectMetricsServiceError } from "./lib/errors";
+
 export {
-  EffectMetricsConfigError,
-  EffectMetricsConflictError,
-  EffectMetricsConnectionError,
   EffectMetricsError,
-  EffectMetricsInternalError,
   EffectMetricsNotFoundError,
-  EffectMetricsTimeoutError,
   EffectMetricsValidationError,
+  EffectMetricsConflictError,
+  EffectMetricsConfigError,
+  EffectMetricsConnectionError,
+  EffectMetricsTimeoutError,
+  EffectMetricsInternalError,
 } from "./lib/errors";
+export type { EffectMetricsServiceError } from "./lib/errors";
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
+
 // Service types and interfaces
 
 export type * from "./lib/types";
+
 
 // ============================================================================
 // Service Implementation
 // ============================================================================
 
+
 // EffectMetrics - External service adapter
 
-//
+// 
 
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 
@@ -56,7 +61,7 @@ export type * from "./lib/types";
 
 //   - EffectMetrics.Test  (testing - mock implementation)
 
-//
+// 
 
 // Migration from pre-3.0 pattern:
 
@@ -66,19 +71,24 @@ export type * from "./lib/types";
 
 //        const layer = EffectMetrics.Live;
 
+
 export { EffectMetrics } from "./lib/service";
+
 
 // ============================================================================
 // Validation Utilities
 // ============================================================================
 
+
 // Input validation functions
 
 export * from "./lib/validation";
 
+
 // ============================================================================
 // Layer Compositions
 // ============================================================================
+
 
 // Pre-wired layer compositions with dependencies
 
@@ -90,7 +100,9 @@ export * from "./lib/validation";
 
 //   - EffectMetricsAuto  (automatic selection based on NODE_ENV)
 
+
 export * from "./lib/layers";
+
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -98,13 +110,13 @@ export * from "./lib/layers";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-//
+// 
 
 // import { Effect, Layer } from 'effect';
 
 // import { EffectMetrics, EffectMetricsLive } from '@myorg/provider-effect-metrics';
 
-//
+// 
 
 // const program = Effect.gen(function* () {
 
@@ -114,7 +126,7 @@ export * from "./lib/layers";
 
 // });
 
-//
+// 
 
 // const runnable = program.pipe(Effect.provide(EffectMetricsLive));
 

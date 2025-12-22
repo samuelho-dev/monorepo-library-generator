@@ -20,9 +20,11 @@ Import options (from most optimal to most convenient):
  * @module @myorg/provider-effect-logger/service
  */
 
+
 // ============================================================================
 // Re-export service interface and tag
 // ============================================================================
 
-export type { EffectLoggerServiceInterface } from "./service";
+
 export { EffectLogger } from "./service";
+export type { EffectLoggerServiceInterface } from "./service";

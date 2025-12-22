@@ -16,37 +16,42 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type { EffectPubsubServiceError } from "./lib/errors";
+
 export {
-  EffectPubsubConfigError,
-  EffectPubsubConflictError,
-  EffectPubsubConnectionError,
   EffectPubsubError,
-  EffectPubsubInternalError,
   EffectPubsubNotFoundError,
-  EffectPubsubTimeoutError,
   EffectPubsubValidationError,
+  EffectPubsubConflictError,
+  EffectPubsubConfigError,
+  EffectPubsubConnectionError,
+  EffectPubsubTimeoutError,
+  EffectPubsubInternalError,
 } from "./lib/errors";
+export type { EffectPubsubServiceError } from "./lib/errors";
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
+
 // Service types and interfaces
 
 export type * from "./lib/types";
+
 
 // ============================================================================
 // Service Implementation
 // ============================================================================
 
+
 // EffectPubsub - External service adapter
 
-//
+// 
 
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 
@@ -56,7 +61,7 @@ export type * from "./lib/types";
 
 //   - EffectPubsub.Test  (testing - mock implementation)
 
-//
+// 
 
 // Migration from pre-3.0 pattern:
 
@@ -66,19 +71,24 @@ export type * from "./lib/types";
 
 //        const layer = EffectPubsub.Live;
 
+
 export { EffectPubsub } from "./lib/service";
+
 
 // ============================================================================
 // Validation Utilities
 // ============================================================================
 
+
 // Input validation functions
 
 export * from "./lib/validation";
 
+
 // ============================================================================
 // Layer Compositions
 // ============================================================================
+
 
 // Pre-wired layer compositions with dependencies
 
@@ -90,7 +100,9 @@ export * from "./lib/validation";
 
 //   - EffectPubsubAuto  (automatic selection based on NODE_ENV)
 
+
 export * from "./lib/layers";
+
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -98,13 +110,13 @@ export * from "./lib/layers";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-//
+// 
 
 // import { Effect, Layer } from 'effect';
 
 // import { EffectPubsub, EffectPubsubLive } from '@myorg/provider-effect-pubsub';
 
-//
+// 
 
 // const program = Effect.gen(function* () {
 
@@ -114,7 +126,7 @@ export * from "./lib/layers";
 
 // });
 
-//
+// 
 
 // const runnable = program.pipe(Effect.provide(EffectPubsubLive));
 

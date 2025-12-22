@@ -1,6 +1,6 @@
-import { FileSystem } from "@effect/platform";
-import { NodeFileSystem } from "@effect/platform-node";
-import { Config, ConfigProvider, Effect, Layer, ManagedRuntime } from "effect";
+import { FileSystem } from "@effect/platform"
+import { NodeFileSystem } from "@effect/platform-node"
+import { Config, ConfigProvider, Effect, Layer, ManagedRuntime } from "effect"
 
 /**
  * Environment Configuration Runtime
@@ -19,6 +19,7 @@ Features:
  *
  * @module @workspace/env/createEnv
  */
+
 
 // ============================================================================
 // Re-export Config
@@ -43,7 +44,7 @@ Features:
  * })
  * ```
  */
-export { Config };
+export { Config }
 
 // ============================================================================
 // Type Definitions
@@ -53,8 +54,8 @@ export { Config };
  * Infer the success type from a record of Config definitions
  */
 type InferConfigRecord<T extends Record<string, Config.Config<unknown>>> = {
-  [K in keyof T]: Config.Config.Success<T[K]>;
-};
+  [K in keyof T]: Config.Config.Success<T[K]>
+}
 
 /**
  * Options for createEnv function
@@ -65,17 +66,17 @@ interface CreateEnvOptions<
   TShared extends Record<string, Config.Config<unknown>>,
 > {
   /** Server-only environment variables (secrets, internal config) */
-  server: TServer;
+  server: TServer
   /** Client-safe environment variables (must have clientPrefix) */
-  client: TClient;
+  client: TClient
   /** Shared environment variables (available in both contexts) */
-  shared?: TShared;
+  shared?: TShared
   /** Required prefix for client variables (e.g., 'PUBLIC_') */
-  clientPrefix: string;
+  clientPrefix: string
   /** Custom runtime env source (defaults to process.env) */
-  runtimeEnv?: Record<string, string | undefined>;
+  runtimeEnv?: Record<string, string | undefined>
   /** Treat empty strings as undefined (default: true) */
-  emptyStringAsUndefined?: boolean;
+  emptyStringAsUndefined?: boolean
 }
 
 // ============================================================================
@@ -88,7 +89,9 @@ interface CreateEnvOptions<
  * Server: Node.js environment with process.versions.node
  * Client: Browser environment without process or Node.js globals
  */
-const isServer = typeof process !== "undefined" && process.versions?.node != null;
+const isServer =
+  typeof process !== "undefined" &&
+  process.versions?.node != null
 
 // ============================================================================
 // .env Parser
@@ -97,17 +100,17 @@ const isServer = typeof process !== "undefined" && process.versions?.node != nul
 /**
  * Parse .env file format
  */
-function parseDotEnv(content: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  content.split("\n").forEach((line) => {
-    const match = line.match(/^([^=:#]+)=(.*)$/);
+function parseDotEnv(content: string) {
+  const result: Record<string, string> = {}
+  content.split("\n").forEach(line => {
+    const match = line.match(/^([^=:#]+)=(.*)$/)
     if (match?.[1] && match[2] !== undefined) {
-      const key = match[1].trim();
-      const value = match[2].trim().replace(/^["']|["']$/g, "");
-      result[key] = value;
+      const key = match[1].trim()
+      const value = match[2].trim().replace(/^["']|["']$/g, "")
+      result[key] = value
     }
-  });
-  return result;
+  })
+  return result
 }
 
 // ============================================================================
@@ -119,29 +122,29 @@ function parseDotEnv(content: string): Record<string, string> {
  */
 const makeConfigLayer = () => {
   if (!isServer) {
-    return Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv());
+    return Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv())
   }
 
   // Server: read .env file and provide NodeContext
   return Layer.unwrapEffect(
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = ".env";
+      const fs = yield* FileSystem.FileSystem
+      const path = ".env"
 
-      const content = yield* fs
-        .readFileString(path)
-        .pipe(Effect.catchAll(() => Effect.succeed("")));
+      const content = yield* fs.readFileString(path).pipe(
+        Effect.catchAll(() => Effect.succeed(""))
+      )
 
-      const envVars = parseDotEnv(content);
+      const envVars = parseDotEnv(content)
       return Layer.succeed(
         ConfigProvider.ConfigProvider,
-        ConfigProvider.fromMap(new Map(Object.entries(envVars))),
-      );
-    }),
-  ).pipe(Layer.provide(NodeFileSystem.layer));
-};
+        ConfigProvider.fromMap(new Map(Object.entries(envVars)))
+      )
+    })
+  ).pipe(Layer.provide(NodeFileSystem.layer))
+}
 
-const ConfigLayer = makeConfigLayer();
+const ConfigLayer = makeConfigLayer()
 
 // ============================================================================
 // ManagedRuntime
@@ -150,7 +153,7 @@ const ConfigLayer = makeConfigLayer();
 /**
  * Managed runtime with ConfigProvider
  */
-const runtime = ManagedRuntime.make(ConfigLayer);
+const runtime = ManagedRuntime.make(ConfigLayer)
 
 // ============================================================================
 // createEnv Function
@@ -192,42 +195,40 @@ export function createEnv<
   TClient extends Record<string, Config.Config<unknown>>,
   TShared extends Record<string, Config.Config<unknown>> = Record<string, never>,
 >(
-  options: CreateEnvOptions<TServer, TClient, TShared>,
+  options: CreateEnvOptions<TServer, TClient, TShared>
 ): InferConfigRecord<TServer> & InferConfigRecord<TClient> & InferConfigRecord<TShared> {
-  const { server, client, shared = {} as TShared, clientPrefix } = options;
+  const { server, client, shared = {} as TShared, clientPrefix } = options
 
   // Validate client keys have correct prefix
   for (const key of Object.keys(client)) {
     if (!key.startsWith(clientPrefix)) {
       throw new Error(
-        `Client env var "${key}" must start with "${clientPrefix}". Either rename to "${clientPrefix}${key}" or move to server config.`,
-      );
+        `Client env var "${key}" must start with "${clientPrefix}". Either rename to "${clientPrefix}${key}" or move to server config.`
+      )
     }
   }
 
   // Build combined config
-  const allConfigs = { ...server, ...client, ...shared };
+  const allConfigs = { ...server, ...client, ...shared }
 
   // Load via Effect Config
-  const envConfig = Config.all(allConfigs);
-  const result = runtime.runSync(envConfig);
+  const envConfig = Config.all(allConfigs)
+  const result = runtime.runSync(envConfig)
 
   // On client, return proxy that protects server vars
   if (!isServer) {
-    const serverKeys = new Set(Object.keys(server));
+    const serverKeys = new Set(Object.keys(server))
     return new Proxy(result as Record<string, unknown>, {
       get(target, prop) {
         if (typeof prop === "string" && serverKeys.has(prop)) {
           throw new Error(
-            `Cannot access server-only env var "${prop}" on the client. This variable is only available in server context.`,
-          );
+            `Cannot access server-only env var "${prop}" on the client. This variable is only available in server context.`
+          )
         }
-        return target[prop as keyof typeof target];
-      },
-    }) as InferConfigRecord<TServer> & InferConfigRecord<TClient> & InferConfigRecord<TShared>;
+        return target[prop as keyof typeof target]
+      }
+    }) as InferConfigRecord<TServer> & InferConfigRecord<TClient> & InferConfigRecord<TShared>
   }
 
-  return result as InferConfigRecord<TServer> &
-    InferConfigRecord<TClient> &
-    InferConfigRecord<TShared>;
+  return result as InferConfigRecord<TServer> & InferConfigRecord<TClient> & InferConfigRecord<TShared>
 }

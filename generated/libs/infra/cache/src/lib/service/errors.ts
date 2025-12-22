@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Cache Errors
@@ -28,8 +28,8 @@ export class CacheServiceError extends Schema.TaggedError<CacheServiceError>()(
   "CacheServiceError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 // ============================================================================
@@ -45,17 +45,20 @@ export class CacheInternalError extends Schema.TaggedError<CacheInternalError>()
   "CacheInternalError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
  * Configuration error - invalid or missing configuration
  */
-export class CacheConfigError extends Schema.TaggedError<CacheConfigError>()("CacheConfigError", {
-  message: Schema.String,
-  field: Schema.optional(Schema.String),
-}) {}
+export class CacheConfigError extends Schema.TaggedError<CacheConfigError>()(
+  "CacheConfigError",
+  {
+    message: Schema.String,
+    field: Schema.optional(Schema.String)
+  }
+) {}
 
 /**
  * Connection error - failure to connect to backing service
@@ -65,8 +68,8 @@ export class CacheConnectionError extends Schema.TaggedError<CacheConnectionErro
   {
     message: Schema.String,
     endpoint: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -76,8 +79,8 @@ export class CacheTimeoutError extends Schema.TaggedError<CacheTimeoutError>()(
   "CacheTimeoutError",
   {
     message: Schema.String,
-    timeoutMs: Schema.optional(Schema.Number),
-  },
+    timeoutMs: Schema.optional(Schema.Number)
+  }
 ) {}
 
 // ============================================================================
@@ -99,4 +102,4 @@ export type CacheError =
   | CacheInternalError
   | CacheConfigError
   | CacheConnectionError
-  | CacheTimeoutError;
+  | CacheTimeoutError

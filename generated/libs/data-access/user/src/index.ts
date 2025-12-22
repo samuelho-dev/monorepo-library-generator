@@ -14,61 +14,67 @@ Repository implements contract from @myorg/contract-user
 // Error Types (from shared/)
 // ============================================================================
 
-export type { UserRepositoryError } from "./lib/shared/errors";
+
 export {
-  UserConfigError,
-  UserConflictError,
-  UserConnectionError,
   UserError,
-  UserInternalError,
   UserNotFoundError,
-  UserTimeoutError,
   UserValidationError,
+  UserConflictError,
+  UserConfigError,
+  UserConnectionError,
+  UserTimeoutError,
+  UserInternalError,
 } from "./lib/shared/errors";
+export type { UserRepositoryError } from "./lib/shared/errors";
 
 // ============================================================================
 // Domain Types (from shared/)
 // ============================================================================
 
+
 export type {
-  PaginatedResponse,
-  PaginationOptions,
-  QueryOptions,
-  SortDirection,
   User,
   UserCreateInput,
-  UserFilter,
-  UserSort,
   UserUpdateInput,
+  UserFilter,
+  SortDirection,
+  UserSort,
+  PaginationOptions,
+  QueryOptions,
+  PaginatedResponse,
 } from "./lib/shared/types";
 
 // ============================================================================
 // Validation Functions (from shared/)
 // ============================================================================
 
+
 export {
+  validateUserCreateInput,
+  validateUserUpdateInput,
+  validateUserFilter,
+  validateUserId,
+  validatePagination,
   isUser,
   isValidUserCreateInput,
   isValidUserUpdateInput,
-  validatePagination,
-  validateUserCreateInput,
-  validateUserFilter,
-  validateUserId,
-  validateUserUpdateInput,
 } from "./lib/shared/validation";
 
 // ============================================================================
 // Query Builders (from queries.ts)
 // ============================================================================
 
-export type { PaginationOptions as QueryPaginationOptions, UserQueryFilters } from "./lib/queries";
+
 export {
-  buildCountQuery,
   buildFindAllQuery,
   buildFindByIdQuery,
+  buildCountQuery,
 } from "./lib/queries";
 
+export type { UserQueryFilters, PaginationOptions as QueryPaginationOptions } from "./lib/queries";
+
 // Repository (Effect 3.0+ Pattern: Static Members)
+
 
 // Export the UserRepository Context.Tag class.
 
@@ -78,6 +84,7 @@ export {
 
 //   - UserRepository.Test  (testing)
 
+
 // MIGRATION from pre-3.0 pattern:
 
 // OLD: import { UserRepositoryLive } from "@myorg/data-access-user";
@@ -85,5 +92,6 @@ export {
 // NEW: import { UserRepository } from "@myorg/data-access-user";
 
 //      const layer = UserRepository.Live;
+
 
 export { UserRepository } from "./lib/repository";

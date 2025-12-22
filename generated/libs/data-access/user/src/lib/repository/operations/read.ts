@@ -1,6 +1,6 @@
-import { Duration, Effect, Option } from "effect";
-import { UserTimeoutError } from "../../shared/errors";
-import type { PaginationOptions, UserFilter } from "../../shared/types";
+import { UserTimeoutError } from "../../shared/errors"
+import { Duration, Effect, Option } from "effect"
+import type { PaginationOptions, UserFilter } from "../../shared/types"
 
 /**
  * User Read Operations
@@ -13,6 +13,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @myorg/data-access-user/repository/operations
  */
 
+
+
+
 // Infrastructure services - Database for persistence
 
 import { DatabaseService } from "@myorg/infra-database";
@@ -20,6 +23,7 @@ import { DatabaseService } from "@myorg/infra-database";
 // ============================================================================
 // Read Operations
 // ============================================================================
+
 
 /**
  * Read operations for User repository
@@ -46,7 +50,11 @@ export const readOperations = {
       yield* Effect.logDebug(`Finding User by ID: ${id}`);
 
       const entity = yield* database.query((db) =>
-        db.selectFrom("users").selectAll().where("id", "=", id).executeTakeFirst(),
+        db
+          .selectFrom("users")
+          .selectAll()
+          .where("id", "=", id)
+          .executeTakeFirst()
       );
 
       if (entity) {
@@ -59,9 +67,9 @@ export const readOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("findById", 30000),
+        onTimeout: () => UserTimeoutError.create("findById", 30000)
       }),
-      Effect.withSpan("UserRepository.findById"),
+      Effect.withSpan("UserRepository.findById")
     ),
 
   /**
@@ -87,7 +95,7 @@ export const readOperations = {
             eb.or([
               // Add searchable fields here based on your schema
               eb("name", "ilike", `%${filter.search}%`),
-            ]),
+            ])
           );
         }
 
@@ -99,7 +107,11 @@ export const readOperations = {
         let query = db.selectFrom("users").select((eb) => eb.fn.countAll().as("count"));
 
         if (filter?.search) {
-          query = query.where((eb) => eb.or([eb("name", "ilike", `%${filter.search}%`)]));
+          query = query.where((eb) =>
+            eb.or([
+              eb("name", "ilike", `%${filter.search}%`),
+            ])
+          );
         }
 
         return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
@@ -115,9 +127,9 @@ export const readOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("findAll", 30000),
+        onTimeout: () => UserTimeoutError.create("findAll", 30000)
       }),
-      Effect.withSpan("UserRepository.findAll"),
+      Effect.withSpan("UserRepository.findAll")
     ),
 
   /**
@@ -135,7 +147,11 @@ export const readOperations = {
 
         // Apply filters
         if (filter.search) {
-          query = query.where((eb) => eb.or([eb("name", "ilike", `%${filter.search}%`)]));
+          query = query.where((eb) =>
+            eb.or([
+              eb("name", "ilike", `%${filter.search}%`),
+            ])
+          );
         }
 
         return query.limit(1).executeTakeFirst();
@@ -151,9 +167,9 @@ export const readOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("findOne", 30000),
+        onTimeout: () => UserTimeoutError.create("findOne", 30000)
       }),
-      Effect.withSpan("UserRepository.findOne"),
+      Effect.withSpan("UserRepository.findOne")
     ),
 } as const;
 

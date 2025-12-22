@@ -1,6 +1,6 @@
-import { Cache, Context, Duration, Effect, Layer, Option, Schema } from "effect";
-import type { CacheHandle, SimpleCacheHandle } from "../service/service";
-import { CacheService } from "../service/service";
+import { CacheService } from "../service/service"
+import { Cache, Context, Duration, Effect, Layer, Option, Schema } from "effect"
+import type { CacheHandle, SimpleCacheHandle } from "../service/service"
 
 /**
  * Cache Redis Layer
@@ -31,12 +31,12 @@ On cache miss:
  * Implement this with your preferred Redis client (ioredis, redis, etc.)
  */
 export interface RedisClient {
-  readonly get: (key: string) => Effect.Effect<string | null>;
-  readonly set: (key: string, value: string) => Effect.Effect<void>;
-  readonly setex: (key: string, seconds: number, value: string) => Effect.Effect<void>;
-  readonly del: (key: string) => Effect.Effect<number>;
-  readonly flushdb: () => Effect.Effect<void>;
-  readonly ping: () => Effect.Effect<string>;
+  readonly get: (key: string) => Effect.Effect<string | null>
+  readonly set: (key: string, value: string) => Effect.Effect<void>
+  readonly setex: (key: string, seconds: number, value: string) => Effect.Effect<void>
+  readonly del: (key: string) => Effect.Effect<number>
+  readonly flushdb: () => Effect.Effect<void>
+  readonly ping: () => Effect.Effect<string>
 }
 
 /**
@@ -44,7 +44,10 @@ export interface RedisClient {
  *
  * Provide your Redis client implementation when using RedisCache layer.
  */
-export class RedisClientTag extends Context.Tag("RedisClient")<RedisClientTag, RedisClient>() {}
+export class RedisClientTag extends Context.Tag("RedisClient")<
+  RedisClientTag,
+  RedisClient
+>() {}
 
 // ============================================================================
 // Redis Cache Layer
@@ -71,64 +74,61 @@ export class RedisClientTag extends Context.Tag("RedisClient")<RedisClientTag, R
 export const CacheRedisLayer = Layer.effect(
   CacheService,
   Effect.gen(function* () {
-    const redis = yield* RedisClientTag;
+    const redis = yield* RedisClientTag
 
     // Serialization helpers using Effect Schema
     // Schema.parseJson handles JSON parsing + validation in one step
     // Errors flow through Effect's error channel (no exceptions)
-    const JsonValue = Schema.parseJson(Schema.Unknown);
-    const decodeJson = Schema.decode(JsonValue);
-    const encodeJson = Schema.encode(JsonValue);
+    const JsonValue = Schema.parseJson(Schema.Unknown)
+    const decodeJson = Schema.decode(JsonValue)
+    const encodeJson = Schema.encode(JsonValue)
 
     const serialize = <V>(value: V): Effect.Effect<string, never, never> =>
-      encodeJson(value).pipe(Effect.orDie); // JSON.stringify shouldn't fail for valid objects
+      encodeJson(value).pipe(Effect.orDie) // JSON.stringify shouldn't fail for valid objects
 
     const deserialize = <V>(data: string): Effect.Effect<V, never, never> =>
-      decodeJson(data).pipe(
-        Effect.map((v) => v as V),
-        Effect.orDie,
-      );
+      decodeJson(data).pipe(Effect.map((v) => v as V), Effect.orDie)
 
     const serializeKey = <K>(key: K): string =>
-      typeof key === "string" ? key : JSON.stringify(key);
+      typeof key === "string" ? key : JSON.stringify(key)
 
     return {
       make: <K, V, E = never>(options: {
-        readonly lookup: (key: K) => Effect.Effect<V, E>;
-        readonly capacity: number;
-        readonly ttl: Duration.Duration;
+        readonly lookup: (key: K) => Effect.Effect<V, E>
+        readonly capacity: number
+        readonly ttl: Duration.Duration
       }) =>
         Effect.gen(function* () {
-          const ttlSeconds = Math.floor(Duration.toMillis(options.ttl) / 1000);
+          const ttlSeconds = Math.floor(Duration.toMillis(options.ttl) / 1000)
 
           // Create memory cache with Redis-aware lookup
           const memoryCache = yield* Cache.make({
             lookup: (key: K) =>
               Effect.gen(function* () {
-                const redisKey = serializeKey(key);
+                const redisKey = serializeKey(key)
 
                 // Check Redis first
-                const cached = yield* redis
-                  .get(redisKey)
-                  .pipe(Effect.catchAll(() => Effect.succeed(null)));
+                const cached = yield* redis.get(redisKey).pipe(
+                  Effect.catchAll(() => Effect.succeed(null))
+                )
 
                 if (cached !== null) {
                   // Redis hit - return cached value
-                  return yield* deserialize<V>(cached);
+                  return yield* deserialize<V>(cached)
                 }
 
                 // Redis miss - call lookup and store in Redis
-                const value = yield* options.lookup(key);
-                const serialized = yield* serialize(value);
+                const value = yield* options.lookup(key)
+                const serialized = yield* serialize(value)
                 yield* redis.setex(redisKey, ttlSeconds, serialized).pipe(
-                  Effect.catchAll(() => Effect.void), // Ignore Redis write failures
-                );
+                  Effect.catchAll(() => Effect.void) // Ignore Redis write failures
+                )
 
-                return value;
+                return value
               }),
             capacity: options.capacity,
-            timeToLive: options.ttl,
-          });
+            timeToLive: options.ttl
+          })
 
           return {
             get: (key: K) => memoryCache.get(key),
@@ -136,95 +136,108 @@ export const CacheRedisLayer = Layer.effect(
             invalidate: (key: K) =>
               Effect.gen(function* () {
                 // Invalidate both memory and Redis
-                yield* memoryCache.invalidate(key);
-                yield* redis.del(serializeKey(key)).pipe(Effect.catchAll(() => Effect.succeed(0)));
+                yield* memoryCache.invalidate(key)
+                yield* redis.del(serializeKey(key)).pipe(
+                  Effect.catchAll(() => Effect.succeed(0))
+                )
               }),
 
-            invalidateAll: Effect.gen(function* () {
-              // Invalidate memory and flush Redis
-              yield* memoryCache.invalidateAll;
-              // Note: flushdb is aggressive - consider using key patterns instead
-              yield* redis.flushdb().pipe(Effect.catchAll(() => Effect.void));
-            }),
+            invalidateAll:
+              Effect.gen(function* () {
+                // Invalidate memory and flush Redis
+                yield* memoryCache.invalidateAll
+                // Note: flushdb is aggressive - consider using key patterns instead
+                yield* redis.flushdb().pipe(
+                  Effect.catchAll(() => Effect.void)
+                )
+              }),
 
             refresh: (key: K) => memoryCache.refresh(key),
 
-            size: memoryCache.size,
-          } satisfies CacheHandle<K, V, E>;
+            size: memoryCache.size
+          } satisfies CacheHandle<K, V, E>
         }),
 
-      makeSimple: <K, V>(options: { readonly capacity: number; readonly ttl: Duration.Duration }) =>
+      makeSimple: <K, V>(options: {
+        readonly capacity: number
+        readonly ttl: Duration.Duration
+      }) =>
         Effect.gen(function* () {
-          const ttlSeconds = Math.floor(Duration.toMillis(options.ttl) / 1000);
+          const ttlSeconds = Math.floor(Duration.toMillis(options.ttl) / 1000)
 
           // In-memory store for hot data
-          const memoryStore = new Map<string, { value: V; expiresAt: number }>();
-          const ttlMs = Duration.toMillis(options.ttl);
+          const memoryStore = new Map<string, { value: V; expiresAt: number }>()
+          const ttlMs = Duration.toMillis(options.ttl)
 
           return {
             get: (key: K) =>
               Effect.gen(function* () {
-                const strKey = serializeKey(key);
+                const strKey = serializeKey(key)
 
                 // Check memory first
-                const memoryEntry = memoryStore.get(strKey);
+                const memoryEntry = memoryStore.get(strKey)
                 if (memoryEntry && memoryEntry.expiresAt > Date.now()) {
-                  return Option.some(memoryEntry.value);
+                  return Option.some(memoryEntry.value)
                 }
-                memoryStore.delete(strKey);
+                memoryStore.delete(strKey)
 
                 // Check Redis
-                const cached = yield* redis
-                  .get(strKey)
-                  .pipe(Effect.catchAll(() => Effect.succeed(null)));
+                const cached = yield* redis.get(strKey).pipe(
+                  Effect.catchAll(() => Effect.succeed(null))
+                )
 
                 if (cached !== null) {
-                  const value = yield* deserialize<V>(cached);
+                  const value = yield* deserialize<V>(cached)
                   // Populate memory cache
-                  memoryStore.set(strKey, { value, expiresAt: Date.now() + ttlMs });
-                  return Option.some(value);
+                  memoryStore.set(strKey, { value, expiresAt: Date.now() + ttlMs })
+                  return Option.some(value)
                 }
 
-                return Option.none<V>();
+                return Option.none<V>()
               }),
 
             set: (key: K, value: V) =>
               Effect.gen(function* () {
-                const strKey = serializeKey(key);
+                const strKey = serializeKey(key)
 
                 // Write to both memory and Redis
-                memoryStore.set(strKey, { value, expiresAt: Date.now() + ttlMs });
-                const serialized = yield* serialize(value);
-                yield* redis
-                  .setex(strKey, ttlSeconds, serialized)
-                  .pipe(Effect.catchAll(() => Effect.void));
+                memoryStore.set(strKey, { value, expiresAt: Date.now() + ttlMs })
+                const serialized = yield* serialize(value)
+                yield* redis.setex(strKey, ttlSeconds, serialized).pipe(
+                  Effect.catchAll(() => Effect.void)
+                )
               }),
 
             delete: (key: K) =>
               Effect.gen(function* () {
-                const strKey = serializeKey(key);
+                const strKey = serializeKey(key)
 
                 // Delete from both memory and Redis
-                memoryStore.delete(strKey);
-                yield* redis.del(strKey).pipe(Effect.catchAll(() => Effect.succeed(0)));
+                memoryStore.delete(strKey)
+                yield* redis.del(strKey).pipe(
+                  Effect.catchAll(() => Effect.succeed(0))
+                )
               }),
 
-            clear: Effect.gen(function* () {
-              memoryStore.clear();
-              yield* redis.flushdb().pipe(Effect.catchAll(() => Effect.void));
-            }),
-          } satisfies SimpleCacheHandle<K, V>;
+            clear:
+              Effect.gen(function* () {
+                memoryStore.clear()
+                yield* redis.flushdb().pipe(
+                  Effect.catchAll(() => Effect.void)
+                )
+              })
+          } satisfies SimpleCacheHandle<K, V>
         }),
 
       healthCheck: () =>
         redis.ping().pipe(
           Effect.map((response) => response === "PONG"),
           Effect.catchAll(() => Effect.succeed(false)),
-          Effect.withSpan("Cache.healthCheck"),
-        ),
-    };
-  }),
-);
+          Effect.withSpan("Cache.healthCheck")
+        )
+    }
+  })
+)
 
 // ============================================================================
 // Example: ioredis Integration

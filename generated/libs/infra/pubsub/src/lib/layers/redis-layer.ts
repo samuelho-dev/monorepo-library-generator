@@ -1,7 +1,7 @@
-import type { Fiber } from "effect";
-import { Context, Effect, Layer, PubSub, Schema } from "effect";
-import type { TopicHandle, TopicOptions } from "../service/service";
-import { PubsubService } from "../service/service";
+import { PubsubService } from "../service/service"
+import { Context, Effect, Layer, PubSub, Schema } from "effect"
+import type { TopicHandle, TopicOptions } from "../service/service"
+import type { Fiber } from "effect"
 
 /**
  * Pubsub Redis Layer
@@ -36,23 +36,26 @@ export interface RedisPubSubClient {
   /**
    * Publish message to channel
    */
-  readonly publish: (channel: string, message: string) => Effect.Effect<number>;
+  readonly publish: (channel: string, message: string) => Effect.Effect<number>
 
   /**
    * Subscribe to channel
    * Calls handler for each message received
    */
-  readonly subscribe: (channel: string, handler: (message: string) => void) => Effect.Effect<void>;
+  readonly subscribe: (
+    channel: string,
+    handler: (message: string) => void
+  ) => Effect.Effect<void>
 
   /**
    * Unsubscribe from channel
    */
-  readonly unsubscribe: (channel: string) => Effect.Effect<void>;
+  readonly unsubscribe: (channel: string) => Effect.Effect<void>
 
   /**
    * Ping for health check
    */
-  readonly ping: () => Effect.Effect<string>;
+  readonly ping: () => Effect.Effect<string>
 }
 
 /**
@@ -95,122 +98,127 @@ export class RedisPubSubClientTag extends Context.Tag("RedisPubSubClient")<
 export const PubsubRedisLayer = Layer.scoped(
   PubsubService,
   Effect.gen(function* () {
-    const redis = yield* RedisPubSubClientTag;
+    const redis = yield* RedisPubSubClientTag
 
     // Track active topics for cleanup
     const activeTopics = new Map<
       string,
       {
-        localPubSub: PubSub.PubSub<unknown>;
-        subscriberFiber: Fiber.RuntimeFiber<void, never>;
+        localPubSub: PubSub.PubSub<unknown>
+        subscriberFiber: Fiber.RuntimeFiber<void, never>
       }
-    >();
+    >()
 
     // Serialization helpers using Effect Schema
     // Schema.parseJson handles JSON parsing + validation in one step
     // Errors flow through Effect's error channel (no exceptions)
-    const JsonValue = Schema.parseJson(Schema.Unknown);
-    const encodeJson = Schema.encode(JsonValue);
+    const JsonValue = Schema.parseJson(Schema.Unknown)
+    const encodeJson = Schema.encode(JsonValue)
 
     const serialize = <T>(value: T): Effect.Effect<string, never, never> =>
-      encodeJson(value).pipe(Effect.orDie);
+      encodeJson(value).pipe(Effect.orDie)
 
     // Synchronous deserialize for use in callbacks (Redis subscription handlers)
     // Uses Effect.runSync since the Redis handler is synchronous
     const deserializeSync = <T>(data: string): T => {
-      const result = Schema.decodeUnknownSync(JsonValue)(data);
-      return result as T;
-    };
+      const result = Schema.decodeUnknownSync(JsonValue)(data)
+      return result as T
+    }
 
     const makeTopicHandle = <T>(
       localPubSub: PubSub.PubSub<T>,
-      channelName: string,
+      channelName: string
     ): TopicHandle<T> => ({
       publish: (message: T) =>
         Effect.gen(function* () {
           // Publish to Redis (broadcasts to all instances)
-          const serialized = yield* serialize(message);
-          const count = yield* redis.publish(channelName, serialized);
-          return count > 0;
+          const serialized = yield* serialize(message)
+          const count = yield* redis.publish(channelName, serialized)
+          return count > 0
         }),
 
       publishAll: (messages: Iterable<T>) =>
         Effect.gen(function* () {
-          let success = false;
+          let success = false
           for (const message of messages) {
-            const serialized = yield* serialize(message);
-            const count = yield* redis.publish(channelName, serialized);
-            if (count > 0) success = true;
+            const serialized = yield* serialize(message)
+            const count = yield* redis.publish(channelName, serialized)
+            if (count > 0) success = true
           }
-          return success;
+          return success
         }),
 
       subscribe: PubSub.subscribe(localPubSub),
 
-      subscriberCount: Effect.sync(() => 0), // Would need Redis PUBSUB NUMSUB
-    });
+      subscriberCount: Effect.sync(() => 0) // Would need Redis PUBSUB NUMSUB
+    })
 
     return {
       topic: <T>(name: string, options?: TopicOptions) =>
         Effect.gen(function* () {
-          const capacity = options?.capacity ?? 1000;
+          const capacity = options?.capacity ?? 1000
           // For named topics, return handle without scope requirement
-          const existing = activeTopics.get(name);
+          const existing = activeTopics.get(name)
           if (existing) {
-            return makeTopicHandle<T>(existing.localPubSub as PubSub.PubSub<T>, name);
+            return makeTopicHandle<T>(
+              existing.localPubSub as PubSub.PubSub<T>,
+              name
+            )
           }
 
           // Create topic in a detached scope (lives for service lifetime)
-          const localPubSub = yield* Effect.sync(() => Effect.runSync(PubSub.bounded<T>(capacity)));
+          const localPubSub = yield* Effect.sync(() =>
+            Effect.runSync(PubSub.bounded<T>(capacity))
+          )
 
           // Subscribe to Redis in background
           const subscriberFiber = yield* Effect.fork(
             redis.subscribe(name, (message) => {
-              const parsed = deserializeSync<T>(message);
-              Effect.runFork(PubSub.publish(localPubSub, parsed));
-            }),
-          );
+              const parsed = deserializeSync<T>(message)
+              Effect.runFork(PubSub.publish(localPubSub, parsed))
+            })
+          )
 
           activeTopics.set(name, {
             localPubSub: localPubSub as PubSub.PubSub<unknown>,
-            subscriberFiber: subscriberFiber as unknown as Fiber.RuntimeFiber<void, never>,
-          });
+            subscriberFiber: subscriberFiber as unknown as Fiber.RuntimeFiber<void, never>
+          })
 
-          return makeTopicHandle(localPubSub, name);
+          return makeTopicHandle(localPubSub, name)
         }),
 
       createTopic: <T>(options?: TopicOptions) =>
         Effect.gen(function* () {
-          const capacity = options?.capacity ?? 1000;
-          const name = `ephemeral:${crypto.randomUUID()}`;
+          const capacity = options?.capacity ?? 1000
+          const name = `ephemeral:${crypto.randomUUID()}`
 
-          const localPubSub = yield* PubSub.bounded<T>(capacity);
+          const localPubSub = yield* PubSub.bounded<T>(capacity)
 
           // Subscribe to Redis channel
           yield* Effect.forkScoped(
             redis.subscribe(name, (message) => {
-              const parsed = deserializeSync<T>(message);
-              Effect.runFork(PubSub.publish(localPubSub, parsed));
-            }),
-          );
+              const parsed = deserializeSync<T>(message)
+              Effect.runFork(PubSub.publish(localPubSub, parsed))
+            })
+          )
 
           // Cleanup on scope close
           yield* Effect.addFinalizer(() =>
-            redis.unsubscribe(name).pipe(Effect.catchAll(() => Effect.void)),
-          );
+            redis.unsubscribe(name).pipe(Effect.catchAll(() => Effect.void))
+          )
 
-          return makeTopicHandle(localPubSub, name);
+          return makeTopicHandle(localPubSub, name)
         }),
 
       healthCheck: () =>
         redis.ping().pipe(
           Effect.map((response) => response === "PONG"),
           Effect.catchAll(() => Effect.succeed(false)),
-          Effect.withSpan("Pubsub.healthCheck"),
-        ),
-    };
-  }),
-);
+          Effect.withSpan("Pubsub.healthCheck")
+        )
+    }
+  })
+)
 
 // ============================================================================
 // Example: ioredis Integration

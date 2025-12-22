@@ -1,9 +1,9 @@
-import { Chunk, Context, Effect, Layer, Option, Stream } from "effect";
-import { aggregateOperations } from "./operations/aggregate";
-import { createOperations } from "./operations/create";
-import { deleteOperations } from "./operations/delete";
-import { readOperations } from "./operations/read";
-import { updateOperations } from "./operations/update";
+import { aggregateOperations } from "./operations/aggregate"
+import { createOperations } from "./operations/create"
+import { deleteOperations } from "./operations/delete"
+import { readOperations } from "./operations/read"
+import { updateOperations } from "./operations/update"
+import { Chunk, Context, Effect, Layer, Option, Stream } from "effect"
 
 /**
  * User Repository
@@ -21,11 +21,16 @@ ARCHITECTURE PATTERN:
  * @module @myorg/data-access-user/repository
  */
 
+
+
+
 // Import operation implementations
+
 
 // ============================================================================
 // Repository Context.Tag
 // ============================================================================
+
 
 /**
  * User Repository implementation
@@ -48,8 +53,8 @@ const repositoryImpl = {
           const chunk = Chunk.fromIterable(result.items);
           const next = result.hasMore ? Option.some(offset + batchSize) : Option.none();
           return [chunk, next] as const;
-        }),
-      ),
+        })
+      )
     );
   },
 } as const;

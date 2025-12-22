@@ -122,7 +122,7 @@ export function generateCreateEnvFile() {
   builder.addRaw('/**');
   builder.addRaw(' * Parse .env file format');
   builder.addRaw(' */');
-  builder.addRaw('function parseDotEnv(content: string): Record<string, string> {');
+  builder.addRaw('function parseDotEnv(content: string) {');
   builder.addRaw('  const result: Record<string, string> = {}');
   builder.addRaw('  content.split("\\n").forEach(line => {');
   builder.addRaw('    const match = line.match(/^([^=:#]+)=(.*)$/)');

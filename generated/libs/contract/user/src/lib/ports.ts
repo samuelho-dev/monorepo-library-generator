@@ -1,6 +1,6 @@
-import { Context, type Effect, type Option } from "effect";
-import type { UserRepositoryError } from "./errors";
-import type { User } from "./types/database";
+import { Context, Effect, Option } from "effect"
+import type { UserRepositoryError } from "./errors"
+import type { User } from "./types/database"
 
 /**
  * User Ports (Interfaces)
@@ -12,9 +12,11 @@ import type { User } from "./types/database";
  * @module @myorg/contract-user/ports
  */
 
+
 // ============================================================================
 // Supporting Types
 // ============================================================================
+
 
 /**
  * Filter options for querying users
@@ -23,30 +25,32 @@ export interface UserFilters {
   /**
    * Filter by creation date range
    */
-  readonly createdAfter?: Date;
-  readonly createdBefore?: Date;
+  readonly createdAfter?: Date
+  readonly createdBefore?: Date
   /**
    * Filter by update date range
    */
-  readonly updatedAfter?: Date;
-  readonly updatedBefore?: Date;
+  readonly updatedAfter?: Date
+  readonly updatedBefore?: Date
 }
+
 
 /**
  * Pagination parameters
  */
 export interface PaginationParams {
-  readonly limit: number;
-  readonly offset: number;
+  readonly limit: number
+  readonly offset: number
 }
 
 /**
  * Sort options
  */
 export interface SortOptions {
-  readonly field: string;
-  readonly direction: "asc" | "desc";
+  readonly field: string
+  readonly direction: "asc" | "desc"
 }
+
 
 /**
  * Paginated result with generic item type
@@ -62,6 +66,7 @@ export interface PaginatedResult<T> {
 // ============================================================================
 // Repository Port
 // ============================================================================
+
 
 /**
  * UserRepository Context Tag for dependency injection
@@ -85,7 +90,9 @@ export interface PaginatedResult<T> {
  * });
  * ```
  */
-export class UserRepository extends Context.Tag("@myorg/contract-user/UserRepository")<
+export class UserRepository extends Context.Tag(
+  "@myorg/contract-user/UserRepository"
+)<
   UserRepository,
   {
     /**
@@ -96,8 +103,12 @@ export class UserRepository extends Context.Tag("@myorg/contract-user/UserReposi
      * - Option.none() when not found
      */
     readonly findById: (
-      id: string,
-    ) => Effect.Effect<Option.Option<User>, UserRepositoryError, never>;
+      id: string
+    ) => Effect.Effect<
+      Option.Option<User>,
+      UserRepositoryError,
+      never
+    >;
 
     /**
      * Find all users matching filters
@@ -105,42 +116,51 @@ export class UserRepository extends Context.Tag("@myorg/contract-user/UserReposi
     readonly findAll: (
       filters?: UserFilters,
       pagination?: PaginationParams,
-      sort?: SortOptions,
+      sort?: SortOptions
     ) => Effect.Effect<PaginatedResult<User>, UserRepositoryError>;
 
     /**
      * Count users matching filters
      */
-    readonly count: (filters?: UserFilters) => Effect.Effect<number, UserRepositoryError, never>;
+    readonly count: (
+      filters?: UserFilters
+    ) => Effect.Effect<number, UserRepositoryError, never>;
 
     /**
      * Create a new user
      */
-    readonly create: (input: Partial<User>) => Effect.Effect<User, UserRepositoryError, never>;
+    readonly create: (
+      input: Partial<User>
+    ) => Effect.Effect<User, UserRepositoryError, never>;
 
     /**
      * Update an existing user
      */
     readonly update: (
       id: string,
-      input: Partial<User>,
+      input: Partial<User>
     ) => Effect.Effect<User, UserRepositoryError, never>;
 
     /**
      * Delete a user permanently
      */
-    readonly delete: (id: string) => Effect.Effect<void, UserRepositoryError, never>;
+    readonly delete: (
+      id: string
+    ) => Effect.Effect<void, UserRepositoryError, never>;
 
     /**
      * Check if user exists by ID
      */
-    readonly exists: (id: string) => Effect.Effect<boolean, UserRepositoryError, never>;
+    readonly exists: (
+      id: string
+    ) => Effect.Effect<boolean, UserRepositoryError, never>;
   }
 >() {}
 
 // ============================================================================
 // Service Port
 // ============================================================================
+
 
 /**
  * UserService Context Tag for dependency injection
@@ -158,13 +178,17 @@ export class UserRepository extends Context.Tag("@myorg/contract-user/UserReposi
  * });
  * ```
  */
-export class UserService extends Context.Tag("@myorg/contract-user/UserService")<
+export class UserService extends Context.Tag(
+  "@myorg/contract-user/UserService"
+)<
   UserService,
   {
     /**
      * Get user by ID
      */
-    readonly get: (id: string) => Effect.Effect<User, UserRepositoryError, never>;
+    readonly get: (
+      id: string
+    ) => Effect.Effect<User, UserRepositoryError, never>;
 
     /**
      * List users with filters and pagination
@@ -172,25 +196,29 @@ export class UserService extends Context.Tag("@myorg/contract-user/UserService")
     readonly list: (
       filters?: UserFilters,
       pagination?: PaginationParams,
-      sort?: SortOptions,
+      sort?: SortOptions
     ) => Effect.Effect<PaginatedResult<User>, UserRepositoryError, never>;
 
     /**
      * Create a new user
      */
-    readonly create: (input: Partial<User>) => Effect.Effect<User, UserRepositoryError, never>;
+    readonly create: (
+      input: Partial<User>
+    ) => Effect.Effect<User, UserRepositoryError, never>;
 
     /**
      * Update an existing user
      */
     readonly update: (
       id: string,
-      input: Partial<User>,
+      input: Partial<User>
     ) => Effect.Effect<User, UserRepositoryError, never>;
 
     /**
      * Delete a user
      */
-    readonly delete: (id: string) => Effect.Effect<void, UserRepositoryError, never>;
+    readonly delete: (
+      id: string
+    ) => Effect.Effect<void, UserRepositoryError, never>;
   }
 >() {}

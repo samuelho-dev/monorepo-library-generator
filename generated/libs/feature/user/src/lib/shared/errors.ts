@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * User Errors
@@ -13,17 +13,21 @@ Schema.TaggedError is used for all errors because:
  * @module @myorg/feature-user/shared/errors
  */
 
+
 /**
  * User Error
  *
  * Primary error type for user operations.
  * Uses Schema.TaggedError for RPC serialization compatibility.
  */
-export class UserError extends Schema.TaggedError<UserError>()("UserError", {
-  message: Schema.String,
-  code: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
+export class UserError extends Schema.TaggedError<UserError>()(
+  "UserError",
+  {
+    message: Schema.String,
+    code: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  }
+) {}
 
 /**
  * Error codes for user operations

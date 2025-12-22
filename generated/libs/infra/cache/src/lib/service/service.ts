@@ -1,4 +1,4 @@
-import { Cache, Context, Duration, Effect, Layer, Option } from "effect";
+import { Cache, Context, Duration, Effect, Layer, Option } from "effect"
 
 /**
  * Cache Service
@@ -34,27 +34,27 @@ export interface CacheHandle<K, V, E = never> {
   /**
    * Get value from cache, calling lookup on miss
    */
-  readonly get: (key: K) => Effect.Effect<V, E>;
+  readonly get: (key: K) => Effect.Effect<V, E>
 
   /**
    * Invalidate specific key
    */
-  readonly invalidate: (key: K) => Effect.Effect<void>;
+  readonly invalidate: (key: K) => Effect.Effect<void>
 
   /**
    * Invalidate all cached entries
    */
-  readonly invalidateAll: Effect.Effect<void>;
+  readonly invalidateAll: Effect.Effect<void>
 
   /**
    * Force refresh of a key (call lookup even if cached)
    */
-  readonly refresh: (key: K) => Effect.Effect<void, E>;
+  readonly refresh: (key: K) => Effect.Effect<void, E>
 
   /**
    * Get current cache size
    */
-  readonly size: Effect.Effect<number>;
+  readonly size: Effect.Effect<number>
 }
 
 /**
@@ -64,22 +64,22 @@ export interface SimpleCacheHandle<K, V> {
   /**
    * Get value from cache
    */
-  readonly get: (key: K) => Effect.Effect<Option.Option<V>>;
+  readonly get: (key: K) => Effect.Effect<Option.Option<V>>
 
   /**
    * Set value in cache
    */
-  readonly set: (key: K, value: V) => Effect.Effect<void>;
+  readonly set: (key: K, value: V) => Effect.Effect<void>
 
   /**
    * Delete key from cache
    */
-  readonly delete: (key: K) => Effect.Effect<void>;
+  readonly delete: (key: K) => Effect.Effect<void>
 
   /**
    * Clear all entries
    */
-  readonly clear: Effect.Effect<void>;
+  readonly clear: Effect.Effect<void>
 }
 
 /**
@@ -88,7 +88,9 @@ export interface SimpleCacheHandle<K, V> {
  * Cache infrastructure using Effect.Cache primitive.
  * Provides memoized caching with TTL, lookup functions, and invalidation.
  */
-export class CacheService extends Context.Tag("@myorg/infra-cache/CacheService")<
+export class CacheService extends Context.Tag(
+  "@myorg/infra-cache/CacheService"
+)<
   CacheService,
   {
     /**
@@ -109,10 +111,10 @@ export class CacheService extends Context.Tag("@myorg/infra-cache/CacheService")
      * ```
      */
     readonly make: <K, V, E = never>(options: {
-      readonly lookup: (key: K) => Effect.Effect<V, E>;
-      readonly capacity: number;
-      readonly ttl: Duration.Duration;
-    }) => Effect.Effect<CacheHandle<K, V, E>>;
+      readonly lookup: (key: K) => Effect.Effect<V, E>
+      readonly capacity: number
+      readonly ttl: Duration.Duration
+    }) => Effect.Effect<CacheHandle<K, V, E>>
 
     /**
      * Create a simple key-value cache without lookup function
@@ -129,14 +131,14 @@ export class CacheService extends Context.Tag("@myorg/infra-cache/CacheService")
      * ```
      */
     readonly makeSimple: <K, V>(options: {
-      readonly capacity: number;
-      readonly ttl: Duration.Duration;
-    }) => Effect.Effect<SimpleCacheHandle<K, V>>;
+      readonly capacity: number
+      readonly ttl: Duration.Duration
+    }) => Effect.Effect<SimpleCacheHandle<K, V>>
 
     /**
      * Health check for monitoring
      */
-    readonly healthCheck: () => Effect.Effect<boolean>;
+    readonly healthCheck: () => Effect.Effect<boolean>
   }
 >() {
   // ===========================================================================
@@ -151,75 +153,78 @@ export class CacheService extends Context.Tag("@myorg/infra-cache/CacheService")
    */
   static readonly Memory = Layer.succeed(this, {
     make: <K, V, E = never>(options: {
-      readonly lookup: (key: K) => Effect.Effect<V, E>;
-      readonly capacity: number;
-      readonly ttl: Duration.Duration;
+      readonly lookup: (key: K) => Effect.Effect<V, E>
+      readonly capacity: number
+      readonly ttl: Duration.Duration
     }) =>
       Effect.gen(function* () {
         const cache = yield* Cache.make({
           lookup: options.lookup,
           capacity: options.capacity,
-          timeToLive: options.ttl,
-        });
+          timeToLive: options.ttl
+        })
 
         return {
           get: (key: K) => cache.get(key),
           invalidate: (key: K) => cache.invalidate(key),
           invalidateAll: cache.invalidateAll,
           refresh: (key: K) => cache.refresh(key),
-          size: cache.size,
-        } satisfies CacheHandle<K, V, E>;
+          size: cache.size
+        } satisfies CacheHandle<K, V, E>
       }),
 
-    makeSimple: <K, V>(options: { readonly capacity: number; readonly ttl: Duration.Duration }) =>
+    makeSimple: <K, V>(options: {
+      readonly capacity: number
+      readonly ttl: Duration.Duration
+    }) =>
       Effect.gen(function* () {
         // Use a Map with manual TTL tracking for simple cache
-        const store = new Map<K, { value: V; expiresAt: number }>();
-        const ttlMs = Duration.toMillis(options.ttl);
+        const store = new Map<K, { value: V; expiresAt: number }>()
+        const ttlMs = Duration.toMillis(options.ttl)
 
         const cleanup = () => {
-          const now = Date.now();
+          const now = Date.now()
           for (const [key, entry] of store) {
             if (entry.expiresAt <= now) {
-              store.delete(key);
+              store.delete(key)
             }
           }
           // Evict oldest if over capacity
           while (store.size > options.capacity) {
-            const oldestKey = store.keys().next().value;
+            const oldestKey = store.keys().next().value
             if (oldestKey !== undefined) {
-              store.delete(oldestKey);
+              store.delete(oldestKey)
             }
           }
-        };
+        }
 
         return {
           get: (key: K) =>
             Effect.sync(() => {
-              const entry = store.get(key);
+              const entry = store.get(key)
               if (!entry || entry.expiresAt <= Date.now()) {
-                store.delete(key);
-                return Option.none<V>();
+                store.delete(key)
+                return Option.none<V>()
               }
-              return Option.some(entry.value);
+              return Option.some(entry.value)
             }),
           set: (key: K, value: V) =>
             Effect.sync(() => {
-              cleanup();
-              store.set(key, { value, expiresAt: Date.now() + ttlMs });
+              cleanup()
+              store.set(key, { value, expiresAt: Date.now() + ttlMs })
             }),
           delete: (key: K) =>
             Effect.sync(() => {
-              store.delete(key);
+              store.delete(key)
             }),
           clear: Effect.sync(() => {
-            store.clear();
-          }),
-        } satisfies SimpleCacheHandle<K, V>;
+            store.clear()
+          })
+        } satisfies SimpleCacheHandle<K, V>
       }),
 
-    healthCheck: () => Effect.succeed(true),
-  });
+    healthCheck: () => Effect.succeed(true)
+  })
 
   // ===========================================================================
   // Static Test Layer
@@ -230,48 +235,52 @@ export class CacheService extends Context.Tag("@myorg/infra-cache/CacheService")
    */
   static readonly Test = Layer.succeed(this, {
     make: <K, V, E = never>(options: {
-      readonly lookup: (key: K) => Effect.Effect<V, E>;
-      readonly capacity: number;
-      readonly ttl: Duration.Duration;
+      readonly lookup: (key: K) => Effect.Effect<V, E>
+      readonly capacity: number
+      readonly ttl: Duration.Duration
     }) =>
       Effect.gen(function* () {
         const cache = yield* Cache.make({
           lookup: options.lookup,
           capacity: options.capacity,
-          timeToLive: options.ttl,
-        });
+          timeToLive: options.ttl
+        })
 
         return {
           get: (key: K) => cache.get(key),
           invalidate: (key: K) => cache.invalidate(key),
           invalidateAll: cache.invalidateAll,
           refresh: (key: K) => cache.refresh(key),
-          size: cache.size,
-        } satisfies CacheHandle<K, V, E>;
+          size: cache.size
+        } satisfies CacheHandle<K, V, E>
       }),
 
-    makeSimple: <K, V>(_options: { readonly capacity: number; readonly ttl: Duration.Duration }) =>
+    makeSimple: <K, V>(_options: {
+      readonly capacity: number
+      readonly ttl: Duration.Duration
+    }) =>
       Effect.gen(function* () {
-        const store = new Map<K, V>();
+        const store = new Map<K, V>()
 
         return {
-          get: (key: K) => Effect.sync(() => Option.fromNullable(store.get(key))),
+          get: (key: K) =>
+            Effect.sync(() => Option.fromNullable(store.get(key))),
           set: (key: K, value: V) =>
             Effect.sync(() => {
-              store.set(key, value);
+              store.set(key, value)
             }),
           delete: (key: K) =>
             Effect.sync(() => {
-              store.delete(key);
+              store.delete(key)
             }),
           clear: Effect.sync(() => {
-            store.clear();
-          }),
-        } satisfies SimpleCacheHandle<K, V>;
+            store.clear()
+          })
+        } satisfies SimpleCacheHandle<K, V>
       }),
 
-    healthCheck: () => Effect.succeed(true),
-  });
+    healthCheck: () => Effect.succeed(true)
+  })
 
   // ===========================================================================
   // Alias: Live = Memory (default)
@@ -282,5 +291,5 @@ export class CacheService extends Context.Tag("@myorg/infra-cache/CacheService")
    *
    * For Redis-backed distributed caching, use RedisCache layer from layers/
    */
-  static readonly Live = CacheService.Memory;
+  static readonly Live = CacheService.Memory
 }

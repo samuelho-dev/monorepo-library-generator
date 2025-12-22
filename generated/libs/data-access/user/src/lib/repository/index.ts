@@ -20,29 +20,32 @@ Import options (from most optimal to most convenient):
  * @module @myorg/data-access-user/repository
  */
 
+
 // ============================================================================
 // Re-export repository interface and tag
 // ============================================================================
 
-export type { UserRepositoryInterface } from "./repository";
-export { UserRepository } from "./repository";
+
+export { UserRepository } from "./repository"
+export type { UserRepositoryInterface } from "./repository"
 
 // ============================================================================
 // Re-export all operations
 // ============================================================================
+
 
 export type {
   AggregateUserOperations,
   CreateUserOperations,
   DeleteUserOperations,
   ReadUserOperations,
-  UpdateUserOperations,
-} from "./operations";
+  UpdateUserOperations
+} from "./operations"
 
 export {
   aggregateOperations,
   createOperations,
   deleteOperations,
   readOperations,
-  updateOperations,
-} from "./operations";
+  updateOperations
+} from "./operations"

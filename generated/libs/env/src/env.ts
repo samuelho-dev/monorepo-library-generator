@@ -22,7 +22,7 @@ Re-run generator to sync with .env changes:
  * @module @workspace/env
  */
 
-import { Config, createEnv } from "./createEnv";
+import { createEnv, Config } from "./createEnv"
 
 // ============================================================================
 // Environment Definition
@@ -72,7 +72,7 @@ export const env = createEnv({
 
   // Required prefix for client variables
   clientPrefix: "PUBLIC_",
-});
+})
 
 // ============================================================================
 // Type Exports
@@ -81,4 +81,4 @@ export const env = createEnv({
 /**
  * Environment type (inferred from createEnv)
  */
-export type Env = typeof env;
+export type Env = typeof env

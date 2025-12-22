@@ -16,37 +16,42 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type { EffectQueueServiceError } from "./lib/errors";
+
 export {
-  EffectQueueConfigError,
-  EffectQueueConflictError,
-  EffectQueueConnectionError,
   EffectQueueError,
-  EffectQueueInternalError,
   EffectQueueNotFoundError,
-  EffectQueueTimeoutError,
   EffectQueueValidationError,
+  EffectQueueConflictError,
+  EffectQueueConfigError,
+  EffectQueueConnectionError,
+  EffectQueueTimeoutError,
+  EffectQueueInternalError,
 } from "./lib/errors";
+export type { EffectQueueServiceError } from "./lib/errors";
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
+
 // Service types and interfaces
 
 export type * from "./lib/types";
+
 
 // ============================================================================
 // Service Implementation
 // ============================================================================
 
+
 // EffectQueue - External service adapter
 
-//
+// 
 
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 
@@ -56,7 +61,7 @@ export type * from "./lib/types";
 
 //   - EffectQueue.Test  (testing - mock implementation)
 
-//
+// 
 
 // Migration from pre-3.0 pattern:
 
@@ -66,19 +71,24 @@ export type * from "./lib/types";
 
 //        const layer = EffectQueue.Live;
 
+
 export { EffectQueue } from "./lib/service";
+
 
 // ============================================================================
 // Validation Utilities
 // ============================================================================
 
+
 // Input validation functions
 
 export * from "./lib/validation";
 
+
 // ============================================================================
 // Layer Compositions
 // ============================================================================
+
 
 // Pre-wired layer compositions with dependencies
 
@@ -90,7 +100,9 @@ export * from "./lib/validation";
 
 //   - EffectQueueAuto  (automatic selection based on NODE_ENV)
 
+
 export * from "./lib/layers";
+
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -98,13 +110,13 @@ export * from "./lib/layers";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-//
+// 
 
 // import { Effect, Layer } from 'effect';
 
 // import { EffectQueue, EffectQueueLive } from '@myorg/provider-effect-queue';
 
-//
+// 
 
 // const program = Effect.gen(function* () {
 
@@ -114,7 +126,7 @@ export * from "./lib/layers";
 
 // });
 
-//
+// 
 
 // const runnable = program.pipe(Effect.provide(EffectQueueLive));
 

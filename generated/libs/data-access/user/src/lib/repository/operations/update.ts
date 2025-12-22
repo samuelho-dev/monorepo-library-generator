@@ -1,6 +1,6 @@
-import { Duration, Effect } from "effect";
-import { UserNotFoundError, UserTimeoutError } from "../../shared/errors";
-import type { UserUpdateInput } from "../../shared/types";
+import { UserNotFoundError, UserTimeoutError } from "../../shared/errors"
+import { Duration, Effect } from "effect"
+import type { UserUpdateInput } from "../../shared/types"
 
 /**
  * User Update Operations
@@ -13,6 +13,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @myorg/data-access-user/repository/operations
  */
 
+
+
+
 // Infrastructure services - Database for persistence
 
 import { DatabaseService } from "@myorg/infra-database";
@@ -20,6 +23,7 @@ import { DatabaseService } from "@myorg/infra-database";
 // ============================================================================
 // Update Operations
 // ============================================================================
+
 
 /**
  * Update operations for User repository
@@ -51,7 +55,7 @@ export const updateOperations = {
           })
           .where("id", "=", id)
           .returningAll()
-          .executeTakeFirst(),
+          .executeTakeFirst()
       );
 
       if (!updated) {
@@ -65,9 +69,9 @@ export const updateOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("update", 30000),
+        onTimeout: () => UserTimeoutError.create("update", 30000)
       }),
-      Effect.withSpan("UserRepository.update"),
+      Effect.withSpan("UserRepository.update")
     ),
 } as const;
 

@@ -65,7 +65,6 @@ export type { GeneratorResult };
  * @property offsetFromRoot - Relative path from project to workspace root
  * @property description - Library description for documentation
  * @property tags - Comma-separated tags for Nx project configuration
- * @property includeCache - Enable caching layer in repository
  * @property contractLibrary - Import path to contract library
  */
 export interface DataAccessCoreOptions {
@@ -81,7 +80,6 @@ export interface DataAccessCoreOptions {
   readonly offsetFromRoot: string;
   readonly description?: string;
   readonly tags?: string;
-  readonly includeCache?: boolean;
   readonly contractLibrary?: string;
 }
 
@@ -118,7 +116,6 @@ export function generateDataAccessCore(adapter: FileSystemAdapter, options: Data
       offsetFromRoot: options.offsetFromRoot,
       description: options.description ?? `Data access library for ${options.className}`,
       tags: parsedTags,
-      includeCache: options.includeCache ?? false,
       contractLibrary: options.contractLibrary ?? getPackageName('contract', options.fileName),
     };
 

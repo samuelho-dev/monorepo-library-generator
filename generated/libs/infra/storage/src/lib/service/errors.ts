@@ -1,4 +1,4 @@
-import { Data } from "effect";
+import { Data } from "effect"
 
 /**
  * Storage Infrastructure Errors
@@ -10,9 +10,12 @@ All errors extend Data.TaggedError for structural equality and pattern matching.
  * @module @myorg/infra-storage/errors
  */
 
+
+
 // ============================================================================
 // Error Types
 // ============================================================================
+
 
 /**
  * Base storage error
@@ -84,6 +87,7 @@ export class InvalidFileTypeError extends Data.TaggedError("InvalidFileTypeError
 // ============================================================================
 // Error Union Type
 // ============================================================================
+
 
 /**
  * Union of all storage errors

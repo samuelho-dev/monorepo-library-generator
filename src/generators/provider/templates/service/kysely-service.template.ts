@@ -159,7 +159,7 @@ export interface ${className}ServiceInterface {
  *
  * @see https://kysely.dev/docs/recipes/splitting-query-building-and-execution
  */
-function createDummyKysely(): KyselyDB<Database> {
+function createDummyKysely() {
   return new KyselyDB<Database>({
     dialect: {
       createAdapter: () => new PostgresAdapter(),

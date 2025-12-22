@@ -1,5 +1,5 @@
-import { useAtom } from "@effect-atom/atom-react";
-import { userAtom } from "../atoms/user-atoms";
+import { userAtom } from "../atoms/user-atoms"
+import { useAtom } from "@effect-atom/atom-react"
 
 /**
  * useUser Hook
@@ -7,6 +7,7 @@ import { userAtom } from "../atoms/user-atoms";
  * React hook for user operations.
  *
  */
+
 
 export function useUser() {
   const [state, setState] = useAtom(userAtom);

@@ -73,19 +73,19 @@ export const dataAccessHelp: EnhancedHelpConfig = {
  * Feature command help
  */
 export const featureHelp: EnhancedHelpConfig = {
-  description: 'Generate a feature library with business logic and server/client support',
+  description: 'Generate a feature library with business logic, RPC, and server/client support',
   examples: [
     {
       command: 'mlg generate feature auth',
-      description: 'Basic feature library',
+      description: 'Feature library with RPC (always included)',
     },
     {
       command: 'mlg generate feature --includeClientServer checkout',
       description: 'With separate client and server exports',
     },
     {
-      command: 'mlg generate feature --includeCQRS --includeRPC notification',
-      description: 'With CQRS and RPC support',
+      command: 'mlg generate feature --includeCQRS notification',
+      description: 'With CQRS patterns',
     },
   ],
   outputStructure: [
@@ -175,25 +175,25 @@ export const domainHelp: EnhancedHelpConfig = {
   examples: [
     {
       command: 'mlg generate domain user',
-      description: 'Complete user domain',
+      description: 'Complete domain with RPC and cache',
     },
     {
-      command: 'mlg generate domain --includeCache product',
-      description: 'With cache integration',
+      command: 'mlg generate domain --includeCQRS order',
+      description: 'With CQRS patterns',
     },
     {
-      command: 'mlg generate domain --includeCQRS --includeClientServer order',
-      description: 'With CQRS and client/server exports',
+      command: 'mlg generate domain --includeClientServer --includeEdge checkout',
+      description: 'With client/server exports and edge support',
     },
   ],
   outputStructure: [
     'libs/contract/{name}/    - Domain types and schemas',
-    'libs/data-access/{name}/ - Repository with wired contract',
-    'libs/feature/{name}/     - Service with wired dependencies',
+    'libs/data-access/{name}/ - Repository with cache integration',
+    'libs/feature/{name}/     - Service with RPC handlers',
   ],
   notes: [
+    'RPC and cache are always included',
     'Creates three coordinated libraries with proper dependencies',
-    'All libraries share the same scope for dependency injection',
     'Ideal for vertical slice architecture',
   ],
 };

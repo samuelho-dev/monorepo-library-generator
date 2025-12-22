@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Metrics Errors
@@ -28,8 +28,8 @@ export class MetricsServiceError extends Schema.TaggedError<MetricsServiceError>
   "MetricsServiceError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 // ============================================================================
@@ -45,8 +45,8 @@ export class MetricsInternalError extends Schema.TaggedError<MetricsInternalErro
   "MetricsInternalError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -56,8 +56,8 @@ export class MetricsConfigError extends Schema.TaggedError<MetricsConfigError>()
   "MetricsConfigError",
   {
     message: Schema.String,
-    field: Schema.optional(Schema.String),
-  },
+    field: Schema.optional(Schema.String)
+  }
 ) {}
 
 /**
@@ -68,8 +68,8 @@ export class MetricsConnectionError extends Schema.TaggedError<MetricsConnection
   {
     message: Schema.String,
     endpoint: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -79,8 +79,8 @@ export class MetricsTimeoutError extends Schema.TaggedError<MetricsTimeoutError>
   "MetricsTimeoutError",
   {
     message: Schema.String,
-    timeoutMs: Schema.optional(Schema.Number),
-  },
+    timeoutMs: Schema.optional(Schema.Number)
+  }
 ) {}
 
 // ============================================================================
@@ -102,4 +102,4 @@ export type MetricsError =
   | MetricsInternalError
   | MetricsConfigError
   | MetricsConnectionError
-  | MetricsTimeoutError;
+  | MetricsTimeoutError

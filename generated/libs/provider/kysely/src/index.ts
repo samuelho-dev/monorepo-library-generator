@@ -17,26 +17,30 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type { KyselyProviderError } from "./lib/errors";
+
 export {
-  KyselyConnectionError,
-  KyselyConstraintError,
   KyselyError,
+  KyselyConnectionError,
   KyselyQueryError,
   KyselyTransactionError,
+  KyselyConstraintError,
 } from "./lib/errors";
+export type { KyselyProviderError } from "./lib/errors";
+
 
 // ============================================================================
 // Service
 // ============================================================================
 
+
 // Kysely - Query builder provider with Effect integration
 
-//
+// 
 
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 
@@ -48,7 +52,9 @@ export {
 
 //   - Kysely.makeLive(kyselyInstance)  (production)
 
-export { type Database, Kysely, type KyselyServiceInterface } from "./lib/service";
+
+export { Kysely, type Database, type KyselyServiceInterface } from "./lib/service";
+
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -56,13 +62,13 @@ export { type Database, Kysely, type KyselyServiceInterface } from "./lib/servic
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-//
+// 
 
 // import { Effect } from 'effect';
 
 // import { Kysely } from '@myorg/provider-kysely';
 
-//
+// 
 
 // const program = Effect.gen(function* () {
 
@@ -78,13 +84,13 @@ export { type Database, Kysely, type KyselyServiceInterface } from "./lib/servic
 
 // });
 
-//
+// 
 
 // // For testing with Kysely's DummyDriver:
 
 // const runnable = program.pipe(Effect.provide(Kysely.Test));
 
-//
+// 
 
 // // For production with real database:
 

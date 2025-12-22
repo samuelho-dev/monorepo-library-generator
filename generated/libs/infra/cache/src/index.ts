@@ -15,10 +15,10 @@ Layers are available as static members on the service class.
 
 // Service with static layers (Memory, Test, Live)
 export {
-  type CacheHandle,
   CacheService,
-  type SimpleCacheHandle,
-} from "./lib/service/service";
+  type CacheHandle,
+  type SimpleCacheHandle
+} from "./lib/service/service"
 
 // ============================================================================
 // Error Types
@@ -26,13 +26,13 @@ export {
 
 // Error types for error handling
 export {
+  CacheServiceError,
+  CacheInternalError,
   CacheConfigError,
   CacheConnectionError,
-  type CacheError,
-  CacheInternalError,
-  CacheServiceError,
   CacheTimeoutError,
-} from "./lib/service/errors";
+  type CacheError
+} from "./lib/service/errors"
 
 // ============================================================================
 // Additional Layers
@@ -41,6 +41,6 @@ export {
 // Redis-backed distributed layer
 export {
   CacheRedisLayer,
-  type RedisClient,
   RedisClientTag,
-} from "./lib/layers/redis-layer";
+  type RedisClient
+} from "./lib/layers/redis-layer"

@@ -6,6 +6,12 @@
     "declarationMap": true,
     "noEmit": false
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "**/*.spec.ts"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

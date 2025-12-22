@@ -29,7 +29,6 @@ const dataAccessExecutor = createExecutor<DataAccessInput, DataAccessCoreOptions
   generateDataAccessCore,
   (validated, metadata) => ({
     ...metadata,
-    includeCache: validated.includeCache ?? false,
     ...(validated.contractLibrary !== undefined && { contractLibrary: validated.contractLibrary }),
   }),
 );

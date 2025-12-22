@@ -1,6 +1,6 @@
-import { Duration, Effect } from "effect";
-import { UserTimeoutError } from "../../shared/errors";
-import type { UserFilter } from "../../shared/types";
+import { UserTimeoutError } from "../../shared/errors"
+import { Duration, Effect } from "effect"
+import type { UserFilter } from "../../shared/types"
 
 /**
  * User Aggregate Operations
@@ -13,6 +13,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @myorg/data-access-user/repository/operations
  */
 
+
+
+
 // Infrastructure services - Database for persistence
 
 import { DatabaseService } from "@myorg/infra-database";
@@ -20,6 +23,7 @@ import { DatabaseService } from "@myorg/infra-database";
 // ============================================================================
 // Aggregate Operations
 // ============================================================================
+
 
 /**
  * Aggregate operations for User repository
@@ -47,7 +51,11 @@ export const aggregateOperations = {
 
         // Apply filters if provided
         if (filter?.search) {
-          query = query.where((eb) => eb.or([eb("name", "ilike", `%${filter.search}%`)]));
+          query = query.where((eb) =>
+            eb.or([
+              eb("name", "ilike", `%${filter.search}%`),
+            ])
+          );
         }
 
         return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
@@ -59,9 +67,9 @@ export const aggregateOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("count", 30000),
+        onTimeout: () => UserTimeoutError.create("count", 30000)
       }),
-      Effect.withSpan("UserRepository.count"),
+      Effect.withSpan("UserRepository.count")
     ),
 
   /**
@@ -79,7 +87,7 @@ export const aggregateOperations = {
           .select((eb) => eb.fn.countAll().as("count"))
           .where("id", "=", id)
           .executeTakeFirstOrThrow()
-          .then((result) => Number(result.count) > 0),
+          .then((result) => Number(result.count) > 0)
       );
 
       yield* Effect.logDebug(`User exists check: ${id} = ${result}`);
@@ -88,9 +96,9 @@ export const aggregateOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("exists", 30000),
+        onTimeout: () => UserTimeoutError.create("exists", 30000)
       }),
-      Effect.withSpan("UserRepository.exists"),
+      Effect.withSpan("UserRepository.exists")
     ),
 } as const;
 

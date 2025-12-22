@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option } from "effect";
+import { Context, Effect, Layer, Option } from "effect"
 
 /**
  * Auth Infrastructure Service
@@ -16,14 +16,20 @@ This service is used by infra-rpc for auth middleware.
  * @module @myorg/infra-auth/service
  */
 
+
 import { Headers } from "@effect/platform";
-import { type AuthUser, SupabaseAuth } from "@myorg/provider-supabase";
-import { AuthError, InvalidTokenError, UnauthorizedError } from "./errors";
+import { SupabaseAuth, type AuthUser } from "@myorg/provider-supabase";
+import {
+  AuthError,
+  UnauthorizedError,
+  InvalidTokenError,
+} from "./errors";
 import type { AuthContext } from "./types";
 
 // ============================================================================
 // Service Interface
 // ============================================================================
+
 
 /**
  * Auth Service Interface
@@ -39,7 +45,7 @@ export interface AuthServiceInterface {
    * Delegates to SupabaseAuth.verifyToken.
    */
   readonly verifyToken: (
-    token: string,
+    token: string
   ) => Effect.Effect<AuthUser, UnauthorizedError | InvalidTokenError>;
 
   /**
@@ -60,13 +66,14 @@ export interface AuthServiceInterface {
    * For API key auth, use ApiKeyRepository from data-access layer.
    */
   readonly buildAuthContext: (
-    headers: Headers.Headers,
+    headers: Headers.Headers
   ) => Effect.Effect<Option.Option<AuthContext>, AuthError>;
 }
 
 // ============================================================================
 // Context.Tag
 // ============================================================================
+
 
 /**
  * Auth Service Tag
@@ -75,7 +82,10 @@ export interface AuthServiceInterface {
  *
  * Requires: SupabaseAuth (from provider-supabase)
  */
-export class AuthService extends Context.Tag("AuthService")<AuthService, AuthServiceInterface>() {
+export class AuthService extends Context.Tag("AuthService")<
+  AuthService,
+  AuthServiceInterface
+>() {
   /**
    * Live layer - requires SupabaseAuth
    *
@@ -100,7 +110,7 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
                 message: `Token verification failed: ${String(error)}`,
               });
             }),
-            Effect.withSpan("AuthService.verifyToken"),
+            Effect.withSpan("AuthService.verifyToken")
           ),
 
         getCurrentUser: () =>
@@ -112,15 +122,14 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
                 name: user.user_metadata?.name,
                 role: user.role,
                 metadata: user.user_metadata,
-              })),
+              }))
             ),
-            Effect.mapError(
-              (error) =>
-                new AuthError({
-                  message: `Failed to get current user: ${String(error)}`,
-                }),
+            Effect.mapError((error) =>
+              new AuthError({
+                message: `Failed to get current user: ${String(error)}`,
+              })
             ),
-            Effect.withSpan("AuthService.getCurrentUser"),
+            Effect.withSpan("AuthService.getCurrentUser")
           ),
 
         buildAuthContext: (headers) =>
@@ -131,7 +140,9 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
             // Priority 1: Bearer Token
             if (Option.isSome(authHeader) && authHeader.value.startsWith("Bearer ")) {
               const token = authHeader.value.slice(7);
-              const userResult = yield* supabaseAuth.verifyToken(token).pipe(Effect.option);
+              const userResult = yield* supabaseAuth.verifyToken(token).pipe(
+                Effect.option
+              );
 
               if (Option.isSome(userResult)) {
                 return Option.some<AuthContext>({
@@ -152,9 +163,9 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
                     name: user.user_metadata?.name,
                     role: user.role,
                     metadata: user.user_metadata,
-                  })),
+                  }))
                 ),
-                Effect.catchAll(() => Effect.succeed(Option.none<AuthUser>())),
+                Effect.catchAll(() => Effect.succeed(Option.none<AuthUser>()))
               );
 
               if (Option.isSome(userResult)) {
@@ -168,7 +179,7 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
             return Option.none();
           }).pipe(Effect.withSpan("AuthService.buildAuthContext")),
       };
-    }),
+    })
   );
 
   /**
@@ -192,7 +203,7 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
           email: "test@example.com",
           name: "Test User",
           role: "authenticated",
-        }),
+        })
       ),
 
     buildAuthContext: () =>
@@ -205,7 +216,7 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
             role: "authenticated",
           },
           authMethod: "session",
-        }),
+        })
       ),
   });
 
@@ -244,9 +255,7 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
 
         buildAuthContext: (headers) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[AuthService] buildAuthContext", {
-              headers: Object.keys(headers),
-            });
+            yield* Effect.logDebug("[AuthService] buildAuthContext", { headers: Object.keys(headers) });
             return Option.some<AuthContext>({
               user: {
                 id: "dev-user-id",
@@ -258,6 +267,6 @@ export class AuthService extends Context.Tag("AuthService")<AuthService, AuthSer
             });
           }),
       };
-    }),
+    })
   );
 }

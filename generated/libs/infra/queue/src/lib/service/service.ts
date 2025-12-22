@@ -1,5 +1,5 @@
-import type { Chunk, Option, Scope } from "effect";
-import { Context, Effect, Layer, Queue } from "effect";
+import { Context, Effect, Layer, Queue } from "effect"
+import type { Chunk, Option, Scope } from "effect"
 
 /**
  * Queue Service
@@ -36,47 +36,47 @@ export interface BoundedQueueHandle<T> {
    *
    * @returns true if offered successfully
    */
-  readonly offer: (item: T) => Effect.Effect<boolean>;
+  readonly offer: (item: T) => Effect.Effect<boolean>
 
   /**
    * Take an item from the queue
    * Suspends if queue is empty
    */
-  readonly take: Effect.Effect<T>;
+  readonly take: Effect.Effect<T>
 
   /**
    * Take up to N items from the queue
    * Returns immediately with available items (may be less than N)
    */
-  readonly takeUpTo: (n: number) => Effect.Effect<Chunk.Chunk<T>>;
+  readonly takeUpTo: (n: number) => Effect.Effect<Chunk.Chunk<T>>
 
   /**
    * Take all available items from the queue
    * Returns immediately
    */
-  readonly takeAll: Effect.Effect<Chunk.Chunk<T>>;
+  readonly takeAll: Effect.Effect<Chunk.Chunk<T>>
 
   /**
    * Poll for an item without blocking
    * Returns None if queue is empty
    */
-  readonly poll: Effect.Effect<Option.Option<T>>;
+  readonly poll: Effect.Effect<Option.Option<T>>
 
   /**
    * Get current queue size
    */
-  readonly size: Effect.Effect<number>;
+  readonly size: Effect.Effect<number>
 
   /**
    * Shutdown the queue
    * Interrupts all pending offers and takes
    */
-  readonly shutdown: Effect.Effect<void>;
+  readonly shutdown: Effect.Effect<void>
 
   /**
    * Check if queue is shutdown
    */
-  readonly isShutdown: Effect.Effect<boolean>;
+  readonly isShutdown: Effect.Effect<boolean>
 }
 
 /**
@@ -87,33 +87,33 @@ export interface UnboundedQueueHandle<T> {
    * Offer an item to the queue
    * Never blocks (unbounded capacity)
    */
-  readonly offer: (item: T) => Effect.Effect<boolean>;
+  readonly offer: (item: T) => Effect.Effect<boolean>
 
   /**
    * Take an item from the queue
    * Suspends if queue is empty
    */
-  readonly take: Effect.Effect<T>;
+  readonly take: Effect.Effect<T>
 
   /**
    * Take up to N items from the queue
    */
-  readonly takeUpTo: (n: number) => Effect.Effect<Chunk.Chunk<T>>;
+  readonly takeUpTo: (n: number) => Effect.Effect<Chunk.Chunk<T>>
 
   /**
    * Take all available items from the queue
    */
-  readonly takeAll: Effect.Effect<Chunk.Chunk<T>>;
+  readonly takeAll: Effect.Effect<Chunk.Chunk<T>>
 
   /**
    * Get current queue size
    */
-  readonly size: Effect.Effect<number>;
+  readonly size: Effect.Effect<number>
 
   /**
    * Shutdown the queue
    */
-  readonly shutdown: Effect.Effect<void>;
+  readonly shutdown: Effect.Effect<void>
 }
 
 /**
@@ -123,7 +123,7 @@ export interface QueueOptions {
   /**
    * Queue name for identification
    */
-  readonly name?: string;
+  readonly name?: string
 }
 
 /**
@@ -132,7 +132,9 @@ export interface QueueOptions {
  * Queue infrastructure using Effect.Queue primitive.
  * Provides bounded and unbounded queues with various overflow strategies.
  */
-export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")<
+export class QueueService extends Context.Tag(
+  "@myorg/infra-queue/QueueService"
+)<
   QueueService,
   {
     /**
@@ -155,8 +157,8 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
      */
     readonly bounded: <T>(
       capacity: number,
-      options?: QueueOptions,
-    ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>;
+      options?: QueueOptions
+    ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>
 
     /**
      * Create an unbounded queue
@@ -171,8 +173,8 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
      * ```
      */
     readonly unbounded: <T>(
-      options?: QueueOptions,
-    ) => Effect.Effect<UnboundedQueueHandle<T>, never, Scope.Scope>;
+      options?: QueueOptions
+    ) => Effect.Effect<UnboundedQueueHandle<T>, never, Scope.Scope>
 
     /**
      * Create a dropping queue
@@ -189,8 +191,8 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
      */
     readonly dropping: <T>(
       capacity: number,
-      options?: QueueOptions,
-    ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>;
+      options?: QueueOptions
+    ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>
 
     /**
      * Create a sliding queue
@@ -207,13 +209,13 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
      */
     readonly sliding: <T>(
       capacity: number,
-      options?: QueueOptions,
-    ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>;
+      options?: QueueOptions
+    ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>
 
     /**
      * Health check for monitoring
      */
-    readonly healthCheck: () => Effect.Effect<boolean>;
+    readonly healthCheck: () => Effect.Effect<boolean>
   }
 >() {
   // ===========================================================================
@@ -229,7 +231,7 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
   static readonly Memory = Layer.succeed(this, {
     bounded: <T>(capacity: number, _options?: QueueOptions) =>
       Effect.gen(function* () {
-        const queue = yield* Queue.bounded<T>(capacity);
+        const queue = yield* Queue.bounded<T>(capacity)
 
         return {
           offer: (item: T) => Queue.offer(queue, item),
@@ -239,13 +241,13 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
           poll: Queue.poll(queue),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
-          isShutdown: Queue.isShutdown(queue),
-        } satisfies BoundedQueueHandle<T>;
+          isShutdown: Queue.isShutdown(queue)
+        } satisfies BoundedQueueHandle<T>
       }),
 
     unbounded: <T>(_options?: QueueOptions) =>
       Effect.gen(function* () {
-        const queue = yield* Queue.unbounded<T>();
+        const queue = yield* Queue.unbounded<T>()
 
         return {
           offer: (item: T) => Queue.offer(queue, item),
@@ -253,13 +255,13 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
           takeAll: Queue.takeAll(queue),
           size: Queue.size(queue),
-          shutdown: Queue.shutdown(queue),
-        } satisfies UnboundedQueueHandle<T>;
+          shutdown: Queue.shutdown(queue)
+        } satisfies UnboundedQueueHandle<T>
       }),
 
     dropping: <T>(capacity: number, _options?: QueueOptions) =>
       Effect.gen(function* () {
-        const queue = yield* Queue.dropping<T>(capacity);
+        const queue = yield* Queue.dropping<T>(capacity)
 
         return {
           offer: (item: T) => Queue.offer(queue, item),
@@ -269,13 +271,13 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
           poll: Queue.poll(queue),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
-          isShutdown: Queue.isShutdown(queue),
-        } satisfies BoundedQueueHandle<T>;
+          isShutdown: Queue.isShutdown(queue)
+        } satisfies BoundedQueueHandle<T>
       }),
 
     sliding: <T>(capacity: number, _options?: QueueOptions) =>
       Effect.gen(function* () {
-        const queue = yield* Queue.sliding<T>(capacity);
+        const queue = yield* Queue.sliding<T>(capacity)
 
         return {
           offer: (item: T) => Queue.offer(queue, item),
@@ -285,12 +287,12 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
           poll: Queue.poll(queue),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
-          isShutdown: Queue.isShutdown(queue),
-        } satisfies BoundedQueueHandle<T>;
+          isShutdown: Queue.isShutdown(queue)
+        } satisfies BoundedQueueHandle<T>
       }),
 
-    healthCheck: () => Effect.succeed(true),
-  });
+    healthCheck: () => Effect.succeed(true)
+  })
 
   // ===========================================================================
   // Static Test Layer
@@ -299,7 +301,7 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
   /**
    * Test Layer - Same as Memory for testing
    */
-  static readonly Test = QueueService.Memory;
+  static readonly Test = QueueService.Memory
 
   // ===========================================================================
   // Alias: Live = Memory (default)
@@ -310,5 +312,5 @@ export class QueueService extends Context.Tag("@myorg/infra-queue/QueueService")
    *
    * For Redis-backed distributed queuing, use RedisQueue layer from layers/
    */
-  static readonly Live = QueueService.Memory;
+  static readonly Live = QueueService.Memory
 }

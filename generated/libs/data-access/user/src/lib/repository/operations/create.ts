@@ -1,6 +1,6 @@
-import { Duration, Effect } from "effect";
-import { UserTimeoutError } from "../../shared/errors";
-import type { UserCreateInput } from "../../shared/types";
+import { UserTimeoutError } from "../../shared/errors"
+import { Duration, Effect } from "effect"
+import type { UserCreateInput } from "../../shared/types"
 
 /**
  * User Create Operations
@@ -13,6 +13,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @myorg/data-access-user/repository/operations
  */
 
+
+
+
 // Infrastructure services - Database for persistence
 
 import { DatabaseService } from "@myorg/infra-database";
@@ -20,6 +23,7 @@ import { DatabaseService } from "@myorg/infra-database";
 // ============================================================================
 // Create Operations
 // ============================================================================
+
 
 /**
  * Create operations for User repository
@@ -51,7 +55,7 @@ export const createOperations = {
             updated_at: new Date(),
           })
           .returningAll()
-          .executeTakeFirstOrThrow(),
+          .executeTakeFirstOrThrow()
       );
 
       yield* Effect.logDebug("User created successfully");
@@ -60,9 +64,9 @@ export const createOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("create", 30000),
+        onTimeout: () => UserTimeoutError.create("create", 30000)
       }),
-      Effect.withSpan("UserRepository.create"),
+      Effect.withSpan("UserRepository.create")
     ),
 
   /**
@@ -82,10 +86,10 @@ export const createOperations = {
               ...input,
               created_at: new Date(),
               updated_at: new Date(),
-            })),
+            }))
           )
           .returningAll()
-          .execute(),
+          .execute()
       );
 
       yield* Effect.logDebug(`Created ${entities.length} User entities successfully`);
@@ -94,9 +98,9 @@ export const createOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("createMany", 30000),
+        onTimeout: () => UserTimeoutError.create("createMany", 30000)
       }),
-      Effect.withSpan("UserRepository.createMany"),
+      Effect.withSpan("UserRepository.createMany")
     ),
 } as const;
 

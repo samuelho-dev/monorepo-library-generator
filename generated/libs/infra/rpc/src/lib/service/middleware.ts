@@ -1,6 +1,6 @@
-import { Headers } from "@effect/platform";
-import { RpcMiddleware } from "@effect/rpc";
-import { Context, Effect, Layer, Option, Schema } from "effect";
+import { Headers } from "@effect/platform"
+import { RpcMiddleware } from "@effect/rpc"
+import { Context, Effect, Layer, Option, Schema } from "effect"
 
 /**
  * Rpc Middleware
@@ -32,20 +32,20 @@ Protected vs Public:
  * Available to all protected RPC handlers after middleware runs.
  */
 export interface CurrentUserData {
-  readonly id: string;
-  readonly email: string;
-  readonly roles: ReadonlyArray<string>;
-  readonly metadata?: Record<string, unknown>;
+  readonly id: string
+  readonly email: string
+  readonly roles: ReadonlyArray<string>
+  readonly metadata?: Record<string, unknown>
 }
 
 /**
  * Request metadata from middleware
  */
 export interface RequestMetadata {
-  readonly requestId: string;
-  readonly timestamp: Date;
-  readonly source: string;
-  readonly headers?: Record<string, string>;
+  readonly requestId: string
+  readonly timestamp: Date
+  readonly source: string
+  readonly headers?: Record<string, string>
 }
 
 // ============================================================================
@@ -65,12 +65,18 @@ export interface RequestMetadata {
  * });
  * ```
  */
-export class CurrentUser extends Context.Tag("@rpc/CurrentUser")<CurrentUser, CurrentUserData>() {}
+export class CurrentUser extends Context.Tag("@rpc/CurrentUser")<
+  CurrentUser,
+  CurrentUserData
+>() {}
 
 /**
  * RequestMeta Context Tag
  */
-export class RequestMeta extends Context.Tag("@rpc/RequestMeta")<RequestMeta, RequestMetadata>() {}
+export class RequestMeta extends Context.Tag("@rpc/RequestMeta")<
+  RequestMeta,
+  RequestMetadata
+>() {}
 
 // ============================================================================
 // Auth Errors (Schema.TaggedError for RPC boundary)
@@ -81,10 +87,13 @@ export class RequestMeta extends Context.Tag("@rpc/RequestMeta")<RequestMeta, Re
  *
  * Uses Schema.TaggedError because it crosses RPC boundaries.
  */
-export class AuthError extends Schema.TaggedError<AuthError>()("AuthError", {
-  code: Schema.Literal("UNAUTHORIZED", "FORBIDDEN", "TOKEN_EXPIRED", "INVALID_TOKEN"),
-  message: Schema.String,
-}) {}
+export class AuthError extends Schema.TaggedError<AuthError>()(
+  "AuthError",
+  {
+    code: Schema.Literal("UNAUTHORIZED", "FORBIDDEN", "TOKEN_EXPIRED", "INVALID_TOKEN"),
+    message: Schema.String
+  }
+) {}
 
 // ============================================================================
 // AuthVerifier Interface (Interface Segregation)
@@ -127,7 +136,7 @@ export class AuthVerifier extends Context.Tag("@rpc/AuthVerifier")<
      * @param token - Bearer token from Authorization header
      * @returns CurrentUserData on success, AuthError on failure
      */
-    readonly verify: (token: string) => Effect.Effect<CurrentUserData, AuthError>;
+    readonly verify: (token: string) => Effect.Effect<CurrentUserData, AuthError>
   }
 >() {}
 
@@ -156,10 +165,13 @@ export class AuthVerifier extends Context.Tag("@rpc/AuthVerifier")<
  * }) {}
  * ```
  */
-export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()("@rpc/AuthMiddleware", {
-  provides: CurrentUser,
-  failure: AuthError,
-}) {}
+export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()(
+  "@rpc/AuthMiddleware",
+  {
+    provides: CurrentUser,
+    failure: AuthError
+  }
+) {}
 
 /**
  * AuthMiddleware implementation Layer
@@ -170,34 +182,34 @@ export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()("@rpc/Au
 export const AuthMiddlewareLive = Layer.effect(
   AuthMiddleware,
   Effect.gen(function* () {
-    const verifier = yield* AuthVerifier;
+    const verifier = yield* AuthVerifier
 
     return ({ headers }) =>
       Effect.gen(function* () {
-        const token = extractBearerToken(headers);
+        const token = extractBearerToken(headers)
 
         if (Option.isNone(token)) {
           return yield* Effect.fail(
-            new AuthError({ code: "UNAUTHORIZED", message: "Missing authorization token" }),
-          );
+            new AuthError({ code: "UNAUTHORIZED", message: "Missing authorization token" })
+          )
         }
 
         // Delegate to AuthVerifier (implemented by infra-auth)
-        return yield* verifier.verify(token.value);
-      });
-  }),
-);
+        return yield* verifier.verify(token.value)
+      })
+  })
+)
 
 /**
  * Authentication method used
  */
-export type AuthMethod = "bearer" | "api-key" | "service-role";
+export type AuthMethod = "bearer" | "api-key" | "service-role"
 
 /**
  * Extended user data with auth method
  */
 export interface AuthenticatedUserData extends CurrentUserData {
-  readonly authMethod: AuthMethod;
+  readonly authMethod: AuthMethod
 }
 
 /**
@@ -215,37 +227,35 @@ export class AuthMethodContext extends Context.Tag("@rpc/AuthMethod")<
  *
  * Uses @effect/platform Headers.get() for type-safe header access.
  */
-const extractAuth = (
-  headers: Headers.Headers,
-): Option.Option<{ type: AuthMethod; token: string }> => {
+const extractAuth = (headers: Headers.Headers): Option.Option<{ type: AuthMethod; token: string }> => {
   // Priority 1: API Key (x-api-key header)
-  const apiKey = Headers.get(headers, "x-api-key");
+  const apiKey = Headers.get(headers, "x-api-key")
   if (Option.isSome(apiKey)) {
-    return Option.some({ type: "api-key" as const, token: apiKey.value });
+    return Option.some({ type: "api-key" as const, token: apiKey.value })
   }
 
   // Priority 2: Bearer Token
-  const auth = Headers.get(headers, "authorization");
+  const auth = Headers.get(headers, "authorization")
   if (Option.isSome(auth) && auth.value.startsWith("Bearer ")) {
-    return Option.some({ type: "bearer" as const, token: auth.value.slice(7) });
+    return Option.some({ type: "bearer" as const, token: auth.value.slice(7) })
   }
 
   // Priority 3: Service Role (internal service-to-service)
-  const serviceRole = Headers.get(headers, "x-service-role");
+  const serviceRole = Headers.get(headers, "x-service-role")
   if (Option.isSome(serviceRole)) {
-    return Option.some({ type: "service-role" as const, token: serviceRole.value });
+    return Option.some({ type: "service-role" as const, token: serviceRole.value })
   }
 
-  return Option.none();
-};
+  return Option.none()
+}
 
 /**
  * Extract bearer token from headers (legacy helper)
  */
-const extractBearerToken = (headers: Headers.Headers): Option.Option<string> => {
-  const auth = extractAuth(headers);
-  return Option.map(auth, (a) => a.token);
-};
+const extractBearerToken = (headers: Headers.Headers) => {
+  const auth = extractAuth(headers)
+  return Option.map(auth, (a) => a.token)
+}
 
 // ============================================================================
 // Handler Context Helper (DX Improvement)
@@ -257,8 +267,8 @@ const extractBearerToken = (headers: Headers.Headers): Option.Option<string> => 
  * Use with getHandlerContext for better DX in handlers.
  */
 export interface HandlerContext {
-  readonly user: CurrentUserData;
-  readonly meta: RequestMetadata;
+  readonly user: CurrentUserData
+  readonly meta: RequestMetadata
 }
 
 /**
@@ -287,10 +297,10 @@ export interface HandlerContext {
  * ```
  */
 export const getHandlerContext = Effect.gen(function* () {
-  const user = yield* CurrentUser;
-  const meta = yield* RequestMeta;
-  return { user, meta } as HandlerContext;
-});
+  const user = yield* CurrentUser
+  const meta = yield* RequestMeta
+  return { user, meta } as HandlerContext
+})
 
 /**
  * Get handler context with optional services
@@ -298,13 +308,13 @@ export const getHandlerContext = Effect.gen(function* () {
  * For handlers that may not have all context available.
  */
 export const getHandlerContextOptional = Effect.gen(function* () {
-  const user = yield* Effect.serviceOption(CurrentUser);
-  const meta = yield* Effect.serviceOption(RequestMeta);
+  const user = yield* Effect.serviceOption(CurrentUser)
+  const meta = yield* Effect.serviceOption(RequestMeta)
   return {
     user: Option.getOrNull(user),
-    meta: Option.getOrNull(meta),
-  };
-});
+    meta: Option.getOrNull(meta)
+  }
+})
 
 // ============================================================================
 // RequestMeta Middleware
@@ -318,21 +328,23 @@ export const getHandlerContextOptional = Effect.gen(function* () {
 export class RequestMetaMiddleware extends RpcMiddleware.Tag<RequestMetaMiddleware>()(
   "@rpc/RequestMetaMiddleware",
   {
-    provides: RequestMeta,
-  },
+    provides: RequestMeta
+  }
 ) {}
 
 /**
  * RequestMeta middleware implementation
  */
-export const RequestMetaMiddlewareLive = Layer.succeed(RequestMetaMiddleware, ({ headers }) =>
-  Effect.succeed({
-    requestId: headers["x-request-id"] ?? crypto.randomUUID(),
-    timestamp: new Date(),
-    source: headers["x-forwarded-for"] ?? "unknown",
-    headers: headers as Record<string, string>,
-  } satisfies RequestMetadata),
-);
+export const RequestMetaMiddlewareLive = Layer.succeed(
+  RequestMetaMiddleware,
+  ({ headers }) =>
+    Effect.succeed({
+      requestId: headers["x-request-id"] ?? crypto.randomUUID(),
+      timestamp: new Date(),
+      source: headers["x-forwarded-for"] ?? "unknown",
+      headers: headers as Record<string, string>
+    } satisfies RequestMetadata)
+)
 
 // ============================================================================
 // Convenience Layers
@@ -344,15 +356,18 @@ export const RequestMetaMiddlewareLive = Layer.succeed(RequestMetaMiddleware, ({
 export const TestUser: CurrentUserData = {
   id: "test-user-id",
   email: "test@example.com",
-  roles: ["user"],
-};
+  roles: ["user"]
+}
 
 /**
  * Test AuthMiddleware - always provides TestUser
  *
  * Use in development and testing.
  */
-export const AuthMiddlewareTest = Layer.succeed(AuthMiddleware, (_) => Effect.succeed(TestUser));
+export const AuthMiddlewareTest = Layer.succeed(
+  AuthMiddleware,
+  (_) => Effect.succeed(TestUser)
+)
 
 /**
  * Admin test user for testing admin routes
@@ -360,12 +375,13 @@ export const AuthMiddlewareTest = Layer.succeed(AuthMiddleware, (_) => Effect.su
 export const AdminTestUser: CurrentUserData = {
   id: "admin-user-id",
   email: "admin@example.com",
-  roles: ["user", "admin"],
-};
+  roles: ["user", "admin"]
+}
 
 /**
  * Admin AuthMiddleware - provides admin user for testing admin routes
  */
-export const AuthMiddlewareAdmin = Layer.succeed(AuthMiddleware, (_) =>
-  Effect.succeed(AdminTestUser),
-);
+export const AuthMiddlewareAdmin = Layer.succeed(
+  AuthMiddleware,
+  (_) => Effect.succeed(AdminTestUser)
+)

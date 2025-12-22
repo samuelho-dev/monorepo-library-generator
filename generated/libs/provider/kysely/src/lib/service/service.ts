@@ -1,5 +1,5 @@
-import { Context, Effect, Layer } from "effect";
-import { KyselyError } from "../errors";
+import { KyselyError } from "../errors"
+import { Context, Effect, Layer } from "effect"
 
 /**
  * Kysely Provider Service
@@ -18,17 +18,20 @@ Architecture:
  * @see https://kysely.dev for Kysely documentation
  */
 
+
 import {
-  DummyDriver,
   Kysely as KyselyDB,
+  DummyDriver,
   PostgresAdapter,
   PostgresIntrospector,
-  PostgresQueryCompiler,
-} from "kysely";
+  PostgresQueryCompiler
+} from "kysely"
+
 
 // ============================================================================
 // Database Types
 // ============================================================================
+
 
 /**
  * Database schema type
@@ -44,12 +47,13 @@ import {
  * For now, using a placeholder that accepts any table structure.
  */
 export interface Database {
-  [tableName: string]: Record<string, unknown>;
+  [tableName: string]: Record<string, unknown>
 }
 
 // ============================================================================
 // Service Interface
 // ============================================================================
+
 
 /**
  * Kysely Service Interface
@@ -71,7 +75,9 @@ export interface KyselyServiceInterface {
    * );
    * ```
    */
-  readonly query: <A>(fn: (db: KyselyDB<Database>) => Promise<A>) => Effect.Effect<A, KyselyError>;
+  readonly query: <A>(
+    fn: (db: KyselyDB<Database>) => Promise<A>
+  ) => Effect.Effect<A, KyselyError>
 
   /**
    * Execute queries within a transaction
@@ -95,8 +101,8 @@ export interface KyselyServiceInterface {
    * ```
    */
   readonly transaction: <A, E, R>(
-    fn: (trx: KyselyDB<Database>) => Effect.Effect<A, E, R>,
-  ) => Effect.Effect<A, E | KyselyError, R>;
+    fn: (trx: KyselyDB<Database>) => Effect.Effect<A, E, R>
+  ) => Effect.Effect<A, E | KyselyError, R>
 
   /**
    * Get raw Kysely instance for advanced operations
@@ -104,17 +110,18 @@ export interface KyselyServiceInterface {
    * Prefer query() and transaction() for most use cases.
    * Use this only when you need direct Kysely access.
    */
-  readonly getInstance: () => Effect.Effect<KyselyDB<Database>, KyselyError>;
+  readonly getInstance: () => Effect.Effect<KyselyDB<Database>, KyselyError>
 
   /**
    * Health check - verifies database connectivity
    */
-  readonly healthCheck: () => Effect.Effect<boolean, KyselyError>;
+  readonly healthCheck: () => Effect.Effect<boolean, KyselyError>
 }
 
 // ============================================================================
 // Context.Tag
 // ============================================================================
+
 
 /**
  * Create a "cold" Kysely instance using DummyDriver
@@ -125,15 +132,15 @@ export interface KyselyServiceInterface {
  *
  * @see https://kysely.dev/docs/recipes/splitting-query-building-and-execution
  */
-function createDummyKysely(): KyselyDB<Database> {
+function createDummyKysely() {
   return new KyselyDB<Database>({
     dialect: {
       createAdapter: () => new PostgresAdapter(),
       createDriver: () => new DummyDriver(),
       createIntrospector: (db) => new PostgresIntrospector(db),
-      createQueryCompiler: () => new PostgresQueryCompiler(),
-    },
-  });
+      createQueryCompiler: () => new PostgresQueryCompiler()
+    }
+  })
 }
 
 /**
@@ -146,7 +153,10 @@ function createDummyKysely(): KyselyDB<Database> {
  * - Kysely.Test - Test layer using Kysely's DummyDriver
  * - Kysely.Dev - Development with query logging
  */
-export class Kysely extends Context.Tag("Kysely")<Kysely, KyselyServiceInterface>() {
+export class Kysely extends Context.Tag("Kysely")<
+  Kysely,
+  KyselyServiceInterface
+>() {
   /**
    * Create Live layer with a Kysely instance
    *
@@ -170,22 +180,21 @@ export class Kysely extends Context.Tag("Kysely")<Kysely, KyselyServiceInterface
       query: <A>(fn: (db: KyselyDB<Database>) => Promise<A>) =>
         Effect.tryPromise({
           try: () => fn(kyselyInstance),
-          catch: (error) =>
-            new KyselyError({
-              message: "Query execution failed",
-              cause: error,
-            }),
+          catch: (error) => new KyselyError({
+            message: "Query execution failed",
+            cause: error
+          })
         }),
 
       transaction: <A, E, R>(fn: (trx: KyselyDB<Database>) => Effect.Effect<A, E, R>) =>
         fn(kyselyInstance).pipe(
           Effect.mapError((error) => {
-            if (error instanceof KyselyError) return error;
+            if (error instanceof KyselyError) return error
             return new KyselyError({
               message: "Transaction failed",
-              cause: error,
-            });
-          }),
+              cause: error
+            })
+          })
         ),
 
       getInstance: () => Effect.succeed(kyselyInstance),
@@ -193,16 +202,15 @@ export class Kysely extends Context.Tag("Kysely")<Kysely, KyselyServiceInterface
       healthCheck: () =>
         Effect.tryPromise({
           try: async () => {
-            await kyselyInstance.selectFrom("_prisma_migrations").selectAll().limit(1).execute();
-            return true;
+            await kyselyInstance.selectFrom("_prisma_migrations").selectAll().limit(1).execute()
+            return true
           },
-          catch: (error) =>
-            new KyselyError({
-              message: "Database health check failed",
-              cause: error,
-            }),
-        }),
-    });
+          catch: (error) => new KyselyError({
+            message: "Database health check failed",
+            cause: error
+          })
+        })
+    })
   }
 
   /**
@@ -218,35 +226,34 @@ export class Kysely extends Context.Tag("Kysely")<Kysely, KyselyServiceInterface
    * or an in-memory database like SQLite/pglite.
    */
   static readonly Test = Layer.sync(Kysely, () => {
-    const db = createDummyKysely();
+    const db = createDummyKysely()
 
     return {
       query: <A>(fn: (kyselyDb: KyselyDB<Database>) => Promise<A>) =>
         Effect.tryPromise({
           try: () => fn(db),
-          catch: (error) =>
-            new KyselyError({
-              message: "Query execution failed",
-              cause: error,
-            }),
+          catch: (error) => new KyselyError({
+            message: "Query execution failed",
+            cause: error
+          })
         }),
 
       transaction: <A, E, R>(fn: (trx: KyselyDB<Database>) => Effect.Effect<A, E, R>) =>
         fn(db).pipe(
           Effect.mapError((error) => {
-            if (error instanceof KyselyError) return error;
+            if (error instanceof KyselyError) return error
             return new KyselyError({
               message: "Transaction failed",
-              cause: error,
-            });
-          }),
+              cause: error
+            })
+          })
         ),
 
       getInstance: () => Effect.succeed(db),
 
-      healthCheck: () => Effect.succeed(true),
-    };
-  });
+      healthCheck: () => Effect.succeed(true)
+    }
+  })
 
   /**
    * Dev layer - Development with query logging
@@ -255,45 +262,44 @@ export class Kysely extends Context.Tag("Kysely")<Kysely, KyselyServiceInterface
    * Logs all query operations for debugging.
    */
   static readonly Dev = Layer.sync(Kysely, () => {
-    const db = createDummyKysely();
+    const db = createDummyKysely()
 
     return {
       query: <A>(fn: (kyselyDb: KyselyDB<Database>) => Promise<A>) =>
         Effect.gen(function* () {
-          yield* Effect.logDebug("[Kysely] [DEV] Executing query");
+          yield* Effect.logDebug("[Kysely] [DEV] Executing query")
           const result = yield* Effect.tryPromise({
             try: () => fn(db),
-            catch: (error) =>
-              new KyselyError({
-                message: "Query execution failed",
-                cause: error,
-              }),
-          });
-          yield* Effect.logDebug("[Kysely] [DEV] Query completed");
-          return result;
+            catch: (error) => new KyselyError({
+              message: "Query execution failed",
+              cause: error
+            })
+          })
+          yield* Effect.logDebug("[Kysely] [DEV] Query completed")
+          return result
         }),
 
       transaction: <A, E, R>(fn: (trx: KyselyDB<Database>) => Effect.Effect<A, E, R>) =>
         Effect.gen(function* () {
-          yield* Effect.logDebug("[Kysely] [DEV] Starting transaction");
+          yield* Effect.logDebug("[Kysely] [DEV] Starting transaction")
           const result = yield* fn(db).pipe(
             Effect.mapError((error) => {
-              if (error instanceof KyselyError) return error;
+              if (error instanceof KyselyError) return error
               return new KyselyError({
                 message: "Transaction failed",
-                cause: error,
-              });
-            }),
-          );
-          yield* Effect.logDebug("[Kysely] [DEV] Transaction completed");
-          return result;
+                cause: error
+              })
+            })
+          )
+          yield* Effect.logDebug("[Kysely] [DEV] Transaction completed")
+          return result
         }),
 
       getInstance: () => Effect.succeed(db),
 
-      healthCheck: () => Effect.succeed(true),
-    };
-  });
+      healthCheck: () => Effect.succeed(true)
+    }
+  })
 
   /**
    * Live layer placeholder
@@ -303,7 +309,7 @@ export class Kysely extends Context.Tag("Kysely")<Kysely, KyselyServiceInterface
    */
   static readonly Live = Layer.fail(
     new KyselyError({
-      message: "Kysely Live layer not configured. Use Kysely.makeLive(kyselyInstance) instead.",
-    }),
-  );
+      message: "Kysely Live layer not configured. Use Kysely.makeLive(kyselyInstance) instead."
+    })
+  )
 }

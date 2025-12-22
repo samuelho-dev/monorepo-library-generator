@@ -1,7 +1,7 @@
-import { Effect, Option } from "effect";
-import { UserService } from "../server/service";
-import { UserError } from "../shared/errors";
-import { UserRpcs } from "./rpc";
+import { UserService } from "../server/service"
+import { UserError } from "../shared/errors"
+import { UserRpcs } from "./rpc"
+import { Effect, Option } from "effect"
 
 /**
  * User RPC Handlers
@@ -19,7 +19,11 @@ Context Access:
  */
 
 // Context services from infra-auth
-import { AuthMethodTag, CurrentUser, RequestMetaTag } from "@myorg/infra-auth";
+import {
+  CurrentUser,
+  RequestMetaTag,
+  AuthMethodTag,
+} from "@myorg/infra-auth";
 
 /**
  * Entity type for mapping service results to RPC responses
@@ -31,6 +35,7 @@ interface UserEntity {
   readonly updatedAt?: Date;
   readonly [key: string]: unknown;
 }
+
 
 // ============================================================================
 // Handler Layer

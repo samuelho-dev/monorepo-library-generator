@@ -179,11 +179,6 @@ export interface DataAccessTemplateOptions extends BaseTemplateOptions {
   readonly databaseType?: 'postgres' | 'mysql' | 'sqlite';
 
   /**
-   * Whether to include caching layer
-   */
-  readonly includeCache: boolean;
-
-  /**
    * Contract library this data-access implements
    */
   readonly contractLibrary: string;

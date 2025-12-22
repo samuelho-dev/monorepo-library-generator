@@ -140,7 +140,7 @@ export interface SupabaseAuthServiceInterface {
   builder.addRaw(`/**
  * Map Supabase user to simplified AuthUser
  */
-function toAuthUser(user: SupabaseUser): AuthUser {
+function toAuthUser(user: SupabaseUser) {
   return {
     id: user.id,
     email: user.email,
@@ -174,7 +174,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
   /**
    * Create auth service from Supabase client
    */
-  private static createService(client: SupabaseSDKClient): SupabaseAuthServiceInterface {
+  private static createService(client: SupabaseSDKClient) {
     return {
       signInWithPassword: (credentials) =>
         Effect.gen(function* () {

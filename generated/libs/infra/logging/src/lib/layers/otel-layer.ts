@@ -1,5 +1,5 @@
-import { Layer, Logger, LogLevel } from "effect";
-import { LoggingService } from "../service/service";
+import { LoggingService } from "../service/service"
+import { Layer, LogLevel, Logger } from "effect"
 
 /**
  * Logging OpenTelemetry Layer
@@ -27,29 +27,29 @@ export interface OtelLoggingConfig {
   /**
    * Service name for OTEL resource
    */
-  readonly serviceName: string;
+  readonly serviceName: string
 
   /**
    * Service version
    */
-  readonly serviceVersion?: string;
+  readonly serviceVersion?: string
 
   /**
    * Environment (production, staging, development)
    */
-  readonly environment?: string;
+  readonly environment?: string
 
   /**
    * OTEL collector endpoint
    * @default "http://localhost:4318"
    */
-  readonly collectorEndpoint?: string;
+  readonly collectorEndpoint?: string
 
   /**
    * Minimum log level to export
    * @default "info"
    */
-  readonly minLogLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+  readonly minLogLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"
 }
 
 // ============================================================================
@@ -82,9 +82,9 @@ export const makeLoggingOtelLayer = (config: OtelLoggingConfig) =>
     LoggingService.makeLogger({
       "service.name": config.serviceName,
       "service.version": config.serviceVersion ?? "unknown",
-      "deployment.environment": config.environment ?? "development",
-    }),
-  );
+      "deployment.environment": config.environment ?? "development"
+    })
+  )
 
 // ============================================================================
 // Example: Full OTEL Setup
@@ -165,7 +165,7 @@ export const makeLoggingOtelLayer = (config: OtelLoggingConfig) =>
  * ```
  */
 export const withMinLogLevel = (minLevel: LogLevel.LogLevel) =>
-  Layer.provide(Logger.minimumLogLevel(minLevel));
+  Layer.provide(Logger.minimumLogLevel(minLevel))
 
 /**
  * Common log level configurations
@@ -189,5 +189,5 @@ export const LogLevelConfigs = {
   /**
    * Testing: All levels (for debugging tests)
    */
-  testing: Logger.minimumLogLevel(LogLevel.Trace),
-};
+  testing: Logger.minimumLogLevel(LogLevel.Trace)
+}

@@ -1,5 +1,5 @@
-import { Duration, Effect } from "effect";
-import { UserTimeoutError } from "../../shared/errors";
+import { UserTimeoutError } from "../../shared/errors"
+import { Duration, Effect } from "effect"
 
 /**
  * User Delete Operations
@@ -12,6 +12,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @myorg/data-access-user/repository/operations
  */
 
+
+
+
 // Infrastructure services - Database for persistence
 
 import { DatabaseService } from "@myorg/infra-database";
@@ -19,6 +22,7 @@ import { DatabaseService } from "@myorg/infra-database";
 // ============================================================================
 // Delete Operations
 // ============================================================================
+
 
 /**
  * Delete operations for User repository
@@ -42,7 +46,10 @@ export const deleteOperations = {
       yield* Effect.logDebug(`Deleting User with id: ${id}`);
 
       const result = yield* database.query((db) =>
-        db.deleteFrom("users").where("id", "=", id).executeTakeFirst(),
+        db
+          .deleteFrom("users")
+          .where("id", "=", id)
+          .executeTakeFirst()
       );
 
       const deletedCount = Number(result.numDeletedRows);
@@ -54,9 +61,9 @@ export const deleteOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("delete", 30000),
+        onTimeout: () => UserTimeoutError.create("delete", 30000)
       }),
-      Effect.withSpan("UserRepository.delete"),
+      Effect.withSpan("UserRepository.delete")
     ),
 
   /**
@@ -69,7 +76,10 @@ export const deleteOperations = {
       yield* Effect.logDebug(`Deleting ${ids.length} User entities`);
 
       const result = yield* database.query((db) =>
-        db.deleteFrom("users").where("id", "in", ids).executeTakeFirst(),
+        db
+          .deleteFrom("users")
+          .where("id", "in", ids)
+          .executeTakeFirst()
       );
 
       const deletedCount = Number(result.numDeletedRows);
@@ -77,9 +87,9 @@ export const deleteOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("deleteMany", 30000),
+        onTimeout: () => UserTimeoutError.create("deleteMany", 30000)
       }),
-      Effect.withSpan("UserRepository.deleteMany"),
+      Effect.withSpan("UserRepository.deleteMany")
     ),
 } as const;
 

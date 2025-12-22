@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * User Schemas
@@ -6,6 +6,7 @@ import { Schema } from "effect";
  * Shared schema definitions using Effect Schema.
  *
  */
+
 
 export const UserConfigSchema = Schema.Struct({
   // Add configuration schema fields

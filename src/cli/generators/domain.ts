@@ -126,9 +126,7 @@ export interface DomainGeneratorOptions {
   readonly description?: string;
   readonly tags?: string;
   readonly scope?: string;
-  readonly includeCache?: boolean;
   readonly includeClientServer?: boolean;
-  readonly includeRPC?: boolean;
   readonly includeCQRS?: boolean;
   readonly includeEdge?: boolean;
 }
@@ -152,17 +150,8 @@ export interface DomainGeneratorOptions {
  */
 export function generateDomain(options: DomainGeneratorOptions) {
   return Effect.gen(function* () {
-    const {
-      description,
-      includeCQRS,
-      includeCache,
-      includeClientServer,
-      includeEdge,
-      includeRPC,
-      name,
-      scope,
-      tags,
-    } = options;
+    const { description, includeCQRS, includeClientServer, includeEdge, name, scope, tags } =
+      options;
 
     yield* Console.log(`\n🏗️  Generating complete domain: ${name}`);
     yield* Console.log('='.repeat(60));
@@ -185,8 +174,7 @@ export function generateDomain(options: DomainGeneratorOptions) {
       name,
       description: description ?? `${name} data access`,
       tags: tags ?? 'domain:data-access',
-      ...(includeCache !== undefined && { includeCache }),
-      contractLibrary: getPackageName('contract', name), // Pre-wire to contract
+      contractLibrary: getPackageName('contract', name),
     });
     yield* Console.log(`✅ Data-access library created: libs/data-access/${name}`);
 
@@ -198,7 +186,6 @@ export function generateDomain(options: DomainGeneratorOptions) {
       tags: tags ?? 'domain:feature',
       ...(scope !== undefined && { scope }),
       ...(includeClientServer !== undefined && { includeClientServer }),
-      ...(includeRPC !== undefined && { includeRPC }),
       ...(includeCQRS !== undefined && { includeCQRS }),
       ...(includeEdge !== undefined && { includeEdge }),
     });

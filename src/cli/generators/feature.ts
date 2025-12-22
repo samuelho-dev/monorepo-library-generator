@@ -32,7 +32,6 @@ const featureExecutor = createExecutor<FeatureInput, FeatureCoreOptions>(
     ...(validated.includeClientServer !== undefined && {
       includeClientServer: validated.includeClientServer,
     }),
-    includeRPC: validated.includeRPC ?? false,
     includeCQRS: validated.includeCQRS ?? false,
     includeEdge: validated.includeEdge ?? false,
   }),

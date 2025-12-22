@@ -15,10 +15,10 @@ Layers are available as static members on the service class.
 
 // Service with static layers (Memory, Test, Live)
 export {
-  type LogContext,
-  type LoggingOperations,
   LoggingService,
-} from "./lib/service/service";
+  type LogContext,
+  type LoggingOperations
+} from "./lib/service/service"
 
 // ============================================================================
 // Error Types
@@ -26,13 +26,13 @@ export {
 
 // Error types for error handling
 export {
+  LoggingServiceError,
+  LoggingInternalError,
   LoggingConfigError,
   LoggingConnectionError,
-  type LoggingError,
-  LoggingInternalError,
-  LoggingServiceError,
   LoggingTimeoutError,
-} from "./lib/service/errors";
+  type LoggingError
+} from "./lib/service/errors"
 
 // ============================================================================
 // Additional Layers
@@ -40,8 +40,8 @@ export {
 
 // OpenTelemetry integration
 export {
-  LogLevelConfigs,
   makeLoggingOtelLayer,
-  type OtelLoggingConfig,
   withMinLogLevel,
-} from "./lib/layers/otel-layer";
+  LogLevelConfigs,
+  type OtelLoggingConfig
+} from "./lib/layers/otel-layer"

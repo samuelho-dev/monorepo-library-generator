@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Pubsub Errors
@@ -28,8 +28,8 @@ export class PubsubServiceError extends Schema.TaggedError<PubsubServiceError>()
   "PubsubServiceError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 // ============================================================================
@@ -45,8 +45,8 @@ export class PubsubInternalError extends Schema.TaggedError<PubsubInternalError>
   "PubsubInternalError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -56,8 +56,8 @@ export class PubsubConfigError extends Schema.TaggedError<PubsubConfigError>()(
   "PubsubConfigError",
   {
     message: Schema.String,
-    field: Schema.optional(Schema.String),
-  },
+    field: Schema.optional(Schema.String)
+  }
 ) {}
 
 /**
@@ -68,8 +68,8 @@ export class PubsubConnectionError extends Schema.TaggedError<PubsubConnectionEr
   {
     message: Schema.String,
     endpoint: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -79,8 +79,8 @@ export class PubsubTimeoutError extends Schema.TaggedError<PubsubTimeoutError>()
   "PubsubTimeoutError",
   {
     message: Schema.String,
-    timeoutMs: Schema.optional(Schema.Number),
-  },
+    timeoutMs: Schema.optional(Schema.Number)
+  }
 ) {}
 
 // ============================================================================
@@ -102,4 +102,4 @@ export type PubsubError =
   | PubsubInternalError
   | PubsubConfigError
   | PubsubConnectionError
-  | PubsubTimeoutError;
+  | PubsubTimeoutError

@@ -1,6 +1,6 @@
-import { HttpClient, HttpClientRequest } from "@effect/platform";
-import { Context, Duration, Effect, Layer, Option } from "effect";
-import { RpcInfraError } from "./errors";
+import { RpcInfraError } from "./errors"
+import { HttpClient, HttpClientRequest } from "@effect/platform"
+import { Context, Duration, Effect, Layer, Option } from "effect"
 
 /**
  * Rpc Client
@@ -30,13 +30,13 @@ export interface RpcClientConfig {
    * Base URL for RPC endpoint
    * @example "https://api.example.com/rpc"
    */
-  readonly baseUrl: string;
+  readonly baseUrl: string
 
   /**
    * Request timeout
    * @default "30 seconds"
    */
-  readonly timeout?: Duration.DurationInput;
+  readonly timeout?: Duration.DurationInput
 
   /**
    * Retry configuration
@@ -46,36 +46,36 @@ export interface RpcClientConfig {
      * Maximum retry attempts
      * @default 3
      */
-    readonly maxAttempts?: number;
+    readonly maxAttempts?: number
 
     /**
      * Initial retry delay
      * @default "100 millis"
      */
-    readonly initialDelay?: Duration.DurationInput;
+    readonly initialDelay?: Duration.DurationInput
 
     /**
      * Maximum retry delay
      * @default "5 seconds"
      */
-    readonly maxDelay?: Duration.DurationInput;
+    readonly maxDelay?: Duration.DurationInput
 
     /**
      * Retryable error codes
      * @default ["NETWORK_ERROR", "TIMEOUT", "SERVICE_UNAVAILABLE"]
      */
-    readonly retryableCodes?: ReadonlyArray<string>;
-  };
+    readonly retryableCodes?: ReadonlyArray<string>
+  }
 
   /**
    * Custom headers for all requests
    */
-  readonly headers?: Record<string, string>;
+  readonly headers?: Record<string, string>
 
   /**
    * Authentication token provider
    */
-  readonly getAuthToken?: () => Effect.Effect<Option.Option<string>>;
+  readonly getAuthToken?: () => Effect.Effect<Option.Option<string>>
 }
 
 /**
@@ -107,7 +107,9 @@ export class RpcClientConfigTag extends Context.Tag("RpcClientConfig")<
  * });
  * ```
  */
-export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
+export class RpcClient extends Context.Tag(
+  "@myorg/infra-rpc/RpcClient"
+)<
   RpcClient,
   {
     /**
@@ -116,7 +118,10 @@ export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
      * @param operation - Operation name
      * @param payload - Request payload
      */
-    readonly call: <R>(operation: string, payload: unknown) => Effect.Effect<R, RpcInfraError>;
+    readonly call: <R>(
+      operation: string,
+      payload: unknown
+    ) => Effect.Effect<R, RpcInfraError>
 
     /**
      * Call with custom options
@@ -125,16 +130,16 @@ export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
       operation: string,
       payload: unknown,
       options?: {
-        timeout?: Duration.DurationInput;
-        skipRetry?: boolean;
-        headers?: Record<string, string>;
-      },
-    ) => Effect.Effect<R, RpcInfraError>;
+        timeout?: Duration.DurationInput
+        skipRetry?: boolean
+        headers?: Record<string, string>
+      }
+    ) => Effect.Effect<R, RpcInfraError>
 
     /**
      * Health check
      */
-    readonly healthCheck: () => Effect.Effect<boolean>;
+    readonly healthCheck: () => Effect.Effect<boolean>
   }
 >() {
   // ===========================================================================
@@ -147,30 +152,30 @@ export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
   static readonly Http = Layer.effect(
     this,
     Effect.gen(function* () {
-      const config = yield* RpcClientConfigTag;
-      const httpClient = yield* HttpClient.HttpClient;
+      const config = yield* RpcClientConfigTag
+      const httpClient = yield* HttpClient.HttpClient
 
       // Build default headers
       const defaultHeaders: Record<string, string> = {
         "Content-Type": "application/json",
-        ...config.headers,
-      };
+        ...config.headers
+      }
 
       // Retry configuration
-      const maxRetries = config.retry?.maxAttempts ?? 0;
+      const maxRetries = config.retry?.maxAttempts ?? 0
 
       const makeRequest = <R>(
         operation: string,
         payload: unknown,
-        customHeaders?: Record<string, string>,
+        customHeaders?: Record<string, string>
       ): Effect.Effect<R, RpcInfraError> =>
         Effect.gen(function* () {
           // Get auth token if provider exists
-          const authHeader: { Authorization?: string } = {};
+          const authHeader: { Authorization?: string } = {}
           if (config.getAuthToken) {
-            const token = yield* config.getAuthToken();
+            const token = yield* config.getAuthToken()
             if (Option.isSome(token)) {
-              authHeader.Authorization = `Bearer ${token.value}`;
+              authHeader.Authorization = `Bearer ${token.value}`
             }
           }
 
@@ -179,23 +184,25 @@ export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
             HttpClientRequest.setHeaders({
               ...defaultHeaders,
               ...authHeader,
-              ...customHeaders,
+              ...customHeaders
             }),
             HttpClientRequest.bodyJson({
               operation,
-              payload,
-            }),
-          );
+              payload
+            })
+          )
 
           // Execute with timeout
-          const response = yield* Effect.flatMap(request, (req) => httpClient.execute(req)).pipe(
+          const response = yield* Effect.flatMap(
+            request,
+            (req) => httpClient.execute(req)
+          ).pipe(
             Effect.timeoutFail({
               duration: Duration.decode(config.timeout ?? "30 seconds"),
-              onTimeout: () =>
-                new RpcInfraError({
-                  message: "Request timeout",
-                  code: "TIMEOUT",
-                }),
+              onTimeout: () => new RpcInfraError({
+                message: "Request timeout",
+                code: "TIMEOUT"
+              })
             }),
             maxRetries > 0 ? Effect.retry({ times: maxRetries }) : (e) => e,
             Effect.catchAll((error) =>
@@ -204,20 +211,20 @@ export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
                 : Effect.fail(
                     new RpcInfraError({
                       message: `RPC call failed: ${error}`,
-                      code: "NETWORK_ERROR",
-                    }),
-                  ),
-            ),
-          );
+                      code: "NETWORK_ERROR"
+                    })
+                  )
+            )
+          )
 
           // Parse response
           if (response.status !== 200) {
             return yield* Effect.fail(
               new RpcInfraError({
                 message: `RPC error: HTTP ${response.status}`,
-                code: "HTTP_ERROR",
-              }),
-            );
+                code: "HTTP_ERROR"
+              })
+            )
           }
 
           const body = yield* response.json.pipe(
@@ -225,62 +232,62 @@ export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
               Effect.fail(
                 new RpcInfraError({
                   message: "Failed to parse RPC response",
-                  code: "PARSE_ERROR",
-                }),
-              ),
-            ),
-          );
+                  code: "PARSE_ERROR"
+                })
+              )
+            )
+          )
 
           // Check for RPC-level error
           if (body && typeof body === "object" && "error" in body) {
-            const errorBody = body as { error?: { message?: string; code?: string } };
+            const errorBody = body as { error?: { message?: string; code?: string } }
             return yield* Effect.fail(
               new RpcInfraError({
                 message: errorBody.error?.message ?? "Unknown RPC error",
-                code: errorBody.error?.code ?? "RPC_ERROR",
-              }),
-            );
+                code: errorBody.error?.code ?? "RPC_ERROR"
+              })
+            )
           }
 
-          return body as R;
-        });
+          return body as R
+        })
 
       return {
-        call: <R>(operation: string, payload: unknown) => makeRequest<R>(operation, payload),
+        call: <R>(operation: string, payload: unknown) =>
+          makeRequest<R>(operation, payload),
 
         callWithOptions: <R>(
           operation: string,
           payload: unknown,
           options?: {
-            timeout?: Duration.DurationInput;
-            skipRetry?: boolean;
-            headers?: Record<string, string>;
-          },
+            timeout?: Duration.DurationInput
+            skipRetry?: boolean
+            headers?: Record<string, string>
+          }
         ) => {
-          const effect = makeRequest<R>(operation, payload, options?.headers);
+          const effect = makeRequest<R>(operation, payload, options?.headers)
           if (options?.timeout) {
             return effect.pipe(
               Effect.timeoutFail({
                 duration: Duration.decode(options.timeout),
-                onTimeout: () =>
-                  new RpcInfraError({
-                    message: "Request timeout",
-                    code: "TIMEOUT",
-                  }),
-              }),
-            );
+                onTimeout: () => new RpcInfraError({
+                  message: "Request timeout",
+                  code: "TIMEOUT"
+                })
+              })
+            )
           }
-          return effect;
+          return effect
         },
 
         healthCheck: () =>
           makeRequest<{ status: string }>("_health", {}).pipe(
             Effect.map((r) => r.status === "ok"),
-            Effect.catchAll(() => Effect.succeed(false)),
-          ),
-      };
-    }),
-  );
+            Effect.catchAll(() => Effect.succeed(false))
+          )
+      }
+    })
+  )
 
   // ===========================================================================
   // Static Test Layer
@@ -289,36 +296,38 @@ export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
   /**
    * Test Layer - Mock client for testing
    */
-  static readonly Test = (mockResponses: Record<string, unknown> = {}) =>
+  static readonly Test = (
+    mockResponses: Record<string, unknown> = {}
+  ) =>
     Layer.succeed(RpcClient, {
       call: <R>(operation: string, _payload: unknown) => {
-        const response = mockResponses[operation];
+        const response = mockResponses[operation]
         if (response !== undefined) {
-          return Effect.succeed(response as R);
+          return Effect.succeed(response as R)
         }
         return Effect.fail(
           new RpcInfraError({
             message: `No mock for ${operation}`,
-            code: "NO_MOCK",
-          }),
-        );
+            code: "NO_MOCK"
+          })
+        )
       },
 
       callWithOptions: <R>(operation: string, _payload: unknown) => {
-        const response = mockResponses[operation];
+        const response = mockResponses[operation]
         if (response !== undefined) {
-          return Effect.succeed(response as R);
+          return Effect.succeed(response as R)
         }
         return Effect.fail(
           new RpcInfraError({
             message: `No mock for ${operation}`,
-            code: "NO_MOCK",
-          }),
-        );
+            code: "NO_MOCK"
+          })
+        )
       },
 
-      healthCheck: () => Effect.succeed(true),
-    });
+      healthCheck: () => Effect.succeed(true)
+    })
 }
 
 // ============================================================================
@@ -347,4 +356,7 @@ export class RpcClient extends Context.Tag("@myorg/infra-rpc/RpcClient")<
  * ```
  */
 export const createRpcClientLayer = (config: RpcClientConfig) =>
-  Layer.provide(RpcClient.Http, Layer.succeed(RpcClientConfigTag, config));
+  Layer.provide(
+    RpcClient.Http,
+    Layer.succeed(RpcClientConfigTag, config)
+  )

@@ -1,4 +1,4 @@
-import { Data } from "effect";
+import { Data } from "effect"
 
 /**
  * User Domain Error Types
@@ -25,9 +25,12 @@ TODO: Customize this file:
  * @module @myorg/data-access-user/server
  */
 
+
+
 // ============================================================================
 // Base Error Type
 // ============================================================================
+
 
 /**
  * Base error type for all User domain errors
@@ -46,7 +49,9 @@ TODO: Customize this file:
  * );
  * ```
  */
-export class UserError extends Data.TaggedError("UserError")<{
+export class UserError extends Data.TaggedError(
+  "UserError"
+)<{
   readonly message: string;
   readonly cause?: unknown;
 }> {}
@@ -54,6 +59,7 @@ export class UserError extends Data.TaggedError("UserError")<{
 // ============================================================================
 // Domain-Specific Error Types
 // ============================================================================
+
 
 /**
  * Error thrown when a User entity is not found
@@ -67,7 +73,9 @@ export class UserError extends Data.TaggedError("UserError")<{
  * }
  * ```
  */
-export class UserNotFoundError extends Data.TaggedError("UserNotFoundError")<{
+export class UserNotFoundError extends Data.TaggedError(
+  "UserNotFoundError"
+)<{
   readonly message: string;
   readonly id: string;
 }> {
@@ -93,7 +101,9 @@ export class UserNotFoundError extends Data.TaggedError("UserNotFoundError")<{
  * }
  * ```
  */
-export class UserValidationError extends Data.TaggedError("UserValidationError")<{
+export class UserValidationError extends Data.TaggedError(
+  "UserValidationError"
+)<{
   readonly message: string;
   readonly errors: readonly string[];
 }> {
@@ -120,7 +130,9 @@ export class UserValidationError extends Data.TaggedError("UserValidationError")
  * }
  * ```
  */
-export class UserConflictError extends Data.TaggedError("UserConflictError")<{
+export class UserConflictError extends Data.TaggedError(
+  "UserConflictError"
+)<{
   readonly message: string;
   readonly conflictingId?: string;
 }> {
@@ -140,7 +152,9 @@ export class UserConflictError extends Data.TaggedError("UserConflictError")<{
  * Configuration error. Occurs when service is misconfigured or required
  * configuration is missing.
  */
-export class UserConfigError extends Data.TaggedError("UserConfigError")<{
+export class UserConfigError extends Data.TaggedError(
+  "UserConfigError"
+)<{
   readonly message: string;
   readonly property: string;
 }> {
@@ -157,7 +171,9 @@ export class UserConfigError extends Data.TaggedError("UserConfigError")<{
  *
  * Server error (503). Occurs when unable to connect to database or other services.
  */
-export class UserConnectionError extends Data.TaggedError("UserConnectionError")<{
+export class UserConnectionError extends Data.TaggedError(
+  "UserConnectionError"
+)<{
   readonly message: string;
   readonly target: string;
   readonly cause: unknown;
@@ -176,7 +192,9 @@ export class UserConnectionError extends Data.TaggedError("UserConnectionError")
  *
  * Server error (504). Occurs when database query or external call takes too long.
  */
-export class UserTimeoutError extends Data.TaggedError("UserTimeoutError")<{
+export class UserTimeoutError extends Data.TaggedError(
+  "UserTimeoutError"
+)<{
   readonly message: string;
   readonly operation: string;
   readonly timeoutMs: number;
@@ -207,7 +225,9 @@ export class UserTimeoutError extends Data.TaggedError("UserTimeoutError")<{
  * }
  * ```
  */
-export class UserInternalError extends Data.TaggedError("UserInternalError")<{
+export class UserInternalError extends Data.TaggedError(
+  "UserInternalError"
+)<{
   readonly message: string;
   readonly cause: unknown;
 }> {
@@ -222,6 +242,7 @@ export class UserInternalError extends Data.TaggedError("UserInternalError")<{
 // ============================================================================
 // Error Type Union
 // ============================================================================
+
 
 /**
  * Union of all User repository errors
@@ -252,7 +273,10 @@ export type UserRepositoryError =
 // Type Guards (using _tag property)
 // ============================================================================
 
-export function isUserNotFoundError(error: unknown) {
+
+export function isUserNotFoundError(
+  error: unknown
+) {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -261,7 +285,9 @@ export function isUserNotFoundError(error: unknown) {
   );
 }
 
-export function isUserValidationError(error: unknown) {
+export function isUserValidationError(
+  error: unknown
+) {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -270,7 +296,9 @@ export function isUserValidationError(error: unknown) {
   );
 }
 
-export function isUserConflictError(error: unknown) {
+export function isUserConflictError(
+  error: unknown
+) {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -279,7 +307,9 @@ export function isUserConflictError(error: unknown) {
   );
 }
 
-export function isUserConfigError(error: unknown) {
+export function isUserConfigError(
+  error: unknown
+) {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -288,7 +318,9 @@ export function isUserConfigError(error: unknown) {
   );
 }
 
-export function isUserConnectionError(error: unknown) {
+export function isUserConnectionError(
+  error: unknown
+) {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -297,7 +329,9 @@ export function isUserConnectionError(error: unknown) {
   );
 }
 
-export function isUserTimeoutError(error: unknown) {
+export function isUserTimeoutError(
+  error: unknown
+) {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -306,7 +340,9 @@ export function isUserTimeoutError(error: unknown) {
   );
 }
 
-export function isUserInternalError(error: unknown) {
+export function isUserInternalError(
+  error: unknown
+) {
   return (
     typeof error === "object" &&
     error !== null &&

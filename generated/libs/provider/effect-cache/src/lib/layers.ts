@@ -1,8 +1,8 @@
-import { env } from "@myorg/env";
-import { Effect, Layer, Redacted } from "effect";
-import { EffectCacheInternalError } from "./errors";
-import { EffectCache } from "./service";
-import type { EffectCacheConfig, Resource } from "./types";
+import { EffectCacheInternalError } from "./errors"
+import { EffectCache } from "./service"
+import { env } from "@myorg/env"
+import { Effect, Layer, Redacted } from "effect"
+import type { EffectCacheConfig, Resource } from "./types"
 
 /**
  * effect-cache - Layer Implementations
@@ -17,9 +17,10 @@ import type { EffectCacheConfig, Resource } from "./types";
  * 4. Layer.scoped - Needs cleanup/release
  */
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 // In-Memory Store for Baseline Implementation
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 //
 // Provides a working baseline implementation using in-memory storage.
 // Replace with actual SDK integration as needed.
@@ -30,7 +31,7 @@ import type { EffectCacheConfig, Resource } from "./types";
 // - Demonstrates correct Effect patterns
 // - Easy to replace with real SDK
 //
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
 /**
  * Create in-memory store for baseline implementation
@@ -63,9 +64,7 @@ function createInMemoryStore() {
       Effect.gen(function* () {
         const item = store.get(id);
         if (!item) {
-          return yield* Effect.fail(
-            new EffectCacheInternalError({ message: `Item ${id} not found` }),
-          );
+          return yield* Effect.fail(new EffectCacheInternalError({ message: `Item ${id} not found` }));
         }
         return item;
       }),
@@ -88,15 +87,13 @@ function createInMemoryStore() {
       Effect.gen(function* () {
         const item = store.get(id);
         if (!item) {
-          return yield* Effect.fail(
-            new EffectCacheInternalError({ message: `Item ${id} not found` }),
-          );
+          return yield* Effect.fail(new EffectCacheInternalError({ message: `Item ${id} not found` }));
         }
         const updated: Resource = {
           ...item,
           ...data,
-          id, // Preserve ID
-          createdAt: item.createdAt, // Preserve createdAt
+          id,  // Preserve ID
+          createdAt: item.createdAt,  // Preserve createdAt
           updatedAt: new Date(),
         };
         store.set(id, updated);
@@ -107,17 +104,15 @@ function createInMemoryStore() {
       Effect.gen(function* () {
         const existed = store.delete(id);
         if (!existed) {
-          return yield* Effect.fail(
-            new EffectCacheInternalError({ message: `Item ${id} not found` }),
-          );
+          return yield* Effect.fail(new EffectCacheInternalError({ message: `Item ${id} not found` }));
         }
       }),
   };
 }
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 // Resource Management
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 //
 // This template uses Layer.scoped + Effect.addFinalizer for cleanup.
 //
@@ -129,11 +124,11 @@ function createInMemoryStore() {
 //
 // See EFFECT_PATTERNS.md for complete examples
 //
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 // Runtime Preservation (for Event-Driven SDKs)
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 //
 // If your SDK uses callbacks (EventEmitter, WebSocket, streams), you MUST
 // preserve the Effect runtime. See EFFECT_PATTERNS.md lines 1779+ for complete guide.
@@ -176,7 +171,7 @@ function createInMemoryStore() {
 //   })
 // );
 //
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
 /**
  * Live Layer - Production environment
@@ -201,32 +196,30 @@ export const EffectCacheLive = Layer.effect(
   Effect.sync(() => {
     const config: EffectCacheConfig = {
       apiKey: Redacted.value(env.EFFECT_CACHE_API_KEY) ?? "baseline_api_key",
-      timeout: env.EFFECT_CACHE_TIMEOUT ?? 20000,
-    };
+      timeout: env.EFFECT_CACHE_TIMEOUT ?? 20000
+    }
 
     // Baseline: In-memory store (replace with SDK integration)
-    const store = createInMemoryStore();
+    const store = createInMemoryStore()
 
     // Return service implementation directly (Effect 3.0+ pattern)
     // Operations instrumented with Effect.withSpan for distributed tracing
     return {
       config,
-      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(
-        Effect.withSpan("EffectCache.healthCheck"),
-      ),
+      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("EffectCache.healthCheck")),
       // TODO: Replace store operations with SDK calls
       list: (params) => store.list(params).pipe(Effect.withSpan("EffectCache.list")),
       get: (id) => store.get(id).pipe(Effect.withSpan("EffectCache.get")),
       create: (data) => store.create(data).pipe(Effect.withSpan("EffectCache.create")),
       update: (id, data) => store.update(id, data).pipe(Effect.withSpan("EffectCache.update")),
-      delete: (id) => store.delete(id).pipe(Effect.withSpan("EffectCache.delete")),
-    };
-  }),
-);
+      delete: (id) => store.delete(id).pipe(Effect.withSpan("EffectCache.delete"))
+    }
+  })
+)
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 // Alternative: Layer.scoped (for SDKs requiring cleanup)
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 //
 // Use this pattern if your SDK has cleanup methods (close, disconnect, end).
 // Examples: Database pools, WebSocket connections, file handles
@@ -262,7 +255,7 @@ export const EffectCacheLive = Layer.effect(
 //   }),
 // );
 //
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
 /**
  * Test Layer - Testing environment
@@ -270,85 +263,82 @@ export const EffectCacheLive = Layer.effect(
  * Uses Layer.sync for deterministic testing with in-memory store.
  * Each Layer.fresh creates isolated state for test independence.
  */
-export const EffectCacheTest = Layer.sync(EffectCache, () => {
-  // In-memory store for test isolation
-  const store = new Map<string, Resource>();
-  let idCounter = 0;
+export const EffectCacheTest = Layer.sync(
+  EffectCache,
+  () => {
+    // In-memory store for test isolation
+    const store = new Map<string, Resource>();
+    let idCounter = 0;
 
-  return {
-    config: { apiKey: "test_key", timeout: 1000 },
-    healthCheck: Effect.succeed({ status: "healthy" as const }),
+    return {
+      config: { apiKey: "test_key", timeout: 1000 },
+      healthCheck: Effect.succeed({ status: "healthy" as const }),
 
-    list: (params) =>
-      Effect.sync(() => {
-        const page = params?.page ?? 1;
-        const limit = params?.limit ?? 10;
-        const items = Array.from(store.values());
-        const start = (page - 1) * limit;
-        const end = start + limit;
-        return {
-          data: items.slice(start, end),
-          page,
-          limit,
-          total: items.length,
-        };
-      }),
+      list: (params) =>
+        Effect.sync(() => {
+          const page = params?.page ?? 1;
+          const limit = params?.limit ?? 10;
+          const items = Array.from(store.values());
+          const start = (page - 1) * limit;
+          const end = start + limit;
+          return {
+            data: items.slice(start, end),
+            page,
+            limit,
+            total: items.length,
+          };
+        }),
 
-    get: (id) =>
-      Effect.gen(function* () {
-        const item = store.get(id);
-        if (!item) {
-          return yield* Effect.fail(
-            new EffectCacheInternalError({ message: `Item ${id} not found` }),
-          );
-        }
-        return item;
-      }),
+      get: (id) =>
+        Effect.gen(function* () {
+          const item = store.get(id);
+          if (!item) {
+            return yield* Effect.fail(new EffectCacheInternalError({ message: `Item ${id} not found` }));
+          }
+          return item;
+        }),
 
-    create: (data) =>
-      Effect.sync(() => {
-        const id = `test-${++idCounter}`;
-        const now = new Date();
-        const item: Resource = {
-          id,
-          ...data,
-          createdAt: now,
-          updatedAt: now,
-        };
-        store.set(id, item);
-        return item;
-      }),
+      create: (data) =>
+        Effect.sync(() => {
+          const id = `test-${++idCounter}`;
+          const now = new Date();
+          const item: Resource = {
+            id,
+            ...data,
+            createdAt: now,
+            updatedAt: now,
+          };
+          store.set(id, item);
+          return item;
+        }),
 
-    update: (id, data) =>
-      Effect.gen(function* () {
-        const item = store.get(id);
-        if (!item) {
-          return yield* Effect.fail(
-            new EffectCacheInternalError({ message: `Item ${id} not found` }),
-          );
-        }
-        const updated: Resource = {
-          ...item,
-          ...data,
-          id,
-          createdAt: item.createdAt,
-          updatedAt: new Date(),
-        };
-        store.set(id, updated);
-        return updated;
-      }),
+      update: (id, data) =>
+        Effect.gen(function* () {
+          const item = store.get(id);
+          if (!item) {
+            return yield* Effect.fail(new EffectCacheInternalError({ message: `Item ${id} not found` }));
+          }
+          const updated: Resource = {
+            ...item,
+            ...data,
+            id,
+            createdAt: item.createdAt,
+            updatedAt: new Date(),
+          };
+          store.set(id, updated);
+          return updated;
+        }),
 
-    delete: (id) =>
-      Effect.gen(function* () {
-        const existed = store.delete(id);
-        if (!existed) {
-          return yield* Effect.fail(
-            new EffectCacheInternalError({ message: `Item ${id} not found` }),
-          );
-        }
-      }),
-  };
-});
+      delete: (id) =>
+        Effect.gen(function* () {
+          const existed = store.delete(id);
+          if (!existed) {
+            return yield* Effect.fail(new EffectCacheInternalError({ message: `Item ${id} not found` }));
+          }
+        }),
+    };
+  },
+);
 
 /**
  * Dev Layer - Development environment
@@ -372,35 +362,13 @@ export const EffectCacheDev = Layer.effect(
     // Return service implementation with distributed tracing
     return {
       config,
-      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(
-        Effect.withSpan("EffectCache.healthCheck"),
-      ),
+      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("EffectCache.healthCheck")),
       // TODO: Replace store operations with SDK calls
-      list: (params) =>
-        store
-          .list(params)
-          .pipe(Effect.tap(() => Effect.logDebug("[EffectCache] list called")))
-          .pipe(Effect.withSpan("EffectCache.list")),
-      get: (id) =>
-        store
-          .get(id)
-          .pipe(Effect.tap(() => Effect.logDebug(`[EffectCache] get called: ${id}`)))
-          .pipe(Effect.withSpan("EffectCache.get")),
-      create: (data) =>
-        store
-          .create(data)
-          .pipe(Effect.tap(() => Effect.logDebug("[EffectCache] create called")))
-          .pipe(Effect.withSpan("EffectCache.create")),
-      update: (id, data) =>
-        store
-          .update(id, data)
-          .pipe(Effect.tap(() => Effect.logDebug(`[EffectCache] update called: ${id}`)))
-          .pipe(Effect.withSpan("EffectCache.update")),
-      delete: (id) =>
-        store
-          .delete(id)
-          .pipe(Effect.tap(() => Effect.logDebug(`[EffectCache] delete called: ${id}`)))
-          .pipe(Effect.withSpan("EffectCache.delete")),
+      list: (params) => store.list(params).pipe(Effect.tap(() => Effect.logDebug("[EffectCache] list called"))).pipe(Effect.withSpan("EffectCache.list")),
+      get: (id) => store.get(id).pipe(Effect.tap(() => Effect.logDebug(`[EffectCache] get called: ${id}`))).pipe(Effect.withSpan("EffectCache.get")),
+      create: (data) => store.create(data).pipe(Effect.tap(() => Effect.logDebug("[EffectCache] create called"))).pipe(Effect.withSpan("EffectCache.create")),
+      update: (id, data) => store.update(id, data).pipe(Effect.tap(() => Effect.logDebug(`[EffectCache] update called: ${id}`))).pipe(Effect.withSpan("EffectCache.update")),
+      delete: (id) => store.delete(id).pipe(Effect.tap(() => Effect.logDebug(`[EffectCache] delete called: ${id}`))).pipe(Effect.withSpan("EffectCache.delete")),
     };
   }),
 );
@@ -454,9 +422,9 @@ export function makeEffectCacheLayer(config: EffectCacheConfig) {
               // TODO: Add SDK cleanup logic when integrating
               // client.close()
               // client.disconnect()
-            }),
-          ),
-        ),
+            })
+          )
+        )
       );
 
       // Return service implementation directly (Effect 3.0+ pattern)

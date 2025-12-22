@@ -1,4 +1,4 @@
-import { MetricsService } from "../service/service";
+import { MetricsService } from "../service/service"
 
 /**
  * Metrics OpenTelemetry Layer
@@ -26,35 +26,35 @@ export interface OtelMetricsConfig {
   /**
    * Service name for OTEL resource
    */
-  readonly serviceName: string;
+  readonly serviceName: string
 
   /**
    * Service version
    */
-  readonly serviceVersion?: string;
+  readonly serviceVersion?: string
 
   /**
    * Environment (production, staging, development)
    */
-  readonly environment?: string;
+  readonly environment?: string
 
   /**
    * OTEL collector endpoint for metrics
    * @default "http://localhost:4318"
    */
-  readonly collectorEndpoint?: string;
+  readonly collectorEndpoint?: string
 
   /**
    * Export interval in milliseconds
    * @default 60000 (1 minute)
    */
-  readonly exportIntervalMs?: number;
+  readonly exportIntervalMs?: number
 
   /**
    * Metric prefix for all metrics
    * @example "myapp_" results in "myapp_http_requests_total"
    */
-  readonly metricPrefix?: string;
+  readonly metricPrefix?: string
 }
 
 // ============================================================================
@@ -84,7 +84,7 @@ export interface OtelMetricsConfig {
  */
 export const makeMetricsOtelLayer = (_config: OtelMetricsConfig) =>
   // Effect's Metric automatically integrates with OTEL when SDK is present
-  MetricsService.Live;
+  MetricsService.Live
 
 // ============================================================================
 // Example: Full OTEL Metrics Setup
@@ -201,8 +201,8 @@ export const HistogramBoundaries = {
    * Batch size
    * For tracking batch processing
    */
-  batchSize: [1, 5, 10, 25, 50, 100, 250, 500],
-};
+  batchSize: [1, 5, 10, 25, 50, 100, 250, 500]
+}
 
 /**
  * Standard metric names following OpenTelemetry conventions
@@ -226,5 +226,5 @@ export const StandardMetricNames = {
   // Cache metrics
   cacheHits: "cache_hits_total",
   cacheMisses: "cache_misses_total",
-  cacheSize: "cache_size",
-};
+  cacheSize: "cache_size"
+}

@@ -1,6 +1,6 @@
-import { DatabaseService } from "@myorg/infra-database";
-import { Layer } from "effect";
-import { UserRepository } from "../repository";
+import { UserRepository } from "../repository"
+import { DatabaseService } from "@myorg/infra-database"
+import { Layer } from "effect"
 
 /**
  * User Data Access Layers
@@ -12,9 +12,12 @@ import { UserRepository } from "../repository";
  * @module @myorg/data-access-user/server
  */
 
+
+
 // ============================================================================
 // Layer Compositions
 // ============================================================================
+
 
 /**
  * User Repository Live Layer
@@ -37,7 +40,9 @@ export const UserRepositoryLive = UserRepository.Live;
  * Fully composed layer for production use.
  * Includes DatabaseService.Live dependency.
  */
-export const UserRepositoryLayer = UserRepository.Live.pipe(Layer.provide(DatabaseService.Live));
+export const UserRepositoryLayer = UserRepository.Live.pipe(
+  Layer.provide(DatabaseService.Live)
+);
 
 /**
  * User Repository Test Layer
@@ -59,5 +64,5 @@ export const UserRepositoryLayer = UserRepository.Live.pipe(Layer.provide(Databa
  * ```
  */
 export const UserRepositoryTestLayer = UserRepository.Live.pipe(
-  Layer.provide(DatabaseService.Test),
+  Layer.provide(DatabaseService.Test)
 );

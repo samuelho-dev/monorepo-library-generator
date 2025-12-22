@@ -1,5 +1,5 @@
-import type { Layer } from "effect";
-import { Effect } from "effect";
+import { Effect } from "effect"
+import type { Layer } from "effect"
 
 /**
  * Rpc Router
@@ -53,19 +53,19 @@ export interface RouterConfig {
    * Base path for RPC endpoints
    * @default "/rpc"
    */
-  readonly basePath?: string;
+  readonly basePath?: string
 
   /**
    * Enable health check endpoint
    * @default true
    */
-  readonly healthCheck?: boolean;
+  readonly healthCheck?: boolean
 
   /**
    * Enable introspection endpoint (lists available operations)
    * @default false (production should be false)
    */
-  readonly introspection?: boolean;
+  readonly introspection?: boolean
 }
 
 /**
@@ -74,8 +74,8 @@ export interface RouterConfig {
 export const defaultRouterConfig: Required<RouterConfig> = {
   basePath: "/rpc",
   healthCheck: true,
-  introspection: false,
-};
+  introspection: false
+}
 
 // ============================================================================
 // HTTP Integration
@@ -117,8 +117,9 @@ export const defaultRouterConfig: Required<RouterConfig> = {
  *
  * This type helps ensure all required layers are provided.
  */
-export type RpcRequiredLayers<R> =
-  R extends Layer.Layer<infer _A, infer _E, infer Deps> ? Deps : never;
+export type RpcRequiredLayers<R> = R extends Layer.Layer<infer _A, infer _E, infer Deps>
+  ? Deps
+  : never
 
 // ============================================================================
 // App Router Integration (Next.js)
@@ -168,10 +169,7 @@ export type RpcRequiredLayers<R> =
 /**
  * RPC handler map type
  */
-export type RpcHandlerMap = Record<
-  string,
-  (payload: unknown) => Effect.Effect<unknown, unknown, unknown>
->;
+export type RpcHandlerMap<R = unknown> = Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>
 
 /**
  * Combine multiple handler maps into one
@@ -185,8 +183,15 @@ export type RpcHandlerMap = Record<
  * );
  * ```
  */
-export const combineHandlers = <T extends RpcHandlerMap>(...handlers: ReadonlyArray<T>): T =>
-  Object.assign({}, ...handlers) as T;
+export const combineHandlers = <R>(
+  ...handlers: ReadonlyArray<RpcHandlerMap<R>>
+) => {
+  const result: RpcHandlerMap<R> = {}
+  for (const handler of handlers) {
+    Object.assign(result, handler)
+  }
+  return result
+}
 
 /**
  * Options for creating a Next.js RPC handler
@@ -195,22 +200,22 @@ export interface NextRpcHandlerOptions<R, E> {
   /**
    * RPC handler map
    */
-  readonly handlers: RpcHandlerMap;
+  readonly handlers: RpcHandlerMap<R>
 
   /**
    * Combined layer providing all dependencies
    */
-  readonly layer: Layer.Layer<R, E, never>;
+  readonly layer: Layer.Layer<R, E, never>
 
   /**
    * Custom error handler
    */
-  readonly onError?: (error: unknown) => Response;
+  readonly onError?: (error: unknown) => Response
 
   /**
    * Router configuration
    */
-  readonly config?: RouterConfig;
+  readonly config?: RouterConfig
 }
 
 /**
@@ -234,56 +239,56 @@ export interface NextRpcHandlerOptions<R, E> {
  * Next.js RPC handler result
  */
 export interface NextRpcHandler {
-  readonly POST: (request: Request) => Promise<Response>;
-  readonly GET: () => Response;
+  readonly POST: (request: Request) => Promise<Response>
+  readonly GET: () => Response
 }
 
 export const createNextRpcHandler = <R, E>(
-  options: NextRpcHandlerOptions<R, E>,
-): NextRpcHandler => {
-  const config = { ...defaultRouterConfig, ...options.config };
+  options: NextRpcHandlerOptions<R, E>
+) => {
+  const config = { ...defaultRouterConfig, ...options.config }
 
   const execute = async (request: Request) => {
     try {
-      const body = (await request.json()) as { operation?: string; payload?: unknown };
-      const operation = body.operation;
-      const payload = body.payload;
+      const body = await request.json() as { operation?: string; payload?: unknown }
+      const operation = body.operation
+      const payload = body.payload
 
       if (!operation || typeof operation !== "string") {
         return Response.json(
           { _tag: "RpcInfraError", message: "Missing operation", code: "INVALID_REQUEST" },
-          { status: 400 },
-        );
+          { status: 400 }
+        )
       }
 
-      const handler = options.handlers[operation];
+      const handler = options.handlers[operation]
       if (!handler) {
         return Response.json(
           { _tag: "RpcInfraError", message: `Unknown operation: ${operation}`, code: "NOT_FOUND" },
-          { status: 404 },
-        );
+          { status: 404 }
+        )
       }
 
       // Build runnable effect by providing the layer
       const runnableEffect = Effect.provide(
-        handler(payload) as Effect.Effect<unknown, unknown, R>,
-        options.layer,
-      );
+        handler(payload),
+        options.layer
+      )
 
-      const result = await Effect.runPromise(runnableEffect);
-      return Response.json(result);
+      const result = await Effect.runPromise(runnableEffect)
+      return Response.json(result)
     } catch (error) {
       if (options.onError) {
-        return options.onError(error);
+        return options.onError(error)
       }
 
-      const message = error instanceof Error ? error.message : "Internal error";
+      const message = error instanceof Error ? error.message : "Internal error"
       return Response.json(
         { _tag: "RpcInfraError", message, code: "INTERNAL_ERROR" },
-        { status: 500 },
-      );
+        { status: 500 }
+      )
     }
-  };
+  }
 
   return {
     POST: execute,
@@ -293,13 +298,13 @@ export const createNextRpcHandler = <R, E>(
         return Response.json({
           status: "ok",
           basePath: config.basePath,
-          timestamp: new Date().toISOString(),
-        });
+          timestamp: new Date().toISOString()
+        })
       }
-      return Response.json({ message: "RPC endpoint - use POST" });
-    },
-  };
-};
+      return Response.json({ message: "RPC endpoint - use POST" })
+    }
+  }
+}
 
 // ============================================================================
 // Server Actions Integration
@@ -342,13 +347,13 @@ export const createNextRpcHandler = <R, E>(
  */
 export const createServerAction = <Payload, Success, Failure, R>(
   handler: (payload: Payload) => Effect.Effect<Success, Failure, R>,
-  layer: Layer.Layer<R, never, never>,
+  layer: Layer.Layer<R, never, never>
 ): ((payload: Payload) => Promise<Success>) => {
   return (payload: Payload): Promise<Success> => {
-    const program = handler(payload).pipe(Effect.provide(layer));
-    return Effect.runPromise(program);
-  };
-};
+    const program = handler(payload).pipe(Effect.provide(layer))
+    return Effect.runPromise(program)
+  }
+}
 
 /**
  * Create a Server Action that returns Exit instead of throwing
@@ -373,13 +378,13 @@ export const createServerAction = <Payload, Success, Failure, R>(
  */
 export const createServerActionSafe = <Payload, Success, Failure, R>(
   handler: (payload: Payload) => Effect.Effect<Success, Failure, R>,
-  layer: Layer.Layer<R, never, never>,
+  layer: Layer.Layer<R, never, never>
 ) => {
   return (payload: Payload) => {
-    const program = handler(payload).pipe(Effect.provide(layer));
-    return Effect.runPromiseExit(program);
-  };
-};
+    const program = handler(payload).pipe(Effect.provide(layer))
+    return Effect.runPromiseExit(program)
+  }
+}
 
 // ============================================================================
 // Health Check
@@ -389,17 +394,14 @@ export const createServerActionSafe = <Payload, Success, Failure, R>(
  * Standard health check response
  */
 export interface HealthCheckResponse {
-  readonly status: "ok" | "degraded" | "error";
-  readonly timestamp: string;
-  readonly version?: string;
-  readonly checks?: Record<
-    string,
-    {
-      status: "ok" | "error";
-      latencyMs?: number;
-      message?: string;
-    }
-  >;
+  readonly status: "ok" | "degraded" | "error"
+  readonly timestamp: string
+  readonly version?: string
+  readonly checks?: Record<string, {
+    status: "ok" | "error"
+    latencyMs?: number
+    message?: string
+  }>
 }
 
 /**
@@ -417,34 +419,29 @@ export interface HealthCheckResponse {
  * ```
  */
 export const healthCheck = (options?: {
-  version?: string;
-  checks?: Record<string, () => Effect.Effect<"ok", unknown>>;
+  version?: string
+  checks?: Record<string, () => Effect.Effect<"ok", unknown>>
 }): Effect.Effect<HealthCheckResponse> =>
   Effect.gen(function* () {
-    const timestamp = new Date().toISOString();
-    let status: "ok" | "degraded" | "error" = "ok";
+    const timestamp = new Date().toISOString()
+    let status: "ok" | "degraded" | "error" = "ok"
 
-    const checksResult: Record<
-      string,
-      { status: "ok" | "error"; latencyMs?: number; message?: string }
-    > = {};
+    const checksResult: Record<string, { status: "ok" | "error"; latencyMs?: number; message?: string }> = {}
 
     if (options?.checks) {
       for (const [name, check] of Object.entries(options.checks)) {
-        const start = Date.now();
+        const start = Date.now()
         const result = yield* check().pipe(
           Effect.map(() => ({ status: "ok" as const, latencyMs: Date.now() - start })),
-          Effect.catchAll((e) =>
-            Effect.succeed({
-              status: "error" as const,
-              latencyMs: Date.now() - start,
-              message: e instanceof Error ? e.message : "Check failed",
-            }),
-          ),
-        );
-        checksResult[name] = result;
+          Effect.catchAll((e) => Effect.succeed({
+            status: "error" as const,
+            latencyMs: Date.now() - start,
+            message: e instanceof Error ? e.message : "Check failed"
+          }))
+        )
+        checksResult[name] = result
         if (result.status === "error") {
-          status = "degraded";
+          status = "degraded"
         }
       }
     }
@@ -452,22 +449,22 @@ export const healthCheck = (options?: {
     // Build response with only defined properties (exactOptionalPropertyTypes)
     const response: HealthCheckResponse = {
       status,
-      timestamp,
-    };
+      timestamp
+    }
 
     if (options?.version !== undefined) {
-      (response as { version: string }).version = options.version;
+      (response as { version: string }).version = options.version
     }
 
     if (Object.keys(checksResult).length > 0) {
-      (response as { checks: typeof checksResult }).checks = checksResult;
+      (response as { checks: typeof checksResult }).checks = checksResult
     }
 
-    return response;
-  });
+    return response
+  })
 
 /**
  * Alias for healthCheck
  * @deprecated Use healthCheck instead
  */
-export const createHealthCheck = healthCheck;
+export const createHealthCheck = healthCheck

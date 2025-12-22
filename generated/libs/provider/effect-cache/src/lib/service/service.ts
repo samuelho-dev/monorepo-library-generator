@@ -1,13 +1,7 @@
-import { Context, Effect, Layer, Redacted } from "effect";
-import type { EffectCacheServiceError } from "../errors";
-import { EffectCacheNotFoundError } from "../errors";
-import type {
-  EffectCacheConfig,
-  HealthCheckResult,
-  ListParams,
-  PaginatedResult,
-  Resource,
-} from "../types";
+import { EffectCacheNotFoundError } from "../errors"
+import { Context, Effect, Layer, Redacted } from "effect"
+import type { EffectCacheServiceError } from "../errors"
+import type { EffectCacheConfig, HealthCheckResult, ListParams, PaginatedResult, Resource } from "../types"
 
 /**
  * EffectCache Service Interface
@@ -26,9 +20,13 @@ Bundle optimization:
  * @module @myorg/provider-effect-cache/service
  */
 
+
+
+
 // ============================================================================
 // Service Interface
 // ============================================================================
+
 
 /**
  * EffectCache Service Interface
@@ -50,25 +48,30 @@ export interface EffectCacheServiceInterface {
   /**
    * Health check - verifies service connectivity
    */
-  readonly healthCheck: Effect.Effect<HealthCheckResult, EffectCacheServiceError>;
+  readonly healthCheck: Effect.Effect<
+    HealthCheckResult,
+    EffectCacheServiceError
+  >;
 
   /**
    * List resources with pagination support
    */
   readonly list: (
-    params?: ListParams,
+    params?: ListParams
   ) => Effect.Effect<PaginatedResult<Resource>, EffectCacheServiceError>;
 
   /**
    * Get resource by ID
    */
-  readonly get: (id: string) => Effect.Effect<Resource, EffectCacheServiceError>;
+  readonly get: (
+    id: string
+  ) => Effect.Effect<Resource, EffectCacheServiceError>;
 
   /**
    * Create new resource
    */
   readonly create: (
-    data: Omit<Resource, "id" | "createdAt" | "updatedAt">,
+    data: Omit<Resource, "id" | "createdAt" | "updatedAt">
   ) => Effect.Effect<Resource, EffectCacheServiceError>;
 
   /**
@@ -76,13 +79,15 @@ export interface EffectCacheServiceInterface {
    */
   readonly update: (
     id: string,
-    data: Partial<Omit<Resource, "id" | "createdAt" | "updatedAt">>,
+    data: Partial<Omit<Resource, "id" | "createdAt" | "updatedAt">>
   ) => Effect.Effect<Resource, EffectCacheServiceError>;
 
   /**
    * Delete resource
    */
-  readonly delete: (id: string) => Effect.Effect<void, EffectCacheServiceError>;
+  readonly delete: (
+    id: string
+  ) => Effect.Effect<void, EffectCacheServiceError>;
 
   // ==========================================================================
   // TODO: Stream-Based Operations for Large-Scale API Interactions
@@ -253,6 +258,7 @@ export interface EffectCacheServiceInterface {
 // Context.Tag
 // ============================================================================
 
+
 /**
  * EffectCache Service Tag
  *
@@ -342,7 +348,7 @@ export class EffectCache extends Context.Tag("EffectCache")<
                   message: `Resource ${id} not found`,
                   resourceId: id,
                   resourceType: "Resource",
-                }),
+                })
               );
             }
             return item;
@@ -371,7 +377,7 @@ export class EffectCache extends Context.Tag("EffectCache")<
                   message: `Resource ${id} not found`,
                   resourceId: id,
                   resourceType: "Resource",
-                }),
+                })
               );
             }
             const updated: Resource = {
@@ -394,12 +400,12 @@ export class EffectCache extends Context.Tag("EffectCache")<
                   message: `Resource ${id} not found`,
                   resourceId: id,
                   resourceType: "Resource",
-                }),
+                })
               );
             }
           }),
       };
-    }),
+    })
   );
 
   /**
@@ -412,105 +418,108 @@ export class EffectCache extends Context.Tag("EffectCache")<
    * Customize via Layer.succeed(EffectCache, \{ ...your mock implementations \})
    * for specific test scenarios.
    */
-  static readonly Test = Layer.sync(EffectCache, () => {
-    // In-memory store for test isolation
-    const store = new Map<string, Resource>();
-    let idCounter = 0;
+  static readonly Test = Layer.sync(
+    EffectCache,
+    () => {
+      // In-memory store for test isolation
+      const store = new Map<string, Resource>();
+      let idCounter = 0;
 
-    return {
-      // Configuration with test values
-      config: { apiKey: "test-key", timeout: 1000 },
+      return {
+        // Configuration with test values
+        config: { apiKey: "test-key", timeout: 1000 },
 
-      // Health check returns success
-      healthCheck: Effect.succeed({ status: "healthy" as const }),
+        // Health check returns success
+        healthCheck: Effect.succeed({ status: "healthy" as const }),
 
-      // List with pagination
-      list: (params) =>
-        Effect.sync(() => {
-          const page = params?.page ?? 1;
-          const limit = params?.limit ?? 10;
-          const items = Array.from(store.values());
-          const start = (page - 1) * limit;
-          const end = start + limit;
-          return {
-            data: items.slice(start, end),
-            page,
-            limit,
-            total: items.length,
-          };
-        }),
+        // List with pagination
+        list: (params) =>
+          Effect.sync(() => {
+            const page = params?.page ?? 1;
+            const limit = params?.limit ?? 10;
+            const items = Array.from(store.values());
+            const start = (page - 1) * limit;
+            const end = start + limit;
+            return {
+              data: items.slice(start, end),
+              page,
+              limit,
+              total: items.length,
+            };
+          }),
 
-      // Get by ID with proper error handling
-      get: (id) =>
-        Effect.gen(function* () {
-          const item = store.get(id);
-          if (!item) {
-            return yield* Effect.fail(
-              new EffectCacheNotFoundError({
-                message: `Resource ${id} not found`,
-                resourceId: id,
-                resourceType: "Resource",
-              }),
-            );
-          }
-          return item;
-        }),
+        // Get by ID with proper error handling
+        get: (id) =>
+          Effect.gen(function* () {
+            const item = store.get(id);
+            if (!item) {
+              return yield* Effect.fail(
+                new EffectCacheNotFoundError({
+                  message: `Resource ${id} not found`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+            return item;
+          }),
 
-      // Create with generated ID
-      create: (data) =>
-        Effect.sync(() => {
-          const id = `test-${++idCounter}`;
-          const now = new Date();
-          const item: Resource = {
-            id,
-            ...data,
-            createdAt: now,
-            updatedAt: now,
-          };
-          store.set(id, item);
-          return item;
-        }),
+        // Create with generated ID
+        create: (data) =>
+          Effect.sync(() => {
+            const id = `test-${++idCounter}`;
+            const now = new Date();
+            const item: Resource = {
+              id,
+              ...data,
+              createdAt: now,
+              updatedAt: now,
+            };
+            store.set(id, item);
+            return item;
+          }),
 
-      // Update existing resource
-      update: (id, data) =>
-        Effect.gen(function* () {
-          const item = store.get(id);
-          if (!item) {
-            return yield* Effect.fail(
-              new EffectCacheNotFoundError({
-                message: `Resource ${id} not found`,
-                resourceId: id,
-                resourceType: "Resource",
-              }),
-            );
-          }
-          const updated: Resource = {
-            ...item,
-            ...data,
-            id,
-            createdAt: item.createdAt,
-            updatedAt: new Date(),
-          };
-          store.set(id, updated);
-          return updated;
-        }),
+        // Update existing resource
+        update: (id, data) =>
+          Effect.gen(function* () {
+            const item = store.get(id);
+            if (!item) {
+              return yield* Effect.fail(
+                new EffectCacheNotFoundError({
+                  message: `Resource ${id} not found`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+            const updated: Resource = {
+              ...item,
+              ...data,
+              id,
+              createdAt: item.createdAt,
+              updatedAt: new Date(),
+            };
+            store.set(id, updated);
+            return updated;
+          }),
 
-      // Delete with existence check
-      delete: (id) =>
-        Effect.gen(function* () {
-          const existed = store.delete(id);
-          if (!existed) {
-            return yield* Effect.fail(
-              new EffectCacheNotFoundError({
-                message: `Resource ${id} not found`,
-                resourceId: id,
-                resourceType: "Resource",
-              }),
-            );
-          }
-        }),
-    };
-  });
+        // Delete with existence check
+        delete: (id) =>
+          Effect.gen(function* () {
+            const existed = store.delete(id);
+            if (!existed) {
+              return yield* Effect.fail(
+                new EffectCacheNotFoundError({
+                  message: `Resource ${id} not found`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+          }),
+      };
+    }
+  );
 
   /**
    * Dev Layer - Development with enhanced logging
@@ -526,7 +535,7 @@ export class EffectCache extends Context.Tag("EffectCache")<
       // Get actual implementation from Live layer
       const liveService = yield* EffectCache.Live.pipe(
         Layer.build,
-        Effect.map(Context.unsafeGet(EffectCache)),
+        Effect.map(Context.unsafeGet(EffectCache))
       );
 
       // Wrap all operations with logging
@@ -544,10 +553,7 @@ export class EffectCache extends Context.Tag("EffectCache")<
           Effect.gen(function* () {
             console.log("[EffectCache] [DEV] list called with:", params);
             const result = yield* liveService.list(params);
-            console.log("[EffectCache] [DEV] list result:", {
-              count: result.data.length,
-              total: result.total,
-            });
+            console.log("[EffectCache] [DEV] list result:", { count: result.data.length, total: result.total });
             return result;
           }),
 
@@ -580,8 +586,8 @@ export class EffectCache extends Context.Tag("EffectCache")<
             console.log("[EffectCache] [DEV] delete called with id:", id);
             yield* liveService.delete(id);
             console.log("[EffectCache] [DEV] delete completed");
-          }),
+          })
       };
-    }),
+    })
   );
 }

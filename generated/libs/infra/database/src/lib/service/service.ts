@@ -1,7 +1,7 @@
-import { Kysely } from "@myorg/provider-kysely";
-import { Context, Effect, Layer } from "effect";
-import type { DatabaseError } from "./errors";
-import { DatabaseConnectionError, DatabaseInternalError } from "./errors";
+import { DatabaseConnectionError, DatabaseInternalError } from "./errors"
+import { Kysely } from "@myorg/provider-kysely"
+import { Context, Effect, Layer } from "effect"
+import type { DatabaseError } from "./errors"
 
 /**
  * Database Service
@@ -44,7 +44,7 @@ Usage:
  * }
  * ```
  */
-export type { Database } from "@myorg/provider-kysely";
+export type { Database } from "@myorg/provider-kysely"
 
 // ============================================================================
 // Service Context.Tag Definition
@@ -102,7 +102,9 @@ export type { Database } from "@myorg/provider-kysely";
  * );
  * ```
  */
-export class DatabaseService extends Context.Tag("@myorg/infra-database/DatabaseService")<
+export class DatabaseService extends Context.Tag(
+  "@myorg/infra-database/DatabaseService"
+)<
   DatabaseService,
   {
     /**
@@ -114,8 +116,8 @@ export class DatabaseService extends Context.Tag("@myorg/infra-database/Database
      * @returns Effect that succeeds with the query result
      */
     readonly query: <A>(
-      fn: (db: import("kysely").Kysely<import("@myorg/provider-kysely").Database>) => Promise<A>,
-    ) => Effect.Effect<A, DatabaseError>;
+      fn: (db: import("kysely").Kysely<import("@myorg/provider-kysely").Database>) => Promise<A>
+    ) => Effect.Effect<A, DatabaseError>
 
     /**
      * Execute multiple queries in a transaction
@@ -127,17 +129,15 @@ export class DatabaseService extends Context.Tag("@myorg/infra-database/Database
      * @returns Effect that succeeds with the transaction result
      */
     readonly transaction: <A, E, R>(
-      fn: (
-        db: import("kysely").Kysely<import("@myorg/provider-kysely").Database>,
-      ) => Effect.Effect<A, E, R>,
-    ) => Effect.Effect<A, E | DatabaseError, R>;
+      fn: (db: import("kysely").Kysely<import("@myorg/provider-kysely").Database>) => Effect.Effect<A, E, R>
+    ) => Effect.Effect<A, E | DatabaseError, R>
 
     /**
      * Health check for database connection
      *
      * @returns Effect that succeeds with true if database is healthy
      */
-    readonly healthCheck: () => Effect.Effect<boolean, DatabaseError>;
+    readonly healthCheck: () => Effect.Effect<boolean, DatabaseError>
   }
 >() {
   // ===========================================================================
@@ -167,48 +167,45 @@ export class DatabaseService extends Context.Tag("@myorg/infra-database/Database
   static readonly Live = Layer.effect(
     DatabaseService,
     Effect.gen(function* () {
-      const kysely = yield* Kysely;
+      const kysely = yield* Kysely
 
       return {
         query: (fn) =>
           kysely.query(fn).pipe(
-            Effect.mapError(
-              (error) =>
-                new DatabaseInternalError({
-                  message: error.message,
-                  cause: error,
-                }),
+            Effect.mapError((error) =>
+              new DatabaseInternalError({
+                message: error.message,
+                cause: error
+              })
             ),
-            Effect.withSpan("DatabaseService.query"),
+            Effect.withSpan("DatabaseService.query")
           ),
 
         transaction: (fn) =>
           kysely.transaction(fn).pipe(
-            Effect.mapError(
-              (error) =>
-                new DatabaseInternalError({
-                  message: "Transaction failed",
-                  cause: error,
-                }),
+            Effect.mapError((error) =>
+              new DatabaseInternalError({
+                message: "Transaction failed",
+                cause: error
+              })
             ),
-            Effect.withSpan("DatabaseService.transaction"),
+            Effect.withSpan("DatabaseService.transaction")
           ),
 
         healthCheck: () =>
           kysely.healthCheck().pipe(
-            Effect.mapError(
-              (error) =>
-                new DatabaseConnectionError({
-                  message: "Health check failed",
-                  endpoint: "database",
-                  cause: error,
-                }),
+            Effect.mapError((error) =>
+              new DatabaseConnectionError({
+                message: "Health check failed",
+                endpoint: "database",
+                cause: error
+              })
             ),
-            Effect.withSpan("DatabaseService.healthCheck"),
-          ),
-      };
-    }),
-  );
+            Effect.withSpan("DatabaseService.healthCheck")
+          )
+      }
+    })
+  )
 
   // ===========================================================================
   // Static Test Layer - Delegates to Kysely Provider Test Layer
@@ -223,45 +220,42 @@ export class DatabaseService extends Context.Tag("@myorg/infra-database/Database
   static readonly Test = Layer.effect(
     DatabaseService,
     Effect.gen(function* () {
-      const kysely = yield* Kysely;
+      const kysely = yield* Kysely
 
       return {
         query: (fn) =>
           kysely.query(fn).pipe(
-            Effect.mapError(
-              (error) =>
-                new DatabaseInternalError({
-                  message: error.message,
-                  cause: error,
-                }),
-            ),
+            Effect.mapError((error) =>
+              new DatabaseInternalError({
+                message: error.message,
+                cause: error
+              })
+            )
           ),
 
         transaction: (fn) =>
           kysely.transaction(fn).pipe(
-            Effect.mapError(
-              (error) =>
-                new DatabaseInternalError({
-                  message: "Transaction failed",
-                  cause: error,
-                }),
-            ),
+            Effect.mapError((error) =>
+              new DatabaseInternalError({
+                message: "Transaction failed",
+                cause: error
+              })
+            )
           ),
 
         healthCheck: () =>
           kysely.healthCheck().pipe(
-            Effect.mapError(
-              (error) =>
-                new DatabaseConnectionError({
-                  message: "Health check failed",
-                  endpoint: "database",
-                  cause: error,
-                }),
-            ),
-          ),
-      };
-    }),
-  ).pipe(Layer.provide(Kysely.Test));
+            Effect.mapError((error) =>
+              new DatabaseConnectionError({
+                message: "Health check failed",
+                endpoint: "database",
+                cause: error
+              })
+            )
+          )
+      }
+    })
+  ).pipe(Layer.provide(Kysely.Test))
 
   // ===========================================================================
   // Static Dev Layer - Uses Kysely Provider with Logging
@@ -275,56 +269,53 @@ export class DatabaseService extends Context.Tag("@myorg/infra-database/Database
   static readonly Dev = Layer.effect(
     DatabaseService,
     Effect.gen(function* () {
-      const kysely = yield* Kysely;
+      const kysely = yield* Kysely
 
       return {
         query: (fn) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[DatabaseService] [DEV] Executing query");
+            yield* Effect.logDebug("[DatabaseService] [DEV] Executing query")
             const result = yield* kysely.query(fn).pipe(
-              Effect.mapError(
-                (error) =>
-                  new DatabaseInternalError({
-                    message: error.message,
-                    cause: error,
-                  }),
-              ),
-            );
-            yield* Effect.logDebug("[DatabaseService] [DEV] Query completed");
-            return result;
+              Effect.mapError((error) =>
+                new DatabaseInternalError({
+                  message: error.message,
+                  cause: error
+                })
+              )
+            )
+            yield* Effect.logDebug("[DatabaseService] [DEV] Query completed")
+            return result
           }),
 
         transaction: (fn) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[DatabaseService] [DEV] Starting transaction");
+            yield* Effect.logDebug("[DatabaseService] [DEV] Starting transaction")
             const result = yield* kysely.transaction(fn).pipe(
-              Effect.mapError(
-                (error) =>
-                  new DatabaseInternalError({
-                    message: "Transaction failed",
-                    cause: error,
-                  }),
-              ),
-            );
-            yield* Effect.logDebug("[DatabaseService] [DEV] Transaction completed");
-            return result;
+              Effect.mapError((error) =>
+                new DatabaseInternalError({
+                  message: "Transaction failed",
+                  cause: error
+                })
+              )
+            )
+            yield* Effect.logDebug("[DatabaseService] [DEV] Transaction completed")
+            return result
           }),
 
         healthCheck: () =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[DatabaseService] [DEV] Health check");
+            yield* Effect.logDebug("[DatabaseService] [DEV] Health check")
             return yield* kysely.healthCheck().pipe(
-              Effect.mapError(
-                (error) =>
-                  new DatabaseConnectionError({
-                    message: "Health check failed",
-                    endpoint: "database",
-                    cause: error,
-                  }),
-              ),
-            );
-          }),
-      };
-    }),
-  ).pipe(Layer.provide(Kysely.Dev));
+              Effect.mapError((error) =>
+                new DatabaseConnectionError({
+                  message: "Health check failed",
+                  endpoint: "database",
+                  cause: error
+                })
+              )
+            )
+          })
+      }
+    })
+  ).pipe(Layer.provide(Kysely.Dev))
 }

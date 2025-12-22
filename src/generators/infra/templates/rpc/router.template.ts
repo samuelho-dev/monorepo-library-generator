@@ -186,7 +186,7 @@ export type RpcRequiredLayers<R> = R extends Layer.Layer<infer _A, infer _E, inf
 /**
  * RPC handler map type
  */
-export type RpcHandlerMap = Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, unknown>>
+export type RpcHandlerMap<R = unknown> = Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>
 
 /**
  * Combine multiple handler maps into one
@@ -200,9 +200,15 @@ export type RpcHandlerMap = Record<string, (payload: unknown) => Effect.Effect<u
  * );
  * \`\`\`
  */
-export const combineHandlers = <T extends RpcHandlerMap>(
-  ...handlers: ReadonlyArray<T>
-): T => Object.assign({}, ...handlers) as T
+export const combineHandlers = <R>(
+  ...handlers: ReadonlyArray<RpcHandlerMap<R>>
+) => {
+  const result: RpcHandlerMap<R> = {}
+  for (const handler of handlers) {
+    Object.assign(result, handler)
+  }
+  return result
+}
 
 /**
  * Options for creating a Next.js RPC handler
@@ -211,7 +217,7 @@ export interface NextRpcHandlerOptions<R, E> {
   /**
    * RPC handler map
    */
-  readonly handlers: RpcHandlerMap
+  readonly handlers: RpcHandlerMap<R>
 
   /**
    * Combined layer providing all dependencies
@@ -256,7 +262,7 @@ export interface NextRpcHandler {
 
 export const createNextRpcHandler = <R, E>(
   options: NextRpcHandlerOptions<R, E>
-): NextRpcHandler => {
+) => {
   const config = { ...defaultRouterConfig, ...options.config }
 
   const execute = async (request: Request) => {
@@ -282,7 +288,7 @@ export const createNextRpcHandler = <R, E>(
 
       // Build runnable effect by providing the layer
       const runnableEffect = Effect.provide(
-        handler(payload) as Effect.Effect<unknown, unknown, R>,
+        handler(payload),
         options.layer
       )
 

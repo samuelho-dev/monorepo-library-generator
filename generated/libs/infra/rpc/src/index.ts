@@ -14,124 +14,143 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Errors
 // ============================================================================
 
+
 export {
-  errorCodeToHttpStatus,
-  mapToRpcError,
+  RpcInfraError,
+  RpcRateLimitError,
+  RpcValidationError,
+  RpcNotFoundError,
+  RpcTimeoutError,
+  RpcInternalError,
   RpcConfigError,
   RpcConnectionError,
   type RpcError,
+  mapToRpcError,
   RpcErrorCodes,
-  RpcInfraError,
-  RpcInternalError,
-  RpcNotFoundError,
-  RpcRateLimitError,
-  RpcTimeoutError,
-  RpcValidationError,
+  errorCodeToHttpStatus,
 } from "./lib/service/errors";
 
 // ============================================================================
 // Core RPC Utilities
 // ============================================================================
 
+
 // Re-exports from @effect/rpc
+export { Rpc, RpcGroup } from "./lib/service/core";
+
 // Definition helpers
-// Schema helpers
 export {
-  createHandlers,
   defineRpc,
   defineRpcGroup,
-  EmptyRequest,
+  createHandlers,
+  type RpcHandler,
   type HandlersFor,
-  IdRequest,
+} from "./lib/service/core";
+
+// Schema helpers
+export {
   paginatedResponse,
   paginationRequest,
-  Rpc,
-  RpcGroup,
-  type RpcHandler,
+  IdRequest,
   SuccessResponse,
+  EmptyRequest,
 } from "./lib/service/core";
 
 // ============================================================================
 // RPC Client
 // ============================================================================
 
+
 export {
-  createRpcClientLayer,
   RpcClient,
-  type RpcClientConfig,
   RpcClientConfigTag,
+  createRpcClientLayer,
+  type RpcClientConfig,
 } from "./lib/service/client";
 
 // ============================================================================
 // Transport Layer
 // ============================================================================
 
-// Router utilities
-export {
-  combineHandlers,
-  createNextRpcHandler,
-  defaultRouterConfig,
-  type HealthCheckResponse,
-  healthCheck,
-  type NextRpcHandler,
-  type NextRpcHandlerOptions,
-  type RouterConfig,
-  type RpcHandlerMap,
-  type RpcRequiredLayers,
-} from "./lib/service/router";
+
 // Transport types
 export type {
-  HttpRpcClientConfig,
-  HttpTransportConfig,
-  HttpTransportOptions,
-  RpcTransportConfig,
-  TransportConfig,
   TransportMode,
+  TransportConfig,
+  HttpTransportConfig,
+  RpcTransportConfig,
+  HttpTransportOptions,
+  HttpRpcClientConfig,
 } from "./lib/service/transport";
+
 // HTTP transport client
+export { HttpRpcClient, RpcTransportClient, createNextHandler } from "./lib/service/transport";
+
 // Transport utilities
 export {
-  createNextHandler,
-  errorResponse,
   extractHeaders,
-  HttpRpcClient,
   jsonResponse,
+  errorResponse,
   type NextHandler,
-  RpcTransportClient,
 } from "./lib/service/transport";
+
+// Router utilities
+export {
+  createNextRpcHandler,
+  combineHandlers,
+  healthCheck,
+  defaultRouterConfig,
+  type RouterConfig,
+  type HealthCheckResponse,
+  type RpcHandlerMap,
+  type RpcRequiredLayers,
+  type NextRpcHandlerOptions,
+  type NextRpcHandler,
+} from "./lib/service/router";
 
 // ============================================================================
 // Middleware & Auth
 // ============================================================================
 
+
 // Auth middleware
-// Context tags and types
-// Context helpers
-// Request metadata middleware
-// Test utilities
 export {
-  AdminTestUser,
-  AuthError,
-  type AuthenticatedUserData,
-  type AuthMethod,
-  AuthMethodContext,
   AuthMiddleware,
-  AuthMiddlewareAdmin,
   AuthMiddlewareLive,
   AuthMiddlewareTest,
+  AuthMiddlewareAdmin,
   AuthVerifier,
+  AuthError,
+  type AuthMethod,
+} from "./lib/service/middleware";
+
+// Context tags and types
+export {
   CurrentUser,
+  RequestMeta,
+  AuthMethodContext,
   type CurrentUserData,
+  type RequestMetadata,
+  type AuthenticatedUserData,
+  type HandlerContext,
+} from "./lib/service/middleware";
+
+// Context helpers
+export {
   getHandlerContext,
   getHandlerContextOptional,
-  type HandlerContext,
-  RequestMeta,
-  type RequestMetadata,
+} from "./lib/service/middleware";
+
+// Request metadata middleware
+export {
   RequestMetaMiddleware,
   RequestMetaMiddlewareLive,
-  TestUser,
 } from "./lib/service/middleware";
+
+// Test utilities
+export { TestUser, AdminTestUser } from "./lib/service/middleware";

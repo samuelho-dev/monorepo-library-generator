@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Supabase Provider Types
@@ -11,9 +11,12 @@ All schemas are composable and can be extended for domain-specific needs.
  * @module @myorg/provider-supabase/types
  */
 
+
+
 // ============================================================================
 // Configuration
 // ============================================================================
+
 
 /**
  * Supabase client configuration
@@ -38,6 +41,7 @@ export const SupabaseConfigSchema = Schema.Struct({
 // ============================================================================
 // User Types
 // ============================================================================
+
 
 /**
  * Supabase user metadata
@@ -86,6 +90,7 @@ export type AuthUser = Schema.Schema.Type<typeof AuthUserSchema>;
 // Session Types
 // ============================================================================
 
+
 /**
  * Supabase session
  */
@@ -113,6 +118,7 @@ export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>;
 // ============================================================================
 // Storage Types
 // ============================================================================
+
 
 /**
  * Storage bucket
@@ -163,7 +169,7 @@ export interface DownloadOptions {
     readonly width?: number;
     readonly height?: number;
     readonly quality?: number;
-    readonly format?: "origin";
+    readonly format?: 'origin';
   };
 }
 
@@ -173,12 +179,13 @@ export interface DownloadOptions {
 export interface SignedUrlOptions {
   readonly expiresIn: number;
   readonly download?: string | boolean;
-  readonly transform?: DownloadOptions["transform"];
+  readonly transform?: DownloadOptions['transform'];
 }
 
 // ============================================================================
 // Auth Method Types
 // ============================================================================
+
 
 /**
  * Authentication method used

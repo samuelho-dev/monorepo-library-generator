@@ -16,37 +16,42 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type { EffectCacheServiceError } from "./lib/errors";
+
 export {
-  EffectCacheConfigError,
-  EffectCacheConflictError,
-  EffectCacheConnectionError,
   EffectCacheError,
-  EffectCacheInternalError,
   EffectCacheNotFoundError,
-  EffectCacheTimeoutError,
   EffectCacheValidationError,
+  EffectCacheConflictError,
+  EffectCacheConfigError,
+  EffectCacheConnectionError,
+  EffectCacheTimeoutError,
+  EffectCacheInternalError,
 } from "./lib/errors";
+export type { EffectCacheServiceError } from "./lib/errors";
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
+
 // Service types and interfaces
 
 export type * from "./lib/types";
+
 
 // ============================================================================
 // Service Implementation
 // ============================================================================
 
+
 // EffectCache - External service adapter
 
-//
+// 
 
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 
@@ -56,7 +61,7 @@ export type * from "./lib/types";
 
 //   - EffectCache.Test  (testing - mock implementation)
 
-//
+// 
 
 // Migration from pre-3.0 pattern:
 
@@ -66,19 +71,24 @@ export type * from "./lib/types";
 
 //        const layer = EffectCache.Live;
 
+
 export { EffectCache } from "./lib/service";
+
 
 // ============================================================================
 // Validation Utilities
 // ============================================================================
 
+
 // Input validation functions
 
 export * from "./lib/validation";
 
+
 // ============================================================================
 // Layer Compositions
 // ============================================================================
+
 
 // Pre-wired layer compositions with dependencies
 
@@ -90,7 +100,9 @@ export * from "./lib/validation";
 
 //   - EffectCacheAuto  (automatic selection based on NODE_ENV)
 
+
 export * from "./lib/layers";
+
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -98,13 +110,13 @@ export * from "./lib/layers";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-//
+// 
 
 // import { Effect, Layer } from 'effect';
 
 // import { EffectCache, EffectCacheLive } from '@myorg/provider-effect-cache';
 
-//
+// 
 
 // const program = Effect.gen(function* () {
 
@@ -114,7 +126,7 @@ export * from "./lib/layers";
 
 // });
 
-//
+// 
 
 // const runnable = program.pipe(Effect.provide(EffectCacheLive));
 

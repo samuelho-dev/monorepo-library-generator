@@ -1,5 +1,5 @@
-import type { Queue, Scope } from "effect";
-import { Context, Effect, Layer, PubSub } from "effect";
+import { Context, Effect, Layer, PubSub } from "effect"
+import type { Queue, Scope } from "effect"
 
 /**
  * Pubsub Service
@@ -35,12 +35,12 @@ export interface TopicHandle<T> {
    *
    * @returns true if published to at least one subscriber
    */
-  readonly publish: (message: T) => Effect.Effect<boolean>;
+  readonly publish: (message: T) => Effect.Effect<boolean>
 
   /**
    * Publish multiple messages
    */
-  readonly publishAll: (messages: Iterable<T>) => Effect.Effect<boolean>;
+  readonly publishAll: (messages: Iterable<T>) => Effect.Effect<boolean>
 
   /**
    * Subscribe to receive messages
@@ -50,12 +50,12 @@ export interface TopicHandle<T> {
    *
    * IMPORTANT: Subscribe BEFORE publishing to guarantee message receipt.
    */
-  readonly subscribe: Effect.Effect<Queue.Dequeue<T>, never, Scope.Scope>;
+  readonly subscribe: Effect.Effect<Queue.Dequeue<T>, never, Scope.Scope>
 
   /**
    * Get current subscriber count
    */
-  readonly subscriberCount: Effect.Effect<number>;
+  readonly subscriberCount: Effect.Effect<number>
 }
 
 /**
@@ -65,13 +65,13 @@ export interface TopicOptions {
   /**
    * Topic name for identification
    */
-  readonly name?: string;
+  readonly name?: string
 
   /**
    * Maximum capacity for subscriber queues
    * @default 1000
    */
-  readonly capacity?: number;
+  readonly capacity?: number
 }
 
 /**
@@ -80,7 +80,9 @@ export interface TopicOptions {
  * PubSub infrastructure using Effect.PubSub primitive.
  * Provides topic-based publish/subscribe with multiple subscriber support.
  */
-export class PubsubService extends Context.Tag("@myorg/infra-pubsub/PubsubService")<
+export class PubsubService extends Context.Tag(
+  "@myorg/infra-pubsub/PubsubService"
+)<
   PubsubService,
   {
     /**
@@ -107,7 +109,10 @@ export class PubsubService extends Context.Tag("@myorg/infra-pubsub/PubsubServic
      * );
      * ```
      */
-    readonly topic: <T>(name: string, options?: TopicOptions) => Effect.Effect<TopicHandle<T>>;
+    readonly topic: <T>(
+      name: string,
+      options?: TopicOptions
+    ) => Effect.Effect<TopicHandle<T>>
 
     /**
      * Create an anonymous topic (not shared)
@@ -115,13 +120,13 @@ export class PubsubService extends Context.Tag("@myorg/infra-pubsub/PubsubServic
      * Use for local pub/sub within a single scope.
      */
     readonly createTopic: <T>(
-      options?: TopicOptions,
-    ) => Effect.Effect<TopicHandle<T>, never, Scope.Scope>;
+      options?: TopicOptions
+    ) => Effect.Effect<TopicHandle<T>, never, Scope.Scope>
 
     /**
      * Health check for monitoring
      */
-    readonly healthCheck: () => Effect.Effect<boolean>;
+    readonly healthCheck: () => Effect.Effect<boolean>
   }
 >() {
   // ===========================================================================
@@ -138,49 +143,49 @@ export class PubsubService extends Context.Tag("@myorg/infra-pubsub/PubsubServic
     this,
     Effect.gen(function* () {
       // Topic registry for named topics
-      const topics = new Map<string, PubSub.PubSub<unknown>>();
+      const topics = new Map<string, PubSub.PubSub<unknown>>()
 
       const getOrCreateTopic = <T>(
         name: string,
-        capacity: number,
+        capacity: number
       ): Effect.Effect<PubSub.PubSub<T>> =>
         Effect.gen(function* () {
-          const existing = topics.get(name);
+          const existing = topics.get(name)
           if (existing) {
-            return existing as PubSub.PubSub<T>;
+            return existing as PubSub.PubSub<T>
           }
 
-          const newTopic = yield* PubSub.bounded<T>(capacity);
-          topics.set(name, newTopic as PubSub.PubSub<unknown>);
-          return newTopic;
-        });
+          const newTopic = yield* PubSub.bounded<T>(capacity)
+          topics.set(name, newTopic as PubSub.PubSub<unknown>)
+          return newTopic
+        })
 
       const makeTopicHandle = <T>(pubsub: PubSub.PubSub<T>): TopicHandle<T> => ({
         publish: (message: T) => PubSub.publish(pubsub, message),
         publishAll: (messages: Iterable<T>) => PubSub.publishAll(pubsub, messages),
         subscribe: PubSub.subscribe(pubsub),
-        subscriberCount: Effect.sync(() => 0), // PubSub doesn't expose this directly
-      });
+        subscriberCount: Effect.sync(() => 0) // PubSub doesn't expose this directly
+      })
 
       return {
         topic: <T>(name: string, options?: TopicOptions) =>
           Effect.gen(function* () {
-            const capacity = options?.capacity ?? 1000;
-            const pubsub = yield* getOrCreateTopic<T>(name, capacity);
-            return makeTopicHandle(pubsub);
+            const capacity = options?.capacity ?? 1000
+            const pubsub = yield* getOrCreateTopic<T>(name, capacity)
+            return makeTopicHandle(pubsub)
           }),
 
         createTopic: <T>(options?: TopicOptions) =>
           Effect.gen(function* () {
-            const capacity = options?.capacity ?? 1000;
-            const pubsub = yield* PubSub.bounded<T>(capacity);
-            return makeTopicHandle(pubsub);
+            const capacity = options?.capacity ?? 1000
+            const pubsub = yield* PubSub.bounded<T>(capacity)
+            return makeTopicHandle(pubsub)
           }),
 
-        healthCheck: () => Effect.succeed(true),
-      };
-    }),
-  );
+        healthCheck: () => Effect.succeed(true)
+      }
+    })
+  )
 
   // ===========================================================================
   // Static Test Layer
@@ -189,7 +194,7 @@ export class PubsubService extends Context.Tag("@myorg/infra-pubsub/PubsubServic
   /**
    * Test Layer - Same as Memory for testing
    */
-  static readonly Test = PubsubService.Memory;
+  static readonly Test = PubsubService.Memory
 
   // ===========================================================================
   // Alias: Live = Memory (default)
@@ -200,7 +205,7 @@ export class PubsubService extends Context.Tag("@myorg/infra-pubsub/PubsubServic
    *
    * For Redis-backed distributed pub/sub, use RedisPubSub layer from layers/
    */
-  static readonly Live = PubsubService.Memory;
+  static readonly Live = PubsubService.Memory
 }
 
 // ============================================================================

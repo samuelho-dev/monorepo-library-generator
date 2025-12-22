@@ -20,9 +20,11 @@ Import options (from most optimal to most convenient):
  * @module @myorg/provider-effect-pubsub/service
  */
 
+
 // ============================================================================
 // Re-export service interface and tag
 // ============================================================================
 
-export type { EffectPubsubServiceInterface } from "./service";
+
 export { EffectPubsub } from "./service";
+export type { EffectPubsubServiceInterface } from "./service";

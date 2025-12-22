@@ -53,7 +53,6 @@ import { generateSubServices } from './sub-services';
  *
  * @property platform - Target platform (universal, node, browser, edge)
  * @property includeClientServer - Generate client-side hooks and state management
- * @property includeRPC - Generate RPC router and handlers
  * @property includeCQRS - Generate CQRS structure with placeholders
  * @property includeEdge - Generate edge middleware
  */
@@ -74,7 +73,6 @@ export interface FeatureCoreOptions {
   readonly platform?: PlatformType;
   readonly scope?: string;
   readonly includeClientServer?: boolean;
-  readonly includeRPC?: boolean;
   readonly includeCQRS?: boolean;
   readonly includeEdge?: boolean;
   readonly includeSubServices?: boolean;
@@ -112,8 +110,6 @@ export interface GeneratorResult {
 export function generateFeatureCore(adapter: FileSystemAdapter, options: FeatureCoreOptions) {
   return Effect.gen(function* () {
     // Compute platform-specific configuration
-    // RPC is now enabled by default for RPC-first architecture
-    const includeRPC = options.includeRPC ?? true;
     const includeCQRS = options.includeCQRS ?? false;
     const includeEdge = options.includeEdge ?? false;
 
@@ -151,7 +147,7 @@ export function generateFeatureCore(adapter: FileSystemAdapter, options: Feature
       tags: options.tags.split(','),
       includeClient: shouldIncludeClientServer,
       includeServer: true,
-      includeRPC,
+      includeRPC: true,
       includeCQRS,
       includeEdge: shouldIncludeEdge,
     };
@@ -206,16 +202,11 @@ This is an AI-optimized reference for ${templateOptions.packageName}, a feature 
   - \`service/index.ts\`: Service barrel export
   - \`layers.ts\`: Layer compositions (Live, Test, Dev, Auto)
   - \`service.spec.ts\`: Service tests
-${
-  includeRPC
-    ? `
 - **lib/rpc/**: RPC layer
   - \`rpc.ts\`: RPC router definition
   - \`handlers.ts\`: RPC handlers (~4-8 KB)
   - \`errors.ts\`: RPC-specific errors
-`
-    : ''
-}${
+${
   shouldIncludeClientServer
     ? `
 - **lib/client/**: Client-side state management
@@ -243,14 +234,10 @@ import type { ${templateOptions.className}Config, ${templateOptions.className}Re
 
 // 3. Server barrel (~10-15 KB)
 import { ${templateOptions.className}Service, ${templateOptions.className}ServiceLayers } from '${templateOptions.packageName}/server';
-${
-  includeRPC
-    ? `
+
 // 4. RPC handlers (~8-12 KB)
 import { ${templateOptions.fileName}Handlers } from '${templateOptions.packageName}/rpc/handlers';
-`
-    : ''
-}
+
 // 5. Package barrel (largest ~20-40 KB depending on features)
 import { ${templateOptions.className}Service } from '${templateOptions.packageName}';
 \`\`\`
@@ -271,16 +258,12 @@ import { ${templateOptions.className}Service } from '${templateOptions.packageNa
    - Wire up service dependencies
    - Configure Live layer with actual implementations
    - Customize Test layer for testing
-${
-  includeRPC
-    ? `
+
 4. **Add RPC Endpoints** (\`lib/rpc/\`):
    - Define routes in \`rpc.ts\`
    - Implement handlers in \`handlers.ts\`
    - Keep handlers lightweight (delegate to service)
-`
-    : ''
-}
+
 ### Usage Example
 
 \`\`\`typescript
@@ -300,9 +283,7 @@ const runnable = program.pipe(
   Effect.provide(${templateOptions.className}Service.Live)
 );
 \`\`\`
-${
-  includeRPC
-    ? `
+
 ### RPC Usage
 
 \`\`\`typescript
@@ -319,9 +300,7 @@ const server = ${templateOptions.fileName}Handlers.pipe(
   Effect.provide(rpcLayer)
 );
 \`\`\`
-`
-    : ''
-}
+
 ### Bundle Optimization Notes
 
 - **Always use granular imports** for production builds
@@ -418,17 +397,15 @@ const server = ${templateOptions.fileName}Handlers.pipe(
       filesGenerated.push(`${serverPath}/projections/.gitkeep`);
     }
 
-    // Generate RPC layer (conditional)
-    if (includeRPC) {
-      yield* adapter.writeFile(`${rpcPath}/rpc.ts`, generateRpcFile(templateOptions));
-      filesGenerated.push(`${rpcPath}/rpc.ts`);
+    // Generate RPC layer
+    yield* adapter.writeFile(`${rpcPath}/rpc.ts`, generateRpcFile(templateOptions));
+    filesGenerated.push(`${rpcPath}/rpc.ts`);
 
-      yield* adapter.writeFile(`${rpcPath}/handlers.ts`, generateRpcHandlersFile(templateOptions));
-      filesGenerated.push(`${rpcPath}/handlers.ts`);
+    yield* adapter.writeFile(`${rpcPath}/handlers.ts`, generateRpcHandlersFile(templateOptions));
+    filesGenerated.push(`${rpcPath}/handlers.ts`);
 
-      yield* adapter.writeFile(`${rpcPath}/errors.ts`, generateRpcErrorsFile(templateOptions));
-      filesGenerated.push(`${rpcPath}/errors.ts`);
-    }
+    yield* adapter.writeFile(`${rpcPath}/errors.ts`, generateRpcErrorsFile(templateOptions));
+    filesGenerated.push(`${rpcPath}/errors.ts`);
 
     // Generate client layer (conditional)
     if (shouldIncludeClientServer) {

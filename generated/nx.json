@@ -3,24 +3,42 @@
   "targetDefaults": {
     "build": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "test": {
       "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/vitest.config.ts"]
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/vitest.config.ts"
+      ]
     },
     "lint": {
       "cache": true,
-      "inputs": ["default", "{workspaceRoot}/biome.json"]
+      "inputs": [
+        "default",
+        "{workspaceRoot}/biome.json"
+      ]
     },
     "typecheck": {
       "cache": true,
-      "inputs": ["default", "^production"]
+      "inputs": [
+        "default",
+        "^production"
+      ]
     }
   },
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",

@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer } from "effect"
 
 /**
  * Storage Infrastructure Service
@@ -16,26 +16,28 @@ This service provides a unified storage API for the application.
  * @module @myorg/infra-storage/service
  */
 
-import type {
-  DownloadOptions,
-  SignedUrlOptions,
-  StorageFile,
-  UploadOptions,
-} from "@myorg/provider-supabase";
+
 import { SupabaseStorage } from "@myorg/provider-supabase";
 import {
-  BucketNotFoundError,
+  StorageError,
   FileNotFoundError,
+  BucketNotFoundError,
+  UploadFailedError,
   FileSizeExceededError,
   InvalidFileTypeError,
-  StorageError,
-  UploadFailedError,
 } from "./errors";
-import type { ListFilesOptions, ListFilesResult, StorageConfig, UploadResult } from "./types";
+import type {
+  StorageConfig,
+  UploadResult,
+  ListFilesOptions,
+  ListFilesResult,
+} from "./types";
+import type { UploadOptions, DownloadOptions, SignedUrlOptions, StorageFile } from "@myorg/provider-supabase";
 
 // ============================================================================
 // Service Interface
 // ============================================================================
+
 
 /**
  * Storage Service Interface
@@ -57,11 +59,8 @@ export interface StorageServiceInterface {
     bucket: string,
     path: string,
     file: Blob | File | ArrayBuffer | string,
-    options?: UploadOptions,
-  ) => Effect.Effect<
-    UploadResult,
-    UploadFailedError | BucketNotFoundError | FileSizeExceededError | InvalidFileTypeError
-  >;
+    options?: UploadOptions
+  ) => Effect.Effect<UploadResult, UploadFailedError | BucketNotFoundError | FileSizeExceededError | InvalidFileTypeError>;
 
   /**
    * Download a file
@@ -69,20 +68,23 @@ export interface StorageServiceInterface {
   readonly download: (
     bucket: string,
     path: string,
-    options?: DownloadOptions,
+    options?: DownloadOptions
   ) => Effect.Effect<Blob, FileNotFoundError | StorageError>;
 
   /**
    * Delete files
    */
-  readonly remove: (bucket: string, paths: readonly string[]) => Effect.Effect<void, StorageError>;
+  readonly remove: (
+    bucket: string,
+    paths: readonly string[]
+  ) => Effect.Effect<void, StorageError>;
 
   /**
    * List files in a bucket
    */
   readonly list: (
     bucket: string,
-    options?: ListFilesOptions,
+    options?: ListFilesOptions
   ) => Effect.Effect<ListFilesResult, BucketNotFoundError | StorageError>;
 
   /**
@@ -91,7 +93,7 @@ export interface StorageServiceInterface {
   readonly move: (
     bucket: string,
     fromPath: string,
-    toPath: string,
+    toPath: string
   ) => Effect.Effect<void, FileNotFoundError | StorageError>;
 
   /**
@@ -100,7 +102,7 @@ export interface StorageServiceInterface {
   readonly copy: (
     bucket: string,
     fromPath: string,
-    toPath: string,
+    toPath: string
   ) => Effect.Effect<void, FileNotFoundError | StorageError>;
 
   /**
@@ -109,23 +111,30 @@ export interface StorageServiceInterface {
   readonly createSignedUrl: (
     bucket: string,
     path: string,
-    options?: SignedUrlOptions,
+    options?: SignedUrlOptions
   ) => Effect.Effect<string, FileNotFoundError | StorageError>;
 
   /**
    * Get public URL for a file
    */
-  readonly getPublicUrl: (bucket: string, path: string) => Effect.Effect<string, never>;
+  readonly getPublicUrl: (
+    bucket: string,
+    path: string
+  ) => Effect.Effect<string, never>;
 
   /**
    * Check if a file exists
    */
-  readonly exists: (bucket: string, path: string) => Effect.Effect<boolean, StorageError>;
+  readonly exists: (
+    bucket: string,
+    path: string
+  ) => Effect.Effect<boolean, StorageError>;
 }
 
 // ============================================================================
 // Context.Tag
 // ============================================================================
+
 
 /**
  * Storage Service Tag
@@ -153,16 +162,14 @@ export class StorageService extends Context.Tag("StorageService")<
       /**
        * Validate file before upload
        */
-      const validateFile = (file: Blob | File | ArrayBuffer | string, options?: UploadOptions) =>
+      const validateFile = (
+        file: Blob | File | ArrayBuffer | string,
+        options?: UploadOptions
+      ) =>
         Effect.gen(function* () {
-          const size =
-            file instanceof Blob
-              ? file.size
-              : file instanceof ArrayBuffer
-                ? file.byteLength
-                : typeof file === "string"
-                  ? new Blob([file]).size
-                  : 0;
+          const size = file instanceof Blob ? file.size :
+                       file instanceof ArrayBuffer ? file.byteLength :
+                       typeof file === 'string' ? new Blob([file]).size : 0;
 
           // Check file size
           if (config.maxFileSize && size > config.maxFileSize) {
@@ -171,13 +178,13 @@ export class StorageService extends Context.Tag("StorageService")<
                 message: `File size ${size} exceeds maximum ${config.maxFileSize}`,
                 maxSize: config.maxFileSize,
                 actualSize: size,
-              }),
+              })
             );
           }
 
           // Check MIME type
-          const contentType =
-            options?.contentType || (file instanceof File ? file.type : undefined);
+          const contentType = options?.contentType ||
+            (file instanceof File ? file.type : undefined);
 
           if (config.allowedMimeTypes && contentType) {
             if (!config.allowedMimeTypes.includes(contentType)) {
@@ -186,7 +193,7 @@ export class StorageService extends Context.Tag("StorageService")<
                   message: `File type ${contentType} is not allowed`,
                   allowedTypes: config.allowedMimeTypes,
                   actualType: contentType,
-                }),
+                })
               );
             }
           }
@@ -216,7 +223,7 @@ export class StorageService extends Context.Tag("StorageService")<
                   path,
                   cause: error,
                 });
-              }),
+              })
             );
 
             const publicUrl = yield* storage.getPublicUrl(bucket, path);
@@ -244,19 +251,18 @@ export class StorageService extends Context.Tag("StorageService")<
                 cause: error,
               });
             }),
-            Effect.withSpan("StorageService.download"),
+            Effect.withSpan("StorageService.download")
           ),
 
         remove: (bucket, paths) =>
           storage.remove(bucket, [...paths]).pipe(
-            Effect.mapError(
-              (error) =>
-                new StorageError({
-                  message: error.message,
-                  cause: error,
-                }),
+            Effect.mapError((error) =>
+              new StorageError({
+                message: error.message,
+                cause: error,
+              })
             ),
-            Effect.withSpan("StorageService.remove"),
+            Effect.withSpan("StorageService.remove")
           ),
 
         list: (bucket, options) =>
@@ -265,28 +271,30 @@ export class StorageService extends Context.Tag("StorageService")<
               ...(options?.limit !== undefined && { limit: options.limit }),
               ...(options?.offset !== undefined && { offset: options.offset }),
               ...(options?.sortBy !== undefined && { sortBy: options.sortBy }),
-            };
+            }
 
-            const files = yield* storage.list(bucket, options?.prefix, listOptions).pipe(
-              Effect.mapError((error) => {
-                if (error._tag === "SupabaseBucketNotFoundError") {
-                  return new BucketNotFoundError({
+            const files = yield* storage
+              .list(bucket, options?.prefix, listOptions)
+              .pipe(
+                Effect.mapError((error) => {
+                  if (error._tag === "SupabaseBucketNotFoundError") {
+                    return new BucketNotFoundError({
+                      message: error.message,
+                      bucket: error.bucket,
+                      cause: error,
+                    });
+                  }
+                  return new StorageError({
                     message: error.message,
-                    bucket: error.bucket,
                     cause: error,
                   });
-                }
-                return new StorageError({
-                  message: error.message,
-                  cause: error,
-                });
-              }),
-            );
+                })
+              );
 
             const limit = options?.limit ?? 100;
-            const hasMore = files.length === limit;
+            const hasMore = files.length === limit
             const result: ListFilesResult = {
-              files: files.map((f) => ({
+              files: files.map(f => ({
                 name: f.name,
                 ...(f.id && { id: f.id }),
                 ...(f.created_at && { created_at: f.created_at }),
@@ -314,7 +322,7 @@ export class StorageService extends Context.Tag("StorageService")<
                 cause: error,
               });
             }),
-            Effect.withSpan("StorageService.move"),
+            Effect.withSpan("StorageService.move")
           ),
 
         copy: (bucket, fromPath, toPath) =>
@@ -333,7 +341,7 @@ export class StorageService extends Context.Tag("StorageService")<
                 cause: error,
               });
             }),
-            Effect.withSpan("StorageService.copy"),
+            Effect.withSpan("StorageService.copy")
           ),
 
         createSignedUrl: (bucket, path, options) => {
@@ -341,38 +349,42 @@ export class StorageService extends Context.Tag("StorageService")<
             expiresIn: options?.expiresIn ?? config.signedUrlExpiresIn ?? 3600,
             ...(options?.download !== undefined && { download: options.download }),
             ...(options?.transform !== undefined && { transform: options.transform }),
-          };
-          return storage.createSignedUrl(bucket, path, signedUrlOptions).pipe(
-            Effect.mapError((error) => {
-              if (error._tag === "SupabaseFileNotFoundError") {
-                return new FileNotFoundError({
+          }
+          return storage
+            .createSignedUrl(bucket, path, signedUrlOptions)
+            .pipe(
+              Effect.mapError((error) => {
+                if (error._tag === "SupabaseFileNotFoundError") {
+                  return new FileNotFoundError({
+                    message: error.message,
+                    bucket: error.bucket,
+                    path: error.path,
+                    cause: error,
+                  });
+                }
+                return new StorageError({
                   message: error.message,
-                  bucket: error.bucket,
-                  path: error.path,
                   cause: error,
                 });
-              }
-              return new StorageError({
-                message: error.message,
-                cause: error,
-              });
-            }),
-            Effect.withSpan("StorageService.createSignedUrl"),
-          );
+              }),
+              Effect.withSpan("StorageService.createSignedUrl")
+            )
         },
 
         getPublicUrl: (bucket, path) =>
-          storage.getPublicUrl(bucket, path).pipe(Effect.withSpan("StorageService.getPublicUrl")),
+          storage.getPublicUrl(bucket, path).pipe(
+            Effect.withSpan("StorageService.getPublicUrl")
+          ),
 
         exists: (bucket, path) =>
           Effect.gen(function* () {
-            const files = yield* storage
-              .list(bucket, path)
-              .pipe(Effect.catchAll(() => Effect.succeed([] as StorageFile[])));
+            const files = yield* storage.list(bucket, path).pipe(
+              Effect.catchAll(() => Effect.succeed([] as StorageFile[]))
+            );
             return files.some((f) => f.name === path.split("/").pop());
           }).pipe(Effect.withSpan("StorageService.exists")),
       };
-    }),
+    })
   );
 
   /**
@@ -479,6 +491,6 @@ export class StorageService extends Context.Tag("StorageService")<
             return true;
           }),
       };
-    }),
+    })
   );
 }

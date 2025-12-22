@@ -1,4 +1,4 @@
-import { Data, Effect } from "effect";
+import { Data, Effect } from "effect"
 
 /**
  * effect-pubsub - Error Types
@@ -6,6 +6,7 @@ import { Data, Effect } from "effect";
  * CRITICAL: Use Data.TaggedError (NOT manual classes)
  * Reference: provider.md lines 716-766
  */
+
 
 /**
  * Base EffectPubsub Error
@@ -65,9 +66,7 @@ export class EffectPubsubTimeoutError extends Data.TaggedError("EffectPubsubTime
 /**
  * Authentication Error - for auth failures
  */
-export class EffectPubsubAuthenticationError extends Data.TaggedError(
-  "EffectPubsubAuthenticationError",
-)<{
+export class EffectPubsubAuthenticationError extends Data.TaggedError("EffectPubsubAuthenticationError")<{
   readonly message: string;
   readonly cause?: unknown;
 }> {}
@@ -215,7 +214,9 @@ export function mapEffectPubsubError(error: unknown) {
 /**
  * Helper: Run Effect.PubSub operation with error mapping
  */
-export function runEffectPubsubOperation<A>(operation: () => Promise<A>) {
+export function runEffectPubsubOperation<A>(
+  operation: () => Promise<A>,
+) {
   return Effect.tryPromise({
     try: operation,
     catch: mapEffectPubsubError,

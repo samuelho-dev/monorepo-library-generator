@@ -20,9 +20,11 @@ Import options (from most optimal to most convenient):
  * @module @myorg/provider-effect-cache/service
  */
 
+
 // ============================================================================
 // Re-export service interface and tag
 // ============================================================================
 
-export type { EffectCacheServiceInterface } from "./service";
+
 export { EffectCache } from "./service";
+export type { EffectCacheServiceInterface } from "./service";

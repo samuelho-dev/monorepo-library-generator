@@ -17,9 +17,11 @@ Import options (from most optimal to most convenient):
  * @module @myorg/feature-user/server/service
  */
 
+
 // ============================================================================
 // Re-export service interface and tag
 // ============================================================================
 
-export type { UserServiceInterface } from "./service";
+
 export { UserService } from "./service";
+export type { UserServiceInterface } from "./service";

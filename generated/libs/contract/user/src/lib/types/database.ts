@@ -9,7 +9,7 @@
  * - Types include: User, UserId, UserInsert, UserUpdate
  */
 
-import { type Brand, Schema } from "effect";
+import { Brand, Schema } from "effect"
 
 // ============================================================================
 // Branded ID Types
@@ -20,12 +20,14 @@ import { type Brand, Schema } from "effect";
  *
  * Prevents accidental mixing of IDs from different entity types.
  */
-export type UserId = string & Brand.Brand<"UserId">;
+export type UserId = string & Brand.Brand<"UserId">
 
 /**
  * UserId Schema for validation and parsing
  */
-export const UserId = Schema.String.pipe(Schema.brand("UserId"));
+export const UserId = Schema.String.pipe(
+  Schema.brand("UserId")
+)
 
 // ============================================================================
 // Entity Schema
@@ -42,12 +44,12 @@ export const User = Schema.Struct({
   name: Schema.String,
   createdAt: Schema.Date,
   updatedAt: Schema.Date,
-});
+})
 
 /**
  * User entity type
  */
-export type User = typeof User.Type;
+export type User = typeof User.Type
 
 // ============================================================================
 // Input Types
@@ -58,11 +60,11 @@ export type User = typeof User.Type;
  *
  * Excludes auto-generated fields (id, createdAt, updatedAt)
  */
-export type UserInsert = Omit<User, "id" | "createdAt" | "updatedAt">;
+export type UserInsert = Omit<User, "id" | "createdAt" | "updatedAt">
 
 /**
  * Input type for updating existing User entities
  *
  * All fields are optional for partial updates
  */
-export type UserUpdate = Partial<UserInsert>;
+export type UserUpdate = Partial<UserInsert>

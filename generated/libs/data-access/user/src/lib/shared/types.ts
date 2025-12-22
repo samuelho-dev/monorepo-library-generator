@@ -11,6 +11,7 @@ Re-exports entity types from contract library and provides query-specific types.
 // Entity Types (from Contract Library)
 // ============================================================================
 
+
 // Re-export entity types from contract library
 export type {
   User,
@@ -22,6 +23,7 @@ export type {
 // ============================================================================
 // Filter & Query Types
 // ============================================================================
+
 
 /**
  * User Filter Options
@@ -56,7 +58,7 @@ export interface UserFilter {
   readonly search?: string;
 }
 
-export type SortDirection = "asc" | "desc";
+export type SortDirection = 'asc' | 'desc';
 
 // User Sort Options
 
@@ -80,12 +82,13 @@ export interface PaginationOptions {
   /**
    * Number of records to skip
    */
-  readonly skip: number;
+  readonly skip: number
   /**
    * Maximum number of records to return
    */
-  readonly limit: number;
+  readonly limit: number
 }
+
 
 /**
  * Query Options
@@ -112,6 +115,7 @@ export interface QueryOptions {
 // Response Types
 // ============================================================================
 
+
 // Paginated List Response
 
 // Standard paginated response format for list queries.
@@ -137,6 +141,7 @@ export interface PaginatedResponse<T> {
 // ============================================================================
 // Helper Type Utilities
 // ============================================================================
+
 
 /**
  * Make all properties of T required

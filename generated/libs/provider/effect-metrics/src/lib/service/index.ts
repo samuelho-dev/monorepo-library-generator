@@ -20,9 +20,11 @@ Import options (from most optimal to most convenient):
  * @module @myorg/provider-effect-metrics/service
  */
 
+
 // ============================================================================
 // Re-export service interface and tag
 // ============================================================================
 
-export type { EffectMetricsServiceInterface } from "./service";
+
 export { EffectMetrics } from "./service";
+export type { EffectMetricsServiceInterface } from "./service";

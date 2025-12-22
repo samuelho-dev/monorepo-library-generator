@@ -419,7 +419,7 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
       }
     }
 
-    const circularDeps = detectCircularReferences(graph, projectName, new Set());
+    const circularDeps = detectCircularReferences(graph, projectName);
     if (circularDeps && circularDeps.length > 0) {
       throw new Error(
         `Circular dependency detected in ${projectName}: ${circularDeps.join(' -> ')}`,
@@ -442,38 +442,45 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
 }
 
 /**
- * Detect circular dependencies using DFS
+ * Detect circular dependencies using iterative DFS
  */
 function detectCircularReferences(
   graph: ProjectGraph,
-  projectName: string,
-  visited: Set<string>,
-  path: Array<string> = [],
-): Array<string> {
-  if (visited.has(projectName)) {
-    const cycleStart = path.indexOf(projectName);
-    if (cycleStart !== -1) {
-      return [...path.slice(cycleStart), projectName];
-    }
-    return [];
-  }
+  startProject: string,
+) {
+  const stack: Array<{ project: string; path: Array<string>; visited: Set<string> }> = [
+    { project: startProject, path: [], visited: new Set() },
+  ];
 
-  visited.add(projectName);
-  path.push(projectName);
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) break;
 
-  const deps = graph.dependencies[projectName] || [];
-  for (const dep of deps) {
-    if (!graph.nodes[dep.target] || dep.target.startsWith('npm:')) {
+    const { project, path, visited } = current;
+
+    if (visited.has(project)) {
+      const cycleStart = path.indexOf(project);
+      if (cycleStart !== -1) {
+        return [...path.slice(cycleStart), project];
+      }
       continue;
     }
 
-    const cycle = detectCircularReferences(graph, dep.target, new Set(visited), [...path]);
-    if (cycle && cycle.length > 0) {
-      return cycle;
+    const newVisited = new Set(visited);
+    newVisited.add(project);
+    const newPath = [...path, project];
+
+    const deps = graph.dependencies[project] || [];
+    for (const dep of deps) {
+      if (!graph.nodes[dep.target] || dep.target.startsWith('npm:')) {
+        continue;
+      }
+      stack.push({ project: dep.target, path: newPath, visited: newVisited });
     }
   }
 
-  return [];
+  const emptyResult: Array<string> = [];
+  return emptyResult;
 }
 
 /**

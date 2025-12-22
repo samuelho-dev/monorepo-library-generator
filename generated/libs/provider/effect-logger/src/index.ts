@@ -16,37 +16,42 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type { EffectLoggerServiceError } from "./lib/errors";
+
 export {
-  EffectLoggerConfigError,
-  EffectLoggerConflictError,
-  EffectLoggerConnectionError,
   EffectLoggerError,
-  EffectLoggerInternalError,
   EffectLoggerNotFoundError,
-  EffectLoggerTimeoutError,
   EffectLoggerValidationError,
+  EffectLoggerConflictError,
+  EffectLoggerConfigError,
+  EffectLoggerConnectionError,
+  EffectLoggerTimeoutError,
+  EffectLoggerInternalError,
 } from "./lib/errors";
+export type { EffectLoggerServiceError } from "./lib/errors";
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
+
 // Service types and interfaces
 
 export type * from "./lib/types";
+
 
 // ============================================================================
 // Service Implementation
 // ============================================================================
 
+
 // EffectLogger - External service adapter
 
-//
+// 
 
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 
@@ -56,7 +61,7 @@ export type * from "./lib/types";
 
 //   - EffectLogger.Test  (testing - mock implementation)
 
-//
+// 
 
 // Migration from pre-3.0 pattern:
 
@@ -66,19 +71,24 @@ export type * from "./lib/types";
 
 //        const layer = EffectLogger.Live;
 
+
 export { EffectLogger } from "./lib/service";
+
 
 // ============================================================================
 // Validation Utilities
 // ============================================================================
 
+
 // Input validation functions
 
 export * from "./lib/validation";
 
+
 // ============================================================================
 // Layer Compositions
 // ============================================================================
+
 
 // Pre-wired layer compositions with dependencies
 
@@ -90,7 +100,9 @@ export * from "./lib/validation";
 
 //   - EffectLoggerAuto  (automatic selection based on NODE_ENV)
 
+
 export * from "./lib/layers";
+
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -98,13 +110,13 @@ export * from "./lib/layers";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-//
+// 
 
 // import { Effect, Layer } from 'effect';
 
 // import { EffectLogger, EffectLoggerLive } from '@myorg/provider-effect-logger';
 
-//
+// 
 
 // const program = Effect.gen(function* () {
 
@@ -114,7 +126,7 @@ export * from "./lib/layers";
 
 // });
 
-//
+// 
 
 // const runnable = program.pipe(Effect.provide(EffectLoggerLive));
 

@@ -1,6 +1,6 @@
-import { Rpc, RpcGroup } from "@effect/rpc";
-import { Schema } from "effect";
-import { UserError } from "./errors";
+import { UserError } from "./errors"
+import { Rpc, RpcGroup } from "@effect/rpc"
+import { Schema } from "effect"
 
 /**
  * User RPC Group
@@ -24,6 +24,7 @@ not at the RPC definition level. This gives more flexibility.
 // Import auth errors for protected routes
 import { AuthError } from "@myorg/infra-auth";
 
+
 // ============================================================================
 // Request/Response Schemas
 // ============================================================================
@@ -33,7 +34,7 @@ import { AuthError } from "@myorg/infra-auth";
  */
 export const GetUserRequest = Schema.Struct({
   id: Schema.String,
-});
+})
 
 /**
  * Response schema for user
@@ -42,7 +43,7 @@ export const UserResponse = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   createdAt: Schema.DateFromString,
-});
+})
 
 /**
  * List request with pagination
@@ -54,7 +55,7 @@ export const ListUserRequest = Schema.Struct({
   pageSize: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
     default: () => 20,
   }),
-});
+})
 
 /**
  * List response with pagination metadata
@@ -64,14 +65,14 @@ export const ListUserResponse = Schema.Struct({
   total: Schema.Number,
   page: Schema.Number,
   pageSize: Schema.Number,
-});
+})
 
 /**
  * Create request
  */
 export const CreateUserRequest = Schema.Struct({
   name: Schema.String,
-});
+})
 
 /**
  * Update request
@@ -79,21 +80,21 @@ export const CreateUserRequest = Schema.Struct({
 export const UpdateUserRequest = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-});
+})
 
 /**
  * Delete request
  */
 export const DeleteUserRequest = Schema.Struct({
   id: Schema.String,
-});
+})
 
 /**
  * Standard success response for mutations
  */
 export const SuccessResponse = Schema.Struct({
   success: Schema.Literal(true),
-});
+})
 
 // ============================================================================
 // RPC Definitions
@@ -214,17 +215,23 @@ export class DeleteUser extends Rpc.make("DeleteUser", {
  * });
  * ```
  */
-export const UserRpcs = RpcGroup.make(GetUser, ListUser, CreateUser, UpdateUser, DeleteUser);
+export const UserRpcs = RpcGroup.make(
+  GetUser,
+  ListUser,
+  CreateUser,
+  UpdateUser,
+  DeleteUser
+)
 
 // ============================================================================
 // Type Exports
 // ============================================================================
 
 // Type exports for consumers
-export type GetUserRequestType = typeof GetUserRequest.Type;
-export type UserResponseType = typeof UserResponse.Type;
-export type ListUserRequestType = typeof ListUserRequest.Type;
-export type ListUserResponseType = typeof ListUserResponse.Type;
-export type CreateUserRequestType = typeof CreateUserRequest.Type;
-export type UpdateUserRequestType = typeof UpdateUserRequest.Type;
-export type DeleteUserRequestType = typeof DeleteUserRequest.Type;
+export type GetUserRequestType = typeof GetUserRequest.Type
+export type UserResponseType = typeof UserResponse.Type
+export type ListUserRequestType = typeof ListUserRequest.Type
+export type ListUserResponseType = typeof ListUserResponse.Type
+export type CreateUserRequestType = typeof CreateUserRequest.Type
+export type UpdateUserRequestType = typeof UpdateUserRequest.Type
+export type DeleteUserRequestType = typeof DeleteUserRequest.Type

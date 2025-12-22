@@ -1,8 +1,8 @@
-import { env } from "@myorg/env";
-import { Effect, Layer, Redacted } from "effect";
-import { EffectLoggerInternalError } from "./errors";
-import { EffectLogger } from "./service";
-import type { EffectLoggerConfig, Resource } from "./types";
+import { EffectLoggerInternalError } from "./errors"
+import { EffectLogger } from "./service"
+import { env } from "@myorg/env"
+import { Effect, Layer, Redacted } from "effect"
+import type { EffectLoggerConfig, Resource } from "./types"
 
 /**
  * effect-logger - Layer Implementations
@@ -17,9 +17,10 @@ import type { EffectLoggerConfig, Resource } from "./types";
  * 4. Layer.scoped - Needs cleanup/release
  */
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 // In-Memory Store for Baseline Implementation
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 //
 // Provides a working baseline implementation using in-memory storage.
 // Replace with actual SDK integration as needed.
@@ -30,7 +31,7 @@ import type { EffectLoggerConfig, Resource } from "./types";
 // - Demonstrates correct Effect patterns
 // - Easy to replace with real SDK
 //
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
 /**
  * Create in-memory store for baseline implementation
@@ -63,9 +64,7 @@ function createInMemoryStore() {
       Effect.gen(function* () {
         const item = store.get(id);
         if (!item) {
-          return yield* Effect.fail(
-            new EffectLoggerInternalError({ message: `Item ${id} not found` }),
-          );
+          return yield* Effect.fail(new EffectLoggerInternalError({ message: `Item ${id} not found` }));
         }
         return item;
       }),
@@ -88,15 +87,13 @@ function createInMemoryStore() {
       Effect.gen(function* () {
         const item = store.get(id);
         if (!item) {
-          return yield* Effect.fail(
-            new EffectLoggerInternalError({ message: `Item ${id} not found` }),
-          );
+          return yield* Effect.fail(new EffectLoggerInternalError({ message: `Item ${id} not found` }));
         }
         const updated: Resource = {
           ...item,
           ...data,
-          id, // Preserve ID
-          createdAt: item.createdAt, // Preserve createdAt
+          id,  // Preserve ID
+          createdAt: item.createdAt,  // Preserve createdAt
           updatedAt: new Date(),
         };
         store.set(id, updated);
@@ -107,17 +104,15 @@ function createInMemoryStore() {
       Effect.gen(function* () {
         const existed = store.delete(id);
         if (!existed) {
-          return yield* Effect.fail(
-            new EffectLoggerInternalError({ message: `Item ${id} not found` }),
-          );
+          return yield* Effect.fail(new EffectLoggerInternalError({ message: `Item ${id} not found` }));
         }
       }),
   };
 }
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 // Resource Management
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 //
 // This template uses Layer.scoped + Effect.addFinalizer for cleanup.
 //
@@ -129,11 +124,11 @@ function createInMemoryStore() {
 //
 // See EFFECT_PATTERNS.md for complete examples
 //
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 // Runtime Preservation (for Event-Driven SDKs)
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 //
 // If your SDK uses callbacks (EventEmitter, WebSocket, streams), you MUST
 // preserve the Effect runtime. See EFFECT_PATTERNS.md lines 1779+ for complete guide.
@@ -176,7 +171,7 @@ function createInMemoryStore() {
 //   })
 // );
 //
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
 /**
  * Live Layer - Production environment
@@ -201,32 +196,30 @@ export const EffectLoggerLive = Layer.effect(
   Effect.sync(() => {
     const config: EffectLoggerConfig = {
       apiKey: Redacted.value(env.EFFECT_LOGGER_API_KEY) ?? "baseline_api_key",
-      timeout: env.EFFECT_LOGGER_TIMEOUT ?? 20000,
-    };
+      timeout: env.EFFECT_LOGGER_TIMEOUT ?? 20000
+    }
 
     // Baseline: In-memory store (replace with SDK integration)
-    const store = createInMemoryStore();
+    const store = createInMemoryStore()
 
     // Return service implementation directly (Effect 3.0+ pattern)
     // Operations instrumented with Effect.withSpan for distributed tracing
     return {
       config,
-      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(
-        Effect.withSpan("EffectLogger.healthCheck"),
-      ),
+      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("EffectLogger.healthCheck")),
       // TODO: Replace store operations with SDK calls
       list: (params) => store.list(params).pipe(Effect.withSpan("EffectLogger.list")),
       get: (id) => store.get(id).pipe(Effect.withSpan("EffectLogger.get")),
       create: (data) => store.create(data).pipe(Effect.withSpan("EffectLogger.create")),
       update: (id, data) => store.update(id, data).pipe(Effect.withSpan("EffectLogger.update")),
-      delete: (id) => store.delete(id).pipe(Effect.withSpan("EffectLogger.delete")),
-    };
-  }),
-);
+      delete: (id) => store.delete(id).pipe(Effect.withSpan("EffectLogger.delete"))
+    }
+  })
+)
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 // Alternative: Layer.scoped (for SDKs requiring cleanup)
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 //
 // Use this pattern if your SDK has cleanup methods (close, disconnect, end).
 // Examples: Database pools, WebSocket connections, file handles
@@ -262,7 +255,7 @@ export const EffectLoggerLive = Layer.effect(
 //   }),
 // );
 //
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
 /**
  * Test Layer - Testing environment
@@ -270,85 +263,82 @@ export const EffectLoggerLive = Layer.effect(
  * Uses Layer.sync for deterministic testing with in-memory store.
  * Each Layer.fresh creates isolated state for test independence.
  */
-export const EffectLoggerTest = Layer.sync(EffectLogger, () => {
-  // In-memory store for test isolation
-  const store = new Map<string, Resource>();
-  let idCounter = 0;
+export const EffectLoggerTest = Layer.sync(
+  EffectLogger,
+  () => {
+    // In-memory store for test isolation
+    const store = new Map<string, Resource>();
+    let idCounter = 0;
 
-  return {
-    config: { apiKey: "test_key", timeout: 1000 },
-    healthCheck: Effect.succeed({ status: "healthy" as const }),
+    return {
+      config: { apiKey: "test_key", timeout: 1000 },
+      healthCheck: Effect.succeed({ status: "healthy" as const }),
 
-    list: (params) =>
-      Effect.sync(() => {
-        const page = params?.page ?? 1;
-        const limit = params?.limit ?? 10;
-        const items = Array.from(store.values());
-        const start = (page - 1) * limit;
-        const end = start + limit;
-        return {
-          data: items.slice(start, end),
-          page,
-          limit,
-          total: items.length,
-        };
-      }),
+      list: (params) =>
+        Effect.sync(() => {
+          const page = params?.page ?? 1;
+          const limit = params?.limit ?? 10;
+          const items = Array.from(store.values());
+          const start = (page - 1) * limit;
+          const end = start + limit;
+          return {
+            data: items.slice(start, end),
+            page,
+            limit,
+            total: items.length,
+          };
+        }),
 
-    get: (id) =>
-      Effect.gen(function* () {
-        const item = store.get(id);
-        if (!item) {
-          return yield* Effect.fail(
-            new EffectLoggerInternalError({ message: `Item ${id} not found` }),
-          );
-        }
-        return item;
-      }),
+      get: (id) =>
+        Effect.gen(function* () {
+          const item = store.get(id);
+          if (!item) {
+            return yield* Effect.fail(new EffectLoggerInternalError({ message: `Item ${id} not found` }));
+          }
+          return item;
+        }),
 
-    create: (data) =>
-      Effect.sync(() => {
-        const id = `test-${++idCounter}`;
-        const now = new Date();
-        const item: Resource = {
-          id,
-          ...data,
-          createdAt: now,
-          updatedAt: now,
-        };
-        store.set(id, item);
-        return item;
-      }),
+      create: (data) =>
+        Effect.sync(() => {
+          const id = `test-${++idCounter}`;
+          const now = new Date();
+          const item: Resource = {
+            id,
+            ...data,
+            createdAt: now,
+            updatedAt: now,
+          };
+          store.set(id, item);
+          return item;
+        }),
 
-    update: (id, data) =>
-      Effect.gen(function* () {
-        const item = store.get(id);
-        if (!item) {
-          return yield* Effect.fail(
-            new EffectLoggerInternalError({ message: `Item ${id} not found` }),
-          );
-        }
-        const updated: Resource = {
-          ...item,
-          ...data,
-          id,
-          createdAt: item.createdAt,
-          updatedAt: new Date(),
-        };
-        store.set(id, updated);
-        return updated;
-      }),
+      update: (id, data) =>
+        Effect.gen(function* () {
+          const item = store.get(id);
+          if (!item) {
+            return yield* Effect.fail(new EffectLoggerInternalError({ message: `Item ${id} not found` }));
+          }
+          const updated: Resource = {
+            ...item,
+            ...data,
+            id,
+            createdAt: item.createdAt,
+            updatedAt: new Date(),
+          };
+          store.set(id, updated);
+          return updated;
+        }),
 
-    delete: (id) =>
-      Effect.gen(function* () {
-        const existed = store.delete(id);
-        if (!existed) {
-          return yield* Effect.fail(
-            new EffectLoggerInternalError({ message: `Item ${id} not found` }),
-          );
-        }
-      }),
-  };
-});
+      delete: (id) =>
+        Effect.gen(function* () {
+          const existed = store.delete(id);
+          if (!existed) {
+            return yield* Effect.fail(new EffectLoggerInternalError({ message: `Item ${id} not found` }));
+          }
+        }),
+    };
+  },
+);
 
 /**
  * Dev Layer - Development environment
@@ -367,42 +357,18 @@ export const EffectLoggerDev = Layer.effect(
     // Baseline: In-memory store (replace with SDK integration)
     const store = createInMemoryStore();
 
-    yield* Effect.logInfo(
-      "[EffectLogger] [DEV] Development layer initialized with in-memory store",
-    );
+    yield* Effect.logInfo("[EffectLogger] [DEV] Development layer initialized with in-memory store");
 
     // Return service implementation with distributed tracing
     return {
       config,
-      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(
-        Effect.withSpan("EffectLogger.healthCheck"),
-      ),
+      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("EffectLogger.healthCheck")),
       // TODO: Replace store operations with SDK calls
-      list: (params) =>
-        store
-          .list(params)
-          .pipe(Effect.tap(() => Effect.logDebug("[EffectLogger] list called")))
-          .pipe(Effect.withSpan("EffectLogger.list")),
-      get: (id) =>
-        store
-          .get(id)
-          .pipe(Effect.tap(() => Effect.logDebug(`[EffectLogger] get called: ${id}`)))
-          .pipe(Effect.withSpan("EffectLogger.get")),
-      create: (data) =>
-        store
-          .create(data)
-          .pipe(Effect.tap(() => Effect.logDebug("[EffectLogger] create called")))
-          .pipe(Effect.withSpan("EffectLogger.create")),
-      update: (id, data) =>
-        store
-          .update(id, data)
-          .pipe(Effect.tap(() => Effect.logDebug(`[EffectLogger] update called: ${id}`)))
-          .pipe(Effect.withSpan("EffectLogger.update")),
-      delete: (id) =>
-        store
-          .delete(id)
-          .pipe(Effect.tap(() => Effect.logDebug(`[EffectLogger] delete called: ${id}`)))
-          .pipe(Effect.withSpan("EffectLogger.delete")),
+      list: (params) => store.list(params).pipe(Effect.tap(() => Effect.logDebug("[EffectLogger] list called"))).pipe(Effect.withSpan("EffectLogger.list")),
+      get: (id) => store.get(id).pipe(Effect.tap(() => Effect.logDebug(`[EffectLogger] get called: ${id}`))).pipe(Effect.withSpan("EffectLogger.get")),
+      create: (data) => store.create(data).pipe(Effect.tap(() => Effect.logDebug("[EffectLogger] create called"))).pipe(Effect.withSpan("EffectLogger.create")),
+      update: (id, data) => store.update(id, data).pipe(Effect.tap(() => Effect.logDebug(`[EffectLogger] update called: ${id}`))).pipe(Effect.withSpan("EffectLogger.update")),
+      delete: (id) => store.delete(id).pipe(Effect.tap(() => Effect.logDebug(`[EffectLogger] delete called: ${id}`))).pipe(Effect.withSpan("EffectLogger.delete")),
     };
   }),
 );
@@ -456,9 +422,9 @@ export function makeEffectLoggerLayer(config: EffectLoggerConfig) {
               // TODO: Add SDK cleanup logic when integrating
               // client.close()
               // client.disconnect()
-            }),
-          ),
-        ),
+            })
+          )
+        )
       );
 
       // Return service implementation directly (Effect 3.0+ pattern)

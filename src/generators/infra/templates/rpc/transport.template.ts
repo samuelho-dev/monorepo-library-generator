@@ -278,10 +278,10 @@ export interface NextHandler {
 export const createNextHandler = <R>(options: {
   handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>
   layers?: Layer.Layer<R, never, never>
-}): NextHandler => {
+}) => {
   return {
     GET: () => new Response("RPC endpoint - use POST", { status: 405 }),
-    POST: async (request: Request): Promise<Response> => {
+    POST: async (request: Request) => {
       try {
         const body = await request.json() as { operation?: string; payload?: unknown }
         const { operation, payload } = body
@@ -327,7 +327,7 @@ export const createNextHandler = <R>(options: {
   builder.addRaw(`/**
  * Extract headers from HTTP request for middleware context
  */
-export const extractHeaders = (request: Request): Record<string, string> => {
+export const extractHeaders = (request: Request) => {
   const headers: Record<string, string> = {}
   request.headers.forEach((value, key) => {
     headers[key.toLowerCase()] = value
@@ -338,7 +338,7 @@ export const extractHeaders = (request: Request): Record<string, string> => {
 /**
  * Create standard JSON response
  */
-export const jsonResponse = <T>(data: T, status = 200): Response =>
+export const jsonResponse = <T>(data: T, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" }
@@ -347,7 +347,7 @@ export const jsonResponse = <T>(data: T, status = 200): Response =>
 /**
  * Create error response
  */
-export const errorResponse = (error: RpcInfraError): Response =>
+export const errorResponse = (error: RpcInfraError) =>
   jsonResponse(
     {
       error: {

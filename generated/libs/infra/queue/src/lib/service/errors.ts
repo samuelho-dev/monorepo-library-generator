@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Queue Errors
@@ -28,8 +28,8 @@ export class QueueServiceError extends Schema.TaggedError<QueueServiceError>()(
   "QueueServiceError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 // ============================================================================
@@ -45,17 +45,20 @@ export class QueueInternalError extends Schema.TaggedError<QueueInternalError>()
   "QueueInternalError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
  * Configuration error - invalid or missing configuration
  */
-export class QueueConfigError extends Schema.TaggedError<QueueConfigError>()("QueueConfigError", {
-  message: Schema.String,
-  field: Schema.optional(Schema.String),
-}) {}
+export class QueueConfigError extends Schema.TaggedError<QueueConfigError>()(
+  "QueueConfigError",
+  {
+    message: Schema.String,
+    field: Schema.optional(Schema.String)
+  }
+) {}
 
 /**
  * Connection error - failure to connect to backing service
@@ -65,8 +68,8 @@ export class QueueConnectionError extends Schema.TaggedError<QueueConnectionErro
   {
     message: Schema.String,
     endpoint: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -76,8 +79,8 @@ export class QueueTimeoutError extends Schema.TaggedError<QueueTimeoutError>()(
   "QueueTimeoutError",
   {
     message: Schema.String,
-    timeoutMs: Schema.optional(Schema.Number),
-  },
+    timeoutMs: Schema.optional(Schema.Number)
+  }
 ) {}
 
 // ============================================================================
@@ -99,4 +102,4 @@ export type QueueError =
   | QueueInternalError
   | QueueConfigError
   | QueueConnectionError
-  | QueueTimeoutError;
+  | QueueTimeoutError

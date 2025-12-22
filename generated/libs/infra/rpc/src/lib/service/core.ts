@@ -1,6 +1,6 @@
-import { Rpc, RpcGroup } from "@effect/rpc";
-import type { Effect } from "effect";
-import { Schema } from "effect";
+import { Rpc, RpcGroup } from "@effect/rpc"
+import { Schema } from "effect"
+import type { Effect } from "effect"
 
 /**
  * Rpc Core
@@ -24,7 +24,7 @@ Router utilities are in router.ts.
 // ============================================================================
 
 // Re-export core RPC primitives for convenience
-export { Rpc, RpcGroup } from "@effect/rpc";
+export { Rpc, RpcGroup } from "@effect/rpc"
 
 // ============================================================================
 // RPC Definition Helpers
@@ -54,7 +54,7 @@ export { Rpc, RpcGroup } from "@effect/rpc";
  * }) {}
  * ```
  */
-export const defineRpc = Rpc.make;
+export const defineRpc = Rpc.make
 
 /**
  * Helper to create an RPC group
@@ -71,7 +71,7 @@ export const defineRpc = Rpc.make;
  * );
  * ```
  */
-export const defineRpcGroup = RpcGroup.make;
+export const defineRpcGroup = RpcGroup.make
 
 // ============================================================================
 // Handler Creation Helpers
@@ -112,14 +112,14 @@ export const defineRpcGroup = RpcGroup.make;
  * Note: This is a simple identity function that helps with type inference.
  * Use directly with your handler implementations.
  */
-export const createHandlers = <T extends Record<string, unknown>>(handlers: T): T => handlers;
+export const createHandlers = <T extends Record<string, unknown>>(handlers: T): T => handlers
 
 /**
  * Type helper for RPC handler function
  */
 export type RpcHandler<Payload, Success, Failure, Deps> = (
-  payload: Payload,
-) => Effect.Effect<Success, Failure, Deps>;
+  payload: Payload
+) => Effect.Effect<Success, Failure, Deps>
 
 /**
  * Type helper to extract handler requirements from an RPC group
@@ -130,18 +130,11 @@ export type RpcHandler<Payload, Success, Failure, Deps> = (
 export type HandlersFor<G> =
   G extends RpcGroup.RpcGroup<infer Rpcs>
     ? {
-        [K in keyof Rpcs]: Rpcs[K] extends Rpc.Rpc<
-          infer _Tag,
-          infer Payload,
-          infer Success,
-          infer Failure
-        >
-          ? (
-              payload: Schema.Schema.Type<Payload>,
-            ) => Effect.Effect<Schema.Schema.Type<Success>, Schema.Schema.Type<Failure>>
-          : never;
+        [K in keyof Rpcs]: Rpcs[K] extends Rpc.Rpc<infer _Tag, infer Payload, infer Success, infer Failure>
+          ? (payload: Schema.Schema.Type<Payload>) => Effect.Effect<Schema.Schema.Type<Success>, Schema.Schema.Type<Failure>>
+          : never
       }
-    : never;
+    : never
 
 // ============================================================================
 // Schema Helpers
@@ -161,8 +154,8 @@ export const paginatedResponse = <T extends Schema.Schema.Any>(itemSchema: T) =>
     items: Schema.Array(itemSchema),
     total: Schema.Number,
     page: Schema.Number,
-    pageSize: Schema.Number,
-  });
+    pageSize: Schema.Number
+  })
 
 /**
  * Create pagination request fields
@@ -177,27 +170,27 @@ export const paginatedResponse = <T extends Schema.Schema.Any>(itemSchema: T) =>
  */
 export const paginationRequest = {
   page: Schema.optionalWith(Schema.Number, { default: () => 1 }),
-  pageSize: Schema.optionalWith(Schema.Number, { default: () => 20 }),
-};
+  pageSize: Schema.optionalWith(Schema.Number, { default: () => 20 })
+}
 
 /**
  * Standard ID request schema
  */
 export const IdRequest = Schema.Struct({
-  id: Schema.String,
-});
+  id: Schema.String
+})
 
 /**
  * Standard success response (for mutations without return value)
  */
 export const SuccessResponse = Schema.Struct({
-  success: Schema.Literal(true),
-});
+  success: Schema.Literal(true)
+})
 
 /**
  * Standard empty request (for operations with no input)
  */
-export const EmptyRequest = Schema.Struct({});
+export const EmptyRequest = Schema.Struct({})
 
 // ============================================================================
 // Error Helpers

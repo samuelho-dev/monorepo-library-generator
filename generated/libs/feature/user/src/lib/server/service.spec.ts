@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
-import { UserService } from "./service";
+import { UserService } from "./service"
+import { describe, expect, it } from "@effect/vitest"
+import { Effect, Layer, Option } from "effect"
 
 /**
  * UserService Tests
@@ -14,6 +14,7 @@ Uses UserService.TestLayer which composes:
  *
  */
 
+
 describe("UserService", () => {
   it.scoped("should create and retrieve user", () =>
     Effect.gen(function* () {
@@ -24,7 +25,7 @@ describe("UserService", () => {
 
       const result = yield* service.get((created as { id: string }).id);
       expect(Option.isSome(result)).toBe(true);
-    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer))),
+    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   );
 
   it.scoped("should list users with pagination", () =>
@@ -39,7 +40,7 @@ describe("UserService", () => {
 
       const count = yield* service.count({});
       expect(count).toBeGreaterThan(0);
-    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer))),
+    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   );
 
   it.scoped("should update user", () =>
@@ -51,7 +52,7 @@ describe("UserService", () => {
 
       const updated = yield* service.update(id, { name: "Updated" });
       expect(Option.isSome(updated)).toBe(true);
-    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer))),
+    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   );
 
   it.scoped("should delete user", () =>
@@ -65,7 +66,7 @@ describe("UserService", () => {
 
       const exists = yield* service.exists(id);
       expect(exists).toBe(false);
-    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer))),
+    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   );
 
   it.scoped("service methods should be defined", () =>
@@ -79,6 +80,6 @@ describe("UserService", () => {
       expect(service.update).toBeDefined();
       expect(service.delete).toBeDefined();
       expect(service.exists).toBeDefined();
-    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer))),
+    }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   );
 });

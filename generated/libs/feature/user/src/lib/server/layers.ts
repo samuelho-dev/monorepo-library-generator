@@ -1,6 +1,6 @@
-import { env } from "@myorg/env";
-import { Layer } from "effect";
-import { UserService } from "./service";
+import { UserService } from "./service"
+import { env } from "@myorg/env"
+import { Layer } from "effect"
 
 /**
  * User Layers
@@ -9,6 +9,7 @@ import { UserService } from "./service";
 Provides different layer implementations for different environments.
  *
  */
+
 
 /**
  * Live layer for production

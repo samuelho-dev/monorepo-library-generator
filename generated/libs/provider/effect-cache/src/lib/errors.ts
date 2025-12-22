@@ -1,4 +1,4 @@
-import { Data, Effect } from "effect";
+import { Data, Effect } from "effect"
 
 /**
  * effect-cache - Error Types
@@ -6,6 +6,7 @@ import { Data, Effect } from "effect";
  * CRITICAL: Use Data.TaggedError (NOT manual classes)
  * Reference: provider.md lines 716-766
  */
+
 
 /**
  * Base EffectCache Error
@@ -65,9 +66,7 @@ export class EffectCacheTimeoutError extends Data.TaggedError("EffectCacheTimeou
 /**
  * Authentication Error - for auth failures
  */
-export class EffectCacheAuthenticationError extends Data.TaggedError(
-  "EffectCacheAuthenticationError",
-)<{
+export class EffectCacheAuthenticationError extends Data.TaggedError("EffectCacheAuthenticationError")<{
   readonly message: string;
   readonly cause?: unknown;
 }> {}
@@ -215,7 +214,9 @@ export function mapEffectCacheError(error: unknown) {
 /**
  * Helper: Run Effect.Cache operation with error mapping
  */
-export function runEffectCacheOperation<A>(operation: () => Promise<A>) {
+export function runEffectCacheOperation<A>(
+  operation: () => Promise<A>,
+) {
   return Effect.tryPromise({
     try: operation,
     catch: mapEffectCacheError,

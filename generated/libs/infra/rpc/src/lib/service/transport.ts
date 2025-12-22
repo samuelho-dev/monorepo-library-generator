@@ -1,6 +1,6 @@
-import { HttpClient, HttpClientRequest } from "@effect/platform";
-import { Context, Effect, Layer } from "effect";
-import { RpcInfraError } from "./errors";
+import { RpcInfraError } from "./errors"
+import { HttpClient, HttpClientRequest } from "@effect/platform"
+import { Context, Effect, Layer } from "effect"
 
 /**
  * Rpc Transport
@@ -23,34 +23,34 @@ All transports share the same handler definitions - only the transport layer dif
 /**
  * Transport mode determines how RPC calls are executed
  */
-export type TransportMode = "http";
+export type TransportMode = "http"
 
 /**
  * Base transport configuration
  */
 export interface TransportConfig {
-  readonly mode: TransportMode;
+  readonly mode: TransportMode
 }
 
 /**
  * HTTP transport config - for cross-process/network calls
  */
 export interface HttpTransportConfig extends TransportConfig {
-  readonly mode: "http";
+  readonly mode: "http"
   /**
    * Base URL for RPC endpoint
    */
-  readonly baseUrl: string;
+  readonly baseUrl: string
   /**
    * Custom headers to include
    */
-  readonly headers?: Record<string, string>;
+  readonly headers?: Record<string, string>
 }
 
 /**
  * Combined transport config union
  */
-export type RpcTransportConfig = HttpTransportConfig;
+export type RpcTransportConfig = HttpTransportConfig
 
 // ============================================================================
 // HTTP Transport
@@ -64,12 +64,12 @@ export interface HttpTransportOptions {
    * Base path for RPC endpoints
    * @default "/rpc"
    */
-  readonly basePath?: string;
+  readonly basePath?: string
 
   /**
    * Custom error mapper
    */
-  readonly mapError?: (error: unknown) => RpcInfraError;
+  readonly mapError?: (error: unknown) => RpcInfraError
 }
 
 /**
@@ -80,19 +80,19 @@ export interface HttpRpcClientConfig {
    * Base URL for RPC endpoint
    * @example "https://api.example.com/rpc"
    */
-  readonly baseUrl: string;
+  readonly baseUrl: string
 
   /**
    * Default headers to include with every request
    * @example { "x-api-key": "secret-key" }
    */
-  readonly headers?: Record<string, string>;
+  readonly headers?: Record<string, string>
 
   /**
    * Request timeout in milliseconds
    * @default 30000
    */
-  readonly timeout?: number;
+  readonly timeout?: number
 }
 
 /**
@@ -126,8 +126,8 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
     readonly call: <R>(
       operation: string,
       payload: unknown,
-      options?: { headers?: Record<string, string> },
-    ) => Effect.Effect<R, RpcInfraError, HttpClient.HttpClient>;
+      options?: { headers?: Record<string, string> }
+    ) => Effect.Effect<R, RpcInfraError, HttpClient.HttpClient>
   }
 >() {
   /**
@@ -138,45 +138,48 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
       call: <R>(
         operation: string,
         payload: unknown,
-        options?: { headers?: Record<string, string> },
+        options?: { headers?: Record<string, string> }
       ) =>
         Effect.gen(function* () {
-          const httpClient = yield* HttpClient.HttpClient;
+          const httpClient = yield* HttpClient.HttpClient
 
           // Build request
           const request = HttpClientRequest.post(config.baseUrl).pipe(
             HttpClientRequest.setHeaders({
               "Content-Type": "application/json",
               ...config.headers,
-              ...options?.headers,
+              ...options?.headers
             }),
             HttpClientRequest.bodyJson({
               operation,
-              payload,
-            }),
-          );
+              payload
+            })
+          )
 
           // Execute request
-          const response = yield* Effect.flatMap(request, (req) => httpClient.execute(req)).pipe(
+          const response = yield* Effect.flatMap(
+            request,
+            (req) => httpClient.execute(req)
+          ).pipe(
             Effect.timeout(config.timeout ?? 30000),
             Effect.catchAll((error) =>
               Effect.fail(
                 new RpcInfraError({
                   message: `RPC call failed: ${String(error)}`,
-                  code: "NETWORK_ERROR",
-                }),
-              ),
-            ),
-          );
+                  code: "NETWORK_ERROR"
+                })
+              )
+            )
+          )
 
           // Parse response
           if (response.status !== 200) {
             return yield* Effect.fail(
               new RpcInfraError({
                 message: `RPC error: HTTP ${response.status}`,
-                code: "HTTP_ERROR",
-              }),
-            );
+                code: "HTTP_ERROR"
+              })
+            )
           }
 
           const body = yield* response.json.pipe(
@@ -184,38 +187,36 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
               Effect.fail(
                 new RpcInfraError({
                   message: "Failed to parse RPC response",
-                  code: "PARSE_ERROR",
-                }),
-              ),
-            ),
-          );
+                  code: "PARSE_ERROR"
+                })
+              )
+            )
+          )
 
           // Check for RPC-level error
           if (body && typeof body === "object" && "error" in body) {
-            const errorBody = body as { error?: { message?: string; code?: string } };
+            const errorBody = body as { error?: { message?: string; code?: string } }
             return yield* Effect.fail(
               new RpcInfraError({
                 message: errorBody.error?.message ?? "Unknown RPC error",
-                code: errorBody.error?.code ?? "RPC_ERROR",
-              }),
-            );
+                code: errorBody.error?.code ?? "RPC_ERROR"
+              })
+            )
           }
 
-          return body as R;
-        }).pipe(Effect.withSpan(`HttpRpc.${operation}`)) as Effect.Effect<
-          R,
-          RpcInfraError,
-          HttpClient.HttpClient
-        >,
-    });
+          return body as R
+        }).pipe(
+          Effect.withSpan(`HttpRpc.${operation}`)
+        ) as Effect.Effect<R, RpcInfraError, HttpClient.HttpClient>
+    })
   }
 
   /**
    * Test layer - returns mock responses
    */
   static readonly Test = Layer.succeed(HttpRpcClient, {
-    call: <R>() => Effect.succeed({} as R),
-  });
+    call: <R>() => Effect.succeed({} as R)
+  })
 }
 
 // ============================================================================
@@ -242,59 +243,55 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
  * Next.js handler result type
  */
 export interface NextHandler {
-  readonly GET: () => Response;
-  readonly POST: (request: Request) => Promise<Response>;
+  readonly GET: () => Response
+  readonly POST: (request: Request) => Promise<Response>
 }
 
 export const createNextHandler = <R>(options: {
-  handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>;
-  layers?: Layer.Layer<R, never, never>;
-}): NextHandler => {
+  handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>
+  layers?: Layer.Layer<R, never, never>
+}) => {
   return {
     GET: () => new Response("RPC endpoint - use POST", { status: 405 }),
-    POST: async (request: Request): Promise<Response> => {
+    POST: async (request: Request) => {
       try {
-        const body = (await request.json()) as { operation?: string; payload?: unknown };
-        const { operation, payload } = body;
+        const body = await request.json() as { operation?: string; payload?: unknown }
+        const { operation, payload } = body
 
         if (!operation || typeof operation !== "string") {
           return new Response(
             JSON.stringify({ error: { message: "Missing operation", code: "BAD_REQUEST" } }),
-            { status: 400, headers: { "Content-Type": "application/json" } },
-          );
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          )
         }
 
-        const handler = options.handlers[operation];
+        const handler = options.handlers[operation]
         if (!handler) {
           return new Response(
-            JSON.stringify({
-              error: { message: `Unknown operation: ${operation}`, code: "NOT_FOUND" },
-            }),
-            { status: 404, headers: { "Content-Type": "application/json" } },
-          );
+            JSON.stringify({ error: { message: `Unknown operation: ${operation}`, code: "NOT_FOUND" } }),
+            { status: 404, headers: { "Content-Type": "application/json" } }
+          )
         }
 
         const effect = handler(payload).pipe(
-          options.layers
-            ? Effect.provide(options.layers)
-            : (e) => e as Effect.Effect<unknown, unknown, never>,
-        );
+          options.layers ? Effect.provide(options.layers) : (e) => e as Effect.Effect<unknown, unknown, never>
+        )
 
-        const result = await Effect.runPromise(effect as Effect.Effect<unknown, never, never>);
+        const result = await Effect.runPromise(effect as Effect.Effect<unknown, never, never>)
         return new Response(JSON.stringify(result), {
           status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+          headers: { "Content-Type": "application/json" }
+        })
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Internal server error";
-        return new Response(JSON.stringify({ error: { message, code: "INTERNAL_ERROR" } }), {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        });
+        const message = error instanceof Error ? error.message : "Internal server error"
+        return new Response(
+          JSON.stringify({ error: { message, code: "INTERNAL_ERROR" } }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        )
       }
-    },
-  };
-};
+    }
+  }
+}
 
 // ============================================================================
 // Transport Utilities
@@ -303,44 +300,40 @@ export const createNextHandler = <R>(options: {
 /**
  * Extract headers from HTTP request for middleware context
  */
-export const extractHeaders = (request: Request): Record<string, string> => {
-  const headers: Record<string, string> = {};
+export const extractHeaders = (request: Request) => {
+  const headers: Record<string, string> = {}
   request.headers.forEach((value, key) => {
-    headers[key.toLowerCase()] = value;
-  });
-  return headers;
-};
+    headers[key.toLowerCase()] = value
+  })
+  return headers
+}
 
 /**
  * Create standard JSON response
  */
-export const jsonResponse = <T>(data: T, status = 200): Response =>
+export const jsonResponse = <T>(data: T, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" },
-  });
+    headers: { "Content-Type": "application/json" }
+  })
 
 /**
  * Create error response
  */
-export const errorResponse = (error: RpcInfraError): Response =>
+export const errorResponse = (error: RpcInfraError) =>
   jsonResponse(
     {
       error: {
         message: error.message,
-        code: error.code,
-      },
+        code: error.code
+      }
     },
-    error.code === "UNAUTHORIZED"
-      ? 401
-      : error.code === "FORBIDDEN"
-        ? 403
-        : error.code === "NOT_FOUND"
-          ? 404
-          : error.code === "RATE_LIMITED"
-            ? 429
-            : 500,
-  );
+    error.code === "UNAUTHORIZED" ? 401 :
+    error.code === "FORBIDDEN" ? 403 :
+    error.code === "NOT_FOUND" ? 404 :
+    error.code === "RATE_LIMITED" ? 429 :
+    500
+  )
 
 // ============================================================================
 // Unified RPC Client
@@ -368,56 +361,61 @@ export const errorResponse = (error: RpcInfraError): Response =>
 export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
   RpcTransportClient,
   {
-    readonly call: <R>(operation: string, payload: unknown) => Effect.Effect<R, RpcInfraError>;
+    readonly call: <R>(
+      operation: string,
+      payload: unknown
+    ) => Effect.Effect<R, RpcInfraError>
   }
 >() {
   /**
    * Create layer from transport configuration
    */
-  static layer(
-    config: RpcTransportConfig,
-  ): Layer.Layer<RpcTransportClient, never, HttpClient.HttpClient> {
+  static layer(config: RpcTransportConfig): Layer.Layer<RpcTransportClient, never, HttpClient.HttpClient> {
     return Layer.effect(
       RpcTransportClient,
       Effect.gen(function* () {
-        const httpClient = yield* HttpClient.HttpClient;
+        const httpClient = yield* HttpClient.HttpClient
         return {
-          call: <R>(operation: string, payload: unknown) =>
+          call: <R>(
+            operation: string,
+            payload: unknown
+          ) =>
             Effect.gen(function* () {
               // Build request
               const request = HttpClientRequest.post(config.baseUrl).pipe(
                 HttpClientRequest.setHeaders({
                   "Content-Type": "application/json",
-                  ...config.headers,
+                  ...config.headers
                 }),
                 HttpClientRequest.bodyJson({
                   operation,
-                  payload,
-                }),
-              );
+                  payload
+                })
+              )
 
               // Execute request
-              const response = yield* Effect.flatMap(request, (req) =>
-                httpClient.execute(req),
+              const response = yield* Effect.flatMap(
+                request,
+                (req) => httpClient.execute(req)
               ).pipe(
                 Effect.catchAll((error) =>
                   Effect.fail(
                     new RpcInfraError({
                       message: `RPC call failed: ${String(error)}`,
-                      code: "NETWORK_ERROR",
-                    }),
-                  ),
-                ),
-              );
+                      code: "NETWORK_ERROR"
+                    })
+                  )
+                )
+              )
 
               // Parse response
               if (response.status !== 200) {
                 return yield* Effect.fail(
                   new RpcInfraError({
                     message: `RPC error: HTTP ${response.status}`,
-                    code: "HTTP_ERROR",
-                  }),
-                );
+                    code: "HTTP_ERROR"
+                  })
+                )
               }
 
               const body = yield* response.json.pipe(
@@ -425,30 +423,29 @@ export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
                   Effect.fail(
                     new RpcInfraError({
                       message: "Failed to parse RPC response",
-                      code: "PARSE_ERROR",
-                    }),
-                  ),
-                ),
-              );
+                      code: "PARSE_ERROR"
+                    })
+                  )
+                )
+              )
 
               // Check for RPC-level error
               if (body && typeof body === "object" && "error" in body) {
-                const errorBody = body as { error?: { message?: string; code?: string } };
+                const errorBody = body as { error?: { message?: string; code?: string } }
                 return yield* Effect.fail(
                   new RpcInfraError({
                     message: errorBody.error?.message ?? "Unknown RPC error",
-                    code: errorBody.error?.code ?? "RPC_ERROR",
-                  }),
-                );
+                    code: errorBody.error?.code ?? "RPC_ERROR"
+                  })
+                )
               }
 
-              return body as R;
-            }).pipe(Effect.withSpan(`RpcTransportClient.${operation}`)) as Effect.Effect<
-              R,
-              RpcInfraError
-            >,
-        };
-      }),
-    );
+              return body as R
+            }).pipe(
+              Effect.withSpan(`RpcTransportClient.${operation}`)
+            ) as Effect.Effect<R, RpcInfraError>
+        }
+      })
+    )
   }
 }

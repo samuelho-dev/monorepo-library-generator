@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 /**
  * Kysely Provider Errors
@@ -8,19 +8,25 @@ import { Schema } from "effect";
  * @module @myorg/provider-kysely/errors
  */
 
+
+
 // ============================================================================
 // Error Types
 // ============================================================================
+
 
 /**
  * Base Kysely error
  *
  * All Kysely-specific errors extend this type.
  */
-export class KyselyError extends Schema.TaggedError<KyselyError>()("KyselyError", {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
+export class KyselyError extends Schema.TaggedError<KyselyError>()(
+  "KyselyError",
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown)
+  }
+) {}
 
 /**
  * Connection error - failure to connect to database
@@ -29,18 +35,21 @@ export class KyselyConnectionError extends Schema.TaggedError<KyselyConnectionEr
   "KyselyConnectionError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
  * Query error - query execution failed
  */
-export class KyselyQueryError extends Schema.TaggedError<KyselyQueryError>()("KyselyQueryError", {
-  message: Schema.String,
-  query: Schema.optional(Schema.String),
-  cause: Schema.optional(Schema.Unknown),
-}) {}
+export class KyselyQueryError extends Schema.TaggedError<KyselyQueryError>()(
+  "KyselyQueryError",
+  {
+    message: Schema.String,
+    query: Schema.optional(Schema.String),
+    cause: Schema.optional(Schema.Unknown)
+  }
+) {}
 
 /**
  * Transaction error - transaction failed
@@ -49,8 +58,8 @@ export class KyselyTransactionError extends Schema.TaggedError<KyselyTransaction
   "KyselyTransactionError",
   {
     message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 /**
@@ -61,13 +70,14 @@ export class KyselyConstraintError extends Schema.TaggedError<KyselyConstraintEr
   {
     message: Schema.String,
     constraint: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown),
-  },
+    cause: Schema.optional(Schema.Unknown)
+  }
 ) {}
 
 // ============================================================================
 // Error Type Union
 // ============================================================================
+
 
 /**
  * Union of all Kysely error types
@@ -77,4 +87,4 @@ export type KyselyProviderError =
   | KyselyConnectionError
   | KyselyQueryError
   | KyselyTransactionError
-  | KyselyConstraintError;
+  | KyselyConstraintError

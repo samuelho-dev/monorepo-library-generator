@@ -13,47 +13,54 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Errors
 // ============================================================================
 
-export type { StorageInfraError } from "./lib/service/errors";
+
 export {
-  BucketNotFoundError,
-  DownloadFailedError,
+  StorageError,
   FileNotFoundError,
+  BucketNotFoundError,
+  UploadFailedError,
+  DownloadFailedError,
   FileSizeExceededError,
   InvalidFileTypeError,
-  StorageError,
-  UploadFailedError,
 } from "./lib/service/errors";
+
+export type { StorageInfraError } from "./lib/service/errors";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-// Re-export from provider for convenience
+
 export type {
-  DownloadOptions,
-  SignedUrlOptions,
-  StorageBucket,
-  StorageFile,
-  UploadOptions,
-} from "@myorg/provider-supabase";
-export type {
-  ListFilesOptions,
-  ListFilesResult,
   StorageConfig,
   UploadResult,
+  ListFilesOptions,
+  ListFilesResult,
 } from "./lib/service/types";
+
 export {
   StorageConfigSchema,
   UploadResultSchema,
 } from "./lib/service/types";
 
+// Re-export from provider for convenience
+export type {
+  StorageBucket,
+  StorageFile,
+  UploadOptions,
+  DownloadOptions,
+  SignedUrlOptions,
+} from "@myorg/provider-supabase";
+
 // ============================================================================
 // Service
 // ============================================================================
+
 
 export { StorageService, type StorageServiceInterface } from "./lib/service/service";
 
@@ -63,19 +70,19 @@ export { StorageService, type StorageServiceInterface } from "./lib/service/serv
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-//
+// 
 
 // import { Effect } from 'effect';
 
 // import { StorageService } from '@myorg/infra-storage';
 
-//
+// 
 
 // const program = Effect.gen(function* () {
 
 //   const storage = yield* StorageService;
 
-//
+// 
 
 //   // Upload a file
 
@@ -91,7 +98,7 @@ export { StorageService, type StorageServiceInterface } from "./lib/service/serv
 
 //   );
 
-//
+// 
 
 //   // Get signed URL
 
@@ -105,7 +112,7 @@ export { StorageService, type StorageServiceInterface } from "./lib/service/serv
 
 //   );
 
-//
+// 
 
 //   return url;
 

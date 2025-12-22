@@ -17,9 +17,11 @@ Import options:
  * @module @myorg/provider-kysely/service
  */
 
+
 // ============================================================================
 // Re-export service interface, tag, and Database type
 // ============================================================================
 
-export type { Database, KyselyServiceInterface } from "./service";
+
 export { Kysely } from "./service";
+export type { KyselyServiceInterface, Database } from "./service";

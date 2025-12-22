@@ -19,7 +19,6 @@ This is an AI-optimized reference for @myorg/feature-user, a feature library fol
   - `service/index.ts`: Service barrel export
   - `layers.ts`: Layer compositions (Live, Test, Dev, Auto)
   - `service.spec.ts`: Service tests
-
 - **lib/rpc/**: RPC layer
   - `rpc.ts`: RPC router definition
   - `handlers.ts`: RPC handlers (~4-8 KB)

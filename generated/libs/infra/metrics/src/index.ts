@@ -15,12 +15,12 @@ Layers are available as static members on the service class.
 
 // Service with static layers (Memory, Test, Live)
 export {
+  MetricsService,
   type CounterHandle,
   type GaugeHandle,
   type HistogramHandle,
-  type MetricOptions,
-  MetricsService,
-} from "./lib/service/service";
+  type MetricOptions
+} from "./lib/service/service"
 
 // ============================================================================
 // Error Types
@@ -28,13 +28,13 @@ export {
 
 // Error types for error handling
 export {
+  MetricsServiceError,
+  MetricsInternalError,
   MetricsConfigError,
   MetricsConnectionError,
-  type MetricsError,
-  MetricsInternalError,
-  MetricsServiceError,
   MetricsTimeoutError,
-} from "./lib/service/errors";
+  type MetricsError
+} from "./lib/service/errors"
 
 // ============================================================================
 // Additional Layers
@@ -42,8 +42,8 @@ export {
 
 // OpenTelemetry integration
 export {
-  HistogramBoundaries,
   makeMetricsOtelLayer,
-  type OtelMetricsConfig,
+  HistogramBoundaries,
   StandardMetricNames,
-} from "./lib/layers/otel-layer";
+  type OtelMetricsConfig
+} from "./lib/layers/otel-layer"

@@ -161,11 +161,6 @@ const includeEdgeOption = Options.boolean('includeEdge').pipe(
   Options.optional,
 );
 
-const includeRPCFeatureOption = Options.boolean('includeRPC').pipe(
-  Options.withDescription('Include RPC definitions'),
-  Options.optional,
-);
-
 const featureCommand = Command.make(
   'feature',
   {
@@ -175,31 +170,16 @@ const featureCommand = Command.make(
     scope: scopeOption,
     platform: platformOption,
     includeClientServer: includeClientServerOption,
-    includeRPC: includeRPCFeatureOption,
     includeCQRS: includeCQRSFeatureOption,
     includeEdge: includeEdgeOption,
     verbose: verboseOption,
     quiet: quietOption,
   },
-  ({
-    description,
-    includeCQRS,
-    includeClientServer,
-    includeEdge,
-    includeRPC,
-    name,
-    platform,
-    scope,
-    tags,
-  }) => {
+  ({ description, includeCQRS, includeClientServer, includeEdge, name, platform, scope, tags }) => {
     const desc = Option.getOrUndefined(description);
     const scopeValue = Option.getOrUndefined(scope);
     const platformValue = Option.getOrUndefined(platform);
-
-    // For boolean options with .optional, @effect/cli returns Some(false) when not provided
-    // We need to treat false as "not provided" (undefined) since boolean flags are only set when explicitly passed
     const includeCS = Option.getOrUndefined(includeClientServer);
-    const includeRPCVal = Option.getOrUndefined(includeRPC);
     const includeCQRSVal = Option.getOrUndefined(includeCQRS);
     const includeEdgeVal = Option.getOrUndefined(includeEdge);
 
@@ -209,9 +189,7 @@ const featureCommand = Command.make(
       tags,
       ...(scopeValue && { scope: scopeValue }),
       ...(platformValue && { platform: platformValue }),
-      // Only include boolean flags if they are explicitly true (flag was provided)
       ...(includeCS === true && { includeClientServer: includeCS }),
-      ...(includeRPCVal === true && { includeRPC: includeRPCVal }),
       ...(includeCQRSVal === true && { includeCQRS: includeCQRSVal }),
       ...(includeEdgeVal === true && { includeEdge: includeEdgeVal }),
     }).pipe(
@@ -313,11 +291,6 @@ const providerCommand = Command.make(
  * - Data-Access library (repository)
  * - Feature library (business logic)
  */
-const includeCacheOption = Options.boolean('includeCache').pipe(
-  Options.withDescription('Include cache integration in data-access layer'),
-  Options.optional,
-);
-
 const domainCommand = Command.make(
   'domain',
   {
@@ -325,30 +298,16 @@ const domainCommand = Command.make(
     description: descriptionOption,
     tags: tagsOption,
     scope: scopeOption,
-    includeCache: includeCacheOption,
     includeClientServer: includeClientServerOption,
-    includeRPC: includeRPCFeatureOption,
     includeCQRS: includeCQRSFeatureOption,
     includeEdge: includeEdgeOption,
     verbose: verboseOption,
     quiet: quietOption,
   },
-  ({
-    description,
-    includeCQRS,
-    includeCache,
-    includeClientServer,
-    includeEdge,
-    includeRPC,
-    name,
-    scope,
-    tags,
-  }) => {
+  ({ description, includeCQRS, includeClientServer, includeEdge, name, scope, tags }) => {
     const desc = Option.getOrUndefined(description);
     const scopeValue = Option.getOrUndefined(scope);
-    const includeCacheVal = Option.getOrUndefined(includeCache);
     const includeCS = Option.getOrUndefined(includeClientServer);
-    const includeRPCVal = Option.getOrUndefined(includeRPC);
     const includeCQRSVal = Option.getOrUndefined(includeCQRS);
     const includeEdgeVal = Option.getOrUndefined(includeEdge);
 
@@ -357,10 +316,7 @@ const domainCommand = Command.make(
       ...(desc && { description: desc }),
       tags,
       ...(scopeValue && { scope: scopeValue }),
-      // Only include boolean flags if they are explicitly true (flag was provided)
-      ...(includeCacheVal === true && { includeCache: includeCacheVal }),
       ...(includeCS === true && { includeClientServer: includeCS }),
-      ...(includeRPCVal === true && { includeRPC: includeRPCVal }),
       ...(includeCQRSVal === true && { includeCQRS: includeCQRSVal }),
       ...(includeEdgeVal === true && { includeEdge: includeEdgeVal }),
     }).pipe(

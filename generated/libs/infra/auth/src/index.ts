@@ -13,38 +13,44 @@ Usage:
  *
  */
 
+
 // ============================================================================
 // Errors
 // ============================================================================
 
+
 export {
   AuthError,
-  type AuthInfraError,
+  UnauthorizedError,
   ForbiddenError,
   InvalidTokenError,
   SessionExpiredError,
-  UnauthorizedError,
+  type AuthInfraError,
 } from "./lib/service/errors";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-// Re-export from provider for convenience
-export type { AuthMethod, AuthUser } from "@myorg/provider-supabase";
-export { AuthUserSchema } from "@myorg/provider-supabase";
+
 export type {
   AuthContext,
   RequestMeta,
 } from "./lib/service/types";
+
 export {
   AuthContextSchema,
   RequestMetaSchema,
 } from "./lib/service/types";
 
+// Re-export from provider for convenience
+export type { AuthUser, AuthMethod } from "@myorg/provider-supabase";
+export { AuthUserSchema } from "@myorg/provider-supabase";
+
 // ============================================================================
 // Service
 // ============================================================================
+
 
 export { AuthService, type AuthServiceInterface } from "./lib/service/service";
 
@@ -52,23 +58,24 @@ export { AuthService, type AuthServiceInterface } from "./lib/service/service";
 // Middleware & Handler Factories
 // ============================================================================
 
+
 export {
-  AuthContextTag,
-  AuthMethodTag,
   // Context Tags
   CurrentUser,
+  OptionalUser,
+  AuthContextTag,
+  RequestMetaTag,
+  AuthMethodTag,
+  // Context Types
+  type ProtectedHandlerContext,
+  type PublicHandlerContext,
   // Middleware creators
   createAuthMiddleware,
   createPublicMiddleware,
   extractRequestMeta,
-  OptionalUser,
-  // Context Types
-  type ProtectedHandlerContext,
-  type PublicHandlerContext,
   // Handler factories
   protectedHandler,
   publicHandler,
-  RequestMetaTag,
 } from "./lib/service/middleware";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -77,13 +84,13 @@ export {
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-//
+// 
 
 // import { Effect, Option } from 'effect';
 
 // import { AuthService, protectedHandler, publicHandler } from '@myorg/infra-auth';
 
-//
+// 
 
 // // Protected handler - requires authentication
 
@@ -101,7 +108,7 @@ export {
 
 // );
 
-//
+// 
 
 // // Public handler - optional authentication
 
