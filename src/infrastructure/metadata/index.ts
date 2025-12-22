@@ -6,5 +6,5 @@
  * @module monorepo-library-generator/infrastructure/metadata
  */
 
-export * from "./computation"
-export * from "./types"
+export * from './computation';
+export * from './types';

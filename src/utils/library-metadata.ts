@@ -8,23 +8,23 @@
  * @module monorepo-library-generator/library-metadata
  */
 
-import type { Tree } from "@nx/devkit"
-import { joinPathFragments, offsetFromRoot as computeOffsetFromRoot } from "@nx/devkit"
-import { Effect } from "effect"
-import { createNamingVariants } from "./naming"
-import type { LibraryType } from "./shared/types"
-import { createTreeAdapter } from "./tree-adapter"
-import { detectWorkspaceConfig } from "./workspace-detection"
+import type { Tree } from '@nx/devkit';
+import { offsetFromRoot as computeOffsetFromRoot, joinPathFragments } from '@nx/devkit';
+import { Effect } from 'effect';
+import { createNamingVariants } from './naming';
+import type { LibraryType } from './types';
+import { createTreeAdapter } from './filesystem';
+import { detectWorkspaceConfig } from './workspace-detection';
 
 /**
  * Input for computing library metadata
  */
 export interface LibraryMetadataInput {
-  readonly name: string
-  readonly directory?: string
-  readonly description?: string
-  readonly libraryType: LibraryType
-  readonly additionalTags?: Array<string>
+  readonly name: string;
+  readonly directory?: string;
+  readonly description?: string;
+  readonly libraryType: LibraryType;
+  readonly additionalTags?: Array<string>;
 }
 
 /**
@@ -37,29 +37,29 @@ export interface LibraryMetadataInput {
  */
 export interface LibraryMetadata {
   // Required by BaseTemplateSubstitutions
-  readonly tmpl: ""
-  readonly name: string
-  readonly offsetFromRoot: string
-  readonly tags: string
+  readonly tmpl: '';
+  readonly name: string;
+  readonly offsetFromRoot: string;
+  readonly tags: string;
 
   // Naming variants
-  readonly className: string // PascalCase
-  readonly propertyName: string // camelCase
-  readonly fileName: string // kebab-case
-  readonly constantName: string // SCREAMING_SNAKE_CASE
-  readonly domainName: string // Title Case
+  readonly className: string; // PascalCase
+  readonly propertyName: string; // camelCase
+  readonly fileName: string; // kebab-case
+  readonly constantName: string; // SCREAMING_SNAKE_CASE
+  readonly domainName: string; // Title Case
 
   // Project identifiers
-  readonly projectName: string // {type}-{name}
-  readonly packageName: string // @custom-repo/{projectName}
+  readonly projectName: string; // {type}-{name}
+  readonly packageName: string; // @custom-repo/{projectName}
 
   // Paths
-  readonly projectRoot: string
-  readonly sourceRoot: string
-  readonly distRoot: string
+  readonly projectRoot: string;
+  readonly sourceRoot: string;
+  readonly distRoot: string;
 
   // Metadata
-  readonly description: string
+  readonly description: string;
 }
 
 /**
@@ -68,13 +68,13 @@ export interface LibraryMetadata {
 function getDefaultDirectory(libraryType: LibraryType, librariesRoot: string) {
   const directories: Record<LibraryType, string> = {
     contract: `${librariesRoot}/contract`,
-    "data-access": `${librariesRoot}/data-access`,
+    'data-access': `${librariesRoot}/data-access`,
     feature: `${librariesRoot}/feature`,
     provider: `${librariesRoot}/provider`,
     infra: `${librariesRoot}/infra`,
-    util: `${librariesRoot}/util`
-  }
-  return directories[libraryType]
+    util: `${librariesRoot}/util`,
+  };
+  return directories[libraryType];
 }
 
 /**
@@ -82,28 +82,24 @@ function getDefaultDirectory(libraryType: LibraryType, librariesRoot: string) {
  */
 function createDomainName(fileName: string) {
   return fileName
-    .split("-")
+    .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
+    .join(' ');
 }
 
 /**
  * Build standard Nx tags for library
  */
-function buildTags(
-  libraryType: LibraryType,
-  fileName: string,
-  additionalTags?: Array<string>
-) {
-  const baseTags = [`type:${libraryType}`, `scope:${fileName}`]
+function buildTags(libraryType: LibraryType, fileName: string, additionalTags?: Array<string>) {
+  const baseTags = [`type:${libraryType}`, `scope:${fileName}`];
 
   if (additionalTags) {
     for (const tag of additionalTags) {
-      baseTags.push(tag)
+      baseTags.push(tag);
     }
   }
 
-  return baseTags.join(",")
+  return baseTags.join(',');
 }
 
 /**
@@ -147,55 +143,59 @@ function buildTags(
 export function computeLibraryMetadata(
   tree: Tree,
   schema: {
-    readonly name: string
-    readonly directory?: string
-    readonly description?: string
-    readonly tags?: string
+    readonly name: string;
+    readonly directory?: string;
+    readonly description?: string;
+    readonly tags?: string;
   },
   libraryType: LibraryType,
-  additionalTags?: ReadonlyArray<string>
+  additionalTags?: ReadonlyArray<string>,
 ) {
   // Detect workspace configuration
-  const adapter = createTreeAdapter(tree)
+  const adapter = createTreeAdapter(tree);
 
-  const workspaceConfig = Effect.runSync(
-    detectWorkspaceConfig(adapter).pipe(Effect.orDie)
-  )
+  const workspaceConfig = Effect.runSync(detectWorkspaceConfig(adapter).pipe(Effect.orDie));
 
   // Parse schema tags if provided
   const schemaTags = schema.tags
-    ? schema.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0)
-    : []
+    ? schema.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
+    : [];
 
   // Combine schema tags with additional tags
-  const allAdditionalTags = additionalTags
-    ? [...schemaTags, ...additionalTags]
-    : schemaTags
+  const allAdditionalTags = additionalTags ? [...schemaTags, ...additionalTags] : schemaTags;
   // Use Nx names utility to get all naming variants
-  const nameVariants = createNamingVariants(schema.name)
-  const fileName = nameVariants.fileName // kebab-case
+  const nameVariants = createNamingVariants(schema.name);
+  const fileName = nameVariants.fileName; // kebab-case
 
   // Get directory (use default if not provided)
-  const directory = schema.directory || getDefaultDirectory(libraryType, workspaceConfig.librariesRoot)
+  const directory =
+    schema.directory || getDefaultDirectory(libraryType, workspaceConfig.librariesRoot);
 
   // Compute paths
-  const projectRoot = joinPathFragments(directory, fileName)
-  const sourceRoot = joinPathFragments(projectRoot, "src")
-  const distRoot = joinPathFragments("dist", directory, fileName)
+  const projectRoot = joinPathFragments(directory, fileName);
+  const sourceRoot = joinPathFragments(projectRoot, 'src');
+  const distRoot = joinPathFragments('dist', directory, fileName);
 
   // Compute project identifiers
-  const projectName = `${libraryType}-${fileName}`
-  const packageName = `${workspaceConfig.scope}/${projectName}`
+  const projectName = `${libraryType}-${fileName}`;
+  const packageName = `${workspaceConfig.scope}/${projectName}`;
 
   // Compute domain name (Title Case from fileName)
-  const domainName = schema.description || createDomainName(fileName)
+  const domainName = schema.description || createDomainName(fileName);
 
   // Build tags
-  const tags = buildTags(libraryType, fileName, allAdditionalTags.length > 0 ? allAdditionalTags : undefined)
+  const tags = buildTags(
+    libraryType,
+    fileName,
+    allAdditionalTags.length > 0 ? allAdditionalTags : undefined,
+  );
 
   return {
     // Required by BaseTemplateSubstitutions
-    tmpl: "",
+    tmpl: '',
     name: schema.name,
     offsetFromRoot: computeOffsetFromRoot(projectRoot),
     tags,
@@ -217,8 +217,8 @@ export function computeLibraryMetadata(
     distRoot,
 
     // Metadata
-    description: schema.description || domainName
-  }
+    description: schema.description || domainName,
+  };
 }
 
 // Forward-facing architecture: No backwards compatibility wrappers

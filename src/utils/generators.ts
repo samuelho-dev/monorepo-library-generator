@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/generator-utils
  */
 
-import type { Tree } from "@nx/devkit"
-import type { LibraryType, PlatformType } from "./build-config"
+import type { Tree } from '@nx/devkit';
+import type { LibraryType, PlatformType } from './build';
 
 /**
  * Calculate relative path from project root to workspace root
@@ -26,8 +26,8 @@ import type { LibraryType, PlatformType } from "./build-config"
  * ```
  */
 export function calculateOffsetFromRoot(projectRoot: string) {
-  const depth = projectRoot.split("/").length
-  return "../".repeat(depth)
+  const depth = projectRoot.split('/').length;
+  return '../'.repeat(depth);
 }
 
 /**
@@ -43,11 +43,8 @@ export function calculateOffsetFromRoot(projectRoot: string) {
  * // Returns: ["type:contract", "platform:universal"]
  * ```
  */
-export function createStandardTags(
-  libraryType: LibraryType,
-  platform: PlatformType = "universal"
-) {
-  return [`type:${libraryType}`, `platform:${platform}`]
+export function createStandardTags(libraryType: LibraryType, platform: PlatformType = 'universal') {
+  return [`type:${libraryType}`, `platform:${platform}`];
 }
 
 /**
@@ -72,19 +69,16 @@ export function createStandardTags(
  * // Returns: ["type:library"]
  * ```
  */
-export function parseTags(
-  tags: string | undefined,
-  defaults: Array<string>
-) {
-  if (!tags) return defaults
+export function parseTags(tags: string | undefined, defaults: Array<string>) {
+  if (!tags) return defaults;
 
   const parsed = tags
-    .split(",")
+    .split(',')
     .map((t) => t.trim())
-    .filter(Boolean)
+    .filter(Boolean);
 
   // Merge with defaults, removing duplicates
-  return Array.from(new Set([...defaults, ...parsed]))
+  return Array.from(new Set([...defaults, ...parsed]));
 }
 
 /**
@@ -95,14 +89,8 @@ export function parseTags(
  * @param projectName - Project name
  * @throws Error if library already exists
  */
-export function validateLibraryDoesNotExist(
-  tree: Tree,
-  projectRoot: string,
-  projectName: string
-) {
+export function validateLibraryDoesNotExist(tree: Tree, projectRoot: string, projectName: string) {
   if (tree.exists(projectRoot)) {
-    throw new Error(
-      `Library "${projectName}" already exists at ${projectRoot}`
-    )
+    throw new Error(`Library "${projectName}" already exists at ${projectRoot}`);
   }
 }

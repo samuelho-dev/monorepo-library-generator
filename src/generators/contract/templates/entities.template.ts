@@ -7,8 +7,9 @@
  * @module monorepo-library-generator/contract/entities-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ContractTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ContractTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate entities.ts file for contract library
@@ -19,16 +20,16 @@ import type { ContractTemplateOptions } from "../../../utils/shared/types"
  * - Helper functions for parsing and encoding
  */
 export function generateEntitiesFile(options: ContractTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
   builder.addFileHeader({
     title: `${className} Domain Entities`,
-    description:
-      "Defines domain entities using Schema.Class for runtime validation. Database types are imported from @custom-repo/infra-database.",
-    module: `@custom-repo/contract-${fileName}/entities`
-  })
+    description: `Defines domain entities using Schema.Class for runtime validation. Database types are imported from ${scope}/infra-database.`,
+    module: `${scope}/contract-${fileName}/entities`,
+  });
 
   builder.addRaw(`
 /**
@@ -41,46 +42,44 @@ export function generateEntitiesFile(options: ContractTemplateOptions) {
  * 6. Add computed fields if needed
  * 7. Import database types (${className}Select, etc.) from infra-database
  */
-`)
+`);
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
-  builder.addBlankLine()
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
+  builder.addBlankLine();
 
   // ============================================================================
   // SECTION 1: Type Aliases
   // ============================================================================
 
-  builder.addSectionComment("Type Aliases for Database Types")
-  builder.addComment(
-    "Import database-generated types from infra-database library"
-  )
-  builder.addComment("DO NOT duplicate these definitions here")
-  builder.addBlankLine()
+  builder.addSectionComment('Type Aliases for Database Types');
+  builder.addComment('Import database-generated types from infra-database library');
+  builder.addComment('DO NOT duplicate these definitions here');
+  builder.addBlankLine();
 
   builder.addTypeAlias({
     name: `${className}Id`,
-    type: "string",
+    type: 'string',
     exported: true,
-    jsdoc: `${className} ID type (UUID string)`
-  })
+    jsdoc: `${className} ID type (UUID string)`,
+  });
 
-  builder.addComment("TODO: Import actual database types when available:")
-  builder.addComment("import type {")
-  builder.addComment(`  ${className}Select,`)
-  builder.addComment(`  ${className}Insert,`)
-  builder.addComment(`  ${className}Update,`)
-  builder.addComment("} from \"@custom-repo/infra-database\";")
-  builder.addBlankLine()
+  builder.addComment('TODO: Import actual database types when available:');
+  builder.addComment('import type {');
+  builder.addComment(`  ${className}Select,`);
+  builder.addComment(`  ${className}Insert,`);
+  builder.addComment(`  ${className}Update,`);
+  builder.addComment(`} from \"${scope}/infra-database\";`);
+  builder.addBlankLine();
 
   // ============================================================================
   // SECTION 2: Domain Entity
   // ============================================================================
 
-  builder.addSectionComment("Domain Entities (Schema.Class)")
-  builder.addBlankLine()
+  builder.addSectionComment('Domain Entities (Schema.Class)');
+  builder.addBlankLine();
 
   // Create Schema.Class using raw code since it has special syntax
   const entityClass = `/**
@@ -151,17 +150,17 @@ export class ${className} extends Schema.Class<${className}>("${className}")({
     title: "${className} Entity",
     description: "Core ${className} domain entity with runtime validation and type safety"
   })
-) {}`
+) {}`;
 
-  builder.addRaw(entityClass)
-  builder.addBlankLine()
+  builder.addRaw(entityClass);
+  builder.addBlankLine();
 
   // ============================================================================
   // SECTION 3: Helper Functions
   // ============================================================================
 
-  builder.addSectionComment("Helper Functions")
-  builder.addBlankLine()
+  builder.addSectionComment('Helper Functions');
+  builder.addBlankLine();
 
   // Parse function
   const parseFunction = `/**
@@ -172,10 +171,10 @@ export class ${className} extends Schema.Class<${className}>("${className}")({
  * const entity = yield* parse${className}(unknownData);
  * \`\`\`
  */
-export const parse${className} = Schema.decodeUnknown(${className});`
+export const parse${className} = Schema.decodeUnknown(${className});`;
 
-  builder.addRaw(parseFunction)
-  builder.addBlankLine()
+  builder.addRaw(parseFunction);
+  builder.addBlankLine();
 
   // Encode function
   const encodeFunction = `/**
@@ -186,10 +185,10 @@ export const parse${className} = Schema.decodeUnknown(${className});`
  * const encoded = yield* encode${className}(entity);
  * \`\`\`
  */
-export const encode${className} = Schema.encode(${className});`
+export const encode${className} = Schema.encode(${className});`;
 
-  builder.addRaw(encodeFunction)
-  builder.addBlankLine()
+  builder.addRaw(encodeFunction);
+  builder.addBlankLine();
 
-  return builder.toString()
+  return builder.toString();
 }

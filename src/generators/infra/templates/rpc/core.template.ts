@@ -1,0 +1,230 @@
+/**
+ * RPC Core Template
+ *
+ * Generates core RPC re-exports and utilities.
+ * Uses native @effect/rpc patterns.
+ *
+ * @module monorepo-library-generator/infra-templates/rpc
+ */
+
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { InfraTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+
+/**
+ * Generate RPC core file
+ *
+ * Creates re-exports and utilities for RPC infrastructure.
+ */
+export function generateRpcCoreFile(options: InfraTemplateOptions) {
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
+
+  builder.addFileHeader({
+    title: `${className} Core`,
+    description: `RPC core utilities and re-exports.
+
+This module provides:
+- Re-exports from @effect/rpc for convenience
+- RPC utilities for common patterns
+- Type helpers for RPC definitions
+
+Middleware is defined in middleware.ts.
+Router utilities are in router.ts.`,
+    module: `${scope}/infra-${fileName}/core`,
+    see: ['@effect/rpc documentation'],
+  });
+
+  builder.addImports([
+    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Schema'] },
+    { from: '@effect/rpc', imports: ['Rpc', 'RpcGroup', 'RpcRouter', 'RpcMiddleware'] },
+  ]);
+
+  builder.addSectionComment('Re-exports from @effect/rpc');
+
+  builder.addRaw(`// Re-export core RPC primitives for convenience
+export { Rpc, RpcGroup, RpcRouter, RpcMiddleware } from "@effect/rpc"
+`);
+
+  builder.addSectionComment('RPC Definition Helpers');
+
+  builder.addRaw(`/**
+ * Helper to create an RPC definition with proper typing
+ *
+ * This is a passthrough for Rpc.make with better DX.
+ *
+ * @example
+ * \`\`\`typescript
+ * import { defineRpc } from "@scope/infra-rpc/core";
+ * import { AuthMiddleware, AuthError } from "@scope/infra-rpc/middleware";
+ *
+ * // Protected RPC
+ * export class GetUser extends defineRpc("GetUser", {
+ *   payload: GetUserRequest,
+ *   success: UserResponse,
+ *   failure: Schema.Union(UserError, AuthError),
+ * }).middleware(AuthMiddleware) {}
+ *
+ * // Public RPC
+ * export class HealthCheck extends defineRpc("HealthCheck", {
+ *   payload: Schema.Struct({}),
+ *   success: Schema.Struct({ status: Schema.String }),
+ * }) {}
+ * \`\`\`
+ */
+export const defineRpc = Rpc.make
+
+/**
+ * Helper to create an RPC group
+ *
+ * @example
+ * \`\`\`typescript
+ * import { defineRpcGroup } from "@scope/infra-rpc/core";
+ *
+ * export const UserRpcs = defineRpcGroup(
+ *   GetUser,
+ *   CreateUser,
+ *   UpdateUser,
+ *   DeleteUser
+ * );
+ * \`\`\`
+ */
+export const defineRpcGroup = RpcGroup.make
+`);
+
+  builder.addSectionComment('Handler Creation Helpers');
+
+  builder.addRaw(`/**
+ * Create a handler layer from an RPC group
+ *
+ * Type-safe wrapper around RpcGroup.toLayer.
+ *
+ * @example
+ * \`\`\`typescript
+ * import { createHandlers } from "@scope/infra-rpc/core";
+ * import { UserRpcs } from "@scope/contract-user/rpc";
+ * import { CurrentUser } from "@scope/infra-rpc/middleware";
+ * import { UserRepository } from "@scope/data-access-user";
+ *
+ * export const UserHandlers = createHandlers(UserRpcs, {
+ *   GetUser: ({ id }) =>
+ *     Effect.gen(function* () {
+ *       const user = yield* CurrentUser; // From AuthMiddleware
+ *       const repo = yield* UserRepository;
+ *       return yield* repo.findById(id);
+ *     }),
+ *
+ *   CreateUser: (input) =>
+ *     Effect.gen(function* () {
+ *       const user = yield* CurrentUser;
+ *       const repo = yield* UserRepository;
+ *       return yield* repo.create({ ...input, createdBy: user.id });
+ *     }),
+ * });
+ * \`\`\`
+ */
+export const createHandlers = RpcGroup.toLayer
+
+/**
+ * Type helper for RPC handler function
+ */
+export type RpcHandler<Payload, Success, Failure, Deps> = (
+  payload: Payload
+) => Effect.Effect<Success, Failure, Deps>
+
+/**
+ * Type helper to extract handler requirements from an RPC group
+ */
+export type HandlersFor<G extends RpcGroup.RpcGroup<any, any>> =
+  G extends RpcGroup.RpcGroup<infer _Id, infer Rpcs>
+    ? {
+        [K in keyof Rpcs]: Rpcs[K] extends Rpc.Rpc<infer _Tag, infer Payload, infer Success, infer Failure>
+          ? (payload: Schema.Schema.Type<Payload>) => Effect.Effect<Schema.Schema.Type<Success>, Schema.Schema.Type<Failure>, any>
+          : never
+      }
+    : never
+`);
+
+  builder.addSectionComment('Schema Helpers');
+
+  builder.addRaw(`/**
+ * Create a paginated response schema
+ *
+ * @example
+ * \`\`\`typescript
+ * const UsersPage = paginatedResponse(UserSchema);
+ * // { items: User[], total: number, page: number, pageSize: number }
+ * \`\`\`
+ */
+export const paginatedResponse = <T extends Schema.Schema.Any>(itemSchema: T) =>
+  Schema.Struct({
+    items: Schema.Array(itemSchema),
+    total: Schema.Number,
+    page: Schema.Number,
+    pageSize: Schema.Number
+  })
+
+/**
+ * Create pagination request fields
+ *
+ * @example
+ * \`\`\`typescript
+ * const ListUsersRequest = Schema.Struct({
+ *   ...paginationRequest,
+ *   filter: Schema.optional(Schema.String)
+ * });
+ * \`\`\`
+ */
+export const paginationRequest = {
+  page: Schema.optionalWith(Schema.Number, { default: () => 1 }),
+  pageSize: Schema.optionalWith(Schema.Number, { default: () => 20 })
+}
+
+/**
+ * Standard ID request schema
+ */
+export const IdRequest = Schema.Struct({
+  id: Schema.String
+})
+
+/**
+ * Standard success response (for mutations without return value)
+ */
+export const SuccessResponse = Schema.Struct({
+  success: Schema.Literal(true)
+})
+
+/**
+ * Standard empty request (for operations with no input)
+ */
+export const EmptyRequest = Schema.Struct({})
+`);
+
+  builder.addSectionComment('Error Helpers');
+
+  builder.addRaw(`/**
+ * Create a domain error schema that can be used in RPC failure
+ *
+ * @example
+ * \`\`\`typescript
+ * export class UserNotFoundError extends createDomainError("UserNotFoundError", {
+ *   userId: Schema.String
+ * }) {}
+ *
+ * // Use in RPC definition
+ * export class GetUser extends defineRpc("GetUser", {
+ *   payload: GetUserRequest,
+ *   success: UserResponse,
+ *   failure: Schema.Union(UserNotFoundError, AuthError),
+ * }).middleware(AuthMiddleware) {}
+ * \`\`\`
+ */
+export const createDomainError = <Tag extends string, Fields extends Schema.Struct.Fields>(
+  tag: Tag,
+  fields: Fields
+) => Schema.TaggedError<any>()(tag, fields)
+`);
+
+  return builder.toString();
+}

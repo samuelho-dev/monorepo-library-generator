@@ -6,19 +6,19 @@
  * @module monorepo-library-generator/provider/service/service-index-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { ProviderTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate service/index.ts file
  *
  * Creates barrel export for service interface and operations
  */
-export function generateProviderServiceIndexFile(
-  options: ProviderTemplateOptions
-) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+export function generateProviderServiceIndexFile(options: ProviderTemplateOptions) {
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Service`,
@@ -37,15 +37,15 @@ Import options (from most optimal to most convenient):
 
 4. Package barrel (largest):
    import { ${className} } from '@scope/provider-${fileName}'`,
-    module: `@custom-repo/provider-${fileName}/service`
-  })
-  builder.addBlankLine()
+    module: `${scope}/provider-${fileName}/service`,
+  });
+  builder.addBlankLine();
 
-  builder.addSectionComment("Re-export service interface and tag")
-  builder.addBlankLine()
+  builder.addSectionComment('Re-export service interface and tag');
+  builder.addBlankLine();
 
   builder.addRaw(`export { ${className} } from "./service";
-export type { ${className}ServiceInterface } from "./service";`)
+export type { ${className}ServiceInterface } from "./service";`);
 
-  return builder.toString()
+  return builder.toString();
 }

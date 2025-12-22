@@ -6,30 +6,131 @@
  * - Data-Access library (repository) - references contract
  * - Feature library (business logic) - references data-access
  *
+ * Automatically generates required infrastructure dependencies if they don't exist:
+ * - provider-kysely (Kysely database provider)
+ * - infra-database (Database orchestration infrastructure)
+ *
  * Single command replaces 3 separate generator calls and manual wiring.
  *
  * @module monorepo-library-generator/cli/generators/domain
  */
 
-import { Console, Effect } from "effect"
-import { getPackageName } from "../../utils/workspace-config"
-import { generateContract } from "./contract"
-import { generateDataAccess } from "./data-access"
-import { generateFeature } from "./feature"
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { Console, Effect } from 'effect';
+import { getPackageName } from '../../utils/workspace-config';
+import { generateContract } from './contract';
+import { generateDataAccess } from './data-access';
+import { generateFeature } from './feature';
+import { generateInfra } from './infra';
+import { generateProvider } from './provider';
+
+/**
+ * Check if a library directory exists
+ */
+function libraryExists(libraryPath: string): boolean {
+  const fullPath = path.join(process.cwd(), libraryPath);
+  return fs.existsSync(fullPath);
+}
+
+/**
+ * Ensure required infrastructure dependencies exist
+ *
+ * Data-access libraries depend on:
+ * 1. provider-kysely - Kysely database provider
+ * 2. provider-effect-cache - Effect.Cache provider
+ * 3. infra-database - Database orchestration (depends on provider-kysely)
+ * 4. infra-cache - Cache orchestration (depends on provider-effect-cache)
+ *
+ * This function generates these dependencies if they don't exist.
+ */
+function ensureInfrastructureDependencies() {
+  return Effect.gen(function* () {
+    const providerKyselyPath = 'libs/provider/kysely';
+    const providerEffectCachePath = 'libs/provider/effect-cache';
+    const infraDatabasePath = 'libs/infra/database';
+    const infraCachePath = 'libs/infra/cache';
+
+    // Check if provider-kysely exists
+    if (!libraryExists(providerKyselyPath)) {
+      yield* Console.log('\n🔧 Required dependency missing: provider-kysely');
+      yield* Console.log('   Generating provider-kysely...');
+
+      yield* generateProvider({
+        name: 'kysely',
+        externalService: 'Kysely',
+        description: 'Kysely provider for type-safe database queries with migrations',
+        tags: 'provider,database,kysely',
+        platform: 'node',
+      });
+
+      yield* Console.log('   ✅ provider-kysely created');
+    }
+
+    // Check if provider-effect-cache exists
+    if (!libraryExists(providerEffectCachePath)) {
+      yield* Console.log('\n🔧 Required dependency missing: provider-effect-cache');
+      yield* Console.log('   Generating provider-effect-cache...');
+
+      yield* generateProvider({
+        name: 'effect-cache',
+        externalService: 'Effect.Cache',
+        description: 'Effect.Cache provider for caching operations',
+        tags: 'provider,cache,effect',
+        platform: 'node',
+      });
+
+      yield* Console.log('   ✅ provider-effect-cache created');
+    }
+
+    // Check if infra-database exists
+    if (!libraryExists(infraDatabasePath)) {
+      yield* Console.log('\n🔧 Required dependency missing: infra-database');
+      yield* Console.log('   Generating infra-database...');
+
+      yield* generateInfra({
+        name: 'database',
+        description:
+          'Database orchestration infrastructure (coordinates database providers like Kysely)',
+        tags: 'infra,database,orchestration',
+        platform: 'node',
+        includeClientServer: true,
+      });
+
+      yield* Console.log('   ✅ infra-database created');
+    }
+
+    // Check if infra-cache exists
+    if (!libraryExists(infraCachePath)) {
+      yield* Console.log('\n🔧 Required dependency missing: infra-cache');
+      yield* Console.log('   Generating infra-cache...');
+
+      yield* generateInfra({
+        name: 'cache',
+        description: 'Cache orchestration infrastructure (coordinates cache providers)',
+        tags: 'infra,cache,orchestration',
+        platform: 'node',
+        includeClientServer: true,
+      });
+
+      yield* Console.log('   ✅ infra-cache created');
+    }
+  });
+}
 
 /**
  * Domain Generator Options (CLI)
  */
 export interface DomainGeneratorOptions {
-  readonly name: string
-  readonly description?: string
-  readonly tags?: string
-  readonly scope?: string
-  readonly includeCache?: boolean
-  readonly includeClientServer?: boolean
-  readonly includeRPC?: boolean
-  readonly includeCQRS?: boolean
-  readonly includeEdge?: boolean
+  readonly name: string;
+  readonly description?: string;
+  readonly tags?: string;
+  readonly scope?: string;
+  readonly includeCache?: boolean;
+  readonly includeClientServer?: boolean;
+  readonly includeRPC?: boolean;
+  readonly includeCQRS?: boolean;
+  readonly includeEdge?: boolean;
 }
 
 /**
@@ -50,69 +151,81 @@ export interface DomainGeneratorOptions {
  * ```
  */
 export function generateDomain(options: DomainGeneratorOptions) {
-  return Effect.gen(function*() {
-    const { description, includeCQRS, includeCache, includeClientServer, includeEdge, includeRPC, name, scope, tags } =
-      options
+  return Effect.gen(function* () {
+    const {
+      description,
+      includeCQRS,
+      includeCache,
+      includeClientServer,
+      includeEdge,
+      includeRPC,
+      name,
+      scope,
+      tags,
+    } = options;
 
-    yield* Console.log(`\n🏗️  Generating complete domain: ${name}`)
-    yield* Console.log("=".repeat(60))
+    yield* Console.log(`\n🏗️  Generating complete domain: ${name}`);
+    yield* Console.log('='.repeat(60));
 
     // Step 1: Generate Contract Library
-    yield* Console.log("\n📦 Step 1/3: Generating contract library...")
+    yield* Console.log('\n📦 Step 1/3: Generating contract library...');
     yield* generateContract({
       name,
       description: description ?? `${name} domain contracts`,
-      tags: tags ?? "domain:contract"
-    })
-    yield* Console.log(`✅ Contract library created: libs/contract/${name}`)
+      tags: tags ?? 'domain:contract',
+    });
+    yield* Console.log(`✅ Contract library created: libs/contract/${name}`);
+
+    // Ensure infrastructure dependencies exist before data-access generation
+    yield* ensureInfrastructureDependencies();
 
     // Step 2: Generate Data-Access Library (with contract reference)
-    yield* Console.log("\n📦 Step 2/3: Generating data-access library...")
+    yield* Console.log('\n📦 Step 2/3: Generating data-access library...');
     yield* generateDataAccess({
       name,
       description: description ?? `${name} data access`,
-      tags: tags ?? "domain:data-access",
+      tags: tags ?? 'domain:data-access',
       ...(includeCache !== undefined && { includeCache }),
-      contractLibrary: getPackageName("contract", name) // Pre-wire to contract
-    })
-    yield* Console.log(`✅ Data-access library created: libs/data-access/${name}`)
+      contractLibrary: getPackageName('contract', name), // Pre-wire to contract
+    });
+    yield* Console.log(`✅ Data-access library created: libs/data-access/${name}`);
 
     // Step 3: Generate Feature Library (with data-access reference)
-    yield* Console.log("\n📦 Step 3/3: Generating feature library...")
+    yield* Console.log('\n📦 Step 3/3: Generating feature library...');
     yield* generateFeature({
       name,
       description: description ?? `${name} feature`,
-      tags: tags ?? "domain:feature",
+      tags: tags ?? 'domain:feature',
       ...(scope !== undefined && { scope }),
       ...(includeClientServer !== undefined && { includeClientServer }),
       ...(includeRPC !== undefined && { includeRPC }),
       ...(includeCQRS !== undefined && { includeCQRS }),
-      ...(includeEdge !== undefined && { includeEdge })
-    })
-    yield* Console.log(`✅ Feature library created: libs/feature/${name}`)
+      ...(includeEdge !== undefined && { includeEdge }),
+    });
+    yield* Console.log(`✅ Feature library created: libs/feature/${name}`);
 
     // Success Summary
-    yield* Console.log("\n" + "=".repeat(60))
-    yield* Console.log(`\n✨ Domain "${name}" created successfully!`)
-    yield* Console.log("\n📦 Generated Libraries:")
-    yield* Console.log(`   1. libs/contract/${name}      - ${getPackageName("contract", name)}`)
-    yield* Console.log(`   2. libs/data-access/${name}   - ${getPackageName("data-access", name)}`)
-    yield* Console.log(`   3. libs/feature/${name}       - ${getPackageName("feature", name)}`)
+    yield* Console.log('\n' + '='.repeat(60));
+    yield* Console.log(`\n✨ Domain "${name}" created successfully!`);
+    yield* Console.log('\n📦 Generated Libraries:');
+    yield* Console.log(`   1. libs/contract/${name}      - ${getPackageName('contract', name)}`);
+    yield* Console.log(`   2. libs/data-access/${name}   - ${getPackageName('data-access', name)}`);
+    yield* Console.log(`   3. libs/feature/${name}       - ${getPackageName('feature', name)}`);
 
-    yield* Console.log("\n🔗 Pre-Wired Dependencies:")
-    yield* Console.log(`   - data-access-${name} → contract-${name}`)
-    yield* Console.log(`   - feature-${name} → data-access-${name}`)
+    yield* Console.log('\n🔗 Pre-Wired Dependencies:');
+    yield* Console.log(`   - data-access-${name} → contract-${name}`);
+    yield* Console.log(`   - feature-${name} → data-access-${name}`);
 
-    yield* Console.log("\n📝 Next Steps:")
-    yield* Console.log("   1. pnpm install           # Install dependencies")
-    yield* Console.log("   2. pnpm build             # Build all libraries")
-    yield* Console.log(`   3. Customize libs/data-access/${name}/src/lib/repository/operations/`)
-    yield* Console.log(`   4. Implement libs/feature/${name}/src/lib/server/service.ts`)
+    yield* Console.log('\n📝 Next Steps:');
+    yield* Console.log('   1. pnpm install           # Install dependencies');
+    yield* Console.log('   2. pnpm build             # Build all libraries');
+    yield* Console.log(`   3. Customize libs/data-access/${name}/src/lib/repository/operations/`);
+    yield* Console.log(`   4. Implement libs/feature/${name}/src/lib/server/service.ts`);
 
-    yield* Console.log("\n💡 Quick Test:")
-    yield* Console.log(`   cd libs/data-access/${name}`)
-    yield* Console.log("   pnpm test")
+    yield* Console.log('\n💡 Quick Test:');
+    yield* Console.log(`   cd libs/data-access/${name}`);
+    yield* Console.log('   pnpm test');
 
-    yield* Console.log("\n" + "=".repeat(60))
-  })
+    yield* Console.log('\n' + '='.repeat(60));
+  });
 }

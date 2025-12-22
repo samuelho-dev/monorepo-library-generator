@@ -6,17 +6,17 @@
  * @module monorepo-library-generator/data-access/repository/aggregate-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate repository/operations/aggregate.ts file
  */
-export function generateRepositoryAggregateOperationFile(
-  options: DataAccessTemplateOptions
-) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+export function generateRepositoryAggregateOperationFile(options: DataAccessTemplateOptions) {
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Aggregate Operations`,
@@ -24,74 +24,55 @@ export function generateRepositoryAggregateOperationFile(
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { aggregateOperations } from '@scope/data-access-${fileName}/repository/operations/aggregate'`,
-    module: `@custom-repo/data-access-${fileName}/repository/operations`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/repository/operations`,
+  });
+  builder.addBlankLine();
 
-  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
-  builder.addBlankLine()
+  builder.addImports([{ from: 'effect', imports: ['Effect', 'Duration'] }]);
+  builder.addBlankLine();
 
   builder.addImports([
     {
-      from: "../../shared/types",
+      from: '../../shared/types',
       imports: [`${className}Filter`],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
-      from: "../../shared/errors",
+      from: '../../shared/errors',
       imports: [`${className}TimeoutError`],
-      isTypeOnly: false
-    }
-  ])
-  builder.addBlankLine()
+      isTypeOnly: false,
+    },
+  ]);
+  builder.addBlankLine();
 
   // Import infrastructure services
-  builder.addComment("Infrastructure services - Database for persistence")
-  builder.addRaw(`import { DatabaseService } from "@custom-repo/infra-database";`)
-  builder.addBlankLine()
+  builder.addComment('Infrastructure services - Database for persistence');
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
+  builder.addBlankLine();
 
-  builder.addSectionComment("Aggregate Operations Interface")
-  builder.addBlankLine()
-
-  builder.addRaw(`export interface Aggregate${className}Operations {
-  /**
-   * Count ${className} entities matching filter
-   *
-   * @param filter - Optional filter criteria
-   * @returns Effect that succeeds with count
-   */
-  count(filter?: ${className}Filter);
-
-  /**
-   * Check if ${className} entity exists by ID
-   *
-   * @param id - Entity identifier
-   * @returns Effect that succeeds with boolean
-   */
-  exists(id: string);
-}`)
-  builder.addBlankLine()
-
-  builder.addSectionComment("Live Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment('Aggregate Operations');
+  builder.addBlankLine();
 
   builder.addRaw(`/**
- * Live aggregate operations implementation
+ * Aggregate operations for ${className} repository
  *
- * Uses DatabaseService for persistence with efficient database-level aggregation
+ * Uses DatabaseService for persistence with efficient database-level aggregation.
+ * Return types are inferred to preserve Effect's dependency and error tracking.
  *
- * PRODUCTION INTEGRATION:
- * - DatabaseService for database access via Kysely
- * - Effect.log* methods for observability
- * - Database-level COUNT operations for performance
- * - Timeout protection and distributed tracing
+ * @example
+ * \`\`\`typescript
+ * const count = yield* aggregateOperations.count({ search: "test" });
+ * \`\`\`
  */
-export const aggregateOperations: Aggregate${className}Operations = {
+export const aggregateOperations = {
+  /**
+   * Count ${className} entities matching filter
+   */
   count: (filter?: ${className}Filter) =>
     Effect.gen(function* () {
       const database = yield* DatabaseService;
 
-      yield* Effect.logInfo(\`Counting ${className} entities (filter: \${JSON.stringify(filter)})\`);
+      yield* Effect.logDebug(\`Counting ${className} entities (filter: \${JSON.stringify(filter)})\`);
 
       const count = yield* database.query((db) => {
         let query = db.selectFrom("${fileName}s").select((eb) => eb.fn.countAll().as("count"));
@@ -108,18 +89,20 @@ export const aggregateOperations: Aggregate${className}Operations = {
         return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
       });
 
-      yield* Effect.logInfo(\`Counted \${count} ${className} entities\`);
+      yield* Effect.logDebug(\`Counted \${count} ${className} entities\`);
 
       return count;
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () =>
-          ${className}TimeoutError.create("count", 30000)
+        onTimeout: () => ${className}TimeoutError.create("count", 30000)
       }),
       Effect.withSpan("${className}Repository.count")
     ),
 
+  /**
+   * Check if ${className} entity exists by ID
+   */
   exists: (id: string) =>
     Effect.gen(function* () {
       const database = yield* DatabaseService;
@@ -141,12 +124,16 @@ export const aggregateOperations: Aggregate${className}Operations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () =>
-          ${className}TimeoutError.create("exists", 30000)
+        onTimeout: () => ${className}TimeoutError.create("exists", 30000)
       }),
       Effect.withSpan("${className}Repository.exists")
     ),
-};`)
+} as const;
 
-  return builder.toString()
+/**
+ * Type alias for the aggregate operations object
+ */
+export type Aggregate${className}Operations = typeof aggregateOperations;`);
+
+  return builder.toString();
 }

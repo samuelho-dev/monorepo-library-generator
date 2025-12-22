@@ -1,15 +1,13 @@
 export const generateProviderConsolidationIndexTemplate = (options: {
-  providers: Array<string>
-  packageName: string
+  providers: Array<string>;
+  packageName: string;
 }) => {
-  const workspaceName = options.packageName.split("/")[0] // @ai-dev-env
+  const workspaceName = options.packageName.split('/')[0]; // @ai-dev-env
   const imports = options.providers
     .map((p) => `import * as ${toClassName(p)} from "${workspaceName}/provider-${p}"`)
-    .join("\n")
+    .join('\n');
 
-  const exports = options.providers
-    .map((p) => `export { ${toClassName(p)} }`)
-    .join("\n")
+  const exports = options.providers.map((p) => `export { ${toClassName(p)} }`).join('\n');
 
   return `/**
  * Provider Consolidation Layer
@@ -29,12 +27,12 @@ export { ClusterInfrastructureLive } from "./lib/layers"
 
 // Multi-provider orchestration
 export { ClusterOrchestrator } from "./lib/orchestrator"
-`
-}
+`;
+};
 
 const toClassName = (name: string) => {
   return name
-    .split("-")
+    .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("")
-}
+    .join('');
+};

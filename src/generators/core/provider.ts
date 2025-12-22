@@ -13,28 +13,30 @@
  * @module monorepo-library-generator/generators/core/provider-generator-core
  */
 
-import { Effect } from "effect"
-import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
-import type { PlatformType } from "../../utils/platforms"
-import type { Platform, ProviderTemplateOptions } from "../../utils/shared/types"
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates/types-only-exports.template"
+import { Effect } from 'effect';
+import { injectEnvVars, type FileSystemAdapter } from '../../utils/filesystem';
+import type { PlatformType } from '../../utils/build';
+import type { Platform, ProviderTemplateOptions } from '../../utils/types';
+import {
+  generateTypesOnlyFile,
+  type TypesOnlyExportOptions,
+} from '../../utils/templates';
 import {
   generateErrorsFile,
   generateIndexFile,
   generateLayersFile,
   generateServiceSpecFile,
   generateTypesFile,
-  generateValidationFile
-} from "../provider/templates/index"
+  generateValidationFile,
+} from '../provider/templates/index';
+import { generateKyselyErrorsFile } from '../provider/templates/kysely-errors.template';
+import { generateKyselyIndexFile } from '../provider/templates/kysely-index.template';
 import {
-  generateProviderCreateOperationFile,
-  generateProviderDeleteOperationFile,
-  generateProviderOperationsIndexFile,
-  generateProviderQueryOperationFile,
   generateProviderServiceFile,
   generateProviderServiceIndexFile,
-  generateProviderUpdateOperationFile
-} from "../provider/templates/service/index"
+} from '../provider/templates/service/index';
+import { generateKyselyProviderServiceFile } from '../provider/templates/service/kysely-service.template';
+import { generateKyselyProviderServiceIndexFile } from '../provider/templates/service/kysely-service-index.template';
 
 /**
  * Provider Generator Core Options
@@ -49,25 +51,25 @@ import {
  * @property platform - Target platform (node, browser, edge, universal)
  */
 export interface ProviderCoreOptions {
-  readonly name: string
-  readonly className: string
-  readonly propertyName: string
-  readonly fileName: string
-  readonly constantName: string
-  readonly projectName: string
-  readonly projectRoot: string
-  readonly sourceRoot: string
-  readonly packageName: string
-  readonly description: string
-  readonly tags: string
-  readonly offsetFromRoot: string
-  readonly workspaceRoot?: string
-  readonly externalService: string
-  readonly platform: PlatformType
-  readonly providerType?: "sdk" | "cli" | "http" | "graphql"
-  readonly cliCommand?: string
-  readonly baseUrl?: string
-  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
+  readonly name: string;
+  readonly className: string;
+  readonly propertyName: string;
+  readonly fileName: string;
+  readonly constantName: string;
+  readonly projectName: string;
+  readonly projectRoot: string;
+  readonly sourceRoot: string;
+  readonly packageName: string;
+  readonly description: string;
+  readonly tags: string;
+  readonly offsetFromRoot: string;
+  readonly workspaceRoot?: string;
+  readonly externalService: string;
+  readonly platform: PlatformType;
+  readonly providerType?: 'sdk' | 'cli' | 'http' | 'graphql';
+  readonly cliCommand?: string;
+  readonly baseUrl?: string;
+  readonly authType?: 'bearer' | 'apikey' | 'oauth' | 'basic' | 'none';
 }
 
 /**
@@ -76,11 +78,11 @@ export interface ProviderCoreOptions {
  * Metadata returned after successful generation.
  */
 export interface GeneratorResult {
-  readonly projectName: string
-  readonly projectRoot: string
-  readonly sourceRoot: string
-  readonly packageName: string
-  readonly filesGenerated: Array<string>
+  readonly projectName: string;
+  readonly projectRoot: string;
+  readonly sourceRoot: string;
+  readonly packageName: string;
+  readonly filesGenerated: Array<string>;
 }
 
 /**
@@ -96,18 +98,15 @@ export interface GeneratorResult {
  * @param options - Pre-computed metadata and feature flags from wrapper
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
-export function generateProviderCore(
-  adapter: FileSystemAdapter,
-  options: ProviderCoreOptions
-) {
-  return Effect.gen(function*() {
+export function generateProviderCore(adapter: FileSystemAdapter, options: ProviderCoreOptions) {
+  return Effect.gen(function* () {
     // Map PlatformType to Platform for template options (internal mapping)
     const platformMapping: Record<PlatformType, Platform> = {
-      node: "server",
-      browser: "client",
-      edge: "edge",
-      universal: "universal"
-    }
+      node: 'server',
+      browser: 'client',
+      edge: 'edge',
+      universal: 'universal',
+    };
 
     // Assemble template options from pre-computed metadata
     const templateOptions: ProviderTemplateOptions = {
@@ -116,60 +115,63 @@ export function generateProviderCore(
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: "provider",
+      libraryType: 'provider',
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       offsetFromRoot: options.offsetFromRoot,
       description: options.description,
-      tags: options.tags.split(","),
+      tags: options.tags.split(','),
       externalService: options.externalService,
       platforms: [platformMapping[options.platform]],
-      providerType: options.providerType || "sdk",
+      providerType: options.providerType || 'sdk',
       ...(options.cliCommand && { cliCommand: options.cliCommand }),
       ...(options.baseUrl && { baseUrl: options.baseUrl }),
-      ...(options.authType && { authType: options.authType })
-    }
+      ...(options.authType && { authType: options.authType }),
+    };
 
     // Generate all domain files
-    const filesGenerated: Array<string> = []
-    const sourceLibPath = `${options.sourceRoot}/lib`
+    const filesGenerated: Array<string> = [];
+    const sourceLibPath = `${options.sourceRoot}/lib`;
 
-    // Generate barrel exports
+    // Detect if this is the Kysely provider (special case with dedicated templates)
+    const isKyselyProvider = options.name === 'kysely' || options.externalService === 'Kysely';
+
+    // Generate barrel exports - Kysely uses specialized template
     yield* adapter.writeFile(
       `${options.sourceRoot}/index.ts`,
-      generateIndexFile(templateOptions)
-    )
-    filesGenerated.push(`${options.sourceRoot}/index.ts`)
+      isKyselyProvider
+        ? generateKyselyIndexFile(templateOptions)
+        : generateIndexFile(templateOptions),
+    );
+    filesGenerated.push(`${options.sourceRoot}/index.ts`);
 
     // Generate types.ts for type-only exports (zero runtime overhead)
     const typesOnlyOptions: TypesOnlyExportOptions = {
-      libraryType: "provider",
+      libraryType: 'provider',
       className: options.className,
       fileName: options.fileName,
       packageName: options.packageName,
-      platform: options.platform === "node"
-        ? "server"
-        : options.platform === "browser"
-        ? "client"
-        : "universal"
-    }
-    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
-    const workspaceRoot = adapter.getWorkspaceRoot()
-    yield* adapter.writeFile(
-      `${workspaceRoot}/${options.sourceRoot}/types.ts`,
-      typesOnlyContent
-    )
-    filesGenerated.push(`${options.sourceRoot}/types.ts`)
+      platform:
+        options.platform === 'node'
+          ? 'server'
+          : options.platform === 'browser'
+            ? 'client'
+            : 'universal',
+    };
+    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions);
+    const workspaceRoot = adapter.getWorkspaceRoot();
+    yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, typesOnlyContent);
+    filesGenerated.push(`${options.sourceRoot}/types.ts`);
 
     // Generate CLAUDE.md with bundle optimization guidance
-    const providerType = options.providerType || "sdk"
+    const providerType = options.providerType || 'sdk';
 
     // Generate provider-type-specific documentation
-    let claudeDoc = ""
+    let claudeDoc = '';
 
-    if (providerType === "cli") {
+    if (providerType === 'cli') {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -180,7 +182,7 @@ This is an AI-optimized reference for ${templateOptions.externalService}, a CLI 
 
 ## Provider Type: CLI Wrapper
 
-This provider wraps the \`${options.cliCommand || "cli-command"}\` command-line tool using Effect's Command API.
+This provider wraps the \`${options.cliCommand || 'cli-command'}\` command-line tool using Effect's Command API.
 
 ## Architecture
 
@@ -224,8 +226,8 @@ Effect.gen(function* () {
 3. **Testing** (\`lib/layers.ts\`):
    - Test layer uses Layer.succeed with mock implementations
    - No actual CLI execution in tests
-`
-    } else if (providerType === "http") {
+`;
+    } else if (providerType === 'http') {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -269,7 +271,7 @@ Effect.gen(function* () {
 
 1. **Configure HTTP Client** (\`lib/service/interface.ts\`):
    - Base URL configured via ${templateOptions.className}Config
-   - Authentication via ${options.authType || "bearer"} token
+   - Authentication via ${options.authType || 'bearer'} token
    - Retry policies and timeouts configurable
 
 2. **Define Resource Schema** (\`lib/types.ts\`):
@@ -285,8 +287,8 @@ Effect.gen(function* () {
    - HttpError: HTTP status code errors (4xx, 5xx)
    - NetworkError: Connection failures
    - RateLimitError: Rate limiting with retry-after
-`
-    } else if (providerType === "graphql") {
+`;
+    } else if (providerType === 'graphql') {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -342,7 +344,7 @@ Effect.gen(function* () {
 
 1. **Configure GraphQL Client** (\`lib/service/interface.ts\`):
    - GraphQL endpoint configured via ${templateOptions.className}Config
-   - Authentication via ${options.authType || "bearer"} token
+   - Authentication via ${options.authType || 'bearer'} token
    - Retry policies and timeouts configurable
 
 2. **Define Schema Types** (\`lib/types.ts\`):
@@ -358,7 +360,7 @@ Effect.gen(function* () {
    - GraphQLError: GraphQL operation errors with error array
    - HttpError: HTTP-level errors (network, status codes)
    - ValidationError: Schema validation failures
-`
+`;
     } else {
       // SDK provider (default)
       claudeDoc = `# ${templateOptions.packageName}
@@ -623,112 +625,92 @@ export function make${templateOptions.className}Layer(config: ${templateOptions.
 3. **Use Live layer in production**
 
 The baseline implementation remains useful for unit tests and demonstrations.
-`
+`;
     }
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
-      claudeDoc
-    )
-    filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`)
+      claudeDoc,
+    );
+    filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`);
 
     // Generate all provider-specific files
     yield* adapter.writeFile(
       `${sourceLibPath}/errors.ts`,
-      generateErrorsFile(templateOptions)
-    )
-    filesGenerated.push(`${sourceLibPath}/errors.ts`)
+      isKyselyProvider
+        ? generateKyselyErrorsFile(templateOptions)
+        : generateErrorsFile(templateOptions),
+    );
+    filesGenerated.push(`${sourceLibPath}/errors.ts`);
 
-    yield* adapter.writeFile(
-      `${sourceLibPath}/types.ts`,
-      generateTypesFile(templateOptions)
-    )
-    filesGenerated.push(`${sourceLibPath}/types.ts`)
+    yield* adapter.writeFile(`${sourceLibPath}/types.ts`, generateTypesFile(templateOptions));
+    filesGenerated.push(`${sourceLibPath}/types.ts`);
 
     yield* adapter.writeFile(
       `${sourceLibPath}/validation.ts`,
-      generateValidationFile(templateOptions)
-    )
-    filesGenerated.push(`${sourceLibPath}/validation.ts`)
+      generateValidationFile(templateOptions),
+    );
+    filesGenerated.push(`${sourceLibPath}/validation.ts`);
 
     // Generate service directory structure for granular imports
-    const servicePath = `${sourceLibPath}/service`
-    yield* adapter.makeDirectory(servicePath)
+    const servicePath = `${sourceLibPath}/service`;
+    yield* adapter.makeDirectory(servicePath);
 
     // Generate service definition (lightweight Context.Tag with static layers)
     yield* adapter.writeFile(
       `${servicePath}/service.ts`,
-      generateProviderServiceFile(templateOptions)
-    )
-    filesGenerated.push(`${servicePath}/service.ts`)
+      isKyselyProvider
+        ? generateKyselyProviderServiceFile(templateOptions)
+        : generateProviderServiceFile(templateOptions),
+    );
+    filesGenerated.push(`${servicePath}/service.ts`);
 
-    // Conditional: Only generate operations for SDK providers
-    // CLI/HTTP/GraphQL providers have operations defined in interface.ts
-    if (providerType === "sdk") {
-      const operationsPath = `${servicePath}/operations`
-      yield* adapter.makeDirectory(operationsPath)
+    // Note: SDK operation templates (CRUD) were removed in favor of
+    // Effect-based service patterns with Context.Tag and Layer composition.
+    // The service.ts file now contains the full service interface.
+    // For SDK providers, operations are defined directly in the service template.
 
-      // Generate operation files (split for optimal tree-shaking)
-      yield* adapter.writeFile(
-        `${operationsPath}/create.ts`,
-        generateProviderCreateOperationFile(templateOptions)
-      )
-      filesGenerated.push(`${operationsPath}/create.ts`)
-
-      yield* adapter.writeFile(
-        `${operationsPath}/query.ts`,
-        generateProviderQueryOperationFile(templateOptions)
-      )
-      filesGenerated.push(`${operationsPath}/query.ts`)
-
-      yield* adapter.writeFile(
-        `${operationsPath}/update.ts`,
-        generateProviderUpdateOperationFile(templateOptions)
-      )
-      filesGenerated.push(`${operationsPath}/update.ts`)
-
-      yield* adapter.writeFile(
-        `${operationsPath}/delete.ts`,
-        generateProviderDeleteOperationFile(templateOptions)
-      )
-      filesGenerated.push(`${operationsPath}/delete.ts`)
-
-      // Generate operations barrel export
-      yield* adapter.writeFile(
-        `${operationsPath}/index.ts`,
-        generateProviderOperationsIndexFile(templateOptions)
-      )
-      filesGenerated.push(`${operationsPath}/index.ts`)
-    }
-
-    // Generate service barrel export
+    // Generate service barrel export - Kysely uses specialized template
     yield* adapter.writeFile(
       `${servicePath}/index.ts`,
-      generateProviderServiceIndexFile(templateOptions)
-    )
-    filesGenerated.push(`${servicePath}/index.ts`)
+      isKyselyProvider
+        ? generateKyselyProviderServiceIndexFile(templateOptions)
+        : generateProviderServiceIndexFile(templateOptions),
+    );
+    filesGenerated.push(`${servicePath}/index.ts`);
 
-    yield* adapter.writeFile(
-      `${sourceLibPath}/layers.ts`,
-      generateLayersFile(templateOptions)
-    )
-    filesGenerated.push(`${sourceLibPath}/layers.ts`)
+    // Kysely provider has layers defined as static members on the service class
+    // Other providers use a separate layers.ts file
+    if (!isKyselyProvider) {
+      yield* adapter.writeFile(`${sourceLibPath}/layers.ts`, generateLayersFile(templateOptions));
+      filesGenerated.push(`${sourceLibPath}/layers.ts`);
+    }
 
     yield* adapter.writeFile(
       `${sourceLibPath}/service.spec.ts`,
-      generateServiceSpecFile(templateOptions)
-    )
-    filesGenerated.push(`${sourceLibPath}/service.spec.ts`)
+      generateServiceSpecFile(templateOptions),
+    );
+    filesGenerated.push(`${sourceLibPath}/service.spec.ts`);
 
     // Platform-specific export files removed - rely on automatic tree-shaking
     // All exports are now handled through the main index.ts
+
+    // Inject environment variables for this provider (except for built-in providers)
+    // Built-in providers (kysely, effect-cache, etc.) are handled by init command
+    const builtInProviders = ['kysely', 'effect-cache', 'effect-logger', 'effect-metrics', 'effect-queue', 'effect-pubsub'];
+    if (!builtInProviders.includes(options.name)) {
+      yield* injectEnvVars(adapter, [
+        { name: `${options.constantName}_API_KEY`, type: 'redacted', context: 'server' },
+        { name: `${options.constantName}_TIMEOUT`, type: 'number', context: 'server' },
+      ]);
+    }
 
     return {
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       packageName: options.packageName,
-      filesGenerated
-    }
-  })
+      filesGenerated,
+    };
+  });
 }

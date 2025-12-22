@@ -1,52 +1,52 @@
 /**
- * Environment Index Template
+ * Index Template
  *
- * Generates main export for type-safe environment variables.
+ * Generates the main entry point for the env library.
+ * Simply re-exports from env.ts for a single import path.
  *
  * @module monorepo-library-generator/env-templates
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
 
 /**
- * Generate index file with env export
+ * Generate index.ts - the main entry point
+ *
+ * Provides a single import path: `import { env } from '@workspace/env'`
  */
 export function generateIndexFile(): string {
-  const builder = new TypeScriptBuilder()
+  const builder = new TypeScriptBuilder();
 
   // File header
   builder.addFileHeader({
-    title: "Environment Variables",
+    title: 'Environment Variables',
     description:
-      "Type-safe environment variable access.\n\nUsage:\n```typescript\nimport { env } from '@workspace/env'\n\n// Server-side\nconst dbUrl = env.DATABASE_URL\nconst apiSecret = env.API_SECRET\n\n// Client-side (only PUBLIC_ vars)\nconst apiUrl = env.PUBLIC_API_URL\n```\n\nPlatform separation:\n- Server (Node.js): Access all variables\n- Client (Browser): Access only PUBLIC_ prefixed variables\n\nValidation:\n- Validated eagerly on import (fail fast)\n- Uses Effect Schema for type safety\n- Throws if required variables are missing",
-    module: "@workspace/env"
-  })
+      'Type-safe environment variable access.\n\n' +
+      'Usage:\n' +
+      '```typescript\n' +
+      "import { env } from '@workspace/env'\n\n" +
+      '// All context - runtime detection\n' +
+      'env.PUBLIC_API_URL  // string (works everywhere)\n' +
+      'env.NODE_ENV        // string (works everywhere)\n' +
+      'env.DATABASE_URL    // Redacted<string> (server only)\n' +
+      'env.PORT            // number (server only)\n' +
+      '```\n\n' +
+      'Behavior:\n' +
+      '- Server: All variables accessible\n' +
+      '- Client: Only client + shared vars; server vars throw runtime error\n' +
+      '- Validated eagerly on import (fail fast)',
+    module: '@workspace/env',
+  });
 
-  // Imports
-  builder.addImport("./parse", "getFilteredEnv")
-  builder.addBlankLine()
+  // Simple re-export
+  builder.addRaw('export { env } from "./env"');
+  builder.addRaw('export type { Env } from "./env"');
+  builder.addBlankLine();
 
-  // Main export
-  builder.addSectionComment("Environment Export")
-  builder.addRaw("/**")
-  builder.addRaw(" * Type-safe environment variables")
-  builder.addRaw(" *")
-  builder.addRaw(" * Server vs Client:")
-  builder.addRaw(" * - Server (Node.js): Access all variables")
-  builder.addRaw(" * - Client (Browser): Access only PUBLIC_ prefixed variables")
-  builder.addRaw(" *")
-  builder.addRaw(" * Validation:")
-  builder.addRaw(" * - Validated eagerly on import (fail fast)")
-  builder.addRaw(" * - Uses Effect Schema for type safety")
-  builder.addRaw(" * - Throws if validation fails")
-  builder.addRaw(" */")
-  builder.addRaw("export const env = getFilteredEnv()")
-  builder.addBlankLine()
+  // Also export createEnv for advanced usage
+  builder.addRaw('// Re-export for advanced usage');
+  builder.addRaw('export { createEnv, Config } from "./createEnv"');
+  builder.addBlankLine();
 
-  // Type re-export
-  builder.addSectionComment("Type Exports")
-  builder.addRaw("/** Environment variables type */")
-  builder.addRaw("export type { Env } from './schema'")
-
-  return builder.toString()
+  return builder.toString();
 }

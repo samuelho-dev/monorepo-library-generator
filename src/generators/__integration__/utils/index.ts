@@ -6,8 +6,7 @@
  * @module monorepo-library-generator/integration/utils
  */
 
-export { compileTreeFiles } from "./compiler"
-export type { CompilationResult } from "./compiler"
-
-export { lintTreeFiles } from "./linter"
-export type { LintResult } from "./linter"
+export type { CompilationResult } from './compiler';
+export { compileTreeFiles } from './compiler';
+export type { LintResult } from './linter';
+export { lintTreeFiles } from './linter';

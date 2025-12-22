@@ -1,6 +1,4 @@
-export const generateSubServiceLayersTemplate = (options: {
-  className: string
-}) =>
+export const generateSubServiceLayersTemplate = (options: { className: string }) =>
   `/**
  * ${options.className} Effect Layers
  */
@@ -30,4 +28,4 @@ export const ${options.className}Test = Layer.succeed(
     validate: Effect.succeed(true)
   })
 )
-`
+`;

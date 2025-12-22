@@ -6,26 +6,26 @@
  */
 
 export interface ProviderGeneratorSchema {
-  name: string
-  directory?: string
-  externalService: string
-  description?: string
-  platform?: "node" | "browser" | "universal" | "edge"
-  includeClientServer?: boolean
+  name: string;
+  directory?: string;
+  externalService: string;
+  description?: string;
+  platform?: 'node' | 'browser' | 'universal' | 'edge';
+  includeClientServer?: boolean;
 
   // Provider type configuration
-  providerType?: "sdk" | "cli" | "http" | "graphql"
-  cliCommand?: string
-  baseUrl?: string
-  authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
+  providerType?: 'sdk' | 'cli' | 'http' | 'graphql';
+  cliCommand?: string;
+  baseUrl?: string;
+  authType?: 'bearer' | 'apikey' | 'oauth' | 'basic' | 'none';
 
   // Operations to generate
-  operations?: ReadonlyArray<"create" | "read" | "update" | "delete" | "query">
+  operations?: ReadonlyArray<'create' | 'read' | 'update' | 'delete' | 'query'>;
 
-  tags?: string
+  tags?: string;
 
   // Dotfile generation options (Effect.ts code quality enforcement)
   // Only library-specific dotfiles (eslint.config.mjs, tsconfig.json) are added
-  addDotfiles?: boolean // Default: true
-  overwriteDotfiles?: boolean // Default: false
+  addDotfiles?: boolean; // Default: true
+  overwriteDotfiles?: boolean; // Default: false
 }

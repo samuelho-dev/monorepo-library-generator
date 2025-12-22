@@ -14,21 +14,21 @@
  * @module monorepo-library-generator/generators/core/data-access-generator-core
  */
 
-import { Effect } from "effect"
-import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
-import { parseTags } from "../../utils/generators"
-import type { DataAccessTemplateOptions } from "../../utils/shared/types"
-import { getPackageName } from "../../utils/workspace-config"
-import { generateErrorsFile } from "../data-access/templates/errors.template"
-import { generateIndexFile } from "../data-access/templates/index.template"
-import { generateLayersSpecFile } from "../data-access/templates/layers-spec.template"
-import { generateLayersFile } from "../data-access/templates/layers.template"
-import { generateQueriesFile } from "../data-access/templates/queries.template"
-import { generateRepositorySpecFile } from "../data-access/templates/repository-spec.template"
-import { generateTypesFile } from "../data-access/templates/types.template"
-import { generateValidationFile } from "../data-access/templates/validation.template"
-import type { GeneratorResult } from "./contract"
-
+import { Effect } from 'effect';
+import type { FileSystemAdapter } from '../../utils/filesystem';
+import { parseTags } from '../../utils/generators';
+import type { DataAccessTemplateOptions } from '../../utils/types';
+// Import type-only exports template
+import {
+  generateTypesOnlyFile,
+  type TypesOnlyExportOptions,
+} from '../../utils/templates';
+import { getPackageName } from '../../utils/workspace-config';
+import { generateErrorsFile } from '../data-access/templates/errors.template';
+import { generateIndexFile } from '../data-access/templates/index.template';
+import { generateLayersFile } from '../data-access/templates/layers.template';
+import { generateLayersSpecFile } from '../data-access/templates/layers-spec.template';
+import { generateQueriesFile } from '../data-access/templates/queries.template';
 // Import new granular repository templates
 import {
   generateRepositoryAggregateOperationFile,
@@ -38,13 +38,14 @@ import {
   generateRepositoryIndexFile,
   generateRepositoryOperationsIndexFile,
   generateRepositoryReadOperationFile,
-  generateRepositoryUpdateOperationFile
-} from "../data-access/templates/repository"
+  generateRepositoryUpdateOperationFile,
+} from '../data-access/templates/repository';
+import { generateRepositorySpecFile } from '../data-access/templates/repository-spec.template';
+import { generateTypesFile } from '../data-access/templates/types.template';
+import { generateValidationFile } from '../data-access/templates/validation.template';
+import type { GeneratorResult } from './contract';
 
-// Import type-only exports template
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates/types-only-exports.template"
-
-export type { GeneratorResult }
+export type { GeneratorResult };
 
 /**
  * Data Access Generator Core Options
@@ -71,20 +72,20 @@ export type { GeneratorResult }
  * @property contractLibrary - Import path to contract library
  */
 export interface DataAccessCoreOptions {
-  readonly name: string
-  readonly className: string
-  readonly propertyName: string
-  readonly fileName: string
-  readonly constantName: string
-  readonly projectName: string
-  readonly projectRoot: string
-  readonly sourceRoot: string
-  readonly packageName: string
-  readonly offsetFromRoot: string
-  readonly description?: string
-  readonly tags?: string
-  readonly includeCache?: boolean
-  readonly contractLibrary?: string
+  readonly name: string;
+  readonly className: string;
+  readonly propertyName: string;
+  readonly fileName: string;
+  readonly constantName: string;
+  readonly projectName: string;
+  readonly projectRoot: string;
+  readonly sourceRoot: string;
+  readonly packageName: string;
+  readonly offsetFromRoot: string;
+  readonly description?: string;
+  readonly tags?: string;
+  readonly includeCache?: boolean;
+  readonly contractLibrary?: string;
 }
 
 /**
@@ -100,13 +101,10 @@ export interface DataAccessCoreOptions {
  * @param options - Pre-computed metadata and feature flags from wrapper
  * @returns Effect that succeeds with GeneratorResult or fails with FileSystemErrors
  */
-export function generateDataAccessCore(
-  adapter: FileSystemAdapter,
-  options: DataAccessCoreOptions
-) {
-  return Effect.gen(function*() {
+export function generateDataAccessCore(adapter: FileSystemAdapter, options: DataAccessCoreOptions) {
+  return Effect.gen(function* () {
     // Parse tags from comma-separated string
-    const parsedTags = parseTags(options.tags, [])
+    const parsedTags = parseTags(options.tags, []);
 
     // Assemble template options from pre-computed metadata
     const templateOptions: DataAccessTemplateOptions = {
@@ -115,7 +113,7 @@ export function generateDataAccessCore(
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: "data-access",
+      libraryType: 'data-access',
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
@@ -124,20 +122,20 @@ export function generateDataAccessCore(
       description: options.description ?? `Data access library for ${options.className}`,
       tags: parsedTags,
       includeCache: options.includeCache ?? false,
-      contractLibrary: options.contractLibrary ?? getPackageName("contract", options.fileName)
-    }
+      contractLibrary: options.contractLibrary ?? getPackageName('contract', options.fileName),
+    };
 
     // Generate all domain files
-    const filesGenerated = yield* generateDomainFiles(adapter, options.sourceRoot, templateOptions)
+    const filesGenerated = yield* generateDomainFiles(adapter, options.sourceRoot, templateOptions);
 
     return {
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       packageName: options.packageName,
       sourceRoot: options.sourceRoot,
-      filesGenerated
-    }
-  })
+      filesGenerated,
+    };
+  });
 }
 
 /**
@@ -154,14 +152,14 @@ export function generateDataAccessCore(
 function generateDomainFiles(
   adapter: FileSystemAdapter,
   sourceRoot: string,
-  templateOptions: DataAccessTemplateOptions
+  templateOptions: DataAccessTemplateOptions,
 ) {
-  return Effect.gen(function*() {
-    const workspaceRoot = adapter.getWorkspaceRoot()
-    const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`
-    const sourceSharedPath = `${sourceLibPath}/shared`
-    const sourceServerPath = `${sourceLibPath}/server`
-    const files: Array<string> = []
+  return Effect.gen(function* () {
+    const workspaceRoot = adapter.getWorkspaceRoot();
+    const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`;
+    const sourceSharedPath = `${sourceLibPath}/shared`;
+    const sourceServerPath = `${sourceLibPath}/server`;
+    const files: Array<string> = [];
 
     // Generate CLAUDE.md
     const claudeDoc = `# ${templateOptions.packageName}
@@ -253,40 +251,43 @@ Effect.gen(function* () {
   // ...
 });
 \`\`\`
-`
+`;
 
-    yield* adapter.writeFile(`${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`, claudeDoc)
+    yield* adapter.writeFile(
+      `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
+      claudeDoc,
+    );
 
     // Create directories
-    yield* adapter.makeDirectory(sourceLibPath)
-    yield* adapter.makeDirectory(sourceSharedPath)
-    yield* adapter.makeDirectory(sourceServerPath)
+    yield* adapter.makeDirectory(sourceLibPath);
+    yield* adapter.makeDirectory(sourceSharedPath);
+    yield* adapter.makeDirectory(sourceServerPath);
 
     // Generate shared files
     const sharedFiles = [
       { path: `${sourceSharedPath}/errors.ts`, generator: generateErrorsFile },
       { path: `${sourceSharedPath}/types.ts`, generator: generateTypesFile },
-      { path: `${sourceSharedPath}/validation.ts`, generator: generateValidationFile }
-    ]
+      { path: `${sourceSharedPath}/validation.ts`, generator: generateValidationFile },
+    ];
 
     for (const { generator, path } of sharedFiles) {
-      const content = generator(templateOptions)
-      yield* adapter.writeFile(path, content)
-      files.push(path)
+      const content = generator(templateOptions);
+      yield* adapter.writeFile(path, content);
+      files.push(path);
     }
 
     // Generate repository files with granular structure for bundle optimization
-    const repositoryPath = `${sourceLibPath}/repository`
-    const operationsPath = `${repositoryPath}/operations`
+    const repositoryPath = `${sourceLibPath}/repository`;
+    const operationsPath = `${repositoryPath}/operations`;
 
     // Create repository directories
-    yield* adapter.makeDirectory(repositoryPath)
-    yield* adapter.makeDirectory(operationsPath)
+    yield* adapter.makeDirectory(repositoryPath);
+    yield* adapter.makeDirectory(operationsPath);
 
     // Generate repository interface
-    const interfaceContent = generateRepositoryFile(templateOptions)
-    yield* adapter.writeFile(`${repositoryPath}/repository.ts`, interfaceContent)
-    files.push(`${repositoryPath}/repository.ts`)
+    const interfaceContent = generateRepositoryFile(templateOptions);
+    yield* adapter.writeFile(`${repositoryPath}/repository.ts`, interfaceContent);
+    files.push(`${repositoryPath}/repository.ts`);
 
     // Generate operation files (split for optimal tree-shaking)
     const operationFiles = [
@@ -294,66 +295,66 @@ Effect.gen(function* () {
       { path: `${operationsPath}/read.ts`, generator: generateRepositoryReadOperationFile },
       { path: `${operationsPath}/update.ts`, generator: generateRepositoryUpdateOperationFile },
       { path: `${operationsPath}/delete.ts`, generator: generateRepositoryDeleteOperationFile },
-      { path: `${operationsPath}/aggregate.ts`, generator: generateRepositoryAggregateOperationFile }
-    ]
+      {
+        path: `${operationsPath}/aggregate.ts`,
+        generator: generateRepositoryAggregateOperationFile,
+      },
+    ];
 
     for (const { generator, path } of operationFiles) {
-      const content = generator(templateOptions)
-      yield* adapter.writeFile(path, content)
-      files.push(path)
+      const content = generator(templateOptions);
+      yield* adapter.writeFile(path, content);
+      files.push(path);
     }
 
     // Generate operations index (barrel)
-    const operationsIndexContent = generateRepositoryOperationsIndexFile(templateOptions)
-    yield* adapter.writeFile(`${operationsPath}/index.ts`, operationsIndexContent)
-    files.push(`${operationsPath}/index.ts`)
+    const operationsIndexContent = generateRepositoryOperationsIndexFile(templateOptions);
+    yield* adapter.writeFile(`${operationsPath}/index.ts`, operationsIndexContent);
+    files.push(`${operationsPath}/index.ts`);
 
     // Generate repository index (barrel)
-    const repositoryIndexContent = generateRepositoryIndexFile(templateOptions)
-    yield* adapter.writeFile(`${repositoryPath}/index.ts`, repositoryIndexContent)
-    files.push(`${repositoryPath}/index.ts`)
+    const repositoryIndexContent = generateRepositoryIndexFile(templateOptions);
+    yield* adapter.writeFile(`${repositoryPath}/index.ts`, repositoryIndexContent);
+    files.push(`${repositoryPath}/index.ts`);
 
     // Generate repository spec (updated to use new structure)
-    const repoSpecContent = generateRepositorySpecFile(templateOptions)
-    yield* adapter.writeFile(`${sourceLibPath}/repository.spec.ts`, repoSpecContent)
-    files.push(`${sourceLibPath}/repository.spec.ts`)
+    const repoSpecContent = generateRepositorySpecFile(templateOptions);
+    yield* adapter.writeFile(`${sourceLibPath}/repository.spec.ts`, repoSpecContent);
+    files.push(`${sourceLibPath}/repository.spec.ts`);
 
     // Generate queries file
-    const queriesContent = generateQueriesFile(templateOptions)
-    yield* adapter.writeFile(`${sourceLibPath}/queries.ts`, queriesContent)
-    files.push(`${sourceLibPath}/queries.ts`)
+    const queriesContent = generateQueriesFile(templateOptions);
+    yield* adapter.writeFile(`${sourceLibPath}/queries.ts`, queriesContent);
+    files.push(`${sourceLibPath}/queries.ts`);
 
     // Generate server files
-    yield* adapter.writeFile(
-      `${sourceServerPath}/layers.ts`,
-      generateLayersFile(templateOptions)
-    )
-    files.push(`${sourceServerPath}/layers.ts`)
+    yield* adapter.writeFile(`${sourceServerPath}/layers.ts`, generateLayersFile(templateOptions));
+    files.push(`${sourceServerPath}/layers.ts`);
 
     yield* adapter.writeFile(
       `${sourceLibPath}/layers.spec.ts`,
-      generateLayersSpecFile(templateOptions)
-    )
-    files.push(`${sourceLibPath}/layers.spec.ts`)
+      generateLayersSpecFile(templateOptions),
+    );
+    files.push(`${sourceLibPath}/layers.spec.ts`);
 
     // Generate type-only exports file for zero-runtime imports
     const typesOnlyOptions: TypesOnlyExportOptions = {
-      libraryType: "data-access",
+      libraryType: 'data-access',
       className: templateOptions.className,
       fileName: templateOptions.fileName,
       packageName: templateOptions.packageName,
-      platform: "server"
-    }
-    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
-    const typesOnlyPath = `${workspaceRoot}/${sourceRoot}/types.ts`
-    yield* adapter.writeFile(typesOnlyPath, typesOnlyContent)
-    files.push(typesOnlyPath)
+      platform: 'server',
+    };
+    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions);
+    const typesOnlyPath = `${workspaceRoot}/${sourceRoot}/types.ts`;
+    yield* adapter.writeFile(typesOnlyPath, typesOnlyContent);
+    files.push(typesOnlyPath);
 
     // Generate index
-    const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
-    yield* adapter.writeFile(indexPath, generateIndexFile(templateOptions))
-    files.push(indexPath)
+    const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`;
+    yield* adapter.writeFile(indexPath, generateIndexFile(templateOptions));
+    files.push(indexPath);
 
-    return files
-  })
+    return files;
+  });
 }

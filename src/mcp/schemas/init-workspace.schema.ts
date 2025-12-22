@@ -7,37 +7,37 @@
  * @module mcp/schemas/init-workspace
  */
 
-import { JSONSchema, Schema } from "effect"
+import { JSONSchema, Schema } from 'effect';
 
 /**
  * Init Workspace Tool Arguments Schema
  *
  * Validates MCP tool arguments using Effect Schema.
  */
-export class InitWorkspaceArgs extends Schema.Class<InitWorkspaceArgs>("InitWorkspaceArgs")({
+export class InitWorkspaceArgs extends Schema.Class<InitWorkspaceArgs>('InitWorkspaceArgs')({
   /**
    * Whether to overwrite existing files
    */
   overwrite: Schema.optionalWith(Schema.Boolean, { default: () => false }).annotations({
-    title: "Overwrite Existing Files",
-    description: "Whether to overwrite existing workspace dotfiles (default: false)"
+    title: 'Overwrite Existing Files',
+    description: 'Whether to overwrite existing workspace dotfiles (default: false)',
   }),
 
   /**
    * Whether to merge with existing files
    */
   merge: Schema.optionalWith(Schema.Boolean, { default: () => true }).annotations({
-    title: "Merge with Existing Files",
-    description: "Whether to merge with existing dotfiles (default: true)"
+    title: 'Merge with Existing Files',
+    description: 'Whether to merge with existing dotfiles (default: true)',
   }),
 
   /**
    * Dry run mode
    */
   dryRun: Schema.optionalWith(Schema.Boolean, { default: () => false }).annotations({
-    title: "Dry Run",
-    description: "Preview changes without writing files (default: false)"
-  })
+    title: 'Dry Run',
+    description: 'Preview changes without writing files (default: false)',
+  }),
 }) {}
 
 /**
@@ -46,7 +46,7 @@ export class InitWorkspaceArgs extends Schema.Class<InitWorkspaceArgs>("InitWork
  * Uses Effect Schema to generate JSON Schema for MCP.
  */
 export const InitWorkspaceToolDefinition = {
-  name: "init_workspace",
+  name: 'init_workspace',
   description: `Initialize workspace-level dotfiles for consistent development experience.
 
 Creates workspace-level configuration files at the repository root:
@@ -61,5 +61,5 @@ Individual libraries will still have their own:
 
 IMPORTANT: This should only be run once per workspace, not per library.`,
 
-  inputSchema: JSONSchema.make(InitWorkspaceArgs)
-}
+  inputSchema: JSONSchema.make(InitWorkspaceArgs),
+};

@@ -6,8 +6,9 @@
  * @module monorepo-library-generator/data-access/layers-spec-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate layers.spec.ts file for data-access library
@@ -19,8 +20,9 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  * - Layer memoization tests
  */
 export function generateLayersSpecFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Layers Tests`,
@@ -32,8 +34,8 @@ Testing Guidelines:
 - Use it.scoped for layer tests (they need Scope)
 - Create inline test layers with Layer.succeed
 - Focus on layer mechanics, not business logic`,
-    module: `@custom-repo/data-access-${fileName}`
-  })
+    module: `${scope}/data-access-${fileName}`,
+  });
 
   builder.addRaw(`import { describe, expect, it } from "@effect/vitest"
 import { Context, Effect, Layer } from "effect"
@@ -174,7 +176,7 @@ describe("${className} Layers", () => {
     })
   })
 })
-`)
+`);
 
-  return builder.toString()
+  return builder.toString();
 }

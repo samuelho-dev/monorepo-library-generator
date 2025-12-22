@@ -6,8 +6,9 @@
  * @module monorepo-library-generator/provider/service/service-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder";
-import type { ProviderTemplateOptions } from "../../../../utils/shared/types";
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { ProviderTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate service/service.ts file
@@ -16,13 +17,8 @@ import type { ProviderTemplateOptions } from "../../../../utils/shared/types";
  */
 export function generateProviderServiceFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder();
-  const {
-    className,
-    cliCommand,
-    externalService,
-    fileName,
-    providerType = "sdk",
-  } = options;
+  const { className, cliCommand, externalService, fileName, providerType = 'sdk' } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Service Interface`,
@@ -31,7 +27,7 @@ export function generateProviderServiceFile(options: ProviderTemplateOptions) {
 External Service: ${externalService}
 
 ${
-  providerType === "sdk"
+  providerType === 'sdk'
     ? `Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.
 
@@ -40,55 +36,50 @@ Bundle optimization:
   - Full service: import { ${className} } from './service'`
     : `Provider Type: ${providerType}`
 }`,
-    module: `@custom-repo/provider-${fileName}/service`,
+    module: `${scope}/provider-${fileName}/service`,
   });
   builder.addBlankLine();
 
   // Add imports based on provider type
-  const effectImports = ["Context", "Effect", "Layer"];
-  if (providerType === "cli") {
-    effectImports.push("Command");
+  const effectImports = ['Context', 'Effect', 'Layer'];
+  if (providerType === 'cli') {
+    effectImports.push('Command');
   }
 
-  builder.addImports([{ from: "effect", imports: effectImports }]);
+  builder.addImports([{ from: 'effect', imports: [...effectImports, 'Redacted'] }]);
   builder.addBlankLine();
 
   // Add platform imports for HTTP/GraphQL
-  if (providerType === "http" || providerType === "graphql") {
+  if (providerType === 'http' || providerType === 'graphql') {
     builder.addImports([
       {
-        from: "@effect/platform",
-        imports: ["HttpClient", "HttpClientRequest", "HttpClientResponse"],
+        from: '@effect/platform',
+        imports: ['HttpClient', 'HttpClientRequest', 'HttpClientResponse'],
       },
     ]);
-    if (providerType === "http") {
-      builder.addImports([{ from: "@effect/platform", imports: ["HttpBody"] }]);
+    if (providerType === 'http') {
+      builder.addImports([{ from: '@effect/platform', imports: ['HttpBody'] }]);
     }
-    builder.addImports([{ from: "effect", imports: ["Schedule"] }]);
+    builder.addImports([{ from: 'effect', imports: ['Schedule'] }]);
     builder.addBlankLine();
   }
 
   // Import shared types and errors - conditional based on provider type
   const typeImports = [`${className}Config`];
-  if (providerType === "cli") {
-    typeImports.push("CommandResult");
+  if (providerType === 'cli') {
+    typeImports.push('CommandResult');
   } else {
-    typeImports.push(
-      "Resource",
-      "ListParams",
-      "PaginatedResult",
-      "HealthCheckResult"
-    );
+    typeImports.push('Resource', 'ListParams', 'PaginatedResult', 'HealthCheckResult');
   }
 
   builder.addImports([
     {
-      from: "../types",
+      from: '../types',
       imports: typeImports,
       isTypeOnly: true,
     },
     {
-      from: "../errors",
+      from: '../errors',
       imports: [`${className}ServiceError`],
       isTypeOnly: true,
     },
@@ -97,28 +88,31 @@ Bundle optimization:
   // Import NotFoundError as value for Test layer usage
   builder.addImports([
     {
-      from: "../errors",
+      from: '../errors',
       imports: [`${className}NotFoundError`],
     },
   ]);
 
+  // Note: env is imported in layers.ts, not here - keeps service interface pure
+  // This allows tests to import service.ts without triggering env runSync
+
   // HTTP/GraphQL providers need ResourceSchema as a value import (not type-only)
   // for HttpClientResponse.schemaBodyJson() validation
-  if (providerType === "http" || providerType === "graphql") {
+  if (providerType === 'http' || providerType === 'graphql') {
     builder.addImports([
       {
-        from: "../types",
-        imports: ["ResourceSchema"],
+        from: '../types',
+        imports: ['ResourceSchema'],
       },
     ]);
   }
   builder.addBlankLine();
 
   // Service interface - conditional based on provider type
-  builder.addSectionComment("Service Interface");
+  builder.addSectionComment('Service Interface');
   builder.addBlankLine();
 
-  if (providerType === "cli") {
+  if (providerType === 'cli') {
     // CLI Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -147,7 +141,7 @@ export interface ${className}ServiceInterface {
    */
   readonly version;
 }`);
-  } else if (providerType === "http") {
+  } else if (providerType === 'http') {
     // HTTP Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -196,7 +190,7 @@ export interface ${className}ServiceInterface {
    */
   readonly list: (params?: ListParams);
 }`);
-  } else if (providerType === "graphql") {
+  } else if (providerType === 'graphql') {
     // GraphQL Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -466,7 +460,7 @@ export interface ${className}ServiceInterface {
   builder.addBlankLine();
 
   // Context.Tag
-  builder.addSectionComment("Context.Tag");
+  builder.addSectionComment('Context.Tag');
   builder.addBlankLine();
 
   builder.addRaw(`/**
@@ -489,7 +483,7 @@ export class ${className} extends Context.Tag("${className}")<
 >() {`);
 
   // Add conditional Live layer implementation
-  if (providerType === "cli") {
+  if (providerType === 'cli') {
     // CLI Live Layer
     builder.addRaw(`  /**
    * Live Layer - CLI command execution
@@ -497,7 +491,7 @@ export class ${className} extends Context.Tag("${className}")<
    * Executes ${cliCommand || externalService} commands using Effect Command
    */
   static readonly Live = Layer.effect(
-    this,
+    ${className},
     Effect.gen(function* () {
       const config = yield* ${className}Config
 
@@ -519,7 +513,7 @@ export class ${className} extends Context.Tag("${className}")<
       return { config, execute, version }
     })
   )`);
-  } else if (providerType === "http") {
+  } else if (providerType === 'http') {
     // HTTP Live Layer
     builder.addRaw(`  /**
    * Live Layer - HTTP REST API client
@@ -527,7 +521,7 @@ export class ${className} extends Context.Tag("${className}")<
    * Uses HttpClient from @effect/platform for ${externalService}
    */
   static readonly Live = Layer.effect(
-    this,
+    ${className},
     Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient
       const config = yield* ${className}Config
@@ -624,7 +618,7 @@ export class ${className} extends Context.Tag("${className}")<
       return { config, healthCheck, get, post, put, delete: del, list }
     })
   )`);
-  } else if (providerType === "graphql") {
+  } else if (providerType === 'graphql') {
     // GraphQL Live Layer
     builder.addRaw(`  /**
    * Live Layer - GraphQL API client
@@ -632,7 +626,7 @@ export class ${className} extends Context.Tag("${className}")<
    * Uses HttpClient for GraphQL operations on ${externalService}
    */
   static readonly Live = Layer.effect(
-    this,
+    ${className},
     Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient
       const config = yield* ${className}Config
@@ -699,128 +693,135 @@ export class ${className} extends Context.Tag("${className}")<
     })
   )`);
   } else {
-    // SDK Live Layer (original implementation)
+    // SDK Live Layer - Uses in-memory baseline implementation
+    // Replace with real SDK calls when integrating with external service
     builder.addRaw(`  /**
    * Live Layer - Production implementation
    *
-   * Uses dynamic imports to load operations on-demand.
-   * Each operation file is only loaded when the layer is constructed.
+   * Currently uses in-memory baseline. Replace with ${externalService} SDK integration:
    *
-   * TODO: Configure ${externalService} SDK client
+   * @example
+   * \`\`\`typescript
+   * // 1. Install SDK: pnpm add ${externalService.toLowerCase()}-sdk
+   * // 2. Replace in-memory store with SDK calls:
+   * static readonly Live = Layer.effect(
+   *   this,
+   *   Effect.gen(function* () {
+   *     const client = new ${externalService}Client(config);
+   *     return {
+   *       get: (id) => Effect.tryPromise({
+   *         try: () => client.get(id),
+   *         catch: (error) => new ${className}InternalError({ message: "Get failed", cause: error })
+   *       }),
+   *       // ... other methods
+   *     };
+   *   })
+   * );
+   * \`\`\`
    */
   static readonly Live = Layer.effect(
-    this,
+    ${className},
     Effect.gen(function* () {
-      // TODO: Initialize ${externalService} SDK client
-      // Example:
-      // const client = yield* Effect.promise(() =>
-      //   import("${externalService}-sdk").then(m => new m.${externalService}Client(config))
-      // );
+      // Lazy import env - only loads when Live layer is built, not at module parse time
+      // This allows tests to import service.ts without triggering env validation
+      const { env } = yield* Effect.promise(() => import("${scope}/env"));
 
-      // =================================================================
-      // OPTIONAL: Rate Limiting with Semaphore
-      // =================================================================
-      //
-      // If your external service has rate limits, use Semaphore to control concurrency:
-      //
-      // import { Effect } from "effect";
-      //
-      // // Create semaphore with max concurrent requests (e.g., 5 concurrent API calls)
-      // const rateLimiter = yield* Effect.makeSemaphore(5);
-      //
-      // // Wrap operations with semaphore.withPermits:
-      // const rateLimitedGet = (id: string) =>
-      //   rateLimiter.withPermits(1)(
-      //     Effect.tryPromise({
-      //       try: () => client.get(id),
-      //       catch: (error) => new ${className}ServiceError({ cause: error })
-      //     })
-      //   );
-      //
-      // Benefits:
-      // - Prevents "429 Too Many Requests" errors
-      // - Protects external service from overload
-      // - Automatic backpressure (suspends when permits exhausted)
-      // - No manual throttling logic needed
-      //
-      // Use Cases:
-      // - API rate limiting (max 10 requests/second → semaphore with 10 permits)
-      // - Connection pooling (max 20 DB connections → semaphore with 20 permits)
-      // - Resource throttling (max 3 concurrent file uploads → semaphore with 3 permits)
-      //
-      // See EFFECT_PATTERNS.md "Semaphore - Resource Limiting & Rate Control" for comprehensive examples.
-
-      // =================================================================
-      // OPTIONAL: Lazy Initialization with Deferred
-      // =================================================================
-      //
-      // Use Deferred for lazy initialization and fiber coordination:
-      //
-      // import { Deferred, Effect } from "effect";
-      //
-      // // Create deferred value for cache warmup
-      // const cacheReady = yield* Deferred.make<void, never>();
-      //
-      // // Start background warmup, signal when complete
-      // yield* Effect.forkScoped(
-      //   Effect.gen(function* () {
-      //     // yield* warmupCache();
-      //     yield* Deferred.succeed(cacheReady, void 0);
-      //   })
-      // );
-      //
-      // // Operations wait for cache before executing:
-      // get: (id: string) =>
-      //   Effect.gen(function* () {
-      //     yield* Deferred.await(cacheReady);  // Wait for warmup
-      //     // ...proceed with operation
-      //   }),
-      //
-      // Benefits:
-      // - One-time value resolution (like Promise)
-      // - Type-safe fiber coordination
-      // - Automatic suspension of waiting fibers
-      // - No polling or busy-waiting needed
-      //
-      // Use Cases:
-      // - Cache warmup coordination (wait for cache before serving)
-      // - Lazy resource initialization (initialize on first use)
-      // - Fiber handoff (pass values between fibers)
-      // - Configuration loading (wait for config before operations)
-      //
-      // Deferred vs Latch:
-      // - Deferred: Carries a value (like Promise), can fail
-      // - Latch: Just a gate (no value), always succeeds
-      //
-      // See EFFECT_PATTERNS.md "Deferred - Fiber Coordination" for comprehensive examples.
-
-      // Lazy load operations for optimal bundle size
-      const createOps = yield* Effect.promise(() =>
-        import("./operations/create").then((m) => m.createOperations)
-      );
-      const queryOps = yield* Effect.promise(() =>
-        import("./operations/query").then((m) => m.queryOperations)
-      );
-      const updateOps = yield* Effect.promise(() =>
-        import("./operations/update").then((m) => m.updateOperations)
-      );
-      const deleteOps = yield* Effect.promise(() =>
-        import("./operations/delete").then((m) => m.deleteOperations)
-      );
+      // In-memory baseline implementation
+      // TODO: Replace with ${externalService} SDK integration
+      const store = new Map<string, Resource>();
+      let idCounter = 0;
 
       // Configuration from environment variables
       const config: ${className}Config = {
-        apiKey: process.env["${options.constantName}_API_KEY"] ?? "baseline_api_key",
-        timeout: Number(process.env["${options.constantName}_TIMEOUT"]) || 20000,
+        apiKey: Redacted.value(env.${options.constantName}_API_KEY) ?? "fallback_api_key",
+        timeout: env.${options.constantName}_TIMEOUT ?? 20000,
       };
 
       return {
         config,
+
         healthCheck: Effect.succeed({ status: "healthy" as const }),
-        ...createOps,
-        ...queryOps,
-        ...updateOps,
-        ...deleteOps
+
+        list: (params) =>
+          Effect.sync(() => {
+            const page = params?.page ?? 1;
+            const limit = params?.limit ?? 10;
+            const items = Array.from(store.values());
+            const start = (page - 1) * limit;
+            const end = start + limit;
+            return {
+              data: items.slice(start, end),
+              page,
+              limit,
+              total: items.length,
+            };
+          }),
+
+        get: (id) =>
+          Effect.gen(function* () {
+            const item = store.get(id);
+            if (!item) {
+              return yield* Effect.fail(
+                new ${className}NotFoundError({
+                  message: \`Resource \${id} not found\`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+            return item;
+          }),
+
+        create: (data) =>
+          Effect.sync(() => {
+            const id = \`live-\${++idCounter}\`;
+            const now = new Date();
+            const item: Resource = {
+              id,
+              ...data,
+              createdAt: now,
+              updatedAt: now,
+            };
+            store.set(id, item);
+            return item;
+          }),
+
+        update: (id, data) =>
+          Effect.gen(function* () {
+            const item = store.get(id);
+            if (!item) {
+              return yield* Effect.fail(
+                new ${className}NotFoundError({
+                  message: \`Resource \${id} not found\`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+            const updated: Resource = {
+              ...item,
+              ...data,
+              id,
+              createdAt: item.createdAt,
+              updatedAt: new Date(),
+            };
+            store.set(id, updated);
+            return updated;
+          }),
+
+        delete: (id) =>
+          Effect.gen(function* () {
+            const existed = store.delete(id);
+            if (!existed) {
+              return yield* Effect.fail(
+                new ${className}NotFoundError({
+                  message: \`Resource \${id} not found\`,
+                  resourceId: id,
+                  resourceType: "Resource",
+                })
+              );
+            }
+          }),
       };
     })
   );
@@ -836,7 +837,7 @@ export class ${className} extends Context.Tag("${className}")<
    * for specific test scenarios.
    */
   static readonly Test = Layer.sync(
-    this,
+    ${className},
     () => {
       // In-memory store for test isolation
       const store = new Map<string, Resource>();
@@ -945,9 +946,9 @@ export class ${className} extends Context.Tag("${className}")<
    * Useful for debugging external SDK integrations.
    */
   static readonly Dev = Layer.effect(
-    this,
+    ${className},
     Effect.gen(function* () {
-      console.log(\`[${className}] [DEV] Initializing development layer\`);
+      console.log("[${className}] [DEV] Initializing development layer");
 
       // Get actual implementation from Live layer
       const liveService = yield* ${className}.Live.pipe(
@@ -960,49 +961,49 @@ export class ${className} extends Context.Tag("${className}")<
         config: liveService.config,
 
         healthCheck: Effect.gen(function* () {
-          console.log(\`[${className}] [DEV] healthCheck called\`);
+          console.log("[${className}] [DEV] healthCheck called");
           const result = yield* liveService.healthCheck;
-          console.log(\`[${className}] [DEV] healthCheck result:\`, result);
+          console.log("[${className}] [DEV] healthCheck result:", result);
           return result;
         }),
 
         list: (params) =>
           Effect.gen(function* () {
-            console.log(\`[${className}] [DEV] list called with:\`, params);
+            console.log("[${className}] [DEV] list called with:", params);
             const result = yield* liveService.list(params);
-            console.log(\`[${className}] [DEV] list result:\`, { count: result.data.length, total: result.total });
+            console.log("[${className}] [DEV] list result:", { count: result.data.length, total: result.total });
             return result;
           }),
 
         get: (id) =>
           Effect.gen(function* () {
-            console.log(\`[${className}] [DEV] get called with id:\`, id);
+            console.log("[${className}] [DEV] get called with id:", id);
             const result = yield* liveService.get(id);
-            console.log(\`[${className}] [DEV] get result:\`, result);
+            console.log("[${className}] [DEV] get result:", result);
             return result;
           }),
 
         create: (data) =>
           Effect.gen(function* () {
-            console.log(\`[${className}] [DEV] create called with:\`, data);
+            console.log("[${className}] [DEV] create called with:", data);
             const result = yield* liveService.create(data);
-            console.log(\`[${className}] [DEV] create result:\`, result);
+            console.log("[${className}] [DEV] create result:", result);
             return result;
           }),
 
         update: (id, data) =>
           Effect.gen(function* () {
-            console.log(\`[${className}] [DEV] update called with id:\`, id, \`data:\`, data);
+            console.log("[${className}] [DEV] update called with id:", id, "data:", data);
             const result = yield* liveService.update(id, data);
-            console.log(\`[${className}] [DEV] update result:\`, result);
+            console.log("[${className}] [DEV] update result:", result);
             return result;
           }),
 
         delete: (id) =>
           Effect.gen(function* () {
-            console.log(\`[${className}] [DEV] delete called with id:\`, id);
+            console.log("[${className}] [DEV] delete called with id:", id);
             yield* liveService.delete(id);
-            console.log(\`[${className}] [DEV] delete completed\`);
+            console.log("[${className}] [DEV] delete completed");
           })
       };
     })

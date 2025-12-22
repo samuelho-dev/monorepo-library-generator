@@ -6,182 +6,122 @@
  * @module monorepo-library-generator/data-access/repository/repository-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate repository/repository.ts file
  *
- * Creates the Context.Tag interface with static layers (Live, Test, Dev, Auto)
+ * Creates the Context.Tag interface with static layers (Live, Test)
  */
-export function generateRepositoryFile(
-  options: DataAccessTemplateOptions
-) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+export function generateRepositoryFile(options: DataAccessTemplateOptions) {
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
-    title: `${className} Repository Interface`,
+    title: `${className} Repository`,
     description: `Context.Tag definition for ${className}Repository.
 
 ARCHITECTURE PATTERN:
-- Repository interface defined in contract library (port)
-- This file imports and re-exports with static layers (adapter)
 - Operations split into separate files for bundle optimization
+- Return types are inferred to preserve Effect's dependency tracking
+- Use repository.streamAll() for large datasets
 
 @see repository/operations/* for implementation details`,
-    module: `@custom-repo/data-access-${fileName}/repository`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/repository`,
+  });
+  builder.addBlankLine();
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Layer", "Effect", "Stream", "Option"] }
-  ])
-  builder.addBlankLine()
+    { from: 'effect', imports: ['Chunk', 'Context', 'Effect', 'Layer', 'Option', 'Stream'] },
+  ]);
+  builder.addBlankLine();
 
-  // Import entity and error types from shared
+  // Import types from shared
   builder.addImports([
     {
-      from: "../shared/types",
-      imports: [`${className}`],
-      isTypeOnly: true
+      from: '../shared/types',
+      imports: [
+        `${className}CreateInput`,
+        `${className}UpdateInput`,
+        `${className}Filter`,
+        `PaginationOptions`,
+      ],
+      isTypeOnly: true,
     },
     {
-      from: "../shared/errors",
-      imports: [`${className}RepositoryError`],
-      isTypeOnly: true
-    }
-  ])
-  builder.addBlankLine()
+      from: '../shared/errors',
+      imports: [`${className}NotFoundError`],
+    },
+  ]);
+  builder.addBlankLine();
 
-  // Import operation types
-  builder.addComment("Import all operation types")
+  // Import operations
+  builder.addComment('Import operation implementations');
   builder.addImports([
-    {
-      from: "./operations/create",
-      imports: [`Create${className}Operations`],
-      isTypeOnly: true
-    },
-    {
-      from: "./operations/read",
-      imports: [`Read${className}Operations`],
-      isTypeOnly: true
-    },
-    {
-      from: "./operations/update",
-      imports: [`Update${className}Operations`],
-      isTypeOnly: true
-    },
-    {
-      from: "./operations/delete",
-      imports: [`Delete${className}Operations`],
-      isTypeOnly: true
-    },
-    {
-      from: "./operations/aggregate",
-      imports: [`Aggregate${className}Operations`],
-      isTypeOnly: true
-    }
-  ])
-  builder.addBlankLine()
+    { from: './operations/create', imports: ['createOperations'] },
+    { from: './operations/read', imports: ['readOperations'] },
+    { from: './operations/update', imports: ['updateOperations'] },
+    { from: './operations/delete', imports: ['deleteOperations'] },
+    { from: './operations/aggregate', imports: ['aggregateOperations'] },
+  ]);
+  builder.addBlankLine();
 
-  // Repository interface
-  builder.addSectionComment("Repository Interface")
-  builder.addBlankLine()
+  // Context.Tag
+  builder.addSectionComment('Repository Context.Tag');
+  builder.addBlankLine();
 
   builder.addRaw(`/**
- * ${className} Repository Interface
+ * ${className} Repository implementation
  *
- * Complete CRUD + aggregate operations for ${className} entities.
- * Operations are split into separate modules for optimal tree-shaking.
+ * Combines all CRUD + aggregate operations into a single repository object.
+ * Return types flow from operations, preserving Effect's dependency and error tracking.
  */
-export interface ${className}RepositoryInterface
-  extends Create${className}Operations,
-    Read${className}Operations,
-    Update${className}Operations,
-    Delete${className}Operations,
-    Aggregate${className}Operations {
-
-  // ==========================================================================
-  // Stream-Based Operations for Large Datasets
-  // ==========================================================================
-  //
-  // Stream provides constant-memory processing for large/unbounded datasets.
-  // Use when processing 1000+ items or when memory constraints are critical.
+const repositoryImpl = {
+  ...createOperations,
+  ...readOperations,
+  ...updateOperations,
+  ...deleteOperations,
+  ...aggregateOperations,
 
   /**
    * Stream all entities with pagination
    *
-   * Provides constant-memory processing of large datasets using Stream.paginateEffect.
-   * Automatically handles pagination and backpressure.
-   *
-   * @param options - Configuration options
-   * @param options.batchSize - Number of items per page (default: 100)
-   *
-   * @returns Stream of entities with constant memory usage
+   * Provides constant-memory processing of large datasets.
    *
    * @example
    * \`\`\`typescript
-   * // Stream all entities
-   * const repo = yield* ${className}Repository;
    * yield* repo.streamAll({ batchSize: 100 }).pipe(
    *   Stream.mapEffect((entity) => processEntity(entity)),
    *   Stream.runDrain
    * );
-   *
-   * // Count total items with constant memory
-   * const count = yield* repo.streamAll().pipe(
-   *   Stream.runCount
-   * );
-   *
-   * // Export to CSV with constant memory
-   * yield* repo.streamAll().pipe(
-   *   Stream.map((entity) => toCsvRow(entity)),
-   *   Stream.run(Sink.file("export.csv"))
-   * );
    * \`\`\`
    */
-  readonly streamAll: (options?: {
-    readonly batchSize?: number;
-  }) => Stream.Stream<${className}, ${className}RepositoryError, never>;
+  streamAll: (options?: { batchSize?: number }) => {
+    const batchSize = options?.batchSize ?? 100;
+    return Stream.paginateChunkEffect(0, (offset) =>
+      readOperations.findAll(undefined, { skip: offset, limit: batchSize }).pipe(
+        Effect.map((result) => {
+          const chunk = Chunk.fromIterable(result.items);
+          const next = result.hasMore ? Option.some(offset + batchSize) : Option.none();
+          return [chunk, next] as const;
+        })
+      )
+    );
+  },
+} as const;
 
-  // ==========================================================================
-  // TODO: Additional Stream Operations (Optional)
-  // ==========================================================================
-  //
-  // Add these if your use case requires filtering or custom streaming:
-  //
-  // readonly streamByCriteria: (
-  //   criteria: Partial<${className}>,
-  //   options?: { batchSize?: number }
-  // ) => Stream.Stream<${className}, ${className}RepositoryError, never>;
-  //
-  // Usage examples:
-  //
-  // // Stream with Sink for aggregation
-  // const total = yield* repo.streamByCriteria({ status: "active" }).pipe(
-  //   Stream.map(item => item.amount),
-  //   Stream.run(Sink.sum) // Constant memory aggregation
-  // );
-  //
-  // // Batch processing with backpressure
-  // yield* repo.streamAll().pipe(
-  //   Stream.grouped(50), // Process 50 at a time
-  //   Stream.mapEffect((batch) => processBatch(batch)),
-  //   Stream.runDrain
-  // );
-  //
-  // See EFFECT_PATTERNS.md "Streaming & Queuing Patterns" for comprehensive examples.
-  // See DATA-ACCESS.md for repository-specific Stream integration patterns.
-}`)
-  builder.addBlankLine()
+/**
+ * ${className} Repository Type
+ *
+ * Use this type when you need to reference the repository interface.
+ */
+export type ${className}RepositoryInterface = typeof repositoryImpl;
 
-  // Context.Tag
-  builder.addSectionComment("Context.Tag")
-  builder.addBlankLine()
-
-  builder.addRaw(`/**
+/**
  * ${className} Repository Tag
  *
  * Access via: yield* ${className}Repository
@@ -189,8 +129,6 @@ export interface ${className}RepositoryInterface
  * Static layers available:
  * - ${className}Repository.Live - Production implementation
  * - ${className}Repository.Test - In-memory test implementation
- * - ${className}Repository.Dev - Development with logging
- * - ${className}Repository.Auto - Auto-select based on NODE_ENV
  */
 export class ${className}Repository extends Context.Tag("${className}Repository")<
   ${className}Repository,
@@ -199,124 +137,154 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
   /**
    * Live Layer - Production implementation
    *
-   * Requires:
-   * - DatabaseService (from @custom-repo/infra-database) for database persistence
-   * - CacheService (from @custom-repo/infra-cache) for performance optimization
-   *
-   * Operations handle service injection internally via Effect.gen
+   * Requires DatabaseService for database persistence.
+   * All dependencies are handled internally via Effect.gen.
    */
-  static readonly Live = Layer.effect(
+  static readonly Live = Layer.succeed(this, repositoryImpl);
+
+  /**
+   * Test Layer - In-memory test implementation
+   *
+   * Uses Layer.effect for isolated in-memory storage per test.
+   * Each Layer.fresh() call creates isolated storage.
+   */
+  static readonly Test = Layer.effect(
     this,
-    Effect.gen(function* () {
-      // Import operation implementations
-      const createOps = yield* Effect.promise(() =>
-        import("./operations/create").then((m) => m.createOperations)
-      );
-      const readOps = yield* Effect.promise(() =>
-        import("./operations/read").then((m) => m.readOperations)
-      );
-      const updateOps = yield* Effect.promise(() =>
-        import("./operations/update").then((m) => m.updateOperations)
-      );
-      const deleteOps = yield* Effect.promise(() =>
-        import("./operations/delete").then((m) => m.deleteOperations)
-      );
-      const aggregateOps = yield* Effect.promise(() =>
-        import("./operations/aggregate").then((m) => m.aggregateOperations)
-      );
+    Effect.sync(() => {
+      // In-memory storage for test isolation
+      const store = new Map<string, Record<string, unknown>>();
+
+      const generateId = () => crypto.randomUUID();
 
       return {
-        ...createOps,
-        ...readOps,
-        ...updateOps,
-        ...deleteOps,
-        ...aggregateOps,
+        create: (input: ${className}CreateInput) =>
+          Effect.sync(() => {
+            const now = new Date();
+            const entity = {
+              id: generateId(),
+              ...input,
+              createdAt: now,
+              updatedAt: now,
+            };
+            store.set(entity.id, entity);
+            return entity;
+          }),
+
+        createMany: (inputs: ReadonlyArray<${className}CreateInput>) =>
+          Effect.sync(() => {
+            const now = new Date();
+            return inputs.map((input) => {
+              const entity = {
+                id: generateId(),
+                ...input,
+                createdAt: now,
+                updatedAt: now,
+              };
+              store.set(entity.id, entity);
+              return entity;
+            });
+          }),
+
+        findById: (id: string) =>
+          Effect.sync(() => {
+            const entity = store.get(id);
+            return entity ? Option.some(entity) : Option.none();
+          }),
+
+        findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
+          Effect.sync(() => {
+            let items = Array.from(store.values());
+
+            // Apply search filter if provided
+            if (filter?.search) {
+              const search = filter.search.toLowerCase();
+              items = items.filter((item) =>
+                JSON.stringify(item).toLowerCase().includes(search)
+              );
+            }
+
+            const total = items.length;
+            const limit = pagination?.limit ?? 50;
+            const skip = pagination?.skip ?? 0;
+
+            items = items.slice(skip, skip + limit);
+
+            return {
+              items,
+              total,
+              hasMore: skip + items.length < total,
+            };
+          }),
+
+        findOne: (filter: ${className}Filter) =>
+          Effect.sync(() => {
+            const items = Array.from(store.values());
+            if (filter.search) {
+              const search = filter.search.toLowerCase();
+              const found = items.find((item) =>
+                JSON.stringify(item).toLowerCase().includes(search)
+              );
+              return found ? Option.some(found) : Option.none();
+            }
+            return items[0] ? Option.some(items[0]) : Option.none();
+          }),
+
+        update: (id: string, input: ${className}UpdateInput) =>
+          Effect.gen(function* () {
+            const existing = store.get(id);
+            if (!existing) {
+              return yield* Effect.fail(${className}NotFoundError.create(id));
+            }
+            const updated = {
+              ...existing,
+              ...input,
+              updatedAt: new Date(),
+            };
+            store.set(id, updated);
+            return updated;
+          }),
+
+        delete: (id: string) =>
+          Effect.sync(() => {
+            store.delete(id);
+          }),
+
+        deleteMany: (ids: ReadonlyArray<string>) =>
+          Effect.sync(() => {
+            for (const id of ids) {
+              store.delete(id);
+            }
+          }),
+
+        count: (filter?: ${className}Filter) =>
+          Effect.sync(() => {
+            if (!filter?.search) {
+              return store.size;
+            }
+            const search = filter.search.toLowerCase();
+            return Array.from(store.values()).filter((item) =>
+              JSON.stringify(item).toLowerCase().includes(search)
+            ).length;
+          }),
+
+        exists: (id: string) =>
+          Effect.sync(() => store.has(id)),
+
+        streamAll: (options?: { batchSize?: number }) => {
+          const batchSize = options?.batchSize ?? 100;
+          return Stream.paginateChunkEffect(0, (offset) =>
+            Effect.sync(() => {
+              const items = Array.from(store.values()).slice(offset, offset + batchSize);
+              const chunk = Chunk.fromIterable(items);
+              const next = items.length < batchSize ? Option.none() : Option.some(offset + batchSize);
+              return [chunk, next];
+            })
+          );
+        },
       };
     })
   );
+}`);
 
-  /**
-   * Test Layer - Placeholder implementation
-   *
-   * Uses Layer.succeed for deterministic testing.
-   * No dynamic imports - all operations are plain functions for proper Layer.fresh isolation.
-   *
-   * IMPORTANT: This provides placeholder implementations that guide you to provide your own mocks.
-   * Customize via Layer.succeed(${className}Repository, \\{ ...your mock implementations \\})
-   * or use ${className}Repository.Dev for a working in-memory implementation.
-   */
-  static readonly Test = Layer.succeed(
-    this,
-    {
-      // Create operations - mock implementations
-      // Returns mock created entity with test-id
-      create: (input) =>
-        Effect.succeed({
-          id: "test-id",
-          ...input,
-          createdAt: new Date("2024-01-01T00:00:00Z"),
-          updatedAt: new Date("2024-01-01T00:00:00Z"),
-        }),
-
-      createMany: (inputs) =>
-        Effect.succeed(
-          inputs.map((input, i) => ({
-            id: \`test-id-\${i}\`,
-            ...input,
-            createdAt: new Date("2024-01-01T00:00:00Z"),
-            updatedAt: new Date("2024-01-01T00:00:00Z"),
-          }))
-        ),
-
-      // Read operations - return empty results or None
-      // Customize these mocks for your specific test scenarios
-      findById: () => Effect.succeed(Option.none()),
-
-      findMany: () => Effect.succeed([]),
-
-      findAll: () => Effect.succeed([]),
-
-      findByCriteria: () => Effect.succeed([]),
-
-      // Update operations - return mock updated entity
-      update: (id, input) =>
-        Effect.succeed({
-          id,
-          name: "test-updated",
-          ...input,
-          createdAt: new Date("2024-01-01T00:00:00Z"),
-          updatedAt: new Date(),
-        }),
-
-      updateMany: () => Effect.succeed(0),
-
-      // Delete operations - return success
-      delete: () => Effect.void,
-
-      deleteMany: () => Effect.succeed(0),
-
-      // Aggregate operations - simple defaults
-      count: () => Effect.succeed(0),
-
-      exists: () => Effect.succeed(false),
-
-      // Stream operation - empty stream
-      streamAll: () => Stream.empty,
-    }
-  );
-
-  /**
-   * Dev Layer - Development with enhanced logging
-   */
-  static readonly Dev = this.Test;
-
-  /**
-   * Auto Layer - Auto-select based on NODE_ENV
-   */
-  static readonly Auto = Layer.suspend(() =>
-    process.env.NODE_ENV === "test" ? this.Test : this.Live
-  );
-}`)
-
-  return builder.toString()
+  return builder.toString();
 }

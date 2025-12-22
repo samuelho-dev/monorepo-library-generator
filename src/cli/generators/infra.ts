@@ -5,53 +5,55 @@
  * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect, ParseResult } from "effect"
-import { generateInfraCore, type InfraCoreOptions } from "../../generators/core/infra"
-import { createExecutor } from "../../infrastructure/execution/executor"
-import { formatOutput } from "../../infrastructure/output/formatter"
-import { decodeInfraInput, type InfraInput } from "../../infrastructure/validation/registry"
+import { Console, Effect, ParseResult } from 'effect';
+import { generateInfraCore, type InfraCoreOptions } from '../../generators/core/infra';
+import { createExecutor } from '../../infrastructure/execution/executor';
+import { formatOutput } from '../../infrastructure/output/formatter';
+import { decodeInfraInput, type InfraInput } from '../../infrastructure/validation/registry';
 
 /**
  * Infra Generator Options - imported from validation registry
  * for single source of truth
  */
-export type InfraGeneratorOptions = InfraInput
+export type InfraGeneratorOptions = InfraInput;
 
 const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
-  "infra",
+  'infra',
   generateInfraCore,
   (validated, metadata) => {
-    let includeClientServer = validated.includeClientServer
+    let includeClientServer = validated.includeClientServer;
     if (includeClientServer === undefined && validated.includeClient && validated.includeServer) {
-      includeClientServer = true
+      includeClientServer = true;
     }
 
     return {
       ...metadata,
       ...(validated.platform !== undefined && { platform: validated.platform }),
       ...(includeClientServer !== undefined && { includeClientServer }),
-      ...(validated.includeEdge !== undefined && { includeEdge: validated.includeEdge })
-    }
-  }
-)
+      ...(validated.includeEdge !== undefined && { includeEdge: validated.includeEdge }),
+    };
+  },
+);
 
 export function generateInfra(options: InfraGeneratorOptions) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeInfraInput(options).pipe(
-      Effect.mapError((parseError) => new Error(ParseResult.TreeFormatter.formatErrorSync(parseError)))
-    )
+      Effect.mapError(
+        (parseError) => new Error(ParseResult.TreeFormatter.formatErrorSync(parseError)),
+      ),
+    );
 
-    yield* Console.log(`Creating infra library: ${validated.name}...`)
+    yield* Console.log(`Creating infra library: ${validated.name}...`);
 
     const result = yield* infraExecutor.execute({
       ...validated,
-      __interfaceType: "cli"
-    })
+      __interfaceType: 'cli',
+    });
 
-    const output = formatOutput(result, "cli")
-    yield* Console.log(output)
+    const output = formatOutput(result, 'cli');
+    yield* Console.log(output);
 
-    return result
-  })
+    return result;
+  });
 }

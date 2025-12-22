@@ -1,7 +1,7 @@
 export const generateSubServiceTemplate = (options: {
-  serviceName: string
-  className: string
-  packageName: string
+  serviceName: string;
+  className: string;
+  packageName: string;
 }) =>
   `/**
  * ${options.className} Sub-Service
@@ -62,4 +62,4 @@ export const make${options.className} = Effect.gen(function* () {
     })
   })
 })
-`
+`;

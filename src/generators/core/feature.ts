@@ -15,11 +15,14 @@
  * @module monorepo-library-generator/generators/core/feature-generator-core
  */
 
-import { Effect } from "effect"
-import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
-import { computePlatformConfiguration, type PlatformType } from "../../utils/platforms"
-import type { FeatureTemplateOptions } from "../../utils/shared/types"
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates/types-only-exports.template"
+import { Effect } from 'effect';
+import type { FileSystemAdapter } from '../../utils/filesystem';
+import { computePlatformConfiguration, type PlatformType } from '../../utils/build';
+import type { FeatureTemplateOptions } from '../../utils/types';
+import {
+  generateTypesOnlyFile,
+  type TypesOnlyExportOptions,
+} from '../../utils/templates';
 import {
   generateAtomsFile,
   generateAtomsIndexFile,
@@ -34,10 +37,13 @@ import {
   generateRpcHandlersFile,
   generateSchemasFile,
   generateServiceSpecFile,
-  generateTypesFile
-} from "../feature/templates/index"
-import { generateFeatureServiceFile, generateFeatureServiceIndexFile } from "../feature/templates/service/index"
-import { generateSubServices } from "./sub-services"
+  generateTypesFile,
+} from '../feature/templates/index';
+import {
+  generateFeatureServiceFile,
+  generateFeatureServiceIndexFile,
+} from '../feature/templates/service/index';
+import { generateSubServices } from './sub-services';
 
 /**
  * Feature Generator Core Options
@@ -55,29 +61,29 @@ import { generateSubServices } from "./sub-services"
  * @property includeEdge - Generate edge middleware
  */
 export interface FeatureCoreOptions {
-  readonly name: string
-  readonly className: string
-  readonly propertyName: string
-  readonly fileName: string
-  readonly constantName: string
-  readonly projectName: string
-  readonly projectRoot: string
-  readonly sourceRoot: string
-  readonly packageName: string
-  readonly description: string
-  readonly tags: string
-  readonly offsetFromRoot: string
-  readonly workspaceRoot?: string
-  readonly platform?: PlatformType
-  readonly scope?: string
-  readonly includeClientServer?: boolean
-  readonly includeRPC?: boolean
-  readonly includeCQRS?: boolean
-  readonly includeEdge?: boolean
-  readonly includeSubServices?: boolean
-  readonly subServices?: string
-  readonly dataAccessLibrary?: string
-  readonly includeClientState?: boolean
+  readonly name: string;
+  readonly className: string;
+  readonly propertyName: string;
+  readonly fileName: string;
+  readonly constantName: string;
+  readonly projectName: string;
+  readonly projectRoot: string;
+  readonly sourceRoot: string;
+  readonly packageName: string;
+  readonly description: string;
+  readonly tags: string;
+  readonly offsetFromRoot: string;
+  readonly workspaceRoot?: string;
+  readonly platform?: PlatformType;
+  readonly scope?: string;
+  readonly includeClientServer?: boolean;
+  readonly includeRPC?: boolean;
+  readonly includeCQRS?: boolean;
+  readonly includeEdge?: boolean;
+  readonly includeSubServices?: boolean;
+  readonly subServices?: string;
+  readonly dataAccessLibrary?: string;
+  readonly includeClientState?: boolean;
 }
 
 /**
@@ -86,11 +92,11 @@ export interface FeatureCoreOptions {
  * Metadata returned after successful generation.
  */
 export interface GeneratorResult {
-  readonly projectName: string
-  readonly projectRoot: string
-  readonly sourceRoot: string
-  readonly packageName: string
-  readonly filesGenerated: Array<string>
+  readonly projectName: string;
+  readonly projectRoot: string;
+  readonly sourceRoot: string;
+  readonly packageName: string;
+  readonly filesGenerated: Array<string>;
 }
 
 /**
@@ -106,29 +112,30 @@ export interface GeneratorResult {
  * @param options - Pre-computed metadata and feature flags from wrapper
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
-export function generateFeatureCore(
-  adapter: FileSystemAdapter,
-  options: FeatureCoreOptions
-) {
-  return Effect.gen(function*() {
+export function generateFeatureCore(adapter: FileSystemAdapter, options: FeatureCoreOptions) {
+  return Effect.gen(function* () {
     // Compute platform-specific configuration
-    const includeRPC = options.includeRPC ?? false
-    const includeCQRS = options.includeCQRS ?? false
-    const includeEdge = options.includeEdge ?? false
+    // RPC is now enabled by default for RPC-first architecture
+    const includeRPC = options.includeRPC ?? true;
+    const includeCQRS = options.includeCQRS ?? false;
+    const includeEdge = options.includeEdge ?? false;
 
     const platformConfig = computePlatformConfiguration(
       {
         ...(options.platform !== undefined && { platform: options.platform }),
-        ...(options.includeClientServer !== undefined && { includeClientServer: options.includeClientServer }),
-        ...(includeEdge && { includeEdge })
+        ...(options.includeClientServer !== undefined && {
+          includeClientServer: options.includeClientServer,
+        }),
+        ...(includeEdge && { includeEdge }),
       },
       {
-        defaultPlatform: "universal",
-        libraryType: "feature"
-      }
-    )
+        defaultPlatform: 'universal',
+        libraryType: 'feature',
+      },
+    );
 
-    const { includeClientServer: shouldIncludeClientServer, includeEdge: shouldIncludeEdge } = platformConfig
+    const { includeClientServer: shouldIncludeClientServer, includeEdge: shouldIncludeEdge } =
+      platformConfig;
 
     // Assemble template options from pre-computed metadata
     const templateOptions: FeatureTemplateOptions = {
@@ -137,48 +144,48 @@ export function generateFeatureCore(
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: "feature",
+      libraryType: 'feature',
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       offsetFromRoot: options.offsetFromRoot,
       description: options.description,
-      tags: options.tags.split(","),
+      tags: options.tags.split(','),
       includeClient: shouldIncludeClientServer,
       includeServer: true,
       includeRPC,
       includeCQRS,
-      includeEdge: shouldIncludeEdge
-    }
+      includeEdge: shouldIncludeEdge,
+    };
 
     // Generate all domain files
-    const filesGenerated: Array<string> = []
+    const filesGenerated: Array<string> = [];
 
     // Compute directory paths
-    const sourceLibPath = `${options.sourceRoot}/lib`
-    const sharedPath = `${sourceLibPath}/shared`
-    const serverPath = `${sourceLibPath}/server`
-    const rpcPath = `${sourceLibPath}/rpc`
-    const clientPath = `${sourceLibPath}/client`
-    const edgePath = `${sourceLibPath}/edge`
+    const sourceLibPath = `${options.sourceRoot}/lib`;
+    const sharedPath = `${sourceLibPath}/shared`;
+    const serverPath = `${sourceLibPath}/server`;
+    const rpcPath = `${sourceLibPath}/rpc`;
+    const clientPath = `${sourceLibPath}/client`;
+    const edgePath = `${sourceLibPath}/edge`;
 
     // Generate main index.ts (barrel exports)
-    yield* adapter.writeFile(`${options.sourceRoot}/index.ts`, generateIndexFile(templateOptions))
-    filesGenerated.push(`${options.sourceRoot}/index.ts`)
+    yield* adapter.writeFile(`${options.sourceRoot}/index.ts`, generateIndexFile(templateOptions));
+    filesGenerated.push(`${options.sourceRoot}/index.ts`);
 
     // Generate types.ts for type-only exports (zero runtime overhead)
     const typesOnlyOptions: TypesOnlyExportOptions = {
-      libraryType: "feature",
+      libraryType: 'feature',
       className: options.className,
       fileName: options.fileName,
       packageName: options.packageName,
-      platform: "server"
-    }
-    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
-    const workspaceRoot = adapter.getWorkspaceRoot()
-    yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, typesOnlyContent)
-    filesGenerated.push(`${options.sourceRoot}/types.ts`)
+      platform: 'server',
+    };
+    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions);
+    const workspaceRoot = adapter.getWorkspaceRoot();
+    yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, typesOnlyContent);
+    filesGenerated.push(`${options.sourceRoot}/types.ts`);
 
     // Generate CLAUDE.md with bundle optimization guidance
     const claudeDoc = `# ${templateOptions.packageName}
@@ -203,31 +210,31 @@ This is an AI-optimized reference for ${templateOptions.packageName}, a feature 
   - \`layers.ts\`: Layer compositions (Live, Test, Dev, Auto)
   - \`service.spec.ts\`: Service tests
 ${
-      includeRPC ?
-        `
+  includeRPC
+    ? `
 - **lib/rpc/**: RPC layer
   - \`rpc.ts\`: RPC router definition
   - \`handlers.ts\`: RPC handlers (~4-8 KB)
   - \`errors.ts\`: RPC-specific errors
-` :
-        ""
-    }${
-      shouldIncludeClientServer ?
-        `
+`
+    : ''
+}${
+  shouldIncludeClientServer
+    ? `
 - **lib/client/**: Client-side state management
   - \`hooks/\`: React hooks
   - \`atoms/\`: Jotai atoms
   - \`components/\`: UI components
-` :
-        ""
-    }${
-      shouldIncludeEdge ?
-        `
+`
+    : ''
+}${
+  shouldIncludeEdge
+    ? `
 - **lib/edge/**: Edge middleware
   - \`middleware.ts\`: Edge runtime middleware
-` :
-        ""
-    }
+`
+    : ''
+}
 ### Import Patterns (Most to Least Optimized)
 
 \`\`\`typescript
@@ -240,13 +247,13 @@ import type { ${templateOptions.className}Config, ${templateOptions.className}Re
 // 3. Server barrel (~10-15 KB)
 import { ${templateOptions.className}Service, ${templateOptions.className}ServiceLayers } from '${templateOptions.packageName}/server';
 ${
-      includeRPC ?
-        `
+  includeRPC
+    ? `
 // 4. RPC handlers (~8-12 KB)
 import { ${templateOptions.fileName}Handlers } from '${templateOptions.packageName}/rpc/handlers';
-` :
-        ""
-    }
+`
+    : ''
+}
 // 5. Package barrel (largest ~20-40 KB depending on features)
 import { ${templateOptions.className}Service } from '${templateOptions.packageName}';
 \`\`\`
@@ -268,15 +275,15 @@ import { ${templateOptions.className}Service } from '${templateOptions.packageNa
    - Configure Live layer with actual implementations
    - Customize Test layer for testing
 ${
-      includeRPC ?
-        `
+  includeRPC
+    ? `
 4. **Add RPC Endpoints** (\`lib/rpc/\`):
    - Define routes in \`rpc.ts\`
    - Implement handlers in \`handlers.ts\`
    - Keep handlers lightweight (delegate to service)
-` :
-        ""
-    }
+`
+    : ''
+}
 ### Usage Example
 
 \`\`\`typescript
@@ -297,8 +304,8 @@ const runnable = program.pipe(
 );
 \`\`\`
 ${
-      includeRPC ?
-        `
+  includeRPC
+    ? `
 ### RPC Usage
 
 \`\`\`typescript
@@ -315,9 +322,9 @@ const server = ${templateOptions.fileName}Handlers.pipe(
   Effect.provide(rpcLayer)
 );
 \`\`\`
-` :
-        ""
-    }
+`
+    : ''
+}
 ### Bundle Optimization Notes
 
 - **Always use granular imports** for production builds
@@ -325,117 +332,144 @@ const server = ${templateOptions.fileName}Handlers.pipe(
 - Service interface is lightweight (~5 KB vs ~40 KB for full barrel)
 - Each module can be imported independently for optimal tree-shaking
 - RPC handlers are separate files for lazy loading
-`
+`;
 
-    yield* adapter.writeFile(`${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`, claudeDoc)
-    filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`)
+    yield* adapter.writeFile(
+      `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
+      claudeDoc,
+    );
+    filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`);
 
     // Always generate shared layer
-    yield* adapter.writeFile(`${sharedPath}/errors.ts`, generateErrorsFile(templateOptions))
-    filesGenerated.push(`${sharedPath}/errors.ts`)
+    yield* adapter.writeFile(`${sharedPath}/errors.ts`, generateErrorsFile(templateOptions));
+    filesGenerated.push(`${sharedPath}/errors.ts`);
 
-    yield* adapter.writeFile(`${sharedPath}/types.ts`, generateTypesFile(templateOptions))
-    filesGenerated.push(`${sharedPath}/types.ts`)
+    yield* adapter.writeFile(`${sharedPath}/types.ts`, generateTypesFile(templateOptions));
+    filesGenerated.push(`${sharedPath}/types.ts`);
 
-    yield* adapter.writeFile(`${sharedPath}/schemas.ts`, generateSchemasFile(templateOptions))
-    filesGenerated.push(`${sharedPath}/schemas.ts`)
+    yield* adapter.writeFile(`${sharedPath}/schemas.ts`, generateSchemasFile(templateOptions));
+    filesGenerated.push(`${sharedPath}/schemas.ts`);
 
     // Generate server layer (always generated for features)
     // Create server/service directory for granular service imports
-    const servicePath = `${serverPath}/service`
-    yield* adapter.makeDirectory(servicePath)
+    const servicePath = `${serverPath}/service`;
+    yield* adapter.makeDirectory(servicePath);
 
     // Generate service interface (lightweight Context.Tag with static layers)
-    yield* adapter.writeFile(`${servicePath}/service.ts`, generateFeatureServiceFile(templateOptions))
-    filesGenerated.push(`${servicePath}/service.ts`)
+    yield* adapter.writeFile(
+      `${servicePath}/service.ts`,
+      generateFeatureServiceFile(templateOptions),
+    );
+    filesGenerated.push(`${servicePath}/service.ts`);
 
     // Generate service index (barrel export for service)
-    yield* adapter.writeFile(`${servicePath}/index.ts`, generateFeatureServiceIndexFile(templateOptions))
-    filesGenerated.push(`${servicePath}/index.ts`)
+    yield* adapter.writeFile(
+      `${servicePath}/index.ts`,
+      generateFeatureServiceIndexFile(templateOptions),
+    );
+    filesGenerated.push(`${servicePath}/index.ts`);
 
-    yield* adapter.writeFile(`${serverPath}/layers.ts`, generateLayersFile(templateOptions))
-    filesGenerated.push(`${serverPath}/layers.ts`)
+    yield* adapter.writeFile(`${serverPath}/layers.ts`, generateLayersFile(templateOptions));
+    filesGenerated.push(`${serverPath}/layers.ts`);
 
-    yield* adapter.writeFile(`${serverPath}/service.spec.ts`, generateServiceSpecFile(templateOptions))
-    filesGenerated.push(`${serverPath}/service.spec.ts`)
+    yield* adapter.writeFile(
+      `${serverPath}/service.spec.ts`,
+      generateServiceSpecFile(templateOptions),
+    );
+    filesGenerated.push(`${serverPath}/service.spec.ts`);
 
     // Generate sub-services (conditional)
     if (options.includeSubServices && options.subServices) {
       const subServicesList = options.subServices
-        .split(",")
+        .split(',')
         .map((s) => s.trim())
-        .filter(Boolean)
+        .filter(Boolean);
 
       if (subServicesList.length > 0) {
         yield* generateSubServices(adapter, {
           projectRoot: options.projectRoot,
           sourceRoot: options.sourceRoot,
           packageName: options.packageName,
-          subServices: subServicesList
-        })
+          subServices: subServicesList,
+        });
 
         // Track generated sub-service files
-        const servicesPath = `${serverPath}/services`
-        filesGenerated.push(`${servicesPath}/index.ts`)
+        const servicesPath = `${serverPath}/services`;
+        filesGenerated.push(`${servicesPath}/index.ts`);
         subServicesList.forEach((serviceName) => {
-          filesGenerated.push(`${servicesPath}/${serviceName}/index.ts`)
-          filesGenerated.push(`${servicesPath}/${serviceName}/service.ts`)
-          filesGenerated.push(`${servicesPath}/${serviceName}/layers.ts`)
-          filesGenerated.push(`${servicesPath}/${serviceName}/errors.ts`)
-          filesGenerated.push(`${servicesPath}/${serviceName}/types.ts`)
-        })
+          filesGenerated.push(`${servicesPath}/${serviceName}/index.ts`);
+          filesGenerated.push(`${servicesPath}/${serviceName}/service.ts`);
+          filesGenerated.push(`${servicesPath}/${serviceName}/layers.ts`);
+          filesGenerated.push(`${servicesPath}/${serviceName}/errors.ts`);
+          filesGenerated.push(`${servicesPath}/${serviceName}/types.ts`);
+        });
       }
     }
 
     // Create CQRS directory placeholders (conditional)
     if (includeCQRS) {
-      yield* adapter.writeFile(`${serverPath}/commands/.gitkeep`, "")
-      filesGenerated.push(`${serverPath}/commands/.gitkeep`)
+      yield* adapter.writeFile(`${serverPath}/commands/.gitkeep`, '');
+      filesGenerated.push(`${serverPath}/commands/.gitkeep`);
 
-      yield* adapter.writeFile(`${serverPath}/queries/.gitkeep`, "")
-      filesGenerated.push(`${serverPath}/queries/.gitkeep`)
+      yield* adapter.writeFile(`${serverPath}/queries/.gitkeep`, '');
+      filesGenerated.push(`${serverPath}/queries/.gitkeep`);
 
-      yield* adapter.writeFile(`${serverPath}/operations/.gitkeep`, "")
-      filesGenerated.push(`${serverPath}/operations/.gitkeep`)
+      yield* adapter.writeFile(`${serverPath}/operations/.gitkeep`, '');
+      filesGenerated.push(`${serverPath}/operations/.gitkeep`);
 
-      yield* adapter.writeFile(`${serverPath}/projections/.gitkeep`, "")
-      filesGenerated.push(`${serverPath}/projections/.gitkeep`)
+      yield* adapter.writeFile(`${serverPath}/projections/.gitkeep`, '');
+      filesGenerated.push(`${serverPath}/projections/.gitkeep`);
     }
 
     // Generate RPC layer (conditional)
     if (includeRPC) {
-      yield* adapter.writeFile(`${rpcPath}/rpc.ts`, generateRpcFile(templateOptions))
-      filesGenerated.push(`${rpcPath}/rpc.ts`)
+      yield* adapter.writeFile(`${rpcPath}/rpc.ts`, generateRpcFile(templateOptions));
+      filesGenerated.push(`${rpcPath}/rpc.ts`);
 
-      yield* adapter.writeFile(`${rpcPath}/handlers.ts`, generateRpcHandlersFile(templateOptions))
-      filesGenerated.push(`${rpcPath}/handlers.ts`)
+      yield* adapter.writeFile(`${rpcPath}/handlers.ts`, generateRpcHandlersFile(templateOptions));
+      filesGenerated.push(`${rpcPath}/handlers.ts`);
 
-      yield* adapter.writeFile(`${rpcPath}/errors.ts`, generateRpcErrorsFile(templateOptions))
-      filesGenerated.push(`${rpcPath}/errors.ts`)
+      yield* adapter.writeFile(`${rpcPath}/errors.ts`, generateRpcErrorsFile(templateOptions));
+      filesGenerated.push(`${rpcPath}/errors.ts`);
     }
 
     // Generate client layer (conditional)
     if (shouldIncludeClientServer) {
-      yield* adapter.writeFile(`${clientPath}/hooks/use-${options.fileName}.ts`, generateHooksFile(templateOptions))
-      filesGenerated.push(`${clientPath}/hooks/use-${options.fileName}.ts`)
+      yield* adapter.writeFile(
+        `${clientPath}/hooks/use-${options.fileName}.ts`,
+        generateHooksFile(templateOptions),
+      );
+      filesGenerated.push(`${clientPath}/hooks/use-${options.fileName}.ts`);
 
-      yield* adapter.writeFile(`${clientPath}/hooks/index.ts`, generateHooksIndexFile(templateOptions))
-      filesGenerated.push(`${clientPath}/hooks/index.ts`)
+      yield* adapter.writeFile(
+        `${clientPath}/hooks/index.ts`,
+        generateHooksIndexFile(templateOptions),
+      );
+      filesGenerated.push(`${clientPath}/hooks/index.ts`);
 
-      yield* adapter.writeFile(`${clientPath}/atoms/${options.fileName}-atoms.ts`, generateAtomsFile(templateOptions))
-      filesGenerated.push(`${clientPath}/atoms/${options.fileName}-atoms.ts`)
+      yield* adapter.writeFile(
+        `${clientPath}/atoms/${options.fileName}-atoms.ts`,
+        generateAtomsFile(templateOptions),
+      );
+      filesGenerated.push(`${clientPath}/atoms/${options.fileName}-atoms.ts`);
 
-      yield* adapter.writeFile(`${clientPath}/atoms/index.ts`, generateAtomsIndexFile(templateOptions))
-      filesGenerated.push(`${clientPath}/atoms/index.ts`)
+      yield* adapter.writeFile(
+        `${clientPath}/atoms/index.ts`,
+        generateAtomsIndexFile(templateOptions),
+      );
+      filesGenerated.push(`${clientPath}/atoms/index.ts`);
 
-      yield* adapter.writeFile(`${clientPath}/components/.gitkeep`, "")
-      filesGenerated.push(`${clientPath}/components/.gitkeep`)
+      yield* adapter.writeFile(`${clientPath}/components/.gitkeep`, '');
+      filesGenerated.push(`${clientPath}/components/.gitkeep`);
     }
 
     // Generate edge layer (conditional)
     if (shouldIncludeEdge) {
-      yield* adapter.writeFile(`${edgePath}/middleware.ts`, generateMiddlewareFile(templateOptions))
-      filesGenerated.push(`${edgePath}/middleware.ts`)
+      yield* adapter.writeFile(
+        `${edgePath}/middleware.ts`,
+        generateMiddlewareFile(templateOptions),
+      );
+      filesGenerated.push(`${edgePath}/middleware.ts`);
     }
 
     // Platform-specific barrel exports removed - rely on automatic tree-shaking
@@ -446,7 +480,7 @@ const server = ${templateOptions.fileName}Handlers.pipe(
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       packageName: options.packageName,
-      filesGenerated
-    }
-  })
+      filesGenerated,
+    };
+  });
 }

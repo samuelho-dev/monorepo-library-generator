@@ -6,9 +6,10 @@
  * @module monorepo-library-generator/data-access/index-template
  */
 
-import { generateStandardErrorExports } from "../../../utils/code-generation/barrel-exports"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+import { generateStandardErrorExports } from '../../../utils/templates';
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate index.ts file for data-access library
@@ -16,9 +17,10 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  * Creates main entry point with all exports organized by category
  */
 export function generateIndexFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName, propertyName } = options
-  const domainName = propertyName
+  const builder = new TypeScriptBuilder();
+  const { className, fileName, propertyName } = options;
+  const domainName = propertyName;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
   builder.addFileHeader({
@@ -27,26 +29,26 @@ export function generateIndexFile(options: DataAccessTemplateOptions) {
 Provides repository pattern with Effect-based dependency injection.
 
 ARCHITECTURE: Server-only exports (no client/edge variants)
-Repository implements contract from @custom-repo/contract-${fileName}`,
-    module: `@custom-repo/data-access-${fileName}`
-  })
+Repository implements contract from ${scope}/contract-${fileName}`,
+    module: `${scope}/data-access-${fileName}`,
+  });
 
   // Error Types section
-  builder.addSectionComment("Error Types (from shared/)")
-  builder.addBlankLine()
+  builder.addSectionComment('Error Types (from shared/)');
+  builder.addBlankLine();
 
   builder.addRaw(
     generateStandardErrorExports({
       className,
-      importPath: "./lib/shared/errors",
-      unionTypeSuffix: "RepositoryError"
-    })
-  )
-  builder.addBlankLine()
+      importPath: './lib/shared/errors',
+      unionTypeSuffix: 'RepositoryError',
+    }),
+  );
+  builder.addBlankLine();
 
   // Domain Types section
-  builder.addSectionComment("Domain Types (from shared/)")
-  builder.addBlankLine()
+  builder.addSectionComment('Domain Types (from shared/)');
+  builder.addBlankLine();
 
   builder.addRaw(`export type {
   ${className},
@@ -58,12 +60,12 @@ Repository implements contract from @custom-repo/contract-${fileName}`,
   PaginationOptions,
   QueryOptions,
   PaginatedResponse,
-} from "./lib/shared/types";`)
-  builder.addBlankLine()
+} from "./lib/shared/types";`);
+  builder.addBlankLine();
 
   // Validation Functions section
-  builder.addSectionComment("Validation Functions (from shared/)")
-  builder.addBlankLine()
+  builder.addSectionComment('Validation Functions (from shared/)');
+  builder.addBlankLine();
 
   builder.addRaw(`export {
   validate${className}CreateInput,
@@ -74,47 +76,45 @@ Repository implements contract from @custom-repo/contract-${fileName}`,
   is${className},
   isValid${className}CreateInput,
   isValid${className}UpdateInput,
-} from "./lib/shared/validation";`)
-  builder.addBlankLine()
+} from "./lib/shared/validation";`);
+  builder.addBlankLine();
 
   // Query Builders section
-  builder.addSectionComment("Query Builders (from queries.ts)")
-  builder.addBlankLine()
+  builder.addSectionComment('Query Builders (from queries.ts)');
+  builder.addBlankLine();
 
   builder.addRaw(`export {
   buildFindAllQuery,
   buildFindByIdQuery,
   buildCountQuery,
-} from "./lib/queries";`)
-  builder.addBlankLine()
+} from "./lib/queries";`);
+  builder.addBlankLine();
 
   builder.addRaw(
-    `export type { ${className}QueryFilters, PaginationOptions as QueryPaginationOptions } from "./lib/queries";`
-  )
-  builder.addBlankLine()
+    `export type { ${className}QueryFilters, PaginationOptions as QueryPaginationOptions } from "./lib/queries";`,
+  );
+  builder.addBlankLine();
 
   // Repository section with Effect 3.0+ pattern documentation
-  builder.addComment(`Repository (Effect 3.0+ Pattern: Static Members)`)
-  builder.addBlankLine()
-  builder.addComment(`Export the ${className}Repository Context.Tag class.`)
-  builder.addComment(`Layers are accessed via static members:`)
-  builder.addComment(`  - ${className}Repository.Live  (production)`)
-  builder.addComment(`  - ${className}Repository.Test  (testing)`)
-  builder.addComment(`  - ${className}Repository.Dev   (development)`)
-  builder.addComment(`  - ${className}Repository.Auto  (environment-based)`)
-  builder.addBlankLine()
-  builder.addComment(`MIGRATION from pre-3.0 pattern:`)
+  builder.addComment(`Repository (Effect 3.0+ Pattern: Static Members)`);
+  builder.addBlankLine();
+  builder.addComment(`Export the ${className}Repository Context.Tag class.`);
+  builder.addComment(`Layers are accessed via static members:`);
+  builder.addComment(`  - ${className}Repository.Live  (production)`);
+  builder.addComment(`  - ${className}Repository.Test  (testing)`);
+  builder.addBlankLine();
+  builder.addComment(`MIGRATION from pre-3.0 pattern:`);
   builder.addComment(
-    `OLD: import { ${className}RepositoryLive } from "@custom-repo/data-access-${fileName}";`
-  )
+    `OLD: import { ${className}RepositoryLive } from "${scope}/data-access-${fileName}";`,
+  );
   builder.addComment(
-    `NEW: import { ${className}Repository } from "@custom-repo/data-access-${fileName}";`
-  )
-  builder.addComment(`     const layer = ${className}Repository.Live;`)
-  builder.addBlankLine()
+    `NEW: import { ${className}Repository } from "${scope}/data-access-${fileName}";`,
+  );
+  builder.addComment(`     const layer = ${className}Repository.Live;`);
+  builder.addBlankLine();
 
   builder.addRaw(`export { ${className}Repository } from "./lib/repository";
-`)
+`);
 
-  return builder.toString()
+  return builder.toString();
 }

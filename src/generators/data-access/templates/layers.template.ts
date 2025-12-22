@@ -6,8 +6,9 @@
  * @module monorepo-library-generator/data-access/layers-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate server/layers.ts file for data-access library
@@ -15,41 +16,35 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  * Creates Effect layer compositions including:
  * - Live layer (production)
  * - Test layer (in-memory)
- * - Dev layer (with logging)
  * - Auto layer (environment-based selection)
  */
 export function generateLayersFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName, propertyName } = options
-  const domainName = propertyName
+  const builder = new TypeScriptBuilder();
+  const { className, fileName, propertyName } = options;
+  const domainName = propertyName;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
   builder.addFileHeader({
     title: `${className} Data Access Layers`,
     description: `Effect layer compositions for dependency injection of ${domainName} repositories.
-Provides Live, Test, Dev, and Auto environment-based layer selection.
-
-TODO: Customize this file:
-1. Update imports to match actual repository implementation location
-2. Compose with infrastructure layers (database, cache, etc.)
-3. Add repository-specific configuration if needed
-4. Define layer composition order and dependencies
-5. Add error handling wrapping if needed
+Provides Live, Test, and Auto environment-based layer selection.
 
 @see https://effect.website/docs/guides/context-management for layer composition`,
-    module: `@custom-repo/data-access-${fileName}/server`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/server`,
+  });
+  builder.addBlankLine();
 
   // Add imports
   builder.addImports([
-    { from: "../repository", imports: [`${className}Repository`] }
-  ])
-  builder.addBlankLine()
+    { from: '../repository', imports: [`${className}Repository`] },
+    { from: `${scope}/env`, imports: ['env'] },
+  ]);
+  builder.addBlankLine();
 
   // Environment-Specific Layers
-  builder.addSectionComment("Environment-Specific Layers")
-  builder.addBlankLine()
+  builder.addSectionComment('Environment-Specific Layers');
+  builder.addBlankLine();
 
   // Live Layer
   builder.addRaw(`/**
@@ -63,8 +58,8 @@ TODO: Customize this file:
  * in the repository.template.ts file and ensure they're provided when
  * using this layer in your application.
  */
-export const ${className}RepositoryLive = ${className}Repository.Live;`)
-  builder.addBlankLine()
+export const ${className}RepositoryLive = ${className}Repository.Live;`);
+  builder.addBlankLine();
 
   // Test Layer
   builder.addRaw(`/**
@@ -77,7 +72,7 @@ export const ${className}RepositoryLive = ${className}Repository.Live;`)
  *
  * Usage in tests:
  * \`\`\`typescript
- * import { ${className}RepositoryTest } from "@custom-repo/data-access-${fileName}/server";
+ * import { ${className}RepositoryTest } from "${scope}/data-access-${fileName}/server";
  *
  * describe("${className} Repository", () => {
  *   it("should find entity by id", () =>
@@ -89,25 +84,8 @@ export const ${className}RepositoryLive = ${className}Repository.Live;`)
  * });
  * \`\`\`
  */
-export const ${className}RepositoryTest = ${className}Repository.Test;`)
-  builder.addBlankLine()
-
-  // Dev Layer
-  builder.addRaw(`/**
- * ${className} Repository Dev Layer
- *
- * Development environment layer with enhanced logging and debugging.
- * Useful for local development and debugging repository operations.
- *
- * Features:
- * - Operation logging and timing
- * - Error details and stack traces
- * - Query inspection
- *
- * The Dev repository layer includes enhanced console logging for all operations.
- */
-export const ${className}RepositoryDev = ${className}Repository.Dev;`)
-  builder.addBlankLine()
+export const ${className}RepositoryTest = ${className}Repository.Test;`);
+  builder.addBlankLine();
 
   // Auto Layer
   builder.addRaw(`/**
@@ -115,8 +93,7 @@ export const ${className}RepositoryDev = ${className}Repository.Dev;`)
  *
  * Automatically selects appropriate layer based on NODE_ENV.
  * - test: Uses in-memory layer for test isolation
- * - development: Uses layer with debugging/logging
- * - production: Uses live layer with real infrastructure
+ * - production/development: Uses live layer with real infrastructure
  *
  * Usage:
  * \`\`\`typescript
@@ -125,18 +102,14 @@ export const ${className}RepositoryDev = ${className}Repository.Dev;`)
  * \`\`\`
  */
 export const ${className}RepositoryAuto = (() => {
-  const env = process.env["NODE_ENV"] || "production";
-
-  switch (env) {
+  switch (env.NODE_ENV) {
     case "test":
       return ${className}RepositoryTest;
-    case "development":
-      return ${className}RepositoryDev;
     default:
       return ${className}RepositoryLive;
   }
-})();`)
-  builder.addBlankLine()
+})();`);
+  builder.addBlankLine();
 
-  return builder.toString()
+  return builder.toString();
 }

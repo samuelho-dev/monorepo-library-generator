@@ -11,9 +11,9 @@
  * @module cli/commands/init-workspace-files
  */
 
-import { FileSystem } from "@effect/platform"
-import { Console, Effect } from "effect"
-import { WORKSPACE_CONFIG } from "../../utils/workspace-config"
+import { FileSystem } from '@effect/platform';
+import { Console, Effect } from 'effect';
+import { WORKSPACE_CONFIG } from '../../utils/workspace-config';
 
 /**
  * Workspace setup options
@@ -22,19 +22,19 @@ export interface WorkspaceOptions {
   /**
    * Workspace name (defaults to directory name)
    */
-  readonly name?: string | undefined
+  readonly name?: string | undefined;
 
   /**
    * Include Nx configuration
    * @default true
    */
-  readonly includeNx?: boolean | undefined
+  readonly includeNx?: boolean | undefined;
 
   /**
    * Package manager (pnpm, npm, yarn)
    * @default "pnpm"
    */
-  readonly packageManager?: "pnpm" | "npm" | "yarn" | undefined
+  readonly packageManager?: 'pnpm' | 'npm' | 'yarn' | undefined;
 }
 
 /**
@@ -51,115 +51,102 @@ export interface WorkspaceOptions {
  * - Consistent package manager behavior
  */
 export function generateWorkspaceFiles(options: WorkspaceOptions = {}) {
-  return Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const name = options.name ?? "my-effect-monorepo"
-    const includeNx = options.includeNx ?? true
-    const packageManager = options.packageManager ?? "pnpm"
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const name = options.name ?? 'my-effect-monorepo';
+    const includeNx = options.includeNx ?? true;
+    const packageManager = options.packageManager ?? 'pnpm';
 
-    yield* Console.log("📦 Setting up workspace configuration...")
+    yield* Console.log('📦 Setting up workspace configuration...');
 
     // 1. Generate package.json
     const packageJson = {
       name,
-      version: "0.0.1",
+      version: '0.0.1',
       private: true,
-      type: "module",
-      workspaces: packageManager === "pnpm" ? undefined : ["libs/**"],
+      type: 'module',
+      workspaces: packageManager === 'pnpm' ? undefined : ['libs/**'],
       engines: {
-        node: ">=20.0.0",
-        pnpm: ">=9.0.0"
+        node: '>=20.0.0',
+        pnpm: '>=9.0.0',
       },
       scripts: {
         // Build scripts
         build: includeNx
-          ? "nx run-many --target=build --all"
-          : "pnpm -r --workspace-concurrency=10 run build",
-        "build:affected": includeNx
-          ? "nx affected --target=build"
+          ? 'nx run-many --target=build --all'
+          : 'pnpm -r --workspace-concurrency=10 run build',
+        'build:affected': includeNx
+          ? 'nx affected --target=build'
           : "pnpm -r --filter='...[HEAD^]' run build",
 
         // Test scripts
-        test: includeNx
-          ? "nx run-many --target=test --all"
-          : "pnpm -r run test",
-        "test:affected": includeNx
-          ? "nx affected --target=test"
+        test: includeNx ? 'nx run-many --target=test --all' : 'pnpm -r run test',
+        'test:affected': includeNx
+          ? 'nx affected --target=test'
           : "pnpm -r --filter='...[HEAD^]' run test",
-        "test:watch": "vitest --watch",
+        'test:watch': 'vitest --watch',
 
         // Lint scripts
-        lint: includeNx
-          ? "nx run-many --target=lint --all"
-          : "pnpm -r run lint",
-        "lint:fix": includeNx
-          ? "nx run-many --target=lint --all --fix"
-          : "pnpm -r run lint --fix",
+        lint: 'biome check .',
+        'lint:fix': 'biome check --write .',
+        format: 'biome format --write .',
 
         // Type checking
-        typecheck: includeNx
-          ? "nx run-many --target=typecheck --all"
-          : "pnpm -r run typecheck",
+        typecheck: includeNx ? 'nx run-many --target=typecheck --all' : 'pnpm -r run typecheck',
 
         // Prisma scripts
-        "prisma:generate": "prisma generate",
-        "prisma:migrate": "prisma migrate dev",
-        "prisma:studio": "prisma studio",
-        "prisma:reset": "prisma migrate reset",
+        'prisma:generate': 'prisma generate',
+        'prisma:migrate': 'prisma migrate dev',
+        'prisma:studio': 'prisma studio',
+        'prisma:reset': 'prisma migrate reset',
 
         // Utility scripts
         clean: includeNx
-          ? "nx reset && rm -rf node_modules dist .nx"
-          : "rm -rf node_modules dist libs/**/node_modules libs/**/dist",
-        format: "prettier --write .",
-        "format:check": "prettier --check ."
+          ? 'nx reset && rm -rf node_modules dist .nx'
+          : 'rm -rf node_modules dist libs/**/node_modules libs/**/dist',
+        'format:check': 'biome format .',
       },
       devDependencies: {
         // Nx (if included)
         ...(includeNx && {
-          "@nx/js": "^22.3.1",
-          "@nx/vite": "^22.3.1",
-          nx: "^22.3.1"
+          '@nx/js': '^22.3.1',
+          '@nx/vite': '^22.3.1',
+          nx: '^22.3.1',
         }),
 
         // TypeScript
-        "@types/node": "^25.0.3",
-        typescript: "^5.9.3",
+        '@types/node': '^25.0.3',
+        typescript: '^5.9.3',
 
         // Testing
-        vitest: "^3.2.4",
-        "@vitest/ui": "^3.2.4",
+        '@effect/vitest': '^0.16.0',
+        vitest: '^3.2.4',
+        '@vitest/ui': '^3.2.4',
 
         // Linting & Formatting
-        "@typescript-eslint/eslint-plugin": "^8.50.0",
-        "@typescript-eslint/parser": "^8.50.0",
-        eslint: "^9.39.2",
-        prettier: "^3.7.4",
+        '@biomejs/biome': '^1.9.4',
 
         // Prisma
-        prisma: "^7.2.0",
-        "prisma-effect-kysely": "latest"
+        prisma: '^7.2.0',
+        'prisma-effect-kysely': 'latest',
       },
       dependencies: {
         // Effect runtime
-        effect: "^3.19.12",
-        "@effect/platform": "^0.93.8",
-        "@effect/platform-node": "^0.103.0",
+        effect: '^3.19.12',
+        '@effect/platform': '^0.93.8',
+        '@effect/platform-node': '^0.103.0',
         // Prisma client
-        "@prisma/client": "^7.2.0"
+        '@prisma/client': '^7.2.0',
       },
-      packageManager: packageManager === "pnpm" ? "pnpm@9.15.0" : undefined
-    }
+      packageManager: packageManager === 'pnpm' ? 'pnpm@9.15.0' : undefined,
+    };
 
-    yield* fs.writeFileString(
-      "package.json",
-      JSON.stringify(packageJson, null, 2) + "\n"
-    )
+    yield* fs.writeFileString('package.json', JSON.stringify(packageJson, null, 2) + '\n');
 
-    yield* Console.log("  ✓ Created package.json")
+    yield* Console.log('  ✓ Created package.json');
 
     // 2. Generate pnpm-workspace.yaml (if using pnpm)
-    if (packageManager === "pnpm") {
+    if (packageManager === 'pnpm') {
       const workspaceYaml = `# pnpm workspace configuration
 # See: https://pnpm.io/workspaces
 
@@ -169,15 +156,16 @@ packages:
 
   # Example apps (if you create any)
   - 'apps/**'
-`
+`;
 
-      yield* fs.writeFileString("pnpm-workspace.yaml", workspaceYaml)
-      yield* Console.log("  ✓ Created pnpm-workspace.yaml")
+      yield* fs.writeFileString('pnpm-workspace.yaml', workspaceYaml);
+      yield* Console.log('  ✓ Created pnpm-workspace.yaml');
     }
 
     // 3. Generate .npmrc
-    const npmrcContent = packageManager === "pnpm"
-      ? `# pnpm configuration
+    const npmrcContent =
+      packageManager === 'pnpm'
+        ? `# pnpm configuration
 # See: https://pnpm.io/npmrc
 
 # Workspace settings
@@ -194,26 +182,26 @@ link-workspace-packages=true
 # Parallel execution
 workspace-concurrency=10
 `
-      : `# npm/yarn configuration
+        : `# npm/yarn configuration
 
 # Use workspace protocol for internal dependencies
 link-workspace-packages=true
-`
+`;
 
-    yield* fs.writeFileString(".npmrc", npmrcContent)
-    yield* Console.log("  ✓ Created .npmrc")
+    yield* fs.writeFileString('.npmrc', npmrcContent);
+    yield* Console.log('  ✓ Created .npmrc');
 
     // 4. Generate tsconfig.base.json
-    const scope = WORKSPACE_CONFIG.getScope()
+    const scope = WORKSPACE_CONFIG.getScope();
     const tsconfigBase = {
       compilerOptions: {
         // Required for path mappings
-        baseUrl: ".",
+        baseUrl: '.',
 
         // Module system
-        module: "ESNext",
-        moduleResolution: "bundler",
-        target: "ES2022",
+        module: 'ESNext',
+        moduleResolution: 'bundler',
+        target: 'ES2022',
 
         // Type checking
         strict: true,
@@ -231,7 +219,7 @@ link-workspace-packages=true
         checkJs: false,
 
         // Module detection
-        moduleDetection: "force",
+        moduleDetection: 'force',
 
         // Output
         declaration: true,
@@ -252,80 +240,133 @@ link-workspace-packages=true
         isolatedModules: true,
 
         // Library
-        lib: ["ES2022"],
+        lib: ['ES2022'],
 
         // TypeScript path mappings for monorepo
         // Enables imports like: import { User } from '@custom-repo/contract-user'
         paths: {
-          [`${scope}/contract-*`]: ["libs/contract/*/src/index.ts"],
-          [`${scope}/data-access-*`]: ["libs/data-access/*/src/index.ts"],
-          [`${scope}/feature-*`]: ["libs/feature/*/src/index.ts"],
-          [`${scope}/infra-*`]: ["libs/infra/*/src/index.ts"],
-          [`${scope}/provider-*`]: ["libs/provider/*/src/index.ts"],
-          [`${scope}/env`]: ["libs/env/src/index.ts"]
-        }
+          [`${scope}/contract-*`]: ['libs/contract/*/src/index.ts'],
+          [`${scope}/data-access-*`]: ['libs/data-access/*/src/index.ts'],
+          [`${scope}/feature-*`]: ['libs/feature/*/src/index.ts'],
+          [`${scope}/infra-*`]: ['libs/infra/*/src/index.ts'],
+          [`${scope}/provider-*`]: ['libs/provider/*/src/index.ts'],
+          [`${scope}/env`]: ['libs/env/src/index.ts'],
+        },
       },
-      exclude: ["node_modules", "dist", "build", ".nx"]
-    }
+      exclude: ['node_modules', 'dist', 'build', '.nx'],
+    };
 
-    yield* fs.writeFileString(
-      "tsconfig.base.json",
-      JSON.stringify(tsconfigBase, null, 2) + "\n"
-    )
-    yield* Console.log("  ✓ Created tsconfig.base.json")
+    yield* fs.writeFileString('tsconfig.base.json', JSON.stringify(tsconfigBase, null, 2) + '\n');
+    yield* Console.log('  ✓ Created tsconfig.base.json');
 
     // 5. Generate nx.json (if includeNx is true)
     if (includeNx) {
       const nxJson = {
-        "$schema": "./node_modules/nx/schemas/nx-schema.json",
+        $schema: './node_modules/nx/schemas/nx-schema.json',
         targetDefaults: {
           build: {
             cache: true,
-            dependsOn: ["^build"],
-            inputs: ["production", "^production"]
+            dependsOn: ['^build'],
+            inputs: ['production', '^production'],
           },
           test: {
             cache: true,
-            inputs: ["default", "^production", "{workspaceRoot}/vitest.config.ts"]
+            inputs: ['default', '^production', '{workspaceRoot}/vitest.config.ts'],
           },
           lint: {
             cache: true,
-            inputs: ["default", "{workspaceRoot}/eslint.config.mjs"]
+            inputs: ['default', '{workspaceRoot}/biome.json'],
           },
           typecheck: {
             cache: true,
-            inputs: ["default", "^production"]
-          }
+            inputs: ['default', '^production'],
+          },
         },
         namedInputs: {
-          default: ["{projectRoot}/**/*", "sharedGlobals"],
+          default: ['{projectRoot}/**/*', 'sharedGlobals'],
           production: [
-            "default",
-            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
-            "!{projectRoot}/tsconfig.spec.json"
+            'default',
+            '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+            '!{projectRoot}/tsconfig.spec.json',
           ],
-          sharedGlobals: []
+          sharedGlobals: [],
         },
         plugins: [
           {
-            plugin: "@nx/vite/plugin",
+            plugin: '@nx/vite/plugin',
             options: {
-              buildTargetName: "build",
-              testTargetName: "test"
-            }
-          }
-        ]
-      }
+              buildTargetName: 'build',
+              testTargetName: 'test',
+            },
+          },
+        ],
+      };
 
-      yield* fs.writeFileString(
-        "nx.json",
-        JSON.stringify(nxJson, null, 2) + "\n"
-      )
-      yield* Console.log("  ✓ Created nx.json")
+      yield* fs.writeFileString('nx.json', JSON.stringify(nxJson, null, 2) + '\n');
+      yield* Console.log('  ✓ Created nx.json');
     }
 
-    // 6. Generate .gitignore if it doesn't exist
-    const gitignoreExists = yield* fs.exists(".gitignore")
+    // 6. Generate biome.json (workspace-level linting & formatting)
+    const biomeConfig = {
+      $schema: 'https://biomejs.dev/schemas/1.9.4/schema.json',
+      vcs: {
+        enabled: true,
+        clientKind: 'git',
+        useIgnoreFile: true,
+      },
+      files: {
+        ignoreUnknown: true,
+        ignore: ['node_modules', 'dist', 'build', '.nx', 'coverage', '*.generated.ts'],
+      },
+      formatter: {
+        enabled: true,
+        indentStyle: 'space',
+        indentWidth: 2,
+        lineWidth: 100,
+      },
+      organizeImports: {
+        enabled: true,
+      },
+      linter: {
+        enabled: true,
+        rules: {
+          recommended: true,
+          complexity: {
+            noForEach: 'off', // Effect.ts uses forEach patterns
+            noBannedTypes: 'off', // Allow {} type for Effect patterns
+          },
+          correctness: {
+            noUnusedVariables: 'error',
+            noUnusedImports: 'error',
+          },
+          style: {
+            noNonNullAssertion: 'warn', // Prefer Effect error handling
+            useConst: 'error',
+            useImportType: 'error', // Enforce type-only imports
+          },
+          suspicious: {
+            noExplicitAny: 'warn', // Prefer proper typing with Effect
+            noConfusingVoidType: 'off', // Effect uses void extensively
+          },
+          nursery: {
+            noRestrictedImports: 'off',
+          },
+        },
+      },
+      javascript: {
+        formatter: {
+          quoteStyle: 'double',
+          trailingCommas: 'all',
+          semicolons: 'always',
+        },
+      },
+    };
+
+    yield* fs.writeFileString('biome.json', JSON.stringify(biomeConfig, null, 2) + '\n');
+    yield* Console.log('  ✓ Created biome.json');
+
+    // 7. Generate .gitignore if it doesn't exist
+    const gitignoreExists = yield* fs.exists('.gitignore');
     if (!gitignoreExists) {
       const gitignore = `# Dependencies
 node_modules/
@@ -375,12 +416,12 @@ pnpm-debug.log*
 # Prisma
 prisma/dev.db
 prisma/dev.db-journal
-`
+`;
 
-      yield* fs.writeFileString(".gitignore", gitignore)
-      yield* Console.log("  ✓ Created .gitignore")
+      yield* fs.writeFileString('.gitignore', gitignore);
+      yield* Console.log('  ✓ Created .gitignore');
     }
 
-    yield* Console.log("")
-  })
+    yield* Console.log('');
+  });
 }

@@ -6,8 +6,9 @@
  * @module monorepo-library-generator/data-access/repository-spec-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate repository.spec.ts file for data-access library
@@ -18,8 +19,9 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  * - Layer isolation tests
  */
 export function generateRepositorySpecFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Repository Tests`,
@@ -32,8 +34,8 @@ Testing Guidelines:
 - Create inline mocks with Layer.succeed
 - Focus on contract compliance, not implementation details
 - Keep ALL tests in this ONE file`,
-    module: `@custom-repo/data-access-${fileName}`
-  })
+    module: `${scope}/data-access-${fileName}`,
+  });
 
   builder.addRaw(`import { describe, expect, it } from "@effect/vitest"
 import { Context, Effect, Layer, Option } from "effect"
@@ -205,7 +207,7 @@ describe("${className} Repository", () => {
       }).pipe(Effect.provide(Layer.fresh(createInMemory${className}Repository()))))
   })
 })
-`)
+`);
 
-  return builder.toString()
+  return builder.toString();
 }

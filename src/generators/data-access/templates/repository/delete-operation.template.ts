@@ -6,17 +6,17 @@
  * @module monorepo-library-generator/data-access/repository/delete-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate repository/operations/delete.ts file
  */
-export function generateRepositoryDeleteOperationFile(
-  options: DataAccessTemplateOptions
-) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+export function generateRepositoryDeleteOperationFile(options: DataAccessTemplateOptions) {
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Delete Operations`,
@@ -24,71 +24,50 @@ export function generateRepositoryDeleteOperationFile(
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { deleteOperations } from '@scope/data-access-${fileName}/repository/operations/delete'`,
-    module: `@custom-repo/data-access-${fileName}/repository/operations`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/repository/operations`,
+  });
+  builder.addBlankLine();
 
-  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
-  builder.addBlankLine()
+  builder.addImports([{ from: 'effect', imports: ['Effect', 'Duration'] }]);
+  builder.addBlankLine();
 
   builder.addImports([
     {
-      from: "../../shared/errors",
+      from: '../../shared/errors',
       imports: [`${className}TimeoutError`],
-      isTypeOnly: false
-    }
-  ])
-  builder.addBlankLine()
+      isTypeOnly: false,
+    },
+  ]);
+  builder.addBlankLine();
 
   // Import infrastructure services
-  builder.addComment("Infrastructure services - Database for persistence")
-  builder.addRaw(`import { DatabaseService } from "@custom-repo/infra-database";`)
-  builder.addBlankLine()
+  builder.addComment('Infrastructure services - Database for persistence');
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
+  builder.addBlankLine();
 
-  builder.addSectionComment("Delete Operations Interface")
-  builder.addBlankLine()
-
-  builder.addRaw(`export interface Delete${className}Operations {
-  /**
-   * Delete ${className} entity by ID
-   *
-   * @param id - Entity identifier
-   * @returns Effect that succeeds when entity is deleted
-   */
-  delete(id: string);
-
-  /**
-   * Delete multiple ${className} entities by IDs
-   *
-   * @param ids - Array of entity identifiers
-   * @returns Effect that succeeds when all entities are deleted
-   */
-  deleteMany(
-    ids: ReadonlyArray<string>
-  );
-}`)
-  builder.addBlankLine()
-
-  builder.addSectionComment("Live Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment('Delete Operations');
+  builder.addBlankLine();
 
   builder.addRaw(`/**
- * Live delete operations implementation
+ * Delete operations for ${className} repository
  *
- * Uses DatabaseService for persistence with type-safe database queries
+ * Uses DatabaseService for persistence with type-safe database queries.
+ * Return types are inferred to preserve Effect's dependency and error tracking.
  *
- * PRODUCTION INTEGRATION:
- * - DatabaseService for database access via Kysely
- * - Effect.log* methods for observability
- * - Batch deletion support for deleteMany
- * - Timeout protection and distributed tracing
+ * @example
+ * \`\`\`typescript
+ * yield* deleteOperations.delete("id-123");
+ * \`\`\`
  */
-export const deleteOperations: Delete${className}Operations = {
+export const deleteOperations = {
+  /**
+   * Delete ${className} entity by ID
+   */
   delete: (id: string) =>
     Effect.gen(function* () {
       const database = yield* DatabaseService;
 
-      yield* Effect.logInfo(\`Deleting ${className} with id: \${id}\`);
+      yield* Effect.logDebug(\`Deleting ${className} with id: \${id}\`);
 
       const result = yield* database.query((db) =>
         db
@@ -99,24 +78,26 @@ export const deleteOperations: Delete${className}Operations = {
 
       const deletedCount = Number(result.numDeletedRows);
       if (deletedCount > 0) {
-        yield* Effect.logInfo(\`${className} deleted successfully (id: \${id})\`);
+        yield* Effect.logDebug(\`${className} deleted successfully (id: \${id})\`);
       } else {
         yield* Effect.logDebug(\`${className} not found for deletion (id: \${id})\`);
       }
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () =>
-          ${className}TimeoutError.create("delete", 30000)
+        onTimeout: () => ${className}TimeoutError.create("delete", 30000)
       }),
       Effect.withSpan("${className}Repository.delete")
     ),
 
+  /**
+   * Delete multiple ${className} entities by IDs
+   */
   deleteMany: (ids: ReadonlyArray<string>) =>
     Effect.gen(function* () {
       const database = yield* DatabaseService;
 
-      yield* Effect.logInfo(\`Deleting \${ids.length} ${className} entities\`);
+      yield* Effect.logDebug(\`Deleting \${ids.length} ${className} entities\`);
 
       const result = yield* database.query((db) =>
         db
@@ -126,16 +107,20 @@ export const deleteOperations: Delete${className}Operations = {
       );
 
       const deletedCount = Number(result.numDeletedRows);
-      yield* Effect.logInfo(\`Deleted \${deletedCount}/\${ids.length} ${className} entities\`);
+      yield* Effect.logDebug(\`Deleted \${deletedCount}/\${ids.length} ${className} entities\`);
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () =>
-          ${className}TimeoutError.create("deleteMany", 30000)
+        onTimeout: () => ${className}TimeoutError.create("deleteMany", 30000)
       }),
       Effect.withSpan("${className}Repository.deleteMany")
     ),
-};`)
+} as const;
 
-  return builder.toString()
+/**
+ * Type alias for the delete operations object
+ */
+export type Delete${className}Operations = typeof deleteOperations;`);
+
+  return builder.toString();
 }

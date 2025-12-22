@@ -1,18 +1,16 @@
 export const generateProviderConsolidationLayersTemplate = (options: {
-  providers: Array<string>
-  packageName: string
+  providers: Array<string>;
+  packageName: string;
 }) => {
-  const workspaceName = options.packageName.split("/")[0]
+  const workspaceName = options.packageName.split('/')[0];
   const imports = options.providers
     .map((p) => {
-      const className = toClassName(p)
-      return `import { ${className}Live } from "${workspaceName}/provider-${p}"`
+      const className = toClassName(p);
+      return `import { ${className}Live } from "${workspaceName}/provider-${p}"`;
     })
-    .join("\n")
+    .join('\n');
 
-  const layerMerge = options.providers
-    .map((p) => `  ${toClassName(p)}Live`)
-    .join(",\n")
+  const layerMerge = options.providers.map((p) => `  ${toClassName(p)}Live`).join(',\n');
 
   return `/**
  * Consolidated Infrastructure Layers
@@ -40,12 +38,12 @@ ${imports}
 export const ClusterInfrastructureLive = Layer.mergeAll(
 ${layerMerge}
 )
-`
-}
+`;
+};
 
 const toClassName = (name: string) => {
   return name
-    .split("-")
+    .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("")
-}
+    .join('');
+};

@@ -7,73 +7,73 @@
  * @module monorepo-library-generator/cli
  */
 
-import { Args, Command, Options } from "@effect/cli"
-import { NodeContext, NodeRuntime } from "@effect/platform-node"
-import { Console, Effect, Option } from "effect"
-import { VERSION } from "../version"
-import { init } from "./commands/init"
-import { initWorkspace } from "./commands/init-workspace"
-import { generateContract } from "./generators/contract"
-import { generateDataAccess } from "./generators/data-access"
-import { generateDomain } from "./generators/domain"
-import { generateFeature } from "./generators/feature"
-import { generateInfra } from "./generators/infra"
-import { generateProvider } from "./generators/provider"
-import { getCommandHelp } from "./help/commands"
-import { runInteractiveMode } from "./interactive"
+import { Args, Command, Options } from '@effect/cli';
+import { NodeContext, NodeRuntime } from '@effect/platform-node';
+import { Console, Effect, Option } from 'effect';
+import { VERSION } from '../version';
+import { init } from './commands/init';
+import { initWorkspace } from './commands/init-workspace';
+import { generateContract } from './generators/contract';
+import { generateDataAccess } from './generators/data-access';
+import { generateDomain } from './generators/domain';
+import { generateFeature } from './generators/feature';
+import { generateInfra } from './generators/infra';
+import { generateProvider } from './generators/provider';
+import { getCommandHelp } from './help/commands';
+import { runInteractiveMode } from './interactive';
 
 /**
  * Common arguments used across all generate commands
  */
-const nameArg = Args.text({ name: "name" }).pipe(
-  Args.withDescription("The name of the library to generate")
-)
+const nameArg = Args.text({ name: 'name' }).pipe(
+  Args.withDescription('The name of the library to generate'),
+);
 
 /**
  * Verbosity options for all generate commands
  */
-const verboseOption = Options.boolean("verbose").pipe(
-  Options.withAlias("v"),
-  Options.withDescription("Show detailed output for each file"),
-  Options.withDefault(false)
-)
+const verboseOption = Options.boolean('verbose').pipe(
+  Options.withAlias('v'),
+  Options.withDescription('Show detailed output for each file'),
+  Options.withDefault(false),
+);
 
-const quietOption = Options.boolean("quiet").pipe(
-  Options.withAlias("q"),
-  Options.withDescription("Minimal output (success/failure only)"),
-  Options.withDefault(false)
-)
+const quietOption = Options.boolean('quiet').pipe(
+  Options.withAlias('q'),
+  Options.withDescription('Minimal output (success/failure only)'),
+  Options.withDefault(false),
+);
 
 /**
  * Common options for library generation
  */
-const descriptionOption = Options.text("description").pipe(
-  Options.withDescription("Description of the library"),
-  Options.optional
-)
+const descriptionOption = Options.text('description').pipe(
+  Options.withDescription('Description of the library'),
+  Options.optional,
+);
 
-const tagsOption = Options.text("tags").pipe(
-  Options.withDescription("Comma-separated list of tags"),
-  Options.withDefault("")
-)
+const tagsOption = Options.text('tags').pipe(
+  Options.withDescription('Comma-separated list of tags'),
+  Options.withDefault(''),
+);
 
 /**
  * Contract Generator Command
  *
  * Generates a contract library with entities, errors, events, and ports.
  */
-const includeCQRSOption = Options.boolean("includeCQRS").pipe(
-  Options.withDescription("Include CQRS patterns (commands, queries, projections)"),
-  Options.withDefault(false)
-)
+const includeCQRSOption = Options.boolean('includeCQRS').pipe(
+  Options.withDescription('Include CQRS patterns (commands, queries, projections)'),
+  Options.withDefault(false),
+);
 
-const includeRPCOption = Options.boolean("includeRPC").pipe(
-  Options.withDescription("Include RPC definitions"),
-  Options.withDefault(false)
-)
+const includeRPCOption = Options.boolean('includeRPC').pipe(
+  Options.withDescription('Include RPC definitions'),
+  Options.withDefault(false),
+);
 
 const contractCommand = Command.make(
-  "contract",
+  'contract',
   {
     name: nameArg,
     description: descriptionOption,
@@ -81,27 +81,25 @@ const contractCommand = Command.make(
     includeCQRS: includeCQRSOption,
     includeRPC: includeRPCOption,
     verbose: verboseOption,
-    quiet: quietOption
+    quiet: quietOption,
   },
   ({ description, includeCQRS, includeRPC, name, tags }) => {
-    const desc = Option.getOrUndefined(description)
+    const desc = Option.getOrUndefined(description);
     return generateContract({
       name,
       ...(desc && { description: desc }),
       tags,
       includeCQRS,
-      includeRPC
+      includeRPC,
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating contract: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-  }
-).pipe(
-  Command.withDescription(getCommandHelp("contract"))
-)
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    );
+  },
+).pipe(Command.withDescription(getCommandHelp('contract')));
 
 /**
  * Data Access Generator Command
@@ -109,69 +107,67 @@ const contractCommand = Command.make(
  * Generates a data-access library with repositories and database operations.
  */
 const dataAccessCommand = Command.make(
-  "data-access",
+  'data-access',
   {
     name: nameArg,
     description: descriptionOption,
     tags: tagsOption,
     verbose: verboseOption,
-    quiet: quietOption
+    quiet: quietOption,
   },
   ({ description, name, tags }) => {
-    const desc = Option.getOrUndefined(description)
+    const desc = Option.getOrUndefined(description);
     return generateDataAccess({
       name,
       ...(desc && { description: desc }),
-      tags
+      tags,
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating data-access: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-  }
-).pipe(
-  Command.withDescription(getCommandHelp("data-access"))
-)
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    );
+  },
+).pipe(Command.withDescription(getCommandHelp('data-access')));
 
 /**
  * Feature Generator Command
  *
  * Generates a feature library with server, client, and edge implementations.
  */
-const scopeOption = Options.text("scope").pipe(
-  Options.withDescription("Scope tag for the feature"),
-  Options.optional
-)
+const scopeOption = Options.text('scope').pipe(
+  Options.withDescription('Scope tag for the feature'),
+  Options.optional,
+);
 
-const platformOption = Options.choice("platform", ["node", "browser", "universal", "edge"]).pipe(
-  Options.withDescription("Target platform for the library"),
-  Options.optional
-)
+const platformOption = Options.choice('platform', ['node', 'browser', 'universal', 'edge']).pipe(
+  Options.withDescription('Target platform for the library'),
+  Options.optional,
+);
 
-const includeClientServerOption = Options.boolean("includeClientServer").pipe(
-  Options.withDescription("Generate client and server exports (overrides platform defaults)"),
-  Options.optional
-)
+const includeClientServerOption = Options.boolean('includeClientServer').pipe(
+  Options.withDescription('Generate client and server exports (overrides platform defaults)'),
+  Options.optional,
+);
 
-const includeCQRSFeatureOption = Options.boolean("includeCQRS").pipe(
-  Options.withDescription("Include CQRS patterns (commands, queries, projections)"),
-  Options.optional
-)
+const includeCQRSFeatureOption = Options.boolean('includeCQRS').pipe(
+  Options.withDescription('Include CQRS patterns (commands, queries, projections)'),
+  Options.optional,
+);
 
-const includeEdgeOption = Options.boolean("includeEdge").pipe(
-  Options.withDescription("Include edge runtime support"),
-  Options.optional
-)
+const includeEdgeOption = Options.boolean('includeEdge').pipe(
+  Options.withDescription('Include edge runtime support'),
+  Options.optional,
+);
 
-const includeRPCFeatureOption = Options.boolean("includeRPC").pipe(
-  Options.withDescription("Include RPC definitions"),
-  Options.optional
-)
+const includeRPCFeatureOption = Options.boolean('includeRPC').pipe(
+  Options.withDescription('Include RPC definitions'),
+  Options.optional,
+);
 
 const featureCommand = Command.make(
-  "feature",
+  'feature',
   {
     name: nameArg,
     description: descriptionOption,
@@ -183,31 +179,29 @@ const featureCommand = Command.make(
     includeCQRS: includeCQRSFeatureOption,
     includeEdge: includeEdgeOption,
     verbose: verboseOption,
-    quiet: quietOption
+    quiet: quietOption,
   },
-  (
-    {
-      description,
-      includeCQRS,
-      includeClientServer,
-      includeEdge,
-      includeRPC,
-      name,
-      platform,
-      scope,
-      tags
-    }
-  ) => {
-    const desc = Option.getOrUndefined(description)
-    const scopeValue = Option.getOrUndefined(scope)
-    const platformValue = Option.getOrUndefined(platform)
+  ({
+    description,
+    includeCQRS,
+    includeClientServer,
+    includeEdge,
+    includeRPC,
+    name,
+    platform,
+    scope,
+    tags,
+  }) => {
+    const desc = Option.getOrUndefined(description);
+    const scopeValue = Option.getOrUndefined(scope);
+    const platformValue = Option.getOrUndefined(platform);
 
     // For boolean options with .optional, @effect/cli returns Some(false) when not provided
     // We need to treat false as "not provided" (undefined) since boolean flags are only set when explicitly passed
-    const includeCS = Option.getOrUndefined(includeClientServer)
-    const includeRPCVal = Option.getOrUndefined(includeRPC)
-    const includeCQRSVal = Option.getOrUndefined(includeCQRS)
-    const includeEdgeVal = Option.getOrUndefined(includeEdge)
+    const includeCS = Option.getOrUndefined(includeClientServer);
+    const includeRPCVal = Option.getOrUndefined(includeRPC);
+    const includeCQRSVal = Option.getOrUndefined(includeCQRS);
+    const includeEdgeVal = Option.getOrUndefined(includeEdge);
 
     return generateFeature({
       name,
@@ -219,18 +213,16 @@ const featureCommand = Command.make(
       ...(includeCS === true && { includeClientServer: includeCS }),
       ...(includeRPCVal === true && { includeRPC: includeRPCVal }),
       ...(includeCQRSVal === true && { includeCQRS: includeCQRSVal }),
-      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal })
+      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal }),
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating feature: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-  }
-).pipe(
-  Command.withDescription(getCommandHelp("feature"))
-)
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    );
+  },
+).pipe(Command.withDescription(getCommandHelp('feature')));
 
 /**
  * Infrastructure Generator Command
@@ -238,7 +230,7 @@ const featureCommand = Command.make(
  * Generates an infrastructure library with services and implementations.
  */
 const infraCommand = Command.make(
-  "infra",
+  'infra',
   {
     name: nameArg,
     description: descriptionOption,
@@ -247,13 +239,13 @@ const infraCommand = Command.make(
     includeClientServer: includeClientServerOption,
     includeEdge: includeEdgeOption,
     verbose: verboseOption,
-    quiet: quietOption
+    quiet: quietOption,
   },
   ({ description, includeClientServer, includeEdge, name, platform, tags }) => {
-    const desc = Option.getOrUndefined(description)
-    const platformValue = Option.getOrUndefined(platform)
-    const includeCS = Option.getOrUndefined(includeClientServer)
-    const includeEdgeVal = Option.getOrUndefined(includeEdge)
+    const desc = Option.getOrUndefined(description);
+    const platformValue = Option.getOrUndefined(platform);
+    const includeCS = Option.getOrUndefined(includeClientServer);
+    const includeEdgeVal = Option.getOrUndefined(includeEdge);
 
     return generateInfra({
       name,
@@ -262,30 +254,28 @@ const infraCommand = Command.make(
       ...(platformValue && { platform: platformValue }),
       // Only include boolean flags if they are explicitly true (flag was provided)
       ...(includeCS === true && { includeClientServer: includeCS }),
-      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal })
+      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal }),
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating infra: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-  }
-).pipe(
-  Command.withDescription(getCommandHelp("infra"))
-)
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    );
+  },
+).pipe(Command.withDescription(getCommandHelp('infra')));
 
 /**
  * Provider Generator Command
  *
  * Generates a provider library for external service integration.
  */
-const externalServiceArg = Args.text({ name: "externalService" }).pipe(
-  Args.withDescription("Name of the external service to integrate")
-)
+const externalServiceArg = Args.text({ name: 'externalService' }).pipe(
+  Args.withDescription('Name of the external service to integrate'),
+);
 
 const providerCommand = Command.make(
-  "provider",
+  'provider',
   {
     name: nameArg,
     externalService: externalServiceArg,
@@ -293,29 +283,27 @@ const providerCommand = Command.make(
     tags: tagsOption,
     platform: platformOption,
     verbose: verboseOption,
-    quiet: quietOption
+    quiet: quietOption,
   },
   ({ description, externalService, name, platform, tags }) => {
-    const desc = Option.getOrUndefined(description)
-    const platformValue = Option.getOrUndefined(platform)
+    const desc = Option.getOrUndefined(description);
+    const platformValue = Option.getOrUndefined(platform);
 
     return generateProvider({
       name,
       externalService,
       ...(desc && { description: desc }),
       tags,
-      ...(platformValue && { platform: platformValue })
+      ...(platformValue && { platform: platformValue }),
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating provider: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-  }
-).pipe(
-  Command.withDescription(getCommandHelp("provider"))
-)
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    );
+  },
+).pipe(Command.withDescription(getCommandHelp('provider')));
 
 /**
  * Domain Generator Command
@@ -325,13 +313,13 @@ const providerCommand = Command.make(
  * - Data-Access library (repository)
  * - Feature library (business logic)
  */
-const includeCacheOption = Options.boolean("includeCache").pipe(
-  Options.withDescription("Include cache integration in data-access layer"),
-  Options.optional
-)
+const includeCacheOption = Options.boolean('includeCache').pipe(
+  Options.withDescription('Include cache integration in data-access layer'),
+  Options.optional,
+);
 
 const domainCommand = Command.make(
-  "domain",
+  'domain',
   {
     name: nameArg,
     description: descriptionOption,
@@ -343,28 +331,26 @@ const domainCommand = Command.make(
     includeCQRS: includeCQRSFeatureOption,
     includeEdge: includeEdgeOption,
     verbose: verboseOption,
-    quiet: quietOption
+    quiet: quietOption,
   },
-  (
-    {
-      description,
-      includeCQRS,
-      includeCache,
-      includeClientServer,
-      includeEdge,
-      includeRPC,
-      name,
-      scope,
-      tags
-    }
-  ) => {
-    const desc = Option.getOrUndefined(description)
-    const scopeValue = Option.getOrUndefined(scope)
-    const includeCacheVal = Option.getOrUndefined(includeCache)
-    const includeCS = Option.getOrUndefined(includeClientServer)
-    const includeRPCVal = Option.getOrUndefined(includeRPC)
-    const includeCQRSVal = Option.getOrUndefined(includeCQRS)
-    const includeEdgeVal = Option.getOrUndefined(includeEdge)
+  ({
+    description,
+    includeCQRS,
+    includeCache,
+    includeClientServer,
+    includeEdge,
+    includeRPC,
+    name,
+    scope,
+    tags,
+  }) => {
+    const desc = Option.getOrUndefined(description);
+    const scopeValue = Option.getOrUndefined(scope);
+    const includeCacheVal = Option.getOrUndefined(includeCache);
+    const includeCS = Option.getOrUndefined(includeClientServer);
+    const includeRPCVal = Option.getOrUndefined(includeRPC);
+    const includeCQRSVal = Option.getOrUndefined(includeCQRS);
+    const includeEdgeVal = Option.getOrUndefined(includeEdge);
 
     return generateDomain({
       name,
@@ -376,72 +362,70 @@ const domainCommand = Command.make(
       ...(includeCS === true && { includeClientServer: includeCS }),
       ...(includeRPCVal === true && { includeRPC: includeRPCVal }),
       ...(includeCQRSVal === true && { includeCQRS: includeCQRSVal }),
-      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal })
+      ...(includeEdgeVal === true && { includeEdge: includeEdgeVal }),
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating domain: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-  }
-).pipe(
-  Command.withDescription(getCommandHelp("domain"))
-)
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    );
+  },
+).pipe(Command.withDescription(getCommandHelp('domain')));
 
 /**
  * Generate Command (parent command with subcommands)
  */
-const generateCommand = Command.make("generate").pipe(
-  Command.withDescription("Generate a new library"),
+const generateCommand = Command.make('generate').pipe(
+  Command.withDescription('Generate a new library'),
   Command.withSubcommands([
     contractCommand,
     dataAccessCommand,
     domainCommand,
     featureCommand,
     infraCommand,
-    providerCommand
-  ])
-)
+    providerCommand,
+  ]),
+);
 
 /**
  * Init Command
  *
  * Initializes complete Effect-based monorepo with built-in libraries
  */
-const overwriteOption = Options.boolean("overwrite").pipe(
-  Options.withDescription("Overwrite existing files"),
-  Options.withDefault(false)
-)
+const overwriteOption = Options.boolean('overwrite').pipe(
+  Options.withDescription('Overwrite existing files'),
+  Options.withDefault(false),
+);
 
-const mergeOption = Options.boolean("merge").pipe(
-  Options.withDescription("Merge with existing files"),
-  Options.withDefault(true)
-)
+const mergeOption = Options.boolean('merge').pipe(
+  Options.withDescription('Merge with existing files'),
+  Options.withDefault(true),
+);
 
-const skipProvidersOption = Options.boolean("skip-providers").pipe(
-  Options.withDescription("Skip generating built-in provider libraries"),
-  Options.withDefault(false)
-)
+const skipProvidersOption = Options.boolean('skip-providers').pipe(
+  Options.withDescription('Skip generating built-in provider libraries'),
+  Options.withDefault(false),
+);
 
-const skipInfraOption = Options.boolean("skip-infra").pipe(
-  Options.withDescription("Skip generating built-in infrastructure libraries"),
-  Options.withDefault(false)
-)
+const skipInfraOption = Options.boolean('skip-infra').pipe(
+  Options.withDescription('Skip generating built-in infrastructure libraries'),
+  Options.withDefault(false),
+);
 
-const includePrismaOption = Options.boolean("includePrisma").pipe(
-  Options.withDescription("Scaffold Prisma directory structure for schema-driven development"),
-  Options.withDefault(false)
-)
+const includePrismaOption = Options.boolean('includePrisma').pipe(
+  Options.withDescription('Scaffold Prisma directory structure for schema-driven development'),
+  Options.withDefault(false),
+);
 
 const initCommand = Command.make(
-  "init",
+  'init',
   {
     overwrite: overwriteOption,
     merge: mergeOption,
     skipProviders: skipProvidersOption,
     skipInfra: skipInfraOption,
-    includePrisma: includePrismaOption
+    includePrisma: includePrismaOption,
   },
   ({ includePrisma, merge, overwrite, skipInfra, skipProviders }) =>
     init({
@@ -449,17 +433,15 @@ const initCommand = Command.make(
       merge,
       includeProviders: !skipProviders,
       includeInfra: !skipInfra,
-      includePrisma
+      includePrisma,
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error initializing monorepo: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-).pipe(
-  Command.withDescription(getCommandHelp("init"))
-)
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    ),
+).pipe(Command.withDescription(getCommandHelp('init')));
 
 /**
  * Init Workspace Command (Legacy - workspace dotfiles only)
@@ -467,59 +449,51 @@ const initCommand = Command.make(
  * Initializes workspace-level dotfiles for consistent development experience.
  */
 const initWorkspaceCommand = Command.make(
-  "init-workspace",
+  'init-workspace',
   {
     overwrite: overwriteOption,
-    merge: mergeOption
+    merge: mergeOption,
   },
   ({ merge, overwrite }) =>
     initWorkspace({
       overwrite,
-      merge
+      merge,
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error initializing workspace: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
+          Effect.flatMap(() => Effect.fail(error)),
+        ),
+      ),
+    ),
 ).pipe(
-  Command.withDescription(
-    "Initialize workspace-level dotfiles only (.editorconfig, .vscode/*)"
-  )
-)
+  Command.withDescription('Initialize workspace-level dotfiles only (.editorconfig, .vscode/*)'),
+);
 
 /**
  * TUI (Text User Interface) Option
  *
  * Launches the interactive wizard mode for guided library generation
  */
-const tuiOption = Options.boolean("tui").pipe(
-  Options.withDescription("Launch interactive wizard mode"),
-  Options.withDefault(false)
-)
+const tuiOption = Options.boolean('tui').pipe(
+  Options.withDescription('Launch interactive wizard mode'),
+  Options.withDefault(false),
+);
 
 /**
  * Main CLI Application
  */
-const mainCommand = Command.make(
-  "mlg",
-  { tui: tuiOption },
-  ({ tui }) => {
-    if (tui) {
-      return runInteractiveMode()
-    }
-    // If no -tui flag and no subcommand, show help
-    return Console.log(`Use 'mlg --help' for usage information, or 'mlg -tui' for interactive mode.`)
+const mainCommand = Command.make('mlg', { tui: tuiOption }, ({ tui }) => {
+  if (tui) {
+    return runInteractiveMode();
   }
-).pipe(
-  Command.withSubcommands([generateCommand, initCommand, initWorkspaceCommand])
-)
+  // If no -tui flag and no subcommand, show help
+  return Console.log(`Use 'mlg --help' for usage information, or 'mlg -tui' for interactive mode.`);
+}).pipe(Command.withSubcommands([generateCommand, initCommand, initWorkspaceCommand]));
 
 const cli = Command.run(mainCommand, {
-  name: "Monorepo Library Generator",
-  version: `v${VERSION}`
-})
+  name: 'Monorepo Library Generator',
+  version: `v${VERSION}`,
+});
 
 /**
  * CLI Entry Point
@@ -528,15 +502,13 @@ const cli = Command.run(mainCommand, {
  * with the necessary Effect platform context.
  */
 export function main(args: ReadonlyArray<string>) {
-  return cli(args)
+  return cli(args);
 }
 
 /**
  * Run CLI if executed directly
  */
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const program = main(process.argv).pipe(
-    Effect.provide(NodeContext.layer)
-  )
-  NodeRuntime.runMain(program)
+  const program = main(process.argv).pipe(Effect.provide(NodeContext.layer));
+  NodeRuntime.runMain(program);
 }

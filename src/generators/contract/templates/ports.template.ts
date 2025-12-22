@@ -7,8 +7,9 @@
  * @module monorepo-library-generator/contract/ports-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ContractTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ContractTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate ports.ts file for contract library
@@ -19,43 +20,42 @@ import type { ContractTemplateOptions } from "../../../utils/shared/types"
  * - Service port (Context.Tag with inline interface)
  */
 export function generatePortsFile(options: ContractTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName, includeCQRS, propertyName } = options
-  const domainName = propertyName
+  const builder = new TypeScriptBuilder();
+  const { className, fileName, includeCQRS, propertyName } = options;
+  const domainName = propertyName;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
-  builder.addRaw(createFileHeader(className, domainName, fileName))
-  builder.addBlankLine()
+  builder.addRaw(createFileHeader(className, domainName, fileName, scope));
+  builder.addBlankLine();
 
   // Add imports
-  builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Option"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Context', 'Effect', 'Option'] }]);
 
   builder.addImports([
     {
-      from: "./entities",
+      from: './types/database',
       imports: [`${className}`],
-      isTypeOnly: true
-    }
-  ])
+      isTypeOnly: true,
+    },
+  ]);
 
   builder.addImports([
     {
-      from: "./errors",
+      from: './errors',
       imports: [`${className}RepositoryError`],
-      isTypeOnly: true
-    }
-  ])
+      isTypeOnly: true,
+    },
+  ]);
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // ============================================================================
   // SECTION 1: Supporting Types
   // ============================================================================
 
-  builder.addSectionComment("Supporting Types")
-  builder.addBlankLine()
+  builder.addSectionComment('Supporting Types');
+  builder.addBlankLine();
 
   // Filters interface
   builder.addInterface({
@@ -64,47 +64,47 @@ export function generatePortsFile(options: ContractTemplateOptions) {
     jsdoc: `Filter options for querying ${domainName}s`,
     properties: [
       {
-        name: "createdAfter",
-        type: "Date",
+        name: 'createdAfter',
+        type: 'Date',
         optional: true,
         readonly: true,
-        jsdoc: "Filter by creation date range"
+        jsdoc: 'Filter by creation date range',
       },
-      { name: "createdBefore", type: "Date", optional: true, readonly: true },
+      { name: 'createdBefore', type: 'Date', optional: true, readonly: true },
       {
-        name: "updatedAfter",
-        type: "Date",
+        name: 'updatedAfter',
+        type: 'Date',
         optional: true,
         readonly: true,
-        jsdoc: "Filter by update date range"
+        jsdoc: 'Filter by update date range',
       },
-      { name: "updatedBefore", type: "Date", optional: true, readonly: true }
-    ]
-  })
+      { name: 'updatedBefore', type: 'Date', optional: true, readonly: true },
+    ],
+  });
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // PaginationParams interface
   builder.addInterface({
-    name: "PaginationParams",
+    name: 'PaginationParams',
     exported: true,
-    jsdoc: "Pagination parameters",
+    jsdoc: 'Pagination parameters',
     properties: [
-      { name: "limit", type: "number", readonly: true },
-      { name: "offset", type: "number", readonly: true }
-    ]
-  })
+      { name: 'limit', type: 'number', readonly: true },
+      { name: 'offset', type: 'number', readonly: true },
+    ],
+  });
 
   // SortOptions interface
   builder.addInterface({
-    name: "SortOptions",
+    name: 'SortOptions',
     exported: true,
-    jsdoc: "Sort options",
+    jsdoc: 'Sort options',
     properties: [
-      { name: "field", type: "string", readonly: true },
-      { name: "direction", type: "\"asc\" | \"desc\"", readonly: true }
-    ]
-  })
+      { name: 'field', type: 'string', readonly: true },
+      { name: 'direction', type: '"asc" | "desc"', readonly: true },
+    ],
+  });
 
   // PaginatedResult interface (generic)
   builder.addRaw(`
@@ -118,67 +118,52 @@ export interface PaginatedResult<T> {
   readonly offset: number;
   readonly hasMore: boolean;
 }
-`)
+`);
 
   // ============================================================================
   // SECTION 2: Repository Port
   // ============================================================================
 
-  builder.addSectionComment("Repository Port")
-  builder.addBlankLine()
+  builder.addSectionComment('Repository Port');
+  builder.addBlankLine();
 
   // Create repository Context.Tag with inline interface
-  const repositoryTag = createRepositoryTag(
-    className,
-    domainName,
-    fileName
-  )
-  builder.addRaw(repositoryTag)
-  builder.addBlankLine()
+  const repositoryTag = createRepositoryTag(className, domainName, fileName, scope);
+  builder.addRaw(repositoryTag);
+  builder.addBlankLine();
 
   // ============================================================================
   // SECTION 3: Service Port
   // ============================================================================
 
-  builder.addSectionComment("Service Port")
-  builder.addBlankLine()
+  builder.addSectionComment('Service Port');
+  builder.addBlankLine();
 
   // Create service Context.Tag with inline interface
-  const serviceTag = createServiceTag(
-    className,
-    domainName,
-    fileName
-  )
-  builder.addRaw(serviceTag)
-  builder.addBlankLine()
+  const serviceTag = createServiceTag(className, domainName, fileName, scope);
+  builder.addRaw(serviceTag);
+  builder.addBlankLine();
 
   // ============================================================================
   // SECTION 4: Projection Repository Port (CQRS only)
   // ============================================================================
 
   if (includeCQRS) {
-    builder.addSectionComment("Projection Repository Port (CQRS)")
-    builder.addBlankLine()
+    builder.addSectionComment('Projection Repository Port (CQRS)');
+    builder.addBlankLine();
 
-    const projectionRepositoryTag = createProjectionRepositoryTag(
-      className,
-      fileName
-    )
-    builder.addRaw(projectionRepositoryTag)
-    builder.addBlankLine()
+    const projectionRepositoryTag = createProjectionRepositoryTag(className, fileName, scope);
+    builder.addRaw(projectionRepositoryTag);
+    builder.addBlankLine();
   }
 
-  return builder.toString()
+  return builder.toString();
 }
 
 /**
  * Create file header with comprehensive documentation
  */
-function createFileHeader(
-  className: string,
-  domainName: string,
-  fileName: string
-) {
+function createFileHeader(className: string, domainName: string, fileName: string, scope: string) {
   return `/**
  * ${className} Ports (Interfaces)
  *
@@ -186,8 +171,8 @@ function createFileHeader(
  * These ports are implemented in the data-access layer using Effect's dependency injection.
  *
  * @see https://effect.website/docs/guides/context-management for dependency injection
- * @module @custom-repo/contract-${fileName}/ports
- */`
+ * @module ${scope}/contract-${fileName}/ports
+ */`;
 }
 
 /**
@@ -196,7 +181,8 @@ function createFileHeader(
 function createRepositoryTag(
   className: string,
   domainName: string,
-  fileName: string
+  fileName: string,
+  scope: string,
 ) {
   return `/**
  * ${className}Repository Context Tag for dependency injection
@@ -221,7 +207,7 @@ function createRepositoryTag(
  * \`\`\`
  */
 export class ${className}Repository extends Context.Tag(
-  "@custom-repo/contract-${fileName}/${className}Repository"
+  "${scope}/contract-${fileName}/${className}Repository"
 )<
   ${className}Repository,
   {
@@ -285,17 +271,13 @@ export class ${className}Repository extends Context.Tag(
       id: string
     ) => Effect.Effect<boolean, ${className}RepositoryError, never>;
   }
->() {}`
+>() {}`;
 }
 
 /**
  * Create service Context.Tag definition
  */
-function createServiceTag(
-  className: string,
-  domainName: string,
-  fileName: string
-) {
+function createServiceTag(className: string, domainName: string, fileName: string, scope: string) {
   return `/**
  * ${className}Service Context Tag for dependency injection
  *
@@ -313,7 +295,7 @@ function createServiceTag(
  * \`\`\`
  */
 export class ${className}Service extends Context.Tag(
-  "@custom-repo/contract-${fileName}/${className}Service"
+  "${scope}/contract-${fileName}/${className}Service"
 )<
   ${className}Service,
   {
@@ -355,16 +337,13 @@ export class ${className}Service extends Context.Tag(
       id: string
     ) => Effect.Effect<void, ${className}RepositoryError, never>;
   }
->() {}`
+>() {}`;
 }
 
 /**
  * Create projection repository Context.Tag definition (CQRS only)
  */
-function createProjectionRepositoryTag(
-  className: string,
-  fileName: string
-) {
+function createProjectionRepositoryTag(className: string, fileName: string, scope: string) {
   return `/**
  * ${className}ProjectionRepository Context Tag for CQRS read models
  *
@@ -381,7 +360,7 @@ function createProjectionRepositoryTag(
  * \`\`\`
  */
 export class ${className}ProjectionRepository extends Context.Tag(
-  "@custom-repo/contract-${fileName}/${className}ProjectionRepository"
+  "${scope}/contract-${fileName}/${className}ProjectionRepository"
 )<
   ${className}ProjectionRepository,
   {
@@ -415,5 +394,5 @@ export class ${className}ProjectionRepository extends Context.Tag(
       id: string
     ) => Effect.Effect<void, ${className}RepositoryError, never>;
   }
->() {}`
+>() {}`;
 }

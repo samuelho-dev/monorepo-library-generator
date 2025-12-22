@@ -9,133 +9,50 @@
 import {
   addPaginatedResponse,
   addPaginationOptions,
-  addSortDirection
-} from "../../../utils/code-generation/type-templates"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+  addSortDirection,
+} from '../../../utils/templates';
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate types.ts file for data-access library
  *
  * Creates shared type definitions including:
- * - Core entity types
+ * - Re-exports from contract library
  * - Filter and query types
  * - Response types
  * - Helper type utilities
  */
 export function generateTypesFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName, contractLibrary } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
   builder.addFileHeader({
     title: `${className} Shared Type Definitions`,
     description: `Common types used across the data-access layer for ${className} operations.
-Provides shared domain types, filters, and query options.
+Re-exports entity types from contract library and provides query-specific types.`,
+    module: `${scope}/data-access-${fileName}/server`,
+  });
 
-TODO: Customize this file:
-1. Define domain-specific types (entity, DTOs, etc.)
-2. Create filter and search interfaces
-3. Define query options and sort criteria
-4. Add type-safe builder patterns if needed`,
-    module: `@custom-repo/data-access-${fileName}/server`
-  })
+  // Re-export from contract library
+  builder.addSectionComment('Entity Types (from Contract Library)');
+  builder.addBlankLine();
 
-  // Core Entity Types
-  builder.addSectionComment("Core Entity Types")
-  builder.addBlankLine()
-
-  builder.addRaw(`/**
- * ${className} Entity
- *
- * Represents a ${fileName} record from the database.
- *
- * TODO: Add your domain-specific properties here
- *
- * Common patterns:
- * - Business identifiers: email, username, sku, slug, etc.
- * - Attributes: name, title, description, status, type, etc.
- * - Numeric values: price, quantity, rating, score, etc.
- * - Metadata: version, tags, metadata object, settings, etc.
- * - Relationships: userId, organizationId, parentId (foreign keys)
- * - Flags: isActive, isPublished, isDeleted, isFeatured, etc.
- * - Dates: publishedAt, expiresAt, completedAt, etc.
- *
- * @example
- * \`\`\`typescript
- * export interface Product {
- *   readonly id: string;
- *   readonly sku: string;
- *   readonly name: string;
- *   readonly description: string;
- *   readonly price: number;
- *   readonly category: string;
- *   readonly inStock: boolean;
- *   readonly tags: readonly string[];
- *   readonly createdAt: Date;
- *   readonly updatedAt: Date;
- * }
- * \`\`\`
- */
-export interface ${className} {
-  readonly id: string;
-  // TODO: Add entity properties (see JSDoc examples above)
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}`)
-  builder.addBlankLine()
-
-  builder.addRaw(`/**
- * ${className} Creation Input
- *
- * DTO for creating new ${className} entities.
- * Omits auto-generated fields (id, createdAt, updatedAt).
- *
- * TODO: Replace with actual creation input type
- * Should include domain-specific properties but exclude:
- * - id (auto-generated)
- * - createdAt (auto-generated)
- * - updatedAt (auto-generated)
- *
- * @example
- * \`\`\`typescript
- * interface CreateProductInput {
- *   name: string;
- *   price: number;
- * }
- * \`\`\`
- */
-export type ${className}CreateInput = Omit<
+  builder.addRaw(`// Re-export entity types from contract library
+export type {
   ${className},
-  'id' | 'createdAt' | 'updatedAt'
->;`)
-  builder.addBlankLine()
-
-  builder.addRaw(`/**
- * ${className} Update Input
- *
- * DTO for updating existing ${className} entities.
- * All properties are optional for partial updates.
- *
- * TODO: Replace with actual update input type
- * Can include any subset of entity properties.
- *
- * @example
- * \`\`\`typescript
- * interface UpdateProductInput {
- *   name?: string;
- *   price?: number;
- * }
- * \`\`\`
- */
-export type ${className}UpdateInput = Partial<
-  Omit<${className}, 'id' | 'createdAt' | 'updatedAt'>
->;`)
-  builder.addBlankLine()
+  ${className}Id,
+  ${className}Insert as ${className}CreateInput,
+  ${className}Update as ${className}UpdateInput,
+} from "${contractLibrary}";`);
+  builder.addBlankLine();
 
   // Filter & Query Types
-  builder.addSectionComment("Filter & Query Types")
-  builder.addBlankLine()
+  builder.addSectionComment('Filter & Query Types');
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * ${className} Filter Options
@@ -168,26 +85,26 @@ export type ${className}UpdateInput = Partial<
 export interface ${className}Filter {
   // TODO: Add filter properties (see JSDoc examples above)
   readonly search?: string;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // Add query types using utility (SortDirection, Sort, Pagination)
-  addSortDirection(builder)
-  builder.addBlankLine()
+  addSortDirection(builder);
+  builder.addBlankLine();
 
-  builder.addComment(`${className} Sort Options`)
-  builder.addComment("TODO: Add domain-specific sortable fields")
-  builder.addComment("Examples: createdAt, updatedAt, name, price")
+  builder.addComment(`${className} Sort Options`);
+  builder.addComment('TODO: Add domain-specific sortable fields');
+  builder.addComment('Examples: createdAt, updatedAt, name, price');
   builder.addRaw(`export interface ${className}Sort {
   readonly field: string; // TODO: Use union of sortable fields
   readonly direction: SortDirection;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
-  builder.addComment("Pagination Options")
-  builder.addComment("Standard pagination parameters for list queries.")
-  addPaginationOptions(builder)
-  builder.addBlankLine()
+  builder.addComment('Pagination Options');
+  builder.addComment('Standard pagination parameters for list queries.');
+  addPaginationOptions(builder);
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Query Options
@@ -208,21 +125,21 @@ export interface QueryOptions {
   readonly filter?: ${className}Filter;
   readonly sort?: ${className}Sort;
   readonly pagination?: PaginationOptions;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // Response Types
-  builder.addSectionComment("Response Types")
-  builder.addBlankLine()
+  builder.addSectionComment('Response Types');
+  builder.addBlankLine();
 
-  builder.addComment("Paginated List Response")
-  builder.addComment("Standard paginated response format for list queries.")
-  addPaginatedResponse(builder)
-  builder.addBlankLine()
+  builder.addComment('Paginated List Response');
+  builder.addComment('Standard paginated response format for list queries.');
+  addPaginatedResponse(builder);
+  builder.addBlankLine();
 
   // Helper Type Utilities
-  builder.addSectionComment("Helper Type Utilities")
-  builder.addBlankLine()
+  builder.addSectionComment('Helper Type Utilities');
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Make all properties of T required
@@ -231,8 +148,8 @@ export interface QueryOptions {
  */
 export type Required<T> = {
   [K in keyof T]-?: T[K];
-};`)
-  builder.addBlankLine()
+};`);
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Make all properties of T readonly
@@ -242,7 +159,7 @@ export type Required<T> = {
 export type ReadonlyDeep<T> = {
   readonly [K in keyof T]: ReadonlyDeep<T[K]>;
 };
-`)
+`);
 
-  return builder.toString()
+  return builder.toString();
 }

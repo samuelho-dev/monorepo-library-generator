@@ -6,19 +6,19 @@
  * @module monorepo-library-generator/data-access/repository/repository-index-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate repository/index.ts file
  *
  * Creates barrel export for repository interface and all operations
  */
-export function generateRepositoryIndexFile(
-  options: DataAccessTemplateOptions
-) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+export function generateRepositoryIndexFile(options: DataAccessTemplateOptions) {
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Repository`,
@@ -37,19 +37,19 @@ Import options (from most optimal to most convenient):
 
 4. Package barrel (largest bundle):
    import { ${className}Repository } from '@scope/data-access-${fileName}'`,
-    module: `@custom-repo/data-access-${fileName}/repository`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/repository`,
+  });
+  builder.addBlankLine();
 
-  builder.addSectionComment("Re-export repository interface and tag")
-  builder.addBlankLine()
+  builder.addSectionComment('Re-export repository interface and tag');
+  builder.addBlankLine();
 
   builder.addRaw(`export { ${className}Repository } from "./repository"
-export type { ${className}RepositoryInterface } from "./repository"`)
-  builder.addBlankLine()
+export type { ${className}RepositoryInterface } from "./repository"`);
+  builder.addBlankLine();
 
-  builder.addSectionComment("Re-export all operations")
-  builder.addBlankLine()
+  builder.addSectionComment('Re-export all operations');
+  builder.addBlankLine();
 
   builder.addRaw(`export type {
   Aggregate${className}Operations,
@@ -65,7 +65,7 @@ export {
   deleteOperations,
   readOperations,
   updateOperations
-} from "./operations"`)
+} from "./operations"`);
 
-  return builder.toString()
+  return builder.toString();
 }

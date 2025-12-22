@@ -7,17 +7,17 @@
  *
  * @module monorepo-library-generator/integration/compiler
  */
-import type { Tree } from "@nx/devkit"
-import * as ts from "typescript"
+import type { Tree } from '@nx/devkit';
+import * as ts from 'typescript';
 
 export interface CompilationResult {
-  readonly success: boolean
+  readonly success: boolean;
   readonly errors: ReadonlyArray<{
-    readonly file: string
-    readonly line: number
-    readonly message: string
-  }>
-  readonly fileCount: number
+    readonly file: string;
+    readonly line: number;
+    readonly message: string;
+  }>;
+  readonly fileCount: number;
 }
 
 /**
@@ -30,72 +30,74 @@ export interface CompilationResult {
 export function compileTreeFiles(
   tree: Tree,
   projectRoot: string,
-  _compilerOptions?: ts.CompilerOptions
+  _compilerOptions?: ts.CompilerOptions,
 ) {
-  const files = collectTypeScriptFiles(tree, projectRoot)
+  const files = collectTypeScriptFiles(tree, projectRoot);
   if (files.length === 0) {
     return {
       success: true,
       errors: [],
-      fileCount: 0
-    }
+      fileCount: 0,
+    };
   }
 
-  const errors: Array<{ file: string; line: number; message: string }> = []
+  const errors: Array<{ file: string; line: number; message: string }> = [];
 
   // Parse each file to check for syntax errors
   for (const filePath of files) {
-    const content = tree.read(filePath, "utf-8")
-    if (content === null) continue
+    const content = tree.read(filePath, 'utf-8');
+    if (content === null) continue;
 
     const sourceFile = ts.createSourceFile(
       filePath,
       content,
       ts.ScriptTarget.ES2022,
       true,
-      ts.ScriptKind.TS
-    )
+      ts.ScriptKind.TS,
+    );
 
     // Get syntax diagnostics (parse errors)
     // parseDiagnostics is an internal property, use type assertion
-    const syntaxDiags = (sourceFile as unknown as { parseDiagnostics?: ts.Diagnostic[] }).parseDiagnostics || []
+    const syntaxDiags =
+      (sourceFile as unknown as { parseDiagnostics?: ts.Diagnostic[] }).parseDiagnostics || [];
     for (const diag of syntaxDiags) {
-      const pos = diag.start !== undefined
-        ? ts.getLineAndCharacterOfPosition(sourceFile, diag.start)
-        : { line: 0, character: 0 }
+      const pos =
+        diag.start !== undefined
+          ? ts.getLineAndCharacterOfPosition(sourceFile, diag.start)
+          : { line: 0, character: 0 };
       errors.push({
         file: filePath,
         line: pos.line + 1,
-        message: ts.flattenDiagnosticMessageText(diag.messageText, "\n")
-      })
+        message: ts.flattenDiagnosticMessageText(diag.messageText, '\n'),
+      });
     }
   }
 
   return {
     success: errors.length === 0,
     errors,
-    fileCount: files.length
-  }
+    fileCount: files.length,
+  };
 }
 
 function collectTypeScriptFiles(tree: Tree, projectRoot: string) {
-  const files: Array<string> = []
+  const files: Array<string> = [];
 
   const visit = (path: string) => {
     if (tree.isFile(path)) {
-      if (path.endsWith(".ts") && !path.endsWith(".spec.ts") && !path.endsWith(".test.ts")) {
-        files.push(path)
+      if (path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts')) {
+        files.push(path);
       }
     } else {
       tree.children(path).forEach((child) => {
-        visit(`${path}/${child}`)
-      })
+        visit(`${path}/${child}`);
+      });
     }
-  }
+  };
 
   if (tree.exists(projectRoot)) {
-    visit(projectRoot)
+    visit(projectRoot);
   }
 
-  return files
+  return files;
 }

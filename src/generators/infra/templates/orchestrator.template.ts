@@ -1,18 +1,16 @@
 export const generateOrchestratorTemplate = (options: {
-  providers: Array<string>
-  packageName: string
+  providers: Array<string>;
+  packageName: string;
 }) => {
-  const workspaceName = options.packageName.split("/")[0]
+  const workspaceName = options.packageName.split('/')[0];
   const providerImports = options.providers
     .map((p) => {
-      const className = toClassName(p)
-      return `import { ${className} } from "${workspaceName}/provider-${p}"`
+      const className = toClassName(p);
+      return `import { ${className} } from "${workspaceName}/provider-${p}"`;
     })
-    .join("\n")
+    .join('\n');
 
-  const providerDeps = options.providers
-    .map((p) => toClassName(p))
-    .join(" | ")
+  const providerDeps = options.providers.map((p) => toClassName(p)).join(' | ');
 
   return `/**
  * Cluster Orchestrator
@@ -53,7 +51,7 @@ export class ClusterOrchestrator extends Context.Tag("@infra/ClusterOrchestrator
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function* () {
-${options.providers.map((p) => `      const ${p} = yield* ${toClassName(p)}`).join("\n")}
+${options.providers.map((p) => `      const ${p} = yield* ${toClassName(p)}`).join('\n')}
 
       return {
         bootstrap: Effect.gen(function* () {
@@ -75,12 +73,12 @@ ${options.providers.map((p) => `      const ${p} = yield* ${toClassName(p)}`).jo
     })
   )
 }
-`
-}
+`;
+};
 
 const toClassName = (name: string) => {
   return name
-    .split("-")
+    .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("")
-}
+    .join('');
+};

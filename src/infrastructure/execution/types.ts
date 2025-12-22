@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/infrastructure/execution/types
  */
 
-import { Data, type Effect } from "effect"
-import type { FileSystemAdapter, FileSystemErrors } from "../adapters/filesystem"
+import { Data, type Effect } from 'effect';
+import type { FileSystemAdapter, FileSystemErrors } from '../../utils/filesystem';
 
 /**
  * Generator Result
@@ -15,11 +15,11 @@ import type { FileSystemAdapter, FileSystemErrors } from "../adapters/filesystem
  * Standard result returned by all core generators
  */
 export interface GeneratorResult {
-  readonly projectName: string
-  readonly projectRoot: string
-  readonly packageName: string
-  readonly sourceRoot: string
-  readonly filesGenerated: ReadonlyArray<string>
+  readonly projectName: string;
+  readonly projectRoot: string;
+  readonly packageName: string;
+  readonly sourceRoot: string;
+  readonly filesGenerated: ReadonlyArray<string>;
 }
 
 /**
@@ -29,8 +29,8 @@ export interface GeneratorResult {
  */
 export type CoreGeneratorFn<TOptions> = (
   adapter: FileSystemAdapter,
-  options: TOptions
-) => Effect.Effect<GeneratorResult, FileSystemErrors>
+  options: TOptions,
+) => Effect.Effect<GeneratorResult, FileSystemErrors>;
 
 /**
  * Generator Execution Error
@@ -38,7 +38,7 @@ export type CoreGeneratorFn<TOptions> = (
  * Tagged error for generator execution failures with structured error information.
  * Preserves the original error cause for debugging.
  */
-export class GeneratorExecutionError extends Data.TaggedError("GeneratorExecutionError")<{
-  readonly message: string
-  readonly cause?: unknown
+export class GeneratorExecutionError extends Data.TaggedError('GeneratorExecutionError')<{
+  readonly message: string;
+  readonly cause?: unknown;
 }> {}

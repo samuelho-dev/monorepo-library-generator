@@ -9,7 +9,7 @@
 /**
  * Library type - identifies which kind of library is being generated
  */
-export type LibraryType = "contract" | "data-access" | "feature" | "provider" | "infra" | "util"
+export type LibraryType = 'contract' | 'data-access' | 'feature' | 'provider' | 'infra' | 'util';
 
 /**
  * Universal library metadata
@@ -26,39 +26,39 @@ export type LibraryType = "contract" | "data-access" | "feature" | "provider" | 
  */
 export interface LibraryMetadata {
   // Required by Nx template substitutions
-  readonly tmpl: ""
-  readonly name: string
-  readonly offsetFromRoot: string
-  readonly tags: string
+  readonly tmpl: '';
+  readonly name: string;
+  readonly offsetFromRoot: string;
+  readonly tags: string;
 
   // Naming variants
-  readonly className: string // PascalCase
-  readonly propertyName: string // camelCase
-  readonly fileName: string // kebab-case
-  readonly constantName: string // SCREAMING_SNAKE_CASE
-  readonly domainName: string // Title Case
+  readonly className: string; // PascalCase
+  readonly propertyName: string; // camelCase
+  readonly fileName: string; // kebab-case
+  readonly constantName: string; // SCREAMING_SNAKE_CASE
+  readonly domainName: string; // Title Case
 
   // Project identifiers
-  readonly projectName: string // {type}-{name}
-  readonly packageName: string // @custom-repo/{projectName}
+  readonly projectName: string; // {type}-{name}
+  readonly packageName: string; // @custom-repo/{projectName}
 
   // Paths
-  readonly projectRoot: string
-  readonly sourceRoot: string
-  readonly distRoot: string
+  readonly projectRoot: string;
+  readonly sourceRoot: string;
+  readonly distRoot: string;
 
   // Metadata
-  readonly description: string
-  readonly libraryType: LibraryType
+  readonly description: string;
+  readonly libraryType: LibraryType;
 }
 
 /**
  * Input for computing library metadata
  */
 export interface MetadataInput {
-  readonly name: string
-  readonly libraryType: LibraryType
-  readonly directory?: string
-  readonly description?: string
-  readonly additionalTags?: ReadonlyArray<string>
+  readonly name: string;
+  readonly libraryType: LibraryType;
+  readonly directory?: string;
+  readonly description?: string;
+  readonly additionalTags?: ReadonlyArray<string>;
 }

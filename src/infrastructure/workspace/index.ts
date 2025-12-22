@@ -6,6 +6,6 @@
  * @module monorepo-library-generator/infrastructure/workspace
  */
 
-export * from "./context"
-export * from "./detector"
-export * from "./types"
+export * from './context';
+export * from './detector';
+export * from './types';

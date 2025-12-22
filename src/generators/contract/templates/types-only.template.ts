@@ -5,10 +5,12 @@
  * These imports are completely erased at compile time.
  */
 
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+
 export interface TypesOnlyOptions {
-  readonly entities: ReadonlyArray<string>
-  readonly includeCQRS?: boolean
-  readonly includeRPC?: boolean
+  readonly entities: ReadonlyArray<string>;
+  readonly includeCQRS?: boolean;
+  readonly includeRPC?: boolean;
 }
 
 /**
@@ -18,15 +20,12 @@ export interface TypesOnlyOptions {
  * This enables zero-bundle-impact imports for type checking.
  */
 export function generateTypesOnlyFile(options: TypesOnlyOptions) {
-  const { entities, includeCQRS, includeRPC } = options
+  const { entities, includeCQRS, includeRPC } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
-  const entityExports = entities
-    .map((entityName) => {
-      const fileName = entityNameToFileName(entityName)
-      return `// ${entityName} entity types
-export type { ${entityName}, ${entityName}Insert, ${entityName}Update } from "./lib/entities/${fileName}";`
-    })
-    .join("\n")
+  // All entity types come from the database types file
+  const entityExports = `// Entity types from database schema
+export type { ${entities.join(', ')}, ${entities.map((e) => `${e}Id`).join(', ')}, ${entities.map((e) => `${e}Insert`).join(', ')}, ${entities.map((e) => `${e}Update`).join(', ')} } from "./lib/types/database";`;
 
   return `/**
  * Type-Only Exports
@@ -35,7 +34,7 @@ export type { ${entityName}, ${entityName}Insert, ${entityName}Update } from "./
  * Use these imports when you only need types for TypeScript checking:
  *
  * @example
- * import type { Product } from '@custom-repo/contract-product/types';
+ * import type { Product } from '${scope}/contract-product/types';
  *
  * These imports are completely erased at compile time and add
  * zero bytes to your JavaScript bundle.
@@ -65,8 +64,8 @@ export type * from "./lib/ports";
 
 export type * from "./lib/events";
 ${
-    includeCQRS
-      ? `
+  includeCQRS
+    ? `
 // ============================================================================
 // CQRS Types
 // ============================================================================
@@ -75,26 +74,17 @@ export type * from "./lib/commands";
 export type * from "./lib/queries";
 export type * from "./lib/projections";
 `
-      : ""
-  }${
-    includeRPC
-      ? `
+    : ''
+}${
+  includeRPC
+    ? `
 // ============================================================================
 // RPC Types
 // ============================================================================
 
 export type * from "./lib/rpc";
 `
-      : ""
-  }
-`
+    : ''
 }
-
-/**
- * Convert entity name to file name
- */
-function entityNameToFileName(entityName: string) {
-  return entityName
-    .replace(/([a-z])([A-Z])/g, "$1-$2")
-    .toLowerCase()
+`;
 }

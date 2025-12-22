@@ -1,6 +1,4 @@
-export const generateSubServiceErrorsTemplate = (options: {
-  className: string
-}) =>
+export const generateSubServiceErrorsTemplate = (options: { className: string }) =>
   `/**
  * ${options.className} Error Types
  */
@@ -30,4 +28,4 @@ export class ${options.className}ConfigError extends Data.TaggedError("${options
   message: string
   configKey?: string
 }> {}
-`
+`;

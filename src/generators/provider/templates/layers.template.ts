@@ -13,8 +13,9 @@
  * @module monorepo-library-generator/provider/templates/layers
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ProviderTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate layers.ts file for provider library
@@ -25,440 +26,478 @@ import type { ProviderTemplateOptions } from "../../../utils/shared/types"
  * @returns Generated TypeScript code
  */
 export function generateLayersFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const {
-    className,
-    constantName: projectConstantName,
-    name: projectClassName
-  } = options
+  const builder = new TypeScriptBuilder();
+  const { className, constantName: projectConstantName, name: projectClassName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // File header
-  builder.addRaw("/**")
-  builder.addRaw(` * ${projectClassName} - Layer Implementations`)
-  builder.addRaw(" *")
-  builder.addRaw(" * CRITICAL: Choose correct Layer type")
-  builder.addRaw(" * Reference: provider.md lines 1548-1587")
-  builder.addRaw(" *")
-  builder.addRaw(" * Layer Selection Guide:")
-  builder.addRaw(" * 1. Layer.succeed - Test/mock data (immediate value)")
-  builder.addRaw(" * 2. Layer.sync - Pure sync functions (no async, no deps)")
-  builder.addRaw(" * 3. Layer.effect - Async with dependencies")
-  builder.addRaw(" * 4. Layer.scoped - Needs cleanup/release")
-  builder.addRaw(" */")
-  builder.addBlankLine()
+  builder.addRaw('/**');
+  builder.addRaw(` * ${projectClassName} - Layer Implementations`);
+  builder.addRaw(' *');
+  builder.addRaw(' * CRITICAL: Choose correct Layer type');
+  builder.addRaw(' * Reference: provider.md lines 1548-1587');
+  builder.addRaw(' *');
+  builder.addRaw(' * Layer Selection Guide:');
+  builder.addRaw(' * 1. Layer.succeed - Test/mock data (immediate value)');
+  builder.addRaw(' * 2. Layer.sync - Pure sync functions (no async, no deps)');
+  builder.addRaw(' * 3. Layer.effect - Async with dependencies');
+  builder.addRaw(' * 4. Layer.scoped - Needs cleanup/release');
+  builder.addRaw(' */');
+  builder.addBlankLine();
 
   // Imports
-  builder.addImport("effect", "Layer")
-  builder.addImport("effect", "Effect")
-  builder.addImport("./service", className)
-  builder.addImport("./errors", `${className}InternalError`)
+  builder.addImport('effect', 'Layer');
+  builder.addImport('effect', 'Effect');
+  builder.addImport('effect', 'Redacted');
+  builder.addImport('./service', className);
+  builder.addImport('./errors', `${className}InternalError`);
   builder.addImports([
-    { from: "./types", imports: [`${className}Config`, "Resource"], isTypeOnly: true }
-  ])
-  builder.addBlankLine()
+    { from: './types', imports: [`${className}Config`, 'Resource'], isTypeOnly: true },
+    { from: `${scope}/env`, imports: ['env'] },
+  ]);
+  builder.addBlankLine();
 
   // In-Memory Store Helper
-  builder.addRaw("// ".repeat(38))
-  builder.addRaw("// In-Memory Store for Baseline Implementation")
-  builder.addRaw("// ".repeat(38))
-  builder.addRaw("//")
-  builder.addRaw("// Provides a working baseline implementation using in-memory storage.")
-  builder.addRaw("// Replace with actual SDK integration as needed.")
-  builder.addRaw("//")
-  builder.addRaw("// Benefits:")
-  builder.addRaw("// - Works immediately without SDK setup")
-  builder.addRaw("// - All type errors resolved")
-  builder.addRaw("// - Demonstrates correct Effect patterns")
-  builder.addRaw("// - Easy to replace with real SDK")
-  builder.addRaw("//")
-  builder.addRaw("// ".repeat(38))
-  builder.addBlankLine()
-  builder.addRaw("/**")
-  builder.addRaw(" * Create in-memory store for baseline implementation")
-  builder.addRaw(" *")
-  builder.addRaw(" * Provides full CRUD operations without external dependencies.")
-  builder.addRaw(" * Replace with SDK integration when ready.")
-  builder.addRaw(" */")
-  builder.addRaw("function createInMemoryStore() {")
-  builder.addRaw("  // Use Resource type from ./types for type safety")
-  builder.addRaw("  const store = new Map<string, Resource>();")
-  builder.addRaw("  let idCounter = 0;")
-  builder.addBlankLine()
-  builder.addRaw("  return {")
-  builder.addRaw("    list: (params?: { page?: number; limit?: number }) =>")
-  builder.addRaw("      Effect.sync(() => {")
-  builder.addRaw("        const page = params?.page ?? 1;")
-  builder.addRaw("        const limit = params?.limit ?? 10;")
-  builder.addRaw("        const items = Array.from(store.values());")
-  builder.addRaw("        const start = (page - 1) * limit;")
-  builder.addRaw("        const end = start + limit;")
-  builder.addRaw("        return {")
-  builder.addRaw("          data: items.slice(start, end),")
-  builder.addRaw("          page,")
-  builder.addRaw("          limit,")
-  builder.addRaw("          total: items.length,")
-  builder.addRaw("        };")
-  builder.addRaw("      }),")
-  builder.addBlankLine()
-  builder.addRaw("    get: (id: string) =>")
-  builder.addRaw("      Effect.gen(function* () {")
-  builder.addRaw("        const item = store.get(id);")
-  builder.addRaw("        if (!item) {")
-  builder.addRaw(`          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
-  builder.addRaw("        }")
-  builder.addRaw("        return item;")
-  builder.addRaw("      }),")
-  builder.addBlankLine()
-  builder.addRaw("    create: (data: Omit<Resource, \"id\" | \"createdAt\" | \"updatedAt\">) =>")
-  builder.addRaw("      Effect.sync(() => {")
-  builder.addRaw("        const id = `item-${++idCounter}`;")
-  builder.addRaw("        const now = new Date();")
-  builder.addRaw("        const item: Resource = {")
-  builder.addRaw("          id,")
-  builder.addRaw("          ...data,")
-  builder.addRaw("          createdAt: now,")
-  builder.addRaw("          updatedAt: now,")
-  builder.addRaw("        };")
-  builder.addRaw("        store.set(id, item);")
-  builder.addRaw("        return item;")
-  builder.addRaw("      }),")
-  builder.addBlankLine()
-  builder.addRaw("    update: (id: string, data: Partial<Omit<Resource, \"id\" | \"createdAt\" | \"updatedAt\">>) =>")
-  builder.addRaw("      Effect.gen(function* () {")
-  builder.addRaw("        const item = store.get(id);")
-  builder.addRaw("        if (!item) {")
-  builder.addRaw(`          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
-  builder.addRaw("        }")
-  builder.addRaw("        const updated: Resource = {")
-  builder.addRaw("          ...item,")
-  builder.addRaw("          ...data,")
-  builder.addRaw("          id,  // Preserve ID")
-  builder.addRaw("          createdAt: item.createdAt,  // Preserve createdAt")
-  builder.addRaw("          updatedAt: new Date(),")
-  builder.addRaw("        };")
-  builder.addRaw("        store.set(id, updated);")
-  builder.addRaw("        return updated;")
-  builder.addRaw("      }),")
-  builder.addBlankLine()
-  builder.addRaw("    delete: (id: string) =>")
-  builder.addRaw("      Effect.gen(function* () {")
-  builder.addRaw("        const existed = store.delete(id);")
-  builder.addRaw("        if (!existed) {")
-  builder.addRaw(`          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
-  builder.addRaw("        }")
-  builder.addRaw("      }),")
-  builder.addRaw("  };")
-  builder.addRaw("}")
-  builder.addBlankLine()
+  builder.addRaw('// '.repeat(38));
+  builder.addRaw('// In-Memory Store for Baseline Implementation');
+  builder.addRaw('// '.repeat(38));
+  builder.addRaw('//');
+  builder.addRaw('// Provides a working baseline implementation using in-memory storage.');
+  builder.addRaw('// Replace with actual SDK integration as needed.');
+  builder.addRaw('//');
+  builder.addRaw('// Benefits:');
+  builder.addRaw('// - Works immediately without SDK setup');
+  builder.addRaw('// - All type errors resolved');
+  builder.addRaw('// - Demonstrates correct Effect patterns');
+  builder.addRaw('// - Easy to replace with real SDK');
+  builder.addRaw('//');
+  builder.addRaw('// '.repeat(38));
+  builder.addBlankLine();
+  builder.addRaw('/**');
+  builder.addRaw(' * Create in-memory store for baseline implementation');
+  builder.addRaw(' *');
+  builder.addRaw(' * Provides full CRUD operations without external dependencies.');
+  builder.addRaw(' * Replace with SDK integration when ready.');
+  builder.addRaw(' */');
+  builder.addRaw('function createInMemoryStore() {');
+  builder.addRaw('  // Use Resource type from ./types for type safety');
+  builder.addRaw('  const store = new Map<string, Resource>();');
+  builder.addRaw('  let idCounter = 0;');
+  builder.addBlankLine();
+  builder.addRaw('  return {');
+  builder.addRaw('    list: (params?: { page?: number; limit?: number }) =>');
+  builder.addRaw('      Effect.sync(() => {');
+  builder.addRaw('        const page = params?.page ?? 1;');
+  builder.addRaw('        const limit = params?.limit ?? 10;');
+  builder.addRaw('        const items = Array.from(store.values());');
+  builder.addRaw('        const start = (page - 1) * limit;');
+  builder.addRaw('        const end = start + limit;');
+  builder.addRaw('        return {');
+  builder.addRaw('          data: items.slice(start, end),');
+  builder.addRaw('          page,');
+  builder.addRaw('          limit,');
+  builder.addRaw('          total: items.length,');
+  builder.addRaw('        };');
+  builder.addRaw('      }),');
+  builder.addBlankLine();
+  builder.addRaw('    get: (id: string) =>');
+  builder.addRaw('      Effect.gen(function* () {');
+  builder.addRaw('        const item = store.get(id);');
+  builder.addRaw('        if (!item) {');
+  builder.addRaw(
+    `          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`,
+  );
+  builder.addRaw('        }');
+  builder.addRaw('        return item;');
+  builder.addRaw('      }),');
+  builder.addBlankLine();
+  builder.addRaw('    create: (data: Omit<Resource, "id" | "createdAt" | "updatedAt">) =>');
+  builder.addRaw('      Effect.sync(() => {');
+  builder.addRaw('        const id = `item-${++idCounter}`;');
+  builder.addRaw('        const now = new Date();');
+  builder.addRaw('        const item: Resource = {');
+  builder.addRaw('          id,');
+  builder.addRaw('          ...data,');
+  builder.addRaw('          createdAt: now,');
+  builder.addRaw('          updatedAt: now,');
+  builder.addRaw('        };');
+  builder.addRaw('        store.set(id, item);');
+  builder.addRaw('        return item;');
+  builder.addRaw('      }),');
+  builder.addBlankLine();
+  builder.addRaw(
+    '    update: (id: string, data: Partial<Omit<Resource, "id" | "createdAt" | "updatedAt">>) =>',
+  );
+  builder.addRaw('      Effect.gen(function* () {');
+  builder.addRaw('        const item = store.get(id);');
+  builder.addRaw('        if (!item) {');
+  builder.addRaw(
+    `          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`,
+  );
+  builder.addRaw('        }');
+  builder.addRaw('        const updated: Resource = {');
+  builder.addRaw('          ...item,');
+  builder.addRaw('          ...data,');
+  builder.addRaw('          id,  // Preserve ID');
+  builder.addRaw('          createdAt: item.createdAt,  // Preserve createdAt');
+  builder.addRaw('          updatedAt: new Date(),');
+  builder.addRaw('        };');
+  builder.addRaw('        store.set(id, updated);');
+  builder.addRaw('        return updated;');
+  builder.addRaw('      }),');
+  builder.addBlankLine();
+  builder.addRaw('    delete: (id: string) =>');
+  builder.addRaw('      Effect.gen(function* () {');
+  builder.addRaw('        const existed = store.delete(id);');
+  builder.addRaw('        if (!existed) {');
+  builder.addRaw(
+    `          return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`,
+  );
+  builder.addRaw('        }');
+  builder.addRaw('      }),');
+  builder.addRaw('  };');
+  builder.addRaw('}');
+  builder.addBlankLine();
 
   // Resource Management Documentation
-  builder.addRaw("// ".repeat(38))
-  builder.addRaw("// Resource Management")
-  builder.addRaw("// ".repeat(38))
-  builder.addRaw("//")
-  builder.addRaw("// This template uses Layer.scoped + Effect.addFinalizer for cleanup.")
-  builder.addRaw("//")
-  builder.addRaw("// For complex resources (pools, connections), use Effect.acquireRelease:")
-  builder.addRaw("//   const resource = yield* Effect.acquireRelease(")
-  builder.addRaw("//     Effect.tryPromise(() => SDK.connect(config)),  // acquire")
-  builder.addRaw("//     (r) => Effect.sync(() => r.close())             // release")
-  builder.addRaw("//   );")
-  builder.addRaw("//")
-  builder.addRaw("// See EFFECT_PATTERNS.md for complete examples")
-  builder.addRaw("//")
-  builder.addRaw("// ".repeat(38))
-  builder.addBlankLine()
+  builder.addRaw('// '.repeat(38));
+  builder.addRaw('// Resource Management');
+  builder.addRaw('// '.repeat(38));
+  builder.addRaw('//');
+  builder.addRaw('// This template uses Layer.scoped + Effect.addFinalizer for cleanup.');
+  builder.addRaw('//');
+  builder.addRaw('// For complex resources (pools, connections), use Effect.acquireRelease:');
+  builder.addRaw('//   const resource = yield* Effect.acquireRelease(');
+  builder.addRaw('//     Effect.tryPromise(() => SDK.connect(config)),  // acquire');
+  builder.addRaw('//     (r) => Effect.sync(() => r.close())             // release');
+  builder.addRaw('//   );');
+  builder.addRaw('//');
+  builder.addRaw('// See EFFECT_PATTERNS.md for complete examples');
+  builder.addRaw('//');
+  builder.addRaw('// '.repeat(38));
+  builder.addBlankLine();
 
   // Runtime Preservation Documentation
-  builder.addRaw("// ".repeat(38))
-  builder.addRaw("// Runtime Preservation (for Event-Driven SDKs)")
-  builder.addRaw("// ".repeat(38))
-  builder.addRaw("//")
-  builder.addRaw("// If your SDK uses callbacks (EventEmitter, WebSocket, streams), you MUST")
-  builder.addRaw("// preserve the Effect runtime. See EFFECT_PATTERNS.md lines 1779+ for complete guide.")
-  builder.addRaw("//")
-  builder.addRaw("// WHEN REQUIRED:")
-  builder.addRaw("// - Event emitters: client.on('event', callback)")
-  builder.addRaw("// - WebSocket handlers: ws.on('message', callback)")
-  builder.addRaw("// - Stream processors: stream.on('data', callback)")
-  builder.addRaw("// - Timers/intervals: setInterval(callback, ms)")
-  builder.addRaw("//")
-  builder.addRaw("// NOT REQUIRED:")
-  builder.addRaw("// - Promise-based SDKs (use Effect.tryPromise)")
-  builder.addRaw("// - Synchronous functions")
-  builder.addRaw("// - SDKs with async/await APIs")
-  builder.addRaw("//")
-  builder.addRaw("// Example pattern:")
-  builder.addRaw("//")
-  builder.addRaw(`// export const ${className}Live = Layer.scoped(`)
-  builder.addRaw(`//   ${className},`)
-  builder.addRaw("//   Effect.gen(function* () {")
-  builder.addRaw("//     const runtime = yield* Effect.runtime(); // Capture runtime")
-  builder.addRaw("//     const logger = yield* LoggingService;")
-  builder.addRaw("//")
-  builder.addRaw("//     const client = new EventEmitterSDK();")
-  builder.addRaw("//")
-  builder.addRaw("//     client.on('event', (data) => {")
-  builder.addRaw("//       Runtime.runFork(runtime)(")
-  builder.addRaw("//         Effect.gen(function* () {")
-  builder.addRaw("//           yield* logger.info('Event received', data);")
-  builder.addRaw("//           // All services available here")
-  builder.addRaw("//         })")
-  builder.addRaw("//       );")
-  builder.addRaw("//     });")
-  builder.addRaw("//")
-  builder.addRaw("//     yield* Effect.addFinalizer(() =>")
-  builder.addRaw("//       Effect.sync(() => client.close())")
-  builder.addRaw("//     );")
-  builder.addRaw("//")
-  builder.addRaw(`//     return ${className}.make(client, config);`)
-  builder.addRaw("//   })")
-  builder.addRaw("// );")
-  builder.addRaw("//")
-  builder.addRaw("// ".repeat(38))
-  builder.addBlankLine()
+  builder.addRaw('// '.repeat(38));
+  builder.addRaw('// Runtime Preservation (for Event-Driven SDKs)');
+  builder.addRaw('// '.repeat(38));
+  builder.addRaw('//');
+  builder.addRaw('// If your SDK uses callbacks (EventEmitter, WebSocket, streams), you MUST');
+  builder.addRaw(
+    '// preserve the Effect runtime. See EFFECT_PATTERNS.md lines 1779+ for complete guide.',
+  );
+  builder.addRaw('//');
+  builder.addRaw('// WHEN REQUIRED:');
+  builder.addRaw("// - Event emitters: client.on('event', callback)");
+  builder.addRaw("// - WebSocket handlers: ws.on('message', callback)");
+  builder.addRaw("// - Stream processors: stream.on('data', callback)");
+  builder.addRaw('// - Timers/intervals: setInterval(callback, ms)');
+  builder.addRaw('//');
+  builder.addRaw('// NOT REQUIRED:');
+  builder.addRaw('// - Promise-based SDKs (use Effect.tryPromise)');
+  builder.addRaw('// - Synchronous functions');
+  builder.addRaw('// - SDKs with async/await APIs');
+  builder.addRaw('//');
+  builder.addRaw('// Example pattern:');
+  builder.addRaw('//');
+  builder.addRaw(`// export const ${className}Live = Layer.scoped(`);
+  builder.addRaw(`//   ${className},`);
+  builder.addRaw('//   Effect.gen(function* () {');
+  builder.addRaw('//     const runtime = yield* Effect.runtime(); // Capture runtime');
+  builder.addRaw('//     const logger = yield* LoggingService;');
+  builder.addRaw('//');
+  builder.addRaw('//     const client = new EventEmitterSDK();');
+  builder.addRaw('//');
+  builder.addRaw("//     client.on('event', (data) => {");
+  builder.addRaw('//       Runtime.runFork(runtime)(');
+  builder.addRaw('//         Effect.gen(function* () {');
+  builder.addRaw("//           yield* logger.info('Event received', data);");
+  builder.addRaw('//           // All services available here');
+  builder.addRaw('//         })');
+  builder.addRaw('//       );');
+  builder.addRaw('//     });');
+  builder.addRaw('//');
+  builder.addRaw('//     yield* Effect.addFinalizer(() =>');
+  builder.addRaw('//       Effect.sync(() => client.close())');
+  builder.addRaw('//     );');
+  builder.addRaw('//');
+  builder.addRaw(`//     return ${className}.make(client, config);`);
+  builder.addRaw('//   })');
+  builder.addRaw('// );');
+  builder.addRaw('//');
+  builder.addRaw('// '.repeat(38));
+  builder.addBlankLine();
 
   // Live Layer
-  builder.addRaw("/**")
-  builder.addRaw(" * Live Layer - Production environment")
-  builder.addRaw(" *")
-  builder.addRaw(" * BASELINE IMPLEMENTATION: Uses in-memory store for immediate functionality.")
-  builder.addRaw(" * This provides a working service that can be replaced with SDK integration.")
-  builder.addRaw(" *")
-  builder.addRaw(" * SDK INTEGRATION STEPS:")
-  builder.addRaw(" * 1. Install SDK: npm install your-sdk")
-  builder.addRaw(" * 2. Initialize client: const client = new SDK(config)")
-  builder.addRaw(" * 3. Replace store operations with SDK calls")
-  builder.addRaw(" * 4. Add timeout wrappers: Effect.timeoutFail(sdk.call(), { duration, onTimeout })")
-  builder.addRaw(" * 5. Keep Effect.withSpan for distributed tracing")
-  builder.addRaw(" *")
-  builder.addRaw(" * Uses Layer.effect for dependency injection without cleanup.")
-  builder.addRaw(" * Switch to Layer.scoped if SDK needs cleanup (connections, pools, etc.)")
-  builder.addRaw(" *")
-  builder.addRaw(" * See EFFECT_PATTERNS.md for complete SDK integration guide.")
-  builder.addRaw(" */")
-  builder.addRaw(`export const ${className}Live = Layer.effect(`)
-  builder.addRaw(`  ${className},`)
-  builder.addRaw("  Effect.sync(() => {")
-  builder.addRaw(`    const config: ${className}Config = {`)
-  builder.addRaw(`      apiKey: process.env["${projectConstantName}_API_KEY"] ?? "baseline_api_key",`)
-  builder.addRaw(`      timeout: Number(process.env["${projectConstantName}_TIMEOUT"]) || 20000`)
-  builder.addRaw("    }")
-  builder.addBlankLine()
-  builder.addRaw("    // Baseline: In-memory store (replace with SDK integration)")
-  builder.addRaw("    const store = createInMemoryStore()")
-  builder.addBlankLine()
-  builder.addRaw("    // Return service implementation directly (Effect 3.0+ pattern)")
-  builder.addRaw("    // Operations instrumented with Effect.withSpan for distributed tracing")
-  builder.addRaw("    return {")
-  builder.addRaw("      config,")
-  builder.addRaw(`      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("${className}.healthCheck")),`)
-  builder.addRaw("      // TODO: Replace store operations with SDK calls")
-  builder.addRaw(`      list: (params) => store.list(params).pipe(Effect.withSpan("${className}.list")),`)
-  builder.addRaw(`      get: (id) => store.get(id).pipe(Effect.withSpan("${className}.get")),`)
-  builder.addRaw(`      create: (data) => store.create(data).pipe(Effect.withSpan("${className}.create")),`)
-  builder.addRaw(`      update: (id, data) => store.update(id, data).pipe(Effect.withSpan("${className}.update")),`)
-  builder.addRaw(`      delete: (id) => store.delete(id).pipe(Effect.withSpan("${className}.delete"))`)
-  builder.addRaw("    }")
-  builder.addRaw("  })")
-  builder.addRaw(")")
-  builder.addBlankLine()
+  builder.addRaw('/**');
+  builder.addRaw(' * Live Layer - Production environment');
+  builder.addRaw(' *');
+  builder.addRaw(' * BASELINE IMPLEMENTATION: Uses in-memory store for immediate functionality.');
+  builder.addRaw(' * This provides a working service that can be replaced with SDK integration.');
+  builder.addRaw(' *');
+  builder.addRaw(' * SDK INTEGRATION STEPS:');
+  builder.addRaw(' * 1. Install SDK: npm install your-sdk');
+  builder.addRaw(' * 2. Initialize client: const client = new SDK(config)');
+  builder.addRaw(' * 3. Replace store operations with SDK calls');
+  builder.addRaw(
+    ' * 4. Add timeout wrappers: Effect.timeoutFail(sdk.call(), { duration, onTimeout })',
+  );
+  builder.addRaw(' * 5. Keep Effect.withSpan for distributed tracing');
+  builder.addRaw(' *');
+  builder.addRaw(' * Uses Layer.effect for dependency injection without cleanup.');
+  builder.addRaw(' * Switch to Layer.scoped if SDK needs cleanup (connections, pools, etc.)');
+  builder.addRaw(' *');
+  builder.addRaw(' * See EFFECT_PATTERNS.md for complete SDK integration guide.');
+  builder.addRaw(' */');
+  builder.addRaw(`export const ${className}Live = Layer.effect(`);
+  builder.addRaw(`  ${className},`);
+  builder.addRaw('  Effect.sync(() => {');
+  builder.addRaw(`    const config: ${className}Config = {`);
+  builder.addRaw(
+    `      apiKey: Redacted.value(env.${projectConstantName}_API_KEY) ?? "baseline_api_key",`,
+  );
+  builder.addRaw(`      timeout: env.${projectConstantName}_TIMEOUT ?? 20000`);
+  builder.addRaw('    }');
+  builder.addBlankLine();
+  builder.addRaw('    // Baseline: In-memory store (replace with SDK integration)');
+  builder.addRaw('    const store = createInMemoryStore()');
+  builder.addBlankLine();
+  builder.addRaw('    // Return service implementation directly (Effect 3.0+ pattern)');
+  builder.addRaw('    // Operations instrumented with Effect.withSpan for distributed tracing');
+  builder.addRaw('    return {');
+  builder.addRaw('      config,');
+  builder.addRaw(
+    `      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("${className}.healthCheck")),`,
+  );
+  builder.addRaw('      // TODO: Replace store operations with SDK calls');
+  builder.addRaw(
+    `      list: (params) => store.list(params).pipe(Effect.withSpan("${className}.list")),`,
+  );
+  builder.addRaw(`      get: (id) => store.get(id).pipe(Effect.withSpan("${className}.get")),`);
+  builder.addRaw(
+    `      create: (data) => store.create(data).pipe(Effect.withSpan("${className}.create")),`,
+  );
+  builder.addRaw(
+    `      update: (id, data) => store.update(id, data).pipe(Effect.withSpan("${className}.update")),`,
+  );
+  builder.addRaw(
+    `      delete: (id) => store.delete(id).pipe(Effect.withSpan("${className}.delete"))`,
+  );
+  builder.addRaw('    }');
+  builder.addRaw('  })');
+  builder.addRaw(')');
+  builder.addBlankLine();
 
   // Add Layer.scoped alternative as commented example
-  builder.addRaw("// ".repeat(38))
-  builder.addRaw("// Alternative: Layer.scoped (for SDKs requiring cleanup)")
-  builder.addRaw("// ".repeat(38))
-  builder.addRaw("//")
-  builder.addRaw("// Use this pattern if your SDK has cleanup methods (close, disconnect, end).")
-  builder.addRaw("// Examples: Database pools, WebSocket connections, file handles")
-  builder.addRaw("//")
-  builder.addRaw(`// export const ${className}Live = Layer.scoped(`)
-  builder.addRaw(`//   ${className},`)
-  builder.addRaw("//   Effect.gen(function* () {")
-  builder.addRaw(`//     const config: ${className}Config = {`)
-  builder.addRaw(`//       apiKey: process.env.${projectConstantName}_API_KEY ?? "baseline_api_key",`)
-  builder.addRaw(`//       timeout: Number(process.env.${projectConstantName}_TIMEOUT) || 20000,`)
-  builder.addRaw("//     };")
-  builder.addRaw("//")
-  builder.addRaw("//     // Initialize SDK client")
-  builder.addRaw("//     const client = new ExternalSDK(config);")
-  builder.addRaw("//")
-  builder.addRaw("//     // Register cleanup function")
-  builder.addRaw("//     yield* Effect.addFinalizer(() =>")
-  builder.addRaw("//       Effect.sync(() => {")
-  builder.addRaw("//         // Example cleanup calls:")
-  builder.addRaw("//         // client.close()")
-  builder.addRaw("//         // client.disconnect()")
-  builder.addRaw("//         // pool.end()")
-  builder.addRaw(`//         console.log(\`[${className}] Cleaning up client resources\`);`)
-  builder.addRaw("//       }),")
-  builder.addRaw("//     );")
-  builder.addRaw("//")
-  builder.addRaw("//     // Return service implementation directly")
-  builder.addRaw("//     return {")
-  builder.addRaw("//       config,")
-  builder.addRaw("//       healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
-  builder.addRaw("//       // ... operation implementations")
-  builder.addRaw("//     };")
-  builder.addRaw("//   }),")
-  builder.addRaw("// );")
-  builder.addRaw("//")
-  builder.addRaw("// ".repeat(38))
-  builder.addBlankLine()
+  builder.addRaw('// '.repeat(38));
+  builder.addRaw('// Alternative: Layer.scoped (for SDKs requiring cleanup)');
+  builder.addRaw('// '.repeat(38));
+  builder.addRaw('//');
+  builder.addRaw('// Use this pattern if your SDK has cleanup methods (close, disconnect, end).');
+  builder.addRaw('// Examples: Database pools, WebSocket connections, file handles');
+  builder.addRaw('//');
+  builder.addRaw(`// export const ${className}Live = Layer.scoped(`);
+  builder.addRaw(`//   ${className},`);
+  builder.addRaw('//   Effect.gen(function* () {');
+  builder.addRaw(`//     const config: ${className}Config = {`);
+  builder.addRaw(`//       apiKey: env.${projectConstantName}_API_KEY ?? "baseline_api_key",`);
+  builder.addRaw(`//       timeout: env.${projectConstantName}_TIMEOUT ?? 20000,`);
+  builder.addRaw('//     };');
+  builder.addRaw('//');
+  builder.addRaw('//     // Initialize SDK client');
+  builder.addRaw('//     const client = new ExternalSDK(config);');
+  builder.addRaw('//');
+  builder.addRaw('//     // Register cleanup function');
+  builder.addRaw('//     yield* Effect.addFinalizer(() =>');
+  builder.addRaw('//       Effect.sync(() => {');
+  builder.addRaw('//         // Example cleanup calls:');
+  builder.addRaw('//         // client.close()');
+  builder.addRaw('//         // client.disconnect()');
+  builder.addRaw('//         // pool.end()');
+  builder.addRaw(`//         console.log(\`[${className}] Cleaning up client resources\`);`);
+  builder.addRaw('//       }),');
+  builder.addRaw('//     );');
+  builder.addRaw('//');
+  builder.addRaw('//     // Return service implementation directly');
+  builder.addRaw('//     return {');
+  builder.addRaw('//       config,');
+  builder.addRaw('//       healthCheck: Effect.succeed({ status: "healthy" as const }),');
+  builder.addRaw('//       // ... operation implementations');
+  builder.addRaw('//     };');
+  builder.addRaw('//   }),');
+  builder.addRaw('// );');
+  builder.addRaw('//');
+  builder.addRaw('// '.repeat(38));
+  builder.addBlankLine();
 
   // Test Layer
-  builder.addRaw("/**")
-  builder.addRaw(" * Test Layer - Testing environment")
-  builder.addRaw(" *")
-  builder.addRaw(" * Uses Layer.sync for deterministic testing with in-memory store.")
-  builder.addRaw(" * Each Layer.fresh creates isolated state for test independence.")
-  builder.addRaw(" */")
-  builder.addRaw(`export const ${className}Test = Layer.sync(`)
-  builder.addRaw(`  ${className},`)
-  builder.addRaw("  () => {")
-  builder.addRaw("    // In-memory store for test isolation")
-  builder.addRaw("    const store = new Map<string, Resource>();")
-  builder.addRaw("    let idCounter = 0;")
-  builder.addRaw("")
-  builder.addRaw("    return {")
-  builder.addRaw("      config: { apiKey: \"test_key\", timeout: 1000 },")
-  builder.addRaw("      healthCheck: Effect.succeed({ status: \"healthy\" as const }),")
-  builder.addRaw("")
-  builder.addRaw("      list: (params) =>")
-  builder.addRaw("        Effect.sync(() => {")
-  builder.addRaw("          const page = params?.page ?? 1;")
-  builder.addRaw("          const limit = params?.limit ?? 10;")
-  builder.addRaw("          const items = Array.from(store.values());")
-  builder.addRaw("          const start = (page - 1) * limit;")
-  builder.addRaw("          const end = start + limit;")
-  builder.addRaw("          return {")
-  builder.addRaw("            data: items.slice(start, end),")
-  builder.addRaw("            page,")
-  builder.addRaw("            limit,")
-  builder.addRaw("            total: items.length,")
-  builder.addRaw("          };")
-  builder.addRaw("        }),")
-  builder.addRaw("")
-  builder.addRaw("      get: (id) =>")
-  builder.addRaw("        Effect.gen(function* () {")
-  builder.addRaw("          const item = store.get(id);")
-  builder.addRaw("          if (!item) {")
-  builder.addRaw(`            return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
-  builder.addRaw("          }")
-  builder.addRaw("          return item;")
-  builder.addRaw("        }),")
-  builder.addRaw("")
-  builder.addRaw("      create: (data) =>")
-  builder.addRaw("        Effect.sync(() => {")
-  builder.addRaw("          const id = `test-${++idCounter}`;")
-  builder.addRaw("          const now = new Date();")
-  builder.addRaw("          const item: Resource = {")
-  builder.addRaw("            id,")
-  builder.addRaw("            ...data,")
-  builder.addRaw("            createdAt: now,")
-  builder.addRaw("            updatedAt: now,")
-  builder.addRaw("          };")
-  builder.addRaw("          store.set(id, item);")
-  builder.addRaw("          return item;")
-  builder.addRaw("        }),")
-  builder.addRaw("")
-  builder.addRaw("      update: (id, data) =>")
-  builder.addRaw("        Effect.gen(function* () {")
-  builder.addRaw("          const item = store.get(id);")
-  builder.addRaw("          if (!item) {")
-  builder.addRaw(`            return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
-  builder.addRaw("          }")
-  builder.addRaw("          const updated: Resource = {")
-  builder.addRaw("            ...item,")
-  builder.addRaw("            ...data,")
-  builder.addRaw("            id,")
-  builder.addRaw("            createdAt: item.createdAt,")
-  builder.addRaw("            updatedAt: new Date(),")
-  builder.addRaw("          };")
-  builder.addRaw("          store.set(id, updated);")
-  builder.addRaw("          return updated;")
-  builder.addRaw("        }),")
-  builder.addRaw("")
-  builder.addRaw("      delete: (id) =>")
-  builder.addRaw("        Effect.gen(function* () {")
-  builder.addRaw("          const existed = store.delete(id);")
-  builder.addRaw("          if (!existed) {")
-  builder.addRaw(`            return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`)
-  builder.addRaw("          }")
-  builder.addRaw("        }),")
-  builder.addRaw("    };")
-  builder.addRaw("  },")
-  builder.addRaw(");")
-  builder.addBlankLine()
+  builder.addRaw('/**');
+  builder.addRaw(' * Test Layer - Testing environment');
+  builder.addRaw(' *');
+  builder.addRaw(' * Uses Layer.sync for deterministic testing with in-memory store.');
+  builder.addRaw(' * Each Layer.fresh creates isolated state for test independence.');
+  builder.addRaw(' */');
+  builder.addRaw(`export const ${className}Test = Layer.sync(`);
+  builder.addRaw(`  ${className},`);
+  builder.addRaw('  () => {');
+  builder.addRaw('    // In-memory store for test isolation');
+  builder.addRaw('    const store = new Map<string, Resource>();');
+  builder.addRaw('    let idCounter = 0;');
+  builder.addRaw('');
+  builder.addRaw('    return {');
+  builder.addRaw('      config: { apiKey: "test_key", timeout: 1000 },');
+  builder.addRaw('      healthCheck: Effect.succeed({ status: "healthy" as const }),');
+  builder.addRaw('');
+  builder.addRaw('      list: (params) =>');
+  builder.addRaw('        Effect.sync(() => {');
+  builder.addRaw('          const page = params?.page ?? 1;');
+  builder.addRaw('          const limit = params?.limit ?? 10;');
+  builder.addRaw('          const items = Array.from(store.values());');
+  builder.addRaw('          const start = (page - 1) * limit;');
+  builder.addRaw('          const end = start + limit;');
+  builder.addRaw('          return {');
+  builder.addRaw('            data: items.slice(start, end),');
+  builder.addRaw('            page,');
+  builder.addRaw('            limit,');
+  builder.addRaw('            total: items.length,');
+  builder.addRaw('          };');
+  builder.addRaw('        }),');
+  builder.addRaw('');
+  builder.addRaw('      get: (id) =>');
+  builder.addRaw('        Effect.gen(function* () {');
+  builder.addRaw('          const item = store.get(id);');
+  builder.addRaw('          if (!item) {');
+  builder.addRaw(
+    `            return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`,
+  );
+  builder.addRaw('          }');
+  builder.addRaw('          return item;');
+  builder.addRaw('        }),');
+  builder.addRaw('');
+  builder.addRaw('      create: (data) =>');
+  builder.addRaw('        Effect.sync(() => {');
+  builder.addRaw('          const id = `test-${++idCounter}`;');
+  builder.addRaw('          const now = new Date();');
+  builder.addRaw('          const item: Resource = {');
+  builder.addRaw('            id,');
+  builder.addRaw('            ...data,');
+  builder.addRaw('            createdAt: now,');
+  builder.addRaw('            updatedAt: now,');
+  builder.addRaw('          };');
+  builder.addRaw('          store.set(id, item);');
+  builder.addRaw('          return item;');
+  builder.addRaw('        }),');
+  builder.addRaw('');
+  builder.addRaw('      update: (id, data) =>');
+  builder.addRaw('        Effect.gen(function* () {');
+  builder.addRaw('          const item = store.get(id);');
+  builder.addRaw('          if (!item) {');
+  builder.addRaw(
+    `            return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`,
+  );
+  builder.addRaw('          }');
+  builder.addRaw('          const updated: Resource = {');
+  builder.addRaw('            ...item,');
+  builder.addRaw('            ...data,');
+  builder.addRaw('            id,');
+  builder.addRaw('            createdAt: item.createdAt,');
+  builder.addRaw('            updatedAt: new Date(),');
+  builder.addRaw('          };');
+  builder.addRaw('          store.set(id, updated);');
+  builder.addRaw('          return updated;');
+  builder.addRaw('        }),');
+  builder.addRaw('');
+  builder.addRaw('      delete: (id) =>');
+  builder.addRaw('        Effect.gen(function* () {');
+  builder.addRaw('          const existed = store.delete(id);');
+  builder.addRaw('          if (!existed) {');
+  builder.addRaw(
+    `            return yield* Effect.fail(new ${className}InternalError({ message: \`Item \${id} not found\` }));`,
+  );
+  builder.addRaw('          }');
+  builder.addRaw('        }),');
+  builder.addRaw('    };');
+  builder.addRaw('  },');
+  builder.addRaw(');');
+  builder.addBlankLine();
 
   // Dev Layer
-  builder.addRaw("/**")
-  builder.addRaw(" * Dev Layer - Development environment")
-  builder.addRaw(" *")
-  builder.addRaw(" * Same as Live but with debug logging and longer timeouts.")
-  builder.addRaw(" * Uses in-memory store for baseline implementation.")
-  builder.addRaw(" */")
-  builder.addRaw(`export const ${className}Dev = Layer.effect(`)
-  builder.addRaw(`  ${className},`)
-  builder.addRaw("  Effect.gen(function* () {")
-  builder.addRaw(`    const config: ${className}Config = {`)
+  builder.addRaw('/**');
+  builder.addRaw(' * Dev Layer - Development environment');
+  builder.addRaw(' *');
+  builder.addRaw(' * Same as Live but with debug logging and longer timeouts.');
+  builder.addRaw(' * Uses in-memory store for baseline implementation.');
+  builder.addRaw(' */');
+  builder.addRaw(`export const ${className}Dev = Layer.effect(`);
+  builder.addRaw(`  ${className},`);
+  builder.addRaw('  Effect.gen(function* () {');
+  builder.addRaw(`    const config: ${className}Config = {`);
+  builder.addRaw(`      apiKey: Redacted.value(env.${projectConstantName}_API_KEY) ?? "dev_key",`);
+  builder.addRaw('      timeout: 30000, // Longer timeout for dev');
+  builder.addRaw('    };');
+  builder.addBlankLine();
+  builder.addRaw('    // Baseline: In-memory store (replace with SDK integration)');
+  builder.addRaw('    const store = createInMemoryStore();');
+  builder.addBlankLine();
   builder.addRaw(
-    `      apiKey: process.env["${projectConstantName}_API_KEY"] ?? "dev_key",`
-  )
-  builder.addRaw("      timeout: 30000, // Longer timeout for dev")
-  builder.addRaw("    };")
-  builder.addBlankLine()
-  builder.addRaw("    // Baseline: In-memory store (replace with SDK integration)")
-  builder.addRaw("    const store = createInMemoryStore();")
-  builder.addBlankLine()
-  builder.addRaw(`    yield* Effect.logInfo(\`[${className}] [DEV] Development layer initialized with in-memory store\`);`)
-  builder.addBlankLine()
-  builder.addRaw("    // Return service implementation with distributed tracing")
-  builder.addRaw("    return {")
-  builder.addRaw("      config,")
-  builder.addRaw(`      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("${className}.healthCheck")),`)
-  builder.addRaw("      // TODO: Replace store operations with SDK calls")
-  builder.addRaw(`      list: (params) => store.list(params).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] list called\`))).pipe(Effect.withSpan("${className}.list")),`)
-  builder.addRaw(`      get: (id) => store.get(id).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] get called: \${id}\`))).pipe(Effect.withSpan("${className}.get")),`)
-  builder.addRaw(`      create: (data) => store.create(data).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] create called\`))).pipe(Effect.withSpan("${className}.create")),`)
-  builder.addRaw(`      update: (id, data) => store.update(id, data).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] update called: \${id}\`))).pipe(Effect.withSpan("${className}.update")),`)
-  builder.addRaw(`      delete: (id) => store.delete(id).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] delete called: \${id}\`))).pipe(Effect.withSpan("${className}.delete")),`)
-  builder.addRaw("    };")
-  builder.addRaw("  }),")
-  builder.addRaw(");")
-  builder.addBlankLine()
+    `    yield* Effect.logInfo("[${className}] [DEV] Development layer initialized with in-memory store");`,
+  );
+  builder.addBlankLine();
+  builder.addRaw('    // Return service implementation with distributed tracing');
+  builder.addRaw('    return {');
+  builder.addRaw('      config,');
+  builder.addRaw(
+    `      healthCheck: Effect.succeed({ status: "healthy" as const }).pipe(Effect.withSpan("${className}.healthCheck")),`,
+  );
+  builder.addRaw('      // TODO: Replace store operations with SDK calls');
+  builder.addRaw(
+    `      list: (params) => store.list(params).pipe(Effect.tap(() => Effect.logDebug("[${className}] list called"))).pipe(Effect.withSpan("${className}.list")),`,
+  );
+  builder.addRaw(
+    `      get: (id) => store.get(id).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] get called: \${id}\`))).pipe(Effect.withSpan("${className}.get")),`,
+  );
+  builder.addRaw(
+    `      create: (data) => store.create(data).pipe(Effect.tap(() => Effect.logDebug("[${className}] create called"))).pipe(Effect.withSpan("${className}.create")),`,
+  );
+  builder.addRaw(
+    `      update: (id, data) => store.update(id, data).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] update called: \${id}\`))).pipe(Effect.withSpan("${className}.update")),`,
+  );
+  builder.addRaw(
+    `      delete: (id) => store.delete(id).pipe(Effect.tap(() => Effect.logDebug(\`[${className}] delete called: \${id}\`))).pipe(Effect.withSpan("${className}.delete")),`,
+  );
+  builder.addRaw('    };');
+  builder.addRaw('  }),');
+  builder.addRaw(');');
+  builder.addBlankLine();
 
   // Auto Layer
-  builder.addRaw("/**")
-  builder.addRaw(" * Auto Layer - Automatic environment detection")
-  builder.addRaw(" *")
-  builder.addRaw(" * Selects appropriate layer based on NODE_ENV.")
-  builder.addRaw(" * Uses Layer.suspend for lazy evaluation - the layer is selected at runtime")
-  builder.addRaw(" * when the layer is first used, not at module import time.")
-  builder.addRaw(" */")
-  builder.addRaw(`export const ${className}Auto = Layer.suspend(() => {`)
-  builder.addRaw("  const nodeEnv = process.env[\"NODE_ENV\"];")
-  builder.addBlankLine()
-  builder.addRaw("  switch (nodeEnv) {")
-  builder.addRaw("    case \"production\":")
-  builder.addRaw(`      return ${className}Live;`)
-  builder.addRaw("    case \"development\":")
-  builder.addRaw(`      return ${className}Dev;`)
-  builder.addRaw("    case \"test\":")
-  builder.addRaw(`      return ${className}Test;`)
-  builder.addRaw("    default:")
-  builder.addRaw(`      return ${className}Dev;`)
-  builder.addRaw("  }")
-  builder.addRaw("});")
-  builder.addBlankLine()
+  builder.addRaw('/**');
+  builder.addRaw(' * Auto Layer - Automatic environment detection');
+  builder.addRaw(' *');
+  builder.addRaw(' * Selects appropriate layer based on NODE_ENV.');
+  builder.addRaw(' * Uses Layer.suspend for lazy evaluation - the layer is selected at runtime');
+  builder.addRaw(' * when the layer is first used, not at module import time.');
+  builder.addRaw(' */');
+  builder.addRaw(`export const ${className}Auto = Layer.suspend(() => {`);
+  builder.addRaw('  switch (env.NODE_ENV) {');
+  builder.addRaw('    case "production":');
+  builder.addRaw(`      return ${className}Live;`);
+  builder.addRaw('    case "development":');
+  builder.addRaw(`      return ${className}Dev;`);
+  builder.addRaw('    case "test":');
+  builder.addRaw(`      return ${className}Test;`);
+  builder.addRaw('    default:');
+  builder.addRaw(`      return ${className}Dev;`);
+  builder.addRaw('  }');
+  builder.addRaw('});');
+  builder.addBlankLine();
 
   // Custom layer factory
   builder.addFunction({
     name: `make${className}Layer`,
     exported: true,
-    jsdoc:
-      `make${className}Layer - Custom layer factory\n\nUse this to create a layer with custom configuration.\nBaseline uses in-memory store - replace with SDK integration.\n\nExample:\n\`\`\`typescript\nconst customLayer = make${className}Layer({\n  apiKey: "custom_key",\n  timeout: 5000,\n});\n\`\`\``,
-    params: [{ name: "config", type: `${className}Config` }],
+    jsdoc: `make${className}Layer - Custom layer factory\n\nUse this to create a layer with custom configuration.\nBaseline uses in-memory store - replace with SDK integration.\n\nExample:\n\`\`\`typescript\nconst customLayer = make${className}Layer({\n  apiKey: "custom_key",\n  timeout: 5000,\n});\n\`\`\``,
+    params: [{ name: 'config', type: `${className}Config` }],
     body: `return Layer.scoped(
   ${className},
   Effect.gen(function* () {
@@ -467,7 +506,7 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
 
     // Register cleanup function
     yield* Effect.addFinalizer(() =>
-      Effect.logInfo(\`[${className}] [CUSTOM] Cleaning up resources\`).pipe(
+      Effect.logInfo("[${className}] [CUSTOM] Cleaning up resources").pipe(
         Effect.andThen(
           Effect.sync(() => {
             // TODO: Add SDK cleanup logic when integrating
@@ -490,8 +529,8 @@ export function generateLayersFile(options: ProviderTemplateOptions) {
       delete: (id) => store.delete(id),
     };
   }),
-);`
-  })
+);`,
+  });
 
-  return builder.toString()
+  return builder.toString();
 }

@@ -6,40 +6,39 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { InfraTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { InfraTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate client layers file for infrastructure service
  */
 export function generateClientLayersFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName, includeClientServer } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName, includeClientServer } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Only generate if client/server mode is enabled
   if (!includeClientServer) {
-    return ""
+    return '';
   }
 
   // File header
   builder.addFileHeader({
     title: `${className} Client Layers`,
-    description:
-      `Layer compositions for client-side dependency injection using Effect.\nBrowser-safe implementations without Node.js APIs or server secrets.\n\nTODO: Customize this file for your service:\n1. Implement client-side service logic\n2. Use browser-safe APIs only (no Node.js modules)\n3. Handle browser storage (localStorage, IndexedDB)\n4. Implement offline support if needed\n5. Add client-specific configuration`,
-    module: `@custom-repo/infra-${fileName}/client`,
-    see: [
-      "https://effect.website/docs/guides/context-management for layer patterns"
-    ]
-  })
+    description: `Layer compositions for client-side dependency injection using Effect.\nBrowser-safe implementations without Node.js APIs or server secrets.\n\nTODO: Customize this file for your service:\n1. Implement client-side service logic\n2. Use browser-safe APIs only (no Node.js modules)\n3. Handle browser storage (localStorage, IndexedDB)\n4. Implement offline support if needed\n5. Add client-specific configuration`,
+    module: `${scope}/infra-${fileName}/client`,
+    see: ['https://effect.website/docs/guides/context-management for layer patterns'],
+  });
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Layer", "Effect", "Option"] },
-    { from: "../service/service", imports: [`${className}Service`] }
-  ])
+    { from: 'effect', imports: ['Layer', 'Effect', 'Option'] },
+    { from: '../service/service', imports: [`${className}Service`] },
+  ]);
 
   // Section: Client Layer
-  builder.addSectionComment("Client Layer (Browser-Safe)")
+  builder.addSectionComment('Client Layer (Browser-Safe)');
 
   builder.addRaw(`// ${className}Service static members for client platform
 // These extend the service tag with platform-specific layers
@@ -105,11 +104,11 @@ ${className}Service.ClientLive = Layer.sync(
       healthCheck: () => Effect.succeed(true),
     };
   }
-);`)
-  builder.addBlankLine()
+);`);
+  builder.addBlankLine();
 
   // Section: Browser Storage Provider
-  builder.addSectionComment("Browser Storage Provider (Optional)")
+  builder.addSectionComment('Browser Storage Provider (Optional)');
 
   builder.addRaw(`/**
  * Browser Storage Provider
@@ -139,8 +138,8 @@ export interface BrowserStorageProvider {
    * Clear all storage
    */
   readonly clear: () => void;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * LocalStorage Provider
@@ -177,11 +176,11 @@ export const localStorageProvider: BrowserStorageProvider = {
       // Ignore errors
     }
   },
-};`)
-  builder.addBlankLine()
+};`);
+  builder.addBlankLine();
 
   builder.addRaw(`// TODO: Add IndexedDB provider if needed for larger storage
-// TODO: Add session storage provider if needed for session-scoped data`)
+// TODO: Add session storage provider if needed for session-scoped data`);
 
-  return builder.toString()
+  return builder.toString();
 }

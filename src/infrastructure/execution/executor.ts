@@ -13,18 +13,20 @@
  * @module monorepo-library-generator/infrastructure/execution/executor
  */
 
-import type { Tree } from "@nx/devkit"
-import { addProjectConfiguration } from "@nx/devkit"
-import { Effect } from "effect"
-import { generateLibraryInfrastructure, type InfrastructureOptions } from "../../utils/infrastructure"
-import { createAdapterFromContext } from "../adapters/factory"
-import type { FileSystemAdapter } from "../adapters/filesystem"
-import { computeMetadata } from "../metadata/computation"
-import type { LibraryMetadata, LibraryType } from "../metadata/types"
-import { createWorkspaceContext } from "../workspace/context"
-import type { InterfaceType } from "../workspace/types"
-import type { CoreGeneratorFn } from "./types"
-import { GeneratorExecutionError } from "./types"
+import type { Tree } from '@nx/devkit';
+import { addProjectConfiguration } from '@nx/devkit';
+import { Effect } from 'effect';
+import { createAdapterFromContext, type FileSystemAdapter } from '../../utils/filesystem';
+import {
+  generateLibraryInfrastructure,
+  type InfrastructureOptions,
+} from '../../utils/infrastructure';
+import { computeMetadata } from '../metadata/computation';
+import type { LibraryMetadata, LibraryType } from '../metadata/types';
+import { createWorkspaceContext } from '../workspace/context';
+import type { InterfaceType } from '../workspace/types';
+import type { CoreGeneratorFn } from './types';
+import { GeneratorExecutionError } from './types';
 
 /**
  * Generator Executor Interface
@@ -35,7 +37,7 @@ import { GeneratorExecutionError } from "./types"
  * the execution flow.
  */
 export interface GeneratorExecutor<TInput, TResult> {
-  readonly execute: (input: TInput) => Effect.Effect<TResult, GeneratorExecutionError>
+  readonly execute: (input: TInput) => Effect.Effect<TResult, GeneratorExecutionError>;
 }
 
 /**
@@ -45,11 +47,11 @@ export interface GeneratorExecutor<TInput, TResult> {
  * by the executor for workspace context creation and metadata computation.
  */
 interface BaseValidatedInput {
-  readonly name: string
-  readonly workspaceRoot?: string | undefined
-  readonly directory?: string | undefined
-  readonly description?: string | undefined
-  readonly tags?: string | undefined
+  readonly name: string;
+  readonly workspaceRoot?: string | undefined;
+  readonly directory?: string | undefined;
+  readonly description?: string | undefined;
+  readonly tags?: string | undefined;
 }
 
 /**
@@ -62,9 +64,9 @@ interface BaseValidatedInput {
  * without losing type information through index signatures.
  */
 type ExtendedInput<TInput extends BaseValidatedInput> = TInput & {
-  readonly __interfaceType?: InterfaceType
-  readonly __nxTree?: Tree
-}
+  readonly __interfaceType?: InterfaceType;
+  readonly __nxTree?: Tree;
+};
 
 /**
  * Create unified executor for any generator
@@ -127,56 +129,53 @@ type ExtendedInput<TInput extends BaseValidatedInput> = TInput & {
  * })
  * ```
  */
-export function createExecutor<
-  TInput extends BaseValidatedInput,
-  TCoreOptions
->(
+export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
   libraryType: LibraryType,
   coreGenerator: CoreGeneratorFn<TCoreOptions>,
-  inputToOptions: (validated: TInput, metadata: LibraryMetadata) => TCoreOptions
+  inputToOptions: (validated: TInput, metadata: LibraryMetadata) => TCoreOptions,
 ) {
   return {
     execute: (validated: ExtendedInput<TInput>) =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         // 1. Create workspace context
-        const interfaceType = validated.__interfaceType ?? "cli"
-        const context = yield* createWorkspaceContext(
-          validated.workspaceRoot,
-          interfaceType
-        ).pipe(
+        const interfaceType = validated.__interfaceType ?? 'cli';
+        const context = yield* createWorkspaceContext(validated.workspaceRoot, interfaceType).pipe(
           Effect.mapError(
             (error) =>
               new GeneratorExecutionError({
                 message: `Failed to detect workspace context: ${error.message}`,
-                cause: error
-              })
-          )
-        )
+                cause: error,
+              }),
+          ),
+        );
 
         // 2. Create appropriate adapter
-        const adapter = yield* createAdapterFromContext(
-          context,
-          validated.__nxTree
-        ).pipe(
+        const adapter = yield* createAdapterFromContext(context, validated.__nxTree).pipe(
           Effect.mapError(
             (error) =>
               new GeneratorExecutionError({
                 message: `Failed to create filesystem adapter: ${error.message}`,
-                cause: error
-              })
-          )
-        )
+                cause: error,
+              }),
+          ),
+        );
 
         // 3. Compute library metadata
         const metadataInput = {
           name: validated.name,
           libraryType,
-          ...(validated.directory !== undefined && { directory: validated.directory }),
-          ...(validated.description !== undefined && { description: validated.description }),
-          ...(validated.tags !== undefined && { additionalTags: validated.tags.split(",").map((t) => t.trim()) })
-        }
+          ...(validated.directory !== undefined && {
+            directory: validated.directory,
+          }),
+          ...(validated.description !== undefined && {
+            description: validated.description,
+          }),
+          ...(validated.tags !== undefined && {
+            additionalTags: validated.tags.split(',').map((t) => t.trim()),
+          }),
+        };
 
-        const metadata = computeMetadata(metadataInput, context)
+        const metadata = computeMetadata(metadataInput, context);
 
         // 4. Generate infrastructure files
         const infraOptions: InfrastructureOptions = {
@@ -186,56 +185,49 @@ export function createExecutor<
           packageName: metadata.packageName,
           libraryType,
           description: metadata.description,
-          platform: "node",
+          platform: 'node',
           offsetFromRoot: metadata.offsetFromRoot,
-          tags: metadata.tags.split(",").map((t) => t.trim())
-        }
+          tags: metadata.tags.split(',').map((t) => t.trim()),
+        };
 
-        const infraResult = yield* generateLibraryInfrastructure(
-          adapter,
-          infraOptions
-        ).pipe(
+        const infraResult = yield* generateLibraryInfrastructure(adapter, infraOptions).pipe(
           Effect.mapError(
             (error) =>
               new GeneratorExecutionError({
                 message: `Failed to generate infrastructure files: ${String(error)}`,
-                cause: error
-              })
-          )
-        )
+                cause: error,
+              }),
+          ),
+        );
 
         // 4b. Register project with Nx if in Nx mode
         if (infraResult.requiresNxRegistration && infraResult.projectConfig && validated.__nxTree) {
-          addProjectConfiguration(
-            validated.__nxTree,
-            infraResult.projectConfig.name,
-            {
-              root: infraResult.projectConfig.root,
-              projectType: "library" as const,
-              sourceRoot: infraResult.projectConfig.sourceRoot,
-              tags: infraResult.projectConfig.tags,
-              targets: infraResult.projectConfig.targets
-            }
-          )
+          addProjectConfiguration(validated.__nxTree, infraResult.projectConfig.name, {
+            root: infraResult.projectConfig.root,
+            projectType: 'library' as const,
+            sourceRoot: infraResult.projectConfig.sourceRoot,
+            tags: infraResult.projectConfig.tags,
+            targets: infraResult.projectConfig.targets,
+          });
         }
 
         // 5. Generate domain-specific files using core generator
         // TypeScript now knows the exact type of validated (TInput)
         // No type assertion needed - the generic preserves the specific type!
-        const coreOptions = inputToOptions(validated, metadata)
+        const coreOptions = inputToOptions(validated, metadata);
         const result = yield* coreGenerator(adapter, coreOptions).pipe(
           Effect.mapError(
             (error) =>
               new GeneratorExecutionError({
                 message: `Failed to generate domain files: ${String(error)}`,
-                cause: error
-              })
-          )
-        )
+                cause: error,
+              }),
+          ),
+        );
 
-        return result
-      })
-  }
+        return result;
+      }),
+  };
 }
 
 /**
@@ -249,9 +241,9 @@ export function executeGenerator<TOptions>(
   metadata: LibraryMetadata,
   coreGenerator: CoreGeneratorFn<TOptions>,
   coreOptions: TOptions,
-  infrastructureOptions?: Partial<InfrastructureOptions>
+  infrastructureOptions?: Partial<InfrastructureOptions>,
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     // Generate infrastructure files
     const infraOptions: InfrastructureOptions = {
       projectRoot: metadata.projectRoot,
@@ -260,24 +252,21 @@ export function executeGenerator<TOptions>(
       packageName: metadata.packageName,
       libraryType: metadata.libraryType,
       description: metadata.description,
-      platform: "node",
+      platform: 'node',
       offsetFromRoot: metadata.offsetFromRoot,
-      tags: metadata.tags.split(",").map((t) => t.trim()),
-      ...infrastructureOptions
-    }
+      tags: metadata.tags.split(',').map((t) => t.trim()),
+      ...infrastructureOptions,
+    };
 
-    yield* generateLibraryInfrastructure(
-      adapter,
-      infraOptions
-    ).pipe(
+    yield* generateLibraryInfrastructure(adapter, infraOptions).pipe(
       Effect.mapError(
         (error) =>
           new GeneratorExecutionError({
             message: `Failed to generate infrastructure: ${String(error)}`,
-            cause: error
-          })
-      )
-    )
+            cause: error,
+          }),
+      ),
+    );
 
     // Generate domain files
     const result = yield* coreGenerator(adapter, coreOptions).pipe(
@@ -285,11 +274,11 @@ export function executeGenerator<TOptions>(
         (error) =>
           new GeneratorExecutionError({
             message: `Failed to generate domain files: ${String(error)}`,
-            cause: error
-          })
-      )
-    )
+            cause: error,
+          }),
+      ),
+    );
 
-    return result
-  })
+    return result;
+  });
 }

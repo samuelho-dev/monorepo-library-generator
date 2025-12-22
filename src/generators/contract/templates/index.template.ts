@@ -11,10 +11,10 @@ import {
   addConditionalExports,
   type ConditionalExport,
   type ExportSection,
-  generateExportSections
-} from "../../../utils/code-generation/barrel-exports"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ContractTemplateOptions } from "../../../utils/shared/types"
+  generateExportSections,
+} from '../../../utils/templates';
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ContractTemplateOptions } from '../../../utils/types';
 
 /**
  * Generate index.ts file for contract library
@@ -30,81 +30,80 @@ import type { ContractTemplateOptions } from "../../../utils/shared/types"
  * - RPC schemas (if RPC enabled)
  */
 export function generateIndexFile(options: ContractTemplateOptions) {
-  const { className, includeCQRS, includeRPC } = options
-  const builder = new TypeScriptBuilder()
+  const { className, includeCQRS, includeRPC } = options;
+  const builder = new TypeScriptBuilder();
 
   // File header
-  let headerDesc =
-    `Domain interfaces, ports, entities, errors, and events for ${className}.\n\nThis library defines the contract between layers:\n- Entities: Domain models with runtime validation\n- Errors: Domain and repository errors\n- Ports: Repository and service interfaces\n- Events: Domain events for event-driven architecture`
+  let headerDesc = `Domain interfaces, ports, entities, errors, and events for ${className}.\n\nThis library defines the contract between layers:\n- Entities: Domain models with runtime validation\n- Errors: Domain and repository errors\n- Ports: Repository and service interfaces\n- Events: Domain events for event-driven architecture`;
 
   if (includeCQRS) {
     headerDesc +=
-      "\n- Commands: CQRS write operations\n- Queries: CQRS read operations\n- Projections: CQRS read models"
+      '\n- Commands: CQRS write operations\n- Queries: CQRS read operations\n- Projections: CQRS read models';
   }
 
   if (includeRPC) {
-    headerDesc += "\n- RPC: Request/Response schemas for network boundaries"
+    headerDesc += '\n- RPC: Request/Response schemas for network boundaries';
   }
 
   builder.addFileHeader({
     title: `${className} Contract Library`,
-    description: headerDesc
-  })
+    description: headerDesc,
+  });
 
   // Core exports section
   const coreExports: Array<ExportSection> = [
     {
-      title: "Core Exports",
+      title: 'Core Exports',
       items: [
-        { comment: "Errors", exports: "export * from \"./lib/errors\";" },
+        { comment: 'Errors', exports: 'export * from "./lib/errors";' },
         {
-          comment: "Entities (barrel export - use granular imports for tree-shaking)",
-          exports: "export * from \"./lib/entities\";"
+          comment: 'Entity types from database schema',
+          exports: 'export * from "./lib/types/database";',
         },
         {
-          comment: "Ports (Repository and Service interfaces)",
-          exports: "export * from \"./lib/ports\";"
+          comment: 'Ports (Repository and Service interfaces)',
+          exports: 'export * from "./lib/ports";',
         },
-        { comment: "Events", exports: "export * from \"./lib/events\";" }
-      ]
-    }
-  ]
+        { comment: 'Events', exports: 'export * from "./lib/events";' },
+      ],
+    },
+  ];
 
-  generateExportSections(builder, coreExports)
+  generateExportSections(builder, coreExports);
 
   // Conditional exports (CQRS and RPC)
   const conditionalExports: Array<ConditionalExport> = [
     {
       condition: includeCQRS,
-      sectionTitle: "CQRS Exports",
+      sectionTitle: 'CQRS Exports',
       exports: [
         {
-          comment: "Commands (Write operations)",
-          exports: "export * from \"./lib/commands\";"
+          comment: 'Commands (Write operations)',
+          exports: 'export * from "./lib/commands";',
         },
         {
-          comment: "Queries (Read operations)",
-          exports: "export * from \"./lib/queries\";"
+          comment: 'Queries (Read operations)',
+          exports: 'export * from "./lib/queries";',
         },
         {
-          comment: "Projections (Read models)",
-          exports: "export * from \"./lib/projections\";"
-        }
-      ]
+          comment: 'Projections (Read models)',
+          exports: 'export * from "./lib/projections";',
+        },
+      ],
     },
     {
       condition: includeRPC,
-      sectionTitle: "RPC Exports",
+      sectionTitle: 'RPC Exports',
       exports: [
         {
-          comment: "RPC Request/Response schemas",
-          exports: "export * from \"./lib/rpc\";"
-        }
-      ]
-    }
-  ]
+          comment: 'RPC Request/Response schemas',
+          exports: 'export * from "./lib/rpc";',
+        },
+      ],
+    },
+  ];
 
-  addConditionalExports(builder, conditionalExports)
+  addConditionalExports(builder, conditionalExports);
 
-  return builder.toString()
+  return builder.toString();
 }

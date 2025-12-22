@@ -6,40 +6,39 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { InfraTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { InfraTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate edge layers file for infrastructure service
  */
 export function generateEdgeLayersFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName, includeEdge } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName, includeEdge } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Only generate if edge mode is enabled
   if (!includeEdge) {
-    return ""
+    return '';
   }
 
   // File header
   builder.addFileHeader({
     title: `${className} Edge Layers`,
-    description:
-      `Layer compositions for edge runtime dependency injection using Effect.\nEdge runtime-safe implementations (no Node.js APIs, limited memory).\n\nEdge runtime environments include:\n- Vercel Edge Functions\n- Cloudflare Workers\n- Deno Deploy\n- AWS Lambda@Edge\n\nTODO: Customize this file for your service:\n1. Implement edge-runtime-safe service logic\n2. Use only edge-compatible APIs (no Node.js fs, crypto)\n3. Minimize memory and CPU usage\n4. Consider request/response handling\n5. Add edge-specific configuration`,
-    module: `@custom-repo/infra-${fileName}/edge`,
-    see: [
-      "https://effect.website/docs/guides/context-management for layer patterns"
-    ]
-  })
+    description: `Layer compositions for edge runtime dependency injection using Effect.\nEdge runtime-safe implementations (no Node.js APIs, limited memory).\n\nEdge runtime environments include:\n- Vercel Edge Functions\n- Cloudflare Workers\n- Deno Deploy\n- AWS Lambda@Edge\n\nTODO: Customize this file for your service:\n1. Implement edge-runtime-safe service logic\n2. Use only edge-compatible APIs (no Node.js fs, crypto)\n3. Minimize memory and CPU usage\n4. Consider request/response handling\n5. Add edge-specific configuration`,
+    module: `${scope}/infra-${fileName}/edge`,
+    see: ['https://effect.website/docs/guides/context-management for layer patterns'],
+  });
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Layer", "Effect"] },
-    { from: "../service/service", imports: [`${className}Service`] }
-  ])
+    { from: 'effect', imports: ['Layer', 'Effect'] },
+    { from: '../service/service', imports: [`${className}Service`] },
+  ]);
 
   // Section: Edge Layer
-  builder.addSectionComment("Edge Layer")
+  builder.addSectionComment('Edge Layer');
 
   builder.addRaw(`/**
  * Edge Layer
@@ -66,16 +65,16 @@ export const ${className}ServiceEdgeLayers = Layer.effect(
       // TODO: Implement edge methods
     };
   })
-);`)
-  builder.addBlankLine()
+);`);
+  builder.addBlankLine();
 
   // Section: Edge Runtime Detection
-  builder.addSectionComment("Edge Runtime Detection")
+  builder.addSectionComment('Edge Runtime Detection');
 
   builder.addFunction({
-    name: "detectEdgeRuntime",
+    name: 'detectEdgeRuntime',
     params: [],
-    returnType: "string | null",
+    returnType: 'string | null',
     body: `// Vercel Edge Functions
 if (typeof globalThis !== 'undefined' && 'Web' in globalThis) {
   if (process.env.VERCEL_ENV) {
@@ -99,18 +98,17 @@ if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
 }
 
 return null;`,
-    jsdoc:
-      `Detect current edge runtime\n\n@returns Runtime name or null if not in edge environment\n\n@example\n\`\`\`typescript\nconst runtime = detectEdgeRuntime();\n// 'vercel' | 'cloudflare' | 'deno' | 'lambda-edge' | null\n\`\`\``
-  })
+    jsdoc: `Detect current edge runtime\n\n@returns Runtime name or null if not in edge environment\n\n@example\n\`\`\`typescript\nconst runtime = detectEdgeRuntime();\n// 'vercel' | 'cloudflare' | 'deno' | 'lambda-edge' | null\n\`\`\``,
+  });
 
   // Section: Edge-Safe Utilities
-  builder.addSectionComment("Edge-Safe Utilities")
+  builder.addSectionComment('Edge-Safe Utilities');
 
   builder.addRaw(`/**
  * Check if running in edge runtime
  */
-export const isEdgeRuntime = (): boolean => detectEdgeRuntime() !== null;`)
-  builder.addBlankLine()
+export const isEdgeRuntime = (): boolean => detectEdgeRuntime() !== null;`);
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Get edge runtime configuration
@@ -129,25 +127,25 @@ export interface EdgeConfig {
 
   /** Cache duration (seconds) */
   readonly cacheDurationSec: number;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   builder.addConst(
-    "defaultEdgeConfig",
+    'defaultEdgeConfig',
     `{
   timeoutMs: 10_000, // 10 seconds
   maxResponseSize: 1_000_000, // 1MB
   enableCaching: true,
   cacheDurationSec: 60, // 1 minute
 }`,
-    "EdgeConfig",
+    'EdgeConfig',
     true,
-    "Default edge configuration"
-  )
+    'Default edge configuration',
+  );
 
   builder.addRaw(`// TODO: Add edge-specific middleware if needed
 // TODO: Add request/response handlers for edge functions
-// TODO: Add streaming support for large responses`)
+// TODO: Add streaming support for large responses`);
 
-  return builder.toString()
+  return builder.toString();
 }

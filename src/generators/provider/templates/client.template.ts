@@ -6,24 +6,23 @@
  * @module monorepo-library-generator/provider-templates
  */
 
-import { generateStandardErrorExports } from "../../../utils/code-generation/barrel-exports"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../utils/shared/types"
+import { generateStandardErrorExports } from '../../../utils/templates';
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ProviderTemplateOptions } from '../../../utils/types';
 
 /**
  * Generate client.ts file for provider service
  */
 export function generateClientFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, packageName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, packageName } = options;
 
   // File header
   builder.addFileHeader({
     title: `${packageName}/client`,
-    description:
-      `Client-side exports for ${className} provider.\nContains browser-compatible service implementations and types.`,
-    module: `${packageName}/client`
-  })
+    description: `Client-side exports for ${className} provider.\nContains browser-compatible service implementations and types.`,
+    module: `${packageName}/client`,
+  });
 
   builder.addRaw(`// Service implementation (client-compatible)
 export { ${className} } from "./lib/service";
@@ -32,15 +31,15 @@ export { ${className} } from "./lib/service";
 export type * from "./lib/types";
 
 // Errors
-`)
+`);
 
   builder.addRaw(
     generateStandardErrorExports({
       className,
-      importPath: "./lib/errors",
-      unionTypeSuffix: "ServiceError"
-    })
-  )
+      importPath: './lib/errors',
+      unionTypeSuffix: 'ServiceError',
+    }),
+  );
 
-  return builder.toString()
+  return builder.toString();
 }

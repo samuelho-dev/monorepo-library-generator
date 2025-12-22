@@ -6,19 +6,19 @@
  * @module monorepo-library-generator/data-access/repository/operations-index-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate repository/operations/index.ts file
  *
  * Creates barrel export for all operation modules
  */
-export function generateRepositoryOperationsIndexFile(
-  options: DataAccessTemplateOptions
-) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+export function generateRepositoryOperationsIndexFile(options: DataAccessTemplateOptions) {
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Repository Operations`,
@@ -30,12 +30,12 @@ For optimal bundle size, import specific operations:
 
 For convenience, import from this barrel:
   import { createOperations, readOperations } from '@scope/data-access-${fileName}/repository/operations'`,
-    module: `@custom-repo/data-access-${fileName}/repository/operations`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/repository/operations`,
+  });
+  builder.addBlankLine();
 
-  builder.addSectionComment("Re-export all operations")
-  builder.addBlankLine()
+  builder.addSectionComment('Re-export all operations');
+  builder.addBlankLine();
 
   builder.addRaw(`// Create operations
 export type { Create${className}Operations } from "./create"
@@ -55,7 +55,7 @@ export { deleteOperations } from "./delete"
 
 // Aggregate operations
 export type { Aggregate${className}Operations } from "./aggregate"
-export { aggregateOperations } from "./aggregate"`)
+export { aggregateOperations } from "./aggregate"`);
 
-  return builder.toString()
+  return builder.toString();
 }

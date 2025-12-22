@@ -6,9 +6,9 @@
  */
 
 export interface EntityFileOptions {
-  readonly entityName: string
-  readonly className: string
-  readonly packageName: string
+  readonly entityName: string;
+  readonly className: string;
+  readonly packageName: string;
 }
 
 /**
@@ -18,7 +18,7 @@ export interface EntityFileOptions {
  * helper types, and validation functions.
  */
 export function generateEntityFile(options: EntityFileOptions) {
-  const { entityName } = options
+  const { entityName } = options;
 
   return `import { Brand, Schema } from "effect";
 
@@ -74,5 +74,5 @@ export const parse${entityName} = Schema.decodeUnknown(${entityName});
  * Encode ${entityName} to plain object
  */
 export const encode${entityName} = Schema.encode(${entityName});
-`
+`;
 }

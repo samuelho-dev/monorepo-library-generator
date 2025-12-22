@@ -11,10 +11,10 @@
 import {
   type ExportSection,
   generateExportSections,
-  generateStandardErrorExports
-} from "../../../utils/code-generation/barrel-exports"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../utils/shared/types"
+  generateStandardErrorExports,
+} from '../../../utils/templates';
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ProviderTemplateOptions } from '../../../utils/types';
 
 /**
  * Generate index.ts for provider library
@@ -29,8 +29,8 @@ import type { ProviderTemplateOptions } from "../../../utils/shared/types"
  * This follows Effect-TS patterns for external service adapters.
  */
 export function generateIndexFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, packageName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, packageName } = options;
 
   // File header
   builder.addFileHeader({
@@ -46,98 +46,98 @@ Effect 3.0+ Pattern:
 
 Usage:
   import { ${className} } from '${packageName}';
-  const layer = ${className}.Live;`
-  })
+  const layer = ${className}.Live;`,
+  });
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Error exports using standard utility
-  builder.addSectionComment("Error Types")
-  builder.addBlankLine()
+  builder.addSectionComment('Error Types');
+  builder.addBlankLine();
   builder.addRaw(
     generateStandardErrorExports({
       className,
-      importPath: "./lib/errors",
-      unionTypeSuffix: "ServiceError"
-    })
-  )
+      importPath: './lib/errors',
+      unionTypeSuffix: 'ServiceError',
+    }),
+  );
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Type exports
   const typeExports: Array<ExportSection> = [
     {
-      title: "Type Definitions",
+      title: 'Type Definitions',
       items: [
         {
-          comment: "Service types and interfaces",
-          exports: "export type * from \"./lib/types\";"
-        }
-      ]
-    }
-  ]
+          comment: 'Service types and interfaces',
+          exports: 'export type * from "./lib/types";',
+        },
+      ],
+    },
+  ];
 
-  generateExportSections(builder, typeExports)
+  generateExportSections(builder, typeExports);
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Service and layers exports
-  builder.addSectionComment("Service Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment('Service Implementation');
+  builder.addBlankLine();
 
-  builder.addComment(`${className} - External service adapter`)
-  builder.addComment("")
-  builder.addComment("Effect 3.0+ Pattern: Context.Tag with static layer members")
-  builder.addComment("Access layers via static members:")
-  builder.addComment(`  - ${className}.Live  (production - wraps real SDK)`)
-  builder.addComment(`  - ${className}.Test  (testing - mock implementation)`)
-  builder.addComment("")
-  builder.addComment("Migration from pre-3.0 pattern:")
-  builder.addComment(`  OLD: import { ${className}Live } from '...';`)
-  builder.addComment(`  NEW: import { ${className} } from '...';`)
-  builder.addComment(`       const layer = ${className}.Live;`)
-  builder.addBlankLine()
+  builder.addComment(`${className} - External service adapter`);
+  builder.addComment('');
+  builder.addComment('Effect 3.0+ Pattern: Context.Tag with static layer members');
+  builder.addComment('Access layers via static members:');
+  builder.addComment(`  - ${className}.Live  (production - wraps real SDK)`);
+  builder.addComment(`  - ${className}.Test  (testing - mock implementation)`);
+  builder.addComment('');
+  builder.addComment('Migration from pre-3.0 pattern:');
+  builder.addComment(`  OLD: import { ${className}Live } from '...';`);
+  builder.addComment(`  NEW: import { ${className} } from '...';`);
+  builder.addComment(`       const layer = ${className}.Live;`);
+  builder.addBlankLine();
 
-  builder.addRaw("export { " + className + " } from \"./lib/service\";\n")
+  builder.addRaw('export { ' + className + ' } from "./lib/service";\n');
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Validation utilities
-  builder.addSectionComment("Validation Utilities")
-  builder.addBlankLine()
-  builder.addComment("Input validation functions")
-  builder.addRaw("export * from \"./lib/validation\";\n")
+  builder.addSectionComment('Validation Utilities');
+  builder.addBlankLine();
+  builder.addComment('Input validation functions');
+  builder.addRaw('export * from "./lib/validation";\n');
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Layer exports
-  builder.addSectionComment("Layer Compositions")
-  builder.addBlankLine()
-  builder.addComment("Pre-wired layer compositions with dependencies")
-  builder.addComment("Use these if you want automatic dependency wiring:")
-  builder.addComment(`  - ${className}Live  (production layer with dependencies)`)
-  builder.addComment(`  - ${className}Test  (test layer with mocks)`)
-  builder.addComment(`  - ${className}Auto  (automatic selection based on NODE_ENV)`)
-  builder.addBlankLine()
-  builder.addRaw("export * from \"./lib/layers\";\n")
+  builder.addSectionComment('Layer Compositions');
+  builder.addBlankLine();
+  builder.addComment('Pre-wired layer compositions with dependencies');
+  builder.addComment('Use these if you want automatic dependency wiring:');
+  builder.addComment(`  - ${className}Live  (production layer with dependencies)`);
+  builder.addComment(`  - ${className}Test  (test layer with mocks)`);
+  builder.addComment(`  - ${className}Auto  (automatic selection based on NODE_ENV)`);
+  builder.addBlankLine();
+  builder.addRaw('export * from "./lib/layers";\n');
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Usage example
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  builder.addComment("Usage Example")
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  builder.addComment("")
-  builder.addComment("import { Effect, Layer } from 'effect';")
-  builder.addComment(`import { ${className}, ${className}Live } from '${packageName}';`)
-  builder.addComment("")
-  builder.addComment("const program = Effect.gen(function* () {")
-  builder.addComment(`  const service = yield* ${className};`)
-  builder.addComment("  // Use service methods...")
-  builder.addComment("});")
-  builder.addComment("")
-  builder.addComment(`const runnable = program.pipe(Effect.provide(${className}Live));`)
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  builder.addComment('Usage Example');
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  builder.addComment('');
+  builder.addComment("import { Effect, Layer } from 'effect';");
+  builder.addComment(`import { ${className}, ${className}Live } from '${packageName}';`);
+  builder.addComment('');
+  builder.addComment('const program = Effect.gen(function* () {');
+  builder.addComment(`  const service = yield* ${className};`);
+  builder.addComment('  // Use service methods...');
+  builder.addComment('});');
+  builder.addComment('');
+  builder.addComment(`const runnable = program.pipe(Effect.provide(${className}Live));`);
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-  return builder.toString()
+  return builder.toString();
 }

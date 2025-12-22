@@ -1,11 +1,9 @@
-export const generateSubServiceTypesTemplate = (options: {
-  className: string
-}) =>
+export const generateSubServiceTypesTemplate = (options: { className: string }) =>
   `/**
  * ${options.className} Type Definitions
  */
 
-import { Schema } from "@effect/schema"
+import { Schema } from "effect"
 
 /**
  * ${options.className} configuration schema
@@ -33,4 +31,4 @@ export const ${options.className}Result = Schema.Struct({
  * ${options.className} result type
  */
 export type ${options.className}Result = typeof ${options.className}Result.Type
-`
+`;

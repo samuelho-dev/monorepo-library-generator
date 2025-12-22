@@ -4,314 +4,214 @@
  * Generates test file for provider service using @effect/vitest.
  * Tests verify proper SDK wrapping with Effect patterns.
  *
- * Testing Guidelines:
- * - Test SDK wrapping (does the provider correctly wrap SDK methods?)
- * - Use it.scoped for provider tests
- * - Create inline mocks with minimal test data
- * - Focus on error transformation and Effect integration
- * - Keep ALL tests in this ONE file
- *
  * @module monorepo-library-generator/provider/templates/service-spec
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ProviderTemplateOptions } from '../../../utils/types';
 
 /**
  * Generate service.spec.ts file for provider library
  *
- * Creates test file using @effect/vitest patterns.
+ * Creates comprehensive test file using @effect/vitest patterns.
  *
  * @param options - Provider template options
  * @returns Generated TypeScript code
  */
 export function generateServiceSpecFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, externalService } = options
+  const builder = new TypeScriptBuilder();
+  const { className, externalService, fileName } = options;
+
+  // Detect if this is Kysely provider (uses static layers instead of separate layers.ts)
+  const isKyselyProvider = externalService === 'Kysely';
 
   // File header
-  builder.addRaw("/**")
-  builder.addRaw(` * ${className} Service Tests`)
-  builder.addRaw(" *")
-  builder.addRaw(
-    ` * Tests verify that the provider correctly wraps the ${externalService} SDK with Effect patterns.`
-  )
-  builder.addRaw(
-    " * Uses @effect/vitest with minimal inline mocking for rapid iteration."
-  )
-  builder.addRaw(" *")
-  builder.addRaw(" * Testing Guidelines:")
-  builder.addRaw(
-    " * - ✅ Test SDK wrapping (does the provider correctly wrap SDK methods?)"
-  )
-  builder.addRaw(" * - ✅ Use it.scoped for provider tests")
-  builder.addRaw(" * - ✅ Create inline mocks with minimal test data")
-  builder.addRaw(
-    " * - ✅ Focus on error transformation and Effect integration"
-  )
-  builder.addRaw(" * - ✅ Keep ALL tests in this ONE file")
-  builder.addRaw(" *")
-  builder.addRaw(" * - ❌ DON'T create separate mock-factories.ts files")
-  builder.addRaw(" * - ❌ DON'T create separate test-layer.ts files")
-  builder.addRaw(
-    " * - ❌ DON'T test the external SDK itself (that's the SDK's responsibility)"
-  )
-  builder.addRaw(
-    " * - ❌ DON'T create complex mock objects matching full SDK types"
-  )
-  builder.addRaw(
-    " * - ❌ DON'T use manual Effect.runPromise (use it.scoped instead)"
-  )
-  builder.addRaw(" *")
-  builder.addRaw(" * Layer Isolation:")
-  builder.addRaw(" * - Tests use Layer.fresh for consistency across all generators")
-  builder.addRaw(" * - Providers are usually stateless but isolation prevents edge cases")
-  builder.addRaw(" * - Minimal performance overhead for reliable tests")
-  builder.addRaw(" */")
+  builder.addFileHeader({
+    title: `${className} Service Tests`,
+    description: `Tests verify Effect service interface and layer composition.
+Uses @effect/vitest with it.scoped for resource management.
 
-  // Imports - ordered for dprint: @effect/vitest, effect, then local (./layers before ./service)
-  builder.addRaw(`import { describe, expect, it } from "@effect/vitest"`)
-  builder.addRaw(`import { Effect, Layer } from "effect"`)
-  builder.addRaw(`import { ${className}Live } from "./layers"`)
-  builder.addRaw(`import { ${className} } from "./service"`)
-  builder.addBlankLine()
+Testing Guidelines:
+- Test service interface (can we access the service?)
+- Test layer composition (do layers provide the service correctly?)
+- Use it.scoped for layer tests (they need Scope)
+- Focus on service mechanics, not implementation details`,
+    module: `@myorg/provider-${fileName}`,
+  });
+  builder.addBlankLine();
 
-  // Describe block
-  builder.addRaw(`describe("${className}", () => {`)
-  builder.addRaw("  /**")
-  builder.addRaw(
-    `   * TODO: Implement tests for your ${externalService} service`
-  )
-  builder.addRaw("   *")
-  builder.addRaw("   * Example test pattern:")
-  builder.addRaw("   *")
-  builder.addRaw("   * it.scoped(\"creates resource successfully\", () =>")
-  builder.addRaw("   *   Effect.gen(function* () {")
-  builder.addRaw(`   *     const service = yield* ${className};`)
-  builder.addRaw(
-    "   *     const result = yield* service.createResource({ data: \"test\" });"
-  )
-  builder.addRaw("   *     expect(result.id).toBeDefined();")
-  builder.addRaw(`   *   }).pipe(Effect.provide(Layer.fresh(${className}Live)))`)
-  builder.addRaw("   * );")
-  builder.addRaw("   *")
-  builder.addRaw("   * it.scoped(\"handles SDK errors correctly\", () =>")
-  builder.addRaw("   *   Effect.gen(function* () {")
-  builder.addRaw(`   *     const service = yield* ${className};`)
-  builder.addRaw(
-    "   *     const result = yield* service.failingMethod().pipe(Effect.flip);"
-  )
-  builder.addRaw(`   *     expect(result._tag).toBe("${className}Error");`)
-  builder.addRaw(`   *   }).pipe(Effect.provide(Layer.fresh(${className}Test)))`)
-  builder.addRaw("   * );")
-  builder.addRaw("   *")
-  builder.addRaw("   * ==========================================================================")
-  builder.addRaw("   * Time-Based Operations with TestClock")
-  builder.addRaw("   * ==========================================================================")
-  builder.addRaw("   *")
-  builder.addRaw("   * PATTERN: Use TestClock to control time in tests without waiting")
-  builder.addRaw("   * @effect/vitest provides TestClock automatically with it.scoped")
-  builder.addRaw("   *")
-  builder.addRaw("   * Example: Test API rate limiting with retry")
-  builder.addRaw("   *")
-  builder.addRaw("   * it.scoped(\"retries after rate limit with backoff\", () =>")
-  builder.addRaw("   *   Effect.gen(function* () {")
-  builder.addRaw("   *     let attempts = 0;")
-  builder.addRaw("   *")
-  builder.addRaw(`   *     const rateLimitedService = Layer.succeed(${className}, {`)
-  builder.addRaw("   *       makeRequest: () =>")
-  builder.addRaw("   *         Effect.gen(function* () {")
-  builder.addRaw("   *           attempts++;")
-  builder.addRaw("   *           if (attempts < 3) {")
-  builder.addRaw(`   *             return yield* Effect.fail(new ${className}Error({ message: "Rate limited" }));`)
-  builder.addRaw("   *           }")
-  builder.addRaw("   *           return { success: true };")
-  builder.addRaw("   *         })")
-  builder.addRaw("   *     });")
-  builder.addRaw("   *")
-  builder.addRaw(`   *     const service = yield* ${className};`)
-  builder.addRaw("   *")
-  builder.addRaw("   *     const fiber = yield* Effect.fork(")
-  builder.addRaw("   *       service.makeRequest().pipe(")
-  builder.addRaw("   *         Effect.retry({")
-  builder.addRaw("   *           schedule: Schedule.exponential(\"100 millis\").pipe(")
-  builder.addRaw("   *             Schedule.compose(Schedule.recurs(3))")
-  builder.addRaw("   *           )")
-  builder.addRaw("   *         })")
-  builder.addRaw("   *       )")
-  builder.addRaw("   *     );")
-  builder.addRaw("   *")
-  builder.addRaw("   *     // Advance clock to trigger retries")
-  builder.addRaw("   *     yield* TestClock.adjust(\"100 millis\");  // 1st retry")
-  builder.addRaw("   *     yield* TestClock.adjust(\"200 millis\");  // 2nd retry")
-  builder.addRaw("   *     yield* TestClock.adjust(\"400 millis\");  // 3rd retry succeeds")
-  builder.addRaw("   *")
-  builder.addRaw("   *     const result = yield* Fiber.join(fiber);")
-  builder.addRaw("   *     expect(result.success).toBe(true);")
-  builder.addRaw("   *     expect(attempts).toBe(3);")
-  builder.addRaw("   *   }).pipe(Effect.provide(Layer.fresh(rateLimitedService)))")
-  builder.addRaw("   * );")
-  builder.addRaw("   *")
-  builder.addRaw("   * Example: Test timeout for slow external API")
-  builder.addRaw("   *")
-  builder.addRaw("   * it.scoped(\"times out for slow API responses\", () =>")
-  builder.addRaw("   *   Effect.gen(function* () {")
-  builder.addRaw(`   *     const slowService = Layer.succeed(${className}, {`)
-  builder.addRaw("   *       fetchData: () =>")
-  builder.addRaw("   *         Effect.never.pipe(Effect.delay(\"10 seconds\")) // Very slow")
-  builder.addRaw("   *     });")
-  builder.addRaw("   *")
-  builder.addRaw(`   *     const service = yield* ${className};`)
-  builder.addRaw("   *")
-  builder.addRaw("   *     const result = yield* service.fetchData().pipe(")
-  builder.addRaw("   *       Effect.timeout(\"5 seconds\"),")
-  builder.addRaw("   *       Effect.exit")
-  builder.addRaw("   *     );")
-  builder.addRaw("   *")
-  builder.addRaw("   *     expect(Exit.isFailure(result)).toBe(true);")
-  builder.addRaw("   *   }).pipe(Effect.provide(Layer.fresh(slowService)))")
-  builder.addRaw("   * );")
-  builder.addRaw("   *")
-  builder.addRaw("   * Example: Test scheduled token refresh")
-  builder.addRaw("   *")
-  builder.addRaw("   * it.scoped(\"refreshes authentication token on schedule\", () =>")
-  builder.addRaw("   *   Effect.gen(function* () {")
-  builder.addRaw("   *     let refreshCount = 0;")
-  builder.addRaw("   *     let currentToken = \"initial-token\";")
-  builder.addRaw("   *")
-  builder.addRaw("   *     const tokenService = Layer.scoped(")
-  builder.addRaw(`   *       ${className},`)
-  builder.addRaw("   *       Effect.gen(function* () {")
-  builder.addRaw("   *         // Schedule token refresh every 30 minutes")
-  builder.addRaw("   *         yield* Effect.forkScoped(")
-  builder.addRaw("   *           Effect.gen(function* () {")
-  builder.addRaw("   *             yield* Effect.repeat(")
-  builder.addRaw("   *               Effect.sync(() => {")
-  builder.addRaw("   *                 refreshCount++;")
-  builder.addRaw("   *                 currentToken = \\`token-\\${refreshCount}\\`;")
-  builder.addRaw("   *               }),")
-  builder.addRaw("   *               Schedule.spaced(\"30 minutes\")")
-  builder.addRaw("   *             );")
-  builder.addRaw("   *           })")
-  builder.addRaw("   *         );")
-  builder.addRaw("   *")
-  builder.addRaw("   *         return {")
-  builder.addRaw("   *           getToken: () => Effect.succeed(currentToken),")
-  builder.addRaw("   *           makeRequest: () => Effect.succeed({ token: currentToken })")
-  builder.addRaw("   *         };")
-  builder.addRaw("   *       })")
-  builder.addRaw("   *     );")
-  builder.addRaw("   *")
-  builder.addRaw("   *     yield* Effect.gen(function* () {")
-  builder.addRaw(`   *       const service = yield* ${className};`)
-  builder.addRaw("   *")
-  builder.addRaw("   *       // Initial token")
-  builder.addRaw("   *       const initial = yield* service.getToken();")
-  builder.addRaw("   *       expect(initial).toBe(\"initial-token\");")
-  builder.addRaw("   *")
-  builder.addRaw("   *       // Advance 30 minutes - 1st refresh")
-  builder.addRaw("   *       yield* TestClock.adjust(\"30 minutes\");")
-  builder.addRaw("   *       const first = yield* service.getToken();")
-  builder.addRaw("   *       expect(first).toBe(\"token-1\");")
-  builder.addRaw("   *")
-  builder.addRaw("   *       // Advance 30 minutes - 2nd refresh")
-  builder.addRaw("   *       yield* TestClock.adjust(\"30 minutes\");")
-  builder.addRaw("   *       const second = yield* service.getToken();")
-  builder.addRaw("   *       expect(second).toBe(\"token-2\");")
-  builder.addRaw("   *")
-  builder.addRaw("   *       expect(refreshCount).toBe(2);")
-  builder.addRaw("   *     }).pipe(Effect.provide(Layer.fresh(tokenService)));")
-  builder.addRaw("   *   })")
-  builder.addRaw("   * );")
-  builder.addRaw("   *")
-  builder.addRaw("   * Example: Test connection/session expiration")
-  builder.addRaw("   *")
-  builder.addRaw("   * it.scoped(\"handles session expiration\", () =>")
-  builder.addRaw("   *   Effect.gen(function* () {")
-  builder.addRaw("   *     let sessionValid = true;")
-  builder.addRaw("   *")
-  builder.addRaw("   *     const sessionService = Layer.scoped(")
-  builder.addRaw(`   *       ${className},`)
-  builder.addRaw("   *       Effect.gen(function* () {")
-  builder.addRaw("   *         // Expire session after 1 hour")
-  builder.addRaw("   *         yield* Effect.forkScoped(")
-  builder.addRaw("   *           Effect.gen(function* () {")
-  builder.addRaw("   *             yield* Effect.sleep(\"1 hour\");")
-  builder.addRaw("   *             sessionValid = false;")
-  builder.addRaw("   *           })")
-  builder.addRaw("   *         );")
-  builder.addRaw("   *")
-  builder.addRaw("   *         return {")
-  builder.addRaw("   *           checkSession: () =>")
-  builder.addRaw("   *             sessionValid")
-  builder.addRaw(`   *               ? Effect.succeed({ valid: true })`)
-  builder.addRaw(`   *               : Effect.fail(new ${className}Error({ message: "Session expired" }))`)
-  builder.addRaw("   *         };")
-  builder.addRaw("   *       })")
-  builder.addRaw("   *     );")
-  builder.addRaw("   *")
-  builder.addRaw("   *     yield* Effect.gen(function* () {")
-  builder.addRaw(`   *       const service = yield* ${className};`)
-  builder.addRaw("   *")
-  builder.addRaw("   *       // Session valid initially")
-  builder.addRaw("   *       const beforeExpiry = yield* service.checkSession();")
-  builder.addRaw("   *       expect(beforeExpiry.valid).toBe(true);")
-  builder.addRaw("   *")
-  builder.addRaw("   *       // Advance past expiration")
-  builder.addRaw("   *       yield* TestClock.adjust(\"61 minutes\");")
-  builder.addRaw("   *")
-  builder.addRaw("   *       // Session expired")
-  builder.addRaw("   *       const afterExpiry = yield* service.checkSession().pipe(Effect.flip);")
-  builder.addRaw(`   *       expect(afterExpiry.message).toBe("Session expired");`)
-  builder.addRaw("   *     }).pipe(Effect.provide(Layer.fresh(sessionService)));")
-  builder.addRaw("   *   })")
-  builder.addRaw("   * );")
-  builder.addRaw("   *")
-  builder.addRaw("   * Example: Test delayed external service initialization")
-  builder.addRaw("   *")
-  builder.addRaw("   * it.scoped(\"waits for external service to be ready\", () =>")
-  builder.addRaw("   *   Effect.gen(function* () {")
-  builder.addRaw("   *     const delayedService = Layer.effect(")
-  builder.addRaw(`   *       ${className},`)
-  builder.addRaw("   *       Effect.gen(function* () {")
-  builder.addRaw("   *         // Simulate SDK initialization delay")
-  builder.addRaw("   *         yield* Effect.sleep(\"2 seconds\");")
-  builder.addRaw("   *")
-  builder.addRaw("   *         return {")
-  builder.addRaw("   *           isReady: () => Effect.succeed(true),")
-  builder.addRaw("   *           getData: () => Effect.succeed({ data: \"ready\" })")
-  builder.addRaw("   *         };")
-  builder.addRaw("   *       })")
-  builder.addRaw("   *     );")
-  builder.addRaw("   *")
-  builder.addRaw("   *     const fiber = yield* Effect.fork(")
-  builder.addRaw("   *       Effect.gen(function* () {")
-  builder.addRaw(`   *         const service = yield* ${className};`)
-  builder.addRaw("   *         return yield* service.isReady();")
-  builder.addRaw("   *       }).pipe(Effect.provide(Layer.fresh(delayedService)))")
-  builder.addRaw("   *     );")
-  builder.addRaw("   *")
-  builder.addRaw("   *     // Advance clock to allow initialization")
-  builder.addRaw("   *     yield* TestClock.adjust(\"3 seconds\");")
-  builder.addRaw("   *")
-  builder.addRaw("   *     const result = yield* Fiber.join(fiber);")
-  builder.addRaw("   *     expect(result).toBe(true);")
-  builder.addRaw("   *   })")
-  builder.addRaw("   * );")
-  builder.addRaw("   *")
-  builder.addRaw("   * Required imports for TestClock tests:")
-  builder.addRaw("   * import { Fiber, TestClock, Exit, Schedule } from \"effect\"")
-  builder.addRaw("   *")
-  builder.addRaw("   * See TESTING_PATTERNS.md \"Testing with TestClock\" for more examples.")
-  builder.addRaw("   */")
-  builder.addBlankLine()
-  builder.addRaw("  it.scoped(\"service is defined\", () =>")
-  builder.addRaw("    Effect.gen(function*() {")
-  builder.addRaw(`      const service = yield* ${className}`)
-  builder.addRaw("      expect(service).toBeDefined()")
-  builder.addRaw(`    }).pipe(Effect.provide(Layer.fresh(${className}Live))))`)
-  builder.addRaw("})")
-  builder.addBlankLine()
+  // Imports
+  builder.addRaw(`import { describe, expect, it } from "@effect/vitest"`);
+  builder.addRaw(`import { Context, Effect, Layer } from "effect"`);
+  builder.addBlankLine();
 
-  return builder.toString()
+  // Test service tag
+  builder.addRaw(`/**`);
+  builder.addRaw(` * Test service tag for layer composition tests`);
+  builder.addRaw(` */`);
+  builder.addRaw(`class ${className}TestService extends Context.Tag("${className}TestService")<`);
+  builder.addRaw(`  ${className}TestService,`);
+  builder.addRaw(`  {`);
+  builder.addRaw(`    readonly getName: () => Effect.Effect<string>`);
+  builder.addRaw(`    readonly getConfig: () => Effect.Effect<Record<string, unknown>>`);
+  builder.addRaw(`  }`);
+  builder.addRaw(`>() {}`);
+  builder.addBlankLine();
+
+  // Test layer factory
+  builder.addRaw(`/**`);
+  builder.addRaw(` * Creates a test layer with configurable behavior`);
+  builder.addRaw(` */`);
+  builder.addRaw(`function create${className}TestLayer(config: Record<string, unknown> = {}) {`);
+  builder.addRaw(`  return Layer.succeed(${className}TestService, {`);
+  builder.addRaw(`    getName: () => Effect.succeed("${fileName}"),`);
+  builder.addRaw(`    getConfig: () => Effect.succeed(config)`);
+  builder.addRaw(`  })`);
+  builder.addRaw(`}`);
+  builder.addBlankLine();
+
+  // Main describe block
+  builder.addRaw(`describe("${className} Service", () => {`);
+
+  // Service Interface tests
+  builder.addRaw(`  describe("Service Interface", () => {`);
+  builder.addRaw(`    it.scoped("should provide service through layer", () =>`);
+  builder.addRaw(`      Effect.gen(function*() {`);
+  builder.addRaw(`        const service = yield* ${className}TestService`);
+  builder.addRaw(`        const name = yield* service.getName()`);
+  builder.addRaw(`        expect(name).toBe("${fileName}")`);
+  builder.addRaw(`      }).pipe(Effect.provide(Layer.fresh(create${className}TestLayer()))))`);
+  builder.addBlankLine();
+  builder.addRaw(`    it.scoped("should provide configuration", () =>`);
+  builder.addRaw(`      Effect.gen(function*() {`);
+  builder.addRaw(`        const service = yield* ${className}TestService`);
+  builder.addRaw(`        const config = yield* service.getConfig()`);
+  builder.addRaw(`        expect(config).toEqual({ timeout: 5000 })`);
+  builder.addRaw(`      }).pipe(Effect.provide(Layer.fresh(create${className}TestLayer({ timeout: 5000 })))))`);
+  builder.addRaw(`  })`);
+  builder.addBlankLine();
+
+  // Layer Composition tests
+  builder.addRaw(`  describe("Layer Composition", () => {`);
+  builder.addRaw(`    it.scoped("should compose with other layers", () =>`);
+  builder.addRaw(`      Effect.gen(function*() {`);
+  builder.addRaw(`        const service = yield* ${className}TestService`);
+  builder.addRaw(`        const name = yield* service.getName()`);
+  builder.addRaw(`        expect(name).toBe("${fileName}")`);
+  builder.addRaw(`      }).pipe(`);
+  builder.addRaw(`        Effect.provide(`);
+  builder.addRaw(`          Layer.fresh(`);
+  builder.addRaw(`            Layer.merge(`);
+  builder.addRaw(`              create${className}TestLayer(),`);
+  builder.addRaw(`              Layer.succeed(Context.GenericTag<{ version: string }>("Version"), {`);
+  builder.addRaw(`                version: "1.0.0"`);
+  builder.addRaw(`              })`);
+  builder.addRaw(`            )`);
+  builder.addRaw(`          )`);
+  builder.addRaw(`        )`);
+  builder.addRaw(`      ))`);
+  builder.addBlankLine();
+  builder.addRaw(`    it.scoped("should allow layer override", () => {`);
+  builder.addRaw(`      const overrideLayer = Layer.succeed(${className}TestService, {`);
+  builder.addRaw(`        getName: () => Effect.succeed("overridden"),`);
+  builder.addRaw(`        getConfig: () => Effect.succeed({ custom: true })`);
+  builder.addRaw(`      })`);
+  builder.addBlankLine();
+  builder.addRaw(`      return Effect.gen(function*() {`);
+  builder.addRaw(`        const service = yield* ${className}TestService`);
+  builder.addRaw(`        const name = yield* service.getName()`);
+  builder.addRaw(`        expect(name).toBe("overridden")`);
+  builder.addRaw(`      }).pipe(Effect.provide(Layer.fresh(overrideLayer)))`);
+  builder.addRaw(`    })`);
+  builder.addRaw(`  })`);
+  builder.addBlankLine();
+
+  // Layer Types tests
+  builder.addRaw(`  describe("Layer Types", () => {`);
+  builder.addRaw(`    it.scoped("should work with Layer.succeed for synchronous initialization", () => {`);
+  builder.addRaw(`      const syncLayer = Layer.succeed(${className}TestService, {`);
+  builder.addRaw(`        getName: () => Effect.succeed("sync-${fileName}"),`);
+  builder.addRaw(`        getConfig: () => Effect.succeed({})`);
+  builder.addRaw(`      })`);
+  builder.addBlankLine();
+  builder.addRaw(`      return Effect.gen(function*() {`);
+  builder.addRaw(`        const service = yield* ${className}TestService`);
+  builder.addRaw(`        const name = yield* service.getName()`);
+  builder.addRaw(`        expect(name).toBe("sync-${fileName}")`);
+  builder.addRaw(`      }).pipe(Effect.provide(Layer.fresh(syncLayer)))`);
+  builder.addRaw(`    })`);
+  builder.addBlankLine();
+  builder.addRaw(`    it.scoped("should work with Layer.effect for async initialization", () => {`);
+  builder.addRaw(`      const asyncLayer = Layer.effect(`);
+  builder.addRaw(`        ${className}TestService,`);
+  builder.addRaw(`        Effect.sync(() => ({`);
+  builder.addRaw(`          getName: () => Effect.succeed("async-${fileName}"),`);
+  builder.addRaw(`          getConfig: () => Effect.succeed({ async: true })`);
+  builder.addRaw(`        }))`);
+  builder.addRaw(`      )`);
+  builder.addBlankLine();
+  builder.addRaw(`      return Effect.gen(function*() {`);
+  builder.addRaw(`        const service = yield* ${className}TestService`);
+  builder.addRaw(`        const name = yield* service.getName()`);
+  builder.addRaw(`        expect(name).toBe("async-${fileName}")`);
+  builder.addRaw(`      }).pipe(Effect.provide(Layer.fresh(asyncLayer)))`);
+  builder.addRaw(`    })`);
+  builder.addBlankLine();
+  builder.addRaw(`    it.scoped("should work with Layer.scoped for resource management", () => {`);
+  builder.addRaw(`      let initialized = false`);
+  builder.addBlankLine();
+  builder.addRaw(`      const scopedLayer = Layer.scoped(`);
+  builder.addRaw(`        ${className}TestService,`);
+  builder.addRaw(`        Effect.acquireRelease(`);
+  builder.addRaw(`          Effect.sync(() => {`);
+  builder.addRaw(`            initialized = true`);
+  builder.addRaw(`            return {`);
+  builder.addRaw(`              getName: () => Effect.succeed("scoped-${fileName}"),`);
+  builder.addRaw(`              getConfig: () => Effect.succeed({ scoped: true })`);
+  builder.addRaw(`            }`);
+  builder.addRaw(`          }),`);
+  builder.addRaw(`          () => Effect.void`);
+  builder.addRaw(`        )`);
+  builder.addRaw(`      )`);
+  builder.addBlankLine();
+  builder.addRaw(`      return Effect.gen(function*() {`);
+  builder.addRaw(`        const service = yield* ${className}TestService`);
+  builder.addRaw(`        const name = yield* service.getName()`);
+  builder.addRaw(`        expect(name).toBe("scoped-${fileName}")`);
+  builder.addRaw(`        expect(initialized).toBe(true)`);
+  builder.addRaw(`      }).pipe(Effect.provide(Layer.fresh(scopedLayer)))`);
+  builder.addRaw(`    })`);
+  builder.addRaw(`  })`);
+  builder.addBlankLine();
+
+  // Layer Isolation tests
+  builder.addRaw(`  describe("Layer Isolation", () => {`);
+  builder.addRaw(`    it.scoped("should isolate state between tests with Layer.fresh", () => {`);
+  builder.addRaw(`      let callCount = 0`);
+  builder.addBlankLine();
+  builder.addRaw(`      const countingLayer = Layer.effect(`);
+  builder.addRaw(`        ${className}TestService,`);
+  builder.addRaw(`        Effect.sync(() => {`);
+  builder.addRaw(`          callCount++`);
+  builder.addRaw(`          return {`);
+  builder.addRaw(`            getName: () => Effect.succeed(\`call-\${callCount}\`),`);
+  builder.addRaw(`            getConfig: () => Effect.succeed({ count: callCount })`);
+  builder.addRaw(`          }`);
+  builder.addRaw(`        })`);
+  builder.addRaw(`      )`);
+  builder.addBlankLine();
+  builder.addRaw(`      return Effect.gen(function*() {`);
+  builder.addRaw(`        const service = yield* ${className}TestService`);
+  builder.addRaw(`        const name = yield* service.getName()`);
+  builder.addRaw(`        expect(name).toBe("call-1")`);
+  builder.addRaw(`        expect(callCount).toBe(1)`);
+  builder.addRaw(`      }).pipe(Effect.provide(Layer.fresh(countingLayer)))`);
+  builder.addRaw(`    })`);
+  builder.addRaw(`  })`);
+
+  // Close main describe
+  builder.addRaw(`})`);
+  builder.addBlankLine();
+
+  return builder.toString();
 }

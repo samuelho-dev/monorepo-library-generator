@@ -11,10 +11,11 @@
  * @see docs/NX_STANDARDS.md for export conventions
  */
 
-import { generateExportSections } from "../../../utils/code-generation/barrel-exports"
-import type { ExportSection } from "../../../utils/code-generation/barrel-exports"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { FeatureTemplateOptions } from "../../../utils/shared/types"
+import type { ExportSection } from '../../../utils/templates';
+import { generateExportSections } from '../../../utils/templates';
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { FeatureTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate index.ts for feature library
@@ -29,8 +30,9 @@ import type { FeatureTemplateOptions } from "../../../utils/shared/types"
  * @see https://tkdodo.eu/blog/please-stop-using-barrel-files
  */
 export function generateIndexFile(options: FeatureTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, includeRPC } = options
+  const builder = new TypeScriptBuilder();
+  const { className, includeRPC } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // File header
   builder.addFileHeader({
@@ -41,89 +43,91 @@ This is the main entry point for the feature library.
 It exports only universal types and errors that are safe for all platforms.
 
 Platform-specific exports:
-  - import { ... } from '@custom-repo/feature-{name}/server'  # Server-side service
-  - import { ... } from '@custom-repo/feature-{name}/client'  # Client-side hooks/atoms
-  - import { ... } from '@custom-repo/feature-{name}/edge'    # Edge middleware
+  - import { ... } from '${scope}/feature-{name}/server'  # Server-side service
+  - import { ... } from '${scope}/feature-{name}/client'  # Client-side hooks/atoms
+  - import { ... } from '${scope}/feature-{name}/edge'    # Edge middleware
 
 Best Practice: Use explicit platform imports to ensure proper tree-shaking
-and avoid bundling server code in client bundles.`
-  })
+and avoid bundling server code in client bundles.`,
+  });
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Core exports
   const coreExports: Array<ExportSection> = [
     {
-      title: "Shared Types",
+      title: 'Shared Types',
       items: [
         {
-          comment: "Domain types (universal)",
-          exports: "export type * from \"./lib/shared/types\";"
-        }
-      ]
+          comment: 'Domain types (universal)',
+          exports: 'export type * from "./lib/shared/types";',
+        },
+      ],
     },
     {
-      title: "Error Types",
+      title: 'Error Types',
       items: [
         {
-          comment: "Error definitions (universal)",
-          exports: "export type * from \"./lib/shared/errors\";"
-        }
-      ]
-    }
-  ]
+          comment: 'Error definitions (universal)',
+          exports: 'export type * from "./lib/shared/errors";',
+        },
+      ],
+    },
+  ];
 
-  generateExportSections(builder, coreExports)
+  generateExportSections(builder, coreExports);
 
   // Conditional RPC exports (if enabled)
   if (includeRPC) {
-    builder.addBlankLine()
-    builder.addSectionComment("RPC Definitions (Universal)")
-    builder.addBlankLine()
-    builder.addComment("RPC schemas are universal and can be used on any platform")
-    builder.addRaw("export type * from \"./lib/rpc/rpc\";\n")
+    builder.addBlankLine();
+    builder.addSectionComment('RPC Definitions (Universal)');
+    builder.addBlankLine();
+    builder.addComment('RPC schemas are universal and can be used on any platform');
+    builder.addRaw('export type * from "./lib/rpc/rpc";\n');
   }
 
   // Platform export guidance
-  builder.addBlankLine()
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  builder.addComment("Platform-Specific Imports")
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  builder.addComment("")
-  builder.addComment("For platform-specific code, use explicit imports:")
-  builder.addComment("")
-  builder.addComment("SERVER (Node.js):")
-  builder.addComment(`  import { ${className}Service } from '@custom-repo/feature-${toKebabCase(className)}/server';`)
-  builder.addComment("")
-  builder.addComment("CLIENT (Browser):")
-  builder.addComment(`  import { use${className} } from '@custom-repo/feature-${toKebabCase(className)}/client';`)
-  builder.addComment("")
-  builder.addComment("EDGE (Cloudflare Workers, Vercel Edge):")
+  builder.addBlankLine();
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  builder.addComment('Platform-Specific Imports');
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  builder.addComment('');
+  builder.addComment('For platform-specific code, use explicit imports:');
+  builder.addComment('');
+  builder.addComment('SERVER (Node.js):');
   builder.addComment(
-    `  import { ${toLowerFirst(className)}Middleware } from '@custom-repo/feature-${toKebabCase(className)}/edge';`
-  )
-  builder.addComment("")
-  builder.addComment("This pattern ensures:")
-  builder.addComment("  ✓ No server code in client bundles")
-  builder.addComment("  ✓ Optimal tree-shaking")
-  builder.addComment("  ✓ Clear platform boundaries")
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    `  import { ${className}Service } from '${scope}/feature-${toKebabCase(className)}/server';`,
+  );
+  builder.addComment('');
+  builder.addComment('CLIENT (Browser):');
+  builder.addComment(
+    `  import { use${className} } from '${scope}/feature-${toKebabCase(className)}/client';`,
+  );
+  builder.addComment('');
+  builder.addComment('EDGE (Cloudflare Workers, Vercel Edge):');
+  builder.addComment(
+    `  import { ${toLowerFirst(className)}Middleware } from '${scope}/feature-${toKebabCase(className)}/edge';`,
+  );
+  builder.addComment('');
+  builder.addComment('This pattern ensures:');
+  builder.addComment('  ✓ No server code in client bundles');
+  builder.addComment('  ✓ Optimal tree-shaking');
+  builder.addComment('  ✓ Clear platform boundaries');
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-  return builder.toString()
+  return builder.toString();
 }
 
 /**
  * Convert PascalCase to kebab-case
  */
 function toKebabCase(str: string) {
-  return str
-    .replace(/([a-z])([A-Z])/g, "$1-$2")
-    .toLowerCase()
+  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
 /**
  * Convert PascalCase to camelCase
  */
 function toLowerFirst(str: string) {
-  return str.charAt(0).toLowerCase() + str.slice(1)
+  return str.charAt(0).toLowerCase() + str.slice(1);
 }

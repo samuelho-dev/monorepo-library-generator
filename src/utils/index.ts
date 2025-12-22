@@ -1,34 +1,45 @@
-// Generator utilities
-export * from "./generators"
-export * from "./library-metadata"
-export * from "./naming"
+/**
+ * Utils - Consolidated Exports
+ *
+ * Single entry point for all utility modules.
+ * Each module is now a flat file at the root of utils/.
+ *
+ * @module monorepo-library-generator/utils
+ */
 
-// Infrastructure generation
-export * from "./infrastructure"
-export * from "./workspace-detection"
+// Types - All type definitions
+export * from './types';
 
-// Template utilities
-export * from "./templates"
+// Build - Build configuration, platforms, tsconfig, exports
+export * from './build';
 
-// TypeScript configuration utilities
-export * from "./tsconfig"
+// Filesystem - All filesystem adapters (Effect, Tree, dotfile generation)
+export * from './filesystem';
 
-// Build configuration utilities
-export * from "./build-config"
+// Templates - Template utilities, error templates, type templates, barrel exports
+export * from './templates';
 
-// Platform utilities
-export * from "./platforms"
+// Code Builder - TypeScriptBuilder and EffectPatterns
+export * from './code-builder';
 
-// Filesystem adapters
-export * from "./effect-fs-adapter"
-export * from "./filesystem-adapter"
-export * from "./tree-adapter"
+// Dotfiles - Dotfile management and file splitter utilities
+export * from './dotfiles';
 
-// Code generation utilities
-export * from "./code-generation/barrel-exports"
-export * from "./code-generation/error-templates"
-export * from "./code-generation/type-templates"
-// Note: effect-patterns not exported to avoid TaggedErrorConfig naming conflict with error-templates
+// Naming - Naming convention utilities
+export * from './naming';
 
-// Shared types
-export * from "./shared/types"
+// Workspace - Workspace detection and configuration
+export * from './workspace-config';
+export * from './workspace-detection';
+
+// Generators - Generator utilities
+export * from './generators';
+
+// Infrastructure - Library infrastructure generation
+export * from './infrastructure';
+
+// Library Metadata - Library metadata computation
+export * from './library-metadata';
+
+// Infra-Provider Mapping - Maps infra concerns to providers
+export * from './infra-provider-mapping';

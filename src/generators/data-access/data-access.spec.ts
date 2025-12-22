@@ -10,542 +10,526 @@
  * - Phase 5: File Structure Validation (directory structure, exports)
  */
 
-import type { Tree } from "@nx/devkit"
-import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing"
-import dataAccessGenerator from "./data-access"
-import type { DataAccessGeneratorSchema } from "./schema"
+import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import dataAccessGenerator from './data-access';
+import type { DataAccessGeneratorSchema } from './schema';
 
-describe("Data Access Library Generator", () => {
-  let tree: Tree
-  const projectRoot = "libs/data-access/product"
-  const projectName = "data-access-product"
+describe('Data Access Library Generator', () => {
+  let tree: Tree;
+  const projectRoot = 'libs/data-access/product';
+  const projectName = 'data-access-product';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace()
-  })
+    tree = createTreeWithEmptyWorkspace();
+  });
 
   // ============================================================================
   // Phase 1: Foundation Tests
   // ============================================================================
   // These tests verify the generator creates the base structure and essential files
 
-  describe("Phase 1: Foundation", () => {
-    it("should generate project.json with correct configuration", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+  describe('Phase 1: Foundation', () => {
+    it('should generate project.json with correct configuration', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/project.json`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/project.json`)).toBe(true);
 
-      const projectJson = JSON.parse(
-        tree.read(`${projectRoot}/project.json`, "utf-8") || ""
-      )
+      const projectJson = JSON.parse(tree.read(`${projectRoot}/project.json`, 'utf-8') || '');
 
-      expect(projectJson.name).toBe(projectName)
-      expect(projectJson.sourceRoot).toBe(`${projectRoot}/src`)
-      expect(projectJson.projectType).toBe("library")
-      expect(projectJson.targets.build).toBeDefined()
-      expect(projectJson.targets.test).toBeDefined()
-    })
+      expect(projectJson.name).toBe(projectName);
+      expect(projectJson.sourceRoot).toBe(`${projectRoot}/src`);
+      expect(projectJson.projectType).toBe('library');
+      expect(projectJson.targets.build).toBeDefined();
+      expect(projectJson.targets.test).toBeDefined();
+    });
 
-    it("should generate package.json with correct metadata", async () => {
+    it('should generate package.json with correct metadata', async () => {
       const schema: DataAccessGeneratorSchema = {
-        name: "product"
-      }
+        name: 'product',
+      };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/package.json`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/package.json`)).toBe(true);
 
-      const packageJson = JSON.parse(
-        tree.read(`${projectRoot}/package.json`, "utf-8") || ""
-      )
+      const packageJson = JSON.parse(tree.read(`${projectRoot}/package.json`, 'utf-8') || '');
 
-      expect(packageJson.name).toBe("@myorg/data-access-product")
-      expect(packageJson.version).toBeDefined()
-    })
+      // Check for package name (npm scope may vary based on workspace config)
+      expect(packageJson.name).toContain('data-access-product');
+      expect(packageJson.version).toBeDefined();
+    });
 
-    it("should generate TypeScript configuration files", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate TypeScript configuration files', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Verify project.json exists as an indicator of proper generation
-      expect(tree.exists(`${projectRoot}/project.json`)).toBe(true)
-    })
+      expect(tree.exists(`${projectRoot}/project.json`)).toBe(true);
+    });
 
-    it("should generate README with documentation", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate README with documentation', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/README.md`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/README.md`)).toBe(true);
 
-      const readme = tree.read(`${projectRoot}/README.md`, "utf-8") || ""
+      const readme = tree.read(`${projectRoot}/README.md`, 'utf-8') || '';
       // README is generated by generateLibraryFiles utility
-      expect(readme.length).toBeGreaterThan(0)
-    })
+      expect(readme.length).toBeGreaterThan(0);
+    });
 
-    it("should generate CLAUDE.md with customization guide", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate CLAUDE.md with customization guide', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/CLAUDE.md`)).toBe(true)
-    })
-  })
+      expect(tree.exists(`${projectRoot}/CLAUDE.md`)).toBe(true);
+    });
+  });
 
   // ============================================================================
   // Phase 2: Repository Pattern Tests
   // ============================================================================
   // These tests verify the generator creates the core repository pattern templates
 
-  describe("Phase 2: Repository Pattern", () => {
-    it("should generate repository with granular structure", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+  describe('Phase 2: Repository Pattern', () => {
+    it('should generate repository with granular structure', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // New granular structure
-      expect(tree.exists(`${projectRoot}/src/lib/repository/repository.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/create.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/read.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/index.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/repository/repository.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/create.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/read.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/index.ts`)).toBe(true);
 
-      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
+      const repositoryContent =
+        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || '';
 
       // Should have ProductRepository Context.Tag
-      expect(repositoryContent).toContain("ProductRepository")
-      expect(repositoryContent).toContain("Context.Tag")
+      expect(repositoryContent).toContain('ProductRepository');
+      expect(repositoryContent).toContain('Context.Tag');
 
-      const readContent = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, "utf-8") || ""
+      const readContent =
+        tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || '';
       // Should have standard repository read methods
-      expect(readContent).toContain("findById")
-    })
+      expect(readContent).toContain('findById');
+    });
 
-    it("should generate repository layers (Live, Test, Dev, Auto)", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate repository layers (Live, Test)', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Static members are in repository.ts (Effect 3.0+ pattern)
-      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
-      expect(repositoryContent).toContain("static readonly Live")
-      expect(repositoryContent).toContain("static readonly Test")
-      expect(repositoryContent).toContain("static readonly Dev")
-      expect(repositoryContent).toContain("static readonly Auto")
+      const repositoryContent =
+        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || '';
+      expect(repositoryContent).toContain('static readonly Live');
+      expect(repositoryContent).toContain('static readonly Test');
 
-      // Layers file should export them
-      const layersContent = tree.read(`${projectRoot}/src/lib/server/layers.ts`, "utf-8") || ""
-      expect(layersContent).toContain("ProductRepositoryLive")
-      expect(layersContent).toContain("ProductRepositoryTest")
-    })
+      // Layers file should export them with Auto environment selection
+      const layersContent = tree.read(`${projectRoot}/src/lib/server/layers.ts`, 'utf-8') || '';
+      expect(layersContent).toContain('ProductRepositoryLive');
+      expect(layersContent).toContain('ProductRepositoryTest');
+      expect(layersContent).toContain('ProductRepositoryAuto');
+    });
 
-    it("should generate repository test layer with in-memory implementation", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate repository test layer with in-memory implementation', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Test layer is defined as static member in repository.ts
-      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
-      expect(repositoryContent).toContain("static readonly Test")
-      expect(repositoryContent).toContain("Layer.succeed") // Stub-based test implementation
+      const repositoryContent =
+        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || '';
+      expect(repositoryContent).toContain('static readonly Test');
+      expect(repositoryContent).toContain('Layer.succeed'); // Stub-based test implementation
 
       // Check operations files for methods
-      const readOps = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, "utf-8") || ""
-      expect(readOps).toContain("findById")
+      const readOps =
+        tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || '';
+      expect(readOps).toContain('findById');
 
-      const createOps = tree.read(`${projectRoot}/src/lib/repository/operations/create.ts`, "utf-8") || ""
-      expect(createOps).toContain("create")
-    })
+      const createOps =
+        tree.read(`${projectRoot}/src/lib/repository/operations/create.ts`, 'utf-8') || '';
+      expect(createOps).toContain('create');
+    });
 
-    it("should generate server-side layers in lib/server/layers.ts", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate server-side layers in lib/server/layers.ts', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/src/lib/server/layers.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/server/layers.ts`)).toBe(true);
 
-      const content = tree.read(`${projectRoot}/src/lib/server/layers.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/server/layers.ts`, 'utf-8') || '';
 
-      // Should have Live, Test, and Dev layers
-      expect(content).toContain("Live")
-      expect(content).toContain("Test")
-      expect(content).toContain("Dev")
-    })
+      // Should have Live, Test, and Auto layers (environment-based selection)
+      expect(content).toContain('Live');
+      expect(content).toContain('Test');
+      expect(content).toContain('Auto');
+    });
 
-    it("should have TODO comments for customization", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should have documentation comments for customization', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      // Check layers file for TODO comments
-      const layersContent = tree.read(`${projectRoot}/src/lib/server/layers.ts`, "utf-8") || ""
+      // Check layers file for JSDoc comments
+      const layersContent = tree.read(`${projectRoot}/src/lib/server/layers.ts`, 'utf-8') || '';
 
-      // Should have TODO comments for developer guidance
-      expect(layersContent).toContain("TODO")
-    })
-  })
+      // Should have documentation for developer guidance
+      expect(layersContent).toContain('Production environment layer');
+      expect(layersContent).toContain('Testing environment layer');
+    });
+  });
 
   // ============================================================================
   // Phase 3: Shared Layer Tests
   // ============================================================================
   // These tests verify the generator creates shared types, errors, and validation
 
-  describe("Phase 3: Shared Layer", () => {
-    it("should generate Data.TaggedError error types", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+  describe('Phase 3: Shared Layer', () => {
+    it('should generate Data.TaggedError error types', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/src/lib/shared/errors.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/shared/errors.ts`)).toBe(true);
 
-      const content = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, 'utf-8') || '';
 
       // Should import Data from effect
-      expect(content).toContain("import { Data } from 'effect'")
+      expect(content).toContain("import { Data } from 'effect'");
       // Should have domain-specific error classes using Data.TaggedError
-      expect(content).toContain("class ProductError extends Data.TaggedError")
-      expect(content).toContain(
-        "class ProductNotFoundError extends Data.TaggedError"
-      )
-      expect(content).toContain(
-        "class ProductValidationError extends Data.TaggedError"
-      )
-      expect(content).toContain(
-        "class ProductConflictError extends Data.TaggedError"
-      )
-      expect(content).toContain(
-        "class ProductInternalError extends Data.TaggedError"
-      )
+      expect(content).toContain('class ProductError extends Data.TaggedError');
+      expect(content).toContain('class ProductNotFoundError extends Data.TaggedError');
+      expect(content).toContain('class ProductValidationError extends Data.TaggedError');
+      expect(content).toContain('class ProductConflictError extends Data.TaggedError');
+      expect(content).toContain('class ProductInternalError extends Data.TaggedError');
       // Should have 8 standard error types (including ConfigError, ConnectionError, TimeoutError)
-      expect(content).toContain(
-        "class ProductConfigError extends Data.TaggedError"
-      )
-      expect(content).toContain(
-        "class ProductConnectionError extends Data.TaggedError"
-      )
-      expect(content).toContain(
-        "class ProductTimeoutError extends Data.TaggedError"
-      )
-    })
+      expect(content).toContain('class ProductConfigError extends Data.TaggedError');
+      expect(content).toContain('class ProductConnectionError extends Data.TaggedError');
+      expect(content).toContain('class ProductTimeoutError extends Data.TaggedError');
+    });
 
-    it("should generate error type guards using _tag property", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate error type guards using _tag property', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const content = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, 'utf-8') || '';
 
       // Should have type guard functions
-      expect(content).toContain("function isProductNotFoundError")
-      expect(content).toContain("function isProductValidationError")
-      expect(content).toContain("function isProductConflictError")
-      expect(content).toContain("function isProductConfigError")
-      expect(content).toContain("function isProductConnectionError")
-      expect(content).toContain("function isProductTimeoutError")
-      expect(content).toContain("function isProductInternalError")
+      expect(content).toContain('function isProductNotFoundError');
+      expect(content).toContain('function isProductValidationError');
+      expect(content).toContain('function isProductConflictError');
+      expect(content).toContain('function isProductConfigError');
+      expect(content).toContain('function isProductConnectionError');
+      expect(content).toContain('function isProductTimeoutError');
+      expect(content).toContain('function isProductInternalError');
       // Type guards should use _tag property for Data.TaggedError
-      expect(content).toContain("error._tag === 'ProductNotFoundError'")
-      expect(content).toContain("error._tag === 'ProductValidationError'")
-    })
+      expect(content).toContain("error._tag === 'ProductNotFoundError'");
+      expect(content).toContain("error._tag === 'ProductValidationError'");
+    });
 
-    it("should generate shared types (entity, filters, pagination)", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate shared types (entity, filters, pagination)', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/src/lib/shared/types.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/shared/types.ts`)).toBe(true);
 
-      const content = tree.read(`${projectRoot}/src/lib/shared/types.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/shared/types.ts`, 'utf-8') || '';
 
       // Should have entity type
-      expect(content).toContain("Product")
+      expect(content).toContain('Product');
       // Should have filter types
-      expect(content).toContain("Filter")
+      expect(content).toContain('Filter');
       // Should have pagination types
-      const hasPagination = content.includes("Pagination") ||
-        content.includes("skip") ||
-        content.includes("limit")
-      expect(hasPagination).toBe(true)
+      const hasPagination =
+        content.includes('Pagination') || content.includes('skip') || content.includes('limit');
+      expect(hasPagination).toBe(true);
       // Should have input types
-      expect(content).toContain("CreateInput")
-      expect(content).toContain("UpdateInput")
-    })
+      expect(content).toContain('CreateInput');
+      expect(content).toContain('UpdateInput');
+    });
 
-    it("should generate validation helpers", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate validation helpers', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/src/lib/shared/validation.ts`)).toBe(
-        true
-      )
+      expect(tree.exists(`${projectRoot}/src/lib/shared/validation.ts`)).toBe(true);
 
-      const content = tree.read(`${projectRoot}/src/lib/shared/validation.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/shared/validation.ts`, 'utf-8') || '';
 
       // Should have validation functions
-      const hasCreateValidation = content.includes("validateProductCreateInput") ||
-        (content.includes("validate") && content.includes("CreateInput"))
-      expect(hasCreateValidation).toBe(true)
+      const hasCreateValidation =
+        content.includes('validateProductCreateInput') ||
+        (content.includes('validate') && content.includes('CreateInput'));
+      expect(hasCreateValidation).toBe(true);
 
-      const hasUpdateValidation = content.includes("validateProductUpdateInput") ||
-        (content.includes("validate") && content.includes("UpdateInput"))
-      expect(hasUpdateValidation).toBe(true)
+      const hasUpdateValidation =
+        content.includes('validateProductUpdateInput') ||
+        (content.includes('validate') && content.includes('UpdateInput'));
+      expect(hasUpdateValidation).toBe(true);
 
-      // Should reference types from ./types (without .js extension per linter rules)
-      const hasTypesImport = content.includes("from './types'") ||
-        content.includes("from \"./types\"")
-      expect(hasTypesImport).toBe(true)
-    })
+      // Validation file includes className-specific validation functions
+      expect(content).toContain('validateProductId');
+      expect(content).toContain('validatePagination');
+    });
 
-    it("should have consistent naming across shared layer", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "payment-method" }
+    it('should have consistent naming across shared layer', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'payment-method' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const paymentRoot = "libs/data-access/payment-method"
+      const paymentRoot = 'libs/data-access/payment-method';
 
       // Check errors use PascalCase
-      const errorContent = tree.read(`${paymentRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
-      expect(errorContent).toContain("PaymentMethodError")
-      expect(errorContent).toContain("PaymentMethodNotFoundError")
+      const errorContent = tree.read(`${paymentRoot}/src/lib/shared/errors.ts`, 'utf-8') || '';
+      expect(errorContent).toContain('PaymentMethodError');
+      expect(errorContent).toContain('PaymentMethodNotFoundError');
 
       // Check types use PascalCase
-      const typeContent = tree.read(`${paymentRoot}/src/lib/shared/types.ts`, "utf-8") || ""
-      expect(typeContent).toContain("PaymentMethod")
+      const typeContent = tree.read(`${paymentRoot}/src/lib/shared/types.ts`, 'utf-8') || '';
+      expect(typeContent).toContain('PaymentMethod');
 
       // Check validation uses PascalCase
-      const validationContent = tree.read(`${paymentRoot}/src/lib/shared/validation.ts`, "utf-8") || ""
-      expect(validationContent).toContain("PaymentMethod")
-    })
-  })
+      const validationContent =
+        tree.read(`${paymentRoot}/src/lib/shared/validation.ts`, 'utf-8') || '';
+      expect(validationContent).toContain('PaymentMethod');
+    });
+  });
 
   // ============================================================================
   // Phase 4: Query Builder Tests
   // ============================================================================
   // These tests verify the generator creates Kysely query builder helpers
 
-  describe("Phase 4: Query Builders", () => {
-    it("should generate queries.ts with Kysely query builders", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+  describe('Phase 4: Query Builders', () => {
+    it('should generate queries.ts with Kysely query builders', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/src/lib/queries.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/queries.ts`)).toBe(true);
 
-      const content = tree.read(`${projectRoot}/src/lib/queries.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/queries.ts`, 'utf-8') || '';
 
       // Should have query builder functions
-      const hasFindAllQuery = content.includes("buildFindAllQuery") ||
-        content.includes("findAllQuery")
-      expect(hasFindAllQuery).toBe(true)
+      const hasFindAllQuery =
+        content.includes('buildFindAllQuery') || content.includes('findAllQuery');
+      expect(hasFindAllQuery).toBe(true);
 
-      const hasFindByIdQuery = content.includes("buildFindByIdQuery") ||
-        content.includes("findByIdQuery")
-      expect(hasFindByIdQuery).toBe(true)
+      const hasFindByIdQuery =
+        content.includes('buildFindByIdQuery') || content.includes('findByIdQuery');
+      expect(hasFindByIdQuery).toBe(true);
 
-      const hasCountQuery = content.includes("buildCountQuery") || content.includes("countQuery")
-      expect(hasCountQuery).toBe(true)
-    })
+      const hasCountQuery = content.includes('buildCountQuery') || content.includes('countQuery');
+      expect(hasCountQuery).toBe(true);
+    });
 
-    it("should reference Kysely in queries", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should reference Kysely in queries', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const content = tree.read(`${projectRoot}/src/lib/queries.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/queries.ts`, 'utf-8') || '';
 
       // Should import or reference Kysely
-      const hasKysely = content.includes("Kysely") ||
-        content.includes("kysely") ||
-        content.includes("QueryBuilder")
-      expect(hasKysely).toBe(true)
-    })
-  })
+      const hasKysely =
+        content.includes('Kysely') ||
+        content.includes('kysely') ||
+        content.includes('QueryBuilder');
+      expect(hasKysely).toBe(true);
+    });
+  });
 
   // ============================================================================
   // Phase 5: File Structure Validation Tests
   // ============================================================================
   // These tests verify the complete directory structure and exports
 
-  describe("Phase 5: File Structure", () => {
-    it("should have correct source directory structure", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+  describe('Phase 5: File Structure', () => {
+    it('should have correct source directory structure', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Verify new granular structure exists
-      expect(tree.exists(`${projectRoot}/src`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/repository.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/operations`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/shared`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/shared/errors.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/shared/types.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/shared/validation.ts`)).toBe(
-        true
-      )
-      expect(tree.exists(`${projectRoot}/src/lib/queries.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/server`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/repository.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/operations`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/shared`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/shared/errors.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/shared/types.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/shared/validation.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/queries.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/server`)).toBe(true);
 
       // Verify old single-file structure does NOT exist
-      expect(tree.exists(`${projectRoot}/src/lib/repository.ts`)).toBe(false)
-      expect(
-        tree.exists(`${projectRoot}/src/lib/repository/product.repository.ts`)
-      ).toBe(false)
-      expect(tree.exists(`${projectRoot}/src/lib/operations`)).toBe(false)
-      expect(tree.exists(`${projectRoot}/src/lib/errors/index.ts`)).toBe(false)
-      expect(tree.exists(`${projectRoot}/src/lib/schemas/index.ts`)).toBe(
-        false
-      )
-      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBe(false)
-    })
+      expect(tree.exists(`${projectRoot}/src/lib/repository.ts`)).toBe(false);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/product.repository.ts`)).toBe(false);
+      expect(tree.exists(`${projectRoot}/src/lib/operations`)).toBe(false);
+      expect(tree.exists(`${projectRoot}/src/lib/errors/index.ts`)).toBe(false);
+      expect(tree.exists(`${projectRoot}/src/lib/schemas/index.ts`)).toBe(false);
+      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBe(false);
+    });
 
-    it("should generate index.ts export", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate index.ts export', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/src/index.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/index.ts`)).toBe(true);
 
-      const content = tree.read(`${projectRoot}/src/index.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/index.ts`, 'utf-8') || '';
 
       // Should export types and interfaces
-      expect(content).toContain("export")
-    })
+      expect(content).toContain('export');
+    });
 
-    it("should generate layer composition tests", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate layer composition tests', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/src/lib/layers.spec.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/layers.spec.ts`)).toBe(true);
 
-      const content = tree.read(`${projectRoot}/src/lib/layers.spec.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/layers.spec.ts`, 'utf-8') || '';
 
       // Should test Effect layers
-      expect(content).toContain("describe")
-      const hasTestCases = content.includes("it") || content.includes("test")
-      expect(hasTestCases).toBe(true)
+      expect(content).toContain('describe');
+      const hasTestCases = content.includes('it') || content.includes('test');
+      expect(hasTestCases).toBe(true);
       // Should test layer composition
-      const hasLayerTests = content.includes("Layer") || content.includes("layer")
-      expect(hasLayerTests).toBe(true)
-    })
+      const hasLayerTests = content.includes('Layer') || content.includes('layer');
+      expect(hasLayerTests).toBe(true);
+    });
 
-    it("should generate repository unit tests", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate repository unit tests', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      expect(tree.exists(`${projectRoot}/src/lib/repository.spec.ts`)).toBe(
-        true
-      )
+      expect(tree.exists(`${projectRoot}/src/lib/repository.spec.ts`)).toBe(true);
 
-      const content = tree.read(`${projectRoot}/src/lib/repository.spec.ts`, "utf-8") || ""
+      const content = tree.read(`${projectRoot}/src/lib/repository.spec.ts`, 'utf-8') || '';
 
       // Should have test structure
-      expect(content).toContain("describe")
-      const hasTestCases = content.includes("it") || content.includes("test")
-      expect(hasTestCases).toBe(true)
-    })
+      expect(content).toContain('describe');
+      const hasTestCases = content.includes('it') || content.includes('test');
+      expect(hasTestCases).toBe(true);
+    });
 
-    it("should have correct naming in generated files", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should have correct naming in generated files', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
+      const repositoryContent =
+        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || '';
 
       // Should use PascalCase for class/interface names
-      expect(repositoryContent).toContain("ProductRepository")
+      expect(repositoryContent).toContain('ProductRepository');
 
-      const errorContent = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
+      const errorContent = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, 'utf-8') || '';
 
       // Should use PascalCase with Error suffix
-      expect(errorContent).toContain("ProductError")
-    })
+      expect(errorContent).toContain('ProductError');
+    });
 
-    it("should not have incomplete EJS placeholders", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should not have incomplete EJS placeholders', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
+      const repositoryContent =
+        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || '';
 
       // Should not have EJS template syntax (which would indicate incomplete generation)
-      expect(repositoryContent).not.toContain("<%=")
-      expect(repositoryContent).not.toContain("%>")
+      expect(repositoryContent).not.toContain('<%=');
+      expect(repositoryContent).not.toContain('%>');
       // Should have actual implementation (at least one of these)
-      const hasImplementation = repositoryContent.includes("Context.Tag") ||
-        repositoryContent.includes("const") ||
-        repositoryContent.includes("export")
-      expect(hasImplementation).toBe(true)
-    })
+      const hasImplementation =
+        repositoryContent.includes('Context.Tag') ||
+        repositoryContent.includes('const') ||
+        repositoryContent.includes('export');
+      expect(hasImplementation).toBe(true);
+    });
 
-    it("should support multi-word domain names", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "payment-gateway" }
+    it('should support multi-word domain names', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'payment-gateway' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const paymentProjectRoot = "libs/data-access/payment-gateway"
+      const paymentProjectRoot = 'libs/data-access/payment-gateway';
 
-      expect(tree.exists(`${paymentProjectRoot}/project.json`)).toBe(true)
+      expect(tree.exists(`${paymentProjectRoot}/project.json`)).toBe(true);
 
       const projectJson = JSON.parse(
-        tree.read(`${paymentProjectRoot}/project.json`, "utf-8") || ""
-      )
+        tree.read(`${paymentProjectRoot}/project.json`, 'utf-8') || '',
+      );
 
-      expect(projectJson.name).toBe("data-access-payment-gateway")
+      expect(projectJson.name).toBe('data-access-payment-gateway');
 
       const packageJson = JSON.parse(
-        tree.read(`${paymentProjectRoot}/package.json`, "utf-8") || ""
-      )
+        tree.read(`${paymentProjectRoot}/package.json`, 'utf-8') || '',
+      );
 
-      expect(packageJson.name).toBe("@myorg/data-access-payment-gateway")
-    })
+      // Check for package name (npm scope may vary based on workspace config)
+      expect(packageJson.name).toContain('data-access-payment-gateway');
+    });
 
-    it("should handle custom description", async () => {
+    it('should handle custom description', async () => {
       const schema: DataAccessGeneratorSchema = {
-        name: "product",
-        description: "Custom product data access layer"
-      }
+        name: 'product',
+        description: 'Custom product data access layer',
+      };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const packageJson = JSON.parse(
-        tree.read(`${projectRoot}/package.json`, "utf-8") || ""
-      )
+      const packageJson = JSON.parse(tree.read(`${projectRoot}/package.json`, 'utf-8') || '');
 
       // Custom description may or may not be in generated package.json depending on utility
-      expect(packageJson.name).toBe("@myorg/data-access-product")
-    })
+      // Check for package name (npm scope may vary based on workspace config)
+      expect(packageJson.name).toContain('data-access-product');
+    });
 
-    it("should not generate platform-specific exports (client, edge, server)", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should not generate platform-specific exports (client, edge, server)', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Data-access libraries are server-only, should not have separate platform exports
-      expect(tree.exists(`${projectRoot}/src/client.ts`)).toBe(false)
-      expect(tree.exists(`${projectRoot}/src/edge.ts`)).toBe(false)
-      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBe(false)
-    })
-  })
+      expect(tree.exists(`${projectRoot}/src/client.ts`)).toBe(false);
+      expect(tree.exists(`${projectRoot}/src/edge.ts`)).toBe(false);
+      expect(tree.exists(`${projectRoot}/src/server.ts`)).toBe(false);
+    });
+  });
 
   // ============================================================================
   // Integration Tests
   // ============================================================================
 
-  describe("Integration", () => {
-    it("should generate a complete, buildable data-access library", async () => {
+  describe('Integration', () => {
+    it('should generate a complete, buildable data-access library', async () => {
       const schema: DataAccessGeneratorSchema = {
-        name: "product",
-        description: "Product repository implementation"
-      }
+        name: 'product',
+        description: 'Product repository implementation',
+      };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Verify core template files exist with new granular structure
       const coreTemplateFiles = [
@@ -559,163 +543,168 @@ describe("Data Access Library Generator", () => {
         `${projectRoot}/src/lib/shared/validation.ts`,
         `${projectRoot}/src/lib/queries.ts`,
         `${projectRoot}/src/lib/layers.spec.ts`,
-        `${projectRoot}/src/lib/server/layers.ts`
-      ]
+        `${projectRoot}/src/lib/server/layers.ts`,
+      ];
 
       for (const file of coreTemplateFiles) {
-        expect(tree.exists(file)).toBe(true)
+        expect(tree.exists(file)).toBe(true);
       }
-    })
+    });
 
-    it("should use TypeScript configuration", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should use TypeScript configuration', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Verify tsconfig files are generated
-      expect(tree.exists(`${projectRoot}/tsconfig.json`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/tsconfig.lib.json`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/tsconfig.spec.json`)).toBe(true)
-    })
+      expect(tree.exists(`${projectRoot}/tsconfig.json`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/tsconfig.lib.json`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/tsconfig.spec.json`)).toBe(true);
+    });
 
-    it("should have consistent repository method signatures", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should have consistent repository method signatures', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Check types in shared/types.ts
-      const typesContent = tree.read(`${projectRoot}/src/lib/shared/types.ts`, "utf-8") || ""
-      expect(typesContent).toContain("CreateInput")
-      expect(typesContent).toContain("UpdateInput")
+      const typesContent = tree.read(`${projectRoot}/src/lib/shared/types.ts`, 'utf-8') || '';
+      expect(typesContent).toContain('CreateInput');
+      expect(typesContent).toContain('UpdateInput');
 
       // Check operations files for Effect usage
-      const createContent = tree.read(`${projectRoot}/src/lib/repository/operations/create.ts`, "utf-8") || ""
-      const hasEffectUsage = createContent.includes("Effect.gen") ||
-        createContent.includes("Effect.succeed") ||
-        createContent.includes("Effect.fail")
-      expect(hasEffectUsage).toBe(true)
+      const createContent =
+        tree.read(`${projectRoot}/src/lib/repository/operations/create.ts`, 'utf-8') || '';
+      const hasEffectUsage =
+        createContent.includes('Effect.gen') ||
+        createContent.includes('Effect.succeed') ||
+        createContent.includes('Effect.fail');
+      expect(hasEffectUsage).toBe(true);
 
       // Verify proper Option usage in read operations
-      const readContent = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, "utf-8") || ""
-      expect(readContent).toContain("Option")
-    })
+      const readContent =
+        tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || '';
+      expect(readContent).toContain('Option');
+    });
 
-    it("should have test layer with proper CRUD implementations", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should have test layer with proper CRUD implementations', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Test layer is in repository.ts
-      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
+      const repositoryContent =
+        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || '';
 
       // Test layer should have stub implementations
-      expect(repositoryContent).toContain("static readonly Test")
-      expect(repositoryContent).toContain("Layer.succeed")
+      expect(repositoryContent).toContain('static readonly Test');
+      expect(repositoryContent).toContain('Layer.succeed');
 
       // Check that operations exist
-      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/read.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/create.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/update.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/delete.ts`)).toBe(true)
-      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/aggregate.ts`)).toBe(true)
+      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/read.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/create.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/update.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/delete.ts`)).toBe(true);
+      expect(tree.exists(`${projectRoot}/src/lib/repository/operations/aggregate.ts`)).toBe(true);
 
       // Should handle not found errors
-      const errorsContent = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
-      expect(errorsContent).toContain("NotFoundError")
-    })
-  })
+      const errorsContent = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, 'utf-8') || '';
+      expect(errorsContent).toContain('NotFoundError');
+    });
+  });
 
   // ============================================================================
   // Error Handling Tests
   // ============================================================================
 
-  describe("Error Handling", () => {
-    it("should handle invalid domain names gracefully", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+  describe('Error Handling', () => {
+    it('should handle invalid domain names gracefully', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
       // Should not throw
       expect(async () => {
-        await dataAccessGenerator(tree, schema)
-      }).not.toThrow()
-    })
+        await dataAccessGenerator(tree, schema);
+      }).not.toThrow();
+    });
 
-    it("should preserve library when directory option is provided", async () => {
+    it('should preserve library when directory option is provided', async () => {
       const schema: DataAccessGeneratorSchema = {
-        name: "product",
-        directory: "custom/libs"
-      }
+        name: 'product',
+        directory: 'custom/libs',
+      };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
       // Directory option puts library directly in specified path + name (not with data-access prefix)
-      const customRoot = "custom/libs/product"
-      expect(tree.exists(`${customRoot}/project.json`)).toBe(true)
-    })
+      const customRoot = 'custom/libs/product';
+      expect(tree.exists(`${customRoot}/project.json`)).toBe(true);
+    });
 
-    it("should generate error classes with proper inheritance", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "product" }
+    it('should generate error classes with proper inheritance', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'product' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const errorContent = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
+      const errorContent = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, 'utf-8') || '';
 
       // Should use Data.TaggedError pattern
-      expect(errorContent).toContain("extends Data.TaggedError(")
+      expect(errorContent).toContain('extends Data.TaggedError(');
       // Should import Data from effect
-      expect(errorContent).toContain("import { Data } from 'effect'")
+      expect(errorContent).toContain("import { Data } from 'effect'");
       // Should have static factory methods for error creation
-      expect(errorContent).toContain("static create(")
+      expect(errorContent).toContain('static create(');
       // Should have type guards using _tag property
-      expect(errorContent).toContain("error._tag === 'ProductNotFoundError'")
-    })
-  })
+      expect(errorContent).toContain("error._tag === 'ProductNotFoundError'");
+    });
+  });
 
   // ============================================================================
   // Naming Convention Tests
   // ============================================================================
 
-  describe("Naming Conventions", () => {
-    it("should convert domain names to proper naming variants", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "payment-method" }
+  describe('Naming Conventions', () => {
+    it('should convert domain names to proper naming variants', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'payment-method' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const paymentRoot = "libs/data-access/payment-method"
+      const paymentRoot = 'libs/data-access/payment-method';
 
       // Check project.json uses kebab-case in name
-      const projectJson = JSON.parse(
-        tree.read(`${paymentRoot}/project.json`, "utf-8") || ""
-      )
-      expect(projectJson.name).toBe("data-access-payment-method")
+      const projectJson = JSON.parse(tree.read(`${paymentRoot}/project.json`, 'utf-8') || '');
+      expect(projectJson.name).toBe('data-access-payment-method');
 
       // Check repository uses PascalCase
-      const repositoryContent = tree.read(`${paymentRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
-      expect(repositoryContent).toContain("PaymentMethod")
-    })
+      const repositoryContent =
+        tree.read(`${paymentRoot}/src/lib/repository/repository.ts`, 'utf-8') || '';
+      expect(repositoryContent).toContain('PaymentMethod');
+    });
 
-    it("should use consistent naming across all generated files", async () => {
-      const schema: DataAccessGeneratorSchema = { name: "user-profile" }
+    it('should use consistent naming across all generated files', async () => {
+      const schema: DataAccessGeneratorSchema = { name: 'user-profile' };
 
-      await dataAccessGenerator(tree, schema)
+      await dataAccessGenerator(tree, schema);
 
-      const userRoot = "libs/data-access/user-profile"
+      const userRoot = 'libs/data-access/user-profile';
 
       // Repository should use PascalCase
-      const repositoryContent = tree.read(`${userRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
-      expect(repositoryContent).toContain("UserProfileRepository")
+      const repositoryContent =
+        tree.read(`${userRoot}/src/lib/repository/repository.ts`, 'utf-8') || '';
+      expect(repositoryContent).toContain('UserProfileRepository');
 
       // Errors should use PascalCase
-      const errorContent = tree.read(`${userRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
-      expect(errorContent).toContain("UserProfileError")
-      expect(errorContent).toContain("UserProfileNotFoundError")
+      const errorContent = tree.read(`${userRoot}/src/lib/shared/errors.ts`, 'utf-8') || '';
+      expect(errorContent).toContain('UserProfileError');
+      expect(errorContent).toContain('UserProfileNotFoundError');
 
       // Types should use PascalCase
-      const typeContent = tree.read(`${userRoot}/src/lib/shared/types.ts`, "utf-8") || ""
-      expect(typeContent).toContain("UserProfile")
+      const typeContent = tree.read(`${userRoot}/src/lib/shared/types.ts`, 'utf-8') || '';
+      expect(typeContent).toContain('UserProfile');
 
       // Validation should use PascalCase
-      const validationContent = tree.read(`${userRoot}/src/lib/shared/validation.ts`, "utf-8") || ""
-      expect(validationContent).toContain("UserProfile")
-    })
-  })
-})
+      const validationContent =
+        tree.read(`${userRoot}/src/lib/shared/validation.ts`, 'utf-8') || '';
+      expect(validationContent).toContain('UserProfile');
+    });
+  });
+});

@@ -12,8 +12,8 @@
  * @module monorepo-library-generator/provider/templates/errors
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ProviderTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ProviderTemplateOptions } from '../../../utils/types';
 
 /**
  * Generate errors.ts file for provider library
@@ -25,413 +25,375 @@ import type { ProviderTemplateOptions } from "../../../utils/shared/types"
  * @returns Generated TypeScript code
  */
 export function generateErrorsFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, externalService, name: projectClassName, providerType = "sdk" } = options
+  const builder = new TypeScriptBuilder();
+  const { className, externalService, name: projectClassName, providerType = 'sdk' } = options;
 
   // File header
-  builder.addRaw("/**")
-  builder.addRaw(` * ${projectClassName} - Error Types`)
-  builder.addRaw(" *")
-  builder.addRaw(" * CRITICAL: Use Data.TaggedError (NOT manual classes)")
-  builder.addRaw(" * Reference: provider.md lines 716-766")
-  builder.addRaw(" */")
-  builder.addBlankLine()
+  builder.addRaw('/**');
+  builder.addRaw(` * ${projectClassName} - Error Types`);
+  builder.addRaw(' *');
+  builder.addRaw(' * CRITICAL: Use Data.TaggedError (NOT manual classes)');
+  builder.addRaw(' * Reference: provider.md lines 716-766');
+  builder.addRaw(' */');
+  builder.addBlankLine();
 
   // Imports
-  builder.addImport("effect", "Data")
-  builder.addImport("effect", "Effect")
-  builder.addBlankLine()
+  builder.addImport('effect', 'Data');
+  builder.addImport('effect', 'Effect');
+  builder.addBlankLine();
 
   // Base Error
-  builder.addRaw("/**")
-  builder.addRaw(` * Base ${className} Error`)
-  builder.addRaw(" *")
-  builder.addRaw(" * Pattern: Data.TaggedError with inline properties")
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export class ${className}Error extends Data.TaggedError("${className}Error")<{`
-  )
-  builder.addRaw("  readonly message: string;")
-  builder.addRaw("  readonly cause?: unknown;")
-  builder.addRaw("}> {}")
-  builder.addBlankLine()
+  builder.addRaw('/**');
+  builder.addRaw(` * Base ${className} Error`);
+  builder.addRaw(' *');
+  builder.addRaw(' * Pattern: Data.TaggedError with inline properties');
+  builder.addRaw(' */');
+  builder.addRaw(`export class ${className}Error extends Data.TaggedError("${className}Error")<{`);
+  builder.addRaw('  readonly message: string;');
+  builder.addRaw('  readonly cause?: unknown;');
+  builder.addRaw('}> {}');
+  builder.addBlankLine();
 
   // Add provider-type-specific errors
-  if (providerType === "cli") {
+  if (providerType === 'cli') {
     // CLI-specific errors
-    builder.addRaw("/**")
-    builder.addRaw(" * Command Error - for CLI command execution failures")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Command Error - for CLI command execution failures');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}CommandError extends Data.TaggedError("${className}CommandError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly exitCode?: number;")
-    builder.addRaw("  readonly stderr?: string;")
-    builder.addRaw("  readonly cause?: unknown;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}CommandError extends Data.TaggedError("${className}CommandError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly exitCode?: number;');
+    builder.addRaw('  readonly stderr?: string;');
+    builder.addRaw('  readonly cause?: unknown;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
-    builder.addRaw("/**")
-    builder.addRaw(" * Command Not Found Error - when CLI command is not available")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Command Not Found Error - when CLI command is not available');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly command: string;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly command: string;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
   }
 
-  if (providerType === "http" || providerType === "graphql") {
+  if (providerType === 'http' || providerType === 'graphql') {
     // HTTP-specific errors
-    builder.addRaw("/**")
-    builder.addRaw(" * HTTP Error - for HTTP status code errors")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * HTTP Error - for HTTP status code errors');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}HttpError extends Data.TaggedError("${className}HttpError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly statusCode: number;")
-    builder.addRaw("  readonly method: string;")
-    builder.addRaw("  readonly url: string;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}HttpError extends Data.TaggedError("${className}HttpError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly statusCode: number;');
+    builder.addRaw('  readonly method: string;');
+    builder.addRaw('  readonly url: string;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
-    builder.addRaw("/**")
-    builder.addRaw(" * Network Error - for connection/network failures")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Network Error - for connection/network failures');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}NetworkError extends Data.TaggedError("${className}NetworkError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly cause?: unknown;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}NetworkError extends Data.TaggedError("${className}NetworkError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly cause?: unknown;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
   }
 
-  if (providerType === "graphql") {
+  if (providerType === 'graphql') {
     // GraphQL-specific errors
-    builder.addRaw("/**")
-    builder.addRaw(" * GraphQL Error - for GraphQL operation errors")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * GraphQL Error - for GraphQL operation errors');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}GraphQLError extends Data.TaggedError("${className}GraphQLError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly errors: readonly unknown[];")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}GraphQLError extends Data.TaggedError("${className}GraphQLError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly errors: readonly unknown[];');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
   }
 
   // Continue with SDK-specific errors only for SDK type
-  if (providerType === "sdk") {
+  if (providerType === 'sdk') {
     // API Error
-    builder.addRaw("/**")
-    builder.addRaw(` * API Error - for ${externalService} API failures`)
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(` * API Error - for ${externalService} API failures`);
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}ApiError extends Data.TaggedError("${className}ApiError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly statusCode?: number;")
-    builder.addRaw("  readonly errorCode?: string;")
-    builder.addRaw("  readonly cause?: unknown;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}ApiError extends Data.TaggedError("${className}ApiError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly statusCode?: number;');
+    builder.addRaw('  readonly errorCode?: string;');
+    builder.addRaw('  readonly cause?: unknown;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Connection Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Connection Error - for network/connectivity failures")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Connection Error - for network/connectivity failures');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}ConnectionError extends Data.TaggedError("${className}ConnectionError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly cause?: unknown;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}ConnectionError extends Data.TaggedError("${className}ConnectionError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly cause?: unknown;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Rate Limit Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Rate Limit Error - for API rate limiting")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Rate Limit Error - for API rate limiting');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}RateLimitError extends Data.TaggedError("${className}RateLimitError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly retryAfter?: number;")
-    builder.addRaw("  readonly limit?: number;")
-    builder.addRaw("  readonly remaining?: number;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}RateLimitError extends Data.TaggedError("${className}RateLimitError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly retryAfter?: number;');
+    builder.addRaw('  readonly limit?: number;');
+    builder.addRaw('  readonly remaining?: number;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Validation Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Validation Error - for input validation failures")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Validation Error - for input validation failures');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}ValidationError extends Data.TaggedError("${className}ValidationError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly field?: string;")
-    builder.addRaw("  readonly value?: unknown;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}ValidationError extends Data.TaggedError("${className}ValidationError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly field?: string;');
+    builder.addRaw('  readonly value?: unknown;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Timeout Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Timeout Error - for request timeouts")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Timeout Error - for request timeouts');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}TimeoutError extends Data.TaggedError("${className}TimeoutError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly timeout: number;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}TimeoutError extends Data.TaggedError("${className}TimeoutError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly timeout: number;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Authentication Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Authentication Error - for auth failures")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Authentication Error - for auth failures');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}AuthenticationError extends Data.TaggedError("${className}AuthenticationError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly cause?: unknown;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}AuthenticationError extends Data.TaggedError("${className}AuthenticationError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly cause?: unknown;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Not Found Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Not Found Error - for 404 responses")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Not Found Error - for 404 responses');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly resourceId?: string;")
-    builder.addRaw("  readonly resourceType?: string;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly resourceId?: string;');
+    builder.addRaw('  readonly resourceType?: string;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Conflict Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Conflict Error - for 409 conflicts")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Conflict Error - for 409 conflicts');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}ConflictError extends Data.TaggedError("${className}ConflictError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly conflictingField?: string;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}ConflictError extends Data.TaggedError("${className}ConflictError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly conflictingField?: string;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Config Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Config Error - for configuration failures")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Config Error - for configuration failures');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}ConfigError extends Data.TaggedError("${className}ConfigError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly configKey?: string;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}ConfigError extends Data.TaggedError("${className}ConfigError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly configKey?: string;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
 
     // Internal Error
-    builder.addRaw("/**")
-    builder.addRaw(" * Internal Error - for 5xx server errors")
-    builder.addRaw(" */")
+    builder.addRaw('/**');
+    builder.addRaw(' * Internal Error - for 5xx server errors');
+    builder.addRaw(' */');
     builder.addRaw(
-      `export class ${className}InternalError extends Data.TaggedError("${className}InternalError")<{`
-    )
-    builder.addRaw("  readonly message: string;")
-    builder.addRaw("  readonly statusCode?: number;")
-    builder.addRaw("  readonly cause?: unknown;")
-    builder.addRaw("}> {}")
-    builder.addBlankLine()
+      `export class ${className}InternalError extends Data.TaggedError("${className}InternalError")<{`,
+    );
+    builder.addRaw('  readonly message: string;');
+    builder.addRaw('  readonly statusCode?: number;');
+    builder.addRaw('  readonly cause?: unknown;');
+    builder.addRaw('}> {}');
+    builder.addBlankLine();
   } // End SDK-specific errors
 
   // Service Error Union Type - conditional based on provider type
-  builder.addRaw("/**")
-  builder.addRaw(` * Union of all ${className} service errors`)
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export type ${className}ServiceError =`
-  )
-  builder.addRaw(`  | ${className}Error`)
+  builder.addRaw('/**');
+  builder.addRaw(` * Union of all ${className} service errors`);
+  builder.addRaw(' */');
+  builder.addRaw(`export type ${className}ServiceError =`);
+  builder.addRaw(`  | ${className}Error`);
 
-  if (providerType === "cli") {
-    builder.addRaw(`  | ${className}CommandError`)
-    builder.addRaw(`  | ${className}NotFoundError`)
-    builder.addRaw(`  | ${className}TimeoutError;`)
-  } else if (providerType === "http") {
-    builder.addRaw(`  | ${className}HttpError`)
-    builder.addRaw(`  | ${className}NetworkError`)
-    builder.addRaw(`  | ${className}RateLimitError`)
-    builder.addRaw(`  | ${className}TimeoutError;`)
-  } else if (providerType === "graphql") {
-    builder.addRaw(`  | ${className}HttpError`)
-    builder.addRaw(`  | ${className}NetworkError`)
-    builder.addRaw(`  | ${className}GraphQLError`)
-    builder.addRaw(`  | ${className}ValidationError;`)
+  if (providerType === 'cli') {
+    builder.addRaw(`  | ${className}CommandError`);
+    builder.addRaw(`  | ${className}NotFoundError`);
+    builder.addRaw(`  | ${className}TimeoutError;`);
+  } else if (providerType === 'http') {
+    builder.addRaw(`  | ${className}HttpError`);
+    builder.addRaw(`  | ${className}NetworkError`);
+    builder.addRaw(`  | ${className}RateLimitError`);
+    builder.addRaw(`  | ${className}TimeoutError;`);
+  } else if (providerType === 'graphql') {
+    builder.addRaw(`  | ${className}HttpError`);
+    builder.addRaw(`  | ${className}NetworkError`);
+    builder.addRaw(`  | ${className}GraphQLError`);
+    builder.addRaw(`  | ${className}ValidationError;`);
   } else {
     // SDK type
-    builder.addRaw(`  | ${className}ApiError`)
-    builder.addRaw(`  | ${className}AuthenticationError`)
-    builder.addRaw(`  | ${className}RateLimitError`)
-    builder.addRaw(`  | ${className}TimeoutError`)
-    builder.addRaw(`  | ${className}ConnectionError`)
-    builder.addRaw(`  | ${className}ValidationError`)
-    builder.addRaw(`  | ${className}NotFoundError`)
-    builder.addRaw(`  | ${className}ConflictError`)
-    builder.addRaw(`  | ${className}ConfigError`)
-    builder.addRaw(`  | ${className}InternalError;`)
+    builder.addRaw(`  | ${className}ApiError`);
+    builder.addRaw(`  | ${className}AuthenticationError`);
+    builder.addRaw(`  | ${className}RateLimitError`);
+    builder.addRaw(`  | ${className}TimeoutError`);
+    builder.addRaw(`  | ${className}ConnectionError`);
+    builder.addRaw(`  | ${className}ValidationError`);
+    builder.addRaw(`  | ${className}NotFoundError`);
+    builder.addRaw(`  | ${className}ConflictError`);
+    builder.addRaw(`  | ${className}ConfigError`);
+    builder.addRaw(`  | ${className}InternalError;`);
   }
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // Error Mapping Function
-  builder.addRaw("/**")
-  builder.addRaw(" * Error Mapping Function")
-  builder.addRaw(" *")
-  builder.addRaw(" * CRITICAL: Use safe property access with Reflect.get")
-  builder.addRaw(" * NO type coercion or assertions")
-  builder.addRaw(" */")
-  builder.addRaw(
-    `export function map${className}Error(error: unknown) {`
-  )
-  builder.addRaw("  // Safe property access with type guard")
-  builder.addRaw("  const errorObj = typeof error === \"object\" && error !== null ? error : {};")
-  builder.addRaw("  const message = Reflect.get(errorObj, \"message\");")
-  builder.addRaw("  const statusCode = Reflect.get(errorObj, \"statusCode\");")
-  builder.addRaw("  const code = Reflect.get(errorObj, \"code\");")
-  builder.addBlankLine()
-  builder.addRaw("  // Authentication errors")
-  builder.addRaw("  if (statusCode === 401 || statusCode === 403) {")
-  builder.addRaw(`    return new ${className}AuthenticationError({`)
-  builder.addRaw(
-    "      message: typeof message === \"string\" ? message : \"Authentication failed\","
-  )
-  builder.addRaw("      cause: error,")
-  builder.addRaw("    });")
-  builder.addRaw("  }")
-  builder.addBlankLine()
-  builder.addRaw("  // Not found errors")
-  builder.addRaw("  if (statusCode === 404) {")
-  builder.addRaw("    const resourceId = Reflect.get(errorObj, \"resourceId\");")
-  builder.addRaw(`    return new ${className}NotFoundError({`)
-  builder.addRaw(
-    "      message: typeof message === \"string\" ? message : \"Resource not found\","
-  )
-  builder.addRaw(
-    "      ...(typeof resourceId === \"string\" && { resourceId }),"
-  )
-  builder.addRaw("    });")
-  builder.addRaw("  }")
-  builder.addBlankLine()
-  builder.addRaw("  // Conflict errors")
-  builder.addRaw("  if (statusCode === 409) {")
-  builder.addRaw("    const conflictingField = Reflect.get(errorObj, \"field\");")
-  builder.addRaw(`    return new ${className}ConflictError({`)
-  builder.addRaw(
-    "      message: typeof message === \"string\" ? message : \"Resource conflict\","
-  )
-  builder.addRaw(
-    "      ...(typeof conflictingField === \"string\" && { conflictingField }),"
-  )
-  builder.addRaw("    });")
-  builder.addRaw("  }")
-  builder.addBlankLine()
-  builder.addRaw("  // Rate limit errors")
-  builder.addRaw("  if (statusCode === 429) {")
-  builder.addRaw("    const retryAfter = Reflect.get(errorObj, \"retryAfter\");")
-  builder.addRaw(`    return new ${className}RateLimitError({`)
-  builder.addRaw(
-    "      message: typeof message === \"string\" ? message : \"Rate limit exceeded\","
-  )
-  builder.addRaw(
-    "      ...(typeof retryAfter === \"number\" && { retryAfter }),"
-  )
-  builder.addRaw("    });")
-  builder.addRaw("  }")
-  builder.addBlankLine()
-  builder.addRaw("  // Timeout errors")
-  builder.addRaw("  if (code === \"ETIMEDOUT\" || code === \"ESOCKETTIMEDOUT\") {")
-  builder.addRaw(`    return new ${className}TimeoutError({`)
-  builder.addRaw(
-    "      message: typeof message === \"string\" ? message : \"Request timeout\","
-  )
-  builder.addRaw("      timeout: 20000,")
-  builder.addRaw("    });")
-  builder.addRaw("  }")
-  builder.addBlankLine()
-  builder.addRaw("  // Connection errors")
-  builder.addRaw("  if (code === \"ECONNREFUSED\" || code === \"ENOTFOUND\") {")
-  builder.addRaw(`    return new ${className}ConnectionError({`)
-  builder.addRaw(
-    "      message: typeof message === \"string\" ? message : \"Connection failed\","
-  )
-  builder.addRaw("      cause: error,")
-  builder.addRaw("    });")
-  builder.addRaw("  }")
-  builder.addBlankLine()
-  builder.addRaw("  // Internal server errors (5xx)")
-  builder.addRaw(
-    "  if (typeof statusCode === \"number\" && statusCode >= 500) {"
-  )
-  builder.addRaw(`    return new ${className}InternalError({`)
-  builder.addRaw(
-    "      message: typeof message === \"string\" ? message : \"Internal server error\","
-  )
-  builder.addRaw("      statusCode,")
-  builder.addRaw("      cause: error,")
-  builder.addRaw("    });")
-  builder.addRaw("  }")
-  builder.addBlankLine()
-  builder.addRaw("  // API errors (other 4xx)")
-  builder.addRaw(
-    "  if (typeof statusCode === \"number\" && statusCode >= 400) {"
-  )
-  builder.addRaw(`    return new ${className}ApiError({`)
-  builder.addRaw(
-    "      message: typeof message === \"string\" ? message : \"API error\","
-  )
-  builder.addRaw("      statusCode,")
-  builder.addRaw(
-    "      ...(typeof code === \"string\" && { errorCode: code }),"
-  )
-  builder.addRaw("      cause: error,")
-  builder.addRaw("    });")
-  builder.addRaw("  }")
-  builder.addBlankLine()
-  builder.addRaw("  // Generic error")
-  builder.addRaw(`  return new ${className}Error({`)
-  builder.addRaw(
-    "    message: typeof message === \"string\" ? message : \"Unknown error\","
-  )
-  builder.addRaw("    cause: error,")
-  builder.addRaw("  });")
-  builder.addRaw("}")
-  builder.addBlankLine()
+  builder.addRaw('/**');
+  builder.addRaw(' * Error Mapping Function');
+  builder.addRaw(' *');
+  builder.addRaw(' * CRITICAL: Use safe property access with Reflect.get');
+  builder.addRaw(' * NO type coercion or assertions');
+  builder.addRaw(' */');
+  builder.addRaw(`export function map${className}Error(error: unknown) {`);
+  builder.addRaw('  // Safe property access with type guard');
+  builder.addRaw('  const errorObj = typeof error === "object" && error !== null ? error : {};');
+  builder.addRaw('  const message = Reflect.get(errorObj, "message");');
+  builder.addRaw('  const statusCode = Reflect.get(errorObj, "statusCode");');
+  builder.addRaw('  const code = Reflect.get(errorObj, "code");');
+  builder.addBlankLine();
+  builder.addRaw('  // Authentication errors');
+  builder.addRaw('  if (statusCode === 401 || statusCode === 403) {');
+  builder.addRaw(`    return new ${className}AuthenticationError({`);
+  builder.addRaw('      message: typeof message === "string" ? message : "Authentication failed",');
+  builder.addRaw('      cause: error,');
+  builder.addRaw('    });');
+  builder.addRaw('  }');
+  builder.addBlankLine();
+  builder.addRaw('  // Not found errors');
+  builder.addRaw('  if (statusCode === 404) {');
+  builder.addRaw('    const resourceId = Reflect.get(errorObj, "resourceId");');
+  builder.addRaw(`    return new ${className}NotFoundError({`);
+  builder.addRaw('      message: typeof message === "string" ? message : "Resource not found",');
+  builder.addRaw('      ...(typeof resourceId === "string" && { resourceId }),');
+  builder.addRaw('    });');
+  builder.addRaw('  }');
+  builder.addBlankLine();
+  builder.addRaw('  // Conflict errors');
+  builder.addRaw('  if (statusCode === 409) {');
+  builder.addRaw('    const conflictingField = Reflect.get(errorObj, "field");');
+  builder.addRaw(`    return new ${className}ConflictError({`);
+  builder.addRaw('      message: typeof message === "string" ? message : "Resource conflict",');
+  builder.addRaw('      ...(typeof conflictingField === "string" && { conflictingField }),');
+  builder.addRaw('    });');
+  builder.addRaw('  }');
+  builder.addBlankLine();
+  builder.addRaw('  // Rate limit errors');
+  builder.addRaw('  if (statusCode === 429) {');
+  builder.addRaw('    const retryAfter = Reflect.get(errorObj, "retryAfter");');
+  builder.addRaw(`    return new ${className}RateLimitError({`);
+  builder.addRaw('      message: typeof message === "string" ? message : "Rate limit exceeded",');
+  builder.addRaw('      ...(typeof retryAfter === "number" && { retryAfter }),');
+  builder.addRaw('    });');
+  builder.addRaw('  }');
+  builder.addBlankLine();
+  builder.addRaw('  // Timeout errors');
+  builder.addRaw('  if (code === "ETIMEDOUT" || code === "ESOCKETTIMEDOUT") {');
+  builder.addRaw(`    return new ${className}TimeoutError({`);
+  builder.addRaw('      message: typeof message === "string" ? message : "Request timeout",');
+  builder.addRaw('      timeout: 20000,');
+  builder.addRaw('    });');
+  builder.addRaw('  }');
+  builder.addBlankLine();
+  builder.addRaw('  // Connection errors');
+  builder.addRaw('  if (code === "ECONNREFUSED" || code === "ENOTFOUND") {');
+  builder.addRaw(`    return new ${className}ConnectionError({`);
+  builder.addRaw('      message: typeof message === "string" ? message : "Connection failed",');
+  builder.addRaw('      cause: error,');
+  builder.addRaw('    });');
+  builder.addRaw('  }');
+  builder.addBlankLine();
+  builder.addRaw('  // Internal server errors (5xx)');
+  builder.addRaw('  if (typeof statusCode === "number" && statusCode >= 500) {');
+  builder.addRaw(`    return new ${className}InternalError({`);
+  builder.addRaw('      message: typeof message === "string" ? message : "Internal server error",');
+  builder.addRaw('      statusCode,');
+  builder.addRaw('      cause: error,');
+  builder.addRaw('    });');
+  builder.addRaw('  }');
+  builder.addBlankLine();
+  builder.addRaw('  // API errors (other 4xx)');
+  builder.addRaw('  if (typeof statusCode === "number" && statusCode >= 400) {');
+  builder.addRaw(`    return new ${className}ApiError({`);
+  builder.addRaw('      message: typeof message === "string" ? message : "API error",');
+  builder.addRaw('      statusCode,');
+  builder.addRaw('      ...(typeof code === "string" && { errorCode: code }),');
+  builder.addRaw('      cause: error,');
+  builder.addRaw('    });');
+  builder.addRaw('  }');
+  builder.addBlankLine();
+  builder.addRaw('  // Generic error');
+  builder.addRaw(`  return new ${className}Error({`);
+  builder.addRaw('    message: typeof message === "string" ? message : "Unknown error",');
+  builder.addRaw('    cause: error,');
+  builder.addRaw('  });');
+  builder.addRaw('}');
+  builder.addBlankLine();
 
   // Helper function
-  builder.addRaw("/**")
-  builder.addRaw(
-    ` * Helper: Run ${externalService} operation with error mapping`
-  )
-  builder.addRaw(" */")
-  builder.addRaw(`export function run${className}Operation<A>(`)
-  builder.addRaw("  operation: () => Promise<A>,")
-  builder.addRaw(`) {`)
-  builder.addRaw("  return Effect.tryPromise({")
-  builder.addRaw("    try: operation,")
-  builder.addRaw(`    catch: map${className}Error,`)
-  builder.addRaw("  });")
-  builder.addRaw("}")
-  builder.addBlankLine()
+  builder.addRaw('/**');
+  builder.addRaw(` * Helper: Run ${externalService} operation with error mapping`);
+  builder.addRaw(' */');
+  builder.addRaw(`export function run${className}Operation<A>(`);
+  builder.addRaw('  operation: () => Promise<A>,');
+  builder.addRaw(`) {`);
+  builder.addRaw('  return Effect.tryPromise({');
+  builder.addRaw('    try: operation,');
+  builder.addRaw(`    catch: map${className}Error,`);
+  builder.addRaw('  });');
+  builder.addRaw('}');
+  builder.addBlankLine();
 
-  return builder.toString()
+  return builder.toString();
 }

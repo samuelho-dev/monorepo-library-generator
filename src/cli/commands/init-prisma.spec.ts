@@ -2,151 +2,209 @@
  * Prisma Scaffolding Tests
  *
  * Tests for the Prisma directory structure scaffolding functionality.
+ * Uses Effect's in-memory file system for isolated testing.
  */
 
-import { NodeContext } from "@effect/platform-node"
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest"
-import { Effect } from "effect"
-import fs from "fs"
-import path from "path"
-import { scaffoldPrismaStructure } from "./init-prisma"
+import { FileSystem, Path } from '@effect/platform';
+import { NodePath } from '@effect/platform-node';
+import { Effect, Layer } from 'effect';
+import { describe, expect, it } from 'vitest';
+import { scaffoldPrismaStructure } from './init-prisma';
 
-describe("init-prisma", () => {
-  const testDir = path.join(process.cwd(), "tmp-prisma-test")
+/**
+ * In-memory file system implementation for testing
+ */
+function makeTestFileSystem() {
+  const files = new Map<string, string>();
+  const directories = new Set<string>();
 
-  beforeEach(() => {
-    // Create test directory
-    if (fs.existsSync(testDir)) {
-      fs.rmSync(testDir, { recursive: true })
-    }
-    fs.mkdirSync(testDir, { recursive: true })
-    // Change to test directory
-    process.chdir(testDir)
-  })
+  const testFs: FileSystem.FileSystem = {
+    access: () => Effect.void,
+    copy: () => Effect.void,
+    copyFile: () => Effect.void,
+    chmod: () => Effect.void,
+    chown: () => Effect.void,
+    exists: (path: string) => Effect.succeed(files.has(path) || directories.has(path)),
+    link: () => Effect.void,
+    makeDirectory: (path: string) =>
+      Effect.sync(() => {
+        directories.add(path);
+        // Also add parent directories
+        const parts = path.split('/');
+        for (let i = 1; i < parts.length; i++) {
+          directories.add(parts.slice(0, i).join('/'));
+        }
+      }),
+    makeTempDirectory: () => Effect.succeed('/tmp/test'),
+    makeTempDirectoryScoped: () => Effect.succeed('/tmp/test'),
+    makeTempFile: () => Effect.succeed('/tmp/test-file'),
+    makeTempFileScoped: () => Effect.succeed('/tmp/test-file'),
+    open: () => Effect.fail(new Error('Not implemented')),
+    readDirectory: () => Effect.succeed([]),
+    readFile: (path: string) =>
+      files.has(path)
+        ? Effect.succeed(new TextEncoder().encode(files.get(path)!))
+        : Effect.fail(new Error(`File not found: ${path}`)),
+    readFileString: (path: string) =>
+      files.has(path)
+        ? Effect.succeed(files.get(path)!)
+        : Effect.fail(new Error(`File not found: ${path}`)),
+    readLink: () => Effect.succeed(''),
+    realPath: (path: string) => Effect.succeed(path),
+    remove: () => Effect.void,
+    rename: () => Effect.void,
+    sink: () => Effect.fail(new Error('Not implemented')),
+    stat: () => Effect.fail(new Error('Not implemented')),
+    stream: () => Effect.fail(new Error('Not implemented')),
+    symlink: () => Effect.void,
+    truncate: () => Effect.void,
+    utimes: () => Effect.void,
+    watch: () => Effect.fail(new Error('Not implemented')),
+    writeFile: () => Effect.void,
+    writeFileString: (path: string, content: string) =>
+      Effect.sync(() => {
+        files.set(path, content);
+      }),
+  } as FileSystem.FileSystem;
 
-  afterEach(() => {
-    // Change back to original directory
-    process.chdir(path.join(testDir, ".."))
-    // Clean up test directory
-    if (fs.existsSync(testDir)) {
-      fs.rmSync(testDir, { recursive: true })
-    }
-  })
+  return {
+    layer: Layer.succeed(FileSystem.FileSystem, testFs),
+    files,
+    directories,
+  };
+}
 
-  describe("scaffoldPrismaStructure", () => {
-    it.scoped("should create prisma directory structure", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+describe('init-prisma', () => {
+  describe('scaffoldPrismaStructure', () => {
+    it('should create prisma directory structure', async () => {
+      const { layer, directories } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
 
-        // Verify directories exist
-        expect(fs.existsSync("prisma")).toBe(true)
-        expect(fs.existsSync("prisma/schemas")).toBe(true)
-        expect(fs.existsSync("prisma/migrations")).toBe(true)
-      }).pipe(Effect.provide(NodeContext.layer)))
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
 
-    it.scoped("should create schema.prisma with correct configuration", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+      expect(directories.has('prisma/schemas')).toBe(true);
+      expect(directories.has('prisma/migrations')).toBe(true);
+    });
 
-        const schemaContent = fs.readFileSync("prisma/schema.prisma", "utf-8")
-        expect(schemaContent).toBeTruthy()
-        expect(schemaContent).toContain("generator client")
-        expect(schemaContent).toContain("generator effectSchemas")
-        expect(schemaContent).toContain("provider = \"prisma-effect-kysely\"")
-        expect(schemaContent).toContain("output   = \"../libs/contract\"")
-        expect(schemaContent).toContain("multiFileDomains = \"true\"")
-        expect(schemaContent).toContain("scaffoldLibraries = \"true\"")
-        expect(schemaContent).toContain("datasource db")
-        expect(schemaContent).toContain("provider = \"postgresql\"")
-      }).pipe(Effect.provide(NodeContext.layer)))
+    it('should create schema.prisma with correct configuration', async () => {
+      const { layer, files } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
 
-    it.scoped("should create .gitkeep files in empty directories", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
 
-        expect(fs.existsSync("prisma/schemas/.gitkeep")).toBe(true)
-        expect(fs.existsSync("prisma/migrations/.gitkeep")).toBe(true)
-      }).pipe(Effect.provide(NodeContext.layer)))
+      const schemaContent = files.get('prisma/schema.prisma');
+      expect(schemaContent).toBeTruthy();
+      expect(schemaContent).toContain('generator client');
+      expect(schemaContent).toContain('generator effectSchemas');
+      expect(schemaContent).toContain('provider = "prisma-effect-kysely"');
+      expect(schemaContent).toContain('output   = "../libs/contract"');
+      expect(schemaContent).toContain('multiFileDomains = "true"');
+      expect(schemaContent).toContain('scaffoldLibraries = "true"');
+      expect(schemaContent).toContain('datasource db');
+      expect(schemaContent).toContain('provider = "postgresql"');
+    });
 
-    it.scoped("should create README.md with documentation", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+    it('should create .gitkeep files in empty directories', async () => {
+      const { layer, files } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
 
-        const readmeContent = fs.readFileSync("prisma/README.md", "utf-8")
-        expect(readmeContent).toBeTruthy()
-        expect(readmeContent).toContain("# Prisma Schemas")
-        expect(readmeContent).toContain("## Structure")
-        expect(readmeContent).toContain("## Usage")
-        expect(readmeContent).toContain("### 1. Define Models")
-        expect(readmeContent).toContain("### 2. Generate Effect Schemas")
-        expect(readmeContent).toContain("pnpm run prisma:generate")
-        expect(readmeContent).toContain("Multi-Domain Organization")
-      }).pipe(Effect.provide(NodeContext.layer)))
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
 
-    it.scoped("should create .env file with DATABASE_URL template", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+      expect(files.has('prisma/schemas/.gitkeep')).toBe(true);
+      expect(files.has('prisma/migrations/.gitkeep')).toBe(true);
+    });
 
-        const envContent = fs.readFileSync(".env", "utf-8")
-        expect(envContent).toBeTruthy()
-        expect(envContent).toContain("DATABASE_URL=")
-        expect(envContent).toContain("postgresql://")
-      }).pipe(Effect.provide(NodeContext.layer)))
+    it('should create README.md with documentation', async () => {
+      const { layer, files } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
 
-    it.scoped("should include multi-schema preview feature in schema.prisma", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
 
-        const schemaContent = fs.readFileSync("prisma/schema.prisma", "utf-8")
-        expect(schemaContent).toContain("previewFeatures = [\"multiSchema\"]")
-      }).pipe(Effect.provide(NodeContext.layer)))
+      const readmeContent = files.get('prisma/README.md');
+      expect(readmeContent).toBeTruthy();
+      expect(readmeContent).toContain('# Prisma Schemas');
+      expect(readmeContent).toContain('## Structure');
+      expect(readmeContent).toContain('## Usage');
+      expect(readmeContent).toContain('### 1. Define Models');
+      expect(readmeContent).toContain('### 2. Generate Effect Schemas');
+      expect(readmeContent).toContain('pnpm run prisma:generate');
+      expect(readmeContent).toContain('Multi-Domain Organization');
+    });
 
-    it.scoped("should reference monorepo-library-generator in schema.prisma", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+    it('should create .env file with DATABASE_URL template', async () => {
+      const { layer, files } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
 
-        const schemaContent = fs.readFileSync("prisma/schema.prisma", "utf-8")
-        expect(schemaContent).toContain("libraryGenerator = \"../node_modules/monorepo-library-generator\"")
-      }).pipe(Effect.provide(NodeContext.layer)))
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
 
-    it.scoped("should create complete file structure in one call", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+      const envContent = files.get('.env');
+      expect(envContent).toBeTruthy();
+      expect(envContent).toContain('DATABASE_URL=');
+      expect(envContent).toContain('postgresql://');
+    });
 
-        // Verify all expected files exist
-        const expectedFiles = [
-          "prisma/schema.prisma",
-          "prisma/schemas/.gitkeep",
-          "prisma/migrations/.gitkeep",
-          "prisma/README.md",
-          ".env"
-        ]
+    it('should include multi-schema preview feature in schema.prisma', async () => {
+      const { layer, files } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
 
-        expectedFiles.forEach((file) => {
-          expect(fs.existsSync(file)).toBe(true)
-        })
-      }).pipe(Effect.provide(NodeContext.layer)))
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
 
-    it.scoped("should include usage instructions in README", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+      const schemaContent = files.get('prisma/schema.prisma');
+      expect(schemaContent).toContain('previewFeatures = ["multiSchema"]');
+    });
 
-        const readmeContent = fs.readFileSync("prisma/README.md", "utf-8")
-        expect(readmeContent).toContain("prisma:generate")
-        expect(readmeContent).toContain("prisma:migrate")
-        expect(readmeContent).toContain("prisma:studio")
-        expect(readmeContent).toContain("libs/contract/{domain}/src/generated/")
-      }).pipe(Effect.provide(NodeContext.layer)))
+    it('should reference monorepo-library-generator in schema.prisma', async () => {
+      const { layer, files } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
 
-    it.scoped("should explain domain detection in README", () =>
-      Effect.gen(function*() {
-        yield* scaffoldPrismaStructure()
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
 
-        const readmeContent = fs.readFileSync("prisma/README.md", "utf-8")
-        expect(readmeContent).toContain("Domain Detection")
-        expect(readmeContent).toContain("prisma/schemas/user.prisma")
-        expect(readmeContent).toContain("domain: \"user\"")
-        expect(readmeContent).toContain("Contract Library Generation")
-      }).pipe(Effect.provide(NodeContext.layer)))
-  })
-})
+      const schemaContent = files.get('prisma/schema.prisma');
+      expect(schemaContent).toContain(
+        'libraryGenerator = "../node_modules/monorepo-library-generator"',
+      );
+    });
+
+    it('should create complete file structure in one call', async () => {
+      const { layer, files, directories } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
+
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
+
+      // Verify all expected files and directories exist
+      expect(files.has('prisma/schema.prisma')).toBe(true);
+      expect(files.has('prisma/schemas/.gitkeep')).toBe(true);
+      expect(files.has('prisma/migrations/.gitkeep')).toBe(true);
+      expect(files.has('prisma/README.md')).toBe(true);
+      expect(files.has('.env')).toBe(true);
+      expect(directories.has('prisma/schemas')).toBe(true);
+      expect(directories.has('prisma/migrations')).toBe(true);
+    });
+
+    it('should include usage instructions in README', async () => {
+      const { layer, files } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
+
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
+
+      const readmeContent = files.get('prisma/README.md');
+      expect(readmeContent).toContain('prisma:generate');
+      expect(readmeContent).toContain('prisma:migrate');
+      expect(readmeContent).toContain('prisma:studio');
+      expect(readmeContent).toContain('libs/contract/{domain}/src/generated/');
+    });
+
+    it('should explain domain detection in README', async () => {
+      const { layer, files } = makeTestFileSystem();
+      const testLayer = Layer.merge(layer, NodePath.layer);
+
+      await Effect.runPromise(scaffoldPrismaStructure().pipe(Effect.provide(testLayer)));
+
+      const readmeContent = files.get('prisma/README.md');
+      expect(readmeContent).toContain('Domain Detection');
+      expect(readmeContent).toContain('prisma/schemas/user.prisma');
+      expect(readmeContent).toContain('domain: "user"');
+      expect(readmeContent).toContain('Contract Library Generation');
+    });
+  });
+});

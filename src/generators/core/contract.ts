@@ -13,22 +13,22 @@
  * @module monorepo-library-generator/generators/core/contract-generator-core
  */
 
-import { Effect } from "effect"
-import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
-import { parseTags } from "../../utils/generators"
-import type { ContractTemplateOptions } from "../../utils/shared/types"
-import { generateCommandsFile } from "../contract/templates/commands.template"
+import { Effect } from 'effect';
+import type { FileSystemAdapter } from '../../utils/filesystem';
+import { parseTags } from '../../utils/generators';
+import type { ContractTemplateOptions } from '../../utils/types';
+import { generateCommandsFile } from '../contract/templates/commands.template';
 // NOTE: Entity generation removed - entities come from prisma-effect-kysely
 // import { generateEntityBarrelFile } from "../contract/templates/entity-barrel.template"
 // import { generateEntityFile } from "../contract/templates/entity-file.template"
-import { generateErrorsFile } from "../contract/templates/errors.template"
-import { generateEventsFile } from "../contract/templates/events.template"
-import { generateIndexFile } from "../contract/templates/index.template"
-import { generatePortsFile } from "../contract/templates/ports.template"
-import { generateProjectionsFile } from "../contract/templates/projections.template"
-import { generateQueriesFile } from "../contract/templates/queries.template"
-import { generateRpcFile } from "../contract/templates/rpc.template"
-import { generateTypesOnlyFile } from "../contract/templates/types-only.template"
+import { generateErrorsFile } from '../contract/templates/errors.template';
+import { generateEventsFile } from '../contract/templates/events.template';
+import { generateIndexFile } from '../contract/templates/index.template';
+import { generatePortsFile } from '../contract/templates/ports.template';
+import { generateProjectionsFile } from '../contract/templates/projections.template';
+import { generateQueriesFile } from '../contract/templates/queries.template';
+import { generateRpcFile } from '../contract/templates/rpc.template';
+import { generateTypesOnlyFile } from '../contract/templates/types-only.template';
 
 /**
  * Contract Generator Core Options
@@ -56,21 +56,21 @@ import { generateTypesOnlyFile } from "../contract/templates/types-only.template
  * @property entities - List of entity names for bundle optimization
  */
 export interface ContractCoreOptions {
-  readonly name: string
-  readonly className: string
-  readonly propertyName: string
-  readonly fileName: string
-  readonly constantName: string
-  readonly projectName: string
-  readonly projectRoot: string
-  readonly sourceRoot: string
-  readonly packageName: string
-  readonly offsetFromRoot: string
-  readonly description?: string
-  readonly tags?: string
-  readonly includeCQRS?: boolean
-  readonly includeRPC?: boolean
-  readonly entities?: ReadonlyArray<string>
+  readonly name: string;
+  readonly className: string;
+  readonly propertyName: string;
+  readonly fileName: string;
+  readonly constantName: string;
+  readonly projectName: string;
+  readonly projectRoot: string;
+  readonly sourceRoot: string;
+  readonly packageName: string;
+  readonly offsetFromRoot: string;
+  readonly description?: string;
+  readonly tags?: string;
+  readonly includeCQRS?: boolean;
+  readonly includeRPC?: boolean;
+  readonly entities?: ReadonlyArray<string>;
 }
 
 /**
@@ -85,11 +85,11 @@ export interface ContractCoreOptions {
  * @property filesGenerated - List of all generated file paths
  */
 export interface GeneratorResult {
-  readonly projectName: string
-  readonly projectRoot: string
-  readonly packageName: string
-  readonly sourceRoot: string
-  readonly filesGenerated: ReadonlyArray<string>
+  readonly projectName: string;
+  readonly projectRoot: string;
+  readonly packageName: string;
+  readonly sourceRoot: string;
+  readonly filesGenerated: ReadonlyArray<string>;
 }
 
 /**
@@ -105,18 +105,14 @@ export interface GeneratorResult {
  * @param options - Pre-computed metadata and feature flags from wrapper
  * @returns Effect that succeeds with GeneratorResult or fails with FileSystemErrors
  */
-export function generateContractCore(
-  adapter: FileSystemAdapter,
-  options: ContractCoreOptions
-) {
-  return Effect.gen(function*() {
+export function generateContractCore(adapter: FileSystemAdapter, options: ContractCoreOptions) {
+  return Effect.gen(function* () {
     // Prepare entities list (defaults to single entity based on library name)
-    const entities = options.entities && options.entities.length > 0
-      ? options.entities
-      : [options.className]
+    const entities =
+      options.entities && options.entities.length > 0 ? options.entities : [options.className];
 
     // Parse tags from comma-separated string
-    const parsedTags = parseTags(options.tags, [])
+    const parsedTags = parseTags(options.tags, []);
 
     // Assemble template options from pre-computed metadata
     const templateOptions: ContractTemplateOptions = {
@@ -125,7 +121,7 @@ export function generateContractCore(
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: "contract",
+      libraryType: 'contract',
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
@@ -135,20 +131,20 @@ export function generateContractCore(
       tags: parsedTags,
       includeCQRS: options.includeCQRS ?? false,
       includeRPC: options.includeRPC ?? false,
-      entities
-    }
+      entities,
+    };
 
     // Generate all domain files
-    const filesGenerated = yield* generateDomainFiles(adapter, options.sourceRoot, templateOptions)
+    const filesGenerated = yield* generateDomainFiles(adapter, options.sourceRoot, templateOptions);
 
     return {
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       packageName: options.packageName,
       sourceRoot: options.sourceRoot,
-      filesGenerated
-    }
-  })
+      filesGenerated,
+    };
+  });
 }
 
 /**
@@ -166,12 +162,12 @@ export function generateContractCore(
 function generateDomainFiles(
   adapter: FileSystemAdapter,
   sourceRoot: string,
-  templateOptions: ContractTemplateOptions
+  templateOptions: ContractTemplateOptions,
 ) {
-  return Effect.gen(function*() {
-    const workspaceRoot = adapter.getWorkspaceRoot()
-    const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`
-    const files: Array<string> = []
+  return Effect.gen(function* () {
+    const workspaceRoot = adapter.getWorkspaceRoot();
+    const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`;
+    const files: Array<string> = [];
 
     // Generate CLAUDE.md
     const claudeDoc = `# ${templateOptions.packageName}
@@ -192,10 +188,10 @@ This is a contract library defining domain types and interfaces.
 - **lib/events.ts**: Domain events (imports entity types from generated/)
 - **lib/ports.ts**: Repository/service interfaces (Context.Tag pattern)
 ${
-      templateOptions.includeCQRS
-        ? `- **lib/commands.ts**: CQRS command schemas\n- **lib/queries.ts**: CQRS query schemas\n- **lib/projections.ts**: Read-model projections`
-        : ""
-    }${templateOptions.includeRPC ? `\n- **lib/rpc.ts**: RPC endpoint definitions` : ""}
+  templateOptions.includeCQRS
+    ? `- **lib/commands.ts**: CQRS command schemas\n- **lib/queries.ts**: CQRS query schemas\n- **lib/projections.ts**: Read-model projections`
+    : ''
+}${templateOptions.includeRPC ? `\n- **lib/rpc.ts**: RPC endpoint definitions` : ''}
 
 ### Integration with prisma-effect-kysely
 
@@ -238,136 +234,150 @@ Effect.gen(function* () {
   });
 });
 \`\`\`
-`
+`;
 
-    yield* adapter.writeFile(`${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`, claudeDoc)
+    yield* adapter.writeFile(
+      `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
+      claudeDoc,
+    );
 
     // Create lib directory
-    yield* adapter.makeDirectory(sourceLibPath)
+    yield* adapter.makeDirectory(sourceLibPath);
 
     // Generate core domain files (always generated)
     const coreFiles = [
-      { path: "errors.ts", generator: generateErrorsFile },
-      { path: "ports.ts", generator: generatePortsFile },
-      { path: "events.ts", generator: generateEventsFile }
-    ]
+      { path: 'errors.ts', generator: generateErrorsFile },
+      { path: 'ports.ts', generator: generatePortsFile },
+      { path: 'events.ts', generator: generateEventsFile },
+    ];
 
     for (const { generator, path } of coreFiles) {
-      const filePath = `${sourceLibPath}/${path}`
-      const content = generator(templateOptions)
-      yield* adapter.writeFile(filePath, content)
-      files.push(filePath)
+      const filePath = `${sourceLibPath}/${path}`;
+      const content = generator(templateOptions);
+      yield* adapter.writeFile(filePath, content);
+      files.push(filePath);
     }
 
-    // NOTE: Entity files are NOT generated here - they come from prisma-effect-kysely
-    // prisma-effect-kysely generates entity schemas in src/generated/ folder
-    // See: https://github.com/your-org/prisma-effect-kysely
-    //
-    // Create generated directory with placeholder for prisma-effect-kysely output
-    const generatedPath = `${sourceLibPath}/generated`
-    yield* adapter.makeDirectory(generatedPath)
+    // Create types directory for database entity types
+    // These types are generated by prisma-effect-kysely from Prisma schema
+    const typesPath = `${sourceLibPath}/types`;
+    yield* adapter.makeDirectory(typesPath);
 
-    // Create placeholder index.ts that explains the integration
-    const generatedPlaceholderContent = `/**
- * Generated Types Placeholder
+    // Create database.ts with entity type definitions
+    const databaseTypesContent = `/**
+ * Database Entity Types
  *
- * This directory is populated by prisma-effect-kysely generator.
- * Run 'npx prisma generate' to generate entity schemas from your Prisma schema.
+ * Entity types generated from database schema.
+ * These types are used throughout the contract library.
  *
- * Expected output:
- * - types.ts: Entity schemas (${templateOptions.className}, ${templateOptions.className}Select, ${templateOptions.className}Insert, ${templateOptions.className}Update)
- * - enums.ts: Enum schemas from Prisma enums
- * - index.ts: Barrel exports
- *
- * @see https://github.com/your-org/prisma-effect-kysely
+ * Integration with prisma-effect-kysely:
+ * - Run 'npx prisma generate' to update types from Prisma schema
+ * - Types include: ${templateOptions.className}, ${templateOptions.className}Id, ${templateOptions.className}Insert, ${templateOptions.className}Update
  */
 
-// Re-export generated types when available
-// After running 'npx prisma generate', replace this with:
-// export * from './types';
-// export * from './enums';
-
-// Temporary placeholder types until prisma-effect-kysely generates real types
 import { Brand, Schema } from "effect"
+
+// ============================================================================
+// Branded ID Types
+// ============================================================================
 
 /**
  * Branded ID type for type-safe ${templateOptions.className} identifiers
+ *
+ * Prevents accidental mixing of IDs from different entity types.
  */
 export type ${templateOptions.className}Id = string & Brand.Brand<"${templateOptions.className}Id">
 
 /**
- * ${templateOptions.className}Id Schema for validation
+ * ${templateOptions.className}Id Schema for validation and parsing
  */
 export const ${templateOptions.className}Id = Schema.String.pipe(
   Schema.brand("${templateOptions.className}Id")
 )
 
+// ============================================================================
+// Entity Schema
+// ============================================================================
+
 /**
- * Placeholder ${templateOptions.className} schema
- * Replace with actual generated schema from prisma-effect-kysely
+ * ${templateOptions.className} entity schema
+ *
+ * Defines the structure of ${templateOptions.className} records in the database.
+ * Includes runtime validation via Effect Schema.
  */
 export const ${templateOptions.className} = Schema.Struct({
   id: ${templateOptions.className}Id,
   name: Schema.String,
   createdAt: Schema.Date,
-  updatedAt: Schema.Date
+  updatedAt: Schema.Date,
 })
 
+/**
+ * ${templateOptions.className} entity type
+ */
 export type ${templateOptions.className} = typeof ${templateOptions.className}.Type
 
+// ============================================================================
+// Input Types
+// ============================================================================
+
 /**
- * Insert type (excludes auto-generated fields)
+ * Input type for creating new ${templateOptions.className} entities
+ *
+ * Excludes auto-generated fields (id, createdAt, updatedAt)
  */
 export type ${templateOptions.className}Insert = Omit<${templateOptions.className}, "id" | "createdAt" | "updatedAt">
 
 /**
- * Update type (partial insert)
+ * Input type for updating existing ${templateOptions.className} entities
+ *
+ * All fields are optional for partial updates
  */
 export type ${templateOptions.className}Update = Partial<${templateOptions.className}Insert>
-`
-    yield* adapter.writeFile(`${generatedPath}/index.ts`, generatedPlaceholderContent)
-    files.push(`${generatedPath}/index.ts`)
+`;
+    yield* adapter.writeFile(`${typesPath}/database.ts`, databaseTypesContent);
+    files.push(`${typesPath}/database.ts`);
 
     // Generate types-only file (types.ts) for zero-runtime imports
-    const typesPath = `${workspaceRoot}/${sourceRoot}/types.ts`
+    const typesOnlyPath = `${workspaceRoot}/${sourceRoot}/types.ts`;
     const typesContent = generateTypesOnlyFile({
       entities: templateOptions.entities,
       includeCQRS: templateOptions.includeCQRS,
-      includeRPC: templateOptions.includeRPC
-    })
-    yield* adapter.writeFile(typesPath, typesContent)
-    files.push(typesPath)
+      includeRPC: templateOptions.includeRPC,
+    });
+    yield* adapter.writeFile(typesOnlyPath, typesContent);
+    files.push(typesOnlyPath);
 
     // Generate CQRS files (conditional)
     if (templateOptions.includeCQRS) {
       const cqrsFiles = [
-        { path: "commands.ts", generator: generateCommandsFile },
-        { path: "queries.ts", generator: generateQueriesFile },
-        { path: "projections.ts", generator: generateProjectionsFile }
-      ]
+        { path: 'commands.ts', generator: generateCommandsFile },
+        { path: 'queries.ts', generator: generateQueriesFile },
+        { path: 'projections.ts', generator: generateProjectionsFile },
+      ];
 
       for (const { generator, path } of cqrsFiles) {
-        const filePath = `${sourceLibPath}/${path}`
-        const content = generator(templateOptions)
-        yield* adapter.writeFile(filePath, content)
-        files.push(filePath)
+        const filePath = `${sourceLibPath}/${path}`;
+        const content = generator(templateOptions);
+        yield* adapter.writeFile(filePath, content);
+        files.push(filePath);
       }
     }
 
     // Generate RPC file (conditional)
     if (templateOptions.includeRPC) {
-      const rpcPath = `${sourceLibPath}/rpc.ts`
-      const content = generateRpcFile(templateOptions)
-      yield* adapter.writeFile(rpcPath, content)
-      files.push(rpcPath)
+      const rpcPath = `${sourceLibPath}/rpc.ts`;
+      const content = generateRpcFile(templateOptions);
+      yield* adapter.writeFile(rpcPath, content);
+      files.push(rpcPath);
     }
 
     // Generate index file (barrel exports)
-    const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
-    const indexContent = generateIndexFile(templateOptions)
-    yield* adapter.writeFile(indexPath, indexContent)
-    files.push(indexPath)
+    const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`;
+    const indexContent = generateIndexFile(templateOptions);
+    yield* adapter.writeFile(indexPath, indexContent);
+    files.push(indexPath);
 
-    return files
-  })
+    return files;
+  });
 }

@@ -7,9 +7,13 @@
  * @module monorepo-library-generator/data-access/errors-template
  */
 
-import { createErrorUnionType, createTypeGuardFunctions } from "../../../utils/code-generation/error-templates"
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+import {
+  createErrorUnionType,
+  createTypeGuardFunctions,
+} from '../../../utils/templates';
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate errors.ts file for data-access library
@@ -22,8 +26,9 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  * - Type guards
  */
 export function generateErrorsFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add comprehensive file header with documentation
   builder.addFileHeader({
@@ -46,17 +51,17 @@ TODO: Customize this file:
 
 @see https://effect.website/docs/guides/error-management/error-channel-operations for patterns
 @see https://effect.website/docs/other/data/tagged-error for Data.TaggedError`,
-    module: `@custom-repo/data-access-${fileName}/server`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/server`,
+  });
+  builder.addBlankLine();
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Data"] }])
-  builder.addBlankLine()
+  builder.addImports([{ from: 'effect', imports: ['Data'] }]);
+  builder.addBlankLine();
 
   // Base Error Type
-  builder.addSectionComment("Base Error Type")
-  builder.addBlankLine()
+  builder.addSectionComment('Base Error Type');
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Base error type for all ${className} domain errors
@@ -80,12 +85,12 @@ export class ${className}Error extends Data.TaggedError(
 )<{
   readonly message: string;
   readonly cause?: unknown;
-}> {}`)
-  builder.addBlankLine()
+}> {}`);
+  builder.addBlankLine();
 
   // Domain-Specific Error Types
-  builder.addSectionComment("Domain-Specific Error Types")
-  builder.addBlankLine()
+  builder.addSectionComment('Domain-Specific Error Types');
+  builder.addBlankLine();
 
   // NotFoundError
   builder.addRaw(`/**
@@ -112,8 +117,8 @@ export class ${className}NotFoundError extends Data.TaggedError(
       id,
     });
   }
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // ValidationError
   builder.addRaw(`/**
@@ -142,8 +147,8 @@ export class ${className}ValidationError extends Data.TaggedError(
       errors,
     });
   }
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // ConflictError
   builder.addRaw(`/**
@@ -175,8 +180,8 @@ export class ${className}ConflictError extends Data.TaggedError(
       ...(conflictingId !== undefined && { conflictingId }),
     });
   }
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // ConfigError
   builder.addRaw(`/**
@@ -197,8 +202,8 @@ export class ${className}ConfigError extends Data.TaggedError(
       property,
     });
   }
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // ConnectionError
   builder.addRaw(`/**
@@ -220,8 +225,8 @@ export class ${className}ConnectionError extends Data.TaggedError(
       cause,
     });
   }
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // TimeoutError
   builder.addRaw(`/**
@@ -243,8 +248,8 @@ export class ${className}TimeoutError extends Data.TaggedError(
       timeoutMs,
     });
   }
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // InternalError
   builder.addRaw(`/**
@@ -276,12 +281,12 @@ export class ${className}InternalError extends Data.TaggedError(
       cause,
     });
   }
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // Error Type Union
-  builder.addSectionComment("Error Type Union")
-  builder.addBlankLine()
+  builder.addSectionComment('Error Type Union');
+  builder.addBlankLine();
 
   builder.addRaw(
     createErrorUnionType({
@@ -294,34 +299,33 @@ export class ${className}InternalError extends Data.TaggedError(
         `${className}ConfigError`,
         `${className}ConnectionError`,
         `${className}TimeoutError`,
-        `${className}InternalError`
+        `${className}InternalError`,
       ],
-      jsdoc:
-        `Union of all ${className} repository errors\n\nUse this type for repository method signatures:\n\n@example\n\`\`\`typescript\nexport interface ${className}Repository {\n  readonly findById: (id: string) => Effect.Effect<\n    Option.Option<${className}>,\n    ${className}RepositoryError\n  >;\n}\n\`\`\``
-    })
-  )
-  builder.addBlankLine()
+      jsdoc: `Union of all ${className} repository errors\n\nUse this type for repository method signatures:\n\n@example\n\`\`\`typescript\nexport interface ${className}Repository {\n  readonly findById: (id: string) => Effect.Effect<\n    Option.Option<${className}>,\n    ${className}RepositoryError\n  >;\n}\n\`\`\``,
+    }),
+  );
+  builder.addBlankLine();
 
   // Type Guards
-  builder.addSectionComment("Type Guards (using _tag property)")
-  builder.addBlankLine()
+  builder.addSectionComment('Type Guards (using _tag property)');
+  builder.addBlankLine();
 
   // Generate type guard functions using utility
   builder.addRaw(
     createTypeGuardFunctions({
       className,
       errorTypes: [
-        "NotFoundError",
-        "ValidationError",
-        "ConflictError",
-        "ConfigError",
-        "ConnectionError",
-        "TimeoutError",
-        "InternalError"
-      ]
-    })
-  )
-  builder.addBlankLine()
+        'NotFoundError',
+        'ValidationError',
+        'ConflictError',
+        'ConfigError',
+        'ConnectionError',
+        'TimeoutError',
+        'InternalError',
+      ],
+    }),
+  );
+  builder.addBlankLine();
 
   // Add TODO comment for additional error types
   builder.addRaw(`// TODO: Add domain-specific error types here
@@ -340,7 +344,7 @@ export class ${className}InternalError extends Data.TaggedError(
 //     });
 //   }
 // }
-`)
+`);
 
-  return builder.toString()
+  return builder.toString();
 }

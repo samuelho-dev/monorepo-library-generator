@@ -6,8 +6,9 @@
  * @module monorepo-library-generator/data-access/queries-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate queries.ts file for data-access library
@@ -18,8 +19,9 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  * - Common query patterns
  */
 export function generateQueriesFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
   builder.addFileHeader({
@@ -28,37 +30,37 @@ export function generateQueriesFile(options: DataAccessTemplateOptions) {
 Encapsulates common query patterns and SQL building logic.
 
 @see https://kysely.dev/docs/category/queries for Kysely API reference`,
-    module: `@custom-repo/data-access-${fileName}/server`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/server`,
+  });
+  builder.addBlankLine();
 
   // Add imports
   builder.addImports([
     {
-      from: "kysely",
-      imports: ["Kysely"],
-      isTypeOnly: true
+      from: 'kysely',
+      imports: ['Kysely'],
+      isTypeOnly: true,
     },
     {
-      from: "@custom-repo/infra-database",
-      imports: ["Database"],
-      isTypeOnly: true
-    }
-  ])
-  builder.addBlankLine()
+      from: `${scope}/infra-database`,
+      imports: ['Database'],
+      isTypeOnly: true,
+    },
+  ]);
+  builder.addBlankLine();
 
   // Query Type Aliases
-  builder.addSectionComment("Query Type Aliases")
-  builder.addBlankLine()
+  builder.addSectionComment('Query Type Aliases');
+  builder.addBlankLine();
 
   // Removed unused type alias - add back when needed for query building
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * ${className} Filter options for queries
  */
-export type ${className}QueryFilters = Record<string, never>;`)
-  builder.addBlankLine()
+export type ${className}QueryFilters = Record<string, never>;`);
+  builder.addBlankLine();
 
   builder.addRaw(`/**
  * Pagination options
@@ -66,12 +68,12 @@ export type ${className}QueryFilters = Record<string, never>;`)
 export interface PaginationOptions {
   readonly skip: number;
   readonly limit: number;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // Query Builders
-  builder.addSectionComment("Query Builders")
-  builder.addBlankLine()
+  builder.addSectionComment('Query Builders');
+  builder.addBlankLine();
 
   // buildFindAllQuery
   builder.addRaw(`/**
@@ -88,8 +90,8 @@ export function buildFindAllQuery(
 ) {
   const query = db.selectFrom("${fileName}");
   return query;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // buildFindByIdQuery
   builder.addRaw(`/**
@@ -108,8 +110,8 @@ export function buildFindByIdQuery(
   return db
     .selectFrom("${fileName}")
     .where("id", "=", id);
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // buildCountQuery
   builder.addRaw(`/**
@@ -129,8 +131,8 @@ export function buildCountQuery(
     .select((eb) => eb.fn.countAll().as("count"));
 
   return query;
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
-  return builder.toString()
+  return builder.toString();
 }

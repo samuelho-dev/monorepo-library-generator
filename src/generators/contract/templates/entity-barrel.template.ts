@@ -5,7 +5,7 @@
  */
 
 export interface EntityBarrelOptions {
-  readonly entities: ReadonlyArray<string>
+  readonly entities: ReadonlyArray<string>;
 }
 
 /**
@@ -15,14 +15,14 @@ export interface EntityBarrelOptions {
  * Users can import from the barrel or use granular imports for tree-shaking.
  */
 export function generateEntityBarrelFile(options: EntityBarrelOptions) {
-  const { entities } = options
+  const { entities } = options;
 
   const exports = entities
     .map((entityName) => {
-      const fileName = entityNameToFileName(entityName)
-      return `export * from "./${fileName}";`
+      const fileName = entityNameToFileName(entityName);
+      return `export * from "./${fileName}";`;
     })
-    .join("\n")
+    .join('\n');
 
   return `/**
  * Entity Barrel Exports
@@ -33,14 +33,12 @@ export function generateEntityBarrelFile(options: EntityBarrelOptions) {
  */
 
 ${exports}
-`
+`;
 }
 
 /**
  * Convert entity name to file name
  */
 function entityNameToFileName(entityName: string) {
-  return entityName
-    .replace(/([a-z])([A-Z])/g, "$1-$2")
-    .toLowerCase()
+  return entityName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }

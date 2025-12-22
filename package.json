@@ -47,12 +47,12 @@
     "ci:publish": "npm publish --access public --provenance"
   },
   "dependencies": {
-    "@effect/cli": "^0.72.1",
-    "@effect/platform": "^0.93.6",
-    "@effect/platform-node": "^0.100.0",
+    "@effect/cli": "^0.73.0",
+    "@effect/platform": "^0.94.0",
+    "@effect/platform-node": "^0.104.0",
     "@effect/schema": "^0.75.5",
     "@nx/devkit": "^22.3.1",
-    "effect": "^3.19.9",
+    "effect": "^3.19.13",
     "nx": "^22.3.1"
   },
   "devDependencies": {

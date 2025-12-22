@@ -7,9 +7,9 @@
  * @module cli/commands/init-prisma
  */
 
-import { FileSystem } from "@effect/platform"
-import * as Path from "@effect/platform/Path"
-import { Console, Effect } from "effect"
+import { FileSystem } from '@effect/platform';
+import * as Path from '@effect/platform/Path';
+import { Console, Effect } from 'effect';
 
 /**
  * Scaffold Prisma directory structure for multi-file schema organization
@@ -21,16 +21,16 @@ import { Console, Effect } from "effect"
  * - prisma/README.md - Documentation for Prisma usage
  */
 export function scaffoldPrismaStructure() {
-  return Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const path = yield* Path.Path
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
 
-    yield* Console.log("🗄️  Scaffolding Prisma directory structure...")
+    yield* Console.log('🗄️  Scaffolding Prisma directory structure...');
 
     // Create directories
-    const basePath = "prisma"
-    yield* fs.makeDirectory(path.join(basePath, "schemas"), { recursive: true })
-    yield* fs.makeDirectory(path.join(basePath, "migrations"), { recursive: true })
+    const basePath = 'prisma';
+    yield* fs.makeDirectory(path.join(basePath, 'schemas'), { recursive: true });
+    yield* fs.makeDirectory(path.join(basePath, 'migrations'), { recursive: true });
 
     // Create schema.prisma with multi-domain configuration
     const schemaContent = `// Prisma Schema
@@ -56,13 +56,13 @@ datasource db {
 
 // Define your models in prisma/schemas/ directory
 // Example: prisma/schemas/user.prisma
-`
+`;
 
-    yield* fs.writeFileString(path.join(basePath, "schema.prisma"), schemaContent)
+    yield* fs.writeFileString(path.join(basePath, 'schema.prisma'), schemaContent);
 
     // Create .gitkeep files for empty directories
-    yield* fs.writeFileString(path.join(basePath, "schemas", ".gitkeep"), "")
-    yield* fs.writeFileString(path.join(basePath, "migrations", ".gitkeep"), "")
+    yield* fs.writeFileString(path.join(basePath, 'schemas', '.gitkeep'), '');
+    yield* fs.writeFileString(path.join(basePath, 'migrations', '.gitkeep'), '');
 
     // Create comprehensive README
     const readmeContent = `# Prisma Schemas
@@ -140,9 +140,9 @@ The generator is configured with \`multiFileDomains = "true"\`, which means:
 - [Prisma Multi-File Schemas](https://www.prisma.io/blog/organize-your-prisma-schema-with-multi-file-support)
 - [Effect Schema](https://effect.website/docs/schema/introduction)
 - [Kysely](https://kysely.dev/)
-`
+`;
 
-    yield* fs.writeFileString(path.join(basePath, "README.md"), readmeContent)
+    yield* fs.writeFileString(path.join(basePath, 'README.md'), readmeContent);
 
     // Create .env file with DATABASE_URL and provider variables
     const envContent = `# Node Environment
@@ -179,14 +179,14 @@ EFFECT_QUEUE_TIMEOUT=20000
 # Effect.PubSub Provider
 EFFECT_PUBSUB_API_KEY="your-pubsub-api-key"
 EFFECT_PUBSUB_TIMEOUT=20000
-`
+`;
 
-    yield* fs.writeFileString(".env", envContent)
+    yield* fs.writeFileString('.env', envContent);
 
-    yield* Console.log("  ✓ Created prisma/schema.prisma")
-    yield* Console.log("  ✓ Created prisma/schemas/ directory")
-    yield* Console.log("  ✓ Created prisma/migrations/ directory")
-    yield* Console.log("  ✓ Created prisma/README.md")
-    yield* Console.log("  ✓ Created .env with DATABASE_URL and provider variables")
-  })
+    yield* Console.log('  ✓ Created prisma/schema.prisma');
+    yield* Console.log('  ✓ Created prisma/schemas/ directory');
+    yield* Console.log('  ✓ Created prisma/migrations/ directory');
+    yield* Console.log('  ✓ Created prisma/README.md');
+    yield* Console.log('  ✓ Created .env with DATABASE_URL and provider variables');
+  });
 }

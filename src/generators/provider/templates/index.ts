@@ -7,12 +7,12 @@
  * @module monorepo-library-generator/provider/templates
  */
 
-export { generateClientFile } from "./client.template"
-export { generateEdgeFile } from "./edge.template"
-export { generateErrorsFile } from "./errors.template"
-export { generateIndexFile } from "./index.template"
-export { generateLayersFile } from "./layers.template"
-export { generateServerFile } from "./server.template"
-export { generateServiceSpecFile } from "./service-spec.template"
-export { generateTypesFile } from "./types.template"
-export { generateValidationFile } from "./validation.template"
+export { generateClientFile } from './client.template';
+export { generateEdgeFile } from './edge.template';
+export { generateErrorsFile } from './errors.template';
+export { generateIndexFile } from './index.template';
+export { generateLayersFile } from './layers.template';
+export { generateServerFile } from './server.template';
+export { generateServiceSpecFile } from './service-spec.template';
+export { generateTypesFile } from './types.template';
+export { generateValidationFile } from './validation.template';

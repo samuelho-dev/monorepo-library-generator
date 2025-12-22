@@ -6,5 +6,5 @@
  * @module monorepo-library-generator/infrastructure/execution
  */
 
-export * from "./executor"
-export * from "./types"
+export * from './executor';
+export * from './types';

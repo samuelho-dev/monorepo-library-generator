@@ -6,17 +6,17 @@
  * @module monorepo-library-generator/data-access/repository/update-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate repository/operations/update.ts file
  */
-export function generateRepositoryUpdateOperationFile(
-  options: DataAccessTemplateOptions
-) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+export function generateRepositoryUpdateOperationFile(options: DataAccessTemplateOptions) {
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Update Operations`,
@@ -24,69 +24,54 @@ export function generateRepositoryUpdateOperationFile(
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { updateOperations } from '@scope/data-access-${fileName}/repository/operations/update'`,
-    module: `@custom-repo/data-access-${fileName}/repository/operations`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/repository/operations`,
+  });
+  builder.addBlankLine();
 
-  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
-  builder.addBlankLine()
+  builder.addImports([{ from: 'effect', imports: ['Effect', 'Duration'] }]);
+  builder.addBlankLine();
 
   builder.addImports([
     {
-      from: "../../shared/types",
+      from: '../../shared/types',
       imports: [`${className}UpdateInput`],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
-      from: "../../shared/errors",
-      imports: [`${className}NotFoundError`, `${className}TimeoutError`]
-    }
-  ])
-  builder.addBlankLine()
+      from: '../../shared/errors',
+      imports: [`${className}NotFoundError`, `${className}TimeoutError`],
+    },
+  ]);
+  builder.addBlankLine();
 
   // Import infrastructure services
-  builder.addComment("Infrastructure services - Database for persistence")
-  builder.addRaw(`import { DatabaseService } from "@custom-repo/infra-database";`)
-  builder.addBlankLine()
+  builder.addComment('Infrastructure services - Database for persistence');
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
+  builder.addBlankLine();
 
-  builder.addSectionComment("Update Operations Interface")
-  builder.addBlankLine()
-
-  builder.addRaw(`export interface Update${className}Operations {
-  /**
-   * Update ${className} entity by ID
-   *
-   * @param id - Entity identifier
-   * @param input - Partial update data
-   * @returns Effect that succeeds with updated entity or fails if not found
-   */
-  update(
-    id: string,
-    input: ${className}UpdateInput
-  );
-}`)
-  builder.addBlankLine()
-
-  builder.addSectionComment("Live Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment('Update Operations');
+  builder.addBlankLine();
 
   builder.addRaw(`/**
- * Live update operations implementation
+ * Update operations for ${className} repository
  *
- * Uses DatabaseService for persistence with type-safe database queries
+ * Uses DatabaseService for persistence with type-safe database queries.
+ * Return types are inferred to preserve Effect's dependency and error tracking.
  *
- * PRODUCTION INTEGRATION:
- * - DatabaseService for database access via Kysely
- * - Effect.log* methods for observability
- * - Proper error handling for not found cases
- * - Timeout protection and distributed tracing
+ * @example
+ * \`\`\`typescript
+ * const updated = yield* updateOperations.update("id-123", { name: "new name" });
+ * \`\`\`
  */
-export const updateOperations: Update${className}Operations = {
+export const updateOperations = {
+  /**
+   * Update ${className} entity by ID
+   */
   update: (id: string, input: ${className}UpdateInput) =>
     Effect.gen(function* () {
       const database = yield* DatabaseService;
 
-      yield* Effect.logInfo(\`Updating ${className} with id: \${id}\`);
+      yield* Effect.logDebug(\`Updating ${className} with id: \${id}\`);
 
       const updated = yield* database.query((db) =>
         db
@@ -105,18 +90,22 @@ export const updateOperations: Update${className}Operations = {
         return yield* Effect.fail(${className}NotFoundError.create(id));
       }
 
-      yield* Effect.logInfo(\`${className} updated successfully (id: \${id})\`);
+      yield* Effect.logDebug(\`${className} updated successfully (id: \${id})\`);
 
       return updated;
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () =>
-          ${className}TimeoutError.create("update", 30000)
+        onTimeout: () => ${className}TimeoutError.create("update", 30000)
       }),
       Effect.withSpan("${className}Repository.update")
     ),
-};`)
+} as const;
 
-  return builder.toString()
+/**
+ * Type alias for the update operations object
+ */
+export type Update${className}Operations = typeof updateOperations;`);
+
+  return builder.toString();
 }

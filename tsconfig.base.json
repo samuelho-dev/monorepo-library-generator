@@ -1,61 +1,24 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "target": "ES2022",
     "strict": true,
     "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "allowJs": false,
-    "checkJs": false,
-    "moduleDetection": "force",
+    "noPropertyAccessFromIndexSignature": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "removeComments": false,
-    "importHelpers": false,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "lib": [
-      "ES2022"
-    ],
-    "paths": {
-      "@myorg/contract-*": [
-        "libs/contract/*/src/index.ts"
-      ],
-      "@myorg/data-access-*": [
-        "libs/data-access/*/src/index.ts"
-      ],
-      "@myorg/feature-*": [
-        "libs/feature/*/src/index.ts"
-      ],
-      "@myorg/infra-*": [
-        "libs/infra/*/src/index.ts"
-      ],
-      "@myorg/provider-*": [
-        "libs/provider/*/src/index.ts"
-      ],
-      "@myorg/env": [
-        "libs/env/src/index.ts"
-      ]
-    }
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {}
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    ".nx"
-  ]
+  "exclude": ["node_modules", "tmp", "dist"]
 }

@@ -13,9 +13,9 @@
  * @module cli/commands/init-integration-example
  */
 
-import { FileSystem } from "@effect/platform"
-import { Console, Effect } from "effect"
-import { getPackageName } from "../../utils/workspace-config"
+import { FileSystem } from '@effect/platform';
+import { Console, Effect } from 'effect';
+import { getPackageName } from '../../utils/workspace-config';
 
 /**
  * Generate complete integration example
@@ -26,20 +26,20 @@ import { getPackageName } from "../../utils/workspace-config"
  * - example/user.prisma - Example Prisma schema
  */
 export function generateIntegrationExample() {
-  return Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
 
     // Get dynamic package names
-    const featureUserPackage = getPackageName("feature", "user-management")
-    const dataAccessUserPackage = getPackageName("data-access", "user")
-    const infraDatabasePackage = getPackageName("infra", "database")
-    const providerKyselyPackage = getPackageName("provider", "kysely")
-    const contractUserPackage = getPackageName("contract", "user")
+    const featureUserPackage = getPackageName('feature', 'user-management');
+    const dataAccessUserPackage = getPackageName('data-access', 'user');
+    const infraDatabasePackage = getPackageName('infra', 'database');
+    const providerKyselyPackage = getPackageName('provider', 'kysely');
+    const contractUserPackage = getPackageName('contract', 'user');
 
-    yield* Console.log("📚 Generating integration example...")
+    yield* Console.log('📚 Generating integration example...');
 
     // Create examples directory
-    yield* fs.makeDirectory("examples", { recursive: true })
+    yield* fs.makeDirectory('examples', { recursive: true });
 
     // 1. Example Prisma schema
     const prismaSchema = `// Example User domain model
@@ -52,10 +52,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-`
+`;
 
-    yield* fs.writeFileString("examples/user.prisma", prismaSchema)
-    yield* Console.log("  ✓ Created examples/user.prisma")
+    yield* fs.writeFileString('examples/user.prisma', prismaSchema);
+    yield* Console.log('  ✓ Created examples/user.prisma');
 
     // 2. Complete application example
     const appExample = `/**
@@ -75,7 +75,7 @@ model User {
  * - Effect.gen accesses services via yield*
  */
 
-import { Effect, Layer, Console } from "effect"
+import { Effect, Layer, Console, Context } from "effect"
 
 // ============================================================================
 // LAYER 5: FEATURE (Business Logic)
@@ -85,8 +85,6 @@ import { Effect, Layer, Console } from "effect"
 // You would have: ${featureUserPackage}
 //
 // For now, we'll simulate the feature service:
-
-import type { Context } from "effect"
 
 // Simulated UserService (would come from feature library)
 class UserService extends Context.Tag("UserService")<
@@ -112,7 +110,7 @@ class UserService extends Context.Tag("UserService")<
 //
 // For now, we'll simulate the repository:
 
-import type { DatabaseService } from "${infraDatabasePackage}"
+import { DatabaseService } from "${infraDatabasePackage}"
 
 const UserRepositoryLive = Layer.effect(
   UserService,
@@ -125,8 +123,20 @@ const UserRepositoryLive = Layer.effect(
         Effect.gen(function* () {
           yield* Console.log(\`📝 Creating user: \${email}\`)
 
-          // Use database infrastructure
-          const user = yield* db.create({ email, name })
+          // Use database.query() with Kysely query builder
+          const user = yield* db.query((kysely) =>
+            kysely
+              .insertInto("users")
+              .values({
+                id: crypto.randomUUID(),
+                email,
+                name: name ?? null,
+                created_at: new Date(),
+                updated_at: new Date(),
+              })
+              .returningAll()
+              .executeTakeFirstOrThrow()
+          )
 
           yield* Console.log(\`✅ User created: \${user.id}\`)
           return user as { id: string; email: string; name?: string }
@@ -136,17 +146,22 @@ const UserRepositoryLive = Layer.effect(
         Effect.gen(function* () {
           yield* Console.log(\`🔍 Finding user: \${email}\`)
 
-          // Use database infrastructure
-          const result = yield* db.findByCriteria({ email }, 0, 1)
+          // Use database.query() with Kysely query builder
+          const user = yield* db.query((kysely) =>
+            kysely
+              .selectFrom("users")
+              .selectAll()
+              .where("email", "=", email)
+              .executeTakeFirst()
+          )
 
-          if (result.length === 0) {
+          if (!user) {
             yield* Console.log(\`❌ User not found: \${email}\`)
             return null
           }
 
-          const user = result[0] as { id: string; email: string; name?: string }
           yield* Console.log(\`✅ User found: \${user.id}\`)
-          return user
+          return user as { id: string; email: string; name?: string }
         })
     }
   })
@@ -162,7 +177,7 @@ const UserRepositoryLive = Layer.effect(
 // This layer is generated by: mlg init
 // It automatically integrates with the Kysely provider
 
-import { DatabaseService } from "${infraDatabasePackage}"
+// (DatabaseService already imported above for repository layer)
 
 // ============================================================================
 // LAYER 2: PROVIDER (External Service Adapter)
@@ -220,7 +235,7 @@ const program = Effect.gen(function* () {
   const userService = yield* UserService
 
   yield* Console.log("\\n🚀 Starting User Management Example\\n")
-  yield* Console.log("=" + "=".repeat(50) + "\\n")
+  yield* Console.log(\`\${"=".repeat(51)}\\n\`)
 
   // Create a user
   yield* Console.log("📋 Step 1: Create User")
@@ -242,7 +257,7 @@ const program = Effect.gen(function* () {
   const notFound = yield* userService.getUserByEmail("bob@example.com")
   yield* Console.log(\`   Result: \${notFound ? "Found" : "Not found"}\\n\`)
 
-  yield* Console.log("=" + "=".repeat(50))
+  yield* Console.log("=".repeat(51))
   yield* Console.log("\\n✅ Example completed successfully!\\n")
 
   return "Success"
@@ -298,10 +313,10 @@ const program = Effect.gen(function* () {
  */
 
 export { program, AppLayer }
-`
+`;
 
-    yield* fs.writeFileString("examples/app.ts", appExample)
-    yield* Console.log("  ✓ Created examples/app.ts")
+    yield* fs.writeFileString('examples/app.ts', appExample);
+    yield* Console.log('  ✓ Created examples/app.ts');
 
     // 3. README with integration explanation
     const readme = `# Integration Example: 5-Layer Architecture
@@ -590,18 +605,18 @@ Infrastructure auto-integrates with providers (Phase 2 feature).
 ---
 
 Generated by: \`mlg init --includePrisma\`
-`
+`;
 
-    yield* fs.writeFileString("examples/README.md", readme)
-    yield* Console.log("  ✓ Created examples/README.md")
+    yield* fs.writeFileString('examples/README.md', readme);
+    yield* Console.log('  ✓ Created examples/README.md');
 
-    yield* Console.log("")
-    yield* Console.log("✨ Integration example generated!")
-    yield* Console.log("")
-    yield* Console.log("📁 Files created:")
-    yield* Console.log("  - examples/app.ts - Complete 5-layer example")
-    yield* Console.log("  - examples/README.md - Integration guide")
-    yield* Console.log("  - examples/user.prisma - Example schema")
-    yield* Console.log("")
-  })
+    yield* Console.log('');
+    yield* Console.log('✨ Integration example generated!');
+    yield* Console.log('');
+    yield* Console.log('📁 Files created:');
+    yield* Console.log('  - examples/app.ts - Complete 5-layer example');
+    yield* Console.log('  - examples/README.md - Integration guide');
+    yield* Console.log('  - examples/user.prisma - Example schema');
+    yield* Console.log('');
+  });
 }

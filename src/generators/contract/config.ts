@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract-config
  */
 
-import { DEFAULT_LIBRARY_TAGS, PLATFORM_EXPORTS } from "../../utils/shared/base-config"
-import type { ContractTemplateOptions, GeneratorConfig } from "../../utils/shared/types"
+import { DEFAULT_LIBRARY_TAGS } from '../../utils/build';
+import type { ContractTemplateOptions, GeneratorConfig } from '../../utils/types';
 
 /**
  * Contract generator configuration
@@ -16,98 +16,71 @@ import type { ContractTemplateOptions, GeneratorConfig } from "../../utils/share
  * Defines which files are generated and under what conditions
  */
 export const ContractGeneratorConfig: GeneratorConfig<ContractTemplateOptions> = {
-  libraryType: "contract",
+  libraryType: 'contract',
 
   /**
    * Files always generated for every contract library
    */
-  defaultFiles: [
-    "errors.ts",
-    "entities.ts",
-    "ports.ts",
-    "events.ts",
-    "index.ts"
-  ],
+  defaultFiles: ['errors.ts', 'entities.ts', 'ports.ts', 'events.ts', 'index.ts'],
 
   /**
    * Files generated based on feature flags
    */
   conditionalFiles: {
-    includeCQRS: ["commands.ts", "queries.ts", "projections.ts"],
-    includeRPC: ["rpc.ts"]
+    includeCQRS: ['commands.ts', 'queries.ts', 'projections.ts'],
+    includeRPC: ['rpc.ts'],
   },
-
-  /**
-   * Template functions are imported directly in the orchestrator
-   * This field is kept for documentation purposes and is not used
-   */
-
-  /**
-   * Contract libraries are universal - no platform-specific exports
-   * They define interfaces/types that can be used anywhere
-   */
-  platformExports: PLATFORM_EXPORTS.universal,
 
   /**
    * Default tags for contract libraries
    */
-  defaultTags: DEFAULT_LIBRARY_TAGS.contract
-}
+  defaultTags: DEFAULT_LIBRARY_TAGS.contract,
+};
 
 /**
  * Get list of files to generate based on options
  */
 export function getFilesToGenerate(options: ContractTemplateOptions) {
-  let files = [...ContractGeneratorConfig.defaultFiles]
+  let files = [...ContractGeneratorConfig.defaultFiles];
 
   // Add CQRS files if requested
-  if (
-    options.includeCQRS &&
-    ContractGeneratorConfig.conditionalFiles?.["includeCQRS"]
-  ) {
-    files = files.concat(ContractGeneratorConfig.conditionalFiles["includeCQRS"])
+  if (options.includeCQRS && ContractGeneratorConfig.conditionalFiles?.['includeCQRS']) {
+    files = files.concat(ContractGeneratorConfig.conditionalFiles['includeCQRS']);
   }
 
   // Add RPC file if requested
-  if (
-    options.includeRPC &&
-    ContractGeneratorConfig.conditionalFiles?.["includeRPC"]
-  ) {
-    files = files.concat(ContractGeneratorConfig.conditionalFiles["includeRPC"])
+  if (options.includeRPC && ContractGeneratorConfig.conditionalFiles?.['includeRPC']) {
+    files = files.concat(ContractGeneratorConfig.conditionalFiles['includeRPC']);
   }
 
-  return files
+  return files;
 }
 
 /**
  * Validate contract generator options
  */
-export function validateContractOptions(
-  options: ContractTemplateOptions
-) {
+export function validateContractOptions(options: ContractTemplateOptions) {
   if (!options.className || options.className.length === 0) {
-    throw new Error("className is required")
+    throw new Error('className is required');
   }
 
   if (!/^[A-Z][a-zA-Z0-9]*$/.test(options.className)) {
-    throw new Error(`className must be PascalCase, got: ${options.className}`)
+    throw new Error(`className must be PascalCase, got: ${options.className}`);
   }
 
   if (!options.propertyName || options.propertyName.length === 0) {
-    throw new Error("propertyName is required")
+    throw new Error('propertyName is required');
   }
 
   if (!/^[a-z][a-zA-Z0-9]*$/.test(options.propertyName)) {
-    throw new Error(
-      `propertyName must be camelCase, got: ${options.propertyName}`
-    )
+    throw new Error(`propertyName must be camelCase, got: ${options.propertyName}`);
   }
 
   if (!options.fileName || options.fileName.length === 0) {
-    throw new Error("fileName is required")
+    throw new Error('fileName is required');
   }
 
   if (!/^[a-z][a-z0-9-]*$/.test(options.fileName)) {
-    throw new Error(`fileName must be kebab-case, got: ${options.fileName}`)
+    throw new Error(`fileName must be kebab-case, got: ${options.fileName}`);
   }
 }

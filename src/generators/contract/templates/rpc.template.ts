@@ -7,8 +7,9 @@
  * @module monorepo-library-generator/contract/rpc-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { ContractTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { ContractTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate rpc.ts file for contract library
@@ -19,72 +20,64 @@ import type { ContractTemplateOptions } from "../../../utils/shared/types"
  * - Type exports for all schemas
  */
 export function generateRpcFile(options: ContractTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName, propertyName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName, propertyName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header
-  builder.addRaw(createFileHeader(className, fileName))
-  builder.addBlankLine()
+  builder.addRaw(createFileHeader(className, fileName, scope));
+  builder.addBlankLine();
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
 
-  builder.addImports([
-    { from: "./entities", imports: [`${className}Id`], isTypeOnly: true }
-  ])
+  builder.addImports([{ from: './types/database', imports: [`${className}Id`] }]);
 
-  builder.addBlankLine()
+  builder.addBlankLine();
 
   // ============================================================================
   // SECTION 1: Request/Response Schemas
   // ============================================================================
 
-  builder.addSectionComment(
-    "Request/Response Schemas (Serializable over network)"
-  )
-  builder.addBlankLine()
+  builder.addSectionComment('Request/Response Schemas (Serializable over network)');
+  builder.addBlankLine();
 
   // Get schemas
-  builder.addRaw(createGetSchemas(className, propertyName))
-  builder.addBlankLine()
+  builder.addRaw(createGetSchemas(className, propertyName));
+  builder.addBlankLine();
 
   // List schemas
-  builder.addRaw(createListSchemas(className))
-  builder.addBlankLine()
+  builder.addRaw(createListSchemas(className));
+  builder.addBlankLine();
 
   // Create schemas
-  builder.addRaw(createCreateSchemas(className))
-  builder.addBlankLine()
+  builder.addRaw(createCreateSchemas(className));
+  builder.addBlankLine();
 
   // Update schemas
-  builder.addRaw(createUpdateSchemas(className, propertyName))
-  builder.addBlankLine()
+  builder.addRaw(createUpdateSchemas(className, propertyName));
+  builder.addBlankLine();
 
   // Delete schemas
-  builder.addRaw(createDeleteSchemas(className, propertyName))
-  builder.addBlankLine()
+  builder.addRaw(createDeleteSchemas(className, propertyName));
+  builder.addBlankLine();
 
   // ============================================================================
   // SECTION 2: RPC Errors (Schema.TaggedError for serialization)
   // ============================================================================
 
-  builder.addSectionComment(
-    "RPC Errors (Schema.TaggedError for serialization)"
-  )
-  builder.addBlankLine()
+  builder.addSectionComment('RPC Errors (Schema.TaggedError for serialization)');
+  builder.addBlankLine();
 
-  builder.addRaw(createRpcErrors(className, propertyName))
+  builder.addRaw(createRpcErrors(className, propertyName));
 
-  return builder.toString()
+  return builder.toString();
 }
 
 /**
  * Create file header
  */
-function createFileHeader(
-  className: string,
-  fileName: string
-) {
+function createFileHeader(className: string, fileName: string, scope: string) {
   return `/**
  * ${className} RPC Schemas
  *
@@ -98,8 +91,8 @@ function createFileHeader(
  * 4. Add validation rules for inputs
  * 5. Document error codes and recovery strategies
  *
- * @module @custom-repo/contract-${fileName}/rpc
- */`
+ * @module ${scope}/contract-${fileName}/rpc
+ */`;
 }
 
 /**
@@ -148,7 +141,7 @@ export const Get${className}Response = Schema.Struct({
   })
 );
 
-export type Get${className}Response = Schema.Schema.Type<typeof Get${className}Response>;`
+export type Get${className}Response = Schema.Schema.Type<typeof Get${className}Response>;`;
 }
 
 /**
@@ -238,7 +231,7 @@ export const List${className}sResponse = Schema.Struct({
   })
 );
 
-export type List${className}sResponse = Schema.Schema.Type<typeof List${className}sResponse>;`
+export type List${className}sResponse = Schema.Schema.Type<typeof List${className}sResponse>;`;
 }
 
 /**
@@ -293,7 +286,7 @@ export const Create${className}Response = Schema.Struct({
   })
 );
 
-export type Create${className}Response = Schema.Schema.Type<typeof Create${className}Response>;`
+export type Create${className}Response = Schema.Schema.Type<typeof Create${className}Response>;`;
 }
 
 /**
@@ -353,7 +346,7 @@ export const Update${className}Response = Schema.Struct({
   })
 );
 
-export type Update${className}Response = Schema.Schema.Type<typeof Update${className}Response>;`
+export type Update${className}Response = Schema.Schema.Type<typeof Update${className}Response>;`;
 }
 
 /**
@@ -408,7 +401,7 @@ export const Delete${className}Response = Schema.Struct({
   })
 );
 
-export type Delete${className}Response = Schema.Schema.Type<typeof Delete${className}Response>;`
+export type Delete${className}Response = Schema.Schema.Type<typeof Delete${className}Response>;`;
 }
 
 /**
@@ -432,11 +425,11 @@ export class ${className}NotFoundRpcError extends Schema.TaggedError<${className
       description: "ID of the ${className} that was not found"
     }),
   },
-  Schema.annotations({
+  {
     identifier: "${className}NotFoundRpcError",
     title: "${className} Not Found Error",
     description: "RPC error thrown when a ${className} is not found"
-  })
+  }
 ) {
   static create(${propertyName}Id: ${className}Id) {
     return new ${className}NotFoundRpcError({
@@ -465,11 +458,11 @@ export class ${className}ValidationRpcError extends Schema.TaggedError<${classNa
       description: "Validation constraint that was violated"
     }),
   },
-  Schema.annotations({
+  {
     identifier: "${className}ValidationRpcError",
     title: "${className} Validation Error",
     description: "RPC error thrown when ${className} validation fails"
-  })
+  }
 ) {
   static create(params: { message: string; field?: string; constraint?: string }) {
     return new ${className}ValidationRpcError(params);
@@ -483,5 +476,5 @@ export type ${className}RpcError =
   | ${className}NotFoundRpcError
   | ${className}ValidationRpcError;
 
-// TODO: Add more RPC-specific errors as needed`
+// TODO: Add more RPC-specific errors as needed`;
 }

@@ -1,27 +1,24 @@
-import { Effect } from "effect"
-import type { FileSystemAdapter } from "../../utils/filesystem-adapter"
-import { generateSubServiceErrorsTemplate } from "../feature/templates/sub-service-errors.template"
-import { generateSubServiceIndexTemplate } from "../feature/templates/sub-service-index.template"
-import { generateSubServiceLayersTemplate } from "../feature/templates/sub-service-layers.template"
-import { generateSubServiceTypesTemplate } from "../feature/templates/sub-service-types.template"
-import { generateSubServiceTemplate } from "../feature/templates/sub-service.template"
+import { Effect } from 'effect';
+import type { FileSystemAdapter } from '../../utils/filesystem';
+import { generateSubServiceTemplate } from '../feature/templates/sub-service.template';
+import { generateSubServiceErrorsTemplate } from '../feature/templates/sub-service-errors.template';
+import { generateSubServiceIndexTemplate } from '../feature/templates/sub-service-index.template';
+import { generateSubServiceLayersTemplate } from '../feature/templates/sub-service-layers.template';
+import { generateSubServiceTypesTemplate } from '../feature/templates/sub-service-types.template';
 
 export interface SubServiceOptions {
-  projectRoot: string
-  sourceRoot: string
-  packageName: string
-  subServices: Array<string>
+  projectRoot: string;
+  sourceRoot: string;
+  packageName: string;
+  subServices: Array<string>;
 }
 
-export const generateSubServices = (
-  adapter: FileSystemAdapter,
-  options: SubServiceOptions
-) =>
-  Effect.gen(function*() {
-    const servicesDir = `${options.sourceRoot}/lib/server/services`
+export const generateSubServices = (adapter: FileSystemAdapter, options: SubServiceOptions) =>
+  Effect.gen(function* () {
+    const servicesDir = `${options.sourceRoot}/lib/server/services`;
 
     // Create services directory
-    yield* adapter.makeDirectory(servicesDir)
+    yield* adapter.makeDirectory(servicesDir);
 
     // Generate each sub-service
     yield* Effect.forEach(
@@ -30,33 +27,33 @@ export const generateSubServices = (
         generateSingleSubService(adapter, {
           ...options,
           servicesDir,
-          serviceName
+          serviceName,
         }),
-      { concurrency: "unbounded" }
-    )
+      { concurrency: 'unbounded' },
+    );
 
     // Generate services barrel export
     yield* generateServicesBarrel(adapter, {
       servicesDir,
-      subServices: options.subServices
-    })
+      subServices: options.subServices,
+    });
 
     return {
       generatedServices: options.subServices,
-      filesGenerated: options.subServices.length * 5 + 1 // 5 files per service + 1 barrel
-    }
-  })
+      filesGenerated: options.subServices.length * 5 + 1, // 5 files per service + 1 barrel
+    };
+  });
 
 const generateSingleSubService = (
   adapter: FileSystemAdapter,
-  options: SubServiceOptions & { servicesDir: string; serviceName: string }
+  options: SubServiceOptions & { servicesDir: string; serviceName: string },
 ) =>
-  Effect.gen(function*() {
-    const serviceDir = `${options.servicesDir}/${options.serviceName}`
-    const className = toClassName(options.serviceName)
+  Effect.gen(function* () {
+    const serviceDir = `${options.servicesDir}/${options.serviceName}`;
+    const className = toClassName(options.serviceName);
 
     // Create service directory
-    yield* adapter.makeDirectory(serviceDir)
+    yield* adapter.makeDirectory(serviceDir);
 
     // Generate service.ts
     yield* adapter.writeFile(
@@ -64,43 +61,43 @@ const generateSingleSubService = (
       generateSubServiceTemplate({
         serviceName: options.serviceName,
         className,
-        packageName: options.packageName
-      })
-    )
+        packageName: options.packageName,
+      }),
+    );
 
     // Generate index.ts
     yield* adapter.writeFile(
       `${serviceDir}/index.ts`,
-      generateSubServiceIndexTemplate({ className })
-    )
+      generateSubServiceIndexTemplate({ className }),
+    );
 
     // Generate layers.ts
     yield* adapter.writeFile(
       `${serviceDir}/layers.ts`,
-      generateSubServiceLayersTemplate({ className })
-    )
+      generateSubServiceLayersTemplate({ className }),
+    );
 
     // Generate errors.ts
     yield* adapter.writeFile(
       `${serviceDir}/errors.ts`,
-      generateSubServiceErrorsTemplate({ className })
-    )
+      generateSubServiceErrorsTemplate({ className }),
+    );
 
     // Generate types.ts
     yield* adapter.writeFile(
       `${serviceDir}/types.ts`,
-      generateSubServiceTypesTemplate({ className })
-    )
-  })
+      generateSubServiceTypesTemplate({ className }),
+    );
+  });
 
 const generateServicesBarrel = (
   adapter: FileSystemAdapter,
-  options: { servicesDir: string; subServices: Array<string> }
+  options: { servicesDir: string; subServices: Array<string> },
 ) =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const exports = options.subServices
       .map((name) => `export * as ${toClassName(name)} from "./${name}"`)
-      .join("\n")
+      .join('\n');
 
     yield* adapter.writeFile(
       `${options.servicesDir}/index.ts`,
@@ -111,13 +108,13 @@ const generateServicesBarrel = (
  */
 
 ${exports}
-`
-    )
-  })
+`,
+    );
+  });
 
 const toClassName = (name: string) => {
   return name
-    .split("-")
+    .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("")
-}
+    .join('');
+};

@@ -6,19 +6,19 @@
  * @module monorepo-library-generator/data-access/repository/read-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-generation/typescript-builder";
-import type { DataAccessTemplateOptions } from "../../../../utils/shared/types";
+import { TypeScriptBuilder } from '../../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
 
 /**
  * Generate repository/operations/read.ts file
  *
  * Creates implementation for entity read/query operations
  */
-export function generateRepositoryReadOperationFile(
-  options: DataAccessTemplateOptions
-) {
+export function generateRepositoryReadOperationFile(options: DataAccessTemplateOptions) {
   const builder = new TypeScriptBuilder();
   const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   builder.addFileHeader({
     title: `${className} Read Operations`,
@@ -26,24 +26,22 @@ export function generateRepositoryReadOperationFile(
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { readOperations } from '@scope/data-access-${fileName}/repository/operations/read'`,
-    module: `@custom-repo/data-access-${fileName}/repository/operations`,
+    module: `${scope}/data-access-${fileName}/repository/operations`,
   });
   builder.addBlankLine();
 
   // Add imports
-  builder.addImports([
-    { from: "effect", imports: ["Effect", "Option", "Duration"] },
-  ]);
+  builder.addImports([{ from: 'effect', imports: ['Effect', 'Option', 'Duration'] }]);
   builder.addBlankLine();
 
   builder.addImports([
     {
-      from: "../../shared/types",
+      from: '../../shared/types',
       imports: [`${className}Filter`, `PaginationOptions`],
       isTypeOnly: true,
     },
     {
-      from: "../../shared/errors",
+      from: '../../shared/errors',
       imports: [`${className}TimeoutError`],
       isTypeOnly: false,
     },
@@ -51,114 +49,37 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine();
 
   // Import infrastructure services
-  builder.addComment(
-    "Infrastructure services - Cache for performance, Database for persistence"
-  );
-  builder.addRaw(`import { CacheService } from "@custom-repo/infra-cache";`);
-  builder.addRaw(
-    `import { DatabaseService } from "@custom-repo/infra-database";`
-  );
+  builder.addComment('Infrastructure services - Database for persistence');
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
   builder.addBlankLine();
 
-  // Operation interface
-  builder.addSectionComment("Read Operations Interface");
+  // Live implementation
+  builder.addSectionComment('Read Operations');
   builder.addBlankLine();
 
   builder.addRaw(`/**
  * Read operations for ${className} repository
+ *
+ * Uses DatabaseService for persistence with type-safe database queries.
+ * Return types are inferred to preserve Effect's dependency and error tracking.
+ *
+ * NOTE: For caching, use CacheService.makeSimple() to create a cache handle
+ * and implement cache-aside pattern in your service layer.
+ *
+ * @example
+ * \`\`\`typescript
+ * const maybeEntity = yield* readOperations.findById("id-123");
+ * \`\`\`
  */
-export interface Read${className}Operations {
+export const readOperations = {
   /**
    * Find ${className} entity by ID
-   *
-   * @param id - Entity identifier
-   * @returns Effect that succeeds with Option containing entity or None if not found
-   *
-   * @example
-   * \`\`\`typescript
-   * const repo = yield* ${className}Repository;
-   * const maybeEntity = yield* repo.findById("id-123");
-   * if (Option.isSome(maybeEntity)) {
-   *   const entity = maybeEntity.value;
-   * }
-   * \`\`\`
    */
-  findById(
-    id: string
-  );
-
-  /**
-   * Find all ${className} entities matching filters
-   *
-   * @param filter - Optional filter criteria
-   * @param pagination - Optional pagination options
-   * @returns Effect that succeeds with paginated response
-   *
-   * @example
-   * \`\`\`typescript
-   * const repo = yield* ${className}Repository;
-   * const results = yield* repo.findAll(
-   *   { search: "query" },
-   *   { limit: 20, skip: 0 }
-   * );
-   * \`\`\`
-   */
-  findAll(
-    filter?: ${className}Filter,
-    pagination?: PaginationOptions
-  );
-
-  /**
-   * Find one ${className} entity matching filter
-   *
-   * @param filter - Filter criteria
-   * @returns Effect that succeeds with Option containing first matching entity
-   *
-   * @example
-   * \`\`\`typescript
-   * const repo = yield* ${className}Repository;
-   * const maybeEntity = yield* repo.findOne({ search: "unique-value" });
-   * \`\`\`
-   */
-  findOne(
-    filter: ${className}Filter
-  );
-}`);
-  builder.addBlankLine();
-
-  // Live implementation
-  builder.addSectionComment("Live Implementation");
-  builder.addBlankLine();
-
-  builder.addRaw(`/**
- * Live read operations implementation
- *
- * Uses DatabaseService for persistence with cache-aside pattern
- *
- * PRODUCTION INTEGRATION:
- * - DatabaseService for database access via Kysely
- * - CacheService for performance optimization
- * - Effect.log* methods for observability
- * - Timeout protection and distributed tracing
- */
-export const readOperations: Read${className}Operations = {
   findById: (id: string) =>
     Effect.gen(function* () {
-      const cache = yield* CacheService;
       const database = yield* DatabaseService;
 
-      yield* Effect.logInfo(\`Finding ${className} by ID: \${id}\`);
-
-      // Check cache first
-      const cacheKey = \`${fileName}:\${id}\`;
-      const cached = yield* cache.get(cacheKey);
-      if (Option.isSome(cached)) {
-        yield* Effect.logDebug(\`Cache hit for ${fileName}:\${id}\`);
-        return Option.some(cached.value);
-      }
-
-      // Cache miss - query database
-      yield* Effect.logDebug(\`Cache miss for ${fileName}:\${id}, querying database\`);
+      yield* Effect.logDebug(\`Finding ${className} by ID: \${id}\`);
 
       const entity = yield* database.query((db) =>
         db
@@ -169,9 +90,7 @@ export const readOperations: Read${className}Operations = {
       );
 
       if (entity) {
-        // Cache the result
-        yield* cache.set(cacheKey, entity);
-        yield* Effect.logDebug(\`Cached ${fileName}:\${id}\`);
+        yield* Effect.logDebug(\`Found ${className}: \${id}\`);
         return Option.some(entity);
       }
 
@@ -180,17 +99,19 @@ export const readOperations: Read${className}Operations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () =>
-          ${className}TimeoutError.create("findById", 30000)
+        onTimeout: () => ${className}TimeoutError.create("findById", 30000)
       }),
       Effect.withSpan("${className}Repository.findById")
     ),
 
+  /**
+   * Find all ${className} entities matching filters
+   */
   findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
     Effect.gen(function* () {
       const database = yield* DatabaseService;
 
-      yield* Effect.logInfo(\`Finding all ${className} entities (filter: \${JSON.stringify(filter)})\`);
+      yield* Effect.logDebug(\`Finding all ${className} entities (filter: \${JSON.stringify(filter)})\`);
 
       const limit = pagination?.limit ?? 50;
       const skip = pagination?.skip ?? 0;
@@ -228,29 +149,29 @@ export const readOperations: Read${className}Operations = {
         return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
       });
 
-      yield* Effect.logInfo(\`Found \${items.length} ${className} entities (total: \${total})\`);
+      yield* Effect.logDebug(\`Found \${items.length} ${className} entities (total: \${total})\`);
 
       return {
         items,
         total,
-        limit,
-        skip,
         hasMore: skip + items.length < total,
       };
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () =>
-          ${className}TimeoutError.create("findAll", 30000)
+        onTimeout: () => ${className}TimeoutError.create("findAll", 30000)
       }),
       Effect.withSpan("${className}Repository.findAll")
     ),
 
+  /**
+   * Find one ${className} entity matching filter
+   */
   findOne: (filter: ${className}Filter) =>
     Effect.gen(function* () {
       const database = yield* DatabaseService;
 
-      yield* Effect.logInfo(\`Finding one ${className} entity (filter: \${JSON.stringify(filter)})\`);
+      yield* Effect.logDebug(\`Finding one ${className} entity (filter: \${JSON.stringify(filter)})\`);
 
       // Build query with filtering
       const entity = yield* database.query((db) => {
@@ -269,21 +190,25 @@ export const readOperations: Read${className}Operations = {
       });
 
       if (entity) {
-        yield* Effect.logDebug(\`Found ${className} matching filter\`);
+        yield* Effect.logDebug("Found ${className} matching filter");
         return Option.some(entity);
       }
 
-      yield* Effect.logDebug(\`No ${className} found matching filter\`);
+      yield* Effect.logDebug("No ${className} found matching filter");
       return Option.none();
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () =>
-          ${className}TimeoutError.create("findOne", 30000)
+        onTimeout: () => ${className}TimeoutError.create("findOne", 30000)
       }),
       Effect.withSpan("${className}Repository.findOne")
     ),
-};`);
+} as const;
+
+/**
+ * Type alias for the read operations object
+ */
+export type Read${className}Operations = typeof readOperations;`);
 
   return builder.toString();
 }

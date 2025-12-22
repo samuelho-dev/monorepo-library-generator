@@ -6,4 +6,4 @@
  * @module monorepo-library-generator/infrastructure/output
  */
 
-export * from "./formatter"
+export * from './formatter';

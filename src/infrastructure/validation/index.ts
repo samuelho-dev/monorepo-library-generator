@@ -6,4 +6,4 @@
  * @module monorepo-library-generator/infrastructure/validation
  */
 
-export * from "./registry"
+export * from './registry';

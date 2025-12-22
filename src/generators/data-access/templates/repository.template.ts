@@ -6,8 +6,9 @@
  * @module monorepo-library-generator/data-access/repository-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-generation/typescript-builder"
-import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder';
+import type { DataAccessTemplateOptions } from '../../../utils/types';
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
 
 /**
  * Generate repository.ts file for data-access library
@@ -19,132 +20,112 @@ import type { DataAccessTemplateOptions } from "../../../utils/shared/types"
  * - Error handling and validation
  */
 export function generateRepositoryFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const builder = new TypeScriptBuilder();
+  const { className, fileName } = options;
+  const scope = WORKSPACE_CONFIG.getScope();
 
   // Add file header with architecture notes
   builder.addFileHeader({
     title: `${className} Repository Implementation`,
     description: `Implements the ${className}Repository contract interface.
-Fulfills the contract defined in \`@custom-repo/contract-${fileName}\`.
+Fulfills the contract defined in \`${scope}/contract-${fileName}\`.
 
 ARCHITECTURE PATTERN:
 1. Import repository tag from contract library (NOT from ./interface.ts)
 2. Create implementation that provides all methods
 3. Wrap with Layer.effect() for dependency injection
 
-@see @custom-repo/contract-${fileName} - Repository contract interface
+@see ${scope}/contract-${fileName} - Repository contract interface
 @see https://effect.website/docs/guides/context-management for layer patterns`,
-    module: `@custom-repo/data-access-${fileName}/server`
-  })
-  builder.addBlankLine()
+    module: `${scope}/data-access-${fileName}/server`,
+  });
+  builder.addBlankLine();
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Option", "Layer", "Stream"] }
-  ])
-  builder.addBlankLine()
+    { from: 'effect', imports: ['Effect', 'Option', 'Layer', 'Stream'] },
+    { from: `${scope}/env`, imports: ['env'] },
+  ]);
+  builder.addBlankLine();
 
   // Add critical architecture pattern comment
-  builder.addSectionComment("CRITICAL: Contract-First Architecture")
-  builder.addComment("")
-  builder.addComment(
-    "ARCHITECTURE PATTERN: Repository interface is defined in contract library,"
-  )
-  builder.addComment(
-    "NOT in data-access. This enforces separation of concerns:"
-  )
-  builder.addComment("")
-  builder.addComment(`1. Contract Library (@custom-repo/contract-${fileName})`)
-  builder.addComment("   ├── Defines repository interface (port)")
-  builder.addComment("   ├── Defines domain errors")
-  builder.addComment("   └── Defines entity types")
-  builder.addComment("")
-  builder.addComment(
-    `2. Data-Access Library (@custom-repo/data-access-${fileName})`
-  )
-  builder.addComment("   ├── Implements repository (adapter)")
-  builder.addComment("   ├── Uses contract tag for Layer.effect")
-  builder.addComment("   └── Provides operational code")
-  builder.addComment("")
-  builder.addComment("If contract library is not yet configured:")
-  builder.addComment(`1. Create: libs/contracts/${fileName}/src/index.ts`)
-  builder.addComment(`2. Define ${className}Repository tag with Context.Tag`)
-  builder.addComment("3. Export error types and entity types")
-  builder.addComment("4. Uncomment imports below and remove fallback imports")
-  builder.addBlankLine()
+  builder.addSectionComment('CRITICAL: Contract-First Architecture');
+  builder.addComment('');
+  builder.addComment('ARCHITECTURE PATTERN: Repository interface is defined in contract library,');
+  builder.addComment('NOT in data-access. This enforces separation of concerns:');
+  builder.addComment('');
+  builder.addComment(`1. Contract Library (${scope}/contract-${fileName})`);
+  builder.addComment('   ├── Defines repository interface (port)');
+  builder.addComment('   ├── Defines domain errors');
+  builder.addComment('   └── Defines entity types');
+  builder.addComment('');
+  builder.addComment(`2. Data-Access Library (${scope}/data-access-${fileName})`);
+  builder.addComment('   ├── Implements repository (adapter)');
+  builder.addComment('   ├── Uses contract tag for Layer.effect');
+  builder.addComment('   └── Provides operational code');
+  builder.addComment('');
+  builder.addComment('If contract library is not yet configured:');
+  builder.addComment(`1. Create: libs/contracts/${fileName}/src/index.ts`);
+  builder.addComment(`2. Define ${className}Repository tag with Context.Tag`);
+  builder.addComment('3. Export error types and entity types');
+  builder.addComment('4. Uncomment imports below and remove fallback imports');
+  builder.addBlankLine();
 
   // Step 1: Import from contract (commented out)
-  builder.addSectionComment(
-    "STEP 1: Import repository tag from CONTRACT library"
-  )
-  builder.addComment("")
-  builder.addComment(
-    "CRITICAL: The repository interface MUST be defined in the contract library."
-  )
-  builder.addComment("This enforces Contract-First Architecture where:")
-  builder.addComment("1. Contract library defines the interface (port)")
-  builder.addComment(
-    "2. Data-access library implements the interface (adapter)"
-  )
-  builder.addComment("")
-  builder.addComment("BEFORE YOU CAN USE THIS FILE:")
-  builder.addComment(
-    `1. Ensure contract library exists: libs/contract/${fileName}`
-  )
-  builder.addComment("2. Uncomment the import below")
-  builder.addComment("3. Remove the FALLBACK section")
-  builder.addComment(`4. Verify contract exports ${className}Repository tag`)
-  builder.addBlankLine()
+  builder.addSectionComment('STEP 1: Import repository tag from CONTRACT library');
+  builder.addComment('');
+  builder.addComment('CRITICAL: The repository interface MUST be defined in the contract library.');
+  builder.addComment('This enforces Contract-First Architecture where:');
+  builder.addComment('1. Contract library defines the interface (port)');
+  builder.addComment('2. Data-access library implements the interface (adapter)');
+  builder.addComment('');
+  builder.addComment('BEFORE YOU CAN USE THIS FILE:');
+  builder.addComment(`1. Ensure contract library exists: libs/contract/${fileName}`);
+  builder.addComment('2. Uncomment the import below');
+  builder.addComment('3. Remove the FALLBACK section');
+  builder.addComment(`4. Verify contract exports ${className}Repository tag`);
+  builder.addBlankLine();
 
   builder.addRaw(`// TODO: Uncomment when contract library is configured
-// import { ${className}Repository } from "@custom-repo/contract-${fileName}";
-// import type { ${className}RepositoryError } from "@custom-repo/contract-${fileName}";`)
-  builder.addBlankLine()
+// import { ${className}Repository } from "${scope}/contract-${fileName}";
+// import type { ${className}RepositoryError } from "${scope}/contract-${fileName}";`);
+  builder.addBlankLine();
 
   // Fallback local types
-  builder.addSectionComment(
-    "FALLBACK: Local types (remove when contract is configured)"
-  )
-  builder.addComment("")
-  builder.addComment(
-    "WARNING: This fallback implementation violates Contract-First Architecture!"
-  )
-  builder.addComment(
-    "It exists only to allow the generated code to compile initially."
-  )
-  builder.addComment(
-    "Replace with actual contract imports as soon as possible."
-  )
-  builder.addBlankLine()
+  builder.addSectionComment('FALLBACK: Local types (remove when contract is configured)');
+  builder.addComment('');
+  builder.addComment('WARNING: This fallback implementation violates Contract-First Architecture!');
+  builder.addComment('It exists only to allow the generated code to compile initially.');
+  builder.addComment('Replace with actual contract imports as soon as possible.');
+  builder.addBlankLine();
 
-  builder.addImports([{ from: "effect", imports: ["Context"] }])
+  builder.addImports([{ from: 'effect', imports: ['Context'] }]);
 
   builder.addImports([
     {
-      from: "./shared/types",
+      from: './shared/types',
       imports: [`${className}`, `${className}CreateInput`, `${className}UpdateInput`],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
-      from: "./shared/errors",
+      from: './shared/errors',
       imports: [`${className}RepositoryError`],
-      isTypeOnly: true
+      isTypeOnly: true,
     },
     {
-      from: "./shared/errors",
+      from: './shared/errors',
       imports: [
         `${className}InternalError`,
         `${className}NotFoundError`,
-        `${className}ConflictError`
-      ]
-    }
-  ])
-  builder.addBlankLine()
+        `${className}ConflictError`,
+      ],
+    },
+  ]);
+  builder.addBlankLine();
 
   // Create Context.Tag definition
   builder.addRaw(`// TEMPORARY: Local Context.Tag definition
-// TODO: Remove this and import from @custom-repo/contract-${fileName} instead
+// TODO: Remove this and import from ${scope}/contract-${fileName} instead
 //
 // NOTE: Interface aligns with contract port definition
 // - findById returns Option to handle not found
@@ -152,7 +133,7 @@ ARCHITECTURE PATTERN:
 // - create (not save) for consistency
 // - exists method for boolean checks
 export class ${className}Repository extends Context.Tag(
-  "@custom-repo/data-access-${fileName}/${className}Repository"
+  "${scope}/data-access-${fileName}/${className}Repository"
 )<
   ${className}Repository,
   {
@@ -184,8 +165,8 @@ export class ${className}Repository extends Context.Tag(
       id: string
     ) => Effect.Effect<boolean, ${className}RepositoryError>;
   }
->() {`)
-  builder.addBlankLine()
+>() {`);
+  builder.addBlankLine();
 
   // Add static Live layer
   builder.addRaw(`  /**
@@ -198,25 +179,25 @@ export class ${className}Repository extends Context.Tag(
     this,
     Effect.gen(function* () {
       // TODO: Import and yield actual dependencies
-      // Import from @custom-repo/provider-kysely/server:
-      // import { KyselyService } from "@custom-repo/provider-kysely/server";
+      // Import from ${scope}/provider-kysely/server:
+      // import { KyselyService } from "${scope}/provider-kysely/server";
       // const database = yield* KyselyService;
 
       // Optional: Import LoggingService for query logging
-      // import { LoggingService } from "@custom-repo/infra-logging/server";
+      // import { LoggingService } from "${scope}/infra-logging/server";
       // const logger = yield* LoggingService;
 
       // For now, create repository with placeholder database
       const placeholderDb: DatabaseService = {
         query: <T>(_fn: (db: KyselyDatabase) => Promise<T>): Effect.Effect<T, never, never> =>
           Effect.dieMessage(
-            "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
+            "Database not configured. Import and provide KyselyService from ${scope}/provider-kysely"
           ),
       };
       return create${className}Repository(placeholderDb, undefined);
     })
-  );`)
-  builder.addBlankLine()
+  );`);
+  builder.addBlankLine();
 
   // Add static Test layer
   builder.addRaw(`  /**
@@ -293,8 +274,8 @@ export class ${className}Repository extends Context.Tag(
         },
       };
     })(),
-  );`)
-  builder.addBlankLine()
+  );`);
+  builder.addBlankLine();
 
   // Add static Dev layer
   builder.addRaw(`  /**
@@ -310,7 +291,7 @@ export class ${className}Repository extends Context.Tag(
       const placeholderDb: DatabaseService = {
         query: <T>(_fn: (db: KyselyDatabase) => Promise<T>): Effect.Effect<T, never, never> =>
           Effect.dieMessage(
-            "Database not configured. Import and provide KyselyService from @custom-repo/provider-kysely"
+            "Database not configured. Import and provide KyselyService from ${scope}/provider-kysely"
           ),
       };
       const repo = create${className}Repository(placeholderDb, undefined);
@@ -377,8 +358,8 @@ export class ${className}Repository extends Context.Tag(
           ),
       };
     }),
-  );`)
-  builder.addBlankLine()
+  );`);
+  builder.addBlankLine();
 
   // Add static Auto layer
   builder.addRaw(`  /**
@@ -387,9 +368,7 @@ export class ${className}Repository extends Context.Tag(
    * Access via: ${className}Repository.Auto
    */
   static readonly Auto = (() => {
-    const env = process.env["NODE_ENV"] || "production";
-
-    switch (env) {
+    switch (env.NODE_ENV) {
       case "test":
         return ${className}Repository.Test;
       case "development":
@@ -398,17 +377,17 @@ export class ${className}Repository extends Context.Tag(
         return ${className}Repository.Live;
     }
   })();
-}`)
-  builder.addBlankLine()
+}`);
+  builder.addBlankLine();
 
   // Repository Implementation
-  builder.addSectionComment("Repository Implementation")
-  builder.addBlankLine()
+  builder.addSectionComment('Repository Implementation');
+  builder.addBlankLine();
 
   // Create repository factory function
   builder.addRaw(`// TODO: Import actual types when dependencies are configured:
-// import type { KyselyService } from "@custom-repo/provider-kysely/server";
-// import type { LoggingService } from "@custom-repo/infra-logging/server";
+// import type { KyselyService } from "${scope}/provider-kysely/server";
+// import type { LoggingService } from "${scope}/infra-logging/server";
 
 /**
  * Kysely database query builder interface
@@ -473,7 +452,7 @@ interface LoggingService {
  * Create ${className} Repository with Kysely Integration
  *
  * This factory creates a repository implementation using Kysely for type-safe queries.
- * Kysely is accessed through DatabaseService from @custom-repo/provider-kysely.
+ * Kysely is accessed through DatabaseService from ${scope}/provider-kysely.
  *
  * @param database - KyselyService from provider-kysely
  * @param logger - Optional LoggingService for query logging
@@ -850,7 +829,7 @@ function create${className}Repository(
       ),
   };
 }
-`)
+`);
 
-  return builder.toString()
+  return builder.toString();
 }

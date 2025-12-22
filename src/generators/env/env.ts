@@ -2,36 +2,30 @@
  * Environment Library Generator (Nx Wrapper)
  *
  * Updates the existing libs/env library with type-safe environment
- * variable handling using Effect Config and ManagedRuntime.
+ * variable handling using Effect Config and a t3-env inspired API.
  *
  * Generation Process:
  * 1. Parse existing .env file from workspace root (or use defaults)
- * 2. Generate types.ts (type definitions)
- * 3. Generate config.ts (Effect Config loaders)
- * 4. Generate env.ts (ManagedRuntime with static exports)
- * 5. Generate entry points (client.ts, server.ts, index.ts)
+ * 2. Generate createEnv.ts (runtime library)
+ * 3. Generate env.ts (user's createEnv call scaffolded from .env)
+ * 4. Generate index.ts (single entry point)
  *
  * The generator ensures:
+ * - Single source of truth (one createEnv call)
  * - Type-safe environment variable access
  * - Eager loading on module initialization (fail fast)
- * - Runtime filtering for server/client separation
- * - Tree-shakeable entry points for optimal bundling
- * - Simple API: import { env } from '@workspace/env' → env.API_KEY
+ * - Runtime protection for server vars on client
+ * - Simple API: import { env } from '@workspace/env'
  */
 
-import type { Tree } from "@nx/devkit"
-import { formatFiles, logger } from "@nx/devkit"
-import * as path from "node:path"
-import type { EnvGeneratorSchema } from "./schema"
-import { generateConfigFile } from "./templates/config.template"
-import {
-  generateClientEntryPoint,
-  generateIndexEntryPoint,
-  generateServerEntryPoint
-} from "./templates/entry-points.template"
-import { generateEnvFile } from "./templates/env.template"
-import { generateTypesFile } from "./templates/types.template"
-import { findDotEnvFile, parseDotEnvFile } from "./utils/parse-dotenv"
+import * as path from 'node:path';
+import type { Tree } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
+import type { EnvGeneratorSchema } from './schema';
+import { generateCreateEnvFile } from './templates/createEnv.template';
+import { generateEnvScaffoldFile } from './templates/env-scaffold.template';
+import { generateIndexFile } from './templates/index.template';
+import { findDotEnvFile, parseDotEnvFile } from './utils/parse-dotenv';
 
 /**
  * Environment Library Generator for Nx Workspaces
@@ -43,138 +37,146 @@ import { findDotEnvFile, parseDotEnvFile } from "./utils/parse-dotenv"
  * @param schema - User-provided generator options
  * @returns Callback function that displays post-generation instructions
  */
-export default async function envGenerator(
-  tree: Tree,
-  schema: EnvGeneratorSchema
-) {
+export default async function envGenerator(tree: Tree, schema: EnvGeneratorSchema) {
   // Determine workspace root
-  const workspaceRoot = tree.root || process.cwd()
+  const workspaceRoot = tree.root || process.cwd();
 
   // Determine project root (default to libs/env)
-  const projectRoot = schema.projectRoot || "libs/env"
-  const sourceRoot = path.join(projectRoot, "src")
+  const projectRoot = schema.projectRoot || 'libs/env';
+  const sourceRoot = path.join(projectRoot, 'src');
 
   // Validate that the project exists (should be created by init command)
   if (!tree.exists(projectRoot)) {
     throw new Error(
       `Environment library not found at ${projectRoot}. ` +
-        `Run 'pnpm exec monorepo-library-generator init' first to create the workspace structure.`
-    )
+        `Run 'pnpm exec monorepo-library-generator init' first to create the workspace structure.`,
+    );
   }
 
-  logger.info(`🔍 Searching for .env file in workspace root...`)
+  logger.info(`🔍 Searching for .env file in workspace root...`);
 
   // Phase 1: Parse .env file from workspace root
-  const dotEnvPath = findDotEnvFile(workspaceRoot)
-  const vars = dotEnvPath
-    ? parseDotEnvFile(dotEnvPath)
-    : parseDotEnvFile("") // Will use defaults
+  const dotEnvPath = findDotEnvFile(workspaceRoot);
+  const vars = dotEnvPath ? parseDotEnvFile(dotEnvPath) : parseDotEnvFile(''); // Will use defaults
 
-  logger.info(`📋 Parsed ${vars.length} environment variables`)
-  logger.info(`   - Shared: ${vars.filter((v) => v.context === "shared").length}`)
-  logger.info(`   - Client: ${vars.filter((v) => v.context === "client").length}`)
-  logger.info(`   - Server: ${vars.filter((v) => v.context === "server").length}`)
+  logger.info(`📋 Parsed ${vars.length} environment variables`);
+  logger.info(`   - Shared: ${vars.filter((v) => v.context === 'shared').length}`);
+  logger.info(`   - Client: ${vars.filter((v) => v.context === 'client').length}`);
+  logger.info(`   - Server: ${vars.filter((v) => v.context === 'server').length}`);
 
-  // Phase 2: Generate source files using templates
-  logger.info(`📝 Generating type-safe environment files...`)
+  // Phase 2: Generate source files using new templates
+  logger.info(`📝 Generating type-safe environment files...`);
 
-  // Generate types.ts (branded type definitions)
-  const typesContent = generateTypesFile(vars)
-  tree.write(path.join(sourceRoot, "types.ts"), typesContent)
-  logger.info(`   ✓ ${sourceRoot}/types.ts`)
+  // Generate createEnv.ts (runtime library)
+  const createEnvContent = generateCreateEnvFile();
+  tree.write(path.join(sourceRoot, 'createEnv.ts'), createEnvContent);
+  logger.info(`   ✓ ${sourceRoot}/createEnv.ts (runtime library)`);
 
-  // Generate config.ts (Effect Config loaders)
-  const configContent = generateConfigFile(vars)
-  tree.write(path.join(sourceRoot, "config.ts"), configContent)
-  logger.info(`   ✓ ${sourceRoot}/config.ts`)
+  // Generate env.ts (user's createEnv call)
+  const envContent = generateEnvScaffoldFile(vars);
+  tree.write(path.join(sourceRoot, 'env.ts'), envContent);
+  logger.info(`   ✓ ${sourceRoot}/env.ts (environment definition)`);
 
-  // Generate env.ts (ManagedRuntime with static exports)
-  const envContent = generateEnvFile(vars)
-  tree.write(path.join(sourceRoot, "env.ts"), envContent)
-  logger.info(`   ✓ ${sourceRoot}/env.ts`)
+  // Generate index.ts (single entry point)
+  const indexContent = generateIndexFile();
+  tree.write(path.join(sourceRoot, 'index.ts'), indexContent);
+  logger.info(`   ✓ ${sourceRoot}/index.ts (entry point)`);
 
-  // Generate entry points (tree-shakeable)
-  const clientContent = generateClientEntryPoint()
-  tree.write(path.join(sourceRoot, "client.ts"), clientContent)
-  logger.info(`   ✓ ${sourceRoot}/client.ts`)
+  // Clean up old files that are no longer needed
+  const obsoleteFiles = [
+    'types.ts',
+    'config.ts',
+    'schema.ts',
+    'parse.ts',
+    'client.ts',
+    'server.ts',
+  ];
 
-  const serverContent = generateServerEntryPoint()
-  tree.write(path.join(sourceRoot, "server.ts"), serverContent)
-  logger.info(`   ✓ ${sourceRoot}/server.ts`)
-
-  const indexContent = generateIndexEntryPoint()
-  tree.write(path.join(sourceRoot, "index.ts"), indexContent)
-  logger.info(`   ✓ ${sourceRoot}/index.ts`)
+  for (const file of obsoleteFiles) {
+    const filePath = path.join(sourceRoot, file);
+    if (tree.exists(filePath)) {
+      tree.delete(filePath);
+      logger.info(`   🗑️  Removed obsolete ${sourceRoot}/${file}`);
+    }
+  }
 
   // Format generated files
-  await formatFiles(tree)
+  await formatFiles(tree);
 
   // Return post-generation callback
   return () => {
     const dotEnvMessage = dotEnvPath
       ? `\n📄 Parsed from: ${dotEnvPath}`
-      : "\n⚠️  No .env file found - using defaults"
+      : '\n⚠️  No .env file found - using defaults';
 
     console.log(`
 ✅ Environment library updated: @workspace/env
 
 📁 Location: ${projectRoot}
 📦 Package: @workspace/env
-📂 Files generated: 6${dotEnvMessage}
+📂 Files generated: 3${dotEnvMessage}
 
-🎯 Usage:
+🎯 Usage (Single Import):
 
-Context-aware (default):
 \`\`\`typescript
 import { env } from '@workspace/env'
 
-const dbUrl = env.DATABASE_URL  // Server: available, Client: undefined
-const apiUrl = env.PUBLIC_API_URL  // Available in both contexts
+// Server context: All variables accessible
+env.DATABASE_URL    // Redacted<string>
+env.PORT            // number
+env.PUBLIC_API_URL  // string
+env.NODE_ENV        // string
+
+// Client context: Only client + shared vars
+env.PUBLIC_API_URL  // string (works)
+env.NODE_ENV        // string (works)
+env.DATABASE_URL    // ❌ Runtime error
 \`\`\`
 
-Client-only (minimal bundle ~1-2KB):
+🔧 Customization:
+
+Edit \`${sourceRoot}/env.ts\` to modify environment variables:
+
 \`\`\`typescript
-import { env } from '@workspace/env/client'
-
-const apiUrl = env.PUBLIC_API_URL
-const featureFlag = env.PUBLIC_FEATURE_FLAG
-\`\`\`
-
-Server-only (full bundle ~3-5KB):
-\`\`\`typescript
-import { env, clientEnv, serverEnv } from '@workspace/env/server'
-
-const dbUrl = env.DATABASE_URL
-const apiSecret = env.API_SECRET
+export const env = createEnv({
+  server: {
+    DATABASE_URL: Config.redacted("DATABASE_URL"),
+    PORT: Config.number("PORT").pipe(Config.withDefault(3000)),
+  },
+  client: {
+    PUBLIC_API_URL: Config.string("PUBLIC_API_URL"),
+  },
+  shared: {
+    NODE_ENV: Config.string("NODE_ENV").pipe(Config.withDefault("development")),
+  },
+  clientPrefix: "PUBLIC_",
+})
 \`\`\`
 
 🔒 Security:
-   - ✅ Eager loading on import (fail fast)
-   - ✅ Runtime context detection (server vs client)
-   - ✅ Type-safe access with branded types
+   - ✅ Single source of truth (one createEnv call)
+   - ✅ Eager validation on import (fail fast)
+   - ✅ Runtime protection for server vars on client
+   - ✅ Type inference via Config.Config.Success<>
    - ✅ Secrets protected with Config.redacted()
-   - ✅ Tree-shakeable entry points
 
 📝 Environment Variables:
-${
-      vars.map((v) =>
-        `   ${v.context === "client" ? "🌐" : v.context === "shared" ? "🔄" : "🔒"} ${v.name}: ${v.type}${
-          v.isSecret ? " (secret)" : ""
-        }`
-      ).join("\n")
-    }
+${vars
+  .map(
+    (v) =>
+      `   ${v.context === 'client' ? '🌐' : v.context === 'shared' ? '🔄' : '🔒'} ${v.name}: ${v.type}${
+        v.isSecret ? ' (secret)' : ''
+      }`,
+  )
+  .join('\n')}
 
 💡 Next Steps:
-1. Create or update your .env file in the workspace root
-2. Re-run this generator to sync with your .env changes:
+1. Edit \`${sourceRoot}/env.ts\` to customize your environment variables
+2. Re-run this generator to sync with .env changes:
    pnpm exec monorepo-library-generator env
 
 3. Import and use in your applications:
    import { env } from '@workspace/env'
-
-📚 Documentation:
-   - See ${projectRoot}/README.md for detailed usage
-   - See /libs/ARCHITECTURE.md for infrastructure patterns
-    `)
-  }
+    `);
+  };
 }

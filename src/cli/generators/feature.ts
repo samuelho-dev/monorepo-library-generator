@@ -5,63 +5,69 @@
  * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { execSync } from "node:child_process"
-import { Console, Effect, ParseResult } from "effect"
-import { type FeatureCoreOptions, generateFeatureCore } from "../../generators/core/feature"
-import { createExecutor } from "../../infrastructure/execution/executor"
-import { formatOutput } from "../../infrastructure/output/formatter"
-import { decodeFeatureInput, type FeatureInput } from "../../infrastructure/validation/registry"
+import { execSync } from 'node:child_process';
+import { Console, Effect, ParseResult } from 'effect';
+import { type FeatureCoreOptions, generateFeatureCore } from '../../generators/core/feature';
+import { createExecutor } from '../../infrastructure/execution/executor';
+import { formatOutput } from '../../infrastructure/output/formatter';
+import { decodeFeatureInput, type FeatureInput } from '../../infrastructure/validation/registry';
 
 /**
  * Feature Generator Options - imported from validation registry
  * for single source of truth
  */
-export type FeatureGeneratorOptions = FeatureInput
+export type FeatureGeneratorOptions = FeatureInput;
 
 const featureExecutor = createExecutor<FeatureInput, FeatureCoreOptions>(
-  "feature",
+  'feature',
   generateFeatureCore,
   (validated, metadata) => ({
     ...metadata,
-    ...(validated.dataAccessLibrary !== undefined && { dataAccessLibrary: validated.dataAccessLibrary }),
+    ...(validated.dataAccessLibrary !== undefined && {
+      dataAccessLibrary: validated.dataAccessLibrary,
+    }),
     includeClientState: validated.includeClientState ?? false,
     ...(validated.scope !== undefined && { scope: validated.scope }),
     ...(validated.platform !== undefined && { platform: validated.platform }),
-    ...(validated.includeClientServer !== undefined && { includeClientServer: validated.includeClientServer }),
+    ...(validated.includeClientServer !== undefined && {
+      includeClientServer: validated.includeClientServer,
+    }),
     includeRPC: validated.includeRPC ?? false,
     includeCQRS: validated.includeCQRS ?? false,
-    includeEdge: validated.includeEdge ?? false
-  })
-)
+    includeEdge: validated.includeEdge ?? false,
+  }),
+);
 
 export function generateFeature(options: FeatureGeneratorOptions) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeFeatureInput(options).pipe(
-      Effect.mapError((parseError) => new Error(ParseResult.TreeFormatter.formatErrorSync(parseError)))
-    )
+      Effect.mapError(
+        (parseError) => new Error(ParseResult.TreeFormatter.formatErrorSync(parseError)),
+      ),
+    );
 
-    yield* Console.log(`Creating feature library: ${validated.name}...`)
+    yield* Console.log(`Creating feature library: ${validated.name}...`);
 
     const result = yield* featureExecutor.execute({
       ...validated,
-      __interfaceType: "cli"
-    })
+      __interfaceType: 'cli',
+    });
 
     // Format generated code with eslint --fix for dprint compatibility
     yield* Effect.try(() => {
-      const projectRoot = result.projectRoot
+      const projectRoot = result.projectRoot;
       execSync(`pnpm exec eslint ${projectRoot}/src --ext .ts --fix`, {
-        stdio: "ignore",
-        cwd: process.cwd()
-      })
+        stdio: 'ignore',
+        cwd: process.cwd(),
+      });
     }).pipe(
-      Effect.catchAll(() => Effect.void) // Ignore formatting errors
-    )
+      Effect.catchAll(() => Effect.void), // Ignore formatting errors
+    );
 
-    const output = formatOutput(result, "cli")
-    yield* Console.log(output)
+    const output = formatOutput(result, 'cli');
+    yield* Console.log(output);
 
-    return result
-  })
+    return result;
+  });
 }
