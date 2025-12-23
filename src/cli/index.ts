@@ -462,9 +462,12 @@ export function main(args: ReadonlyArray<string>) {
 }
 
 /**
- * Run CLI if executed directly
+ * Run CLI - always execute when this module is the entry point
+ *
+ * Note: We unconditionally run the CLI here because:
+ * 1. This file is only used as a bin entry point (via package.json "bin" field)
+ * 2. The import.meta.url check fails with npm/npx symlinks
+ * 3. When bundled, this becomes the sole purpose of the file
  */
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const program = main(process.argv).pipe(Effect.provide(NodeContext.layer));
-  NodeRuntime.runMain(program);
-}
+const program = main(process.argv).pipe(Effect.provide(NodeContext.layer));
+NodeRuntime.runMain(program);

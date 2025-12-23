@@ -1,6 +1,6 @@
 {
   "name": "@samuelho-dev/monorepo-library-generator",
-  "version": "1.6.0",
+  "version": "1.6.3",
   "description": "Effect-based CLI for generating libraries in Effect-native monorepos",
   "type": "module",
   "bin": {

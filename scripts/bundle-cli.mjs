@@ -39,16 +39,9 @@ try {
     define: {
       __VERSION__: JSON.stringify(version)
     },
-    external: [
-      // Node.js built-ins
-      "node:*",
-      // Effect packages (keep external for proper ESM resolution)
-      "effect",
-      "@effect/*",
-      // Nx has native bindings
-      "@nx/*",
-      "nx"
-    ]
+    // Externalize ALL npm packages - they install via npm at runtime
+    // This avoids bundling optional deps like @effect/cluster
+    packages: "external"
   })
 
   // Make executable
