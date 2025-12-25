@@ -196,13 +196,13 @@ export function createEnv<
   if (!isServer) {
     const serverKeys = new Set(Object.keys(server))
     return new Proxy(result, {
-      get(target, prop) {
+      get(target, prop, receiver) {
         if (typeof prop === "string" && serverKeys.has(prop)) {
           throw new Error(
             `Cannot access server-only env var "${prop}" on the client. This variable is only available in server context.`
           )
         }
-        return target[prop]
+        return Reflect.get(target, prop, receiver)
       }
     })
   }

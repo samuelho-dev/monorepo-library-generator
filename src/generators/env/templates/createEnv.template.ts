@@ -229,7 +229,7 @@ export function generateCreateEnvFile() {
   builder.addRaw("  if (!isServer) {")
   builder.addRaw("    const serverKeys = new Set(Object.keys(server))")
   builder.addRaw("    return new Proxy(result, {")
-  builder.addRaw("      get(target, prop) {")
+  builder.addRaw("      get(target, prop, receiver) {")
   builder.addRaw("        if (typeof prop === \"string\" && serverKeys.has(prop)) {")
   builder.addRaw("          throw new Error(")
   builder.addRaw(
@@ -237,7 +237,7 @@ export function generateCreateEnvFile() {
   )
   builder.addRaw("          )")
   builder.addRaw("        }")
-  builder.addRaw("        return target[prop]")
+  builder.addRaw("        return Reflect.get(target, prop, receiver)")
   builder.addRaw("      }")
   builder.addRaw("    })")
   builder.addRaw("  }")
