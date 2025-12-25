@@ -112,7 +112,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
    */
   static readonly Dev = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const liveService = yield* UserRepository.Live.pipe(
         Layer.build,
         Effect.map(Context.unsafeGet(UserRepository))
@@ -127,15 +127,13 @@ export class UserRepository extends Context.Tag("UserRepository")<
   /**
    * Auto layer - Environment-aware layer selection
    *
-   * Automatically selects the appropriate layer based on env.NODE_ENV:
+   * Automatically selects the appropriate layer based on process.env.NODE_ENV:
    * - "test" → Test layer
    * - "development" → Dev layer (with logging)
    * - "production" or other → Live layer (default)
-   *
-   * Requires: import { env } from "@scope/env";
    */
   static readonly Auto = Layer.suspend(() => {
-    switch (env.NODE_ENV) {
+    switch (process.env["NODE_ENV"]) {
       case "test":
         return UserRepository.Test
       case "development":

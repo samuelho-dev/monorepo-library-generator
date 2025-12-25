@@ -86,7 +86,7 @@ Error Flow:
  * \`\`\`typescript
  * const handler = ${className.toLowerCase()}Service.get(id).pipe(
  *   with${className}RpcBoundary
- * );
+ * )
  * \`\`\`
  *
  * For custom transformations, use Effect.catchTag directly:
@@ -100,7 +100,7 @@ Error Flow:
  *       id: e.${className.toLowerCase()}Id
  *     }))
  *   )
- * );
+ * )
  * \`\`\`
  */
 export const with${className}RpcBoundary = <A, R>(
@@ -130,19 +130,8 @@ export const with${className}RpcBoundary = <A, R>(
         message: e.message
       }))
     ),
-    // Repository Errors → RPC Errors
-    Effect.catchTag("${className}NotFoundRepositoryError", (e) =>
-      Effect.fail(new RpcNotFoundError({
-        message: e.message,
-        resource: "${className}"
-      }))
-    ),
-    Effect.catchTag("${className}ConflictRepositoryError", (e) =>
-      Effect.fail(new RpcConflictError({
-        message: e.message
-      }))
-    ),
-    // Service/Infrastructure Errors → RPC Internal Error
+    // Infrastructure Errors → RPC Internal Error
+    // These are Connection, Timeout, Transaction errors from data-access layer
     Effect.catchAll(() =>
       Effect.fail(new RpcInternalError({
         message: "An unexpected error occurred"

@@ -1,5 +1,4 @@
-import { Schema } from "@effect/schema"
-import { Option, Runtime } from "effect"
+import { Option, Runtime, Schema } from "effect"
 import type { Effect, Exit } from "effect"
 import { useCallback, useEffect, useState } from "react"
 
@@ -15,16 +14,14 @@ Provides:
 - No return function types - explicit signatures throughout
 
 Usage:
-  import { useRpcMutation, useRpcQuery, callRpc } from "@samuelho-dev/infra-rpc/client";
-
-  // Direct RPC call
-  const result = await callRpc("/api/rpc", "getUser", { id: "123" });
+  import { useRpcMutation, useRpcQuery, callRpc } from "@samuelho-dev/infra-rpc/client"  // Direct RPC call
+  const result = await callRpc("/api/rpc", "getUser", { id: "123" })
 
   // With hooks
   const { data, error } = useRpcQuery(
     (input) => callRpc("/api/rpc", "getUser", input),
     { id: userId }
-  );
+  )
  *
  */
 
@@ -135,11 +132,11 @@ export interface RpcCallOptions<T> {
  *
  * @example
  * ```typescript
- * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String })
  *
  * const user = await callRpc("/api/rpc", "getUser", { id: "123" }, {
  *   responseSchema: UserSchema
- * });
+ * })
  * ```
  */
 export async function callRpc<T>(
@@ -199,10 +196,10 @@ export async function callRpc<T>(
  * function CreateUserForm() {
  *   const { mutate, isLoading, error } = useRpcMutation(
  *     (input: CreateUserInput) => callRpc<User>("/api/rpc", "createUser", input)
- *   );
+ *   )
  *
  *   const handleSubmit = async (data: CreateUserInput) => {
- *     const user = await mutate(data);
+ *     const user = await mutate(data)
  *   };
  *
  *   return (
@@ -210,7 +207,7 @@ export async function callRpc<T>(
  *       {error && <Error message={error.message} tag={error._tag} />}
  *       <button disabled={isLoading}>Create</button>
  *     </form>
- *   );
+ *   )
  * }
  * ```
  */
@@ -266,13 +263,13 @@ export function useRpcMutation<TInput, TOutput>(
  *     (input: { id: string }) => callRpc<User>("/api/rpc", "getUser", input),
  *     { id: userId },
  *     { enabled: Boolean(userId) }
- *   );
+ *   )
  *
- *   if (isLoading) return <Loading />;
- *   if (error) return <Error message={error.message} tag={error._tag} />;
+ *   if (isLoading) return <Loading />
+ *   if (error) return <Error message={error.message} tag={error._tag} />
  *   if (!data) return null;
  *
- *   return <UserCard user={data} />;
+ *   return <UserCard user={data} />
  * }
  * ```
  */
@@ -326,10 +323,10 @@ export function useRpcQuery<TInput, TOutput>(
  * function SearchUsers() {
  *   const { data, isLoading, error, execute } = useRpcLazyQuery(
  *     (input: { query: string }) => callRpc<User[]>("/api/rpc", "searchUsers", input)
- *   );
+ *   )
  *
  *   const handleSearch = (query: string): void => {
- *     execute({ query });
+ *     execute({ query })
  *   };
  *
  *   return (
@@ -339,7 +336,7 @@ export function useRpcQuery<TInput, TOutput>(
  *       {error && <Error message={error.message} />}
  *       {data && <UserList users={data} />}
  *     </div>
- *   );
+ *   )
  * }
  * ```
  */

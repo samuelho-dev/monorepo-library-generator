@@ -193,10 +193,10 @@ const createExecutorImpl = (
  *       correlationId: "req-123",
  *     },
  *     bus.dispatch(new Create${className}Command(), input)
- *   );
+ *   )
  *
  *   return result;
- * });
+ * })
  * \`\`\`
  */
 export class ${className}OperationExecutor extends Context.Tag("${className}OperationExecutor")<
@@ -233,7 +233,7 @@ export class ${className}OperationExecutor extends Context.Tag("${className}Oper
  * \`\`\`typescript
  * const validateMiddleware = createValidationMiddleware(
  *   (input) => input.name.length > 0
- * );
+ * )
  * \`\`\`
  */
 export function createValidationMiddleware<A, E, R>(
@@ -252,7 +252,7 @@ export function createValidationMiddleware<A, E, R>(
  *
  * @example
  * \`\`\`typescript
- * const retryMiddleware = createRetryMiddleware({ times: 3 });
+ * const retryMiddleware = createRetryMiddleware({ times: 3 })
  * \`\`\`
  */
 export function createRetryMiddleware<A, E, R>(options: {

@@ -45,7 +45,7 @@ Usage:
     createRpcClientLayer,
     AuthMiddleware,
     ServiceMiddleware,
-    createMiddlewareSelector,
+    createMiddlewareSelector
   } from '${packageName}';`
   })
   builder.addBlankLine()

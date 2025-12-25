@@ -45,7 +45,7 @@ State Hierarchy:
 
 Usage:
   import { use${className} } from "${scope}/feature-${fileName}/client";
-  const { data, isLoading, fetch } = use${className}();`,
+  const { data, isLoading, fetch } = use${className}()`,
     module: `${scope}/feature-${fileName}/client/atoms`
   })
 

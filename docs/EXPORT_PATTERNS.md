@@ -103,9 +103,7 @@ export {
   ProductTimeoutError,
   ProductInternalError
 } from "./lib/shared/errors";
-export type { ProductRepositoryErrors } from "./lib/shared/errors";
-
-// Domain Types
+export type { ProductRepositoryErrors } from "./lib/shared/errors"// Domain Types
 export type {
   Product,              // Entity type
   ProductInsert,        // Create input
@@ -113,22 +111,14 @@ export type {
   ProductFilter,        // Query filter
   ProductSort,          // Sort options
   PaginationOptions     // Pagination
-} from "./lib/domain";
-
-// Validation Functions
-export * from "./lib/validation";
-
-// Query Builders
+} from "./lib/domain"// Validation Functions
+export * from "./lib/validation"// Query Builders
 export {
   buildFindAllQuery,
   buildFindByIdQuery,
   buildCountQuery
-} from "./lib/queries";
-
-// Repository (Effect 3.0+ Pattern)
-export { ProductRepository } from "./lib/repository";
-
-// Usage: ProductRepository.Live, ProductRepository.Test, ProductRepository.Auto
+} from "./lib/queries"// Repository (Effect 3.0+ Pattern)
+export { ProductRepository } from "./lib/repository"// Usage: ProductRepository.Live, ProductRepository.Test, ProductRepository.Auto
 ```
 
 ### Package.json
@@ -156,9 +146,7 @@ export { ProductRepository } from "./lib/repository";
 ```typescript
 // Shared Types (type-only exports)
 export type * from "./lib/shared/types";
-export type * from "./lib/shared/errors";
-
-// Conditional: RPC Definitions (if includeRPC)
+export type * from "./lib/shared/errors"// Conditional: RPC Definitions (if includeRPC)
 export type * from "./lib/rpc/rpc";
 ```
 
@@ -245,9 +233,7 @@ export type * from "./lib/service/errors";     // Error types
 // Server-side exports
 export { CacheService } from "./lib/service/service";
 export { CacheServiceLive, CacheServiceTest } from "./lib/layers/server-layers";
-export { MemoryCacheProvider } from "./lib/providers/memory";
-
-// Error Types
+export { MemoryCacheProvider } from "./lib/providers/memory"// Error Types
 export {
   CacheServiceError,
   CacheNotFoundError,
@@ -307,18 +293,10 @@ export {
   StripeValidationError,
   StripeInternalError
 } from "./lib/errors";
-export type { StripeServiceErrors } from "./lib/errors";
-
-// Type Definitions
-export type * from "./lib/types";
-
-// Service Implementation (Effect 3.0+ Pattern)
-export { StripeService } from "./lib/service";
-
-// Validation Utilities
-export * from "./lib/validation";
-
-// Layer Compositions
+export type { StripeServiceErrors } from "./lib/errors"// Type Definitions
+export type * from "./lib/types"// Service Implementation (Effect 3.0+ Pattern)
+export { StripeService } from "./lib/service"// Validation Utilities
+export * from "./lib/validation"// Layer Compositions
 export * from "./lib/layers";  // StripeServiceLive, StripeServiceTest, StripeServiceDev, StripeServiceAuto
 ```
 
@@ -388,7 +366,7 @@ All services follow the **Context.Tag with static layer members** pattern:
 export class ProductService extends Context.Tag("ProductService")<
   ProductService,
   {
-    readonly getById: (id: string) => Effect.Effect<Product, ProductServiceError>;
+    readonly getById: (id: string) => Effect.Effect<Product, ProductServiceError>
     // ... more methods
   }
 >() {
@@ -397,11 +375,11 @@ export class ProductService extends Context.Tag("ProductService")<
     Effect.gen(function*() {
       // Implementation
     })
-  );
+  )
 
   static readonly Test = Layer.succeed(this, {
     // Mock implementation
-  });
+  })
 
   static readonly Auto =
     process.env.NODE_ENV === "production"
@@ -416,9 +394,7 @@ export class ProductService extends Context.Tag("ProductService")<
 ```typescript
 // OLD (pre-3.0)
 import { ProductServiceLive } from '@workspace-scope/feature-product';
-const layer = ProductServiceLive;
-
-// NEW (3.0+)
+const layer = ProductServiceLive// NEW (3.0+)
 import { ProductService } from '@workspace-scope/feature-product/server';
 const layer = ProductService.Live;
 ```
@@ -444,24 +420,16 @@ const layer = ProductRepository.Live;
 ### Feature Library
 ```typescript
 // Server-side service
-import { ProductService } from '@workspace-scope/feature-product/server';
-
-// Client-side hooks
-import { useProduct } from '@workspace-scope/feature-product/client';
-
-// Edge middleware
-import { productMiddleware } from '@workspace-scope/feature-product/edge';
-
-// Universal types
+import { ProductService } from '@workspace-scope/feature-product/server'// Client-side hooks
+import { useProduct } from '@workspace-scope/feature-product/client'// Edge middleware
+import { productMiddleware } from '@workspace-scope/feature-product/edge'// Universal types
 import type { ProductInput } from '@workspace-scope/feature-product';
 ```
 
 ### Infrastructure Library
 ```typescript
 // Server-side service
-import { CacheService } from '@workspace-scope/infra-cache/server';
-
-// Client-side (if browser-safe variant exists)
+import { CacheService } from '@workspace-scope/infra-cache/server'// Client-side (if browser-safe variant exists)
 import { useCache } from '@workspace-scope/infra-cache/client';
 ```
 
@@ -469,12 +437,8 @@ import { useCache } from '@workspace-scope/infra-cache/client';
 ```typescript
 // External service adapter (server-only)
 import { StripeService } from '@workspace-scope/provider-stripe/server';
-const layer = StripeService.Live;
-
-// Browser-compatible SDK (if applicable)
-import { StripeService } from '@workspace-scope/provider-stripe/client';
-
-// Edge runtime (if applicable)
+const layer = StripeService.Live// Browser-compatible SDK (if applicable)
+import { StripeService } from '@workspace-scope/provider-stripe/client'// Edge runtime (if applicable)
 import { StripeService } from '@workspace-scope/provider-stripe/edge';
 ```
 
@@ -515,9 +479,7 @@ import { StripeService } from '@workspace-scope/provider-stripe/edge';
 2. **Don't use relative imports** between libraries:
    ```typescript
    // Bad
-   import { ProductRepository } from '../../../data-access/product';
-
-   // Good
+   import { ProductRepository } from '../../../data-access/product'   // Good
    import { ProductRepository } from '@workspace-scope/data-access-product';
    ```
 

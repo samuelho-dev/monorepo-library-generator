@@ -15,10 +15,10 @@
  * yield* writeFilesBatch(adapter, [
  *   { path: 'src/index.ts', content: indexContent },
  *   { path: 'src/types.ts', content: typesContent, condition: includeTypes },
- * ]);
+ * ])
  *
  * // Create directory structure
- * yield* createDirectories(adapter, basePath, ['lib', 'lib/shared', 'lib/server']);
+ * yield* createDirectories(adapter, basePath, ['lib', 'lib/shared', 'lib/server'])
  * ```
  */
 
@@ -83,8 +83,8 @@ export interface BatchWriteOptions {
  * const result = yield* writeFilesBatch(adapter, [
  *   { path: 'src/index.ts', content: 'export * from "./lib";' },
  *   { path: 'src/types.ts', content: () => generateTypes() },
- * ]);
- * console.log(`Wrote ${result.written.length} files`);
+ * ])
+ * console.log(`Wrote ${result.written.length} files`)
  * ```
  *
  * @example With conditions
@@ -93,7 +93,7 @@ export interface BatchWriteOptions {
  *   { path: 'src/index.ts', content: indexContent },
  *   { path: 'src/rpc.ts', content: rpcContent, condition: options.includeRPC },
  *   { path: 'src/cqrs.ts', content: cqrsContent, condition: options.includeCQRS },
- * ]);
+ * ])
  * ```
  */
 export function writeFilesBatch(
@@ -138,7 +138,7 @@ export function writeFilesBatch(
  * const files = yield* writeFiles(adapter, [
  *   { path: 'src/index.ts', content: indexContent },
  *   { path: 'src/types.ts', content: typesContent },
- * ]);
+ * ])
  * // files = ['src/index.ts', 'src/types.ts']
  * ```
  */
@@ -182,7 +182,7 @@ export interface DirectorySpec {
  *   'lib/shared',
  *   'lib/server',
  *   'lib/server/service',
- * ]);
+ * ])
  * ```
  *
  * @example With conditions
@@ -192,7 +192,7 @@ export interface DirectorySpec {
  *   { path: 'lib/shared', condition: true },
  *   { path: 'lib/client', condition: options.includeClientServer },
  *   { path: 'lib/edge', condition: options.includeEdge },
- * ]);
+ * ])
  * ```
  */
 export function createDirectories(
@@ -313,7 +313,7 @@ export const OPTIONAL_DIRECTORIES: Record<
  *   includeRPC: true,
  *   includeClientServer: true,
  *   includeCQRS: false,
- * });
+ * })
  * ```
  */
 export function createLibraryDirectories(

@@ -259,27 +259,21 @@ export class PurchaseOrderService extends Context.Tag("PurchaseOrderService")<
     Effect.gen(function*() {
       // Depend on repositories from data-access
       const productRepo = yield* ProductRepository;
-      const orderRepo = yield* OrderRepository;
-
-      // Depend on external services from providers
-      const stripe = yield* StripeService;
-
-      // Depend on infrastructure services
-      const logger = yield* LoggingService;
-
-      return {
+      const orderRepo = yield* OrderRepository      // Depend on external services from providers
+      const stripe = yield* StripeService      // Depend on infrastructure services
+      const logger = yield* LoggingService      return {
         createOrder: (params) =>
           Effect.gen(function*() {
             // Business logic orchestration
-            const product = yield* productRepo.findById(params.productId);
-            const payment = yield* stripe.paymentIntents.create({...});
-            const order = yield* orderRepo.create({...});
-            yield* logger.info("Order created", { orderId: order.id });
+            const product = yield* productRepo.findById(params.productId)
+            const payment = yield* stripe.paymentIntents.create({...})
+            const order = yield* orderRepo.create({...})
+            yield* logger.info("Order created", { orderId: order.id })
             return order;
-          }),
-      };
+          })
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -292,34 +286,30 @@ export const ProductRepositoryLive = Layer.effect(
   Effect.gen(function*() {
     // Depend on infrastructure
     const database = yield* DatabaseService;
-    const cache = yield* CacheService;
-
-    return {
+    const cache = yield* CacheService    return {
       findById: (id) =>
         Effect.gen(function*() {
           // Check cache first
-          const cached = yield* cache.get<Product>(`product:${id}`);
-          if (Option.isSome(cached)) return cached;
-
-          // Query database
+          const cached = yield* cache.get<Product>(`product:${id}`)
+          if (Option.isSome(cached)) return cached          // Query database
           const result = yield* database.query((db) =>
             db
               .selectFrom('products')
               .where('id', '=', id)
               .selectAll()
               .executeTakeFirst(),
-          );
+          )
 
           // Cache and return
           if (result) {
-            yield* cache.set(`product:${id}`, result, '1 hour');
-            return Option.some(result);
+            yield* cache.set(`product:${id}`, result, '1 hour')
+            return Option.some(result)
           }
-          return Option.none();
+          return Option.none()
         }),
-    };
+    }
   }),
-);
+)
 ```
 
 ### Pattern 3: Infrastructure Service
@@ -331,12 +321,12 @@ export class CacheService extends Context.Tag('CacheService')<
   {
     readonly get: <A>(
       key: string,
-    ) => Effect.Effect<Option.Option<A>, CacheError>;
+    ) => Effect.Effect<Option.Option<A>, CacheError>
     readonly set: <A>(
       key: string,
       value: A,
       ttl?: string,
-    ) => Effect.Effect<void, CacheError>;
+    ) => Effect.Effect<void, CacheError>
   }
 >() {
   static readonly Live = Layer.scoped(
@@ -344,30 +334,28 @@ export class CacheService extends Context.Tag('CacheService')<
     Effect.gen(function*() {
       // Depend on provider
       const redis = yield* RedisService;
-      const logger = yield* LoggingService;
-
-      // Register cleanup
+      const logger = yield* LoggingService      // Register cleanup
       yield* Effect.addFinalizer(() =>
         Effect.gen(function*() {
-          yield* logger.info('Closing cache connections');
-          yield* redis.quit();
+          yield* logger.info('Closing cache connections')
+          yield* redis.quit()
         }),
-      );
+      )
 
       return {
         get: (key) =>
           Effect.gen(function*() {
-            const value = yield* redis.get(key);
-            return value ? Option.some(JSON.parse(value)) : Option.none();
+            const value = yield* redis.get(key)
+            return value ? Option.some(JSON.parse(value)) : Option.none()
           }),
         set: (key, value, ttl) =>
           Effect.gen(function*() {
-            const serialized = JSON.stringify(value);
-            yield* redis.set(key, serialized, ttl);
-          }),
-      };
+            const serialized = JSON.stringify(value)
+            yield* redis.set(key, serialized, ttl)
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -381,47 +369,45 @@ export class StripeService extends Context.Tag('StripeService')<
     readonly paymentIntents: {
       readonly create: (
         params: CreatePaymentIntentParams,
-      ) => Effect.Effect<PaymentIntent, StripeError>;
-    };
+      ) => Effect.Effect<PaymentIntent, StripeError>
+    }
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
       const config = yield* StripeConfig;
-      const logger = yield* LoggingService;
-
-      // Initialize SDK
+      const logger = yield* LoggingService      // Initialize SDK
       const stripe = new Stripe(config.apiKey, {
         apiVersion: '2024-11-20.acacia',
-      });
+      })
 
       // Register cleanup function for resource management
       yield* Effect.addFinalizer(() =>
         Effect.gen(function*() {
-          yield* logger.info('Cleaning up Stripe client resources');
+          yield* logger.info('Cleaning up Stripe client resources')
           // Add any SDK-specific cleanup here if available
         }),
-      );
+      )
 
       return {
         paymentIntents: {
           create: (params) =>
             Effect.gen(function*() {
-              yield* logger.debug('Creating payment intent', { params });
+              yield* logger.debug('Creating payment intent', { params })
 
               // Transform SDK errors to Effect errors
               const result = yield* Effect.tryPromise({
                 try: () => stripe.paymentIntents.create(params),
                 catch: (error) => new StripeError({ cause: error }),
-              });
+              })
 
               return result;
             }),
-        },
-      };
+        }
+      }
     }),
-  );
+  )
 }
 ```
 
@@ -438,7 +424,7 @@ export class OrderProcessingService extends Context.Tag('OrderProcessingService'
       ProcessingSummary,
       OrderError,
       OrderRepository
-    >;
+    >
   }
 >() {
   static readonly Live = Layer.effect(
@@ -447,15 +433,13 @@ export class OrderProcessingService extends Context.Tag('OrderProcessingService'
       return {
         processAllOrders: () =>
           Effect.gen(function*() {
-            const repo = yield* OrderRepository;
-
-            // Stream all orders with constant memory usage
+            const repo = yield* OrderRepository            // Stream all orders with constant memory usage
             const summary = yield* repo.streamAll({ batchSize: 100 }).pipe(
               // Process each order
               Stream.mapEffect((order) =>
                 Effect.gen(function*() {
-                  yield* validateOrder(order);
-                  yield* enrichOrder(order);
+                  yield* validateOrder(order)
+                  yield* enrichOrder(order)
                   return order;
                 }),
               ),
@@ -468,13 +452,13 @@ export class OrderProcessingService extends Context.Tag('OrderProcessingService'
                 processed: Chunk.size(results),
                 success: true,
               })),
-            );
+            )
 
             return summary;
-          }),
-      };
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -502,9 +486,7 @@ import { ProductRepositoryLive } from '@samuelho-dev/data-access-product';
 import { ProductServiceLive } from '@samuelho-dev/feature-product';
 import { DatabaseServiceLive } from '@samuelho-dev/infra-database';
 import { CacheServiceLive } from '@samuelho-dev/infra-cache';
-import { StripeServiceLive } from '@samuelho-dev/provider-stripe';
-
-// Compose all dependencies in one place
+import { StripeServiceLive } from '@samuelho-dev/provider-stripe'// Compose all dependencies in one place
 const AppLayer = Layer.mergeAll(
   // Infrastructure foundation
   DatabaseServiceLive,
@@ -518,15 +500,15 @@ const AppLayer = Layer.mergeAll(
 
   // Features
   ProductServiceLive,
-);
+)
 
 // Provide to your application
 const program = Effect.gen(function*() {
   const productService = yield* ProductService;
   // ... use services
-});
+})
 
-Effect.runPromise(program.pipe(Effect.provide(AppLayer)));
+Effect.runPromise(program.pipe(Effect.provide(AppLayer)))
 ```
 
 **Rationale for Required Pattern:**
@@ -552,14 +534,14 @@ Each library provides its own layer with dependencies (NOT RECOMMENDED):
 export const ProductFeatureLayer = ProductServiceLive.pipe(
   Layer.provide(ProductRepositoryLive),
   Layer.provide(StripeServiceLive),
-);
+)
 
 // Apps just need to provide infrastructure
 const AppLayer = Layer.mergeAll(
   DatabaseServiceLive,
   CacheServiceLive,
   ProductFeatureLayer, // Pre-wired (NOT RECOMMENDED)
-);
+)
 ```
 
 **Example of Acceptable Exception:**
@@ -569,7 +551,7 @@ const AppLayer = Layer.mergeAll(
 // libs/infra/cache/src/lib/internal/layers.ts (NOT exported in index.ts)
 const InternalCacheLayer = MemoryCacheService.Live.pipe(
   Layer.provide(LocalStorageService.Live) // Both in same infra library
-);
+)
 ```
 
 **Prohibited Patterns:**
@@ -578,22 +560,22 @@ const InternalCacheLayer = MemoryCacheService.Live.pipe(
 // ❌ WRONG: Cross-library pre-wiring
 export const ProductFeatureLayer = ProductService.Live.pipe(
   Layer.provide(ProductRepository.Live), // From different library
-);
+)
 
 // ❌ WRONG: Feature services pre-wiring repositories
 export const UserFeatureLayer = UserService.Live.pipe(
   Layer.provide(UserRepository.Live), // Should be app-level
-);
+)
 
 // ❌ WRONG: Infrastructure services pre-wiring providers
 export const DatabaseLayer = DatabaseService.Live.pipe(
   Layer.provide(PostgresProvider.Live), // Should be app-level
-);
+)
 
 // ❌ WRONG: Any exported layer with pre-wired dependencies
 export const AnythingWithDependencies = Service.Live.pipe(
   Layer.provide(AnyOtherService.Live), // Violates transparency
-);
+)
 ```
 
 **Enforcement:** Generators produce layers WITHOUT pre-wiring. Applications compose at entry point.
@@ -610,20 +592,14 @@ Libraries support platform-specific exports to enable tree-shaking and runtime c
 // Main index.ts - Universal exports
 export type * from './lib/types';
 export * from './lib/errors';
-export { MyService } from './lib/service';
-
-// server.ts - Node.js specific
+export { MyService } from './lib/service'// server.ts - Node.js specific
 export * from './index';
 export * from './lib/layers/server-layers';
-export { serverOnlyFunction } from './lib/server-utils';
-
-// client.ts - Browser specific
+export { serverOnlyFunction } from './lib/server-utils'// client.ts - Browser specific
 export type * from './lib/types';
 export * from './lib/errors';
 export { MyService } from './lib/service';
-export * from './lib/layers/client-layers';
-
-// edge.ts - Edge runtime specific
+export * from './lib/layers/client-layers'// edge.ts - Edge runtime specific
 export type * from './lib/types';
 export * from './lib/errors';
 export { MyService } from './lib/service';
@@ -634,12 +610,8 @@ export * from './lib/layers/edge-layers';
 
 ```typescript
 // Node.js application
-import { MyService, MyServiceLive } from '@my-scope/infra-service/server';
-
-// Browser application
-import { MyService, MyServiceLive } from '@my-scope/infra-service/client';
-
-// Edge runtime (Cloudflare Workers, Vercel Edge)
+import { MyService, MyServiceLive } from '@my-scope/infra-service/server'// Browser application
+import { MyService, MyServiceLive } from '@my-scope/infra-service/client'// Edge runtime (Cloudflare Workers, Vercel Edge)
 import { MyService, MyServiceLive } from '@my-scope/infra-service/edge';
 ```
 
@@ -724,19 +696,17 @@ All tests follow standardized @effect/vitest patterns:
 import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer, Option } from 'effect';
 import { ProductRepository } from '@samuelho-dev/contract-product';
-import { ProductRepositoryLive } from '../repository';
-
-// Mock infrastructure dependencies
+import { ProductRepositoryLive } from '../repository'// Mock infrastructure dependencies
 const MockDatabaseLayer = Layer.succeed(DatabaseService, {
-  query: () => Effect.succeed({ id: 'test', name: 'Test Product' }),
-});
+  query: () => Effect.succeed({ id: 'test', name: 'Test Product' })
+})
 
 it.scoped('findById returns product', () => // ✅ Always it.scoped
   Effect.gen(function*() {
     const repo = yield* ProductRepository;
-    const result = yield* repo.findById('test');
+    const result = yield* repo.findById('test')
 
-    expect(Option.isSome(result)).toBe(true);
+    expect(Option.isSome(result)).toBe(true)
   }).pipe(
     Effect.provide(
       Layer.fresh( // ✅ Always Layer.fresh
@@ -744,7 +714,7 @@ it.scoped('findById returns product', () => // ✅ Always it.scoped
       )
     ),
   ),
-);
+)
 ```
 
 ### Service Testing (with mocked dependencies)
@@ -752,18 +722,16 @@ it.scoped('findById returns product', () => // ✅ Always it.scoped
 ```typescript
 import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer } from 'effect';
-import { ProductService } from '../service';
-
-const MockProductRepository = Layer.succeed(ProductRepository, {
-  findById: () => Effect.succeed(Option.some(mockProduct)),
-});
+import { ProductService } from '../service'const MockProductRepository = Layer.succeed(ProductRepository, {
+  findById: () => Effect.succeed(Option.some(mockProduct))
+})
 
 it.scoped('createOrder validates product', () => // ✅ Always it.scoped
   Effect.gen(function*() {
     const service = yield* ProductService;
-    const result = yield* service.createOrder({ productId: 'test' });
+    const result = yield* service.createOrder({ productId: 'test' })
 
-    expect(result.productId).toBe('test');
+    expect(result.productId).toBe('test')
   }).pipe(
     Effect.provide(
       Layer.fresh( // ✅ Always Layer.fresh
@@ -771,7 +739,7 @@ it.scoped('createOrder validates product', () => // ✅ Always it.scoped
       )
     ),
   ),
-);
+)
 ```
 
 ---
@@ -964,14 +932,14 @@ All libraries use TypeScript composite projects for incremental compilation:
 
 ```typescript
 // WRONG: provider-supabase implementing ProductRepository
-export const ProductRepositoryLive = Layer.effect(/* ... */);
+export const ProductRepositoryLive = Layer.effect(/* ... */)
 ```
 
 ### ✅ Do: Implement repositories in data-access
 
 ```typescript
 // CORRECT: data-access-product implementing ProductRepository
-export const ProductRepositoryLive = Layer.effect(/* ... */);
+export const ProductRepositoryLive = Layer.effect(/* ... */)
 ```
 
 ---
@@ -983,7 +951,7 @@ export const ProductRepositoryLive = Layer.effect(/* ... */);
 findById: (id) => {
   const product = /* query */;
   const discountedPrice = product.price * 0.9; // ❌ Business logic
-  return { ...product, price: discountedPrice };
+  return { ...product, price: discountedPrice }
 }
 ```
 
@@ -993,7 +961,7 @@ findById: (id) => {
 // CORRECT: Just query and return
 findById: (id) => {
   const product = /* query */;
-  return Option.some(product); // ✅ Pure data access
+  return Option.some(product) // ✅ Pure data access
 }
 ```
 

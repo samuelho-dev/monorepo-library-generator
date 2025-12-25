@@ -90,7 +90,7 @@ export const InfrastructureDev = Layer.mergeAll(
  *
  * @example
  * ```typescript
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const repo = yield* UserRepository
  *   const entity = yield* repo.findById("id-123")
  * })
@@ -111,7 +111,7 @@ export const UserDataAccessLive = Layer.mergeAll(
  * ```typescript
  * describe("UserRepository", () => {
  *   it("should create entity", () =>
- *     Effect.gen(function* () {
+ *     Effect.gen(function*() {
  *       const repo = yield* UserRepository
  *       const result = yield* repo.create({ name: "test" })
  *       expect(result).toBeDefined()

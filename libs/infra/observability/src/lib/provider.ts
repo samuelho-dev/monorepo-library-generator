@@ -75,17 +75,17 @@ export interface OtelProviderOperations {
  * const AppLayer = Layer.mergeAll(
  *   LoggingService.Live,  // Internally provides OtelProvider.Live
  *   MetricsService.Live,  // Shares the same OTEL SDK
- * );
+ * )
  *
  * // For custom OTEL setup:
  * const customOtel = OtelProvider.make({
  *   serviceName: "my-service",
  *   tracesEndpoint: "http://custom-collector:4318/v1/traces"
- * });
+ * })
  * const CustomAppLayer = Layer.mergeAll(
  *   Layer.provide(LoggingService.WithOtel, customOtel),
  *   Layer.provide(MetricsService.WithOtel, customOtel),
- * );
+ * )
  * ```
  */
 export class OtelProvider extends Context.Tag(
@@ -109,7 +109,7 @@ export class OtelProvider extends Context.Tag(
    *   tracesEndpoint: "http://jaeger:4318/v1/traces",
    *   metricsEndpoint: "http://prometheus:4318/v1/metrics",
    *   metricsExportIntervalMs: 30000
-   * });
+   * })
    * ```
    */
   static make(config: {
@@ -141,9 +141,9 @@ export class OtelProvider extends Context.Tag(
       metricReader: metricsEnabled
         ? new PeriodicExportingMetricReader({
             exporter: new OTLPMetricExporter({
-              url: config.metricsEndpoint ?? "http://localhost:4318/v1/metrics",
+              url: config.metricsEndpoint ?? "http://localhost:4318/v1/metrics"
             }),
-            exportIntervalMillis: config.metricsExportIntervalMs ?? 60000,
+            exportIntervalMillis: config.metricsExportIntervalMs ?? 60000
           })
         : undefined,
     }))
@@ -192,7 +192,7 @@ export class OtelProvider extends Context.Tag(
       "http://localhost:4318/v1/metrics",
     metricsExportIntervalMs: env.OTEL_METRICS_EXPORT_INTERVAL_MS
       ? Number.parseInt(env.OTEL_METRICS_EXPORT_INTERVAL_MS, 10)
-      : 60000,
+      : 60000
   })
 
   // ===========================================================================
@@ -209,7 +209,7 @@ export class OtelProvider extends Context.Tag(
     tracesEnabled: false,
     metricsEnabled: false,
     serviceName: "test-service",
-    serviceVersion: "0.0.0-test",
+    serviceVersion: "0.0.0-test"
   })
 
   // ===========================================================================

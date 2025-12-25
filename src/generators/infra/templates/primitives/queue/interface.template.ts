@@ -179,15 +179,15 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const JobSchema = Schema.Struct({ type: Schema.String, data: Schema.Unknown });
-     * const jobQueue = yield* queue.bounded(100, JobSchema);
+     * const JobSchema = Schema.Struct({ type: Schema.String, data: Schema.Unknown })
+     * const jobQueue = yield* queue.bounded(100, JobSchema)
      *
      * // Producer
-     * yield* jobQueue.offer({ type: "send_email", data: emailData });
+     * yield* jobQueue.offer({ type: "send_email", data: emailData })
      *
      * // Consumer
      * const job = yield* jobQueue.take;
-     * yield* processJob(job);
+     * yield* processJob(job)
      * \`\`\`
      */
     readonly bounded: <T, I = T>(
@@ -207,9 +207,9 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const EventSchema = Schema.Struct({ type: Schema.String, payload: Schema.Unknown });
-     * const eventQueue = yield* queue.unbounded(EventSchema);
-     * yield* eventQueue.offer(event);
+     * const EventSchema = Schema.Struct({ type: Schema.String, payload: Schema.Unknown })
+     * const eventQueue = yield* queue.unbounded(EventSchema)
+     * yield* eventQueue.offer(event)
      * \`\`\`
      */
     readonly unbounded: <T, I = T>(
@@ -229,10 +229,10 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const MetricSchema = Schema.Struct({ name: Schema.String, value: Schema.Number });
-     * const metricsQueue = yield* queue.dropping(1000, MetricSchema);
+     * const MetricSchema = Schema.Struct({ name: Schema.String, value: Schema.Number })
+     * const metricsQueue = yield* queue.dropping(1000, MetricSchema)
      * // If queue is full, metrics are dropped (acceptable for non-critical data)
-     * yield* metricsQueue.offer(metric);
+     * yield* metricsQueue.offer(metric)
      * \`\`\`
      */
     readonly dropping: <T, I = T>(
@@ -253,10 +253,10 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const EventSchema = Schema.Struct({ type: Schema.String, timestamp: Schema.Number });
-     * const recentEvents = yield* queue.sliding(100, EventSchema);
+     * const EventSchema = Schema.Struct({ type: Schema.String, timestamp: Schema.Number })
+     * const recentEvents = yield* queue.sliding(100, EventSchema)
      * // Always keeps the 100 most recent events
-     * yield* recentEvents.offer(event);
+     * yield* recentEvents.offer(event)
      * \`\`\`
      */
     readonly sliding: <T, I = T>(

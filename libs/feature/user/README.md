@@ -1,6 +1,6 @@
 # @samuelho-dev/feature-user
 
-User
+User feature with CurrentUser integration
 
 ## Overview
 

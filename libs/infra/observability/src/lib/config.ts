@@ -146,7 +146,7 @@ export type LogsConfig = typeof LogsConfigSchema.Type
  *   environment: "production",
  *   traces: { enabled: true, samplingRatio: 0.1 },
  *   metrics: { exportIntervalMs: 30000 },
- * });
+ * })
  * ```
  */
 export const ObservabilityConfigSchema = Schema.Struct({
@@ -232,7 +232,7 @@ export const ProductionConfig: Partial<ObservabilityConfig> = {
   },
   logs: {
     enabled: true,
-    minLevel: "info",
+    minLevel: "info"
   },
 }
 
@@ -255,7 +255,7 @@ export const DevelopmentConfig: Partial<ObservabilityConfig> = {
   },
   logs: {
     enabled: true,
-    minLevel: "debug",
+    minLevel: "debug"
   },
 }
 

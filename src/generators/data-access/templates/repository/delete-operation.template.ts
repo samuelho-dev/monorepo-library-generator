@@ -31,7 +31,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addImports([
     { from: "effect", imports: ["Duration", "Effect"] },
     { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
-    { from: "../../shared/errors", imports: [`${className}NotFoundRepositoryError`, `${className}TimeoutError`] }
+    // Domain errors from contract, infrastructure errors from shared
+    { from: `${scope}/contract-${fileName}`, imports: [`${className}NotFoundError`] },
+    { from: "../../shared/errors", imports: [`${className}TimeoutError`] }
   ])
 
   builder.addSectionComment("Delete Operations")
@@ -67,9 +69,12 @@ export const deleteOperations = {
 
       const deletedCount = Number(result.numDeletedRows)
       if (deletedCount === 0) {
-        // Throw NotFoundRepositoryError when record doesn't exist
+        // Throw NotFoundError when record doesn't exist
         // This ensures callers can distinguish "deleted" from "nothing to delete"
-        return yield* Effect.fail(${className}NotFoundRepositoryError.create(id))
+        return yield* Effect.fail(new ${className}NotFoundError({
+          message: \`${className} not found: \${id}\`,
+          ${fileName}Id: id
+        }))
       }
 
       yield* Effect.logDebug(\`${className} deleted successfully (id: \${id})\`)

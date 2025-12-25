@@ -1,6 +1,6 @@
 # @samuelho-dev/data-access-user
 
-user data access
+User data access with cache integration
 
 ## AI Agent Reference
 
@@ -20,16 +20,12 @@ This is a data-access library following Effect-based repository patterns.
 
 ```typescript
 // Type-only import (zero runtime)
-import type { User, UserCreateInput } from '@samuelho-dev/data-access-user/types';
-
-// Repository import
-import { UserRepository } from '@samuelho-dev/data-access-user';
-
-Effect.gen(function*() {
+import type { User, UserCreateInput } from '@samuelho-dev/data-access-user/types'// Repository import
+import { UserRepository } from '@samuelho-dev/data-access-user'Effect.gen(function*() {
   const repo = yield* UserRepository;
-  const result = yield* repo.findById("id-123");
+  const result = yield* repo.findById("id-123")
   // ...
-});
+})
 ```
 
 ### Customization Guide
@@ -56,32 +52,26 @@ Effect.gen(function*() {
 
 ```typescript
 import { UserRepository } from '@samuelho-dev/data-access-user';
-import type { UserCreateInput } from '@samuelho-dev/data-access-user/types';
-
-// Standard usage
+import type { UserCreateInput } from '@samuelho-dev/data-access-user/types'// Standard usage
 const program = Effect.gen(function*() {
   const repo = yield* UserRepository;
-  const entity = yield* repo.findById("id-123");
+  const entity = yield* repo.findById("id-123")
   return entity;
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(UserRepository.Live)  // Production
   // or Effect.provide(UserRepository.Test)   // Testing
   // or Effect.provide(UserRepository.Auto)   // NODE_ENV-based
-);
+)
 
 // With caching layer
-import { UserCache } from '@samuelho-dev/data-access-user';
-
-Effect.gen(function*() {
+import { UserCache } from '@samuelho-dev/data-access-user'Effect.gen(function*() {
   const repo = yield* UserRepository;
-  const cache = yield* UserCache;
-
-  // Reads go through cache (automatic lookup on miss)
-  const entity = yield* cache.get("id-123", () => repo.findById("id-123"));
-});
+  const cache = yield* UserCache  // Reads go through cache (automatic lookup on miss)
+  const entity = yield* cache.get("id-123", () => repo.findById("id-123"))
+})
 ```
 
 ### Testing Strategy

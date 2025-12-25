@@ -21,7 +21,7 @@ export default defineConfig({
     environment: "node",
     testTimeout: 30000, // Allow time for generator workspace creation
     // Run sequentially to prevent NX graph conflicts
-    fileParallelism: false,
+    fileParallelism: false
   },
   resolve: {
     alias: {

@@ -37,19 +37,19 @@ export interface SupabaseAuthServiceInterface {
    */
   readonly signInWithPassword: (
     credentials: SignInCredentials
-  ) => Effect.Effect<AuthResult, SupabaseAuthError | SupabaseInvalidCredentialsError>;
+  ) => Effect.Effect<AuthResult, SupabaseAuthError | SupabaseInvalidCredentialsError>
 
   /**
    * Sign up with email and password
    */
   readonly signUp: (
     credentials: SignUpCredentials
-  ) => Effect.Effect<AuthResult, SupabaseAuthError>;
+  ) => Effect.Effect<AuthResult, SupabaseAuthError>
 
   /**
    * Sign out the current user
    */
-  readonly signOut: () => Effect.Effect<void, SupabaseAuthError>;
+  readonly signOut: () => Effect.Effect<void, SupabaseAuthError>
 
   /**
    * Verify a JWT token and return the user
@@ -58,7 +58,7 @@ export interface SupabaseAuthServiceInterface {
    */
   readonly verifyToken: (
     token: string
-  ) => Effect.Effect<AuthUser, SupabaseAuthError | SupabaseTokenError>;
+  ) => Effect.Effect<AuthUser, SupabaseAuthError | SupabaseTokenError>
 
   /**
    * Get the current session
@@ -68,14 +68,14 @@ export interface SupabaseAuthServiceInterface {
   readonly getSession: () => Effect.Effect<
     Option.Option<SupabaseSession>,
     SupabaseAuthError
-  >;
+  >
 
   /**
    * Get the current user
    *
    * Returns None if no authenticated user.
    */
-  readonly getUser: () => Effect.Effect<Option.Option<SupabaseUser>, SupabaseAuthError>;
+  readonly getUser: () => Effect.Effect<Option.Option<SupabaseUser>, SupabaseAuthError>
 
   /**
    * Refresh the current session
@@ -83,7 +83,7 @@ export interface SupabaseAuthServiceInterface {
   readonly refreshSession: () => Effect.Effect<
     SupabaseSession,
     SupabaseAuthError | SupabaseSessionExpiredError
-  >;
+  >
 
   /**
    * Get user from session token (server-side)
@@ -93,7 +93,7 @@ export interface SupabaseAuthServiceInterface {
    */
   readonly getUserFromToken: (
     accessToken: string
-  ) => Effect.Effect<AuthUser, SupabaseAuthError | SupabaseTokenError>;
+  ) => Effect.Effect<AuthUser, SupabaseAuthError | SupabaseTokenError>
 }
 
 // ============================================================================
@@ -105,12 +105,12 @@ export interface SupabaseAuthServiceInterface {
  *
  * Uses Effect Schema for type-safe decoding instead of type assertions.
  */
-const decodeUser = Schema.decodeUnknownOption(SupabaseUserSchema);
+const decodeUser = Schema.decodeUnknownOption(SupabaseUserSchema)
 
 /**
  * Decode SDK session to typed SupabaseSession using Schema
  */
-const decodeSession = Schema.decodeUnknownOption(SupabaseSessionSchema);
+const decodeSession = Schema.decodeUnknownOption(SupabaseSessionSchema)
 
 /**
  * Map Supabase user to simplified AuthUser
@@ -121,24 +121,24 @@ function toAuthUser(user: SupabaseUser) {
     email: user.email,
     name: user.user_metadata?.name,
     role: user.role,
-    metadata: user.user_metadata,
-  };
+    metadata: user.user_metadata
+  }
 }
 
 /**
  * Validate and decode user from SDK response
  */
 function validateUser(user: unknown, operation: string) {
-  const userOption = decodeUser(user);
+  const userOption = decodeUser(user)
   if (Option.isNone(userOption)) {
     return Effect.fail(
       new SupabaseAuthError({
         message: "Invalid user data from Supabase",
         operation
       })
-    );
+    )
   }
-  return Effect.succeed(userOption.value);
+  return Effect.succeed(userOption.value)
 }
 
 /**
@@ -151,7 +151,7 @@ function handleSignInError(error: { message?: string }) {
         message: "Invalid email or password",
         cause: error
       })
-    );
+    )
   }
   return Effect.fail(
     new SupabaseAuthError({
@@ -159,18 +159,18 @@ function handleSignInError(error: { message?: string }) {
       operation: "signIn",
       cause: error
     })
-  );
+  )
 }
 
 /**
  * Build auth result from user and optional session
  */
 function buildAuthResult(user: SupabaseUser, session: unknown) {
-  const sessionOption = session ? decodeSession(session) : Option.none();
+  const sessionOption = session ? decodeSession(session) : Option.none()
   return {
     user,
-    session: Option.isSome(sessionOption) ? sessionOption.value : null,
-  };
+    session: Option.isSome(sessionOption) ? sessionOption.value : null
+  }
 }
 
 // ============================================================================
@@ -199,7 +199,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
   private static createService(client: SupabaseSDKClient) {
     return {
       signInWithPassword: (credentials: SignInCredentials) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const { data, error } = yield* Effect.tryPromise({
             try: () =>
               client.auth.signInWithPassword({
@@ -211,19 +211,19 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Sign in failed",
                 operation: "signIn",
                 cause: error
-              }),
-          });
+              })
+          })
 
           if (error) {
-            return yield* handleSignInError(error);
+            return yield* handleSignInError(error)
           }
 
-          const user = yield* validateUser(data.user, "signIn");
-          return buildAuthResult(user, data.session);
+          const user = yield* validateUser(data.user, "signIn")
+          return buildAuthResult(user, data.session)
         }).pipe(Effect.withSpan("SupabaseAuth.signInWithPassword")),
 
       signUp: (credentials: SignUpCredentials) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const { data, error } = yield* Effect.tryPromise({
             try: () =>
               client.auth.signUp({
@@ -236,8 +236,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Sign up failed",
                 operation: "signUp",
                 cause: error
-              }),
-          });
+              })
+          })
 
           if (error) {
             return yield* Effect.fail(
@@ -246,15 +246,15 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 operation: "signUp",
                 cause: error
               })
-            );
+            )
           }
 
-          const user = yield* validateUser(data.user, "signUp");
-          return buildAuthResult(user, data.session);
+          const user = yield* validateUser(data.user, "signUp")
+          return buildAuthResult(user, data.session)
         }).pipe(Effect.withSpan("SupabaseAuth.signUp")),
 
       signOut: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const { error } = yield* Effect.tryPromise({
             try: () => client.auth.signOut(),
             catch: (error) =>
@@ -262,8 +262,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Sign out failed",
                 operation: "signOut",
                 cause: error
-              }),
-          });
+              })
+          })
 
           if (error) {
             return yield* Effect.fail(
@@ -272,12 +272,12 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 operation: "signOut",
                 cause: error
               })
-            );
+            )
           }
         }).pipe(Effect.withSpan("SupabaseAuth.signOut")),
 
       verifyToken: (token: string) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.getUser(token),
             catch: (error) =>
@@ -285,8 +285,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Token verification failed",
                 operation: "verifyToken",
                 cause: error
-              }),
-          });
+              })
+          })
 
           if (error) {
             return yield* Effect.fail(
@@ -295,7 +295,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 tokenType: "access",
                 cause: error
               })
-            );
+            )
           }
 
           if (!data.user) {
@@ -304,25 +304,25 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Token is valid but no user found",
                 tokenType: "access"
               })
-            );
+            )
           }
 
           // Decode using Schema for type safety
-          const userOption = decodeUser(data.user);
+          const userOption = decodeUser(data.user)
           if (Option.isNone(userOption)) {
             return yield* Effect.fail(
               new SupabaseTokenError({
                 message: "Invalid user data from token",
                 tokenType: "access"
               })
-            );
+            )
           }
 
-          return toAuthUser(userOption.value);
+          return toAuthUser(userOption.value)
         }).pipe(Effect.withSpan("SupabaseAuth.verifyToken")),
 
       getSession: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.getSession(),
             catch: (error) =>
@@ -330,8 +330,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Failed to get session",
                 operation: "getSession",
                 cause: error
-              }),
-          });
+              })
+          })
 
           if (error) {
             return yield* Effect.fail(
@@ -340,20 +340,20 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 operation: "getSession",
                 cause: error
               })
-            );
+            )
           }
 
           // Decode using Schema for type safety
           if (!data.session) {
-            return Option.none();
+            return Option.none()
           }
 
-          const sessionOption = decodeSession(data.session);
-          return sessionOption;
+          const sessionOption = decodeSession(data.session)
+          return sessionOption
         }).pipe(Effect.withSpan("SupabaseAuth.getSession")),
 
       getUser: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.getUser(),
             catch: (error) =>
@@ -361,13 +361,13 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Failed to get user",
                 operation: "getUser",
                 cause: error
-              }),
-          });
+              })
+          })
 
           if (error) {
             // Not authenticated is not an error, just no user
             if (error.status === 401) {
-              return Option.none();
+              return Option.none()
             }
             return yield* Effect.fail(
               new SupabaseAuthError({
@@ -375,20 +375,20 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 operation: "getUser",
                 cause: error
               })
-            );
+            )
           }
 
           // Decode using Schema for type safety
           if (!data.user) {
-            return Option.none();
+            return Option.none()
           }
 
-          const userOption = decodeUser(data.user);
-          return userOption;
+          const userOption = decodeUser(data.user)
+          return userOption
         }).pipe(Effect.withSpan("SupabaseAuth.getUser")),
 
       refreshSession: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.refreshSession(),
             catch: (error) =>
@@ -396,8 +396,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Failed to refresh session",
                 operation: "refreshToken",
                 cause: error
-              }),
-          });
+              })
+          })
 
           if (error) {
             if (error.message?.includes("expired")) {
@@ -406,7 +406,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                   message: "Session has expired",
                   cause: error
                 })
-              );
+              )
             }
             return yield* Effect.fail(
               new SupabaseAuthError({
@@ -414,7 +414,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 operation: "refreshToken",
                 cause: error
               })
-            );
+            )
           }
 
           if (!data.session) {
@@ -422,25 +422,25 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
               new SupabaseSessionExpiredError({
                 message: "No session to refresh"
               })
-            );
+            )
           }
 
           // Decode using Schema for type safety
-          const sessionOption = decodeSession(data.session);
+          const sessionOption = decodeSession(data.session)
           if (Option.isNone(sessionOption)) {
             return yield* Effect.fail(
               new SupabaseAuthError({
                 message: "Invalid session data from Supabase",
                 operation: "refreshToken"
               })
-            );
+            )
           }
 
-          return sessionOption.value;
+          return sessionOption.value
         }).pipe(Effect.withSpan("SupabaseAuth.refreshSession")),
 
       getUserFromToken: (accessToken: string) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.getUser(accessToken),
             catch: (error) =>
@@ -448,8 +448,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Failed to get user from token",
                 operation: "getUser",
                 cause: error
-              }),
-          });
+              })
+          })
 
           if (error) {
             return yield* Effect.fail(
@@ -458,7 +458,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 tokenType: "access",
                 cause: error
               })
-            );
+            )
           }
 
           if (!data.user) {
@@ -467,23 +467,23 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 message: "Token is valid but no user found",
                 tokenType: "access"
               })
-            );
+            )
           }
 
           // Decode using Schema for type safety
-          const userOption = decodeUser(data.user);
+          const userOption = decodeUser(data.user)
           if (Option.isNone(userOption)) {
             return yield* Effect.fail(
               new SupabaseTokenError({
                 message: "Invalid user data from token",
                 tokenType: "access"
               })
-            );
+            )
           }
 
-          return toAuthUser(userOption.value);
+          return toAuthUser(userOption.value)
         }).pipe(Effect.withSpan("SupabaseAuth.getUserFromToken")),
-    };
+    }
   }
 
   /**
@@ -491,12 +491,12 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
    */
   static readonly Live = Layer.effect(
     SupabaseAuth,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const supabaseClient = yield* SupabaseClient;
-      const client = yield* supabaseClient.getClient();
-      return SupabaseAuth.createService(client);
+      const client = yield* supabaseClient.getClient()
+      return SupabaseAuth.createService(client)
     })
-  );
+  )
 
   /**
    * Test layer with mock implementations
@@ -585,22 +585,22 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
         email: "test@example.com",
         name: "Test User",
         role: "authenticated",
-      }),
-  });
+      })
+  })
 
   /**
    * Dev layer with debug logging
    */
   static readonly Dev = Layer.effect(
     SupabaseAuth,
-    Effect.gen(function* () {
-      yield* Effect.logDebug("[SupabaseAuth] Initializing dev auth service...");
+    Effect.gen(function*() {
+      yield* Effect.logDebug("[SupabaseAuth] Initializing dev auth service...")
 
       // Use test implementations with logging
       return {
         signInWithPassword: (credentials: SignInCredentials) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseAuth] signInWithPassword", { email: credentials.email });
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseAuth] signInWithPassword", { email: credentials.email })
             return {
               user: {
                 id: "dev-user-id",
@@ -622,8 +622,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           }),
 
         signUp: (credentials: SignUpCredentials) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseAuth] signUp", { email: credentials.email });
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseAuth] signUp", { email: credentials.email })
             return {
               user: {
                 id: "dev-new-user-id",
@@ -635,13 +635,13 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           }),
 
         signOut: () =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseAuth] signOut");
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseAuth] signOut")
           }),
 
         verifyToken: (token: string) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseAuth] verifyToken", { token: `${token.slice(0, 10)}...` });
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseAuth] verifyToken", { token: `${token.slice(0, 10)}...` })
             return {
               id: "dev-user-id",
               email: "dev@example.com",
@@ -651,8 +651,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           }),
 
         getSession: () =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseAuth] getSession");
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseAuth] getSession")
             return Option.some({
               access_token: "dev-access-token",
               refresh_token: "dev-refresh-token",
@@ -663,22 +663,22 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 email: "dev@example.com",
                 created_at: new Date().toISOString()
               },
-            });
+            })
           }),
 
         getUser: () =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseAuth] getUser");
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseAuth] getUser")
             return Option.some({
               id: "dev-user-id",
               email: "dev@example.com",
               created_at: new Date().toISOString(),
-            });
+            })
           }),
 
         refreshSession: () =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseAuth] refreshSession");
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseAuth] refreshSession")
             return {
               access_token: "dev-refreshed-token",
               refresh_token: "dev-refresh-token",
@@ -693,16 +693,16 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           }),
 
         getUserFromToken: (accessToken: string) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseAuth] getUserFromToken", { token: `${accessToken.slice(0, 10)}...` });
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseAuth] getUserFromToken", { token: `${accessToken.slice(0, 10)}...` })
             return {
               id: "dev-user-id",
               email: "dev@example.com",
               name: "Dev User",
               role: "authenticated",
             };
-          }),
-      };
+          })
+      } ;
     })
-  );
+  )
 }

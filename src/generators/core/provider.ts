@@ -224,16 +224,12 @@ This provider wraps the \`${options.cliCommand || "cli-command"}\` command-line 
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { CommandResult, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
-
-// Service import
-import { ${templateOptions.className} } from '${templateOptions.packageName}';
-
-Effect.gen(function*() {
+import type { CommandResult, ${templateOptions.className}Config } from '${templateOptions.packageName}/types'// Service import
+import { ${templateOptions.className} } from '${templateOptions.packageName}'Effect.gen(function*() {
   const service = yield* ${templateOptions.className};
-  const result = yield* service.execute(["--help"]);
+  const result = yield* service.execute(["--help"])
   const version = yield* service.version;
-});
+})
 \`\`\`
 
 ### Customization Guide
@@ -280,16 +276,12 @@ This provider integrates with ${templateOptions.externalService} HTTP API using 
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
-
-// Service import
-import { ${templateOptions.className} } from '${templateOptions.packageName}';
-
-Effect.gen(function*() {
+import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types'// Service import
+import { ${templateOptions.className} } from '${templateOptions.packageName}'Effect.gen(function*() {
   const service = yield* ${templateOptions.className};
-  const resources = yield* service.list({ page: 1, limit: 10 });
-  const resource = yield* service.get("resource-id");
-});
+  const resources = yield* service.list({ page: 1, limit: 10 })
+  const resource = yield* service.get("resource-id")
+})
 \`\`\`
 
 ### Customization Guide
@@ -340,28 +332,24 @@ This provider integrates with ${templateOptions.externalService} GraphQL API usi
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
-
-// Service import
-import { ${templateOptions.className} } from '${templateOptions.packageName}';
-
-Effect.gen(function*() {
-  const service = yield* ${templateOptions.className};
+import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types'// Service import
+import { ${templateOptions.className} } from '${templateOptions.packageName}'Effect.gen(function*() {
+  const service = yield* ${templateOptions.className}
 
   // GraphQL query
   const data = yield* service.query<QueryResult>(\`
     query GetResources {
       resources { id name }
     }
-  \`);
+  \`)
 
   // GraphQL mutation
   const result = yield* service.mutation<MutationResult>(\`
     mutation CreateResource($input: ResourceInput!) {
       createResource(input: $input) { id name }
     }
-  \`, { input: { name: "New Resource" } });
-});
+  \`, { input: { name: "New Resource" } })
+})
 \`\`\`
 
 ### Customization Guide
@@ -409,16 +397,12 @@ This is an AI-optimized reference for ${templateOptions.externalService}, a prov
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
-
-// Service import
-import { ${templateOptions.className} } from '${templateOptions.packageName}';
-
-Effect.gen(function*() {
+import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types'// Service import
+import { ${templateOptions.className} } from '${templateOptions.packageName}'Effect.gen(function*() {
   const service = yield* ${templateOptions.className};
-  const result = yield* service.list({ page: 1, limit: 10 });
+  const result = yield* service.list({ page: 1, limit: 10 })
   // ...
-});
+})
 \`\`\`
 
 ### Customization Guide
@@ -445,21 +429,19 @@ Effect.gen(function*() {
 
 \`\`\`typescript
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
-import type { Resource } from '${templateOptions.packageName}/types';
-
-// Standard usage
+import type { Resource } from '${templateOptions.packageName}/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* ${templateOptions.className};
-  const items = yield* service.list({ page: 1, limit: 10 });
+  const items = yield* service.list({ page: 1, limit: 10 })
   return items;
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(${templateOptions.className}.Live)  // Production
   // or Effect.provide(${templateOptions.className}.Test)   // Testing
   // or Effect.provide(${templateOptions.className}.Auto)   // NODE_ENV-based
-);
+)
 \`\`\`
 
 ## SDK Integration Guide
@@ -494,10 +476,10 @@ static readonly Live = Layer.effect(
     const config: ${templateOptions.className}Config = {
       apiKey: env.${templateOptions.constantName}_API_KEY,
       timeout: env.${templateOptions.constantName}_TIMEOUT || 20000,
-    };
+    }
 
     // Initialize SDK client
-    const client = new ${templateOptions.externalService}SDK(config);
+    const client = new ${templateOptions.externalService}SDK(config)
 
     return {
       config,
@@ -529,9 +511,9 @@ static readonly Live = Layer.effect(
 
       // Repeat for get, create, update, delete operations
       // ... (follow same pattern with Effect.tryPromise + timeoutFail)
-    };
+    }
   }),
-);
+)
 \`\`\`
 
 #### 3. Add Resource Cleanup (If Needed)
@@ -545,19 +527,19 @@ static readonly Live = Layer.scoped(
     const config: ${templateOptions.className}Config = {
       apiKey: env.${templateOptions.constantName}_API_KEY,
       timeout: env.${templateOptions.constantName}_TIMEOUT || 20000,
-    };
+    }
 
     // Initialize SDK with cleanup
     const client = yield* Effect.acquireRelease(
       Effect.tryPromise(() => ${templateOptions.externalService}SDK.connect(config)),
       (client) => Effect.sync(() => client.close())
-    );
+    )
 
     return {
       // ... service implementation
-    };
+    }
   }),
-);
+)
 \`\`\`
 
 #### 4. Update Dev Layer (Optional)

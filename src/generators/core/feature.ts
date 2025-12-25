@@ -221,16 +221,12 @@ ${
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { ${templateOptions.className}Config, ${templateOptions.className}Result } from '${templateOptions.packageName}/types';
-
-// Service import
-import { ${templateOptions.className}Service } from '${templateOptions.packageName}';
-
-Effect.gen(function*() {
+import type { ${templateOptions.className}Config, ${templateOptions.className}Result } from '${templateOptions.packageName}/types'// Service import
+import { ${templateOptions.className}Service } from '${templateOptions.packageName}'Effect.gen(function*() {
   const service = yield* ${templateOptions.className}Service;
-  const result = yield* service.exampleOperation();
+  const result = yield* service.exampleOperation()
   return result;
-});
+})
 \`\`\`
 
 ### Customization Guide
@@ -260,38 +256,34 @@ Effect.gen(function*() {
 
 \`\`\`typescript
 import { ${templateOptions.className}Service } from '${templateOptions.packageName}';
-import type { ${templateOptions.className}Result } from '${templateOptions.packageName}/types';
-
-// Standard usage
+import type { ${templateOptions.className}Result } from '${templateOptions.packageName}/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* ${templateOptions.className}Service;
-  const result = yield* service.exampleOperation();
+  const result = yield* service.exampleOperation()
   return result;
-});
+})
 
 // With layers
 const runnable = program.pipe(
   Effect.provide(${templateOptions.className}Service.Live)  // Production
   // or Effect.provide(${templateOptions.className}Service.Test)   // Testing
   // or Effect.provide(${templateOptions.className}Service.Auto)   // NODE_ENV-based
-);
+)
 \`\`\`
 
 ### RPC Usage
 
 \`\`\`typescript
 import { ${templateOptions.fileName}Handlers } from '${templateOptions.packageName}';
-import { ${templateOptions.className}Service } from '${templateOptions.packageName}';
-
-// Compose with RPC server
+import { ${templateOptions.className}Service } from '${templateOptions.packageName}'// Compose with RPC server
 const rpcLayer = Layer.mergeAll(
   ${templateOptions.className}Service.Live,
   // ... other dependencies
-);
+)
 
 const server = ${templateOptions.fileName}Handlers.pipe(
   Effect.provide(rpcLayer)
-);
+)
 \`\`\`
 
 ### Testing Strategy
@@ -531,7 +523,7 @@ export {
   Delete${templateOptions.className}Job,
   Bulk${templateOptions.className}Job,
   JobMetadata,
-} from "./queue";
+} from "./queue"
 
 export type {
   ${templateOptions.className}Job,

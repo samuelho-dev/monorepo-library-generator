@@ -20,16 +20,12 @@ This is an AI-optimized reference for Kysely, a provider library following Effec
 
 ```typescript
 // Type-only import (zero runtime)
-import type { Resource, KyselyConfig } from '@samuelho-dev/provider-kysely/types';
-
-// Service import
-import { Kysely } from '@samuelho-dev/provider-kysely';
-
-Effect.gen(function*() {
+import type { Resource, KyselyConfig } from '@samuelho-dev/provider-kysely/types'// Service import
+import { Kysely } from '@samuelho-dev/provider-kysely'Effect.gen(function*() {
   const service = yield* Kysely;
-  const result = yield* service.list({ page: 1, limit: 10 });
+  const result = yield* service.list({ page: 1, limit: 10 })
   // ...
-});
+})
 ```
 
 ### Customization Guide
@@ -56,21 +52,19 @@ Effect.gen(function*() {
 
 ```typescript
 import { Kysely } from '@samuelho-dev/provider-kysely';
-import type { Resource } from '@samuelho-dev/provider-kysely/types';
-
-// Standard usage
+import type { Resource } from '@samuelho-dev/provider-kysely/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* Kysely;
-  const items = yield* service.list({ page: 1, limit: 10 });
+  const items = yield* service.list({ page: 1, limit: 10 })
   return items;
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(Kysely.Live)  // Production
   // or Effect.provide(Kysely.Test)   // Testing
   // or Effect.provide(Kysely.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ## SDK Integration Guide
@@ -105,10 +99,10 @@ static readonly Live = Layer.effect(
     const config: KyselyConfig = {
       apiKey: env.KYSELY_API_KEY,
       timeout: env.KYSELY_TIMEOUT || 20000,
-    };
+    }
 
     // Initialize SDK client
-    const client = new KyselySDK(config);
+    const client = new KyselySDK(config)
 
     return {
       config,
@@ -140,9 +134,9 @@ static readonly Live = Layer.effect(
 
       // Repeat for get, create, update, delete operations
       // ... (follow same pattern with Effect.tryPromise + timeoutFail)
-    };
+    }
   }),
-);
+)
 ```
 
 #### 3. Add Resource Cleanup (If Needed)
@@ -156,19 +150,19 @@ static readonly Live = Layer.scoped(
     const config: KyselyConfig = {
       apiKey: env.KYSELY_API_KEY,
       timeout: env.KYSELY_TIMEOUT || 20000,
-    };
+    }
 
     // Initialize SDK with cleanup
     const client = yield* Effect.acquireRelease(
       Effect.tryPromise(() => KyselySDK.connect(config)),
       (client) => Effect.sync(() => client.close())
-    );
+    )
 
     return {
       // ... service implementation
-    };
+    }
   }),
-);
+)
 ```
 
 #### 4. Update Dev Layer (Optional)

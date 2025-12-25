@@ -81,7 +81,7 @@ export {
   isServiceRoute,
   isPublicRoute,
   ${className}RpcsByRoute
-} from "${scope}/contract-${name}/rpc"
+} from "${scope}/contract-${name}"
 `)
 
   builder.addSectionComment("Handler Exports")

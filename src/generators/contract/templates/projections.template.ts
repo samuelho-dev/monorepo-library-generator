@@ -124,7 +124,7 @@ export class ${className}ListProjection extends Schema.Class<${className}ListPro
   //
   // /** Aggregated stats */
   // itemCount: Schema.Number,
-  // averageRating: Schema.optional(Schema.Number),
+  // averageRating: Schema.optional(Schema.Number)
 }) {}`
 }
 
@@ -178,7 +178,7 @@ export class ${className}DetailProjection extends Schema.Class<${className}Detai
   // stats: Schema.Struct({
   //   count: Schema.Number,
   //   total: Schema.Number,
-  // }),
+  // })
 }) {}`
 }
 

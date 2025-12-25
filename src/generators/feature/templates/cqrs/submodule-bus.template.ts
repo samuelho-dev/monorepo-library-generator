@@ -248,7 +248,7 @@ ${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield*
  * const appLayer = Layer.mergeAll(
  *   ${className}UnifiedBusLayer,
  *   ${className}FeatureLive,
- * );
+ * )
  * \`\`\`
  */
 export const ${className}UnifiedBusLayer = Layer.mergeAll(

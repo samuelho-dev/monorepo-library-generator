@@ -8,14 +8,13 @@
  */
 
 import { Box, Text, useInput } from 'ink';
-import { useState } from 'react';
-
+import { useState } from 'react'
 import {
   LIBRARY_TYPES,
   WIZARD_ACTIONS,
   type WizardSelection,
 } from '../../interactive/types';
-import { colors, statusIcons } from '../theme/colors';
+import { colors, statusIcons } from '../theme/colors'
 
 interface TypeSelectProps {
   readonly librariesRoot: string;
@@ -48,25 +47,25 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
       value: info.type as WizardSelection,
       description: info.description,
     })),
-  ];
+  ]
 
   // Filter out separator for navigation (but keep it for display)
-  const selectableItems = items.filter((item) => !item.isSeparator);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const selectableItems = items.filter((item) => !item.isSeparator)
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
   // Ensure selectedItem is always defined
-  const selectedItem = selectableItems[selectedIndex];
+  const selectedItem = selectableItems[selectedIndex]
 
   useInput((input, key) => {
     if (!selectedItem) return;
     if (key.upArrow) {
-      setSelectedIndex((i) => Math.max(0, i - 1));
+      setSelectedIndex((i) => Math.max(0, i - 1))
     } else if (key.downArrow) {
-      setSelectedIndex((i) => Math.min(selectableItems.length - 1, i + 1));
+      setSelectedIndex((i) => Math.min(selectableItems.length - 1, i + 1))
     } else if (key.return) {
-      onSelect(selectedItem.value);
+      onSelect(selectedItem.value)
     }
-  });
+  })
 
   // Map selectable index to display index (accounting for separator)
   const getDisplayIndex = (selectableIdx: number) => {
@@ -75,14 +74,14 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
       return selectableIdx;
     }
     // After separator
-    return selectableIdx + 1;
-  };
+    return selectableIdx + 1
+  }
 
-  const displaySelectedIndex = getDisplayIndex(selectedIndex);
+  const displaySelectedIndex = getDisplayIndex(selectedIndex)
 
   // Guard against no selectable items
   if (!selectedItem) {
-    return null;
+    return null
   }
 
   return (
@@ -98,11 +97,11 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
             <Box key="separator">
               <Text color={colors.muted}>  {item.label}</Text>
             </Box>
-          );
+          )
         }
 
         const isSelected = displayIdx === displaySelectedIndex;
-        const prefix = isSelected ? statusIcons.chevronRight : ' ';
+        const prefix = isSelected ? statusIcons.chevronRight : ' '
 
         return (
           <Box key={item.value}>
@@ -111,7 +110,7 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
             </Text>
             <Text color={colors.muted}> - {item.description}</Text>
           </Box>
-        );
+        )
       })}
 
       {/* Show what will be generated for selected item */}
@@ -140,5 +139,5 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
         <Text color={colors.muted}>Use arrow keys to navigate, Enter to select</Text>
       </Box>
     </Box>
-  );
+  )
 }

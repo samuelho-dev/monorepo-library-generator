@@ -7,10 +7,9 @@
  */
 
 import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner';
-
+import Spinner from 'ink-spinner'
 import type { LibraryType } from '../../interactive/types';
-import { colors, statusIcons } from '../theme/colors';
+import { colors, statusIcons } from '../theme/colors'
 
 interface GenerationProgressProps {
   readonly libraryType: LibraryType;
@@ -43,7 +42,7 @@ export function GenerationProgress({
           </Box>
         )}
       </Box>
-    );
+    )
   }
 
   if (status === 'success') {
@@ -62,7 +61,7 @@ export function GenerationProgress({
           <Text color={colors.muted}>Files created: {generatedFiles.length}</Text>
         </Box>
       </Box>
-    );
+    )
   }
 
   // Running state
@@ -92,5 +91,5 @@ export function GenerationProgress({
         </Box>
       )}
     </Box>
-  );
+  )
 }

@@ -7,14 +7,13 @@
  */
 
 import { Box } from 'ink';
-import { useCallback, useReducer } from 'react';
-
+import { useCallback, useReducer } from 'react'
 import { getTargetDirectory } from '../interactive/file-preview';
 import type { WizardResult } from '../interactive/types';
 import { OperationsProvider } from './bridge/operations-context';
 import { Header } from './components/Header';
 import { WizardContainer } from './components/WizardContainer';
-import { createInitialState, wizardReducer } from './state/types';
+import { createInitialState, wizardReducer } from './state/types'
 
 interface AppProps {
   readonly librariesRoot: string;
@@ -23,7 +22,7 @@ interface AppProps {
 }
 
 export function App({ librariesRoot, workspaceRoot, onComplete }: AppProps) {
-  const [state, dispatch] = useReducer(wizardReducer, createInitialState(librariesRoot));
+  const [state, dispatch] = useReducer(wizardReducer, createInitialState(librariesRoot))
 
   const handleGenerate = useCallback(() => {
     // When generation is triggered, we notify the parent with the result
@@ -33,7 +32,7 @@ export function App({ librariesRoot, workspaceRoot, onComplete }: AppProps) {
         state.librariesRoot,
         state.libraryType,
         state.libraryName,
-      );
+      )
 
       const result: WizardResult = {
         libraryType: state.libraryType,
@@ -41,12 +40,12 @@ export function App({ librariesRoot, workspaceRoot, onComplete }: AppProps) {
         externalService: state.externalService || undefined,
         targetDirectory,
         options: state.options,
-        filesToCreate: state.filesToCreate,
-      };
+        filesToCreate: state.filesToCreate
+      }
 
-      onComplete(result);
+      onComplete(result)
     }
-  }, [state, onComplete]);
+  }, [state, onComplete])
 
   return (
     <OperationsProvider>
@@ -62,5 +61,5 @@ export function App({ librariesRoot, workspaceRoot, onComplete }: AppProps) {
         </Box>
       </Box>
     </OperationsProvider>
-  );
+  )
 }

@@ -1,6 +1,7 @@
+import { UserNotFoundError } from "@samuelho-dev/contract-user"
 import { DatabaseService } from "@samuelho-dev/infra-database"
 import { Duration, Effect } from "effect"
-import { UserNotFoundRepositoryError, UserTimeoutError } from "../../shared/errors"
+import { UserTimeoutError } from "../../shared/errors"
 import type { UserUpdateInput } from "../../shared/types"
 
 /**
@@ -53,7 +54,10 @@ export const updateOperations = {
 
       if (!updated) {
         yield* Effect.logWarning(`User not found: ${id}`)
-        return yield* Effect.fail(UserNotFoundRepositoryError.create(id))
+        return yield* Effect.fail(new UserNotFoundError({
+          message: `User not found: ${id}`,
+          userId: id
+        }))
       }
 
       yield* Effect.logDebug(`User updated successfully (id: ${id})`)

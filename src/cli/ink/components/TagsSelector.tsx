@@ -8,9 +8,8 @@
  */
 
 import { Box, Text } from 'ink';
-import TextInput from 'ink-text-input';
-
-import { colors, statusIcons } from '../theme/colors';
+import TextInput from 'ink-text-input'
+import { colors, statusIcons } from '../theme/colors'
 
 interface TagsSelectorProps {
   /** Available tags from workspace */
@@ -43,7 +42,7 @@ export function TagsSelector({
 }: TagsSelectorProps) {
   // Empty state - no existing tags in workspace
   if (availableTags.length === 0) {
-    const isAddingFocused = isActive && focusedIndex === 0;
+    const isAddingFocused = isActive && focusedIndex === 0
 
     return (
       <Box flexDirection="column">
@@ -84,7 +83,7 @@ export function TagsSelector({
           </Box>
         )}
       </Box>
-    );
+    )
   }
 
   return (
@@ -92,8 +91,8 @@ export function TagsSelector({
       {/* Tag list with checkboxes */}
       {availableTags.map((tag, index) => {
         const isFocused = isActive && mode === 'navigation' && focusedIndex === index;
-        const isSelected = selectedTags.includes(tag);
-        const checkbox = isSelected ? statusIcons.completed : statusIcons.pending;
+        const isSelected = selectedTags.includes(tag)
+        const checkbox = isSelected ? statusIcons.completed : statusIcons.pending
 
         return (
           <Box key={tag}>
@@ -103,7 +102,7 @@ export function TagsSelector({
             <Text color={isSelected ? colors.success : colors.muted}>{checkbox}</Text>
             <Text bold={isFocused}> {tag}</Text>
           </Box>
-        );
+        )
       })}
 
       {/* Add new tag option */}
@@ -148,5 +147,5 @@ export function TagsSelector({
         </Box>
       )}
     </Box>
-  );
+  )
 }

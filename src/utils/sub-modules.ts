@@ -10,7 +10,7 @@
  * ```typescript
  * import { parseSubModules } from './sub-modules';
  *
- * const modules = parseSubModules('cart,checkout,wishlist');
+ * const modules = parseSubModules('cart,checkout,wishlist')
  * // [
  * //   { name: 'cart', className: 'Cart', propertyName: 'cart', fileName: 'cart' },
  * //   { name: 'checkout', className: 'Checkout', propertyName: 'checkout', fileName: 'checkout' },
@@ -55,7 +55,7 @@ export interface ParsedSubModule {
  *
  * @example Basic usage
  * ```typescript
- * const modules = parseSubModules('cart,checkout');
+ * const modules = parseSubModules('cart,checkout')
  * // [
  * //   { name: 'cart', className: 'Cart', ... },
  * //   { name: 'checkout', className: 'Checkout', ... }
@@ -64,15 +64,15 @@ export interface ParsedSubModule {
  *
  * @example Handles whitespace
  * ```typescript
- * const modules = parseSubModules(' cart , checkout ');
+ * const modules = parseSubModules(' cart , checkout ')
  * // Same result as above - whitespace is trimmed
  * ```
  *
  * @example Returns empty array for undefined/empty
  * ```typescript
- * parseSubModules(undefined); // []
- * parseSubModules('');        // []
- * parseSubModules('  ');      // []
+ * parseSubModules(undefined) // []
+ * parseSubModules('')        // []
+ * parseSubModules('  ')      // []
  * ```
  */
 export function parseSubModules(input?: string) {
@@ -104,10 +104,10 @@ export function parseSubModules(input?: string) {
  *
  * @example
  * ```typescript
- * hasSubModules('cart,checkout'); // true
- * hasSubModules('cart');          // true
- * hasSubModules('');              // false
- * hasSubModules(undefined);       // false
+ * hasSubModules('cart,checkout') // true
+ * hasSubModules('cart')          // true
+ * hasSubModules('')              // false
+ * hasSubModules(undefined)       // false
  * ```
  */
 export function hasSubModules(input?: string) {
@@ -124,7 +124,7 @@ export function hasSubModules(input?: string) {
  *
  * @example
  * ```typescript
- * getSubModuleNames('cart, checkout, wishlist');
+ * getSubModuleNames('cart, checkout, wishlist')
  * // ['cart', 'checkout', 'wishlist']
  * ```
  */

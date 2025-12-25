@@ -617,7 +617,7 @@ export class EffectPatterns {
    *   readonly fooId: string;
    * }> {
    *   static create(fooId: string) {
-   *     return new FooNotFoundError({ message: `Foo not found: ${fooId}`, fooId });
+   *     return new FooNotFoundError({ message: `Foo not found: ${fooId}`, fooId })
    *   }
    * }
    * ```
@@ -686,20 +686,20 @@ ${methods}
    * ```typescript
    * static readonly Live = Layer.effect(
    *   FooService,
-   *   Effect.gen(function* () {
+   *   Effect.gen(function*() {
    *     const db = yield* DatabaseService;
    *     const cache = yield* CacheService;
    *
    *     return {
-   *       create: (data) => Effect.gen(function* () {
+   *       create: (data) => Effect.gen(function*() {
    *         // implementation
    *       }),
-   *       findById: (id) => Effect.gen(function* () {
+   *       findById: (id) => Effect.gen(function*() {
    *         // implementation
    *       })
    *     };
    *   })
-   * );
+   * )
    * ```
    */
   static createLiveLayer(config: LayerConfig) {
@@ -723,7 +723,7 @@ ${methods}
 
     return `${jsdocComment}  static readonly ${layerName} = ${layerMethod}(
     ${config.serviceName},
-    Effect.gen(function* () {
+    Effect.gen(function*() {
 ${dependencyYields}${
       implementation
         .split("\n")
@@ -731,7 +731,7 @@ ${dependencyYields}${
         .join("\n")
     }
     })
-  );`
+  )`
   }
 
   /**
@@ -742,11 +742,11 @@ ${dependencyYields}${
    * static readonly Test = Layer.succeed(FooService, {
    *   create: () => Effect.succeed(mockFoo),
    *   findById: () => Effect.succeed(Option.none())
-   * });
+   * })
    * ```
    */
   static createTestLayer(serviceName: string, mockImplementation: string) {
-    return `  static readonly Test = Layer.succeed(${serviceName}, ${mockImplementation});`
+    return `  static readonly Test = Layer.succeed(${serviceName}, ${mockImplementation})`
   }
 
   /**
@@ -759,7 +759,7 @@ ${dependencyYields}${
    *   name: Schema.String,
    *   createdAt: Schema.DateTimeUtc,
    *   metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
-   * });
+   * })
    * ```
    */
   static createSchemaStruct(config: SchemaStructConfig) {
@@ -777,31 +777,31 @@ ${dependencyYields}${
 
     return `${jsdocComment}${exported}const ${config.name} = Schema.Struct({
 ${fields}
-});`
+})`
   }
 
   /**
    * Create a Schema type inference
    *
    * ```typescript
-   * export type Foo = Schema.Schema.Type<typeof FooSchema>;
+   * export type Foo = Schema.Schema.Type<typeof FooSchema>
    * ```
    */
   static createSchemaType(typeName: string, schemaName: string, exported = true) {
     const exportKeyword = exported ? "export " : ""
-    return `${exportKeyword}type ${typeName} = Schema.Schema.Type<typeof ${schemaName}>;`
+    return `${exportKeyword}type ${typeName} = Schema.Schema.Type<typeof ${schemaName}>`
   }
 
   /**
    * Create a Schema encoding type inference
    *
    * ```typescript
-   * export type FooEncoded = Schema.Schema.Encoded<typeof FooSchema>;
+   * export type FooEncoded = Schema.Schema.Encoded<typeof FooSchema>
    * ```
    */
   static createSchemaEncodedType(typeName: string, schemaName: string, exported = true) {
     const exportKeyword = exported ? "export " : ""
-    return `${exportKeyword}type ${typeName} = Schema.Schema.Encoded<typeof ${schemaName}>;`
+    return `${exportKeyword}type ${typeName} = Schema.Schema.Encoded<typeof ${schemaName}>`
   }
 
   /**
@@ -811,10 +811,10 @@ ${fields}
     const implementations = methods
       .map((method) => {
         const params = method.params.map((p) => p.name).join(", ")
-        return `      ${method.name}: (${params}) => Effect.gen(function* () {
+        return `      ${method.name}: (${params}) => Effect.gen(function*() {
         // TODO: Implement ${method.name}
-        yield* Effect.logDebug(\`${method.name} called with: \${JSON.stringify({ ${params} })}\`);
-        return yield* Effect.fail(new Error("Not implemented"));
+        yield* Effect.logDebug(\`${method.name} called with: \${JSON.stringify({ ${params} })}\`)
+        return yield* Effect.fail(new Error("Not implemented"))
       })`
       })
       .join(",\n")
@@ -831,8 +831,8 @@ ${implementations}
    * export const CreateFooCommand = Schema.Struct({
    *   _tag: Schema.Literal("CreateFoo"),
    *   data: FooDataSchema
-   * });
-   * export type CreateFooCommand = Schema.Schema.Type<typeof CreateFooCommand>;
+   * })
+   * export type CreateFooCommand = Schema.Schema.Type<typeof CreateFooCommand>
    * ```
    */
   static createCommand(commandName: string, dataSchema: string, jsdoc?: string) {
@@ -843,9 +843,9 @@ ${implementations}
     return `${jsdocComment}export const ${commandName}Schema = Schema.Struct({
   _tag: Schema.Literal("${tag}"),
   data: ${dataSchema}
-});
+})
 
-export type ${commandName} = Schema.Schema.Type<typeof ${commandName}Schema>;`
+export type ${commandName} = Schema.Schema.Type<typeof ${commandName}Schema>`
   }
 
   /**
@@ -862,9 +862,9 @@ export type ${commandName} = Schema.Schema.Type<typeof ${commandName}Schema>;`
 
     return `${jsdocComment}export const ${queryName}Schema = Schema.Struct({
   ${fields}
-});
+})
 
-export type ${queryName} = Schema.Schema.Type<typeof ${queryName}Schema>;`
+export type ${queryName} = Schema.Schema.Type<typeof ${queryName}Schema>`
   }
 
   /**
@@ -877,7 +877,7 @@ export type ${queryName} = Schema.Schema.Type<typeof ${queryName}Schema>;`
    *     output: FooSchema,
    *     error: FooDomainError
    *   }
-   * });
+   * })
    * ```
    */
   static createRpcSchema(rpcName: string, endpoints: Array<RpcEndpoint>, jsdoc?: string) {
@@ -895,6 +895,6 @@ export type ${queryName} = Schema.Schema.Type<typeof ${queryName}Schema>;`
 
     return `${jsdocComment}export const ${rpcName} = RpcSchema.make({
 ${endpointDefs}
-});`
+})`
   }
 }

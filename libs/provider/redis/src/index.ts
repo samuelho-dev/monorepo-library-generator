@@ -15,14 +15,12 @@ Effect 3.0+ Pattern:
   - Access layers via static members: Redis.Test, Redis.Live
 
 Usage:
-  import { Redis } from '@samuelho-dev/provider-redis';
-
-  const program = Effect.gen(function* () {
+  import { Redis } from '@samuelho-dev/provider-redis'  const program = Effect.gen(function*() {
     const redis = yield* Redis;
-    yield* redis.cache.set("key", "value");
-    const value = yield* redis.cache.get("key");
-    return value;
-  }).pipe(Effect.provide(Redis.Live));
+    yield* redis.cache.set("key", "value")
+    const value = yield* redis.cache.get("key")
+    return value
+  }).pipe(Effect.provide(Redis.Live))
  *
  */
 
@@ -114,44 +112,44 @@ export { makeQueueClient } from "./lib/queue"
 // import { Redis } from '@samuelho-dev/provider-redis';
 // 
 // // Cache operations
-// const cacheProgram = Effect.gen(function* () {
+// const cacheProgram = Effect.gen(function*() {
 //   const redis = yield* Redis;
-//   yield* redis.cache.set("user:1", JSON.stringify({ name: "Alice" }));
-//   const user = yield* redis.cache.get("user:1");
+//   yield* redis.cache.set("user:1", JSON.stringify({ name: "Alice" }))
+//   const user = yield* redis.cache.get("user:1")
 //   return user;
-// });
+// })
 // 
 // // PubSub operations
-// const pubsubProgram = Effect.gen(function* () {
+// const pubsubProgram = Effect.gen(function*() {
 //   const redis = yield* Redis;
-//   yield* redis.pubsub.subscribe("events", (msg) => console.log(msg));
-//   yield* redis.pubsub.publish("events", "Hello!");
-// });
+//   yield* redis.pubsub.subscribe("events", (msg) => console.log(msg))
+//   yield* redis.pubsub.publish("events", "Hello!")
+// })
 // 
 // // Queue operations
-// const queueProgram = Effect.gen(function* () {
+// const queueProgram = Effect.gen(function*() {
 //   const redis = yield* Redis;
-//   yield* redis.queue.lpush("jobs", JSON.stringify({ task: "process" }));
-//   const [key, value] = yield* redis.queue.brpop("jobs", 0);
+//   yield* redis.queue.lpush("jobs", JSON.stringify({ task: "process" }))
+//   const [key, value] = yield* redis.queue.brpop("jobs", 0)
 //   return value;
-// });
+// })
 // 
 // // Extended operations
-// const extendedProgram = Effect.gen(function* () {
+// const extendedProgram = Effect.gen(function*() {
 //   const redis = yield* Redis;
-//   yield* redis.expire("user:1", 3600);
-//   const ttl = yield* redis.ttl("user:1");
-//   const exists = yield* redis.exists("user:1");
+//   yield* redis.expire("user:1", 3600)
+//   const ttl = yield* redis.ttl("user:1")
+//   const exists = yield* redis.exists("user:1")
 //   return { ttl, exists };
-// });
+// })
 // 
 // // Run with layer
 // const result = Effect.runPromise(
 //   cacheProgram.pipe(Effect.provide(Redis.Live))
-// );
+// )
 // 
 // // Testing
 // const testResult = Effect.runSync(
 //   cacheProgram.pipe(Effect.provide(Redis.Test))
-// );
+// )
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

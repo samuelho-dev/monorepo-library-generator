@@ -32,14 +32,12 @@ Effect 3.0+ Pattern:
   - Access layers via static members: Redis.Test, Redis.Live
 
 Usage:
-  import { Redis } from '${packageName}';
-
-  const program = Effect.gen(function* () {
+  import { Redis } from '${packageName}'  const program = Effect.gen(function*() {
     const redis = yield* Redis;
-    yield* redis.cache.set("key", "value");
-    const value = yield* redis.cache.get("key");
-    return value;
-  }).pipe(Effect.provide(Redis.Live));`
+    yield* redis.cache.set("key", "value")
+    const value = yield* redis.cache.get("key")
+    return value
+  }).pipe(Effect.provide(Redis.Live))`
   })
   builder.addBlankLine()
 
@@ -140,46 +138,46 @@ export { makeQueueClient } from "./lib/queue"`)
   builder.addComment(`import { Redis } from '${packageName}';`)
   builder.addComment("")
   builder.addComment("// Cache operations")
-  builder.addComment("const cacheProgram = Effect.gen(function* () {")
+  builder.addComment("const cacheProgram = Effect.gen(function*() {")
   builder.addComment("  const redis = yield* Redis;")
-  builder.addComment("  yield* redis.cache.set(\"user:1\", JSON.stringify({ name: \"Alice\" }));")
-  builder.addComment("  const user = yield* redis.cache.get(\"user:1\");")
+  builder.addComment("  yield* redis.cache.set(\"user:1\", JSON.stringify({ name: \"Alice\" }))")
+  builder.addComment("  const user = yield* redis.cache.get(\"user:1\")")
   builder.addComment("  return user;")
-  builder.addComment("});")
+  builder.addComment("})")
   builder.addComment("")
   builder.addComment("// PubSub operations")
-  builder.addComment("const pubsubProgram = Effect.gen(function* () {")
+  builder.addComment("const pubsubProgram = Effect.gen(function*() {")
   builder.addComment("  const redis = yield* Redis;")
-  builder.addComment("  yield* redis.pubsub.subscribe(\"events\", (msg) => console.log(msg));")
-  builder.addComment("  yield* redis.pubsub.publish(\"events\", \"Hello!\");")
-  builder.addComment("});")
+  builder.addComment("  yield* redis.pubsub.subscribe(\"events\", (msg) => console.log(msg))")
+  builder.addComment("  yield* redis.pubsub.publish(\"events\", \"Hello!\")")
+  builder.addComment("})")
   builder.addComment("")
   builder.addComment("// Queue operations")
-  builder.addComment("const queueProgram = Effect.gen(function* () {")
+  builder.addComment("const queueProgram = Effect.gen(function*() {")
   builder.addComment("  const redis = yield* Redis;")
-  builder.addComment("  yield* redis.queue.lpush(\"jobs\", JSON.stringify({ task: \"process\" }));")
-  builder.addComment("  const [key, value] = yield* redis.queue.brpop(\"jobs\", 0);")
+  builder.addComment("  yield* redis.queue.lpush(\"jobs\", JSON.stringify({ task: \"process\" }))")
+  builder.addComment("  const [key, value] = yield* redis.queue.brpop(\"jobs\", 0)")
   builder.addComment("  return value;")
-  builder.addComment("});")
+  builder.addComment("})")
   builder.addComment("")
   builder.addComment("// Extended operations")
-  builder.addComment("const extendedProgram = Effect.gen(function* () {")
+  builder.addComment("const extendedProgram = Effect.gen(function*() {")
   builder.addComment("  const redis = yield* Redis;")
-  builder.addComment("  yield* redis.expire(\"user:1\", 3600);")
-  builder.addComment("  const ttl = yield* redis.ttl(\"user:1\");")
-  builder.addComment("  const exists = yield* redis.exists(\"user:1\");")
+  builder.addComment("  yield* redis.expire(\"user:1\", 3600)")
+  builder.addComment("  const ttl = yield* redis.ttl(\"user:1\")")
+  builder.addComment("  const exists = yield* redis.exists(\"user:1\")")
   builder.addComment("  return { ttl, exists };")
-  builder.addComment("});")
+  builder.addComment("})")
   builder.addComment("")
   builder.addComment("// Run with layer")
   builder.addComment("const result = Effect.runPromise(")
   builder.addComment("  cacheProgram.pipe(Effect.provide(Redis.Live))")
-  builder.addComment(");")
+  builder.addComment(")")
   builder.addComment("")
   builder.addComment("// Testing")
   builder.addComment("const testResult = Effect.runSync(")
   builder.addComment("  cacheProgram.pipe(Effect.provide(Redis.Test))")
-  builder.addComment(");")
+  builder.addComment(")")
   builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   return builder.toString()

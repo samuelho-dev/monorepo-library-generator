@@ -102,7 +102,7 @@ export interface HistogramHandle {
    *
    * @example
    * ```typescript
-   * const result = yield* histogram.timer(processRequest);
+   * const result = yield* histogram.timer(processRequest)
    * ```
    */
   readonly timer: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
@@ -185,14 +185,14 @@ export interface MetricsOperations {
  * const program = Effect.gen(function*() {
  *   const metrics = yield* MetricsService;
  *
- *   const counter = yield* metrics.counter(StandardMetricNames.httpRequestsTotal);
+ *   const counter = yield* metrics.counter(StandardMetricNames.httpRequestsTotal)
  *   yield* counter.increment;
  *
  *   const histogram = yield* metrics.histogram("request_duration", {
  *     boundaries: HistogramBoundaries.httpDuration
- *   });
- *   yield* histogram.timer(handleRequest);
- * }).pipe(Effect.provide(MetricsService.Live));
+ *   })
+ *   yield* histogram.timer(handleRequest)
+ * }).pipe(Effect.provide(MetricsService.Live))
  * ```
  */
 export class MetricsService extends Context.Tag(
@@ -361,7 +361,7 @@ export class MetricsService extends Context.Tag(
    * const customLayer = Layer.provide(
    *   MetricsService.WithOtel,
    *   OtelProvider.make({ serviceName: "custom" })
-   * );
+   * )
    * ```
    */
   static readonly WithOtel = Layer.effect(

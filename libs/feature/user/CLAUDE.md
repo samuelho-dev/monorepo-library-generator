@@ -1,6 +1,6 @@
 # @samuelho-dev/feature-user
 
-User
+User feature with CurrentUser integration
 
 ## Quick Reference
 
@@ -22,16 +22,12 @@ This is an AI-optimized reference for @samuelho-dev/feature-user, a feature libr
 
 ```typescript
 // Type-only import (zero runtime)
-import type { UserConfig, UserResult } from '@samuelho-dev/feature-user/types';
-
-// Service import
-import { UserService } from '@samuelho-dev/feature-user';
-
-Effect.gen(function*() {
+import type { UserConfig, UserResult } from '@samuelho-dev/feature-user/types'// Service import
+import { UserService } from '@samuelho-dev/feature-user'Effect.gen(function*() {
   const service = yield* UserService;
-  const result = yield* service.exampleOperation();
+  const result = yield* service.exampleOperation()
   return result;
-});
+})
 ```
 
 ### Customization Guide
@@ -61,38 +57,34 @@ Effect.gen(function*() {
 
 ```typescript
 import { UserService } from '@samuelho-dev/feature-user';
-import type { UserResult } from '@samuelho-dev/feature-user/types';
-
-// Standard usage
+import type { UserResult } from '@samuelho-dev/feature-user/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* UserService;
-  const result = yield* service.exampleOperation();
+  const result = yield* service.exampleOperation()
   return result;
-});
+})
 
 // With layers
 const runnable = program.pipe(
   Effect.provide(UserService.Live)  // Production
   // or Effect.provide(UserService.Test)   // Testing
   // or Effect.provide(UserService.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ### RPC Usage
 
 ```typescript
 import { userHandlers } from '@samuelho-dev/feature-user';
-import { UserService } from '@samuelho-dev/feature-user';
-
-// Compose with RPC server
+import { UserService } from '@samuelho-dev/feature-user'// Compose with RPC server
 const rpcLayer = Layer.mergeAll(
   UserService.Live,
   // ... other dependencies
-);
+)
 
 const server = userHandlers.pipe(
   Effect.provide(rpcLayer)
-);
+)
 ```
 
 ### Testing Strategy

@@ -109,16 +109,15 @@ export interface UserEventPublisherInterface {
  * Topic handles for user events
  *
  * Created during layer initialization and stored for publishing.
- * TopicHandle<T, E, R> where:
+ * TopicHandle<T, E> where:
  * - T: message type
  * - E: error type (ParseError for Schema validation)
- * - R: context requirements (never for in-memory)
  */
 interface UserTopicHandles {
-  readonly all: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>
-  readonly created: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>
-  readonly updated: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>
-  readonly deleted: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>
+  readonly all: TopicHandle<UserDomainEvent, ParseResult.ParseError>
+  readonly created: TopicHandle<UserDomainEvent, ParseResult.ParseError>
+  readonly updated: TopicHandle<UserDomainEvent, ParseResult.ParseError>
+  readonly deleted: TopicHandle<UserDomainEvent, ParseResult.ParseError>
 }
 
 /**
@@ -130,7 +129,7 @@ const createPublisherImpl = (
   metrics: Context.Tag.Service<typeof MetricsService>
 ) => {
   const publishToTopic = (
-    topic: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>,
+    topic: TopicHandle<UserDomainEvent, ParseResult.ParseError>,
     topicName: string,
     event: UserDomainEvent
   ) =>
@@ -178,8 +177,8 @@ const createPublisherImpl = (
       publishToTopic(topics.deleted, UserEventTopics.DELETED, event),
 
     publish: (event: UserDomainEvent) => {
-      // Use _tag discriminated union instead of instanceof
-      switch (event._tag) {
+      // Use eventType field for discrimination (defined in EventMetadata schema)
+      switch (event.eventType) {
         case "UserCreatedEvent":
           return publishToTopic(topics.created, UserEventTopics.CREATED, event)
         case "UserUpdatedEvent":
@@ -210,12 +209,12 @@ const createPublisherImpl = (
  *   const event = UserCreatedEvent.create({
  *     userId: "uuid-123",
  *     createdBy: "user-456",
- *   });
+ *   })
  *
- *   yield* publisher.publishCreated(event);
- * });
+ *   yield* publisher.publishCreated(event)
+ * })
  *
- * program.pipe(Effect.provide(UserEventPublisher.Live));
+ * program.pipe(Effect.provide(UserEventPublisher.Live))
  * ```
  */
 export class UserEventPublisher extends Context.Tag("UserEventPublisher")<
@@ -271,14 +270,14 @@ export class UserEventPublisher extends Context.Tag("UserEventPublisher")<
  *   const topic = yield* pubsub.topic(
  *     UserEventTopics.ALL,
  *     UserDomainEventSchema
- *   );
+ *   )
  *
  *   yield* topic.subscribe((event) =>
  *     Effect.gen(function*() {
- *       console.log("Received event:", event.eventType);
+ *       console.log("Received event:", event.eventType)
  *     })
- *   );
- * });
+ *   )
+ * })
  * ```
  */
 export function createUserEventSubscription(

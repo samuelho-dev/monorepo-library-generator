@@ -41,7 +41,7 @@ Usage:
   const database = yield* DatabaseService;
   const users = yield* database.query((db) =>
     db.selectFrom("users").selectAll().execute()
-  );`,
+  )`,
     module: `${scope}/infra-${fileName}/service`,
     see: ["EFFECT_PATTERNS.md for database patterns"]
   })
@@ -77,7 +77,7 @@ Usage:
  * // Use DB type with DatabaseService
  * const users = yield* database.query((db) =>
  *   db.selectFrom("users").selectAll().execute()
- * );
+ * )
  * \`\`\`
  */
 export type { DB as Database } from "${scope}/types-database"
@@ -101,7 +101,7 @@ export type { DB as Database } from "${scope}/types-database"
  *   // Simple query
  *   const users = yield* database.query((db) =>
  *     db.selectFrom("users").selectAll().execute()
- *   );
+ *   )
  *
  *   // Query with filtering
  *   const activeUsers = yield* database.query((db) =>
@@ -109,7 +109,7 @@ export type { DB as Database } from "${scope}/types-database"
  *       .selectAll()
  *       .where("status", "=", "active")
  *       .execute()
- *   );
+ *   )
  *
  *   // Transaction
  *   yield* database.transaction((db) =>
@@ -119,22 +119,22 @@ export type { DB as Database } from "${scope}/types-database"
  *           .values({ name: "John" })
  *           .returningAll()
  *           .executeTakeFirstOrThrow()
- *       );
+ *       )
  *       yield* database.query(() =>
  *         db.insertInto("audit_logs")
  *           .values({ userId: user.id, action: "created" })
  *           .execute()
- *       );
+ *       )
  *       return user;
  *     })
- *   );
- * });
+ *   )
+ * })
  *
  * // Provide layers
  * const runnable = program.pipe(
  *   Effect.provide(${className}Service.Live),
  *   Effect.provide(Kysely.makeLive(kyselyInstance))
- * );
+ * )
  * \`\`\`
  */
 export class ${className}Service extends Context.Tag(
@@ -191,13 +191,13 @@ export class ${className}Service extends Context.Tag(
    * import { Pool } from "pg";
    * import { Kysely as KyselyProvider } from "${scope}/provider-kysely";
    *
-   * const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-   * const kyselyInstance = new Kysely({ dialect: new PostgresDialect({ pool }) });
+   * const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+   * const kyselyInstance = new Kysely({ dialect: new PostgresDialect({ pool }) })
    *
    * const program = myProgram.pipe(
    *   Effect.provide(${className}Service.Live),
    *   Effect.provide(KyselyProvider.makeLive(kyselyInstance))
-   * );
+   * )
    * \`\`\`
    */
   static readonly Live = Layer.effect(

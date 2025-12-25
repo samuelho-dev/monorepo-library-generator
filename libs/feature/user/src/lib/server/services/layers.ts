@@ -6,8 +6,8 @@ import { LoggingService, MetricsService } from "@samuelho-dev/infra-observabilit
 import { PubsubService } from "@samuelho-dev/infra-pubsub"
 import { QueueService } from "@samuelho-dev/infra-queue"
 import { Layer } from "effect"
-import { AuthenticationLive, AuthenticationTest } from "./authentication"
-import { ProfileLive, ProfileTest } from "./profile"
+import { AuthenticationLive, AuthenticationTest } from "./authentication/layer"
+import { ProfileLive, ProfileTest } from "./profile/layer"
 import { UserService } from "./service"
 
 /**
@@ -108,10 +108,10 @@ export const InfrastructureDev = Layer.mergeAll(
  * ```typescript
  * const program = Effect.gen(function*() {
  *   const service = yield* UserService;
- *   const entity = yield* service.create({ name: "test" });
- * });
+ *   const entity = yield* service.create({ name: "test" })
+ * })
  *
- * program.pipe(Effect.provide(UserFeatureLive));
+ * program.pipe(Effect.provide(UserFeatureLive))
  * ```
  */
 export const UserFeatureLive = Layer.mergeAll(
@@ -133,12 +133,12 @@ export const UserFeatureLive = Layer.mergeAll(
  *   it("should create entity", () =>
  *     Effect.gen(function*() {
  *       const service = yield* UserService;
- *       const result = yield* service.create({ name: "test" });
+ *       const result = yield* service.create({ name: "test" })
  *       // No events published - isolated unit test
- *       expect(result).toBeDefined();
+ *       expect(result).toBeDefined()
  *     }).pipe(Effect.provide(UserFeatureTest))
- *   );
- * });
+ *   )
+ * })
  * ```
  */
 export const UserFeatureTest = Layer.mergeAll(

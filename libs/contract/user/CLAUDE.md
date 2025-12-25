@@ -1,6 +1,6 @@
 # @samuelho-dev/contract-user
 
-user domain contracts
+User domain contract with auth integration
 
 ## AI Agent Reference
 
@@ -45,18 +45,14 @@ This is a contract library defining domain types and interfaces.
 
 ```typescript
 import { User, UserRepository } from '@samuelho-dev/contract-user';
-import type { UserInsert } from '@samuelho-dev/contract-user';
-
-// Use in your Effect program
+import type { UserInsert } from '@samuelho-dev/contract-user'// Use in your Effect program
 Effect.gen(function*() {
-  const repo = yield* UserRepository;
-
-  // Query existing entity
-  const entity = yield* repo.findById("id-123");
+  const repo = yield* UserRepository  // Query existing entity
+  const entity = yield* repo.findById("id-123")
 
   // Create new entity (uses prisma-effect-kysely generated Insert type)
   const newEntity = yield* repo.create({
     // ... fields from UserInsert
-  });
-});
+  })
+})
 ```

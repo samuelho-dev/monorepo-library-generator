@@ -233,20 +233,16 @@ ${
 
 \`\`\`typescript
 import { ${templateOptions.className}, ${templateOptions.className}Repository } from '${templateOptions.packageName}';
-import type { ${templateOptions.className}Insert } from '${templateOptions.packageName}';
-
-// Use in your Effect program
+import type { ${templateOptions.className}Insert } from '${templateOptions.packageName}'// Use in your Effect program
 Effect.gen(function*() {
-  const repo = yield* ${templateOptions.className}Repository;
-
-  // Query existing entity
-  const entity = yield* repo.findById("id-123");
+  const repo = yield* ${templateOptions.className}Repository  // Query existing entity
+  const entity = yield* repo.findById("id-123")
 
   // Create new entity (uses prisma-effect-kysely generated Insert type)
   const newEntity = yield* repo.create({
     // ... fields from ${templateOptions.className}Insert
-  });
-});
+  })
+})
 \`\`\`
 `
 

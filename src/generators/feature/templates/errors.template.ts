@@ -42,12 +42,8 @@ Domain errors are defined in ${scope}/contract-${name} - import directly from th
 This file only contains service-level errors specific to feature operations.
 
 For domain errors, import from contract:
-  import { ${className}NotFoundError, ${className}ValidationError } from "${scope}/contract-${name}";
-
-For infrastructure errors, import from data-access:
-  import { ${className}TimeoutError, ${className}ConnectionError } from "${scope}/data-access-${name}";
-
-Service Errors (defined here):
+  import { ${className}NotFoundError, ${className}ValidationError } from "${scope}/contract-${name}"For infrastructure errors, import from data-access:
+  import { ${className}TimeoutError, ${className}ConnectionError } from "${scope}/data-access-${name}"Service Errors (defined here):
   - ${className}ServiceError - Orchestration/dependency failures
 
 @see ${scope}/contract-${name} for domain error definitions
@@ -154,7 +150,7 @@ yield* Effect.catchTag("${className}ConnectionError", (error) =>
     "Database connection failed",
     error
   ))
-);
+)
 \`\`\``
     })
   )

@@ -108,8 +108,8 @@ export interface LoggingOperations {
  *
  * const program = Effect.gen(function*() {
  *   const logger = yield* LoggingService;
- *   yield* logger.info("Application started", { version: "1.0.0" });
- * }).pipe(Effect.provide(LoggingService.Live));
+ *   yield* logger.info("Application started", { version: "1.0.0" })
+ * }).pipe(Effect.provide(LoggingService.Live))
  * ```
  */
 export class LoggingService extends Context.Tag(
@@ -190,7 +190,7 @@ export class LoggingService extends Context.Tag(
    * const customLayer = Layer.provide(
    *   LoggingService.WithOtel,
    *   OtelProvider.make({ serviceName: "custom" })
-   * );
+   * )
    * ```
    */
   static readonly WithOtel = Layer.effect(

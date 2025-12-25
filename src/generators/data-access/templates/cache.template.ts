@@ -73,15 +73,11 @@ export interface ${className}CacheConfig {
    * Maximum number of entries in the cache
    * @default 10_000
    */
-  readonly capacity?: number;
-
-  /**
+  readonly capacity?: number  /**
    * Time-to-live for cache entries
    * @default 5 minutes
    */
-  readonly ttl?: Duration.Duration;
-
-  /**
+  readonly ttl?: Duration.Duration  /**
    * Time-to-live for list cache entries (shorter due to staleness)
    * @default 1 minute
    */
@@ -104,9 +100,7 @@ const DEFAULT_CONFIG: Required<${className}CacheConfig> = {
  * Matches the actual error types returned by repository operations.
  * This is a transparent passthrough of repository errors.
  */
-export type ${className}CacheLookupError = ${className}TimeoutError | DatabaseError;
-
-/**
+export type ${className}CacheLookupError = ${className}TimeoutError | DatabaseError/**
  * ${className} Cache Interface
  *
  * Provides cached access to ${name} data with automatic invalidation.
@@ -118,24 +112,24 @@ export interface ${className}CacheInterface {
    * Automatically fetches from repository on cache miss
    * May fail with repository errors on cache miss
    */
-  readonly getById: (id: ${className}Id) => Effect.Effect<Option.Option<${className}>, ${className}CacheLookupError>;
+  readonly getById: (id: ${className}Id) => Effect.Effect<Option.Option<${className}>, ${className}CacheLookupError>
 
   /**
    * Invalidate a specific ${name} from cache
    * Called automatically after update/delete operations
    */
-  readonly invalidate: (id: ${className}Id) => Effect.Effect<void>;
+  readonly invalidate: (id: ${className}Id) => Effect.Effect<void>
 
   /**
    * Invalidate all ${name} cache entries
    * Called after create operations (affects list queries)
    */
-  readonly invalidateAll: () => Effect.Effect<void>;
+  readonly invalidateAll: () => Effect.Effect<void>
 
   /**
    * Get current cache size
    */
-  readonly size: Effect.Effect<number>;
+  readonly size: Effect.Effect<number>
 
   /**
    * Get cache statistics
@@ -143,8 +137,8 @@ export interface ${className}CacheInterface {
   readonly stats: Effect.Effect<{
     readonly size: number;
     readonly capacity: number;
-    readonly ttlMs: number;
-  }>;
+    readonly ttlMs: number
+  }>
 }
 `)
 
@@ -161,12 +155,12 @@ export interface ${className}CacheInterface {
  * // Use cache instead of repository for reads
  * const program = Effect.gen(function*() {
  *   const cache = yield* ${className}Cache;
- *   const entity = yield* cache.getById("id-123");
+ *   const entity = yield* cache.getById("id-123")
  *   return entity;
- * });
+ * })
  *
  * // Provide cache layer
- * program.pipe(Effect.provide(${className}Cache.Live));
+ * program.pipe(Effect.provide(${className}Cache.Live))
  * \`\`\`
  */
 export class ${className}Cache extends Context.Tag("${className}Cache")<
@@ -183,7 +177,6 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
       const repo = yield* ${className}Repository;
       const logger = yield* LoggingService;
       const metrics = yield* MetricsService;
-
       const config = DEFAULT_CONFIG;
 
       // Create cache for entity by ID
@@ -200,21 +193,19 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
           ),
         capacity: config.capacity,
         ttl: config.ttl,
-      });
+      })
 
       // Track cache metrics
-      const hitCounter = yield* metrics.counter("${name.toLowerCase()}_cache_hits_total");
-      const missCounter = yield* metrics.counter("${name.toLowerCase()}_cache_misses_total");
-      const invalidationCounter = yield* metrics.counter("${name.toLowerCase()}_cache_invalidations_total");
+      const hitCounter = yield* metrics.counter("${name.toLowerCase()}_cache_hits_total")
+      const missCounter = yield* metrics.counter("${name.toLowerCase()}_cache_misses_total")
+      const invalidationCounter = yield* metrics.counter("${name.toLowerCase()}_cache_invalidations_total")
 
       return {
         getById: (id) =>
           Effect.gen(function*() {
             const sizeBefore = yield* entityCache.size;
-            const result = yield* entityCache.get(id);
-            const sizeAfter = yield* entityCache.size;
-
-            // If size increased, it was a miss
+            const result = yield* entityCache.get(id)
+            const sizeAfter = yield* entityCache.size            // If size increased, it was a miss
             if (sizeAfter > sizeBefore) {
               yield* missCounter.increment;
             } else {
@@ -226,16 +217,16 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
 
         invalidate: (id) =>
           Effect.gen(function*() {
-            yield* entityCache.invalidate(id);
+            yield* entityCache.invalidate(id)
             yield* invalidationCounter.increment;
-            yield* logger.debug("${className}Cache invalidated", { id });
+            yield* logger.debug("${className}Cache invalidated", { id })
           }).pipe(Effect.withSpan("${className}Cache.invalidate")),
 
         invalidateAll: () =>
           Effect.gen(function*() {
             yield* entityCache.invalidateAll;
             yield* invalidationCounter.increment;
-            yield* logger.debug("${className}Cache invalidated all");
+            yield* logger.debug("${className}Cache invalidated all")
           }).pipe(Effect.withSpan("${className}Cache.invalidateAll")),
 
         size: entityCache.size,
@@ -246,18 +237,16 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
             size,
             capacity: config.capacity,
             ttlMs: Duration.toMillis(config.ttl),
-          };
-        }),
-      };
+          }
+        })
+      } ;
     })
-  );
+  )
 
   /**
    * Test layer with in-memory cache
    */
-  static readonly Test = this.Live;
-
-  /**
+  static readonly Test = this.Live  /**
    * Create cache layer with custom configuration
    */
   static makeLayer(config: ${className}CacheConfig) {
@@ -268,12 +257,11 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
         const repo = yield* ${className}Repository;
         const logger = yield* LoggingService;
         const metrics = yield* MetricsService;
-
         const finalConfig = {
           capacity: config.capacity ?? DEFAULT_CONFIG.capacity,
           ttl: config.ttl ?? DEFAULT_CONFIG.ttl,
           listTtl: config.listTtl ?? DEFAULT_CONFIG.listTtl,
-        };
+        }
 
         // Type inference handles error/requirements from repo.findById
         const entityCache = yield* cacheService.make({
@@ -287,20 +275,18 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
             ),
           capacity: finalConfig.capacity,
           ttl: finalConfig.ttl,
-        });
+        })
 
-        const hitCounter = yield* metrics.counter("${name.toLowerCase()}_cache_hits_total");
-        const missCounter = yield* metrics.counter("${name.toLowerCase()}_cache_misses_total");
-        const invalidationCounter = yield* metrics.counter("${name.toLowerCase()}_cache_invalidations_total");
+        const hitCounter = yield* metrics.counter("${name.toLowerCase()}_cache_hits_total")
+        const missCounter = yield* metrics.counter("${name.toLowerCase()}_cache_misses_total")
+        const invalidationCounter = yield* metrics.counter("${name.toLowerCase()}_cache_invalidations_total")
 
         return {
           getById: (id) =>
             Effect.gen(function*() {
               const sizeBefore = yield* entityCache.size;
-              const result = yield* entityCache.get(id);
-              const sizeAfter = yield* entityCache.size;
-
-              if (sizeAfter > sizeBefore) {
+              const result = yield* entityCache.get(id)
+              const sizeAfter = yield* entityCache.size              if (sizeAfter > sizeBefore) {
                 yield* missCounter.increment;
               } else {
                 yield* hitCounter.increment;
@@ -311,16 +297,16 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
 
           invalidate: (id) =>
             Effect.gen(function*() {
-              yield* entityCache.invalidate(id);
+              yield* entityCache.invalidate(id)
               yield* invalidationCounter.increment;
-              yield* logger.debug("${className}Cache invalidated", { id });
+              yield* logger.debug("${className}Cache invalidated", { id })
             }),
 
           invalidateAll: () =>
             Effect.gen(function*() {
               yield* entityCache.invalidateAll;
               yield* invalidationCounter.increment;
-              yield* logger.debug("${className}Cache invalidated all");
+              yield* logger.debug("${className}Cache invalidated all")
             }),
 
           size: entityCache.size,
@@ -335,7 +321,7 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
           }),
         };
       })
-    );
+    )
   }
 }
 `)
@@ -356,14 +342,14 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
  *   const repo = yield* ${className}Repository;
  *   const cache = yield* ${className}Cache;
  *
- *   const cachedRepo = createCachedRepository(repo, cache);
+ *   const cachedRepo = createCachedRepository(repo, cache)
  *
  *   // Reads go through cache
- *   const entity = yield* cachedRepo.findById("id-123");
+ *   const entity = yield* cachedRepo.findById("id-123")
  *
  *   // Writes invalidate cache
- *   yield* cachedRepo.update("id-123", { name: "updated" });
- * });
+ *   yield* cachedRepo.update("id-123", { name: "updated" })
+ * })
  * \`\`\`
  */
 export function createCachedRepository(
@@ -393,8 +379,8 @@ export function createCachedRepository(
     delete: (id: ${className}Id) =>
       repo.delete(id).pipe(
         Effect.tap(() => cache.invalidate(id))
-      ),
-  };
+      )
+  }
 }
 `)
 

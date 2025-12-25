@@ -13,9 +13,7 @@ Effect 3.0+ Pattern:
   - Access layers via static members: Service.Test, Service.Live
 
 Usage:
-  import { SupabaseAuth, SupabaseStorage } from '@samuelho-dev/provider-supabase';
-
-  const authLayer = SupabaseAuth.Test;
+  import { SupabaseAuth, SupabaseStorage } from '@samuelho-dev/provider-supabase'  const authLayer = SupabaseAuth.Test;
   const storageLayer = SupabaseStorage.Test;
  *
  */
@@ -115,33 +113,33 @@ export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./lib/sto
 // import { SupabaseAuth, SupabaseClient, SupabaseStorage } from '@samuelho-dev/provider-supabase';
 // 
 // // Authentication example
-// const authProgram = Effect.gen(function* () {
+// const authProgram = Effect.gen(function*() {
 //   const auth = yield* SupabaseAuth;
 //   const result = yield* auth.signInWithPassword({
 //     email: 'user@example.com',
 //     password: 'password123',
-//   });
+//   })
 //   return result.user;
-// });
+// })
 // 
 // // Storage example
-// const storageProgram = Effect.gen(function* () {
+// const storageProgram = Effect.gen(function*() {
 //   const storage = yield* SupabaseStorage;
-//   const files = yield* storage.list('my-bucket');
+//   const files = yield* storage.list('my-bucket')
 //   return files;
-// });
+// })
 // 
 // // Layer composition
 // const MainLayer = Layer.mergeAll(
 //   SupabaseClient.Live,
 //   SupabaseAuth.Live,
 //   SupabaseStorage.Live,
-// );
+// )
 // 
 // // For testing
 // const TestLayer = Layer.mergeAll(
 //   SupabaseClient.Test,
 //   SupabaseAuth.Test,
 //   SupabaseStorage.Test,
-// );
+// )
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

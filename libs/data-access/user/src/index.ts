@@ -12,8 +12,8 @@ Repository implements contract from @samuelho-dev/contract-user
 // ============================================================================
 // Error Types (from shared/)
 // ============================================================================
-export { UserAlreadyExistsError, UserConnectionError, UserNotFoundError, UserPermissionError, UserTimeoutError, UserTransactionError, UserValidationError } from "./lib/shared/errors"
-export type { UserDataAccessError, UserInfrastructureError, UserRepositoryError } from "./lib/shared/errors"
+export { UserConnectionError, UserTimeoutError, UserTransactionError } from "./lib/shared/errors"
+export type { UserDataAccessError, UserInfrastructureError } from "./lib/shared/errors"
 
 // ============================================================================
 // Domain Types (from shared/)

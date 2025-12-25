@@ -69,13 +69,13 @@ Usage:
  *   readonly _tag = "Get${className}ByIdQuery";
  *   readonly input = ${className}IdInput;
  *   readonly output = ${className}Result;
- *   readonly cacheTTL = Option.some(Duration.minutes(5));
+ *   readonly cacheTTL = Option.some(Duration.minutes(5))
  *
  *   execute(input) {
  *     return Effect.gen(function*() {
  *       const db = yield* DatabaseService;
- *       return yield* db.findById(input.id);
- *     });
+ *       return yield* db.findById(input.id)
+ *     })
  *   }
  * }
  * \`\`\`
@@ -188,16 +188,16 @@ export interface QueryBusInterface {
  *   const result1 = yield* bus.dispatch(
  *     new Get${className}ByIdQuery(),
  *     { id: "123" }
- *   );
+ *   )
  *
  *   // Second call may return cached result (if cacheTTL is set)
  *   const result2 = yield* bus.dispatch(
  *     new Get${className}ByIdQuery(),
  *     { id: "123" }
- *   );
+ *   )
  *
  *   return result1;
- * });
+ * })
  * \`\`\`
  */
 export class ${className}QueryBus extends Context.Tag("${className}QueryBus")<

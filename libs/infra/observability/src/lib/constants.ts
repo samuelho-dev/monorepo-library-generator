@@ -29,7 +29,7 @@ Includes:
  * const requestDuration = Metric.histogram(
  *   "http_request_duration_seconds",
  *   { boundaries: HistogramBoundaries.httpDuration }
- * );
+ * )
  * ```
  */
 export const HistogramBoundaries = {
@@ -86,7 +86,7 @@ export const HistogramBoundaries = {
  * import { Metric } from "effect";
  * import { StandardMetricNames } from "@samuelho-dev/infra-observability";
  *
- * const counter = Metric.counter(StandardMetricNames.httpRequestsTotal);
+ * const counter = Metric.counter(StandardMetricNames.httpRequestsTotal)
  * ```
  */
 export const StandardMetricNames = {
@@ -139,7 +139,7 @@ export const StandardMetricNames = {
  *
  * const program = myEffect.pipe(
  *   Effect.provide(LogLevelConfigs.production)
- * );
+ * )
  * ```
  */
 export const LogLevelConfigs = {
@@ -184,7 +184,7 @@ export const LogLevelConfigs = {
  *
  * const program = myEffect.pipe(
  *   Effect.provide(withMinLogLevel(LogLevel.Info))
- * );
+ * )
  * ```
  */
 export const withMinLogLevel = (minLevel: LogLevel.LogLevel) =>
@@ -211,7 +211,7 @@ export const withMinLogLevel = (minLevel: LogLevel.LogLevel) =>
  *       [SpanAttributes.httpRoute]: "/api/users",
  *     }
  *   })
- * );
+ * )
  * ```
  */
 export const SpanAttributes = {

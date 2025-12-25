@@ -132,9 +132,9 @@ export class ${className}Service extends Context.Tag(
      *   lookup: (userId: string) => userRepo.findById(userId),
      *   capacity: 1000,
      *   ttl: Duration.minutes(5)
-     * });
+     * })
      *
-     * const user = yield* userCache.get("user-123");
+     * const user = yield* userCache.get("user-123")
      * \`\`\`
      */
     readonly make: <K, V, E = never>(options: {

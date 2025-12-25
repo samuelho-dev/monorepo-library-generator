@@ -24,7 +24,7 @@ import { ProfileRpcError } from "./rpc-errors"
  * export const ProfileHandlers = ProfileRpcs.toLayer({
  *   "Profile.Get": (input) =>
  *     Effect.flatMap(ProfileService, s => s.get(input.id)),
- * });
+ * })
  * ```
  *
  * @module @samuelho-dev/contract-user/profile/rpc

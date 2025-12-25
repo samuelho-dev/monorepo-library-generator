@@ -35,7 +35,7 @@ Used by infra-cache's Redis layer.
  * @example
  * ```typescript
  * const redis = yield* Redis;
- * const value = yield* redis.cache.get("my-key");
+ * const value = yield* redis.cache.get("my-key")
  * ```
  */
 export function makeCacheClient(client: IORedis) {
@@ -48,8 +48,8 @@ export function makeCacheClient(client: IORedis) {
             message: `GET failed for key: ${key}`,
             command: "GET",
             args: [key],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.cache.get", { attributes: { key } })),
 
     set: (key: string, value: string) =>
@@ -60,8 +60,8 @@ export function makeCacheClient(client: IORedis) {
             message: `SET failed for key: ${key}`,
             command: "SET",
             args: [key, value],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.cache.set", { attributes: { key } })),
 
     setex: (key: string, seconds: number, value: string) =>
@@ -72,8 +72,8 @@ export function makeCacheClient(client: IORedis) {
             message: `SETEX failed for key: ${key}`,
             command: "SETEX",
             args: [key, seconds, value],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.cache.setex", { attributes: { key, seconds } })),
 
     del: (key: string) =>
@@ -84,8 +84,8 @@ export function makeCacheClient(client: IORedis) {
             message: `DEL failed for key: ${key}`,
             command: "DEL",
             args: [key],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.cache.del", { attributes: { key } })),
 
     flushdb: () =>
@@ -95,8 +95,8 @@ export function makeCacheClient(client: IORedis) {
           new RedisCommandError({
             message: "FLUSHDB failed",
             command: "FLUSHDB",
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.cache.flushdb")),
 
     ping: () =>
@@ -106,10 +106,10 @@ export function makeCacheClient(client: IORedis) {
           new RedisCommandError({
             message: "PING failed",
             command: "PING",
-            cause: error,
-          }),
-      }).pipe(Effect.withSpan("Redis.cache.ping")),
-  };
+            cause: error
+          })
+      }).pipe(Effect.withSpan("Redis.cache.ping"))
+  }
 }
 
 // ============================================================================
@@ -139,13 +139,13 @@ export class RedisCacheService extends Context.Tag("RedisCacheService")<
     setex: () => Effect.void,
     del: () => Effect.succeed(0),
     flushdb: () => Effect.void,
-    ping: () => Effect.succeed("PONG"),
-  });
+    ping: () => Effect.succeed("PONG")
+  })
 
   /**
    * Create a layer from an ioredis client
    */
   static fromClient(client: IORedis) {
-    return Layer.succeed(RedisCacheService, makeCacheClient(client));
+    return Layer.succeed(RedisCacheService, makeCacheClient(client))
   }
 }

@@ -435,9 +435,7 @@ Provider libraries implement **adapters** that wrap external services, NOT repos
 ```typescript
 // libs/provider/stripe/src/lib/service.ts
 import { Context, Effect, Layer, Config } from "effect";
-import Stripe from "stripe";
-
-// Adapter service with inline interface using Context.Tag
+import Stripe from "stripe"// Adapter service with inline interface using Context.Tag
 export class StripeService extends Context.Tag("StripeService")<
   StripeService,
   {
@@ -445,44 +443,44 @@ export class StripeService extends Context.Tag("StripeService")<
       readonly create: (params: {
         amount: number;
         currency: string;
-        metadata?: Record<string, string>;
-      }) => Effect.Effect<Stripe.PaymentIntent, StripeError>;
+        metadata?: Record<string, string>
+      }) => Effect.Effect<Stripe.PaymentIntent, StripeError>
 
       readonly retrieve: (
         id: string,
-      ) => Effect.Effect<Stripe.PaymentIntent, StripeError>;
+      ) => Effect.Effect<Stripe.PaymentIntent, StripeError>
 
       readonly confirm: (
         id: string,
-      ) => Effect.Effect<Stripe.PaymentIntent, StripeError>;
-    };
+      ) => Effect.Effect<Stripe.PaymentIntent, StripeError>
+    }
 
     readonly customers: {
       readonly create: (params: {
         email: string;
         name?: string;
-        metadata?: Record<string, string>;
-      }) => Effect.Effect<Stripe.Customer, StripeError>;
+        metadata?: Record<string, string>
+      }) => Effect.Effect<Stripe.Customer, StripeError>
 
       readonly retrieve: (
         id: string,
-      ) => Effect.Effect<Stripe.Customer, StripeError>;
-    };
+      ) => Effect.Effect<Stripe.Customer, StripeError>
+    }
 
     readonly refunds: {
       readonly create: (params: {
         payment_intent: string;
         amount?: number;
         reason?: string;
-      }) => Effect.Effect<Stripe.Refund, StripeError>;
-    };
+      }) => Effect.Effect<Stripe.Refund, StripeError>
+    }
 
     readonly webhooks: {
       readonly constructEvent: (
         payload: string,
         signature: string,
-      ) => Effect.Effect<Stripe.Event, WebhookError>;
-    };
+      ) => Effect.Effect<Stripe.Event, WebhookError>
+    }
   }
 >() {}
 ```
@@ -506,17 +504,15 @@ export class StripeService extends Context.Tag("StripeService")<
 
 ```typescript
 // libs/provider/stripe/src/lib/service.ts (continued)
-import { Schedule, pipe } from "effect";
-
-// Configuration schema
+import { Schedule, pipe } from "effect"// Configuration schema
 const StripeConfig = Config.all({
   secretKey: Config.secret("STRIPE_SECRET_KEY"),
   webhookSecret: Config.secret("STRIPE_WEBHOOK_SECRET").pipe(Config.optional),
   apiVersion: Config.string("STRIPE_API_VERSION").pipe(
     Config.withDefault("2023-10-16"),
   ),
-  maxRetries: Config.integer("STRIPE_MAX_RETRIES").pipe(Config.withDefault(3)),
-});
+  maxRetries: Config.integer("STRIPE_MAX_RETRIES").pipe(Config.withDefault(3))
+})
 
 // Service implementation as static Live layer
 export class StripeService extends Context.Tag("StripeService")<
@@ -526,62 +522,60 @@ export class StripeService extends Context.Tag("StripeService")<
       readonly create: (params: {
         amount: number;
         currency: string;
-        metadata?: Record<string, string>;
-      }) => Effect.Effect<Stripe.PaymentIntent, StripeError>;
+        metadata?: Record<string, string>
+      }) => Effect.Effect<Stripe.PaymentIntent, StripeError>
 
       readonly retrieve: (
         id: string,
-      ) => Effect.Effect<Stripe.PaymentIntent, StripeError>;
+      ) => Effect.Effect<Stripe.PaymentIntent, StripeError>
 
       readonly confirm: (
         id: string,
-      ) => Effect.Effect<Stripe.PaymentIntent, StripeError>;
-    };
+      ) => Effect.Effect<Stripe.PaymentIntent, StripeError>
+    }
 
     readonly customers: {
       readonly create: (params: {
         email: string;
         name?: string;
-        metadata?: Record<string, string>;
-      }) => Effect.Effect<Stripe.Customer, StripeError>;
+        metadata?: Record<string, string>
+      }) => Effect.Effect<Stripe.Customer, StripeError>
 
       readonly retrieve: (
         id: string,
-      ) => Effect.Effect<Stripe.Customer, StripeError>;
-    };
+      ) => Effect.Effect<Stripe.Customer, StripeError>
+    }
 
     readonly refunds: {
       readonly create: (params: {
         payment_intent: string;
         amount?: number;
         reason?: string;
-      }) => Effect.Effect<Stripe.Refund, StripeError>;
-    };
+      }) => Effect.Effect<Stripe.Refund, StripeError>
+    }
 
     readonly webhooks: {
       readonly constructEvent: (
         payload: string,
         signature: string,
-      ) => Effect.Effect<Stripe.Event, WebhookError>;
-    };
+      ) => Effect.Effect<Stripe.Event, WebhookError>
+    }
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const config = yield* StripeConfig;
-
-      // Initialize Stripe client
+      const config = yield* StripeConfig      // Initialize Stripe client
       const stripe = new Stripe(Config.unwrap(config.secretKey), {
         apiVersion: config.apiVersion,
         maxNetworkRetries: 0, // We handle retries with Effect
-      });
+      })
 
       // Define retry policy
       const retrySchedule = Schedule.exponential("100 millis").pipe(
         Schedule.jittered,
         Schedule.compose(Schedule.recurs(config.maxRetries)),
-      );
+      )
 
       return {
         paymentIntents: {
@@ -711,7 +705,7 @@ export class StripeService extends Context.Tag("StripeService")<
                   new WebhookError({
                     message: "Webhook secret not configured",
                   }),
-                );
+                )
               }
 
               return yield* Effect.try({
@@ -726,12 +720,12 @@ export class StripeService extends Context.Tag("StripeService")<
                     message:
                       error instanceof Error ? error.message : String(error),
                   }),
-              });
+              })
             }).pipe(Effect.withSpan("stripe.webhooks.constructEvent")),
-        },
-      };
+        }
+      }
     }),
-  );
+  )
 }
 ```
 
@@ -741,12 +735,10 @@ export class StripeService extends Context.Tag("StripeService")<
 // libs/provider/stripe/src/lib/layers.ts
 import { Layer } from "effect";
 import { StripeService } from "./service";
-import { LoggingService } from "@creativetoolkits/infra-observability/server";
-
-// Production layer with all dependencies
+import { LoggingService } from "@creativetoolkits/infra-observability/server"// Production layer with all dependencies
 export const StripeServiceLive = StripeService.Live.pipe(
   Layer.provide(LoggingService.Live),
-);
+)
 
 // Test layer with mocked responses
 // ✅ CRITICAL: Type-safe factories with NO type assertions
@@ -802,12 +794,12 @@ const createMockPaymentIntent = (
     statement_descriptor_suffix: null,
     status: "succeeded",
     transfer_data: null,
-    transfer_group: null,
-  };
+    transfer_group: null
+  }
 
   return { ...base, ...overrides };
   // ✅ No type assertion - compiler validates all required fields
-};
+}
 
 /**
  * Creates a complete mock Customer with all required Stripe fields.
@@ -841,11 +833,11 @@ const createMockCustomer = (
     preferred_locales: [],
     shipping: null,
     tax_exempt: "none",
-    test_clock: null,
-  };
+    test_clock: null
+  }
 
-  return { ...base, ...overrides };
-};
+  return { ...base, ...overrides }
+}
 
 /**
  * Creates a complete mock Refund with all required Stripe fields.
@@ -868,11 +860,11 @@ const createMockRefund = (
     receipt_number: null,
     source_transfer_reversal: null,
     status: "succeeded",
-    transfer_reversal: null,
-  };
+    transfer_reversal: null
+  }
 
-  return { ...base, ...overrides };
-};
+  return { ...base, ...overrides }
+}
 
 /**
  * Creates a complete mock Event with all required Stripe fields.
@@ -893,29 +885,29 @@ const createMockEvent = (
     livemode: false,
     pending_webhooks: 0,
     request: null,
-    type: "payment_intent.succeeded",
-  };
+    type: "payment_intent.succeeded"
+  }
 
-  return { ...base, ...overrides };
-};
+  return { ...base, ...overrides }
+}
 
 export const StripeServiceTest = Layer.succeed(StripeService, {
   paymentIntents: {
     create: () => Effect.succeed(createMockPaymentIntent()),
     retrieve: () => Effect.succeed(createMockPaymentIntent()),
-    confirm: () => Effect.succeed(createMockPaymentIntent()),
+    confirm: () => Effect.succeed(createMockPaymentIntent())
   },
   customers: {
     create: () => Effect.succeed(createMockCustomer()),
-    retrieve: () => Effect.succeed(createMockCustomer()),
+    retrieve: () => Effect.succeed(createMockCustomer())
   },
   refunds: {
-    create: () => Effect.succeed(createMockRefund()),
+    create: () => Effect.succeed(createMockRefund())
   },
   webhooks: {
-    constructEvent: () => Effect.succeed(createMockEvent()),
-  },
-});
+    constructEvent: () => Effect.succeed(createMockEvent())
+  }
+})
 
 // Development layer with sandbox credentials
 export const StripeServiceDev = Layer.effect(
@@ -927,13 +919,13 @@ export const StripeServiceDev = Layer.effect(
       webhookSecret: Config.succeed("whsec_test_..."),
       apiVersion: Config.succeed("2023-10-16"),
       maxRetries: Config.succeed(1),
-    };
+    }
 
     return yield* StripeService.Live.pipe(
       Layer.provide(Layer.setConfigProvider(testConfig)),
-    );
+    )
   }),
-);
+)
 ```
 
 **Generator Must Create (Layer Composition):**
@@ -965,9 +957,7 @@ export const StripeServiceDev = Layer.effect(
 
 ```typescript
 // libs/provider/stripe/src/lib/errors.ts
-import { Data } from "effect";
-
-// Provider-specific errors using Data.TaggedError
+import { Data } from "effect"// Provider-specific errors using Data.TaggedError
 export class StripeError extends Data.TaggedError("StripeError")<{
   readonly message: string;
   readonly code?: string;
@@ -991,9 +981,7 @@ export type StripeServiceError =
   | StripeError
   | WebhookError
   | RateLimitError
-  | InvalidApiKeyError;
-
-// Error transformation utilities
+  | InvalidApiKeyError// Error transformation utilities
 export const transformStripeError = (error: unknown): StripeServiceError => {
   if (error instanceof Stripe.errors.StripeError) {
     switch (error.type) {
@@ -1002,21 +990,21 @@ export const transformStripeError = (error: unknown): StripeServiceError => {
           retryAfter: error.headers?.["retry-after"]
             ? parseInt(error.headers["retry-after"])
             : 60,
-        });
+        })
       case "StripeAuthenticationError":
-        return new InvalidApiKeyError({ message: error.message });
+        return new InvalidApiKeyError({ message: error.message })
       default:
         return new StripeError({
           message: error.message,
           code: error.code,
           statusCode: error.statusCode,
-        });
+        })
     }
   }
 
   return new StripeError({
-    message: error instanceof Error ? error.message : String(error),
-  });
+    message: error instanceof Error ? error.message : String(error)
+  })
 };
 ```
 
@@ -1048,9 +1036,7 @@ export type {
   RateLimitError,
   InvalidApiKeyError,
   StripeServiceError,
-} from "./lib/errors";
-
-// libs/provider/stripe/src/server.ts
+} from "./lib/errors"// libs/provider/stripe/src/server.ts
 // Server-side exports
 export { StripeService } from "./lib/service";
 export {
@@ -1058,14 +1044,10 @@ export {
   StripeServiceTest,
   StripeServiceDev,
 } from "./lib/layers";
-export * from "./lib/errors";
-
-// libs/provider/stripe/src/client.ts
+export * from "./lib/errors"// libs/provider/stripe/src/client.ts
 // Client-side exports (if applicable - most providers are server-only)
 // Note: Stripe should NOT be used directly in the browser
-export type { StripeError } from "./lib/errors";
-
-// libs/provider/stripe/src/edge.ts
+export type { StripeError } from "./lib/errors"// libs/provider/stripe/src/edge.ts
 // Edge runtime exports (limited Stripe functionality)
 export { validateWebhookSignature } from "./lib/edge/webhook";
 ```
@@ -1139,9 +1121,7 @@ Tests verify that provider services correctly wrap external SDKs with Effect pat
 // src/lib/service.spec.ts
 import { Effect, Layer } from "effect";
 import { describe, expect, it } from "@effect/vitest"; // ✅ All from @effect/vitest
-import { StripeService } from "./service";
-
-describe("StripeService", () => {
+import { StripeService } from "./service"describe("StripeService", () => {
   // Inline minimal mock - just the fields you need
   const mockStripeSDK = {
     paymentIntents: {
@@ -1153,24 +1133,22 @@ describe("StripeService", () => {
           currency: params.currency,
           status: "requires_payment_method",
         }),
-    },
-  };
+    }
+  }
 
-  const mockLayer = Layer.succeed(StripeService, mockStripeSDK);
+  const mockLayer = Layer.succeed(StripeService, mockStripeSDK)
 
   it.scoped("wraps SDK method correctly", () => // ✅ Always it.scoped
     Effect.gen(function*() {
-      const stripe = yield* StripeService;
-
-      const result = yield* stripe.paymentIntents.create({
+      const stripe = yield* StripeService      const result = yield* stripe.paymentIntents.create({
         amount: 1000,
         currency: "usd",
-      });
+      })
 
-      expect(result.id).toBe("pi_test_123");
-      expect(result.amount).toBe(1000);
+      expect(result.id).toBe("pi_test_123")
+      expect(result.amount).toBe(1000)
     }).pipe(Effect.provide(Layer.fresh(mockLayer))) // ✅ Always Layer.fresh
-  );
+  )
 
   it.scoped("transforms SDK errors to domain errors", () => // ✅ Always it.scoped
     Effect.gen(function*() {
@@ -1184,24 +1162,22 @@ describe("StripeService", () => {
               })
             ),
         },
-      });
+      })
 
-      const stripe = yield* StripeService;
-
-      const result = yield* Effect.either(
+      const stripe = yield* StripeService      const result = yield* Effect.either(
         stripe.paymentIntents.create({
           amount: 1000,
           currency: "usd",
         })
-      );
+      )
 
-      expect(Either.isLeft(result)).toBe(true);
+      expect(Either.isLeft(result)).toBe(true)
       if (Either.isLeft(result)) {
-        expect(result.left._tag).toBe("StripeError");
+        expect(result.left._tag).toBe("StripeError")
       }
     }).pipe(Effect.provide(Layer.fresh(failingMock))) // ✅ Always Layer.fresh
-  );
-});
+  )
+})
 ```
 
 ### Vitest Configuration
@@ -1210,14 +1186,12 @@ describe("StripeService", () => {
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({
+import { defineConfig } from "vitest/config"export default defineConfig({
   test: {
     globals: true,
-    setupFiles: ["@effect/vitest/setup"],
-  },
-});
+    setupFiles: ["@effect/vitest/setup"]
+  }
+})
 ```
 
 ### Best Practices
@@ -1238,9 +1212,7 @@ export default defineConfig({
 ```typescript
 // libs/provider/openai/src/lib/service.ts
 import { Context, Effect, Layer, Config } from "effect";
-import OpenAI from "openai";
-
-export class OpenAIService extends Context.Tag("OpenAIService")<
+import OpenAI from "openai"export class OpenAIService extends Context.Tag("OpenAIService")<
   OpenAIService,
   {
     readonly completions: {
@@ -1248,22 +1220,22 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
         model: string;
         messages: readonly { role: string; content: string }[];
         temperature?: number;
-      }) => Effect.Effect<OpenAI.ChatCompletion, OpenAIError>;
-    };
+      }) => Effect.Effect<OpenAI.ChatCompletion, OpenAIError>
+    }
 
     readonly embeddings: {
       readonly create: (params: {
         model: string;
         input: string | readonly string[];
-      }) => Effect.Effect<OpenAI.Embedding[], OpenAIError>;
-    };
+      }) => Effect.Effect<OpenAI.Embedding[], OpenAIError>
+    }
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const apiKey = yield* Config.secret("OPENAI_API_KEY");
-      const openai = new OpenAI({ apiKey: Config.unwrap(apiKey) });
+      const apiKey = yield* Config.secret("OPENAI_API_KEY")
+      const openai = new OpenAI({ apiKey: Config.unwrap(apiKey) })
 
       return {
         completions: {
@@ -1275,8 +1247,8 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
                   messages: params.messages,
                   temperature: params.temperature,
                 }),
-              catch: transformOpenAIError,
-            }),
+              catch: transformOpenAIError
+            })
         },
 
         embeddings: {
@@ -1286,15 +1258,15 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
                 const response = await openai.embeddings.create({
                   model: params.model,
                   input: params.input,
-                });
+                })
                 return response.data;
               },
-              catch: transformOpenAIError,
-            }),
-        },
-      };
+              catch: transformOpenAIError
+            })
+        }
+      }
     }),
-  );
+  )
 }
 ```
 
@@ -1303,32 +1275,30 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
 ```typescript
 // libs/provider/redis/src/lib/service.ts
 import { Context, Effect, Layer, Config } from "effect";
-import Redis from "ioredis";
-
-export class RedisService extends Context.Tag("RedisService")<
+import Redis from "ioredis"export class RedisService extends Context.Tag("RedisService")<
   RedisService,
   {
-    readonly get: (key: string) => Effect.Effect<string | null, RedisError>;
+    readonly get: (key: string) => Effect.Effect<string | null, RedisError>
     readonly set: (
       key: string,
       value: string,
       ttl?: number,
-    ) => Effect.Effect<void, RedisError>;
-    readonly del: (key: string) => Effect.Effect<void, RedisError>;
-    readonly exists: (key: string) => Effect.Effect<boolean, RedisError>;
+    ) => Effect.Effect<void, RedisError>
+    readonly del: (key: string) => Effect.Effect<void, RedisError>
+    readonly exists: (key: string) => Effect.Effect<boolean, RedisError>
     readonly expire: (
       key: string,
       seconds: number,
-    ) => Effect.Effect<void, RedisError>;
+    ) => Effect.Effect<void, RedisError>
     readonly hget: (
       key: string,
       field: string,
-    ) => Effect.Effect<string | null, RedisError>;
+    ) => Effect.Effect<string | null, RedisError>
     readonly hset: (
       key: string,
       field: string,
       value: string,
-    ) => Effect.Effect<void, RedisError>;
+    ) => Effect.Effect<void, RedisError>
   }
 >() {
   static readonly Live = Layer.scoped(
@@ -1336,62 +1306,62 @@ export class RedisService extends Context.Tag("RedisService")<
     Effect.gen(function*() {
       const host = yield* Config.string("REDIS_HOST").pipe(
         Config.withDefault("localhost"),
-      );
+      )
       const port = yield* Config.integer("REDIS_PORT").pipe(
         Config.withDefault(6379),
-      );
+      )
 
       const redis = yield* Effect.acquireRelease(
         Effect.sync(() => new Redis({ host, port })),
         (client) => Effect.promise(() => client.quit()),
-      );
+      )
 
       return {
         get: (key) =>
           Effect.tryPromise({
             try: () => redis.get(key),
-            catch: (error) => new RedisError({ message: String(error) }),
+            catch: (error) => new RedisError({ message: String(error) })
           }),
 
         set: (key, value, ttl) =>
           Effect.tryPromise({
             try: () =>
               ttl ? redis.set(key, value, "EX", ttl) : redis.set(key, value),
-            catch: (error) => new RedisError({ message: String(error) }),
+            catch: (error) => new RedisError({ message: String(error) })
           }).pipe(Effect.asVoid),
 
         del: (key) =>
           Effect.tryPromise({
             try: () => redis.del(key),
-            catch: (error) => new RedisError({ message: String(error) }),
+            catch: (error) => new RedisError({ message: String(error) })
           }).pipe(Effect.asVoid),
 
         exists: (key) =>
           Effect.tryPromise({
             try: async () => (await redis.exists(key)) === 1,
-            catch: (error) => new RedisError({ message: String(error) }),
+            catch: (error) => new RedisError({ message: String(error) })
           }),
 
         expire: (key, seconds) =>
           Effect.tryPromise({
             try: () => redis.expire(key, seconds),
-            catch: (error) => new RedisError({ message: String(error) }),
+            catch: (error) => new RedisError({ message: String(error) })
           }).pipe(Effect.asVoid),
 
         hget: (key, field) =>
           Effect.tryPromise({
             try: () => redis.hget(key, field),
-            catch: (error) => new RedisError({ message: String(error) }),
+            catch: (error) => new RedisError({ message: String(error) })
           }),
 
         hset: (key, field, value) =>
           Effect.tryPromise({
             try: () => redis.hset(key, field, value),
-            catch: (error) => new RedisError({ message: String(error) }),
-          }).pipe(Effect.asVoid),
-      };
+            catch: (error) => new RedisError({ message: String(error) })
+          }).pipe(Effect.asVoid)
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -1407,14 +1377,12 @@ External SDKs use callback patterns that require preserving the Effect runtime. 
 // libs/provider/openai/src/lib/service.ts
 import { Effect, Runtime, Stream } from "effect";
 import OpenAI from "openai";
-import { LoggingService } from "@creativetoolkits/infra-observability";
-
-export class OpenAIService extends Context.Tag("OpenAIService")<
+import { LoggingService } from "@creativetoolkits/infra-observability"export class OpenAIService extends Context.Tag("OpenAIService")<
   OpenAIService,
   {
     readonly streamChat: (
       messages: Array<{ role: string; content: string }>
-    ) => Stream.Stream<string, OpenAIError>;
+    ) => Stream.Stream<string, OpenAIError>
   }
 >() {
   static readonly Live = Layer.effect(
@@ -1422,14 +1390,14 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
     Effect.gen(function*() {
       const config = yield* OpenAIConfig;
       const logger = yield* LoggingService;
-      const runtime = yield* Effect.runtime<LoggingService>();
+      const runtime = yield* Effect.runtime<LoggingService>()
 
-      const client = new OpenAI({ apiKey: config.apiKey });
+      const client = new OpenAI({ apiKey: config.apiKey })
 
       return {
         streamChat: (messages) =>
           Stream.async<string, OpenAIError>((emit) => {
-            const runFork = Runtime.runFork(runtime);
+            const runFork = Runtime.runFork(runtime)
 
             // SDK uses callbacks for streaming
             client.chat.completions
@@ -1443,26 +1411,26 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
                   const content = chunk.choices[0]?.delta?.content;
                   if (content) {
                     // Emit to Effect Stream
-                    emit.single(content);
+                    emit.single(content)
 
                     // Log with Effect runtime
                     runFork(
                       Effect.gen(function*() {
                         const log = yield* LoggingService;
-                        yield* log.debug("Stream chunk", { content });
+                        yield* log.debug("Stream chunk", { content })
                       })
-                    );
+                    )
                   }
                 }
-                emit.end();
+                emit.end()
               })
               .catch((error) => {
-                emit.fail(new OpenAIError({ cause: error }));
-              });
-          }),
-      };
+                emit.fail(new OpenAIError({ cause: error }))
+              })
+          })
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -1473,29 +1441,23 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
 import { Effect, Runtime } from "effect";
 import Stripe from "stripe";
 import { LoggingService } from "@creativetoolkits/infra-observability";
-import { DatabaseService } from "@creativetoolkits/infra-database";
-
-export const createStripeWebhookHandler = Effect.gen(function*() {
+import { DatabaseService } from "@creativetoolkits/infra-database"export const createStripeWebhookHandler = Effect.gen(function*() {
   const runtime = yield* Effect.runtime<
     LoggingService | DatabaseService
-  >();
-  const runFork = Runtime.runFork(runtime);
-  const logger = yield* LoggingService;
-
-  return (req: Request) => {
-    const sig = req.headers.get("stripe-signature");
+  >()
+  const runFork = Runtime.runFork(runtime)
+  const logger = yield* LoggingService  return (req: Request) => {
+    const sig = req.headers.get("stripe-signature")
     const event = stripe.webhooks.constructEvent(
       await req.text(),
       sig!,
       process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    )
 
     // Handle webhook event with Effect runtime
     const program = Effect.gen(function*() {
       const db = yield* DatabaseService;
-      const log = yield* LoggingService;
-
-      yield* log.info("Stripe webhook event", { type: event.type });
+      const log = yield* LoggingService      yield* log.info("Stripe webhook event", { type: event.type })
 
       switch (event.type) {
         case "payment_intent.succeeded":
@@ -1506,10 +1468,8 @@ export const createStripeWebhookHandler = Effect.gen(function*() {
               .set({ status: "succeeded" })
               .where("stripe_id", "=", paymentIntent.id)
               .execute()
-          );
-          break;
-
-        case "payment_intent.payment_failed":
+          )
+          break        case "payment_intent.payment_failed":
           const failedIntent = event.data.object as Stripe.PaymentIntent;
           yield* db.query((db) =>
             db
@@ -1517,19 +1477,19 @@ export const createStripeWebhookHandler = Effect.gen(function*() {
               .set({ status: "failed" })
               .where("stripe_id", "=", failedIntent.id)
               .execute()
-          );
+          )
           break;
       }
-    });
+    })
 
     // Fire and forget webhook processing
-    runFork(program);
+    runFork(program)
 
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
-    });
-  };
-});
+    })
+  }
+})
 ```
 
 ### Pattern: SDK Event Emitter
@@ -1538,34 +1498,32 @@ export const createStripeWebhookHandler = Effect.gen(function*() {
 // libs/provider/supabase/src/lib/realtime.ts
 import { Effect, Runtime, Queue } from "effect";
 import { createClient, RealtimeChannel } from "@supabase/supabase-js";
-import { LoggingService } from "@creativetoolkits/infra-observability";
-
-export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeService")<
+import { LoggingService } from "@creativetoolkits/infra-observability"export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeService")<
   SupabaseRealtimeService,
   {
     readonly subscribe: (
       table: string
-    ) => Effect.Effect<Queue.Queue<DatabaseChange>, SupabaseError>;
+    ) => Effect.Effect<Queue.Queue<DatabaseChange>, SupabaseError>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
       const config = yield* SupabaseConfig;
-      const runtime = yield* Effect.runtime<LoggingService>();
-      const runFork = Runtime.runFork(runtime);
+      const runtime = yield* Effect.runtime<LoggingService>()
+      const runFork = Runtime.runFork(runtime)
 
-      const client = createClient(config.url, config.anonKey);
+      const client = createClient(config.url, config.anonKey)
 
       // Cleanup on scope close
       yield* Effect.addFinalizer(() =>
         Effect.sync(() => client.removeAllChannels())
-      );
+      )
 
       return {
         subscribe: (table) =>
           Effect.gen(function*() {
-            const queue = yield* Queue.unbounded<DatabaseChange>();
+            const queue = yield* Queue.unbounded<DatabaseChange>()
 
             const channel = client
               .channel(`public:${table}`)
@@ -1578,19 +1536,19 @@ export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeServic
                   runFork(
                     Effect.gen(function*() {
                       const logger = yield* LoggingService;
-                      yield* logger.debug("Database change", { payload });
-                      yield* Queue.offer(queue, payload);
+                      yield* logger.debug("Database change", { payload })
+                      yield* Queue.offer(queue, payload)
                     })
-                  );
+                  )
                 }
               )
-              .subscribe();
+              .subscribe()
 
             return queue;
-          }),
-      };
+          })
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -1902,12 +1860,12 @@ const createMockPaymentIntent = (
     statement_descriptor_suffix: null,
     status: "succeeded",
     transfer_data: null,
-    transfer_group: null,
-  };
+    transfer_group: null
+  }
 
   return { ...base, ...overrides };
   // ✅ Compiler validates ALL required fields - no type coercion
-};
+}
 
 // Static mock for testing
 export const StripeServiceMock = Layer.succeed(StripeService, {
@@ -1916,10 +1874,10 @@ export const StripeServiceMock = Layer.succeed(StripeService, {
     retrieve: () => Effect.succeed(createMockPaymentIntent({
       status: "requires_payment_method",
       amount_received: 0
-    })),
+    }))
   },
   // ... other methods
-});
+})
 ```
 
 **When to use**: Test layers, mocks, static configurations
@@ -1940,7 +1898,7 @@ export class UtilsService extends Context.Tag("UtilsService")<
 >() {
   static readonly Live = Layer.sync(this, () => ({
     hash: (input) => Effect.sync(() => crypto.createHash("sha256").update(input).digest("hex"))
-  }));
+  }))
 }
 ```
 
@@ -1959,21 +1917,19 @@ export class StripeService extends Context.Tag("StripeService")<
     this,
     Effect.gen(function*() {
       // ✅ Access dependencies via Effect.gen
-      const config = yield* StripeConfig;
-
-      // ✅ Initialize SDK (synchronous, no cleanup needed)
+      const config = yield* StripeConfig      // ✅ Initialize SDK (synchronous, no cleanup needed)
       const stripe = new Stripe(Config.unwrap(config.secretKey), {
         apiVersion: config.apiVersion,
-      });
+      })
 
       return {
         paymentIntents: {
           create: (params) => Effect.tryPromise({ /* ... */ }),
           // ... other methods
-        },
-      };
+        }
+      }
     })
-  );
+  )
 }
 ```
 
@@ -1993,21 +1949,21 @@ export class RedisService extends Context.Tag("RedisService")<
     this,
     Effect.gen(function*() {
       // ✅ Access dependencies
-      const host = yield* Config.string("REDIS_HOST");
-      const port = yield* Config.integer("REDIS_PORT");
+      const host = yield* Config.string("REDIS_HOST")
+      const port = yield* Config.integer("REDIS_PORT")
 
       // ✅ Use Effect.acquireRelease for resource cleanup
       const redis = yield* Effect.acquireRelease(
         Effect.sync(() => new Redis({ host, port })),
         (client) => Effect.promise(() => client.quit()) // 🔑 Cleanup on scope end
-      );
+      )
 
       return {
         get: (key) => Effect.tryPromise({ /* ... */ }),
         // ... other methods
       };
     })
-  );
+  )
 }
 ```
 
@@ -2024,20 +1980,20 @@ static readonly Live = Layer.scoped(
   this,
   Effect.gen(function*() {
     const config = yield* Config;
-    const stripe = new Stripe(config.apiKey); // No cleanup needed!
-    return { /* ... */ };
+    const stripe = new Stripe(config.apiKey) // No cleanup needed!
+    return { /* ... */ }
   })
-);
+)
 
 // ✅ CORRECT: Use Layer.effect instead
 static readonly Live = Layer.effect(
   this,
   Effect.gen(function*() {
     const config = yield* Config;
-    const stripe = new Stripe(config.apiKey);
-    return { /* ... */ };
+    const stripe = new Stripe(config.apiKey)
+    return { /* ... */ }
   })
-);
+)
 ```
 
 ❌ **Using Layer.sync with dependencies**:
@@ -2045,17 +2001,17 @@ static readonly Live = Layer.effect(
 // ❌ WRONG: Layer.sync can't access dependencies
 static readonly Live = Layer.sync(this, () => {
   const config = ???; // Can't access Config here!
-  return { /* ... */ };
-});
+  return { /* ... */ }
+})
 
 // ✅ CORRECT: Use Layer.effect to access dependencies
 static readonly Live = Layer.effect(
   this,
   Effect.gen(function*() {
     const config = yield* Config;
-    return { /* ... */ };
+    return { /* ... */ }
   })
-);
+)
 ```
 
 ❌ **Manual cleanup without acquireRelease**:
@@ -2064,14 +2020,14 @@ static readonly Live = Layer.effect(
 static readonly Live = Layer.effect(
   this,
   Effect.gen(function*() {
-    const redis = new Redis();
+    const redis = new Redis()
     // ❌ This won't run if scope is interrupted!
     return {
       close: () => Effect.promise(() => redis.quit()),
       // ... methods
-    };
+    }
   })
-);
+)
 
 // ✅ CORRECT: Use acquireRelease with Layer.scoped
 static readonly Live = Layer.scoped(
@@ -2080,10 +2036,10 @@ static readonly Live = Layer.scoped(
     const redis = yield* Effect.acquireRelease(
       Effect.sync(() => new Redis()),
       (client) => Effect.promise(() => client.quit())
-    );
-    return { /* ... */ };
+    )
+    return { /* ... */ }
   })
-);
+)
 ```
 
 ### Effect 4.0 Compatibility Notes

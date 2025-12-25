@@ -20,7 +20,7 @@ State Hierarchy:
 
 Usage:
   import { useUser } from "@samuelho-dev/feature-user/client";
-  const { data, isLoading, fetch } = useUser();
+  const { data, isLoading, fetch } = useUser()
  *
  * @module @samuelho-dev/feature-user/client/atoms
  */

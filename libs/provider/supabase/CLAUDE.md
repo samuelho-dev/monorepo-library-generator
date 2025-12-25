@@ -1,6 +1,6 @@
 # @samuelho-dev/provider-supabase
 
-Supabase
+Supabase provider for auth, storage, and client operations
 
 ## Quick Reference
 
@@ -20,16 +20,12 @@ This is an AI-optimized reference for Supabase, a provider library following Eff
 
 ```typescript
 // Type-only import (zero runtime)
-import type { Resource, SupabaseConfig } from '@samuelho-dev/provider-supabase/types';
-
-// Service import
-import { Supabase } from '@samuelho-dev/provider-supabase';
-
-Effect.gen(function*() {
+import type { Resource, SupabaseConfig } from '@samuelho-dev/provider-supabase/types'// Service import
+import { Supabase } from '@samuelho-dev/provider-supabase'Effect.gen(function*() {
   const service = yield* Supabase;
-  const result = yield* service.list({ page: 1, limit: 10 });
+  const result = yield* service.list({ page: 1, limit: 10 })
   // ...
-});
+})
 ```
 
 ### Customization Guide
@@ -56,21 +52,19 @@ Effect.gen(function*() {
 
 ```typescript
 import { Supabase } from '@samuelho-dev/provider-supabase';
-import type { Resource } from '@samuelho-dev/provider-supabase/types';
-
-// Standard usage
+import type { Resource } from '@samuelho-dev/provider-supabase/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* Supabase;
-  const items = yield* service.list({ page: 1, limit: 10 });
+  const items = yield* service.list({ page: 1, limit: 10 })
   return items;
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(Supabase.Live)  // Production
   // or Effect.provide(Supabase.Test)   // Testing
   // or Effect.provide(Supabase.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ## SDK Integration Guide
@@ -105,10 +99,10 @@ static readonly Live = Layer.effect(
     const config: SupabaseConfig = {
       apiKey: env.SUPABASE_API_KEY,
       timeout: env.SUPABASE_TIMEOUT || 20000,
-    };
+    }
 
     // Initialize SDK client
-    const client = new SupabaseSDK(config);
+    const client = new SupabaseSDK(config)
 
     return {
       config,
@@ -140,9 +134,9 @@ static readonly Live = Layer.effect(
 
       // Repeat for get, create, update, delete operations
       // ... (follow same pattern with Effect.tryPromise + timeoutFail)
-    };
+    }
   }),
-);
+)
 ```
 
 #### 3. Add Resource Cleanup (If Needed)
@@ -156,19 +150,19 @@ static readonly Live = Layer.scoped(
     const config: SupabaseConfig = {
       apiKey: env.SUPABASE_API_KEY,
       timeout: env.SUPABASE_TIMEOUT || 20000,
-    };
+    }
 
     // Initialize SDK with cleanup
     const client = yield* Effect.acquireRelease(
       Effect.tryPromise(() => SupabaseSDK.connect(config)),
       (client) => Effect.sync(() => client.close())
-    );
+    )
 
     return {
       // ... service implementation
-    };
+    }
   }),
-);
+)
 ```
 
 #### 4. Update Dev Layer (Optional)

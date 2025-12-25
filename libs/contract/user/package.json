@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "user domain contracts",
+  "description": "User domain contract with auth integration",
   "exports": {
     ".": {
       "import": "./src/index.ts",
@@ -28,6 +28,14 @@
     "./events": {
       "import": "./src/lib/events.ts",
       "types": "./src/lib/events.ts"
+    },
+    "./authentication": {
+      "import": "./src/authentication/index.ts",
+      "types": "./src/authentication/index.ts"
+    },
+    "./profile": {
+      "import": "./src/profile/index.ts",
+      "types": "./src/profile/index.ts"
     }
   },
   "peerDependencies": {

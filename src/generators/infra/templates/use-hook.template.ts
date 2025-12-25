@@ -34,8 +34,7 @@ export function generateUseHookFile(options: InfraTemplateOptions) {
   // Imports
   builder.addImports([
     { from: "react", imports: ["useEffect", "useState", "useCallback"] },
-    { from: "@effect/schema", imports: ["Schema"] },
-    { from: "effect", imports: ["Option"] }
+    { from: "effect", imports: ["Option", "Schema"] }
   ])
 
   // Section: Error Types
@@ -48,7 +47,7 @@ export function generateUseHookFile(options: InfraTemplateOptions) {
  */
 const RpcErrorSchema = Schema.Struct({
   _tag: Schema.String,
-  message: Schema.String,
+  message: Schema.String
 })
 
 /**
@@ -109,7 +108,7 @@ const refetch = useCallback(async () => {
   try {
     // BASELINE: Set placeholder data
     // TODO: Replace with actual service call
-    // const result = await serviceCall();
+    // const result = await serviceCall()
     setData({ status: "baseline", timestamp: new Date().toISOString() })
   } catch (err) {
     // Parse error using Schema - returns typed RpcError or null
@@ -131,7 +130,7 @@ return {
   refetch,
 }`,
     jsdoc:
-      `use${className} Hook\n\nTODO: Implement hook logic\n\n@returns Hook state with data, error, loading, and refetch\n\n@example\n\`\`\`typescript\nfunction MyComponent() {\n  const { data, isLoading, error, refetch } = use${className}();\n\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n\n  return (\n    <div>\n      <p>{JSON.stringify(data)}</p>\n      <button onClick={refetch}>Refresh</button>\n    </div>\n  );\n}\n\`\`\``
+      `use${className} Hook\n\nTODO: Implement hook logic\n\n@returns Hook state with data, error, loading, and refetch\n\n@example\n\`\`\`typescript\nfunction MyComponent() {\n  const { data, isLoading, error, refetch } = use${className}()\n\n  if (isLoading) return <div>Loading...</div>\n  if (error) return <div>Error: {error.message}</div>\n\n  return (\n    <div>\n      <p>{JSON.stringify(data)}</p>\n      <button onClick={refetch}>Refresh</button>\n    </div>\n  )\n}\n\`\`\``
   })
 
   builder.addRaw(`// TODO: Add additional hooks as needed
@@ -147,7 +146,7 @@ return {
 //
 //     try {
 //       // TODO: Call service mutation
-//       // const result = await serviceMutation(input);
+//       // const result = await serviceMutation(input)
 //       // return result;
 //     } catch (err) {
 //       // Parse error using Schema

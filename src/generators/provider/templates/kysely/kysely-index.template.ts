@@ -25,10 +25,8 @@ export function generateKyselyIndexFile(options: ProviderTemplateOptions) {
 Generic over DB type - specify your database schema when creating the service.
 
 Usage:
-  import type { DB } from "${scope}/types-database";
-
-  const kysely = yield* make${className}Service<DB>({ connectionString: "..." });
-  const users = yield* kysely.query((db) => db.selectFrom("users").selectAll().execute());`
+  import type { DB } from "${scope}/types-database"  const kysely = yield* make${className}Service<DB>({ connectionString: "..." })
+  const users = yield* kysely.query((db) => db.selectFrom("users").selectAll().execute())`
   })
 
   builder.addBlankLine()
@@ -79,21 +77,21 @@ Usage:
   builder.addComment(`import type { DB } from "${scope}/types-database";`)
   builder.addComment(`import { make${className}Service, ${className}Service } from "${packageName}";`)
   builder.addComment("")
-  builder.addComment("const program = Effect.gen(function* () {")
+  builder.addComment("const program = Effect.gen(function*() {")
   builder.addComment(`  const kysely = yield* make${className}Service<DB>({`)
   builder.addComment("    connectionString: process.env.DATABASE_URL,")
-  builder.addComment("  });")
+  builder.addComment("  })")
   builder.addComment("")
   builder.addComment("  const users = yield* kysely.query((db) =>")
   builder.addComment("    db.selectFrom('users').selectAll().execute()")
-  builder.addComment("  );")
+  builder.addComment("  )")
   builder.addComment("  return users;")
-  builder.addComment("});")
+  builder.addComment("})")
   builder.addComment("")
   builder.addComment("// For testing:")
   builder.addComment(`const mockService = makeTest${className}Service<DB>({`)
   builder.addComment("  mockTables: ['users', 'posts']")
-  builder.addComment("});")
+  builder.addComment("})")
   builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   return builder.toString()

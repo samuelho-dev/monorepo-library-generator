@@ -59,8 +59,8 @@ Used by infra-queue's Redis layer.`,
  * @example
  * \`\`\`typescript
  * const redis = yield* Redis;
- * yield* redis.queue.lpush("my-queue", JSON.stringify(job));
- * const [key, value] = yield* redis.queue.brpop("my-queue", 0);
+ * yield* redis.queue.lpush("my-queue", JSON.stringify(job))
+ * const [key, value] = yield* redis.queue.brpop("my-queue", 0)
  * \`\`\`
  */
 export function makeQueueClient(client: IORedis) {
@@ -73,8 +73,8 @@ export function makeQueueClient(client: IORedis) {
             message: \`LPUSH failed for key: \${key}\`,
             command: "LPUSH",
             args: [key, value],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.queue.lpush", { attributes: { key } })),
 
     brpop: (key: string, timeout: number) =>
@@ -85,8 +85,8 @@ export function makeQueueClient(client: IORedis) {
             message: \`BRPOP failed for key: \${key}\`,
             command: "BRPOP",
             args: [key, timeout],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.queue.brpop", { attributes: { key, timeout } })),
 
     rpop: (key: string) =>
@@ -97,8 +97,8 @@ export function makeQueueClient(client: IORedis) {
             message: \`RPOP failed for key: \${key}\`,
             command: "RPOP",
             args: [key],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.queue.rpop", { attributes: { key } })),
 
     llen: (key: string) =>
@@ -109,8 +109,8 @@ export function makeQueueClient(client: IORedis) {
             message: \`LLEN failed for key: \${key}\`,
             command: "LLEN",
             args: [key],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.queue.llen", { attributes: { key } })),
 
     lrange: (key: string, start: number, stop: number) =>
@@ -121,8 +121,8 @@ export function makeQueueClient(client: IORedis) {
             message: \`LRANGE failed for key: \${key}\`,
             command: "LRANGE",
             args: [key, start, stop],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.queue.lrange", { attributes: { key, start, stop } })),
 
     ltrim: (key: string, start: number, stop: number) =>
@@ -133,8 +133,8 @@ export function makeQueueClient(client: IORedis) {
             message: \`LTRIM failed for key: \${key}\`,
             command: "LTRIM",
             args: [key, start, stop],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.queue.ltrim", { attributes: { key, start, stop } })),
 
     del: (key: string) =>
@@ -145,8 +145,8 @@ export function makeQueueClient(client: IORedis) {
             message: \`DEL failed for key: \${key}\`,
             command: "DEL",
             args: [key],
-            cause: error,
-          }),
+            cause: error
+          })
       }).pipe(Effect.withSpan("Redis.queue.del", { attributes: { key } })),
 
     ping: () =>
@@ -156,10 +156,10 @@ export function makeQueueClient(client: IORedis) {
           new RedisCommandError({
             message: "PING failed",
             command: "PING",
-            cause: error,
-          }),
-      }).pipe(Effect.withSpan("Redis.queue.ping")),
-  };
+            cause: error
+          })
+      }).pipe(Effect.withSpan("Redis.queue.ping"))
+  }
 }`)
   builder.addBlankLine()
 
@@ -191,14 +191,14 @@ export class RedisQueueService extends Context.Tag("RedisQueueService")<
     lrange: () => Effect.succeed([]),
     ltrim: () => Effect.void,
     del: () => Effect.succeed(0),
-    ping: () => Effect.succeed("PONG"),
-  });
+    ping: () => Effect.succeed("PONG")
+  })
 
   /**
    * Create a layer from an ioredis client
    */
   static fromClient(client: IORedis) {
-    return Layer.succeed(RedisQueueService, makeQueueClient(client));
+    return Layer.succeed(RedisQueueService, makeQueueClient(client))
   }
 }`)
 

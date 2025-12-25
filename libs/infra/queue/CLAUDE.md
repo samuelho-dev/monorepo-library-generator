@@ -19,15 +19,11 @@ This is an infrastructure library following Effect-based service patterns.
 
 ```typescript
 // Type-only import (zero runtime)
-import type { QueueConfig } from '@samuelho-dev/infra-queue/types';
-
-// Service import
-import { QueueService } from '@samuelho-dev/infra-queue';
-
-Effect.gen(function*() {
+import type { QueueConfig } from '@samuelho-dev/infra-queue/types'// Service import
+import { QueueService } from '@samuelho-dev/infra-queue'Effect.gen(function*() {
   const service = yield* QueueService;
   // Use service...
-});
+})
 ```
 
 ### Customization Guide
@@ -52,29 +48,25 @@ Effect.gen(function*() {
 
 ```typescript
 import { QueueService } from '@samuelho-dev/infra-queue';
-import type { QueueConfig } from '@samuelho-dev/infra-queue/types';
-
-// Standard usage
+import type { QueueConfig } from '@samuelho-dev/infra-queue/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* QueueService;
   // Use service...
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(QueueService.Live)  // Production
   // or Effect.provide(QueueService.Test)   // Testing
   // or Effect.provide(QueueService.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ### Client Usage
 
 ```typescript
-import { useQueue } from '@samuelho-dev/infra-queue/client/hooks';
-
-function MyComponent() {
-  const queue = useQueue();
+import { useQueue } from '@samuelho-dev/infra-queue/client/hooks'function MyComponent() {
+  const queue = useQueue()
   // Use service in React component
 }
 ```

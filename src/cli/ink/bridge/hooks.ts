@@ -41,7 +41,7 @@ export interface UseEffectOperationResult<A, E> extends EffectOperationState<A, 
  * function GenerateButton({ name }: { name: string }) {
  *   const { execute, isLoading, error, result } = useEffectOperation(
  *     () => generateContract({ name, tags: '' })
- *   );
+ *   )
  *
  *   return (
  *     <Box>
@@ -50,7 +50,7 @@ export interface UseEffectOperationResult<A, E> extends EffectOperationState<A, 
  *       {result && <Text color="green">Generated!</Text>}
  *       <Button onPress={execute}>Generate</Button>
  *     </Box>
- *   );
+ *   )
  * }
  * ```
  */
@@ -127,11 +127,11 @@ export function useEffectOperation<A, E>(
  * function WorkspaceInfo() {
  *   const { result, isLoading, error } = useEffectOnMount(
  *     () => createWorkspaceContext(undefined, 'cli')
- *   );
+ *   )
  *
- *   if (isLoading) return <Spinner />;
- *   if (error) return <Text color="red">Error: {String(error)}</Text>;
- *   return <Text>Workspace: {result?.librariesRoot}</Text>;
+ *   if (isLoading) return <Spinner />
+ *   if (error) return <Text color="red">Error: {String(error)}</Text>
+ *   return <Text>Workspace: {result?.librariesRoot}</Text>
  * }
  * ```
  */

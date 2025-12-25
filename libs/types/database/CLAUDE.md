@@ -21,17 +21,15 @@ pnpm prisma generate
 
 ```typescript
 import type { DB } from "@samuelho-dev/types-database";
-import { makeKyselyService } from "@samuelho-dev/provider-kysely";
-
-// Create Kysely service with type-safe DB
+import { makeKyselyService } from "@samuelho-dev/provider-kysely"// Create Kysely service with type-safe DB
 const kysely = yield* makeKyselyService<DB>({
   connectionString: process.env.DATABASE_URL
-});
+})
 
 // All queries are now type-safe
 const users = yield* kysely.query((db) =>
   db.selectFrom("user").selectAll().execute()
-);
+)
 ```
 
 ### Prisma Configuration

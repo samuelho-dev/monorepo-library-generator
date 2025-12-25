@@ -205,9 +205,9 @@ function createRepositoryTag(
  * // In service implementation:
  * const service = Effect.gen(function*() {
  *   const repo = yield* ${className}Repository;
- *   const entity = yield* repo.findById("id");
+ *   const entity = yield* repo.findById("id")
  *   return entity;
- * });
+ * })
  * \`\`\`
  */
 export class ${className}Repository extends Context.Tag(
@@ -293,9 +293,9 @@ function createServiceTag(className: string, domainName: string, fileName: strin
  * // In tRPC router or API handler:
  * const handler = Effect.gen(function*() {
  *   const service = yield* ${className}Service;
- *   const entity = yield* service.get("id");
+ *   const entity = yield* service.get("id")
  *   return entity;
- * });
+ * })
  * \`\`\`
  */
 export class ${className}Service extends Context.Tag(
@@ -358,9 +358,9 @@ function createProjectionRepositoryTag(className: string, fileName: string, scop
  * \`\`\`typescript
  * const projection = Effect.gen(function*() {
  *   const repo = yield* ${className}ProjectionRepository;
- *   const view = yield* repo.findProjection("id");
+ *   const view = yield* repo.findProjection("id")
  *   return view;
- * });
+ * })
  * \`\`\`
  */
 export class ${className}ProjectionRepository extends Context.Tag(

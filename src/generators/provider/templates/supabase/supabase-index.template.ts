@@ -30,9 +30,7 @@ Effect 3.0+ Pattern:
   - Access layers via static members: Service.Test, Service.Live
 
 Usage:
-  import { SupabaseAuth, SupabaseStorage } from '${packageName}';
-
-  const authLayer = SupabaseAuth.Test;
+  import { SupabaseAuth, SupabaseStorage } from '${packageName}'  const authLayer = SupabaseAuth.Test;
   const storageLayer = SupabaseStorage.Test;`
   })
   builder.addBlankLine()
@@ -151,35 +149,35 @@ export {
   )
   builder.addComment("")
   builder.addComment("// Authentication example")
-  builder.addComment("const authProgram = Effect.gen(function* () {")
+  builder.addComment("const authProgram = Effect.gen(function*() {")
   builder.addComment("  const auth = yield* SupabaseAuth;")
   builder.addComment("  const result = yield* auth.signInWithPassword({")
   builder.addComment("    email: 'user@example.com',")
   builder.addComment("    password: 'password123',")
-  builder.addComment("  });")
+  builder.addComment("  })")
   builder.addComment("  return result.user;")
-  builder.addComment("});")
+  builder.addComment("})")
   builder.addComment("")
   builder.addComment("// Storage example")
-  builder.addComment("const storageProgram = Effect.gen(function* () {")
+  builder.addComment("const storageProgram = Effect.gen(function*() {")
   builder.addComment("  const storage = yield* SupabaseStorage;")
-  builder.addComment("  const files = yield* storage.list('my-bucket');")
+  builder.addComment("  const files = yield* storage.list('my-bucket')")
   builder.addComment("  return files;")
-  builder.addComment("});")
+  builder.addComment("})")
   builder.addComment("")
   builder.addComment("// Layer composition")
   builder.addComment("const MainLayer = Layer.mergeAll(")
   builder.addComment("  SupabaseClient.Live,")
   builder.addComment("  SupabaseAuth.Live,")
   builder.addComment("  SupabaseStorage.Live,")
-  builder.addComment(");")
+  builder.addComment(")")
   builder.addComment("")
   builder.addComment("// For testing")
   builder.addComment("const TestLayer = Layer.mergeAll(")
   builder.addComment("  SupabaseClient.Test,")
   builder.addComment("  SupabaseAuth.Test,")
   builder.addComment("  SupabaseStorage.Test,")
-  builder.addComment(");")
+  builder.addComment(")")
   builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   return builder.toString()

@@ -89,9 +89,9 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const result = yield* service.get("id-123");
+     * const result = yield* service.get("id-123")
      * if (Option.isSome(result)) {
-     *   console.log("Found:", result.value);
+     *   console.log("Found:", result.value)
      * }
      * \`\`\`
      */
@@ -107,7 +107,7 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const items = yield* service.findByCriteria({ status: "active" }, 0, 10);
+     * const items = yield* service.findByCriteria({ status: "active" }, 0, 10)
      * \`\`\`
      */
     readonly findByCriteria: (criteria: Record<string, unknown>, skip?: number, limit?: number) => Effect.Effect<readonly unknown[], ${className}ServiceError, never>
@@ -120,7 +120,7 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const newItem = yield* service.create({ name: "example" });
+     * const newItem = yield* service.create({ name: "example" })
      * \`\`\`
      */
     readonly create: (input: Record<string, unknown>) => Effect.Effect<unknown, ${className}ServiceError, never>
@@ -134,7 +134,7 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const updated = yield* service.update("id-123", { name: "new name" });
+     * const updated = yield* service.update("id-123", { name: "new name" })
      * \`\`\`
      */
     readonly update: (id: string, input: Record<string, unknown>) => Effect.Effect<unknown, ${className}ServiceError, never>
@@ -147,7 +147,7 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * yield* service.delete("id-123");
+     * yield* service.delete("id-123")
      * \`\`\`
      */
     readonly delete: (id: string) => Effect.Effect<void, ${className}ServiceError, never>
@@ -159,7 +159,7 @@ export class ${className}Service extends Context.Tag(
      *
      * @example
      * \`\`\`typescript
-     * const isHealthy = yield* service.healthCheck();
+     * const isHealthy = yield* service.healthCheck()
      * \`\`\`
      */
     readonly healthCheck: () => Effect.Effect<boolean, never>${
@@ -169,8 +169,8 @@ export class ${className}Service extends Context.Tag(
     // TODO: Add database-specific operations here
     // For Kysely integration, add query and transaction methods:
     //
-    // readonly query: <A>(fn: (db: Kysely<Database>) => Promise<A>);
-    // readonly transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>);`
+    // readonly query: <A>(fn: (db: Kysely<Database>) => Promise<A>)
+    // readonly transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>)`
       : ""
   }
   }
@@ -216,7 +216,7 @@ ${
       // const resource = yield* Effect.acquireRelease(
       //   Effect.gen(function*() {
       //     // Acquire phase: Initialize resource
-      //     // yield* logger.info("${className} service initializing");
+      //     // yield* logger.info("${className} service initializing")
       //
       //     // Replace with actual resource initialization:
       //     // const pool = yield* Effect.tryPromise({
@@ -225,7 +225,7 @@ ${
       //     //     message: "Failed to create connection pool",
       //     //     cause: error
       //     //   })
-      //     // });
+      //     // })
       //
       //     // For demonstration, return a mock resource
       //     return {
@@ -242,7 +242,7 @@ ${
       //     }).pipe(
       //       Effect.catchAll(() => Effect.void) // Ignore cleanup errors
       //     )
-      // );`
+      // )`
       : `      const resource = yield* Effect.acquireRelease(
         Effect.sync(() => {
           // Acquire phase: Initialize resource (sync baseline)
@@ -250,14 +250,14 @@ ${
           //
           // Example with Effect.gen (for async/with deps):
           // Effect.gen(function*() {
-          //   yield* logger.info("${className} service initializing");
+          //   yield* logger.info("${className} service initializing")
           //   const pool = yield* Effect.tryPromise({
           //     try: () => createConnectionPool(config),
           //     catch: (error) => new ${className}InitializationError({
           //       message: "Failed to create connection pool",
           //       cause: error
           //     })
-          //   });
+          //   })
           //   return pool;
           // })
 
@@ -276,7 +276,7 @@ ${
           }).pipe(
             Effect.catchAll(() => Effect.void) // Ignore cleanup errors
           )
-      );`
+      )`
   }
 
       // ${"=".repeat(74)}
@@ -288,26 +288,26 @@ ${
       // import { Queue } from "effect";
       //
       // // Create bounded queue with backpressure (max 1000 pending jobs)
-      // const jobQueue = yield* Queue.bounded<{ type: string; payload: unknown }>(1000);
+      // const jobQueue = yield* Queue.bounded<{ type: string; payload: unknown }>(1000)
       //
       // // Start background processor fiber
       // yield* Effect.forkScoped(
       //   Effect.gen(function*() {
       //     while (true) {
       //       // Take batch of jobs from queue
-      //       const jobs = yield* Queue.takeUpTo(jobQueue, 10);
+      //       const jobs = yield* Queue.takeUpTo(jobQueue, 10)
       //
       //       // Process jobs with controlled concurrency
       //       yield* Effect.all(
       //         jobs.map(job => processJob(job)),
       //         { concurrency: 5 }
-      //       );
+      //       )
       //     }
       //   })
-      // );
+      // )
       //
       // // Enqueue jobs from service methods:
-      // // yield* Queue.offer(jobQueue, { type: "send_email", payload: emailData });
+      // // yield* Queue.offer(jobQueue, { type: "send_email", payload: emailData })
       //
       // Benefits:
       // - Automatic backpressure when queue is full
@@ -338,29 +338,29 @@ ${
       //   type: string;
       //   payload: unknown;
       //   timestamp: Date;
-      // }>(1000);
+      // }>(1000)
       //
       // // Service methods can publish events:
       // // yield* PubSub.publish(eventBus, {
       // //   type: "${className}Created",
       // //   payload: createdItem,
       // //   timestamp: new Date()
-      // // });
+      // // })
       //
       // // Consumers subscribe to receive events:
       // export const subscribe = (
       //   handler: (event: unknown) => Effect.Effect<void, never>
       // ) =>
       //   Effect.gen(function*() {
-      //     const subscription = yield* PubSub.subscribe(eventBus);
+      //     const subscription = yield* PubSub.subscribe(eventBus)
       //
       //     // Process events from subscription queue
       //     yield* Queue.take(subscription).pipe(
       //       Effect.flatMap(handler),
       //       Effect.forever,
       //       Effect.forkScoped  // Run in background fiber
-      //     );
-      //   });
+      //     )
+      //   })
       //
       // Benefits:
       // - Multiple subscribers receive all events
@@ -395,18 +395,18 @@ ${
       // import { Effect } from "effect";
       //
       // // Create closed latch (blocks operations)
-      // const migrationLatch = yield* Effect.makeLatch(false);
+      // const migrationLatch = yield* Effect.makeLatch(false)
       //
       // // Run migrations in background, open latch when done
       // yield* Effect.forkScoped(
       //   Effect.gen(function*() {
-      //     // yield* runDatabaseMigrations();
-      //     yield* migrationLatch.open();  // Unblock waiting operations
+      //     // yield* runDatabaseMigrations()
+      //     yield* migrationLatch.open()  // Unblock waiting operations
       //   })
-      // );
+      // )
       //
       // // Service methods wait for latch before executing:
-      // // yield* migrationLatch.await();  // Blocks until migrations complete
+      // // yield* migrationLatch.await()  // Blocks until migrations complete
       // // ...proceed with operation
       //
       // Benefits:
@@ -434,24 +434,24 @@ ${
       // import { Deferred, Effect } from "effect";
       //
       // // Create deferred for async result
-      // const initResult = yield* Deferred.make<ResourceHandle, ${className}Error>();
+      // const initResult = yield* Deferred.make<ResourceHandle, ${className}Error>()
       //
       // // Background fiber initializes and resolves deferred
       // yield* Effect.forkScoped(
       //   Effect.gen(function*() {
-      //     const handle = yield* initializeResource();
-      //     yield* Deferred.succeed(initResult, handle);
+      //     const handle = yield* initializeResource()
+      //     yield* Deferred.succeed(initResult, handle)
       //   }).pipe(
       //     Effect.catchAll((error) =>
       //       Deferred.fail(initResult, error)
       //     )
       //   )
-      // );
+      // )
       //
       // // Service methods wait for and use the result:
       // get: (id: string) =>
       //   Effect.gen(function*() {
-      //     const handle = yield* Deferred.await(initResult);  // Waits & unwraps
+      //     const handle = yield* Deferred.await(initResult)  // Waits & unwraps
       //     // ...use handle for operation
       //   }),
       //
@@ -503,8 +503,8 @@ ${
       //     const connection = yield* Effect.tryPromise({
       //       try: () => pool.connect(),
       //       catch: (error) => new ${className}ConnectionError({ cause: error })
-      //     });
-      //     yield* Effect.sync(() => connection.beginTransaction());
+      //     })
+      //     yield* Effect.sync(() => connection.beginTransaction())
       //
       //     yield* Scope.addFinalizer((exit) =>
       //       Exit.match(exit, {
@@ -512,8 +512,8 @@ ${
       //           Effect.gen(function*() {
       //             yield* Effect.tryPromise(() => connection.rollback()).pipe(
       //               Effect.catchAll(() => Effect.void)
-      //             );
-      //             yield* Effect.sync(() => connection.release());
+      //             )
+      //             yield* Effect.sync(() => connection.release())
       //           }),
       //         onSuccess: () =>
       //           Effect.gen(function*() {
@@ -523,25 +523,25 @@ ${
       //                   Effect.catchAll(() => Effect.void)
       //                 )
       //               )
-      //             );
-      //             yield* Effect.sync(() => connection.release());
+      //             )
+      //             yield* Effect.sync(() => connection.release())
       //           })
       //       })
-      //     );
+      //     )
       //     return connection;
       //   }),
       //   (connection) =>
       //     Effect.sync(() => connection.isConnected && connection.release()).pipe(
       //       Effect.catchAll(() => Effect.void)
       //     )
-      // );
+      // )
       //
       // Message Queue Pattern:
       // yield* Scope.addFinalizer((exit) =>
       //   Exit.isSuccess(exit)
       //     ? Effect.tryPromise(() => message.ack())
       //     : Effect.tryPromise(() => message.nack())
-      // );
+      // )
       //
       // See EFFECT_PATTERNS.md "Exit-Aware Finalizers" for full examples and patterns.
       //
@@ -553,7 +553,7 @@ ${
       return {
         get: (id: string) =>
           Effect.gen(function*() {
-            // yield* logger.debug(\`Getting item: \${id}\`);
+            // yield* logger.debug(\`Getting item: \${id}\`)
 
             ${
     hasProvider && providerClassName
@@ -563,44 +563,44 @@ ${
               Effect.catchTag("${providerClassName}NotFoundError", () =>
                 Effect.succeed(Option.none())
               )
-            );`
+            )`
       : `const result = yield* Effect.tryPromise({
               try: () => resource.query(id),
               catch: (error) => new ${className}InternalError({
                 message: \`Failed to get item \${id}\`,
                 cause: error
               })
-            });
-            return Option.fromNullable(result);`
+            })
+            return Option.fromNullable(result)`
   }
           }).pipe(Effect.withSpan("${className}.get")),
 
         findByCriteria: (criteria, skip = 0, limit = 10) =>
           Effect.gen(function*() {
-            // yield* logger.debug("Finding items by criteria", { criteria, skip, limit });
+            // yield* logger.debug("Finding items by criteria", { criteria, skip, limit })
 
             const result = yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual query logic
                 return [{ id: "1", ...criteria }, { id: "2", ...criteria }]
-                  .slice(skip, skip + limit);
+                  .slice(skip, skip + limit)
               },
               catch: (error) => new ${className}InternalError({
                 message: "Failed to find items by criteria",
                 cause: error
               })
-            });
+            })
             return result;
           }).pipe(Effect.withSpan("${className}.findByCriteria")),
 
         create: (input) =>
           Effect.gen(function*() {
-            // yield* logger.info("Creating item", { input });
+            // yield* logger.info("Creating item", { input })
 
             ${
     hasProvider && providerClassName
       ? `// Delegate to provider
-            return yield* provider.create(input);`
+            return yield* provider.create(input)`
       : `const result = yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual creation logic
@@ -610,19 +610,19 @@ ${
                 message: "Failed to create item",
                 cause: error
               })
-            });
+            })
             return result;`
   }
           }).pipe(Effect.withSpan("${className}.create")),
 
         update: (id, input) =>
           Effect.gen(function*() {
-            // yield* logger.info(\`Updating item: \${id}\`, { input });
+            // yield* logger.info(\`Updating item: \${id}\`, { input })
 
             ${
     hasProvider && providerClassName
       ? `// Delegate to provider
-            return yield* provider.update(id, input);`
+            return yield* provider.update(id, input)`
       : `// Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
             const result = yield* Effect.tryPromise({
@@ -635,19 +635,19 @@ ${
                 message: \`Item \${id} not found or update failed\`,
                 cause: error
               })
-            });
+            })
             return result;`
   }
           }).pipe(Effect.withSpan("${className}.update")),
 
         delete: (id) =>
           Effect.gen(function*() {
-            // yield* logger.info(\`Deleting item: \${id}\`);
+            // yield* logger.info(\`Deleting item: \${id}\`)
 
             ${
     hasProvider && providerClassName
       ? `// Delegate to provider
-            yield* provider.delete(id);`
+            yield* provider.delete(id)`
       : `// Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
             yield* Effect.tryPromise({
@@ -660,7 +660,7 @@ ${
                 message: \`Failed to delete item \${id}\`,
                 cause: error
               })
-            });`
+            })`
   }
           }).pipe(Effect.withSpan("${className}.delete")),
 
@@ -669,7 +669,7 @@ ${
     hasProvider && providerClassName
       ? `Effect.gen(function*() {
             // Delegate to provider
-            return yield* provider.healthCheck();
+            return yield* provider.healthCheck()
           })`
       : `Effect.sync(() => {
             // Check resource health (sync baseline)
@@ -680,7 +680,7 @@ ${
             //   const result = yield* Effect.tryPromise({
             //     try: () => resource.query("health"),
             //     catch: () => false as const
-            //   }).pipe(Effect.catchAll(() => Effect.succeed(false as const)));
+            //   }).pipe(Effect.catchAll(() => Effect.succeed(false as const)))
             //   return result;
             // })
 
@@ -707,16 +707,16 @@ ${
         //               try: () => queryFn(trx),
         //               catch: (error) => new ${className}InternalError({ message: "Transaction query failed", cause: error })
         //             })
-        //         });
-        //         return await Effect.runPromise(fn.pipe(Effect.provide(txKyselyLayer)));
+        //         })
+        //         return await Effect.runPromise(fn.pipe(Effect.provide(txKyselyLayer)))
         //       })
-        //     );
+        //     )
         //   }).pipe(Effect.withSpan("${className}.transaction"))`
       : ""
   }
       };
     })
-  );
+  )
 
   // ${"=".repeat(74)}
   // Static Test Layer
@@ -731,44 +731,44 @@ ${
    */
   static readonly Test = Layer.sync(this, () => {
     // Fresh storage per test run for isolation
-    const testStorage = new Map<string, Record<string, unknown>>();
+    const testStorage = new Map<string, Record<string, unknown>>()
 
     return {
       get: (id: string) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] TEST get id=\${id}\`);
-          return Option.fromNullable(testStorage.get(id));
+          yield* Effect.logDebug(\`[${className}] TEST get id=\${id}\`)
+          return Option.fromNullable(testStorage.get(id))
         }),
       findByCriteria: (criteria: Record<string, unknown>, skip?: number, limit?: number) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] TEST findByCriteria\`, { criteria, skip, limit });
-          const items = Array.from(testStorage.values());
-          return items.slice(skip ?? 0, (skip ?? 0) + (limit ?? 10));
+          yield* Effect.logDebug(\`[${className}] TEST findByCriteria\`, { criteria, skip, limit })
+          const items = Array.from(testStorage.values())
+          return items.slice(skip ?? 0, (skip ?? 0) + (limit ?? 10))
         }),
       create: (input: Record<string, unknown>) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] TEST create\`, input);
-          const id = randomUUID();
+          yield* Effect.logDebug(\`[${className}] TEST create\`, input)
+          const id = randomUUID()
           const item = { id, ...input };
-          testStorage.set(id, item);
-          return item;
+          testStorage.set(id, item)
+          return item
         }),
       update: (id: string, input: Record<string, unknown>) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] TEST update id=\${id}\`, input);
+          yield* Effect.logDebug(\`[${className}] TEST update id=\${id}\`, input)
           const item = { id, ...input };
-          testStorage.set(id, item);
-          return item;
+          testStorage.set(id, item)
+          return item
         }),
       delete: (id: string) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] TEST delete id=\${id}\`);
-          testStorage.delete(id);
+          yield* Effect.logDebug(\`[${className}] TEST delete id=\${id}\`)
+          testStorage.delete(id)
         }),
       healthCheck: () =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] TEST healthCheck\`);
-          return true;
+          yield* Effect.logDebug(\`[${className}] TEST healthCheck\`)
+          return true
         })${
     isDatabaseInfra
       ? `
@@ -781,8 +781,8 @@ ${
       //   fn.pipe(Effect.provideService(${className}Service, ${className}Service.Test))`
       : ""
   }
-    };
-  });
+    }
+  })
 
   // ${"=".repeat(74)}
   // Static Dev Layer
@@ -797,60 +797,60 @@ ${
   static readonly Dev = Layer.effect(
     this,
     Effect.gen(function*() {
-      yield* Effect.logInfo(\`[${className}Service] [DEV] Initializing development layer\`);
+      yield* Effect.logInfo(\`[${className}Service] [DEV] Initializing development layer\`)
 
       // Get actual implementation from Live layer
       const liveService = yield* ${className}Service.Live.pipe(
         Layer.build,
         Effect.map((ctx) => Context.get(ctx, ${className}Service))
-      );
+      )
 
       // Wrap all operations with verbose logging
       return {
         get: (id: string) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug(\`[${className}Service] [DEV] get called with id:\`, id);
-            const result = yield* liveService.get(id);
-            yield* Effect.logDebug(\`[${className}Service] [DEV] get result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] get called with id:\`, id)
+            const result = yield* liveService.get(id)
+            yield* Effect.logDebug(\`[${className}Service] [DEV] get result:\`, result)
             return result;
           }),
 
         findByCriteria: (criteria, skip, limit) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug(\`[${className}Service] [DEV] findByCriteria called:\`, { criteria, skip, limit });
-            const result = yield* liveService.findByCriteria(criteria, skip, limit);
-            yield* Effect.logDebug(\`[${className}Service] [DEV] findByCriteria returned \${result.length} items\`);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] findByCriteria called:\`, { criteria, skip, limit })
+            const result = yield* liveService.findByCriteria(criteria, skip, limit)
+            yield* Effect.logDebug(\`[${className}Service] [DEV] findByCriteria returned \${result.length} items\`)
             return result;
           }),
 
         create: (input) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug(\`[${className}Service] [DEV] create called with:\`, input);
-            const result = yield* liveService.create(input);
-            yield* Effect.logDebug(\`[${className}Service] [DEV] create result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] create called with:\`, input)
+            const result = yield* liveService.create(input)
+            yield* Effect.logDebug(\`[${className}Service] [DEV] create result:\`, result)
             return result;
           }),
 
         update: (id, input) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug(\`[${className}Service] [DEV] update called:\`, { id, input });
-            const result = yield* liveService.update(id, input);
-            yield* Effect.logDebug(\`[${className}Service] [DEV] update result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] update called:\`, { id, input })
+            const result = yield* liveService.update(id, input)
+            yield* Effect.logDebug(\`[${className}Service] [DEV] update result:\`, result)
             return result;
           }),
 
         delete: (id) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug(\`[${className}Service] [DEV] delete called with id:\`, id);
-            yield* liveService.delete(id);
-            yield* Effect.logDebug(\`[${className}Service] [DEV] delete completed\`);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] delete called with id:\`, id)
+            yield* liveService.delete(id)
+            yield* Effect.logDebug(\`[${className}Service] [DEV] delete completed\`)
           }),
 
         healthCheck: () =>
           Effect.gen(function*() {
-            yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck called\`);
-            const result = yield* liveService.healthCheck();
-            yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck result:\`, result);
+            yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck called\`)
+            const result = yield* liveService.healthCheck()
+            yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck result:\`, result)
             return result;
           })${
     isDatabaseInfra
@@ -860,23 +860,23 @@ ${
         // Example:
         // query: <A>(fn: (db: Kysely<Database>) => Promise<A>) =>
         //   Effect.gen(function*() {
-        //     yield* Effect.logDebug(\`[${className}Service] [DEV] query called\`);
-        //     const result = yield* liveService.query(fn);
-        //     yield* Effect.logDebug(\`[${className}Service] [DEV] query result:\`, result);
+        //     yield* Effect.logDebug(\`[${className}Service] [DEV] query called\`)
+        //     const result = yield* liveService.query(fn)
+        //     yield* Effect.logDebug(\`[${className}Service] [DEV] query result:\`, result)
         //     return result;
         //   }),
         // transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
         //   Effect.gen(function*() {
-        //     yield* Effect.logDebug(\`[${className}Service] [DEV] transaction started\`);
-        //     const result = yield* liveService.transaction(fn);
-        //     yield* Effect.logDebug(\`[${className}Service] [DEV] transaction completed\`);
+        //     yield* Effect.logDebug(\`[${className}Service] [DEV] transaction started\`)
+        //     const result = yield* liveService.transaction(fn)
+        //     yield* Effect.logDebug(\`[${className}Service] [DEV] transaction completed\`)
         //     return result;
         //   })`
       : ""
   }
       };
     })
-  );
+  )
 
   // ${"=".repeat(74)}
   // Static Auto Layer
@@ -903,7 +903,7 @@ ${
       default:
         return ${className}Service.Live;
     }
-  });${
+  })${
     includeClientServer
       ? `
 
@@ -917,7 +917,7 @@ ${
    * Browser-safe implementation defined in client.ts
    * This property is assigned at module load time.
    */
-  static ClientLive: Layer.Layer<${className}Service, never, never>;
+  static ClientLive: Layer.Layer<${className}Service, never, never>
 
   /**
    * Server Live Layer
@@ -925,7 +925,7 @@ ${
    * Node.js implementation defined in server.ts
    * This property is assigned at module load time.
    */
-  static ServerLive: Layer.Layer<${className}Service, never, never>;`
+  static ServerLive: Layer.Layer<${className}Service, never, never>`
       : ""
   }
 }`)

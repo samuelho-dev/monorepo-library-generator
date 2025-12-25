@@ -26,9 +26,7 @@ Contract-First Architecture:
 
 Integration:
   import { AuthMiddlewareLive } from '@samuelho-dev/infra-rpc';
-  import { AuthVerifierLive } from '@samuelho-dev/infra-auth';
-
-  const middleware = AuthMiddlewareLive.pipe(Layer.provide(AuthVerifierLive));
+  import { AuthVerifierLive } from '@samuelho-dev/infra-auth'  const middleware = AuthMiddlewareLive.pipe(Layer.provide(AuthVerifierLive))
  *
  * @module @samuelho-dev/infra-auth/service
  */

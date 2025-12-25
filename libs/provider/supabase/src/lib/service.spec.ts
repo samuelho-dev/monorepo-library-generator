@@ -29,7 +29,7 @@ describe("SupabaseClient", () => {
   // Test 1: Service Interface
   describe("Service Interface", () => {
     it("should provide config and methods", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* SupabaseClient
         expect(client.config).toBeDefined()
         expect(client.getClient).toBeDefined()
@@ -49,7 +49,7 @@ describe("SupabaseClient", () => {
     it("should compose with other services", async () => {
       const layer = Layer.mergeAll(SupabaseClient.Test)
 
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* SupabaseClient
         return client.config.url
       })
@@ -68,7 +68,7 @@ describe("SupabaseClient", () => {
         healthCheck: () => Effect.succeed(true)
       })
 
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* SupabaseClient
         return client.config.url
       })
@@ -88,7 +88,7 @@ describe("SupabaseClient", () => {
         })
       )
 
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* SupabaseClient
         return client.config.url
       })
@@ -118,9 +118,9 @@ describe("SupabaseClient", () => {
               finalized = true;
             })
         )
-      );
+      )
 
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* SupabaseClient
         return client.config.url
       })
@@ -149,17 +149,17 @@ describe("SupabaseClient", () => {
             healthCheck: () => Effect.succeed(true),
           }
         })
-      );
+      )
 
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* SupabaseClient
         return client.config.url
       })
 
       // With fresh, each use creates a new instance
       const fresh = Layer.fresh(countingLayer)
-      await Effect.runPromise(program.pipe(Effect.provide(fresh)));
-      await Effect.runPromise(program.pipe(Effect.provide(fresh)));
+      await Effect.runPromise(program.pipe(Effect.provide(fresh)))
+      await Effect.runPromise(program.pipe(Effect.provide(fresh)))
       expect(callCount).toBeGreaterThan(1)
     })
   })
@@ -167,7 +167,7 @@ describe("SupabaseClient", () => {
   // Test 7: Health check
   describe("Health Check", () => {
     it("should pass health check in test mode", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* SupabaseClient
         return yield* client.healthCheck()
       })
@@ -189,7 +189,7 @@ describe("SupabaseClient", () => {
 
       const layer = SupabaseClient.make(customConfig)
 
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* SupabaseClient
         return client.config
       })
@@ -209,7 +209,7 @@ describe("SupabaseAuth", () => {
   // Test 1: Service Interface
   describe("Service Interface", () => {
     it("should provide auth methods", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const auth = yield* SupabaseAuth
         expect(auth.signInWithPassword).toBeDefined()
         expect(auth.signUp).toBeDefined()
@@ -230,7 +230,7 @@ describe("SupabaseAuth", () => {
   // Test 2: Sign in
   describe("Authentication", () => {
     it("should sign in with password", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const auth = yield* SupabaseAuth
         const result = yield* auth.signInWithPassword({
           email: "test@example.com",
@@ -248,7 +248,7 @@ describe("SupabaseAuth", () => {
 
     // Test 3: Sign up
     it("should sign up new user", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const auth = yield* SupabaseAuth
         const result = yield* auth.signUp({
           email: "new@example.com",
@@ -266,7 +266,7 @@ describe("SupabaseAuth", () => {
 
     // Test 4: Verify token
     it("should verify access token", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const auth = yield* SupabaseAuth
         const user = yield* auth.verifyToken("test-access-token")
         return user
@@ -283,7 +283,7 @@ describe("SupabaseAuth", () => {
   // Test 5: Session management
   describe("Session Management", () => {
     it("should get current session", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const auth = yield* SupabaseAuth
         const session = yield* auth.getSession()
         return session
@@ -292,7 +292,7 @@ describe("SupabaseAuth", () => {
       const result = await Effect.runPromise(
         program.pipe(Effect.provide(SupabaseAuth.Test))
       )
-      expect(Option.isSome(result)).toBe(true);
+      expect(Option.isSome(result)).toBe(true)
       if (Option.isSome(result)) {
         expect(result.value.access_token).toBe("test-access-token")
       }
@@ -300,7 +300,7 @@ describe("SupabaseAuth", () => {
 
     // Test 6: Get user
     it("should get current user", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const auth = yield* SupabaseAuth
         const user = yield* auth.getUser()
         return user
@@ -309,16 +309,16 @@ describe("SupabaseAuth", () => {
       const result = await Effect.runPromise(
         program.pipe(Effect.provide(SupabaseAuth.Test))
       )
-      expect(Option.isSome(result)).toBe(true);
+      expect(Option.isSome(result)).toBe(true)
     })
   })
 
   // Test 7: Layer composition
   describe("Layer Composition", () => {
     it("should compose Test layer", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const auth = yield* SupabaseAuth
-        yield* auth.signOut();
+        yield* auth.signOut()
         return true
       })
 
@@ -332,7 +332,7 @@ describe("SupabaseAuth", () => {
   // Test 8: getUserFromToken for RPC
   describe("RPC Integration", () => {
     it("should get user from token (for RPC middleware)", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const auth = yield* SupabaseAuth
         const user = yield* auth.getUserFromToken("bearer-token")
         return user
@@ -355,7 +355,7 @@ describe("SupabaseStorage", () => {
   // Test 1: Service Interface
   describe("Service Interface", () => {
     it("should provide storage methods", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
         expect(storage.upload).toBeDefined()
         expect(storage.download).toBeDefined()
@@ -376,7 +376,7 @@ describe("SupabaseStorage", () => {
   // Test 2: Upload
   describe("File Operations", () => {
     it("should upload file", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
         const result = yield* storage.upload(
           "test-bucket",
@@ -394,10 +394,10 @@ describe("SupabaseStorage", () => {
 
     // Test 3: Download
     it("should download file", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
         // First upload
-        yield* storage.upload("test-bucket", "download-test.txt", new Blob(["test"]));
+        yield* storage.upload("test-bucket", "download-test.txt", new Blob(["test"]))
         // Then download
         const blob = yield* storage.download("test-bucket", "download-test.txt")
         return blob
@@ -411,9 +411,9 @@ describe("SupabaseStorage", () => {
 
     // Test 4: List
     it("should list files in bucket", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
-        yield* storage.upload("test-bucket", "list-test.txt", new Blob(["test"]));
+        yield* storage.upload("test-bucket", "list-test.txt", new Blob(["test"]))
         const files = yield* storage.list("test-bucket")
         return files
       })
@@ -421,15 +421,15 @@ describe("SupabaseStorage", () => {
       const result = await Effect.runPromise(
         program.pipe(Effect.provide(SupabaseStorage.Test))
       )
-      expect(Array.isArray(result)).toBe(true);
+      expect(Array.isArray(result)).toBe(true)
     })
 
     // Test 5: Delete
     it("should delete file", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
-        yield* storage.upload("test-bucket", "delete-test.txt", new Blob(["test"]));
-        yield* storage.remove("test-bucket", ["delete-test.txt"]);
+        yield* storage.upload("test-bucket", "delete-test.txt", new Blob(["test"]))
+        yield* storage.remove("test-bucket", ["delete-test.txt"])
         return true
       })
 
@@ -443,7 +443,7 @@ describe("SupabaseStorage", () => {
   // Test 6: URL generation
   describe("URL Generation", () => {
     it("should create signed URL", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
         const url = yield* storage.createSignedUrl("test-bucket", "file.txt", {
           expiresIn: 3600,
@@ -459,7 +459,7 @@ describe("SupabaseStorage", () => {
 
     // Test 7: Public URL
     it("should get public URL", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
         const url = yield* storage.getPublicUrl("public-bucket", "file.txt")
         return url
@@ -476,10 +476,10 @@ describe("SupabaseStorage", () => {
   // Test 8: Bucket operations
   describe("Bucket Operations", () => {
     it("should list and manage buckets", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
         const buckets = yield* storage.listBuckets()
-        expect(Array.isArray(buckets)).toBe(true);
+        expect(Array.isArray(buckets)).toBe(true)
 
         // Create bucket
         const newBucket = yield* storage.createBucket("new-bucket", { public: true })
@@ -490,7 +490,7 @@ describe("SupabaseStorage", () => {
         expect(Option.isSome(bucket)).toBe(true)
 
         // Delete bucket
-        yield* storage.deleteBucket("new-bucket");
+        yield* storage.deleteBucket("new-bucket")
         return true
       })
 

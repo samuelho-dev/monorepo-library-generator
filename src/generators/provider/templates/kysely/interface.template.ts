@@ -104,7 +104,7 @@ export interface ${className}ServiceInterface<DB> {
    * @example
    * \`\`\`typescript
    * yield* kysely.transaction((tx) =>
-   *   Effect.gen(function* () {
+   *   Effect.gen(function*() {
    *     yield* kysely.query(() =>
    *       tx.insertInto("users").values({ name: "John" }).execute()
    *     )

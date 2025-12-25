@@ -31,8 +31,7 @@ Includes:
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Data", "Option"] },
-    { from: "@effect/schema", imports: ["Schema"] }
+    { from: "effect", imports: ["Data", "Option", "Schema"] }
   ])
   builder.addBlankLine()
 
@@ -156,7 +155,7 @@ export type RedisProviderError =
  */
 const SdkErrorSchema = Schema.Struct({
   message: Schema.optional(Schema.String),
-  code: Schema.optional(Schema.String),
+  code: Schema.optional(Schema.String)
 })
 
 /**

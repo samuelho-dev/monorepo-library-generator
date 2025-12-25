@@ -222,8 +222,7 @@ export function generateTracingModule() {
  * @module tracing
  */
 
-import { Effect, Option } from "effect"
-import { Schema } from "@effect/schema"
+import { Effect, Option, Schema } from "effect"
 
 ${generateTracingConfig()}
 

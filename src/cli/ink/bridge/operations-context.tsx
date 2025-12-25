@@ -8,8 +8,7 @@
  */
 
 import type React from 'react';
-import { createContext, useContext, useMemo } from 'react';
-
+import { createContext, useContext, useMemo } from 'react'
 import { getOptionsForType, type OptionConfig } from '../../interactive/config/options.config';
 import {
   validateExternalService,
@@ -18,7 +17,7 @@ import {
 } from '../../interactive/config/validation.config';
 import { executeWizardResult } from '../../interactive/execution';
 import { getCreationDescription, getFilePreview, getTargetDirectory } from '../../interactive/file-preview';
-import type { FilePreview, LibraryType, WizardOptions, } from '../../interactive/types';
+import type { FilePreview, LibraryType, WizardOptions, } from '../../interactive/types'
 
 /**
  * Operations interface - thin wrapper around existing functions
@@ -31,7 +30,7 @@ export interface WizardOperations {
     /** Validate a library name */
     validateName: (name: string) => ValidationResult;
     /** Validate an external service name */
-    validateExternalService: (name: string) => ValidationResult;
+    validateExternalService: (name: string) => ValidationResult
   };
   readonly preview: {
     /** Get file preview for a library configuration */
@@ -47,19 +46,19 @@ export interface WizardOperations {
       name: string
     ) => string;
     /** Get description of what will be created */
-    getCreationDescription: (type: LibraryType, name: string) => string;
+    getCreationDescription: (type: LibraryType, name: string) => string
   };
   readonly config: {
     /** Get available options for a library type */
-    getOptionsForType: (type: LibraryType) => readonly OptionConfig[];
+    getOptionsForType: (type: LibraryType) => readonly OptionConfig[]
   };
   readonly generation: {
     /** Execute library generation from wizard result */
-    execute: typeof executeWizardResult;
-  };
+    execute: typeof executeWizardResult
+  }
 }
 
-const OperationsContext = createContext<WizardOperations | null>(null);
+const OperationsContext = createContext<WizardOperations | null>(null)
 
 interface OperationsProviderProps {
   readonly children: React.ReactNode;
@@ -95,9 +94,9 @@ export function OperationsProvider({ children }: OperationsProviderProps) {
       },
     }),
     []
-  );
+  )
 
-  return <OperationsContext.Provider value={operations}>{children}</OperationsContext.Provider>;
+  return <OperationsContext.Provider value={operations}>{children}</OperationsContext.Provider>
 }
 
 /**
@@ -108,16 +107,16 @@ export function OperationsProvider({ children }: OperationsProviderProps) {
  * @example
  * ```tsx
  * function NameInput() {
- *   const { validation } = useOperations();
- *   const result = validation.validateName(name);
+ *   const { validation } = useOperations()
+ *   const result = validation.validateName(name)
  *   // ...
  * }
  * ```
  */
 export function useOperations(): WizardOperations {
-  const ops = useContext(OperationsContext);
+  const ops = useContext(OperationsContext)
   if (!ops) {
-    throw new Error('useOperations must be used within OperationsProvider');
+    throw new Error('useOperations must be used within OperationsProvider')
   }
   return ops;
 }

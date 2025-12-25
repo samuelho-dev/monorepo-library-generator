@@ -172,9 +172,7 @@ Type-safe environment variable access with Effect Config.
 ## Usage
 
 \`\`\`typescript
-import { env } from '${packageName}';
-
-// Server context: All variables accessible
+import { env } from '${packageName}'// Server context: All variables accessible
 env.DATABASE_URL    // Redacted<string>
 env.PORT            // number
 env.PUBLIC_API_URL  // string
@@ -196,15 +194,15 @@ import { createEnv, Config } from "./createEnv"
 export const env = createEnv({
   server: {
     DATABASE_URL: Config.redacted("DATABASE_URL"),
-    PORT: Config.number("PORT").pipe(Config.withDefault(3000)),
+    PORT: Config.number("PORT").pipe(Config.withDefault(3000))
   },
   client: {
-    PUBLIC_API_URL: Config.string("PUBLIC_API_URL"),
+    PUBLIC_API_URL: Config.string("PUBLIC_API_URL")
   },
   shared: {
-    NODE_ENV: Config.string("NODE_ENV").pipe(Config.withDefault("development")),
+    NODE_ENV: Config.string("NODE_ENV").pipe(Config.withDefault("development"))
   },
-  clientPrefix: "PUBLIC_",
+  clientPrefix: "PUBLIC_"
 })
 \`\`\`
 

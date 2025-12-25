@@ -12,12 +12,8 @@ Domain errors are defined in @samuelho-dev/contract-user - import directly from 
 This file only contains service-level errors specific to feature operations.
 
 For domain errors, import from contract:
-  import { UserNotFoundError, UserValidationError } from "@samuelho-dev/contract-user";
-
-For infrastructure errors, import from data-access:
-  import { UserTimeoutError, UserConnectionError } from "@samuelho-dev/data-access-user";
-
-Service Errors (defined here):
+  import { UserNotFoundError, UserValidationError } from "@samuelho-dev/contract-user"For infrastructure errors, import from data-access:
+  import { UserTimeoutError, UserConnectionError } from "@samuelho-dev/data-access-user"Service Errors (defined here):
   - UserServiceError - Orchestration/dependency failures
 
 @see @samuelho-dev/contract-user for domain error definitions
@@ -50,7 +46,7 @@ Service Errors (defined here):
  *     "Database connection failed",
  *     error
  *   ))
- * );
+ * )
  * ```
  */
 export class UserServiceError extends Data.TaggedError("UserServiceError")<{

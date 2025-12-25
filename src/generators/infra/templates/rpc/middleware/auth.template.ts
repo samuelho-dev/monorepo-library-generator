@@ -75,7 +75,7 @@ import {
   // Context Tags
   CurrentUser,
   AuthMethodContext,
-} from "${scope}/contract-auth";
+} from "${scope}/contract-auth"
 
 // Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
 export {
@@ -140,7 +140,7 @@ export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()(
   "@${fileName}/AuthMiddleware",
   {
     provides: CurrentUser,
-    failure: AuthError,
+    failure: AuthError
   }
 ) {}
 
@@ -175,22 +175,12 @@ export const AuthMiddlewareLive = Layer.effect(
 
         const { type: authMethod, token } = auth.value
 
-        // Store auth method in context for downstream handlers
-        yield* AuthMethodContext.set(authMethod)
-
         // Log authentication attempt (without exposing token)
         yield* Effect.logDebug(\`Authentication attempt using \${authMethod}\`)
 
         // Delegate to AuthVerifier (implemented by infra-auth)
-        const user = yield* verifier.verify(token).pipe(
-          Effect.catchAll((error) =>
-            Effect.gen(function*() {
-              // Log failed verification attempts
-              yield* Effect.logWarning(\`Authentication verification failed for \${authMethod}: \${error.message}\`)
-              return yield* Effect.fail(error)
-            })
-          )
-        )
+        // verifier.verify already returns Effect<CurrentUserData, AuthError>
+        const user = yield* verifier.verify(token)
 
         // Log successful authentication
         yield* Effect.logDebug(\`User authenticated: \${user.id} via \${authMethod}\`)

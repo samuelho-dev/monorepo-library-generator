@@ -47,7 +47,7 @@ function getEnvConfig() {
       endpoint: env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ?? env.OTEL_EXPORTER_OTLP_ENDPOINT ?? "http://localhost:4318/v1/metrics",
       exportIntervalMs: env.OTEL_METRICS_EXPORT_INTERVAL_MS ? Number.parseInt(env.OTEL_METRICS_EXPORT_INTERVAL_MS, 10) : 60000,
     },
-    resourceAttributes: {},
+    resourceAttributes: {}
   }
 }
 
@@ -71,9 +71,9 @@ function getEnvConfig() {
  *     metrics: { enabled: true, exportIntervalMs: 30000 },
  *   }),
  *   MyService.Live,
- * );
+ * )
  *
- * Effect.runPromise(program.pipe(Effect.provide(AppLayer)));
+ * Effect.runPromise(program.pipe(Effect.provide(AppLayer)))
  * ```
  */
 export function makeSdkLayer(config: ObservabilityConfig) {
@@ -86,18 +86,18 @@ export function makeSdkLayer(config: ObservabilityConfig) {
     spanProcessor: config.traces?.enabled !== false
       ? new BatchSpanProcessor(
           new OTLPTraceExporter({
-            url: config.traces?.endpoint ?? "http://localhost:4318/v1/traces",
+            url: config.traces?.endpoint ?? "http://localhost:4318/v1/traces"
           })
         )
       : undefined,
     metricReader: config.metrics?.enabled !== false
       ? new PeriodicExportingMetricReader({
           exporter: new OTLPMetricExporter({
-            url: config.metrics?.endpoint ?? "http://localhost:4318/v1/metrics",
+            url: config.metrics?.endpoint ?? "http://localhost:4318/v1/metrics"
           }),
           exportIntervalMillis: config.metrics?.exportIntervalMs ?? 60000,
         })
-      : undefined,
+      : undefined
   }))
 }
 
@@ -137,14 +137,14 @@ export const Dev = NodeSdk.layer(() => ({
   resource: {
     serviceName: env.OTEL_SERVICE_NAME ?? "dev-service",
     serviceVersion: "0.0.0-dev",
-    environment: "development",
+    environment: "development"
   },
   // In dev, OTEL SDK will attempt to export but gracefully handle failures
   spanProcessor: new BatchSpanProcessor(
     new OTLPTraceExporter({
       url: "http://localhost:4318/v1/traces",
     })
-  ),
+  )
 }))
 
 /**
@@ -183,23 +183,23 @@ export const Auto = Layer.suspend(() => {
  * const AppLayer = Layer.mergeAll(
  *   Observability.Auto,         // OTEL SDK based on NODE_ENV
  *   UserService.Live,
- * );
+ * )
  *
  * // With optional fiber tracking
  * const AppLayerWithFibers = Layer.mergeAll(
  *   Observability.Auto,
  *   Observability.FiberTrackingMinimal,  // Only track failures
  *   UserService.Live,
- * );
+ * )
  *
  * // Effect.withSpan() calls automatically export to OTEL
  * const program = Effect.gen(function*() {
  *   const result = yield* someOperation.pipe(
  *     Effect.withSpan("MyOperation", { attributes: { key: "value" } })
- *   );
+ *   )
  *   return result;
- * });
+ * })
  *
- * Effect.runPromise(program.pipe(Effect.provide(AppLayer)));
+ * Effect.runPromise(program.pipe(Effect.provide(AppLayer)))
  * ```
  */

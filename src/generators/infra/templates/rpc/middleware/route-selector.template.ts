@@ -62,9 +62,7 @@ import {
   RouteTag,
   type RouteType,
   type RpcWithRouteTag,
-} from "${scope}/contract-auth";
-
-// Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
+} from "${scope}/contract-auth"// Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
 export { RouteTag, type RouteType, type RpcWithRouteTag };
 `)
 
@@ -75,8 +73,8 @@ export { RouteTag, type RouteType, type RpcWithRouteTag };
  *
  * @example
  * \`\`\`typescript
- * const routeType = getRouteType(GetUser); // "public"
- * const middleware = selectMiddleware(routeType);
+ * const routeType = getRouteType(GetUser) // "public"
+ * const middleware = selectMiddleware(routeType)
  * \`\`\`
  */
 export function getRouteType<T extends RpcWithRouteTag>(rpc: T) {
@@ -129,19 +127,19 @@ export function detectRouteType(headers: Headers.Headers) {
  */
 export interface MiddlewareSelectorConfig {
   /** Middleware for public routes (optional, typically just RequestMeta) */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
   readonly publicMiddleware?: Layer.Layer<any, any, any>
 
   /** Middleware for protected routes (user auth) */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
   readonly protectedMiddleware: Layer.Layer<any, any, any>
 
   /** Middleware for service routes (S2S auth) */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
   readonly serviceMiddleware: Layer.Layer<any, any, any>
 
   /** Middleware applied to ALL routes (typically RequestMeta) */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
   readonly globalMiddleware?: Layer.Layer<any, any, any>
 }
 
@@ -157,10 +155,10 @@ export interface MiddlewareSelectorConfig {
  *   protectedMiddleware: AuthMiddlewareLive,
  *   serviceMiddleware: ServiceMiddlewareLive,
  *   globalMiddleware: RequestMetaMiddlewareLive,
- * });
+ * })
  *
  * // In router setup
- * const middleware = selectMiddleware(getRouteType(GetUser));
+ * const middleware = selectMiddleware(getRouteType(GetUser))
  * \`\`\`
  */
 export function createMiddlewareSelector(config: MiddlewareSelectorConfig) {
@@ -207,7 +205,7 @@ export function createMiddlewareSelector(config: MiddlewareSelectorConfig) {
  * const handlers = applyRouteMiddleware(UserRpcs, config, {
  *   GetUser: (input) => userService.get(input.id),
  *   CreateUser: (input) => userService.create(input),
- * });
+ * })
  * \`\`\`
  */
 export function applyRouteMiddleware<Rpcs extends Record<string, RpcWithRouteTag>>(

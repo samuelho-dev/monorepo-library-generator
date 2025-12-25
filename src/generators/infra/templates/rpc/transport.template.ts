@@ -39,13 +39,12 @@ All transports share the same handler definitions - only the transport layer dif
   builder.addImports([
     {
       from: "effect",
-      imports: ["Effect", "Layer", "Context", "Option", "Cause", "Exit"]
+      imports: ["Effect", "Layer", "Context", "Option", "Cause", "Exit", "Schema"]
     },
     {
       from: "@effect/platform",
       imports: ["HttpClient", "HttpClientRequest"]
     },
-    { from: "@effect/schema", imports: ["Schema"] },
     { from: "./errors", imports: ["RpcInfraError"] }
   ])
 
@@ -137,16 +136,16 @@ export interface HttpRpcClientConfig {
  * const HttpClientLive = HttpRpcClient.layer({
  *   baseUrl: "https://api.example.com/rpc",
  *   headers: { "x-api-key": env.API_KEY }
- * });
+ * })
  *
- * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String })
  *
  * // Use in Effect
  * const program = Effect.gen(function*() {
  *   const client = yield* HttpRpcClient;
- *   const user = yield* client.call("getUser", { id: "123" }, UserSchema);
+ *   const user = yield* client.call("getUser", { id: "123" }, UserSchema)
  *   return user;
- * }).pipe(Effect.provide(HttpClientLive));
+ * }).pipe(Effect.provide(HttpClientLive))
  * \`\`\`
  */
 export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
@@ -319,7 +318,7 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
  *
  * export const { POST } = createNextHandler({
  *   handlers: UserHandlers,
- * });
+ * })
  * \`\`\`
  */
 /**
@@ -523,14 +522,14 @@ const checkTransportError = (body: unknown) => {
  * const HttpClientLive = RpcTransportClient.layer({
  *   mode: "http",
  *   baseUrl: "https://api.example.com/rpc"
- * });
+ * })
  *
- * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String })
  *
  * const program = Effect.gen(function*() {
  *   const client = yield* RpcTransportClient;
- *   return yield* client.call("getUser", { id: "123" }, UserSchema);
- * });
+ *   return yield* client.call("getUser", { id: "123" }, UserSchema)
+ * })
  * \`\`\`
  */
 export class RpcTransportClient extends Context.Tag("RpcTransportClient")<

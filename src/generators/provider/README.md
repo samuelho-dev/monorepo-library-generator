@@ -38,7 +38,7 @@ export class StripeService extends Context.Tag("StripeService")<
 // Layer with resource management
 export const StripeServiceLive = Layer.scoped(
   StripeService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* StripeConfig
     const stripe = new Stripe(config.apiKey)
 
@@ -84,7 +84,7 @@ export const RedisServiceLive = Layer.succeed(
 // ✅ GOOD: Scoped layer with cleanup
 export const RedisServiceLive = Layer.scoped(
   RedisService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const client = yield* Effect.acquireRelease(
       Effect.sync(() => new Redis()),
       (client) => Effect.sync(() => client.disconnect())
@@ -128,7 +128,7 @@ export class KyselyService extends Context.Tag("KyselyService")<
 
 export const KyselyServiceLive = Layer.scoped(
   KyselyService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* KyselyConfig
 
     const db = yield* Effect.acquireRelease(
@@ -207,7 +207,7 @@ import Stripe from "stripe"
 
 export const StripeServiceLive = Layer.scoped(
   StripeService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* StripeConfig
     const stripe = new Stripe(config.apiKey)
 
@@ -232,7 +232,7 @@ export const StripeServiceLive = Layer.scoped(
 ### Use in Feature
 
 ```typescript
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const stripe = yield* StripeService
   return yield* stripe.createCharge({ amount: 1000, currency: "usd" })
 }).pipe(Effect.provide(StripeServiceLive))
@@ -265,7 +265,7 @@ const MockStripeService = Layer.succeed(
   })
 )
 
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const stripe = yield* StripeService
   return yield* stripe.createCharge({ amount: 1000, currency: "usd" })
 }).pipe(Effect.provide(MockStripeService))

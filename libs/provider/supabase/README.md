@@ -1,6 +1,6 @@
 # @samuelho-dev/provider-supabase
 
-Supabase
+Supabase provider for auth, storage, and client operations
 
 ## Overview
 

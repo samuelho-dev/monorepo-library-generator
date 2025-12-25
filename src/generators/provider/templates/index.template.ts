@@ -117,7 +117,7 @@ Usage:
   builder.addComment("import { Effect } from 'effect';")
   builder.addComment(`import { ${className} } from '${packageName}';`)
   builder.addComment("")
-  builder.addComment("const program = Effect.gen(function* () {")
+  builder.addComment("const program = Effect.gen(function*() {")
   builder.addComment(`  const service = yield* ${className}`)
   builder.addComment("  // Use service methods...")
   builder.addComment("})")

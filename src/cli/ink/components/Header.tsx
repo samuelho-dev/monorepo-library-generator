@@ -6,9 +6,8 @@
  * @module monorepo-library-generator/cli/ink/components/Header
  */
 
-import { Box, Text } from 'ink';
-
-import { colors } from '../theme/colors';
+import { Box, Text } from 'ink'
+import { colors } from '../theme/colors'
 
 interface HeaderProps {
   readonly librariesRoot: string;
@@ -16,7 +15,7 @@ interface HeaderProps {
 
 export function Header({ librariesRoot }: HeaderProps) {
   const title = 'Monorepo Library Generator - Wizard';
-  const border = '='.repeat(42);
+  const border = '='.repeat(42)
 
   return (
     <Box flexDirection="column" marginBottom={1}>
@@ -29,5 +28,5 @@ export function Header({ librariesRoot }: HeaderProps) {
         <Text>/</Text>
       </Box>
     </Box>
-  );
+  )
 }

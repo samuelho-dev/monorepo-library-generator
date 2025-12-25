@@ -73,22 +73,22 @@ Use Cases:
  * const JobSchema = Schema.Struct({
  *   type: Schema.String,
  *   data: Schema.Unknown
- * });
+ * })
  *
  * const program = Effect.gen(function*() {
  *   const queue = yield* ${className}Service;
- *   const jobQueue = yield* queue.bounded(1000, JobSchema, { name: "jobs" });
+ *   const jobQueue = yield* queue.bounded(1000, JobSchema, { name: "jobs" })
  *
  *   // Producer (can be on different instance)
- *   yield* jobQueue.offer({ type: "process", data: "..." });
+ *   yield* jobQueue.offer({ type: "process", data: "..." })
  *
  *   // Consumer (can be on different instance)
  *   const job = yield* jobQueue.take;
- *   yield* processJob(job);
+ *   yield* processJob(job)
  * }).pipe(
  *   Effect.provide(${className}RedisLayer),
  *   Effect.provide(Redis.Live) // or Redis.Test for testing
- * );
+ * )
  * \`\`\`
  */
 export const ${className}RedisLayer = Layer.effect(

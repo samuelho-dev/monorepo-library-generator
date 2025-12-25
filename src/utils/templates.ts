@@ -336,7 +336,7 @@ export function createTypeGuardFunctions(config: TypeGuardConfig) {
     error !== null &&
     "_tag" in error &&
     error._tag === "${fullTypeName}"
-  );
+  )
 }`
     })
     .join("\n\n")
@@ -937,30 +937,27 @@ export interface StandardErrorExportConfig {
 /**
  * Generates standard error exports for data-access layer
  *
+ * CONTRACT-FIRST ARCHITECTURE:
+ * - Domain errors (NotFound, Validation, etc.) come from contract library - NOT re-exported here
+ * - Only infrastructure errors are exported from data-access layer
+ *
  * Exports:
- * - Domain errors (re-exported from contract): NotFoundError, ValidationError, etc.
  * - Infrastructure errors: ConnectionError, TimeoutError, TransactionError
  */
 export function generateStandardErrorExports(config: StandardErrorExportConfig) {
-  const { className, importPath, unionTypeSuffix = "RepositoryError" } = config
+  const { className, importPath } = config
 
-  // All errors merged and sorted alphabetically (dprint requirement)
-  // Domain errors (re-exported from contract): AlreadyExists, NotFound, Permission, Validation
-  // Infrastructure errors (data-access layer): Connection, Timeout, Transaction
-  const allErrors = [
-    `${className}AlreadyExistsError`,
+  // Only infrastructure errors - domain errors come from contract
+  const infraErrors = [
     `${className}ConnectionError`,
-    `${className}NotFoundError`,
-    `${className}PermissionError`,
     `${className}TimeoutError`,
-    `${className}TransactionError`,
-    `${className}ValidationError`
+    `${className}TransactionError`
   ]
 
-  let output = `export { ${allErrors.join(", ")} } from "${importPath}"\n`
-  // Type exports must be alphabetically sorted
+  let output = `export { ${infraErrors.join(", ")} } from "${importPath}"\n`
+  // Type exports - only data-access specific types
   output +=
-    `export type { ${className}DataAccessError, ${className}InfrastructureError, ${className}${unionTypeSuffix} } from "${importPath}"`
+    `export type { ${className}DataAccessError, ${className}InfrastructureError } from "${importPath}"`
 
   return output
 }

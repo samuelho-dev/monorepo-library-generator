@@ -114,3 +114,14 @@ export {
 // Sub-modules are imported as namespaces to preserve module boundaries
 // Import specific items: import { Authentication } from "@scope/contract-name"
 // Then use: Authentication.AuthenticationNotFoundError
+
+
+// ============================================================================
+// Sub-Module Namespace Exports (Hybrid DDD Pattern)
+// ============================================================================
+
+import * as AuthenticationModule from "./authentication"
+import * as ProfileModule from "./profile"
+
+export { AuthenticationModule as Authentication }
+export { ProfileModule as Profile }

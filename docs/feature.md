@@ -333,9 +333,7 @@ libs/feature/{name}/
 ```typescript
 // src/index.ts - ONLY shared types/errors (no runtime code)
 export type { SharedMetrics } from "./lib/shared/types";
-export * from "./lib/server/errors";
-
-// src/server.ts - ALL server-side exports (ALWAYS create)
+export * from "./lib/server/errors"// src/server.ts - ALL server-side exports (ALWAYS create)
 export { ProductService } from "./lib/server/service";
 export * from "./lib/server/commands";    // If CQRS
 export * from "./lib/server/queries";     // If CQRS
@@ -407,9 +405,7 @@ Context tags are defined once in the infrastructure layer and accessed by all RP
 
 ```typescript
 // libs/infra/rpc/src/lib/context/current-user.ts
-import { Context } from "effect";
-
-// User context provided by authentication infrastructure
+import { Context } from "effect"// User context provided by authentication infrastructure
 export interface User {
   readonly id: string;
   readonly email: string;
@@ -453,18 +449,14 @@ import { RpcRequest } from "@effect/rpc/RpcRequest";
 import type { HandlersFrom } from "@effect/rpc/RpcHandlers";
 import { Effect } from "effect";
 import { CurrentUser } from "@creativetoolkits/infra-rpc/server";
-import { PaymentService } from "./server/service";
-
-// Import RPC schemas from contract library
+import { PaymentService } from "./server/service"// Import RPC schemas from contract library
 import {
   GetPaymentStatusRequest,
   GetPaymentStatusResponse,
   ProcessPaymentRequest,
   ProcessPaymentResponse,
   PaymentRpcError,
-} from "@creativetoolkits/contract-payment/rpc";
-
-/**
+} from "@creativetoolkits/contract-payment/rpc"/**
  * Payment RPC Group Definition
  *
  * Defines RPC procedures using @effect/rpc 0.69.5 API.
@@ -478,7 +470,7 @@ export const PaymentRpcs = RpcGroup.make("PaymentRpcs", {
   getPaymentStatus: RpcRequest.make({
     request: GetPaymentStatusRequest,
     response: GetPaymentStatusResponse,
-    error: PaymentRpcError,
+    error: PaymentRpcError
   }),
 
   verifyPaymentIntent: RpcRequest.make({
@@ -490,7 +482,7 @@ export const PaymentRpcs = RpcGroup.make("PaymentRpcs", {
       verified: Schema.Boolean,
       status: Schema.String,
     }),
-    error: PaymentRpcError,
+    error: PaymentRpcError
   }),
 
   // ========================================
@@ -500,7 +492,7 @@ export const PaymentRpcs = RpcGroup.make("PaymentRpcs", {
   processPayment: RpcRequest.make({
     request: ProcessPaymentRequest,
     response: ProcessPaymentResponse,
-    error: PaymentRpcError,
+    error: PaymentRpcError
   }),
 
   refundPayment: RpcRequest.make({
@@ -513,7 +505,7 @@ export const PaymentRpcs = RpcGroup.make("PaymentRpcs", {
       status: Schema.Literal("refunded"),
       amount: Schema.Number,
     }),
-    error: PaymentRpcError,
+    error: PaymentRpcError
   }),
 
   listUserPayments: RpcRequest.make({
@@ -522,9 +514,9 @@ export const PaymentRpcs = RpcGroup.make("PaymentRpcs", {
       limit: Schema.Number,
     }),
     response: Schema.Array(Schema.Unknown), // Should reference contract Payment schema
-    error: PaymentRpcError,
-  }),
-});
+    error: PaymentRpcError
+  })
+})
 
 // ============================================
 // STEP 2B: Handler Implementation
@@ -535,13 +527,13 @@ export const PaymentHandlers: HandlersFrom<typeof PaymentRpcs> = {
   getPaymentStatus: (req) =>
     Effect.gen(function*() {
       const service = yield* PaymentService;
-      const payment = yield* service.getPayment(req.paymentId);
+      const payment = yield* service.getPayment(req.paymentId)
 
       return {
         status: payment.status,
         amount: payment.amount,
-        createdAt: payment.createdAt,
-      };
+        createdAt: payment.createdAt
+      }
     }),
 
   verifyPaymentIntent: (req) =>
@@ -550,51 +542,45 @@ export const PaymentHandlers: HandlersFrom<typeof PaymentRpcs> = {
       const verified = yield* service.verifyPaymentIntent(
         req.paymentId,
         req.clientSecret,
-      );
+      )
 
       return {
         verified,
-        status: verified ? "verified" : "invalid",
-      };
+        status: verified ? "verified" : "invalid"
+      }
     }),
 
   // Protected endpoints with CurrentUser
   processPayment: (req) =>
     Effect.gen(function*() {
       const user = yield* CurrentUser;
-      const service = yield* PaymentService;
-
-      return yield* service.processPayment({
+      const service = yield* PaymentService      return yield* service.processPayment({
         ...req,
         userId: user.id,
         userEmail: user.email,
-      });
+      })
     }),
 
   refundPayment: (req) =>
     Effect.gen(function*() {
       const user = yield* CurrentUser;
-      const service = yield* PaymentService;
-
-      return yield* service.refundPayment({
+      const service = yield* PaymentService      return yield* service.refundPayment({
         paymentId: req.paymentId,
         userId: user.id,
         reason: req.reason,
-      });
+      })
     }),
 
   listUserPayments: (req) =>
     Effect.gen(function*() {
       const user = yield* CurrentUser;
-      const service = yield* PaymentService;
-
-      return yield* service.listPayments({
+      const service = yield* PaymentService      return yield* service.listPayments({
         userId: user.id,
         page: req.page,
         limit: req.limit,
-      });
+      })
     }),
-};
+}
 
 export type PaymentRpcRouter = typeof PaymentRpcs;
 ```
@@ -633,9 +619,7 @@ Services implement business logic and orchestrate repositories. This is where au
 import { Context, Effect, Layer, Option } from "effect";
 import { PaymentRepository } from "@creativetoolkits/contract-payment";
 import { StripeService } from "@creativetoolkits/provider-stripe/server";
-import type { Payment, PaymentError } from "@creativetoolkits/contract-payment";
-
-export class PaymentService extends Context.Tag("PaymentService")<
+import type { Payment, PaymentError } from "@creativetoolkits/contract-payment"export class PaymentService extends Context.Tag("PaymentService")<
   PaymentService,
   {
     readonly processPayment: (params: {
@@ -650,7 +634,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
         status: "pending";
       },
       PaymentError
-    >;
+    >
 
     readonly refundPayment: (params: {
       paymentId: string;
@@ -663,31 +647,29 @@ export class PaymentService extends Context.Tag("PaymentService")<
         amount: number;
       },
       PaymentError
-    >;
+    >
 
     readonly listPayments: (params: {
       userId: string;
       page: number;
       limit: number;
-    }) => Effect.Effect<readonly Payment[], PaymentError>;
+    }) => Effect.Effect<readonly Payment[], PaymentError>
 
     readonly getPayment: (
       paymentId: string,
-    ) => Effect.Effect<Payment, PaymentError>;
+    ) => Effect.Effect<Payment, PaymentError>
 
     readonly verifyPaymentIntent: (
       paymentId: string,
       clientSecret: string,
-    ) => Effect.Effect<boolean, PaymentError>;
+    ) => Effect.Effect<boolean, PaymentError>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
       const stripe = yield* StripeService;
-      const paymentRepo = yield* PaymentRepository;
-
-      return {
+      const paymentRepo = yield* PaymentRepository      return {
         processPayment: (params) =>
           Effect.gen(function*() {
             // Business logic: Create Stripe payment intent
@@ -698,7 +680,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
                 userId: params.userId,
                 productId: params.productId,
               },
-            });
+            })
 
             // Persistence: Store payment via repository
             const payment = yield* paymentRepo.create({
@@ -708,7 +690,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
               amount: params.amount,
               status: "pending",
               stripePaymentIntentId: paymentIntent.id,
-            });
+            })
 
             // Extract client secret with proper error handling
             const clientSecret = paymentIntent.client_secret;
@@ -717,7 +699,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
                 new PaymentProcessingError({
                   message: "Stripe payment intent missing client_secret",
                 })
-              );
+              )
             }
 
             return {
@@ -730,7 +712,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
         refundPayment: (params) =>
           Effect.gen(function*() {
             // Authorization: Verify user owns this payment
-            const paymentOpt = yield* paymentRepo.findById(params.paymentId);
+            const paymentOpt = yield* paymentRepo.findById(params.paymentId)
             const payment = yield* Option.match(paymentOpt, {
               onNone: () =>
                 Effect.fail(
@@ -739,24 +721,24 @@ export class PaymentService extends Context.Tag("PaymentService")<
                   }),
                 ),
               onSome: Effect.succeed,
-            });
+            })
 
             if (payment.userId !== params.userId) {
               return yield* Effect.fail(
                 new ForbiddenError({
                   message: "You can only refund your own payments",
                 }),
-              );
+              )
             }
 
             // Business logic: Process refund via Stripe
             const refund = yield* stripe.refunds.create({
               payment_intent: payment.stripePaymentIntentId,
               reason: params.reason || "requested_by_customer",
-            });
+            })
 
             // Persistence: Update payment status
-            yield* paymentRepo.updateStatus(params.paymentId, "refunded");
+            yield* paymentRepo.updateStatus(params.paymentId, "refunded")
 
             return {
               refundId: refund.id,
@@ -771,28 +753,28 @@ export class PaymentService extends Context.Tag("PaymentService")<
             return yield* paymentRepo.findByUser(params.userId, {
               page: params.page,
               limit: params.limit,
-            });
+            })
           }),
 
         getPayment: (paymentId) =>
           Effect.gen(function*() {
-            const paymentOpt = yield* paymentRepo.findById(paymentId);
+            const paymentOpt = yield* paymentRepo.findById(paymentId)
             return yield* Option.match(paymentOpt, {
               onNone: () =>
                 Effect.fail(new PaymentNotFoundError({ paymentId })),
               onSome: Effect.succeed,
-            });
+            })
           }),
 
         verifyPaymentIntent: (paymentId, clientSecret) =>
           Effect.gen(function*() {
             // Verification logic via Stripe
-            const intent = yield* stripe.paymentIntents.retrieve(paymentId);
+            const intent = yield* stripe.paymentIntents.retrieve(paymentId)
             return intent.client_secret === clientSecret;
-          }),
-      };
+          })
+      } ;
     }),
-  );
+  )
 
   static readonly Test = Layer.succeed(this, {
     // Placeholder implementations - provide your own test mocks
@@ -815,8 +797,8 @@ export class PaymentService extends Context.Tag("PaymentService")<
     verifyPaymentIntent: () =>
       Effect.dieMessage(
         "Test layer not implemented. Provide your own test mock"
-      ),
-  });
+      )
+  })
 }
 ```
 
@@ -842,9 +824,7 @@ import { PaymentService } from "@creativetoolkits/feature-payment/server";
 import { CurrentUser } from "@creativetoolkits/infra-rpc/server";
 import { PaymentRepositoryLive } from "@creativetoolkits/data-access-payment/server";
 import { StripeServiceLive } from "@creativetoolkits/provider-stripe/server";
-import { authenticateRequest } from "../auth/middleware";
-
-/**
+import { authenticateRequest } from "../auth/middleware"/**
  * Payment RPC Layer
  *
  * Provides CurrentUser context by authenticating each request.
@@ -857,7 +837,7 @@ export const PaymentRpcLive = RpcRouter.toHandler(PaymentRpcs).pipe(
       CurrentUser,
       Effect.gen(function*() {
         // App-specific authentication logic
-        const user = yield* authenticateRequest();
+        const user = yield* authenticateRequest()
         return user;
       }),
     ),
@@ -866,12 +846,12 @@ export const PaymentRpcLive = RpcRouter.toHandler(PaymentRpcs).pipe(
   Layer.provide(PaymentService.Live),
   Layer.provide(PaymentRepositoryLive),
   Layer.provide(StripeServiceLive),
-);
+)
 
 // HTTP adapter for Fastify/Express
 export const PaymentRpcHttpHandler = HttpRpcRouter.toHttpApp(PaymentRpcs).pipe(
   Layer.provide(PaymentRpcLive),
-);
+)
 ```
 
 **Layer Composition** ✅:
@@ -888,29 +868,25 @@ Modern @effect/rpc 0.69.5 provides type-safe client creation.
 ```typescript
 // apps/web/src/lib/rpc/payment-client.ts
 import { HttpRpcClient } from "@effect/rpc-http";
-import { PaymentRpcs } from "@creativetoolkits/feature-payment/client";
-
-// Create typed RPC client
+import { PaymentRpcs } from "@creativetoolkits/feature-payment/client"// Create typed RPC client
 export const PaymentRpcClientLive = HttpRpcClient.layer(PaymentRpcs, {
-  url: "/api/rpc/payment",
-});
+  url: "/api/rpc/payment"
+})
 
 // Usage in application
 const program = Effect.gen(function*() {
-  const client = yield* PaymentRpcs;
-
-  // Type-safe RPC calls with full inference
-  const status = yield* client.getPaymentStatus({ paymentId: "pay_123" });
-  console.log(status.status); // "pending" | "succeeded" | "failed"
+  const client = yield* PaymentRpcs  // Type-safe RPC calls with full inference
+  const status = yield* client.getPaymentStatus({ paymentId: "pay_123" })
+  console.log(status.status) // "pending" | "succeeded" | "failed"
 
   const result = yield* client.processPayment({
     productId: "prod_123",
-    amount: 1000,
-  });
-  console.log(result.clientSecret); // string
-});
+    amount: 1000
+  })
+  console.log(result.clientSecret) // string
+})
 
-Effect.runPromise(program.pipe(Effect.provide(PaymentRpcClientLive)));
+Effect.runPromise(program.pipe(Effect.provide(PaymentRpcClientLive)))
 ```
 
 ### Complete Architecture Flow
@@ -1013,9 +989,7 @@ import { Context, Effect, Layer } from "effect";
 import { ProductRepository } from "@creativetoolkits/contract-product";
 import { UserRepository } from "@creativetoolkits/contract-user";
 import { StripeService } from "@creativetoolkits/provider-stripe/server";
-import { DatabaseService } from "@creativetoolkits/infra-database/server";
-
-// Service with inline interface using Context.Tag (Modern Effect 3.0+ pattern)
+import { DatabaseService } from "@creativetoolkits/infra-database/server"// Service with inline interface using Context.Tag (Modern Effect 3.0+ pattern)
 export class PaymentService extends Context.Tag("PaymentService")<
   PaymentService,
   {
@@ -1023,16 +997,16 @@ export class PaymentService extends Context.Tag("PaymentService")<
       userId: string;
       productId: string;
       amount: number;
-    }) => Effect.Effect<PaymentResult, PaymentError>;
+    }) => Effect.Effect<PaymentResult, PaymentError>
 
     readonly refundPayment: (params: {
       paymentId: string;
       reason?: string;
-    }) => Effect.Effect<RefundResult, RefundError>;
+    }) => Effect.Effect<RefundResult, RefundError>
 
     readonly getPaymentHistory: (
       userId: string,
-    ) => Effect.Effect<readonly Payment[], DatabaseError>;
+    ) => Effect.Effect<readonly Payment[], DatabaseError>
   }
 >() {}
 ```
@@ -1050,16 +1024,16 @@ export class PaymentService extends Context.Tag("PaymentService")<
       userId: string;
       productId: string;
       amount: number;
-    }) => Effect.Effect<PaymentResult, PaymentError>;
+    }) => Effect.Effect<PaymentResult, PaymentError>
 
     readonly refundPayment: (params: {
       paymentId: string;
       reason?: string;
-    }) => Effect.Effect<RefundResult, RefundError>;
+    }) => Effect.Effect<RefundResult, RefundError>
 
     readonly getPaymentHistory: (
       userId: string,
-    ) => Effect.Effect<readonly Payment[], DatabaseError>;
+    ) => Effect.Effect<readonly Payment[], DatabaseError>
   }
 >() {
   static readonly Live = Layer.effect(
@@ -1083,7 +1057,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
                   onSome: Effect.succeed,
                 }),
               ),
-            );
+            )
 
             // Validate product exists
             const product = yield* productRepo.findById(params.productId).pipe(
@@ -1096,7 +1070,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
                   onSome: Effect.succeed,
                 }),
               ),
-            );
+            )
 
             // Create Stripe payment intent
             const payment = yield* stripe.paymentIntents.create({
@@ -1106,7 +1080,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
                 userId: params.userId,
                 productId: params.productId,
               },
-            });
+            })
 
             // Record payment in database
             yield* database.transaction((tx) =>
@@ -1117,15 +1091,15 @@ export class PaymentService extends Context.Tag("PaymentService")<
                   productId: params.productId,
                   amount: params.amount,
                   status: "pending",
-                });
+                })
 
                 yield* tx.insert("payment_events", {
                   paymentId: payment.id,
                   type: "created",
                   timestamp: new Date(),
-                });
+                })
               }),
-            );
+            )
 
             return {
               paymentId: payment.id,
@@ -1155,13 +1129,13 @@ export class PaymentService extends Context.Tag("PaymentService")<
                         }),
                       ),
                 ),
-              );
+              )
 
             // Process refund through Stripe
             const refund = yield* stripe.refunds.create({
               payment_intent: payment.stripe_payment_id,
               reason: params.reason || "requested_by_customer",
-            });
+            })
 
             // Update payment status in database
             yield* database.transaction((tx) =>
@@ -1170,16 +1144,16 @@ export class PaymentService extends Context.Tag("PaymentService")<
                   .update("payments")
                   .set({ status: "refunded", refundedAt: new Date() })
                   .where("id", "=", params.paymentId)
-                  .execute();
+                  .execute()
 
                 yield* tx.insert("payment_events", {
                   paymentId: params.paymentId,
                   type: "refunded",
                   timestamp: new Date(),
                   metadata: { refundId: refund.id, reason: params.reason },
-                });
+                })
               }),
-            );
+            )
 
             return {
               refundId: refund.id,
@@ -1196,10 +1170,10 @@ export class PaymentService extends Context.Tag("PaymentService")<
               .orderBy("createdAt", "desc")
               .selectAll()
               .execute(),
-          ),
-      };
+          )
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -1212,19 +1186,15 @@ Operations compose multiple services to implement complex business logic:
 import { Effect, pipe } from "effect";
 import { PaymentService } from "../service";
 import { InventoryService } from "@creativetoolkits/feature-inventory/server";
-import { EmailService } from "@creativetoolkits/infra-messaging/server";
-
-export const checkoutOperation = (params: CheckoutParams) =>
+import { EmailService } from "@creativetoolkits/infra-messaging/server"export const checkoutOperation = (params: CheckoutParams) =>
   Effect.gen(function*() {
     const payment = yield* PaymentService;
     const inventory = yield* InventoryService;
-    const email = yield* EmailService;
-
-    // Reserve inventory with timeout
+    const email = yield* EmailService    // Reserve inventory with timeout
     const reservation = yield* inventory.reserve({
       items: params.items,
       duration: "15 minutes",
-    });
+    })
 
     // Process payment with automatic inventory release on failure
     const result = yield* pipe(
@@ -1241,7 +1211,7 @@ export const checkoutOperation = (params: CheckoutParams) =>
         // Release inventory on failure
         inventory.release(reservation.id),
       ),
-    );
+    )
 
     // Send confirmation email (fire and forget)
     yield* email
@@ -1252,10 +1222,10 @@ export const checkoutOperation = (params: CheckoutParams) =>
       })
       .pipe(
         Effect.fork, // Run in background
-      );
+      )
 
-    return result;
-  });
+    return result
+  })
 ```
 
 ## Service Orchestration Patterns
@@ -1285,39 +1255,35 @@ import { Effect } from "effect";
 import { ProductRepository } from "@creativetoolkits/contract-product";
 import { ReviewRepository } from "@creativetoolkits/contract-review";
 import { SellerRepository } from "@creativetoolkits/contract-seller";
-import { AnalyticsService } from "@creativetoolkits/feature-analytics/server";
-
-export const getProductDetail = (productId: string) =>
+import { AnalyticsService } from "@creativetoolkits/feature-analytics/server"export const getProductDetail = (productId: string) =>
   Effect.gen(function*() {
     const productRepo = yield* ProductRepository;
     const reviewRepo = yield* ReviewRepository;
     const sellerRepo = yield* SellerRepository;
-    const analytics = yield* AnalyticsService;
-
-    // Execute all queries concurrently using Effect.all
+    const analytics = yield* AnalyticsService    // Execute all queries concurrently using Effect.all
     const { product, reviews, seller, viewCount } = yield* Effect.all(
       {
         product: productRepo.findById(productId),
         reviews: reviewRepo.findByProduct(productId),
         seller: Effect.gen(function*() {
-          const prod = yield* productRepo.findById(productId);
-          return yield* sellerRepo.findById(prod.sellerId);
+          const prod = yield* productRepo.findById(productId)
+          return yield* sellerRepo.findById(prod.sellerId)
         }),
-        viewCount: analytics.getProductViews(productId),
+        viewCount: analytics.getProductViews(productId)
       },
       { concurrency: "unbounded" },
-    ); // All run in parallel
+    ) // All run in parallel
 
     // Track view asynchronously (fire-and-forget)
-    yield* analytics.trackProductView(productId).pipe(Effect.fork); // Run in background
+    yield* analytics.trackProductView(productId).pipe(Effect.fork) // Run in background
 
     return {
       product,
       reviews,
       seller,
       analytics: { viewCount },
-    };
-  });
+    }
+  })
 ```
 
 ### Sequential Service Orchestration
@@ -1331,31 +1297,29 @@ export const fulfillOrder = (orderId: string) =>
     const orders = yield* OrderRepository;
     const inventory = yield* InventoryService;
     const shipping = yield* ShippingService;
-    const email = yield* EmailService;
-
-    // Step 1: Validate order
-    const order = yield* orders.findById(orderId);
+    const email = yield* EmailService    // Step 1: Validate order
+    const order = yield* orders.findById(orderId)
 
     // Step 2: Reserve inventory (depends on order)
-    const reservation = yield* inventory.reserve(order.items);
+    const reservation = yield* inventory.reserve(order.items)
 
     // Step 3: Create shipment (depends on reservation)
     const shipment = yield* shipping.createShipment({
       orderId,
       items: reservation.items,
       address: order.shippingAddress,
-    });
+    })
 
     // Step 4: Update order status (depends on shipment)
-    yield* orders.updateStatus(orderId, "shipped");
+    yield* orders.updateStatus(orderId, "shipped")
 
     // Step 5: Send notification (can be async)
     yield* email
       .sendShipmentNotification(order.customerEmail, shipment)
-      .pipe(Effect.fork);
+      .pipe(Effect.fork)
 
-    return { orderId, shipmentId: shipment.id };
-  });
+    return { orderId, shipmentId: shipment.id }
+  })
 ```
 
 ## Caching Strategies for Feature Services
@@ -1382,20 +1346,20 @@ Use for **pure computations** where same input always produces same output:
 export const calculateDiscount = (tier: string, amount: number) =>
   Effect.gen(function*() {
     const rules = yield* DiscountRulesRepository;
-    const tierRules = yield* rules.findByTier(tier);
+    const tierRules = yield* rules.findByTier(tier)
 
     // Expensive calculation
     const discount = tierRules.rules.reduce(
       (acc, rule) => acc + calculateRule(rule, amount),
       0,
-    );
+    )
 
-    return discount;
-  }).pipe(Effect.cached); // ← Cache indefinitely
+    return discount
+  }).pipe(Effect.cached) // ← Cache indefinitely
 
 // Usage - cached per (tier, amount) combination
-const discount1 = yield* calculateDiscount("gold", 100); // Fresh
-const discount2 = yield* calculateDiscount("gold", 100); // Cached!
+const discount1 = yield* calculateDiscount("gold", 100) // Fresh
+const discount2 = yield* calculateDiscount("gold", 100) // Cached!
 ```
 
 **When to use:**
@@ -1414,15 +1378,15 @@ Use for **frequently accessed data** that changes periodically:
 export const getFeaturedProducts = () =>
   Effect.gen(function*() {
     const repo = yield* ProductRepository;
-    const products = yield* repo.findByCriteria({ featured: true });
-    return products;
-  }).pipe(Effect.cachedWithTTL("10 minutes")); // ← Refresh every 10 minutes
+    const products = yield* repo.findByCriteria({ featured: true })
+    return products
+  }).pipe(Effect.cachedWithTTL("10 minutes")) // ← Refresh every 10 minutes
 
 // Usage
-const products1 = yield* getFeaturedProducts(); // Fresh from DB
-const products2 = yield* getFeaturedProducts(); // Cached
+const products1 = yield* getFeaturedProducts() // Fresh from DB
+const products2 = yield* getFeaturedProducts() // Cached
 // ... 11 minutes later ...
-const products3 = yield* getFeaturedProducts(); // Fresh again
+const products3 = yield* getFeaturedProducts() // Fresh again
 ```
 
 **When to use:**
@@ -1441,7 +1405,7 @@ export const getProductDetails = (productId: string) =>
   Effect.gen(function*() {
     // L2 Cache: Check Redis first
     const cache = yield* CacheService;
-    const cached = yield* cache.get<Product>(`product:${productId}`);
+    const cached = yield* cache.get<Product>(`product:${productId}`)
 
     if (Option.isSome(cached)) {
       return cached.value;
@@ -1449,17 +1413,17 @@ export const getProductDetails = (productId: string) =>
 
     // Cache miss - fetch from repository
     const repo = yield* ProductRepository;
-    const product = yield* repo.findById(productId);
+    const product = yield* repo.findById(productId)
 
     if (Option.isNone(product)) {
-      return yield* Effect.fail(new ProductNotFoundError({ productId }));
+      return yield* Effect.fail(new ProductNotFoundError({ productId }))
     }
 
     // Store in Redis with 1-hour TTL
-    yield* cache.set(`product:${productId}`, product.value, "1 hour");
+    yield* cache.set(`product:${productId}`, product.value, "1 hour")
 
-    return product.value;
-  }).pipe(Effect.cached); // ← L1 Cache: In-memory
+    return product.value
+  }).pipe(Effect.cached) // ← L1 Cache: In-memory
 
 // Pattern: L1 (fast, per-process) + L2 (shared, durable)
 ```
@@ -1479,18 +1443,16 @@ Use for **application setup** that should run exactly once:
 export const initializeFeatureFlags = () =>
   Effect.gen(function*() {
     const config = yield* ConfigService;
-    const logger = yield* LoggingService;
+    const logger = yield* LoggingService    yield* logger.info("Loading feature flags")
+    const flags = yield* config.loadFeatureFlags()
 
-    yield* logger.info("Loading feature flags");
-    const flags = yield* config.loadFeatureFlags();
-
-    yield* logger.info("Feature flags initialized", { count: flags.length });
-    return flags;
-  }).pipe(Effect.once); // ← Runs exactly once
+    yield* logger.info("Feature flags initialized", { count: flags.length })
+    return flags
+  }).pipe(Effect.once) // ← Runs exactly once
 
 // Multiple calls share same result
-const flags1 = yield* initializeFeatureFlags(); // Initializes
-const flags2 = yield* initializeFeatureFlags(); // Returns cached
+const flags1 = yield* initializeFeatureFlags() // Initializes
+const flags2 = yield* initializeFeatureFlags() // Returns cached
 ```
 
 **When to use:**
@@ -1503,17 +1465,15 @@ const flags2 = yield* initializeFeatureFlags(); // Returns cached
 Use for **pure functions** with multiple argument combinations:
 
 ```typescript
-import { cachedFunction } from "effect/Function";
-
-// libs/feature/pricing/src/lib/server/service.ts
+import { cachedFunction } from "effect/Function"// libs/feature/pricing/src/lib/server/service.ts
 const calculateShippingCost = cachedFunction(
   (weight: number, distance: number, express: boolean) =>
     Effect.gen(function*() {
       const rules = yield* ShippingRulesRepository;
       // Expensive calculation...
-      return calculateCost(rules, weight, distance, express);
+      return calculateCost(rules, weight, distance, express)
     }),
-);
+)
 
 // Each unique (weight, distance, express) combination is cached
 export const getShippingQuote = (order: Order) =>
@@ -1522,9 +1482,9 @@ export const getShippingQuote = (order: Order) =>
       order.weight,
       order.distance,
       order.expressShipping,
-    );
-    return { cost, estimatedDays: calculateDays(order.distance) };
-  });
+    )
+    return { cost, estimatedDays: calculateDays(order.distance) }
+  })
 ```
 
 **When to use:**
@@ -1544,16 +1504,14 @@ export const updateProduct = (
 ) =>
   Effect.gen(function*() {
     const repo = yield* ProductRepository;
-    const cache = yield* CacheService;
-
-    // Update database
-    const updated = yield* repo.update(productId, updates);
+    const cache = yield* CacheService    // Update database
+    const updated = yield* repo.update(productId, updates)
 
     // Invalidate cache (write-through pattern)
-    yield* cache.delete(`product:${productId}`);
+    yield* cache.delete(`product:${productId}`)
 
-    return updated;
-  });
+    return updated
+  })
 
 // Pattern: Write-through invalidation
 // 1. Update database
@@ -1595,43 +1553,39 @@ When integrating with **callback-based APIs** (WebSockets, event emitters, SDK c
 import { Effect, Runtime } from "effect";
 import type { WebSocket } from "ws";
 import { MessageService } from "./service";
-import { LoggingService } from "@creativetoolkits/infra-observability";
-
-export const createWebSocketHandler = Effect.gen(function*() {
+import { LoggingService } from "@creativetoolkits/infra-observability"export const createWebSocketHandler = Effect.gen(function*() {
   // ✅ CORRECT: Capture runtime for WebSocket callbacks
-  const runtime = yield* Effect.runtime<MessageService | LoggingService>();
-  const runFork = Runtime.runFork(runtime);
+  const runtime = yield* Effect.runtime<MessageService | LoggingService>()
+  const runFork = Runtime.runFork(runtime)
 
   return (ws: WebSocket) => {
     // WebSocket callbacks execute outside Effect context
     ws.on("message", (data) => {
       const program = Effect.gen(function*() {
         const messageService = yield* MessageService;
-        const logger = yield* LoggingService;
-
-        const parsed = JSON.parse(data.toString());
-        yield* logger.info("Received message", { data: parsed });
+        const logger = yield* LoggingService        const parsed = JSON.parse(data.toString())
+        yield* logger.info("Received message", { data: parsed })
 
         // Process message with full Effect context
-        const response = yield* messageService.processMessage(parsed);
+        const response = yield* messageService.processMessage(parsed)
 
-        ws.send(JSON.stringify(response));
-      });
+        ws.send(JSON.stringify(response))
+      })
 
       // ✅ Run Effect program with captured runtime
-      runFork(program);
-    });
+      runFork(program)
+    })
 
     ws.on("error", (error) => {
       const program = Effect.gen(function*() {
         const logger = yield* LoggingService;
-        yield* logger.error("WebSocket error", { error });
-      });
+        yield* logger.error("WebSocket error", { error })
+      })
 
-      runFork(program);
-    });
-  };
-});
+      runFork(program)
+    })
+  }
+})
 ```
 
 ### Pattern: Event Emitter Integration
@@ -1641,39 +1595,35 @@ export const createWebSocketHandler = Effect.gen(function*() {
 import { Effect, Runtime } from "effect";
 import { EventEmitter } from "events";
 import { NotificationService } from "./service";
-import { LoggingService } from "@creativetoolkits/infra-observability";
+import { LoggingService } from "@creativetoolkits/infra-observability"export const setupEventHandlers = Effect.gen(function*() {
+  const runtime = yield* Effect.runtime<NotificationService | LoggingService>()
+  const runFork = Runtime.runFork(runtime)
 
-export const setupEventHandlers = Effect.gen(function*() {
-  const runtime = yield* Effect.runtime<NotificationService | LoggingService>();
-  const runFork = Runtime.runFork(runtime);
-
-  const emitter = new EventEmitter();
+  const emitter = new EventEmitter()
 
   // Handle payment events
   emitter.on("payment.completed", (data) => {
     const program = Effect.gen(function*() {
       const notifications = yield* NotificationService;
-      const logger = yield* LoggingService;
+      const logger = yield* LoggingService      yield* logger.info("Payment completed event", { data })
+      yield* notifications.sendPaymentReceipt(data.userId, data.paymentId)
+    })
 
-      yield* logger.info("Payment completed event", { data });
-      yield* notifications.sendPaymentReceipt(data.userId, data.paymentId);
-    });
-
-    runFork(program);
-  });
+    runFork(program)
+  })
 
   // Handle errors in event handlers
   emitter.on("error", (error) => {
     const program = Effect.gen(function*() {
       const logger = yield* LoggingService;
-      yield* logger.error("Event handler error", { error });
-    });
+      yield* logger.error("Event handler error", { error })
+    })
 
-    runFork(program);
-  });
+    runFork(program)
+  })
 
   return emitter;
-});
+})
 ```
 
 ### When to Use Runtime Preservation
@@ -1720,31 +1670,27 @@ Multi-step workflows with retries and error recovery:
 ```typescript
 // libs/feature/payment/src/lib/server/workflows/subscription.ts
 import { Effect, Schedule, pipe } from "effect";
-import { PaymentService } from "../service";
-
-export class SubscriptionWorkflow {
+import { PaymentService } from "../service"export class SubscriptionWorkflow {
   static readonly process = (subscriptionId: string) =>
     pipe(
       Effect.gen(function*() {
-        const payment = yield* PaymentService;
-
-        // Step 1: Validate subscription
-        const subscription = yield* payment.getSubscription(subscriptionId);
+        const payment = yield* PaymentService        // Step 1: Validate subscription
+        const subscription = yield* payment.getSubscription(subscriptionId)
 
         // Step 2: Check payment method
         const paymentMethod = yield* payment.getPaymentMethod(
           subscription.paymentMethodId,
-        );
+        )
 
         // Step 3: Process recurring payment
         const result = yield* payment.processRecurringPayment({
           subscriptionId,
           amount: subscription.amount,
           paymentMethodId: paymentMethod.id,
-        });
+        })
 
         // Step 4: Update subscription status
-        yield* payment.updateSubscriptionStatus(subscriptionId, "active");
+        yield* payment.updateSubscriptionStatus(subscriptionId, "active")
 
         return result;
       }),
@@ -1759,12 +1705,12 @@ export class SubscriptionWorkflow {
       Effect.catchAll((error) =>
         Effect.gen(function*() {
           const payment = yield* PaymentService;
-          yield* payment.updateSubscriptionStatus(subscriptionId, "failed");
-          yield* payment.notifySubscriptionFailure(subscriptionId, error);
-          return yield* Effect.fail(error);
+          yield* payment.updateSubscriptionStatus(subscriptionId, "failed")
+          yield* payment.notifySubscriptionFailure(subscriptionId, error)
+          return yield* Effect.fail(error)
         }),
       ),
-    );
+    )
 }
 ```
 
@@ -1788,9 +1734,7 @@ export class SubscriptionWorkflow {
 
 ```typescript
 // libs/feature/payment/src/lib/server/errors.ts
-import { Data } from "effect";
-
-// Business errors using Data.TaggedError (runtime errors)
+import { Data } from "effect"// Business errors using Data.TaggedError (runtime errors)
 export class PaymentDeclined extends Data.TaggedError("PaymentDeclined")<{
   readonly reason: string;
   readonly code: string;
@@ -1831,13 +1775,11 @@ export type PaymentError =
   | PaymentMethodExpired
   | InvalidUserError
   | InvalidProductError
-  | PaymentNotFoundError;
-
-// Error transformation helper
+  | PaymentNotFoundError// Error transformation helper
 export const transformDomainError = <E, A>(
   mapError: (error: E) => PaymentError,
 ) =>
-  Effect.catchAll<A, E, PaymentError>((error) => Effect.fail(mapError(error)));
+  Effect.catchAll<A, E, PaymentError>((error) => Effect.fail(mapError(error)))
 ```
 
 ### RPC Error Schemas (Schema.TaggedError)
@@ -1846,16 +1788,14 @@ export const transformDomainError = <E, A>(
 
 ```typescript
 // libs/contract/payment/src/lib/rpc/errors.ts
-import { Schema } from "effect";
-
-// ✅ CORRECT: Schema.TaggedError for RPC boundaries
+import { Schema } from "effect"// ✅ CORRECT: Schema.TaggedError for RPC boundaries
 export class PaymentRpcError extends Schema.TaggedError<PaymentRpcError>()(
   "PaymentRpcError",
   {
     message: Schema.String,
     code: Schema.String,
     timestamp: Schema.DateTimeUtc, // Schema encoding for Date
-    metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+    metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown))
   },
 ) {}
 
@@ -1865,8 +1805,8 @@ export const toRpcError = (domainError: PaymentError): PaymentRpcError =>
     message: domainError.message || "Payment operation failed",
     code: domainError._tag,
     timestamp: new Date().toISOString(),
-    metadata: domainError,
-  });
+    metadata: domainError
+  })
 ```
 
 **Decision Rule**:
@@ -1893,9 +1833,7 @@ import { HttpClient } from "@effect/platform";
 import { Effect, Layer, Context } from "effect";
 import { RpcClient } from "@effect/rpc";
 import { PaymentRpcs } from "./router";
-import { AuthMiddlewareClientLive } from "@creativetoolkits/infra-rpc/client";
-
-// Define client service tag
+import { AuthMiddlewareClientLive } from "@creativetoolkits/infra-rpc/client"// Define client service tag
 export class PaymentRpcClient extends Context.Tag("PaymentRpcClient")<
   PaymentRpcClient,
   RpcClient.RpcClient<typeof PaymentRpcs>
@@ -1905,19 +1843,17 @@ export class PaymentRpcClient extends Context.Tag("PaymentRpcClient")<
 export const PaymentRpcClientLive = Layer.effect(
   PaymentRpcClient,
   Effect.gen(function*() {
-    const http = yield* HttpClient.HttpClient;
-
-    return RpcClient.make(PaymentRpcs, {
+    const http = yield* HttpClient.HttpClient    return RpcClient.make(PaymentRpcs, {
       transport: HttpResolver.make(
         http.post("/api/rpc/payment", {
           headers: { "Content-Type": "application/json" },
         }),
       ),
-    });
+    })
   }),
 ).pipe(
   Layer.provide(AuthMiddlewareClientLive), // Client middleware for auth headers
-);
+)
 ```
 
 ### React Hook with Effect RPC
@@ -1927,87 +1863,83 @@ export const PaymentRpcClientLive = Layer.effect(
 import { useState, useCallback, useContext } from 'react';
 import { Effect, Exit, Runtime } from 'effect';
 import { PaymentRpcClient } from '../../rpc/client';
-import { EffectRuntimeContext } from '../contexts/runtime-context';
-
-export function usePayment() {
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+import { EffectRuntimeContext } from '../contexts/runtime-context'export function usePayment() {
+  const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Get runtime from React context (set up at app level)
-  const runtime = useContext(EffectRuntimeContext);
+  const runtime = useContext(EffectRuntimeContext)
 
   const processPayment = useCallback(
     async (params: ProcessPaymentParams) => {
-      setProcessing(true);
-      setError(null);
+      setProcessing(true)
+      setError(null)
 
       // Create Effect program
       const program = Effect.gen(function*() {
         const client = yield* PaymentRpcClient;
-        return yield* client.processPayment(params);
-      });
+        return yield* client.processPayment(params)
+      })
 
       // Run with runtime that has all layers
-      const exit = await Runtime.runPromiseExit(runtime)(program);
+      const exit = await Runtime.runPromiseExit(runtime)(program)
 
       if (Exit.isFailure(exit)) {
-        const cause = Exit.causeSquash(exit);
-        setError(cause._tag || 'Payment failed');
-        setProcessing(false);
-        throw new Error(cause.message || 'Payment failed');
+        const cause = Exit.causeSquash(exit)
+        setError(cause._tag || 'Payment failed')
+        setProcessing(false)
+        throw new Error(cause.message || 'Payment failed')
       }
 
-      setProcessing(false);
+      setProcessing(false)
       return exit.value;
     },
     [runtime]
-  );
+  )
 
   const getPaymentStatus = useCallback(
     async (paymentId: string) => {
       const program = Effect.gen(function*() {
         const client = yield* PaymentRpcClient;
-        return yield* client.getPaymentStatus({ paymentId });
-      });
+        return yield* client.getPaymentStatus({ paymentId })
+      })
 
-      const exit = await Runtime.runPromiseExit(runtime)(program);
+      const exit = await Runtime.runPromiseExit(runtime)(program)
 
       if (Exit.isSuccess(exit)) {
         return exit.value;
       }
 
-      throw new Error('Failed to get payment status');
+      throw new Error('Failed to get payment status')
     },
     [runtime]
-  );
+  )
 
   return {
     processPayment,
     getPaymentStatus,
     processing,
     error,
-    reset: () => setError(null),
-  };
+    reset: () => setError(null)
+  }
 }
 
 // React component example
 // libs/feature/payment/src/lib/client/components/payment-button.tsx
-import { usePayment } from '../hooks/use-payment';
-
-export function PaymentButton({ productId, amount }: PaymentButtonProps) {
-  const { initiatePayment, processing, error } = usePayment();
+import { usePayment } from '../hooks/use-payment'export function PaymentButton({ productId, amount }: PaymentButtonProps) {
+  const { initiatePayment, processing, error } = usePayment()
 
   const handleClick = async () => {
     try {
       const result = await initiatePayment({
         productId,
         amount,
-      });
+      })
       // Handle success
     } catch (error) {
       // Error already set in hook
     }
-  };
+  }
 
   return (
     <>
@@ -2016,7 +1948,7 @@ export function PaymentButton({ productId, amount }: PaymentButtonProps) {
       </button>
       {error && <div className="error">{error}</div>}
     </>
-  );
+  )
 }
 ```
 
@@ -2025,9 +1957,7 @@ export function PaymentButton({ productId, amount }: PaymentButtonProps) {
 ```typescript
 // libs/feature/cart/src/lib/server/cart-store.ts
 import { Atom, Context, Effect, Layer } from "effect";
-import type { CartItem } from "../types";
-
-/**
+import type { CartItem } from "../types"/**
  * CartStore service manages shopping cart state using Effect Atom for thread-safe,
  * concurrent state management. Provides operations for cart manipulation.
  */
@@ -2038,12 +1968,12 @@ export interface CartStoreState {
 export class CartStore extends Context.Tag("CartStore")<
   CartStore,
   {
-    readonly getItems: () => Effect.Effect<CartItem[]>;
-    readonly addItem: (item: CartItem) => Effect.Effect<void>;
-    readonly removeItem: (productId: string) => Effect.Effect<void>;
-    readonly updateQuantity: (productId: string, quantity: number) => Effect.Effect<void>;
-    readonly clearCart: () => Effect.Effect<void>;
-    readonly getTotalPrice: () => Effect.Effect<number>;
+    readonly getItems: () => Effect.Effect<CartItem[]>
+    readonly addItem: (item: CartItem) => Effect.Effect<void>
+    readonly removeItem: (productId: string) => Effect.Effect<void>
+    readonly updateQuantity: (productId: string, quantity: number) => Effect.Effect<void>
+    readonly clearCart: () => Effect.Effect<void>
+    readonly getTotalPrice: () => Effect.Effect<number>
   }
 >() {
   /**
@@ -2053,7 +1983,7 @@ export class CartStore extends Context.Tag("CartStore")<
     this,
     Effect.gen(function*() {
       // Create atom with initial cart state
-      const cartAtom = yield* Atom.make<CartStoreState>({ items: [] });
+      const cartAtom = yield* Atom.make<CartStoreState>({ items: [] })
 
       return {
         /**
@@ -2061,7 +1991,7 @@ export class CartStore extends Context.Tag("CartStore")<
          */
         getItems: () =>
           Effect.gen(function*() {
-            const state = yield* Atom.get(cartAtom);
+            const state = yield* Atom.get(cartAtom)
             return state.items;
           }),
 
@@ -2073,7 +2003,7 @@ export class CartStore extends Context.Tag("CartStore")<
             items: [
               ...state.items.filter((i) => i.productId !== item.productId),
               item,
-            ],
+            ]
           })),
 
         /**
@@ -2081,7 +2011,7 @@ export class CartStore extends Context.Tag("CartStore")<
          */
         removeItem: (productId: string) =>
           Atom.update(cartAtom, (state) => ({
-            items: state.items.filter((item) => item.productId !== productId),
+            items: state.items.filter((item) => item.productId !== productId)
           })),
 
         /**
@@ -2091,7 +2021,7 @@ export class CartStore extends Context.Tag("CartStore")<
           Atom.update(cartAtom, (state) => ({
             items: state.items.map((item) =>
               item.productId === productId ? { ...item, quantity } : item,
-            ),
+            )
           })),
 
         /**
@@ -2105,15 +2035,15 @@ export class CartStore extends Context.Tag("CartStore")<
          */
         getTotalPrice: () =>
           Effect.gen(function*() {
-            const state = yield* Atom.get(cartAtom);
+            const state = yield* Atom.get(cartAtom)
             return state.items.reduce(
               (sum, item) => sum + item.price * item.quantity,
               0
-            );
-          }),
-      };
+            )
+          })
+      } ;
     })
-  );
+  )
 
   /**
    * Test layer with in-memory implementation (no persistence)
@@ -2121,12 +2051,12 @@ export class CartStore extends Context.Tag("CartStore")<
   static readonly Test = Layer.effect(
     this,
     Effect.gen(function*() {
-      const cartAtom = yield* Atom.make<CartStoreState>({ items: [] });
+      const cartAtom = yield* Atom.make<CartStoreState>({ items: [] })
 
       return {
         getItems: () =>
           Effect.gen(function*() {
-            const state = yield* Atom.get(cartAtom);
+            const state = yield* Atom.get(cartAtom)
             return state.items;
           }),
         addItem: (item: CartItem) =>
@@ -2134,30 +2064,30 @@ export class CartStore extends Context.Tag("CartStore")<
             items: [
               ...state.items.filter((i) => i.productId !== item.productId),
               item,
-            ],
+            ]
           })),
         removeItem: (productId: string) =>
           Atom.update(cartAtom, (state) => ({
-            items: state.items.filter((item) => item.productId !== productId),
+            items: state.items.filter((item) => item.productId !== productId)
           })),
         updateQuantity: (productId: string, quantity: number) =>
           Atom.update(cartAtom, (state) => ({
             items: state.items.map((item) =>
               item.productId === productId ? { ...item, quantity } : item,
-            ),
+            )
           })),
         clearCart: () => Atom.set(cartAtom, { items: [] }),
         getTotalPrice: () =>
           Effect.gen(function*() {
-            const state = yield* Atom.get(cartAtom);
+            const state = yield* Atom.get(cartAtom)
             return state.items.reduce(
               (sum, item) => sum + item.price * item.quantity,
               0
-            );
-          }),
-      };
+            )
+          })
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -2173,37 +2103,35 @@ export class CartStore extends Context.Tag("CartStore")<
 // libs/feature/cart/src/lib/client/hooks/use-cart.ts
 import { useEffect, useState } from "react";
 import { Effect, RunSync } from "effect";
-import { CartStore } from "../store";
-
-export function useCart() {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [totalPrice, setTotalPrice] = useState(0);
+import { CartStore } from "../store"export function useCart() {
+  const [items, setItems] = useState<CartItem[]>([])
+  const [totalPrice, setTotalPrice] = useState(0)
 
   useEffect(() => {
     // Fetch initial state - run Effect synchronously in browser
     const program = Effect.gen(function*() {
       const store = yield* CartStore;
-      const cartItems = yield* store.getItems();
-      const price = yield* store.getTotalPrice();
+      const cartItems = yield* store.getItems()
+      const price = yield* store.getTotalPrice()
       return { cartItems, price };
-    });
+    })
 
-    const result = RunSync.runSync(program);
-    setItems(result.cartItems);
-    setTotalPrice(result.price);
-  }, []);
+    const result = RunSync.runSync(program)
+    setItems(result.cartItems)
+    setTotalPrice(result.price)
+  }, [])
 
   const addItem = (item: CartItem) => {
     const program = Effect.gen(function*() {
       const store = yield* CartStore;
-      yield* store.addItem(item);
-      const newItems = yield* store.getItems();
-      setItems(newItems);
-    });
-    RunSync.runSync(program);
-  };
+      yield* store.addItem(item)
+      const newItems = yield* store.getItems()
+      setItems(newItems)
+    })
+    RunSync.runSync(program)
+  }
 
-  return { items, totalPrice, addItem };
+  return { items, totalPrice, addItem }
 }
 ```
 
@@ -2213,40 +2141,38 @@ export function useCart() {
 // libs/feature/wishlist/src/lib/client/hooks/use-wishlist.ts
 import { useOptimistic, useEffect, useState } from "react";
 import { Effect, Exit, Stream, Queue } from "effect";
-import { WishlistServiceClient } from "../rpc/client";
-
-export function useWishlist(userId: string) {
-  const client = WishlistServiceClient.use();
-  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
-  const [loading, setLoading] = useState(true);
+import { WishlistServiceClient } from "../rpc/client"export function useWishlist(userId: string) {
+  const client = WishlistServiceClient.use()
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([])
+  const [loading, setLoading] = useState(true)
 
   // Initial load and subscription
   useEffect(() => {
     const program = Effect.gen(function*() {
       // Get initial wishlist
-      const initial = yield* client.getWishlist(userId);
-      setWishlist(initial);
-      setLoading(false);
+      const initial = yield* client.getWishlist(userId)
+      setWishlist(initial)
+      setLoading(false)
 
       // Subscribe to updates via Effect Stream
-      const updates = yield* client.subscribeToWishlist(userId);
+      const updates = yield* client.subscribeToWishlist(userId)
 
       yield* Stream.runForEach(updates, (item) =>
         Effect.sync(() => {
           setWishlist((prev) => {
-            const filtered = prev.filter((i) => i.productId !== item.productId);
+            const filtered = prev.filter((i) => i.productId !== item.productId)
             return item.removed ? filtered : [...filtered, item];
-          });
+          })
         }),
-      );
-    });
+      )
+    })
 
-    const fiber = Effect.runFork(program);
+    const fiber = Effect.runFork(program)
 
     return () => {
-      Effect.runFork(fiber.interruptFork);
-    };
-  }, [userId, client]);
+      Effect.runFork(fiber.interruptFork)
+    }
+  }, [userId, client])
 
   // Optimistic state
   const [optimisticWishlist, addOptimistic] = useOptimistic(
@@ -2255,27 +2181,27 @@ export function useWishlist(userId: string) {
       ...current,
       { productId, addedAt: new Date() },
     ],
-  );
+  )
 
   const addToWishlist = async (productId: string) => {
     // Optimistically update UI
-    addOptimistic(productId);
+    addOptimistic(productId)
 
     // Execute RPC
-    const program = client.addToWishlist({ userId, productId });
-    const exit = await Effect.runPromiseExit(program);
+    const program = client.addToWishlist({ userId, productId })
+    const exit = await Effect.runPromiseExit(program)
 
     if (Exit.isFailure(exit)) {
       // Rollback on error (the subscription will restore correct state)
-      console.error("Failed to add to wishlist", exit.cause);
+      console.error("Failed to add to wishlist", exit.cause)
     }
-  };
+  }
 
   return {
     wishlist: optimisticWishlist,
     addToWishlist,
-    isLoading: loading,
-  };
+    isLoading: loading
+  }
 }
 ```
 
@@ -2289,9 +2215,7 @@ import { ProductRepositoryLive } from "@creativetoolkits/data-access-product/ser
 import { UserRepositoryLive } from "@creativetoolkits/data-access-user/server";
 import { DatabaseServiceLive } from "@creativetoolkits/infra-database/server";
 import { StripeServiceLive } from "@creativetoolkits/provider-stripe/server";
-import { LoggingServiceLive } from "@creativetoolkits/infra-observability/server";
-
-// Complete layer with all dependencies
+import { LoggingServiceLive } from "@creativetoolkits/infra-observability/server"// Complete layer with all dependencies
 export const PaymentLive = PaymentService.Live.pipe(
   Layer.provide([
     ProductRepositoryLive,
@@ -2300,7 +2224,7 @@ export const PaymentLive = PaymentService.Live.pipe(
     StripeServiceLive,
     LoggingServiceLive,
   ]),
-);
+)
 
 // Test layer with mocked dependencies
 export const PaymentTest = PaymentService.Live.pipe(
@@ -2311,7 +2235,7 @@ export const PaymentTest = PaymentService.Live.pipe(
     StripeServiceMock,
     LoggingServiceTest,
   ]),
-);
+)
 ```
 
 ## Testing & Spec File Patterns
@@ -2381,9 +2305,7 @@ import { Effect, Layer } from "effect";
 import { describe, expect, it } from "@effect/vitest"; // ✅ All from @effect/vitest
 import { PaymentService } from "./service";
 import { ProductRepository } from "@creativetoolkits/contract-product";
-import { StripeService } from "@creativetoolkits/provider-stripe";
-
-// Mock dependencies inline
+import { StripeService } from "@creativetoolkits/provider-stripe"// Mock dependencies inline
 const ProductRepositoryMock = Layer.succeed(ProductRepository, {
   findById: (id) =>
     Effect.succeed({
@@ -2391,8 +2313,8 @@ const ProductRepositoryMock = Layer.succeed(ProductRepository, {
       name: "Test Product",
       price: 1000,
       sellerId: "seller-123",
-    }),
-});
+    })
+})
 
 const StripeServiceMock = Layer.succeed(StripeService, {
   paymentIntents: {
@@ -2402,24 +2324,22 @@ const StripeServiceMock = Layer.succeed(StripeService, {
         client_secret: "secret_test",
         status: "requires_payment_method",
         amount: params.amount,
-      }),
-  },
-});
+      })
+  }
+})
 
 describe("PaymentService", () => {
   // Use it.scoped for all tests
   it.scoped("processPayment creates payment intent", () => // ✅ Always it.scoped
     Effect.gen(function*() {
-      const payment = yield* PaymentService;
-
-      const result = yield* payment.processPayment({
+      const payment = yield* PaymentService      const result = yield* payment.processPayment({
         userId: "user_123",
         productId: "prod_456",
         amount: 1000,
-      });
+      })
 
-      expect(result.paymentId).toBe("pi_test_123");
-      expect(result.status).toBe("pending");
+      expect(result.paymentId).toBe("pi_test_123")
+      expect(result.status).toBe("pending")
     }).pipe(
       Effect.provide(
         Layer.fresh( // ✅ Always Layer.fresh
@@ -2431,7 +2351,7 @@ describe("PaymentService", () => {
         ),
       ),
     ),
-  );
+  )
 
   it.scoped("handles payment failure gracefully", () => // ✅ Always it.scoped
     Effect.gen(function*() {
@@ -2445,21 +2365,19 @@ describe("PaymentService", () => {
               }),
             ),
         },
-      });
+      })
 
-      const payment = yield* PaymentService;
-
-      const result = yield* Effect.either(
+      const payment = yield* PaymentService      const result = yield* Effect.either(
         payment.processPayment({
           userId: "user_123",
           productId: "prod_456",
           amount: 1000,
         }),
-      );
+      )
 
-      expect(Either.isLeft(result)).toBe(true);
+      expect(Either.isLeft(result)).toBe(true)
       if (Either.isLeft(result)) {
-        expect(result.left._tag).toBe("PaymentError");
+        expect(result.left._tag).toBe("PaymentError")
       }
     }).pipe(
       Effect.provide(
@@ -2472,8 +2390,8 @@ describe("PaymentService", () => {
         ),
       ),
     ),
-  );
-});
+  )
+})
 ```
 
 ### Vitest Configuration
@@ -2482,14 +2400,12 @@ describe("PaymentService", () => {
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({
+import { defineConfig } from "vitest/config"export default defineConfig({
   test: {
     globals: true,
-    setupFiles: ["@effect/vitest/setup"],
-  },
-});
+    setupFiles: ["@effect/vitest/setup"]
+  }
+})
 ```
 
 ### Best Practices
@@ -2544,22 +2460,16 @@ export type {
   PaymentResult,
   RefundResult,
   PaymentStatus,
-} from "./lib/shared/types";
-
-// libs/feature/payment/src/client.ts
+} from "./lib/shared/types"// libs/feature/payment/src/client.ts
 // Client-side exports (React hooks, components)
 export { usePayment } from "./lib/client/hooks/use-payment";
 export { PaymentForm } from "./lib/client/components/payment-form";
-export { PaymentButton } from "./lib/client/components/payment-button";
-
-// libs/feature/payment/src/server.ts
+export { PaymentButton } from "./lib/client/components/payment-button"// libs/feature/payment/src/server.ts
 // Server-side exports (services, layers)
 export { PaymentService } from "./lib/server/service";
 export { PaymentLive, PaymentTest } from "./lib/server/layers";
 export { checkoutOperation } from "./lib/server/operations/checkout";
-export * from "./lib/server/errors";
-
-// libs/feature/payment/src/edge.ts
+export * from "./lib/server/errors"// libs/feature/payment/src/edge.ts
 // Edge runtime exports (middleware compatible)
 export { validatePaymentWebhook } from "./lib/edge/middleware";
 export { PaymentEdgeService } from "./lib/edge/service";
@@ -2830,30 +2740,26 @@ The generator creates a service skeleton:
 ```typescript
 // Generated: src/lib/server/service.ts
 import { Context, Effect, Layer } from "effect";
-import type { <%= className %>Error } from "./errors";
-
-export class <%= className %> extends Context.Tag("<%= className %>")<
+import type { <%= className %>Error } from "./errors"export class <%= className %> extends Context.Tag("<%= className %>")<
   <%= className %>,
   {
     // TODO: Define service methods
-    readonly doSomething: () => Effect.Effect<void, <%= className %>Error>;
+    readonly doSomething: () => Effect.Effect<void, <%= className %>Error>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
       // TODO: Inject dependencies
-      // const repo = yield* SomeRepository;
-
-      return {
+      // const repo = yield* SomeRepository      return {
         doSomething: () =>
           Effect.gen(function*() {
             // TODO: Implement business logic
-            yield* Effect.log("Operation completed");
+            yield* Effect.log("Operation completed")
           })
       };
     })
-  );
+  )
 }
 ```
 

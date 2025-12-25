@@ -47,15 +47,17 @@ Usage:
 
   builder.addImports([
     { from: "effect", imports: [{ name: "Array", alias: "EffectArray" }, "DateTime", "Effect", "Layer", "Option"] },
+    // RPC errors for response mapping
     {
       from: `${scope}/contract-${name}`,
       imports: [
         `${className}NotFoundRpcError`,
-        `${className}PermissionRpcError`,
         `${className}Rpcs`,
         `${className}ValidationRpcError`
       ]
     },
+    // Note: Domain errors (${className}NotFoundError, ${className}TimeoutError) are NOT imported
+    // because catchTags uses string literals to match error tags, not runtime types
     { from: `${scope}/infra-rpc`, imports: ["getHandlerContext", "RequestMeta", "ServiceContext"] },
     { from: "../server/services", imports: [`${className}Service`] }
   ])
@@ -71,32 +73,37 @@ Usage:
     }
   }
 
-  // Helper to generate catchTags error mapping
-  const errorCatchTags = `Effect.catchTags({
+  // Error handlers for catchTags - catch all errors in the error channel
+  // Domain errors: NotFoundError (from service when entity not found)
+  // Infrastructure errors: TimeoutError (from repository timeout), DatabaseInternalError (from database)
+  const notFoundAndInfraCatchTags = `Effect.catchTags({
         "${className}NotFoundError": (e) =>
           Effect.fail(new ${className}NotFoundRpcError({
-            message: e.message,
-            ${name}Id: e.${name}Id
+            ${name}Id: e.${name}Id,
+            message: e.message
           })),
-        "${className}ValidationError": (e) =>
+        "${className}TimeoutError": (e) =>
           Effect.fail(new ${className}ValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
+            field: "timeout",
+            message: \`Operation timed out after \${e.timeoutMs}ms\`
           })),
-        "${className}AlreadyExistsError": (e) =>
+        "DatabaseInternalError": (e) =>
           Effect.fail(new ${className}ValidationRpcError({
-            message: e.message,
-            field: "${name}Id"
-          })),
-        "${className}PermissionError": (e) =>
-          Effect.fail(new ${className}PermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "${className}ServiceError": (e) =>
+            field: "database",
+            message: e.message
+          }))
+      })`
+
+  const infraOnlyCatchTags = `Effect.catchTags({
+        "${className}TimeoutError": (e) =>
           Effect.fail(new ${className}ValidationRpcError({
-            message: \`Service error: \${e.message}\`,
-            field: "service"
+            field: "timeout",
+            message: \`Operation timed out after \${e.timeoutMs}ms\`
+          })),
+        "DatabaseInternalError": (e) =>
+          Effect.fail(new ${className}ValidationRpcError({
+            field: "database",
+            message: e.message
           }))
       })`
 
@@ -119,7 +126,7 @@ Usage:
  *   Effect.gen(function*() {
  *     const { user, meta } = yield* getHandlerContext;
  *     const service = yield* ${className}Service;
- *     return yield* service.findById(id);
+ *     return yield* service.findById(id)
  *   })
  * \`\`\`
  */
@@ -128,6 +135,7 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
    * Get ${name} by ID
    *
    * RouteTag: "public" - No authentication required
+   * Errors: NotFoundError, TimeoutError
    */
   Get${className}: ({ id }) =>
     Effect.gen(function*() {
@@ -139,22 +147,15 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         requestId: meta.requestId
       })
 
-      const result = yield* service.get(id).pipe(
-        ${errorCatchTags}
-      );
-
-      // Handle Option.none case - return typed RPC error
-      if (Option.isNone(result)) {
-        return yield* Effect.fail(${className}NotFoundRpcError.create(id))
-      }
-
-      return result.value
-    }),
+      // Service throws ${className}NotFoundError which is caught by catchTags
+      return yield* service.get(id)
+    }).pipe(${notFoundAndInfraCatchTags}),
 
   /**
    * List ${name}s with pagination
    *
    * RouteTag: "public" - No authentication required
+   * Errors: TimeoutError
    */
   List${className}s: ({ page, pageSize }) =>
     Effect.gen(function*() {
@@ -165,12 +166,8 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
       const offset = (currentPage - 1) * currentPageSize
 
       const [items, total] = yield* Effect.all([
-        service.findByCriteria({}, offset, currentPageSize).pipe(
-          ${errorCatchTags}
-        ),
-        service.count({}).pipe(
-          ${errorCatchTags}
-        )
+        service.findByCriteria({}, offset, currentPageSize),
+        service.count({})
       ])
 
       return {
@@ -180,12 +177,13 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         total,
         hasMore: offset + items.length < total
       }
-    }),
+    }).pipe(${infraOnlyCatchTags}),
 
   /**
    * Create a new ${name}
    *
    * RouteTag: "protected" - User authentication required
+   * Errors: TimeoutError
    */
   Create${className}: (input) =>
     Effect.gen(function*() {
@@ -199,15 +197,14 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
 
       // RPC input type should match service create input type
       // If types differ, use Schema.decode for transformation at this boundary
-      return yield* service.create(input).pipe(
-        ${errorCatchTags}
-      )
-    }),
+      return yield* service.create(input)
+    }).pipe(${infraOnlyCatchTags}),
 
   /**
    * Update an existing ${name}
    *
    * RouteTag: "protected" - User authentication required
+   * Errors: NotFoundError, TimeoutError
    */
   Update${className}: ({ id, data }) =>
     Effect.gen(function*() {
@@ -222,25 +219,15 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
 
       // RPC data type should match service update input type
       // If types differ, use Schema.decode for transformation at this boundary
-      const result = yield* service.update(id, data).pipe(
-        ${errorCatchTags}
-      )
-
-      // Handle Option.none case - return typed RPC error
-      if (Option.isNone(result)) {
-        return yield* Effect.fail(new ${className}NotFoundRpcError({
-          message: \`${className} not found: \${id}\`,
-          ${name}Id: id
-        }))
-      }
-
-      return result.value
-    }),
+      // Service throws ${className}NotFoundError which is caught by catchTags
+      return yield* service.update(id, data)
+    }).pipe(${notFoundAndInfraCatchTags}),
 
   /**
    * Delete a ${name}
    *
    * RouteTag: "protected" - User authentication required
+   * Errors: NotFoundError, TimeoutError
    */
   Delete${className}: ({ id }) =>
     Effect.gen(function*() {
@@ -253,19 +240,18 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         requestId: meta.requestId
       })
 
-      yield* service.delete(id).pipe(
-        ${errorCatchTags}
-      )
+      yield* service.delete(id)
       return {
         success: true as const,
         deletedAt: DateTime.unsafeNow()
       }
-    }),
+    }).pipe(${notFoundAndInfraCatchTags}),
 
   /**
    * Validate ${name} (service-to-service)
    *
    * RouteTag: "service" - Service authentication required
+   * Errors: TimeoutError
    */
   Validate${className}: ({ userId, validationType }) =>
     Effect.gen(function*() {
@@ -278,9 +264,7 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         callingService: serviceCtx.serviceName
       })
 
-      const exists = yield* service.exists(userId).pipe(
-        ${errorCatchTags}
-      )
+      const exists = yield* service.exists(userId)
 
       // Build response with proper handling for exactOptionalPropertyTypes
       const baseResponse = {
@@ -295,26 +279,33 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
       return exists
         ? baseResponse
         : { ...baseResponse, errors: notFoundErrors }
-    }),
+    }).pipe(${infraOnlyCatchTags}),
 
   /**
    * Bulk get ${name}s (service-to-service)
    *
    * RouteTag: "service" - Service authentication required
+   * Errors: TimeoutError (NotFoundError is handled per-id internally)
    */
   BulkGet${className}s: ({ ids }) =>
     Effect.gen(function*() {
       const service = yield* ${className}Service
 
-      // Fetch all entities in parallel using individual gets
+      // Fetch all entities in parallel, catching NotFoundError per-id
+      // Use Effect.option to convert NotFoundError to Option.none
       const results = yield* Effect.all(
-        ids.map((id) => service.get(id).pipe(
-          ${errorCatchTags}
-        )),
+        ids.map((id) =>
+          service.get(id).pipe(
+            Effect.asSome,
+            Effect.catchTag("${className}NotFoundError", () =>
+              Effect.succeed(Option.none())
+            )
+          )
+        ),
         { concurrency: "unbounded" }
       )
 
-      // Extract found items (filter out None results)
+      // Extract found items using EffectArray.getSomes
       const items = EffectArray.getSomes(results)
       const foundIds = new Set(items.map((item) => item.id))
       const notFound = ids.filter((id) => !foundIds.has(id))
@@ -323,7 +314,7 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         items,
         notFound
       }
-    })
+    }).pipe(${infraOnlyCatchTags})
 })
 `)
 

@@ -72,9 +72,9 @@ Usage:
  *   execute(input) {
  *     return Effect.gen(function*() {
  *       const db = yield* DatabaseService;
- *       const created = yield* db.insert(input);
+ *       const created = yield* db.insert(input)
  *       return created;
- *     });
+ *     })
  *   }
  * }
  * \`\`\`
@@ -88,19 +88,13 @@ export abstract class Command<
   /**
    * Unique command tag for routing
    */
-  abstract readonly _tag: string;
-
-  /**
+  abstract readonly _tag: string  /**
    * Input schema for validation
    */
-  abstract readonly input: TInput;
-
-  /**
+  abstract readonly input: TInput  /**
    * Output schema for response
    */
-  abstract readonly output: TOutput;
-
-  /**
+  abstract readonly output: TOutput  /**
    * Execute the command
    *
    * @param input - Validated command input
@@ -108,7 +102,7 @@ export abstract class Command<
    */
   abstract execute(
     input: Schema.Schema.Type<TInput>
-  ): Effect.Effect<Schema.Schema.Type<TOutput>, TError, TDeps>;
+  ): Effect.Effect<Schema.Schema.Type<TOutput>, TError, TDeps>
 }`)
   builder.addBlankLine()
 
@@ -135,7 +129,7 @@ export interface CommandBusInterface {
   >(
     command: Command<TInput, TOutput, TError, TDeps>,
     input: Schema.Schema.Type<TInput>
-  ) => Effect.Effect<Schema.Schema.Type<TOutput>, TError, TDeps>;
+  ) => Effect.Effect<Schema.Schema.Type<TOutput>, TError, TDeps>
 
   /**
    * Register a command handler
@@ -147,7 +141,7 @@ export interface CommandBusInterface {
     TDeps
   >(
     command: Command<TInput, TOutput, TError, TDeps>
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 }`)
   builder.addBlankLine()
 
@@ -167,10 +161,10 @@ export interface CommandBusInterface {
  *   const result = yield* bus.dispatch(
  *     new Create${className}Command(),
  *     { name: "example" }
- *   );
+ *   )
  *
  *   return result;
- * });
+ * })
  * \`\`\`
  */
 export class ${className}CommandBus extends Context.Tag("${className}CommandBus")<
@@ -189,7 +183,7 @@ export class ${className}CommandBus extends Context.Tag("${className}CommandBus"
         ),
       register: () => Effect.void,
     }
-  );
+  )
 
   /**
    * Test layer - same as Live, suitable for testing

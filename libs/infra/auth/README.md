@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-auth
 
-Auth
+Auth infrastructure with session/token verification and RPC middleware integration
 
 ## Overview
 

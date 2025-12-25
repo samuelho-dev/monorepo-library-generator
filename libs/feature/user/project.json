@@ -6,7 +6,10 @@
   "tags": [
     "type:feature",
     "scope:user",
-    ""
+    "feature",
+    "domain",
+    "user",
+    "builtin"
   ],
   "targets": {
     "build": {

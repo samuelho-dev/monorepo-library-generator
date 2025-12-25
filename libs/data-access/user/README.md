@@ -1,6 +1,6 @@
 # @samuelho-dev/data-access-user
 
-user data access
+User data access with cache integration
 
 ## Overview
 

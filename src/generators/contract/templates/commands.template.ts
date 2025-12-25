@@ -101,7 +101,7 @@ export const ${className}CommandSchema = Schema.Union(
   Update${className}Command,
   Delete${className}Command
   // TODO: Add custom command schemas
-);
+)
 `)
 
   return builder.toString()
@@ -139,9 +139,9 @@ function createCreateCommand(className: string) {
  *
  * @example
  * \`\`\`typescript
- * const command = Create${className}Command.make({ name: "My ${className}" });
+ * const command = Create${className}Command.make({ name: "My ${className}" })
  * // or use the convenience factory:
- * const command = Create${className}Command.create({ name: "My ${className}" });
+ * const command = Create${className}Command.create({ name: "My ${className}" })
  * \`\`\`
  */
 export class Create${className}Command extends Schema.Class<Create${className}Command>("Create${className}Command")({
@@ -159,13 +159,13 @@ export class Create${className}Command extends Schema.Class<Create${className}Co
   // Example:
   // description: Schema.optional(Schema.String),
   // category: Schema.String,
-  // ownerId: Schema.UUID,
+  // ownerId: Schema.UUID
 }) {
   /**
    * Create a new ${className} command with validated input
    */
   static create(params: { name: string }) {
-    return new Create${className}Command(params);
+    return new Create${className}Command(params)
   }
 }`
 }
@@ -182,7 +182,7 @@ function createUpdateCommand(className: string, propertyName: string) {
  * const command = Update${className}Command.create({
  *   ${propertyName}Id: "..." as ${className}Id,
  *   updates: { name: "Updated Name" }
- * });
+ * })
  * \`\`\`
  */
 export class Update${className}Command extends Schema.Class<Update${className}Command>("Update${className}Command")({
@@ -195,7 +195,7 @@ export class Update${className}Command extends Schema.Class<Update${className}Co
   /** Fields to update */
   updates: Schema.Record({
     key: Schema.String,
-    value: Schema.Unknown,
+    value: Schema.Unknown
   }).annotations({
     title: "Updates",
     description: "Key-value pairs of fields to update"
@@ -203,16 +203,16 @@ export class Update${className}Command extends Schema.Class<Update${className}Co
 
   // TODO: Add specific update fields instead of generic Record
   // name: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
-  // status: Schema.optional(Schema.String),
+  // status: Schema.optional(Schema.String)
 }) {
   /**
    * Create an update command with validated input
    */
   static create(params: {
     ${propertyName}Id: ${className}Id;
-    updates: Record<string, unknown>;
+    updates: Record<string, unknown>
   }) {
-    return new Update${className}Command(params);
+    return new Update${className}Command(params)
   }
 }`
 }
@@ -229,7 +229,7 @@ function createDeleteCommand(className: string, propertyName: string) {
  * const command = Delete${className}Command.create({
  *   ${propertyName}Id: "..." as ${className}Id,
  *   reason: "No longer needed"
- * });
+ * })
  * \`\`\`
  */
 export class Delete${className}Command extends Schema.Class<Delete${className}Command>("Delete${className}Command")({
@@ -243,16 +243,16 @@ export class Delete${className}Command extends Schema.Class<Delete${className}Co
   reason: Schema.optional(Schema.String).annotations({
     title: "Deletion Reason",
     description: "Optional reason for deleting this ${className}"
-  }),
+  })
 }) {
   /**
    * Create a delete command with validated input
    */
   static create(params: {
     ${propertyName}Id: ${className}Id;
-    reason?: string;
+    reason?: string
   }) {
-    return new Delete${className}Command(params);
+    return new Delete${className}Command(params)
   }
 }`
 }

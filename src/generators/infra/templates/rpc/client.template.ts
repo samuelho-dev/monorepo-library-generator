@@ -35,9 +35,9 @@ Works in browser and Node.js environments.`,
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer", "Context", "Duration", "Option"] },
+    { from: "effect", imports: ["Effect", "Layer", "Context", "Duration", "Option", "Schema"] },
     { from: "@effect/platform", imports: ["HttpClient", "HttpClientRequest"] },
-    { from: "@effect/schema", imports: ["Schema"] },
+    { from: "@effect/platform", imports: ["HttpClientResponse"], isTypeOnly: true },
     { from: "./errors", imports: ["RpcInfraError"] }
   ])
 
@@ -119,20 +119,20 @@ export class RpcClientConfigTag extends Context.Tag("RpcClientConfig")<
  * @example
  * \`\`\`typescript
  * import { ${className}Client } from "${scope}/infra-${fileName}/client";
- * import { Schema } from "@effect/schema";
+ * import { Schema } from "effect";
  *
  * // Define response schema
  * const UserSchema = Schema.Struct({
  *   id: Schema.String,
  *   name: Schema.String
- * });
+ * })
  *
  * const program = Effect.gen(function*() {
  *   const client = yield* ${className}Client;
  *
  *   // Call with schema validation
- *   const user = yield* client.call("getUser", { id: "123" }, UserSchema);
- * });
+ *   const user = yield* client.call("getUser", { id: "123" }, UserSchema)
+ * })
  * \`\`\`
  */
 export class ${className}Client extends Context.Tag(
@@ -206,18 +206,25 @@ export class ${className}Client extends Context.Tag(
         })
 
       // Helper: Execute HTTP request with retries
-      const executeRequest = (request: Effect.Effect<HttpClientRequest.HttpClientRequest>) =>
-        Effect.flatMap(request, (req) => httpClient.execute(req)).pipe(
+      // All errors are mapped to RpcInfraError via catchAll
+      const executeRequest = (request: HttpClientRequest.HttpClientRequest) => {
+        const baseEffect = httpClient.execute(request).pipe(
           Effect.timeoutFail({
             duration: Duration.decode(config.timeout ?? "30 seconds"),
             onTimeout: () => new RpcInfraError({ message: "Request timeout", code: "TIMEOUT" })
-          }),
-          maxRetries > 0 ? Effect.retry({ times: maxRetries }) : (e) => e,
-          Effect.catchTag("RpcInfraError", (error) => Effect.fail(error)),
+          })
+        )
+
+        const withRetry = maxRetries > 0
+          ? baseEffect.pipe(Effect.retry({ times: maxRetries }))
+          : baseEffect
+
+        return withRetry.pipe(
           Effect.catchAll((error) =>
             Effect.fail(new RpcInfraError({ message: \`RPC call failed: \${String(error)}\`, code: "NETWORK_ERROR" }))
           )
         )
+      }
 
       // Helper: Parse JSON response body
       const parseResponseBody = (response: HttpClientResponse.HttpClientResponse) =>
@@ -265,9 +272,13 @@ export class ${className}Client extends Context.Tag(
         Effect.gen(function*() {
           const authHeader = yield* getAuthHeader()
 
-          const request = HttpClientRequest.post(config.baseUrl).pipe(
+          // Build request - handle potential body serialization error
+          const request = yield* HttpClientRequest.post(config.baseUrl).pipe(
             HttpClientRequest.setHeaders({ ...defaultHeaders, ...authHeader, ...customHeaders }),
-            HttpClientRequest.bodyJson({ operation, payload })
+            HttpClientRequest.bodyJson({ operation, payload }),
+            Effect.mapError((error) =>
+              new RpcInfraError({ message: \`Failed to serialize request body: \${String(error)}\`, code: "SERIALIZE_ERROR" })
+            )
           )
 
           const response = yield* executeRequest(request)
@@ -342,14 +353,14 @@ export class ${className}Client extends Context.Tag(
    * // Simple mock responses
    * const mockLayer = ${className}Client.Test({
    *   getUser: { id: "123", name: "John" }
-   * });
+   * })
    *
    * // Function-based mocks that can inspect payload
    * const mockLayer = ${className}Client.Test({
    *   getUser: (payload) => payload.id === "123"
    *     ? { id: "123", name: "John" }
    *     : { id: payload.id, name: "Unknown" }
-   * });
+   * })
    * \`\`\`
    */
   static readonly Test = (
@@ -444,17 +455,17 @@ export class ${className}Client extends Context.Tag(
  *   timeout: "30 seconds",
  *   getAuthToken: () =>
  *     Effect.gen(function*() {
- *       const token = yield* getStoredToken();
- *       return Option.fromNullable(token);
+ *       const token = yield* getStoredToken()
+ *       return Option.fromNullable(token)
  *     })
- * });
+ * })
  *
- * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String })
  *
  * const program = Effect.gen(function*() {
  *   const client = yield* ${className}Client;
- *   return yield* client.call("getUser", { id: "123" }, UserSchema);
- * }).pipe(Effect.provide(clientLayer));
+ *   return yield* client.call("getUser", { id: "123" }, UserSchema)
+ * }).pipe(Effect.provide(clientLayer))
  * \`\`\`
  */
 export const createRpcClientLayer = (config: RpcClientConfig) =>

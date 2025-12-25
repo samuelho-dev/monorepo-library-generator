@@ -99,7 +99,7 @@ export const ${className}QuerySchema = Schema.Union(
   List${className}sQuery,
   Search${className}sQuery
   // TODO: Add custom query schemas
-);
+)
 `)
 
   return builder.toString()
@@ -137,7 +137,7 @@ function createGetQuery(className: string, propertyName: string) {
  *
  * @example
  * \`\`\`typescript
- * const query = Get${className}Query.create("..." as ${className}Id);
+ * const query = Get${className}Query.create("..." as ${className}Id)
  * \`\`\`
  */
 export class Get${className}Query extends Schema.Class<Get${className}Query>("Get${className}Query")({
@@ -145,13 +145,13 @@ export class Get${className}Query extends Schema.Class<Get${className}Query>("Ge
   ${propertyName}Id: ${className}Id.annotations({
     title: "${className} ID",
     description: "Branded UUID of the ${className} to retrieve"
-  }),
+  })
 }) {
   /**
    * Create a get query for the specified ID
    */
   static create(${propertyName}Id: ${className}Id) {
-    return new Get${className}Query({ ${propertyName}Id });
+    return new Get${className}Query({ ${propertyName}Id })
   }
 }`
 }
@@ -165,7 +165,7 @@ function createListQuery(className: string) {
  *
  * @example
  * \`\`\`typescript
- * const query = List${className}sQuery.create({ page: 1, limit: 20 });
+ * const query = List${className}sQuery.create({ page: 1, limit: 20 })
  * \`\`\`
  */
 export class List${className}sQuery extends Schema.Class<List${className}sQuery>("List${className}sQuery")({
@@ -202,7 +202,7 @@ export class List${className}sQuery extends Schema.Class<List${className}sQuery>
 
   // TODO: Add domain-specific filter fields
   // status: Schema.optional(Schema.String),
-  // ownerId: Schema.optional(Schema.UUID),
+  // ownerId: Schema.optional(Schema.UUID)
 }) {
   /**
    * Create a list query with pagination
@@ -211,14 +211,14 @@ export class List${className}sQuery extends Schema.Class<List${className}sQuery>
     page?: number;
     limit?: number;
     sortBy?: string;
-    sortDirection?: "asc" | "desc";
+    sortDirection?: "asc" | "desc"
   } = {}) {
     return new List${className}sQuery({
       page: params.page ?? 1,
       limit: params.limit ?? 20,
       ...(params.sortBy !== undefined && { sortBy: params.sortBy }),
       ...(params.sortDirection !== undefined && { sortDirection: params.sortDirection }),
-    });
+    })
   }
 }`
 }
@@ -232,7 +232,7 @@ function createSearchQuery(className: string) {
  *
  * @example
  * \`\`\`typescript
- * const query = Search${className}sQuery.create({ searchTerm: "example" });
+ * const query = Search${className}sQuery.create({ searchTerm: "example" })
  * \`\`\`
  */
 export class Search${className}sQuery extends Schema.Class<Search${className}sQuery>("Search${className}sQuery")({
@@ -261,7 +261,7 @@ export class Search${className}sQuery extends Schema.Class<Search${className}sQu
   ).annotations({
     title: "Results Limit",
     description: "Number of search results per page (max 100)"
-  }),
+  })
 }) {
   /**
    * Create a search query with pagination
@@ -269,13 +269,13 @@ export class Search${className}sQuery extends Schema.Class<Search${className}sQu
   static create(params: {
     searchTerm: string;
     page?: number;
-    limit?: number;
+    limit?: number
   }) {
     return new Search${className}sQuery({
       searchTerm: params.searchTerm,
       page: params.page ?? 1,
       limit: params.limit ?? 20,
-    });
+    })
   }
 }`
 }

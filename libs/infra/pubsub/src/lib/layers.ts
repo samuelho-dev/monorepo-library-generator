@@ -42,17 +42,17 @@ Use Cases:
  *   const pubsub = yield* PubsubService;
  *
  *   // On Instance A
- *   const events = yield* pubsub.topic<UserEvent>("user-events");
- *   yield* events.publish({ type: "login", userId: "123" });
+ *   const events = yield* pubsub.topic<UserEvent>("user-events")
+ *   yield* events.publish({ type: "login", userId: "123" })
  *
  *   // On Instance B (different process)
- *   const events = yield* pubsub.topic<UserEvent>("user-events");
+ *   const events = yield* pubsub.topic<UserEvent>("user-events")
  *   const sub = yield* events.subscribe;
- *   const event = yield* Queue.take(sub); // Receives event from Instance A
+ *   const event = yield* Queue.take(sub) // Receives event from Instance A
  * }).pipe(
  *   Effect.provide(PubsubRedisLayer),
  *   Effect.provide(Redis.Live) // or Redis.Test for testing
- * );
+ * )
  * ```
  */
 export const PubsubRedisLayer = Layer.scoped(
@@ -229,14 +229,14 @@ export const PubsubRedisLayer = Layer.scoped(
  *   type: Schema.Literal("UserCreated", "UserUpdated"),
  *   userId: Schema.String,
  *   timestamp: Schema.DateFromSelf
- * });
- * type UserEvent = Schema.Schema.Type<typeof UserEventSchema>;
+ * })
+ * type UserEvent = Schema.Schema.Type<typeof UserEventSchema>
  *
  * const program = Effect.gen(function*() {
  *   const pubsub = yield* PubsubService;
  *
  *   // Create a typed topic
- *   const userEvents = yield* pubsub.topic("user-events", UserEventSchema);
+ *   const userEvents = yield* pubsub.topic("user-events", UserEventSchema)
  *
  *   // Subscribe to events
  *   const subscription = yield* userEvents.subscribe;
@@ -246,12 +246,12 @@ export const PubsubRedisLayer = Layer.scoped(
  *     type: "UserCreated",
  *     userId: "user-123",
  *     timestamp: new Date()
- *   });
+ *   })
  *
  *   // Receive event (in another part of the app or another instance)
- *   const event = yield* Queue.take(subscription);
- *   console.log("Received:", event);
- * });
+ *   const event = yield* Queue.take(subscription)
+ *   console.log("Received:", event)
+ * })
  *
  * // Run with Redis layer (production)
  * Effect.runPromise(
@@ -259,7 +259,7 @@ export const PubsubRedisLayer = Layer.scoped(
  *     Effect.provide(PubsubRedisLayer),
  *     Effect.provide(Redis.Live)
  *   )
- * );
+ * )
  *
  * // Run with test layer (no Redis needed)
  * Effect.runPromise(
@@ -267,7 +267,7 @@ export const PubsubRedisLayer = Layer.scoped(
  *     Effect.provide(PubsubRedisLayer),
  *     Effect.provide(Redis.Test)
  *   )
- * );
+ * )
  * ```
  */
 

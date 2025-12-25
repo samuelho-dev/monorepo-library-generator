@@ -82,7 +82,7 @@ export const defineRpc = Rpc.make
  *   CreateUser,
  *   UpdateUser,
  *   DeleteUser
- * );
+ * )
  * \`\`\`
  */
 export const defineRpcGroup = RpcGroup.make
@@ -107,16 +107,16 @@ export const defineRpcGroup = RpcGroup.make
  *     Effect.gen(function*() {
  *       const user = yield* CurrentUser; // From AuthMiddleware
  *       const repo = yield* UserRepository;
- *       return yield* repo.findById(id);
+ *       return yield* repo.findById(id)
  *     }),
  *
  *   CreateUser: (input) =>
  *     Effect.gen(function*() {
  *       const user = yield* CurrentUser;
  *       const repo = yield* UserRepository;
- *       return yield* repo.create({ ...input, createdBy: user.id });
+ *       return yield* repo.create({ ...input, createdBy: user.id })
  *     }),
- * });
+ * })
  * \`\`\`
  */
 /**
@@ -147,10 +147,10 @@ export type RpcHandler<Payload, Success, Failure, Deps> = (
  * \`\`\`typescript
  * import { UserRpcs } from "@scope/contract-user/rpc";
  *
- * type UserHandlers = HandlersFor<typeof UserRpcs>;
+ * type UserHandlers = HandlersFor<typeof UserRpcs>
  * // {
- * //   GetUser: (payload: { id: string }) => Effect<User, UserNotFoundError | AuthError, UserRepository>;
- * //   CreateUser: (payload: CreateUserInput) => Effect<User, ValidationError | AuthError, UserRepository>;
+ * //   GetUser: (payload: { id: string }) => Effect<User, UserNotFoundError | AuthError, UserRepository>
+ * //   CreateUser: (payload: CreateUserInput) => Effect<User, ValidationError | AuthError, UserRepository>
  * // }
  * \`\`\`
  */
@@ -209,7 +209,7 @@ export type RpcFailure<R> = R extends Rpc.Rpc<string, unknown, unknown, infer Fa
  *
  * @example
  * \`\`\`typescript
- * const UsersPage = paginatedResponse(UserSchema);
+ * const UsersPage = paginatedResponse(UserSchema)
  * // { items: User[], total: number, page: number, pageSize: number }
  * \`\`\`
  */
@@ -229,7 +229,7 @@ export const paginatedResponse = <T extends Schema.Schema.Any>(itemSchema: T) =>
  * const ListUsersRequest = Schema.Struct({
  *   ...paginationRequest,
  *   filter: Schema.optional(Schema.String)
- * });
+ * })
  * \`\`\`
  */
 export const paginationRequest = {

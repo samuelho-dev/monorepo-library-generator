@@ -1,6 +1,6 @@
 # @samuelho-dev/provider-redis
 
-Redis
+Redis provider for cache, queue, and pubsub backing with ioredis
 
 ## Quick Reference
 
@@ -20,16 +20,12 @@ This is an AI-optimized reference for Redis, a provider library following Effect
 
 ```typescript
 // Type-only import (zero runtime)
-import type { Resource, RedisConfig } from '@samuelho-dev/provider-redis/types';
-
-// Service import
-import { Redis } from '@samuelho-dev/provider-redis';
-
-Effect.gen(function*() {
+import type { Resource, RedisConfig } from '@samuelho-dev/provider-redis/types'// Service import
+import { Redis } from '@samuelho-dev/provider-redis'Effect.gen(function*() {
   const service = yield* Redis;
-  const result = yield* service.list({ page: 1, limit: 10 });
+  const result = yield* service.list({ page: 1, limit: 10 })
   // ...
-});
+})
 ```
 
 ### Customization Guide
@@ -56,21 +52,19 @@ Effect.gen(function*() {
 
 ```typescript
 import { Redis } from '@samuelho-dev/provider-redis';
-import type { Resource } from '@samuelho-dev/provider-redis/types';
-
-// Standard usage
+import type { Resource } from '@samuelho-dev/provider-redis/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* Redis;
-  const items = yield* service.list({ page: 1, limit: 10 });
+  const items = yield* service.list({ page: 1, limit: 10 })
   return items;
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(Redis.Live)  // Production
   // or Effect.provide(Redis.Test)   // Testing
   // or Effect.provide(Redis.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ## SDK Integration Guide
@@ -105,10 +99,10 @@ static readonly Live = Layer.effect(
     const config: RedisConfig = {
       apiKey: env.REDIS_API_KEY,
       timeout: env.REDIS_TIMEOUT || 20000,
-    };
+    }
 
     // Initialize SDK client
-    const client = new RedisSDK(config);
+    const client = new RedisSDK(config)
 
     return {
       config,
@@ -140,9 +134,9 @@ static readonly Live = Layer.effect(
 
       // Repeat for get, create, update, delete operations
       // ... (follow same pattern with Effect.tryPromise + timeoutFail)
-    };
+    }
   }),
-);
+)
 ```
 
 #### 3. Add Resource Cleanup (If Needed)
@@ -156,19 +150,19 @@ static readonly Live = Layer.scoped(
     const config: RedisConfig = {
       apiKey: env.REDIS_API_KEY,
       timeout: env.REDIS_TIMEOUT || 20000,
-    };
+    }
 
     // Initialize SDK with cleanup
     const client = yield* Effect.acquireRelease(
       Effect.tryPromise(() => RedisSDK.connect(config)),
       (client) => Effect.sync(() => client.close())
-    );
+    )
 
     return {
       // ... service implementation
-    };
+    }
   }),
-);
+)
 ```
 
 #### 4. Update Dev Layer (Optional)

@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-storage
 
-Storage
+Storage infrastructure for file operations (coordinates storage providers)
 
 ## Overview
 

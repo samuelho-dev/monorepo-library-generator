@@ -1,4 +1,4 @@
-import { UserNotFoundRpcError, UserPermissionRpcError, UserRpcs, UserValidationRpcError } from "@samuelho-dev/contract-user"
+import { UserNotFoundRpcError, UserRpcs, UserValidationRpcError } from "@samuelho-dev/contract-user"
 import { RequestMeta, ServiceContext, getHandlerContext } from "@samuelho-dev/infra-rpc"
 import { Array as EffectArray, DateTime, Effect, Layer, Option } from "effect"
 import { UserService } from "../server/services"
@@ -46,7 +46,7 @@ import { ProfileHandlers } from "../server/services/profile/handlers"
  *   Effect.gen(function*() {
  *     const { user, meta } = yield* getHandlerContext;
  *     const service = yield* UserService;
- *     return yield* service.findById(id);
+ *     return yield* service.findById(id)
  *   })
  * ```
  */
@@ -55,6 +55,7 @@ export const UserHandlers = UserRpcs.toLayer({
    * Get user by ID
    *
    * RouteTag: "public" - No authentication required
+   * Errors: NotFoundError, TimeoutError
    */
   GetUser: ({ id }) =>
     Effect.gen(function*() {
@@ -66,48 +67,31 @@ export const UserHandlers = UserRpcs.toLayer({
         requestId: meta.requestId
       })
 
-      const result = yield* service.get(id).pipe(
-        Effect.catchTags({
+      // Service throws UserNotFoundError which is caught by catchTags
+      return yield* service.get(id)
+    }).pipe(Effect.catchTags({
         "UserNotFoundError": (e) =>
           Effect.fail(new UserNotFoundRpcError({
-            message: e.message,
-            userId: e.userId
+            userId: e.userId,
+            message: e.message
           })),
-        "UserValidationError": (e) =>
+        "UserTimeoutError": (e) =>
           Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
+            field: "timeout",
+            message: `Operation timed out after ${e.timeoutMs}ms`
           })),
-        "UserAlreadyExistsError": (e) =>
+        "DatabaseInternalError": (e) =>
           Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            field: "userId"
-          })),
-        "UserPermissionError": (e) =>
-          Effect.fail(new UserPermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "UserServiceError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: `Service error: ${e.message}`,
-            field: "service"
+            field: "database",
+            message: e.message
           }))
-      })
-      );
-
-      // Handle Option.none case - return typed RPC error
-      if (Option.isNone(result)) {
-        return yield* Effect.fail(UserNotFoundRpcError.create(id))
-      }
-
-      return result.value
-    }),
+      })),
 
   /**
    * List users with pagination
    *
    * RouteTag: "public" - No authentication required
+   * Errors: TimeoutError
    */
   ListUsers: ({ page, pageSize }) =>
     Effect.gen(function*() {
@@ -118,64 +102,8 @@ export const UserHandlers = UserRpcs.toLayer({
       const offset = (currentPage - 1) * currentPageSize
 
       const [items, total] = yield* Effect.all([
-        service.findByCriteria({}, offset, currentPageSize).pipe(
-          Effect.catchTags({
-        "UserNotFoundError": (e) =>
-          Effect.fail(new UserNotFoundRpcError({
-            message: e.message,
-            userId: e.userId
-          })),
-        "UserValidationError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
-          })),
-        "UserAlreadyExistsError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            field: "userId"
-          })),
-        "UserPermissionError": (e) =>
-          Effect.fail(new UserPermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "UserServiceError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: `Service error: ${e.message}`,
-            field: "service"
-          }))
-      })
-        ),
-        service.count({}).pipe(
-          Effect.catchTags({
-        "UserNotFoundError": (e) =>
-          Effect.fail(new UserNotFoundRpcError({
-            message: e.message,
-            userId: e.userId
-          })),
-        "UserValidationError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
-          })),
-        "UserAlreadyExistsError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            field: "userId"
-          })),
-        "UserPermissionError": (e) =>
-          Effect.fail(new UserPermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "UserServiceError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: `Service error: ${e.message}`,
-            field: "service"
-          }))
-      })
-        )
+        service.findByCriteria({}, offset, currentPageSize),
+        service.count({})
       ])
 
       return {
@@ -185,12 +113,24 @@ export const UserHandlers = UserRpcs.toLayer({
         total,
         hasMore: offset + items.length < total
       }
-    }),
+    }).pipe(Effect.catchTags({
+        "UserTimeoutError": (e) =>
+          Effect.fail(new UserValidationRpcError({
+            field: "timeout",
+            message: `Operation timed out after ${e.timeoutMs}ms`
+          })),
+        "DatabaseInternalError": (e) =>
+          Effect.fail(new UserValidationRpcError({
+            field: "database",
+            message: e.message
+          }))
+      })),
 
   /**
    * Create a new user
    *
    * RouteTag: "protected" - User authentication required
+   * Errors: TimeoutError
    */
   CreateUser: (input) =>
     Effect.gen(function*() {
@@ -204,41 +144,25 @@ export const UserHandlers = UserRpcs.toLayer({
 
       // RPC input type should match service create input type
       // If types differ, use Schema.decode for transformation at this boundary
-      return yield* service.create(input).pipe(
-        Effect.catchTags({
-        "UserNotFoundError": (e) =>
-          Effect.fail(new UserNotFoundRpcError({
-            message: e.message,
-            userId: e.userId
-          })),
-        "UserValidationError": (e) =>
+      return yield* service.create(input)
+    }).pipe(Effect.catchTags({
+        "UserTimeoutError": (e) =>
           Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
+            field: "timeout",
+            message: `Operation timed out after ${e.timeoutMs}ms`
           })),
-        "UserAlreadyExistsError": (e) =>
+        "DatabaseInternalError": (e) =>
           Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            field: "userId"
-          })),
-        "UserPermissionError": (e) =>
-          Effect.fail(new UserPermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "UserServiceError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: `Service error: ${e.message}`,
-            field: "service"
+            field: "database",
+            message: e.message
           }))
-      })
-      )
-    }),
+      })),
 
   /**
    * Update an existing user
    *
    * RouteTag: "protected" - User authentication required
+   * Errors: NotFoundError, TimeoutError
    */
   UpdateUser: ({ id, data }) =>
     Effect.gen(function*() {
@@ -253,51 +177,31 @@ export const UserHandlers = UserRpcs.toLayer({
 
       // RPC data type should match service update input type
       // If types differ, use Schema.decode for transformation at this boundary
-      const result = yield* service.update(id, data).pipe(
-        Effect.catchTags({
+      // Service throws UserNotFoundError which is caught by catchTags
+      return yield* service.update(id, data)
+    }).pipe(Effect.catchTags({
         "UserNotFoundError": (e) =>
           Effect.fail(new UserNotFoundRpcError({
-            message: e.message,
-            userId: e.userId
+            userId: e.userId,
+            message: e.message
           })),
-        "UserValidationError": (e) =>
+        "UserTimeoutError": (e) =>
           Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
+            field: "timeout",
+            message: `Operation timed out after ${e.timeoutMs}ms`
           })),
-        "UserAlreadyExistsError": (e) =>
+        "DatabaseInternalError": (e) =>
           Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            field: "userId"
-          })),
-        "UserPermissionError": (e) =>
-          Effect.fail(new UserPermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "UserServiceError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: `Service error: ${e.message}`,
-            field: "service"
+            field: "database",
+            message: e.message
           }))
-      })
-      )
-
-      // Handle Option.none case - return typed RPC error
-      if (Option.isNone(result)) {
-        return yield* Effect.fail(new UserNotFoundRpcError({
-          message: `User not found: ${id}`,
-          userId: id
-        }))
-      }
-
-      return result.value
-    }),
+      })),
 
   /**
    * Delete a user
    *
    * RouteTag: "protected" - User authentication required
+   * Errors: NotFoundError, TimeoutError
    */
   DeleteUser: ({ id }) =>
     Effect.gen(function*() {
@@ -310,45 +214,34 @@ export const UserHandlers = UserRpcs.toLayer({
         requestId: meta.requestId
       })
 
-      yield* service.delete(id).pipe(
-        Effect.catchTags({
-        "UserNotFoundError": (e) =>
-          Effect.fail(new UserNotFoundRpcError({
-            message: e.message,
-            userId: e.userId
-          })),
-        "UserValidationError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
-          })),
-        "UserAlreadyExistsError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            field: "userId"
-          })),
-        "UserPermissionError": (e) =>
-          Effect.fail(new UserPermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "UserServiceError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: `Service error: ${e.message}`,
-            field: "service"
-          }))
-      })
-      )
+      yield* service.delete(id)
       return {
         success: true as const,
         deletedAt: DateTime.unsafeNow()
       }
-    }),
+    }).pipe(Effect.catchTags({
+        "UserNotFoundError": (e) =>
+          Effect.fail(new UserNotFoundRpcError({
+            userId: e.userId,
+            message: e.message
+          })),
+        "UserTimeoutError": (e) =>
+          Effect.fail(new UserValidationRpcError({
+            field: "timeout",
+            message: `Operation timed out after ${e.timeoutMs}ms`
+          })),
+        "DatabaseInternalError": (e) =>
+          Effect.fail(new UserValidationRpcError({
+            field: "database",
+            message: e.message
+          }))
+      })),
 
   /**
    * Validate user (service-to-service)
    *
    * RouteTag: "service" - Service authentication required
+   * Errors: TimeoutError
    */
   ValidateUser: ({ userId, validationType }) =>
     Effect.gen(function*() {
@@ -361,35 +254,7 @@ export const UserHandlers = UserRpcs.toLayer({
         callingService: serviceCtx.serviceName
       })
 
-      const exists = yield* service.exists(userId).pipe(
-        Effect.catchTags({
-        "UserNotFoundError": (e) =>
-          Effect.fail(new UserNotFoundRpcError({
-            message: e.message,
-            userId: e.userId
-          })),
-        "UserValidationError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
-          })),
-        "UserAlreadyExistsError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            field: "userId"
-          })),
-        "UserPermissionError": (e) =>
-          Effect.fail(new UserPermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "UserServiceError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: `Service error: ${e.message}`,
-            field: "service"
-          }))
-      })
-      )
+      const exists = yield* service.exists(userId)
 
       // Build response with proper handling for exactOptionalPropertyTypes
       const baseResponse = {
@@ -404,52 +269,44 @@ export const UserHandlers = UserRpcs.toLayer({
       return exists
         ? baseResponse
         : { ...baseResponse, errors: notFoundErrors }
-    }),
+    }).pipe(Effect.catchTags({
+        "UserTimeoutError": (e) =>
+          Effect.fail(new UserValidationRpcError({
+            field: "timeout",
+            message: `Operation timed out after ${e.timeoutMs}ms`
+          })),
+        "DatabaseInternalError": (e) =>
+          Effect.fail(new UserValidationRpcError({
+            field: "database",
+            message: e.message
+          }))
+      })),
 
   /**
    * Bulk get users (service-to-service)
    *
    * RouteTag: "service" - Service authentication required
+   * Errors: TimeoutError (NotFoundError is handled per-id internally)
    */
   BulkGetUsers: ({ ids }) =>
     Effect.gen(function*() {
       const service = yield* UserService
 
-      // Fetch all entities in parallel using individual gets
+      // Fetch all entities in parallel, catching NotFoundError per-id
+      // Use Effect.option to convert NotFoundError to Option.none
       const results = yield* Effect.all(
-        ids.map((id) => service.get(id).pipe(
-          Effect.catchTags({
-        "UserNotFoundError": (e) =>
-          Effect.fail(new UserNotFoundRpcError({
-            message: e.message,
-            userId: e.userId
-          })),
-        "UserValidationError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            ...(e.field !== undefined && { field: e.field })
-          })),
-        "UserAlreadyExistsError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: e.message,
-            field: "userId"
-          })),
-        "UserPermissionError": (e) =>
-          Effect.fail(new UserPermissionRpcError({
-            message: e.message,
-            action: e.operation
-          })),
-        "UserServiceError": (e) =>
-          Effect.fail(new UserValidationRpcError({
-            message: `Service error: ${e.message}`,
-            field: "service"
-          }))
-      })
-        )),
+        ids.map((id) =>
+          service.get(id).pipe(
+            Effect.asSome,
+            Effect.catchTag("UserNotFoundError", () =>
+              Effect.succeed(Option.none())
+            )
+          )
+        ),
         { concurrency: "unbounded" }
       )
 
-      // Extract found items (filter out None results)
+      // Extract found items using EffectArray.getSomes
       const items = EffectArray.getSomes(results)
       const foundIds = new Set(items.map((item) => item.id))
       const notFound = ids.filter((id) => !foundIds.has(id))
@@ -458,7 +315,18 @@ export const UserHandlers = UserRpcs.toLayer({
         items,
         notFound
       }
-    })
+    }).pipe(Effect.catchTags({
+        "UserTimeoutError": (e) =>
+          Effect.fail(new UserValidationRpcError({
+            field: "timeout",
+            message: `Operation timed out after ${e.timeoutMs}ms`
+          })),
+        "DatabaseInternalError": (e) =>
+          Effect.fail(new UserValidationRpcError({
+            field: "database",
+            message: e.message
+          }))
+      }))
 })
 
 // ============================================================================

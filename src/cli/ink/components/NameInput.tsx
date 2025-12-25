@@ -9,11 +9,10 @@
 
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
-import { useState } from 'react';
-
+import { useState } from 'react'
 import type { LibraryType } from '../../interactive/types';
 import { useOperations } from '../bridge/operations-context';
-import { colors } from '../theme/colors';
+import { colors } from '../theme/colors'
 
 interface NameInputProps {
   readonly librariesRoot: string;
@@ -22,25 +21,25 @@ interface NameInputProps {
 }
 
 export function NameInput({ librariesRoot, libraryType, onSubmit }: NameInputProps) {
-  const { validation } = useOperations();
-  const [name, setName] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const { validation } = useOperations()
+  const [name, setName] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const handleChange = (value: string) => {
-    setName(value);
-    setError(null);
-  };
+    setName(value)
+    setError(null)
+  }
 
   useInput((input, key) => {
     if (key.return) {
-      const result = validation.validateName(name);
+      const result = validation.validateName(name)
       if (!result.isValid) {
-        setError(result.error);
+        setError(result.error)
       } else {
-        onSubmit(name.trim());
+        onSubmit(name.trim())
       }
     }
-  });
+  })
 
   return (
     <Box flexDirection="column">
@@ -67,5 +66,5 @@ export function NameInput({ librariesRoot, libraryType, onSubmit }: NameInputPro
         <Text color={colors.muted}>Press Enter to continue</Text>
       </Box>
     </Box>
-  );
+  )
 }

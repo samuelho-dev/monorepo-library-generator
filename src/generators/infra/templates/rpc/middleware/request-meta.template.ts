@@ -74,9 +74,9 @@ export interface RequestMetadata {
  * \`\`\`typescript
  * const handler = Effect.gen(function*() {
  *   const meta = yield* RequestMeta;
- *   console.log("Request ID:", meta.requestId);
- *   console.log("Timestamp:", meta.timestamp);
- * });
+ *   console.log("Request ID:", meta.requestId)
+ *   console.log("Timestamp:", meta.timestamp)
+ * })
  * \`\`\`
  */
 export class RequestMeta extends Context.Tag("@${fileName}/RequestMeta")<
@@ -95,7 +95,7 @@ export class RequestMeta extends Context.Tag("@${fileName}/RequestMeta")<
 export class RequestMetaMiddleware extends RpcMiddleware.Tag<RequestMetaMiddleware>()(
   "@${fileName}/RequestMetaMiddleware",
   {
-    provides: RequestMeta,
+    provides: RequestMeta
   }
 ) {}
 

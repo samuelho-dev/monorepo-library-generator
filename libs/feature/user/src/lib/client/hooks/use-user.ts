@@ -1,8 +1,6 @@
-import { Schema } from "@effect/schema"
 import { useAtom, useAtomValue } from "@effect-atom/atom-react"
 import type { CreateUserInput, UpdateUserInput, UserSelect as User } from "@samuelho-dev/contract-user"
-import { env } from "@samuelho-dev/env"
-import { Option } from "effect"
+import { Option, Schema } from "effect"
 import { useCallback, useMemo } from "react"
 import { resetUserState, updateUserEntity, updateUserList, updateUserOperation, userAtom, userDataAtom, userErrorAtom, userIsLoadingAtom, userListAtom } from "../atoms/user-atoms"
 import type { UserState } from "../atoms/user-atoms"
@@ -18,13 +16,11 @@ Contract-First Architecture:
 - Sub-modules access state through this hook
 
 Usage:
-  import { useUser } from "@samuelho-dev/feature-user/client";
-
-  function MyComponent() {
+  import { useUser } from "@samuelho-dev/feature-user/client"  function MyComponent() {
     const {
       data, list, isLoading, error,
       fetchById, fetchList, create, update, remove, reset
-    } = useUser();
+    } = useUser()
     // ...
   }
  *
@@ -42,13 +38,15 @@ const RpcErrorSchema = Schema.Struct({
   message: Schema.String
 })
 
+type RpcErrorMessage = Schema.Schema.Type<typeof RpcErrorSchema>
+
 /**
  * Extract error message from RPC error response using Schema
  *
  * Uses Schema.decodeUnknownOption for type-safe parsing without coercion.
  */
-function getErrorMessage(error: unknown, fallback: string) {
-  const result = Schema.decodeUnknownOption(RpcErrorSchema)(error)
+function getErrorMessage(error: unknown, fallback: string): string {
+  const result: Option.Option<RpcErrorMessage> = Schema.decodeUnknownOption(RpcErrorSchema)(error)
   return Option.isSome(result) ? result.value.message : fallback
 }
 
@@ -63,19 +61,17 @@ export interface UseUserReturn {
   // State
   readonly state: UserState;
   readonly data: User | null;
-  readonly list: ReadonlyArray<User>;
+  readonly list: ReadonlyArray<User>
   readonly isLoading: boolean;
-  readonly error: string | null;
-
-  // Entity operations
-  readonly fetchById: (id: string) => Promise<User | null>;
-  readonly create: (input: CreateUserInput) => Promise<User>;
-  readonly update: (id: string, input: UpdateUserInput) => Promise<User>;
-  readonly remove: (id: string) => Promise<void>;
+  readonly error: string | null  // Entity operations
+  readonly fetchById: (id: string) => Promise<User | null>
+  readonly create: (input: CreateUserInput) => Promise<User>
+  readonly update: (id: string, input: UpdateUserInput) => Promise<User>
+  readonly remove: (id: string) => Promise<void>
 
   // List operations
-  readonly fetchList: (options?: { page?: number; pageSize?: number }) => Promise<void>;
-  readonly refreshList: () => Promise<void>;
+  readonly fetchList: (options?: { page?: number; pageSize?: number }) => Promise<void>
+  readonly refreshList: () => Promise<void>
 
   // State management
   readonly reset: () => void;
@@ -86,12 +82,12 @@ export interface UseUserReturn {
 // Hook Implementation
 // ============================================================================
 /**
- * RPC endpoint URL - configured via env library
+ * RPC endpoint URL - configured via environment
  *
- * Uses centralized environment configuration for type-safe access.
+ * Uses process.env for client-side configuration.
  * Falls back to "/api/rpc" if PUBLIC_API_URL is not configured.
  */
-const RPC_ENDPOINT = env.PUBLIC_API_URL ?? "/api/rpc"
+const RPC_ENDPOINT = process.env["PUBLIC_API_URL"] ?? process.env["NEXT_PUBLIC_API_URL"] ?? "/api/rpc"
 
 /**
  * Make an RPC call to the server
@@ -119,7 +115,7 @@ async function rpcCall<T>(operation: string, payload: unknown): Promise<T> {
  * List response type from server
  */
 interface ListResponse<T> {
-  readonly items: ReadonlyArray<T>;
+  readonly items: ReadonlyArray<T>
   readonly total: number;
   readonly hasMore: boolean;
 }
@@ -136,24 +132,24 @@ interface ListResponse<T> {
  * @example
  * ```tsx
  * function UserList() {
- *   const { list, isLoading, fetchList } = useUser();
+ *   const { list, isLoading, fetchList } = useUser()
  *
  *   useEffect(() => {
- *     fetchList();
- *   }, [fetchList]);
+ *     fetchList()
+ *   }, [fetchList])
  *
- *   if (isLoading) return <Loading />;
- *   return <ul>{list.map(item => <li key={item.id}>{item.name}</li>)}</ul>;
+ *   if (isLoading) return <Loading />
+ *   return <ul>{list.map(item => <li key={item.id}>{item.name}</li>)}</ul>
  * }
  * ```
  */
 export function useUser(): UseUserReturn {
   // Atom state
-  const [state, setState] = useAtom(userAtom);
-  const isLoading = useAtomValue(userIsLoadingAtom);
-  const error = useAtomValue(userErrorAtom);
-  const data = useAtomValue(userDataAtom);
-  const list = useAtomValue(userListAtom);
+  const [state, setState] = useAtom(userAtom)
+  const isLoading = useAtomValue(userIsLoadingAtom)
+  const error = useAtomValue(userErrorAtom)
+  const data = useAtomValue(userDataAtom)
+  const list = useAtomValue(userListAtom)
 
   // Fetch by ID
   const fetchById = useCallback(async (id: string) => {

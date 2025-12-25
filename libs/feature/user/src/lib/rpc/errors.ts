@@ -40,7 +40,7 @@ Error Flow:
  * ```typescript
  * const handler = userService.get(id).pipe(
  *   withUserRpcBoundary
- * );
+ * )
  * ```
  *
  * For custom transformations, use Effect.catchTag directly:
@@ -54,7 +54,7 @@ Error Flow:
  *       id: e.userId
  *     }))
  *   )
- * );
+ * )
  * ```
  */
 export const withUserRpcBoundary = <A, R>(
@@ -84,19 +84,8 @@ export const withUserRpcBoundary = <A, R>(
         message: e.message
       }))
     ),
-    // Repository Errors → RPC Errors
-    Effect.catchTag("UserNotFoundRepositoryError", (e) =>
-      Effect.fail(new RpcNotFoundError({
-        message: e.message,
-        resource: "User"
-      }))
-    ),
-    Effect.catchTag("UserConflictRepositoryError", (e) =>
-      Effect.fail(new RpcConflictError({
-        message: e.message
-      }))
-    ),
-    // Service/Infrastructure Errors → RPC Internal Error
+    // Infrastructure Errors → RPC Internal Error
+    // These are Connection, Timeout, Transaction errors from data-access layer
     Effect.catchAll(() =>
       Effect.fail(new RpcInternalError({
         message: "An unexpected error occurred"

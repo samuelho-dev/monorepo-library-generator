@@ -46,13 +46,16 @@ export type { ${className}ServiceInterface } from "./service"
   builder.addBlankLine()
 
   // Export sub-modules if present
+  // NOTE: Sub-modules don't have index.ts (biome noBarrelFile compliance)
+  // Import directly from service.ts and layer.ts
   if (options.subModules && options.subModules.length > 0) {
     builder.addSectionComment("Sub-Module Services")
 
     for (const subModule of options.subModules) {
       const subClassName = createNamingVariants(subModule).className
       builder.addRaw(
-        `export { ${subClassName}Service, ${subClassName}Live, ${subClassName}Test } from "./${subModule}"
+        `export { ${subClassName}Service, type ${subClassName}ServiceInterface } from "./${subModule}/service"
+export { ${subClassName}Live, ${subClassName}Test, ${subClassName}Dependencies } from "./${subModule}/layer"
 `
       )
     }

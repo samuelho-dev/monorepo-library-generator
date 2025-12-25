@@ -82,7 +82,7 @@ export interface StaticLayerConfig {
  *   layerType: "succeed",
  *   liveImpl: "repositoryImpl",
  *   testViaDependencies: true
- * });
+ * })
  * ```
  */
 export function generateStaticLayers(config: StaticLayerConfig) {
@@ -198,7 +198,7 @@ function generateDevLayer(
    */
   static readonly Dev = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const liveService = yield* ${className}.Live.pipe(
         Layer.build,
         Effect.map(Context.unsafeGet(${className}))
@@ -214,8 +214,8 @@ function generateDevLayer(
 /**
  * Generate Auto layer for environment-aware selection
  *
- * Uses env library for type-safe environment access.
- * The caller must ensure env is imported from @scope/env.
+ * Uses process.env for environment access since NODE_ENV
+ * is a standard runtime variable not included in the typed env object.
  *
  * @param className - The Context.Tag class name
  * @param envVar - The environment variable key (e.g., "NODE_ENV")
@@ -224,15 +224,13 @@ function generateAutoLayer(className: string, envVar: string) {
   return `  /**
    * Auto layer - Environment-aware layer selection
    *
-   * Automatically selects the appropriate layer based on env.${envVar}:
+   * Automatically selects the appropriate layer based on process.env.${envVar}:
    * - "test" → Test layer
    * - "development" → Dev layer (with logging)
    * - "production" or other → Live layer (default)
-   *
-   * Requires: import { env } from "@scope/env";
    */
   static readonly Auto = Layer.suspend(() => {
-    switch (env.${envVar}) {
+    switch (process.env["${envVar}"]) {
       case "test":
         return ${className}.Test
       case "development":

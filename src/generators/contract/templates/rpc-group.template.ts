@@ -46,7 +46,7 @@ export function generateRpcGroupFile(options: ContractTemplateOptions) {
  *   Delete${className}: (input) => Effect.flatMap(${className}Service, s => s.delete(input.id)),
  *   Validate${className}: (input) => Effect.flatMap(${className}Service, s => s.validate(input)),
  *   BulkGet${className}s: (input) => Effect.flatMap(${className}Service, s => s.bulkGet(input.ids)),
- * });
+ * })
  * \`\`\`
  *
  * @module ${scope}/contract-${fileName}/rpc-group
@@ -97,10 +97,10 @@ export function generateRpcGroupFile(options: ContractTemplateOptions) {
  *   Get${className}: (input) => service.get(input.id),
  *   List${className}s: (input) => service.list(input),
  *   // ... other handlers
- * });
+ * })
  *
  * // Merge with router
- * const app = RouterBuilder.make(${className}Rpcs).handle(handlers);
+ * const app = RouterBuilder.make(${className}Rpcs).handle(handlers)
  * \`\`\`
  */
 export const ${className}Rpcs = RpcGroup.make(BulkGet${className}s, Create${className}, Delete${className}, Get${className}, List${className}s, Update${className}, Validate${className})`)

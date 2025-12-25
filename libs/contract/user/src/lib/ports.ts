@@ -80,9 +80,9 @@ export interface PaginatedResult<T> {
  * // In service implementation:
  * const service = Effect.gen(function*() {
  *   const repo = yield* UserRepository;
- *   const entity = yield* repo.findById("id");
+ *   const entity = yield* repo.findById("id")
  *   return entity;
- * });
+ * })
  * ```
  */
 export class UserRepository extends Context.Tag(
@@ -166,9 +166,9 @@ export class UserRepository extends Context.Tag(
  * // In tRPC router or API handler:
  * const handler = Effect.gen(function*() {
  *   const service = yield* UserService;
- *   const entity = yield* service.get("id");
+ *   const entity = yield* service.get("id")
  *   return entity;
- * });
+ * })
  * ```
  */
 export class UserService extends Context.Tag(

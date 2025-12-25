@@ -152,18 +152,18 @@ import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "
  * Replace this with your actual Prisma model once schema is configured.
  */
 export interface UserTable {
-  id: Generated<string>;
+  id: Generated<string>
   email: string;
   name: string | null;
-  createdAt: Generated<Date>;
+  createdAt: Generated<Date>
   updatedAt: Date;
 }
 
 // Kysely operation types for User
-export type User = Selectable<UserTable>;
+export type User = Selectable<UserTable>
 export type UserSelect = User;
-export type UserInsert = Insertable<UserTable>;
-export type UserUpdate = Updateable<UserTable>;
+export type UserInsert = Insertable<UserTable>
+export type UserUpdate = Updateable<UserTable>
 
 // ============================================================================
 // Database Interface
@@ -185,7 +185,7 @@ export interface DB {
 /**
  * Helper type for JSON columns
  */
-export type Json = ColumnType<unknown, string, string>;
+export type Json = ColumnType<unknown, string, string>
 `
     yield* adapter.writeFile(
       `${workspaceRoot}/${sourceRoot}/lib/types.ts`,
@@ -232,17 +232,15 @@ pnpm prisma generate
 
 \`\`\`typescript
 import type { DB } from "${packageName}";
-import { makeKyselyService } from "${scope}/provider-kysely";
-
-// Create Kysely service with type-safe DB
+import { makeKyselyService } from "${scope}/provider-kysely"// Create Kysely service with type-safe DB
 const kysely = yield* makeKyselyService<DB>({
   connectionString: process.env.DATABASE_URL
-});
+})
 
 // All queries are now type-safe
 const users = yield* kysely.query((db) =>
   db.selectFrom("user").selectAll().execute()
-);
+)
 \`\`\`
 
 ### Prisma Configuration

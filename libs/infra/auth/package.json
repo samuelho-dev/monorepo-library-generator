@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Auth",
+  "description": "Auth infrastructure with session/token verification and RPC middleware integration",
   "exports": {
     ".": {
       "import": "./src/index.ts",

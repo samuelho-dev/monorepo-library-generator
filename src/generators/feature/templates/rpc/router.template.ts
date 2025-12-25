@@ -43,7 +43,7 @@ Contract-First Architecture:
 Usage:
   // In Next.js App Router (app/api/${name}/route.ts)
   import { create${className}Handler } from "${scope}/feature-${name}/rpc";
-  export const POST = create${className}Handler();`
+  export const POST = create${className}Handler()`
   })
 
   builder.addImports([
@@ -104,13 +104,13 @@ export const ${className}TestLayer = Layer.mergeAll(
  * // Mount RPC handlers
  * const httpApp = HttpRouter.empty.pipe(
  *   HttpRouter.mount("/rpc", RpcServer.toHttpApp(${className}Rpcs))
- * );
+ * )
  *
  * // Provide layers and run
  * const runnable = httpApp.pipe(
  *   Effect.provide(${className}Handlers),
  *   Effect.provide(${className}ProductionLayer)
- * );
+ * )
  * \`\`\`
  *
  * For simpler Next.js integration, use Effect.runPromise directly:
@@ -118,15 +118,15 @@ export const ${className}TestLayer = Layer.mergeAll(
  * \`\`\`typescript
  * // app/api/${name}/route.ts
  * export async function POST(request: Request) {
- *   const body = await request.json();
+ *   const body = await request.json()
  *   // Handle RPC call using provided layers
  *   const result = await Effect.runPromise(
  *     handleRpcRequest(body).pipe(
  *       Effect.provide(${className}Handlers),
  *       Effect.provide(${className}ProductionLayer)
  *     )
- *   );
- *   return Response.json(result);
+ *   )
+ *   return Response.json(result)
  * }
  * \`\`\`
  */

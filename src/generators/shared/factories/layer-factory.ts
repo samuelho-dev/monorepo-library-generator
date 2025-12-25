@@ -10,19 +10,19 @@
  * ```typescript
  * import { createInfrastructureLayers, createDomainLayers } from './layer-factory';
  *
- * const builder = new TypeScriptBuilder();
+ * const builder = new TypeScriptBuilder()
  *
  * createInfrastructureLayers({
  *   services: ['DatabaseService', 'LoggingService', 'MetricsService', 'CacheService'],
  *   scope: '@myorg',
- * })(builder);
+ * })(builder)
  *
  * createDomainLayers({
  *   className: 'User',
  *   domainServices: ['Repository', 'Cache'],
  *   environments: ['Live', 'Test', 'Dev'],
  *   libraryType: 'data-access',
- * })(builder);
+ * })(builder)
  * ```
  */
 
@@ -121,7 +121,7 @@ export interface InfrastructureLayerConfig {
  * createInfrastructureLayers({
  *   services: ['DatabaseService', 'LoggingService', 'MetricsService', 'CacheService'],
  *   scope: '@myorg',
- * })(builder);
+ * })(builder)
  * ```
  */
 export function createInfrastructureLayers(config: InfrastructureLayerConfig) {
@@ -212,7 +212,7 @@ export interface DomainLayerConfig {
  *   className: 'User',
  *   domainServices: ['UserRepository.Live', 'UserCache.Live'],
  *   libraryType: 'data-access',
- * })(builder);
+ * })(builder)
  * ```
  */
 export function createDomainLayers(config: DomainLayerConfig) {
@@ -251,7 +251,7 @@ export function createDomainLayers(config: DomainLayerConfig) {
  *
  * @example
  * \`\`\`typescript
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const repo = yield* ${domainServices[0] || `${className}Repository`}
  *   const entity = yield* repo.findById("id-123")
  * })
@@ -274,7 +274,7 @@ export const ${className}${layerPrefix}Live = Layer.mergeAll(
  * \`\`\`typescript
  * describe("${className}Repository", () => {
  *   it("should create entity", () =>
- *     Effect.gen(function* () {
+ *     Effect.gen(function*() {
  *       const repo = yield* ${domainServices[0] || `${className}Repository`}
  *       const result = yield* repo.create({ name: "test" })
  *       expect(result).toBeDefined()
@@ -334,7 +334,7 @@ export interface AutoLayerConfig {
  * createAutoLayer({
  *   className: 'User',
  *   layerPrefix: 'DataAccess',
- * })(builder);
+ * })(builder)
  * ```
  */
 export function createAutoLayer(config: AutoLayerConfig) {

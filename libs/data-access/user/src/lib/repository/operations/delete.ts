@@ -1,6 +1,7 @@
+import { UserNotFoundError } from "@samuelho-dev/contract-user"
 import { DatabaseService } from "@samuelho-dev/infra-database"
 import { Duration, Effect } from "effect"
-import { UserNotFoundRepositoryError, UserTimeoutError } from "../../shared/errors"
+import { UserTimeoutError } from "../../shared/errors"
 
 /**
  * User Delete Operations
@@ -47,9 +48,12 @@ export const deleteOperations = {
 
       const deletedCount = Number(result.numDeletedRows)
       if (deletedCount === 0) {
-        // Throw NotFoundRepositoryError when record doesn't exist
+        // Throw NotFoundError when record doesn't exist
         // This ensures callers can distinguish "deleted" from "nothing to delete"
-        return yield* Effect.fail(UserNotFoundRepositoryError.create(id))
+        return yield* Effect.fail(new UserNotFoundError({
+          message: `User not found: ${id}`,
+          userId: id
+        }))
       }
 
       yield* Effect.logDebug(`User deleted successfully (id: ${id})`)

@@ -26,6 +26,8 @@ export type { UserServiceInterface } from "./service"
 // ============================================================================
 // Sub-Module Services
 // ============================================================================
-export { AuthenticationService, AuthenticationLive, AuthenticationTest } from "./authentication"
+export { AuthenticationService, type AuthenticationServiceInterface } from "./authentication/service"
+export { AuthenticationLive, AuthenticationTest, AuthenticationDependencies } from "./authentication/layer"
 
-export { ProfileService, ProfileLive, ProfileTest } from "./profile"
+export { ProfileService, type ProfileServiceInterface } from "./profile/service"
+export { ProfileLive, ProfileTest, ProfileDependencies } from "./profile/layer"

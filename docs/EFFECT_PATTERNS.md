@@ -42,8 +42,8 @@ export class PaymentService extends Context.Tag('PaymentService')<
   {
     readonly processPayment: (
       amount: number,
-    ) => Effect.Effect<Payment, PaymentError>;
-    readonly refundPayment: (id: string) => Effect.Effect<void, PaymentError>;
+    ) => Effect.Effect<Payment, PaymentError>
+    readonly refundPayment: (id: string) => Effect.Effect<void, PaymentError>
   }
 >() {
   // Static Live property for layer composition
@@ -51,23 +51,21 @@ export class PaymentService extends Context.Tag('PaymentService')<
     this,
     Effect.gen(function*() {
       const stripe = yield* StripeService;
-      const database = yield* DatabaseService;
-
-      return {
+      const database = yield* DatabaseService      return {
         processPayment: (amount) =>
           Effect.gen(function*() {
             const result = yield* Effect.tryPromise({
               try: () =>
                 stripe.paymentIntents.create({ amount, currency: 'usd' }),
               catch: (error) => new PaymentError({ cause: error }),
-            });
+            })
 
             yield* database.query((db) =>
               db
                 .insertInto('payments')
                 .values({ amount, stripeId: result.id })
                 .execute(),
-            );
+            )
 
             return result;
           }),
@@ -75,11 +73,11 @@ export class PaymentService extends Context.Tag('PaymentService')<
         refundPayment: (id) =>
           Effect.tryPromise({
             try: () => stripe.refunds.create({ payment_intent: id }),
-            catch: (error) => new PaymentError({ cause: error }),
-          }).pipe(Effect.asVoid),
-      };
+            catch: (error) => new PaymentError({ cause: error })
+          }).pipe(Effect.asVoid)
+      } ;
     }),
-  );
+  )
 
   // Test implementation included in service definition
   // ✅ BEST PRACTICE: Use complete mock factory for type safety
@@ -95,12 +93,12 @@ export class PaymentService extends Context.Tag('PaymentService')<
         livemode: false,
         client_secret: `test_secret_${amount}`,
         description: null,
-        metadata: {},
-      };
-      return Effect.succeed(mockPayment);
+        metadata: {}
+      }
+      return Effect.succeed(mockPayment)
     },
-    refundPayment: () => Effect.succeed(void 0),
-  });
+    refundPayment: () => Effect.succeed(void 0)
+  })
 }
 ```
 
@@ -112,11 +110,11 @@ Use when service has 10+ methods or interface is shared:
 // ✅ CORRECT - For complex services only
 // interfaces.ts
 export interface LoggingServiceInterface {
-  readonly trace: (msg: string, meta?: LogMetadata) => Effect.Effect<void>;
-  readonly debug: (msg: string, meta?: LogMetadata) => Effect.Effect<void>;
-  readonly info: (msg: string, meta?: LogMetadata) => Effect.Effect<void>;
-  readonly warn: (msg: string, meta?: LogMetadata) => Effect.Effect<void>;
-  readonly error: (msg: string, meta?: LogMetadata) => Effect.Effect<void>;
+  readonly trace: (msg: string, meta?: LogMetadata) => Effect.Effect<void>
+  readonly debug: (msg: string, meta?: LogMetadata) => Effect.Effect<void>
+  readonly info: (msg: string, meta?: LogMetadata) => Effect.Effect<void>
+  readonly warn: (msg: string, meta?: LogMetadata) => Effect.Effect<void>
+  readonly error: (msg: string, meta?: LogMetadata) => Effect.Effect<void>
   // ... 10+ more methods
 }
 
@@ -130,9 +128,9 @@ export class LoggingService extends Context.Tag('LoggingService')<
     Effect.gen(function*() {
       const config = yield* Config;
       // Complex initialization
-      return createStructuredLogger(config);
+      return createStructuredLogger(config)
     }),
-  );
+  )
 }
 ```
 
@@ -188,17 +186,17 @@ const MyDatabaseService = KyselyService<Database>()
 class Logger extends Effect.Service<Logger>()('Logger', {
   sync: () => ({
     info: (msg: string) => Effect.sync(() => console.log(`[INFO] ${msg}`)),
-    error: (msg: string) => Effect.sync(() => console.error(`[ERROR] ${msg}`)),
+    error: (msg: string) => Effect.sync(() => console.error(`[ERROR] ${msg}`))
   }),
   accessors: true, // Optional: generates Logger.info() convenience functions
 }) {}
 
 // Usage
 const program = Effect.gen(function*() {
-  yield* Logger.info('Hello'); // Direct accessor (if accessors: true)
-});
+  yield* Logger.info('Hello') // Direct accessor (if accessors: true)
+})
 
-Effect.runPromise(program.pipe(Effect.provide(Logger.Default)));
+Effect.runPromise(program.pipe(Effect.provide(Logger.Default)))
 ```
 
 **Options**: `sync`, `effect`, `scoped`, `succeed`, `dependencies`, `accessors`
@@ -220,43 +218,39 @@ export class UserRepository extends Context.Tag('UserRepository')<
   {
     readonly findById: (
       id: string,
-    ) => Effect.Effect<Option.Option<User>, DatabaseError>;
-    readonly create: (input: UserInput) => Effect.Effect<User, DatabaseError>;
+    ) => Effect.Effect<Option.Option<User>, DatabaseError>
+    readonly create: (input: UserInput) => Effect.Effect<User, DatabaseError>
     readonly update: (
       id: string,
       input: Partial<UserInput>,
-    ) => Effect.Effect<User, DatabaseError>;
-    readonly delete: (id: string) => Effect.Effect<void, DatabaseError>;
+    ) => Effect.Effect<User, DatabaseError>
+    readonly delete: (id: string) => Effect.Effect<void, DatabaseError>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
       const database = yield* DatabaseService;
-      const cache = yield* CacheService;
-
-      return {
+      const cache = yield* CacheService      return {
         findById: (id) =>
           Effect.gen(function*() {
             // Check cache first - use type-safe cache.get with schema
-            const cached = yield* cache.get<User>(`user:${id}`, UserSchema);
-            if (Option.isSome(cached)) return cached;
-
-            // Query database
+            const cached = yield* cache.get<User>(`user:${id}`, UserSchema)
+            if (Option.isSome(cached)) return cached            // Query database
             const user = yield* database.query((db) =>
               db
                 .selectFrom('users')
                 .where('id', '=', id)
                 .selectAll()
                 .executeTakeFirst(),
-            );
+            )
 
             // Cache result if found
             if (user) {
-              yield* cache.set(`user:${id}`, user, UserSchema);
+              yield* cache.set(`user:${id}`, user, UserSchema)
             }
 
-            return Option.fromNullable(user);
+            return Option.fromNullable(user)
           }),
 
         create: (input) =>
@@ -277,9 +271,9 @@ export class UserRepository extends Context.Tag('UserRepository')<
                 .where('id', '=', id)
                 .returningAll()
                 .executeTakeFirstOrThrow(),
-            );
+            )
             // Invalidate cache
-            yield* cache.delete(`user:${id}`);
+            yield* cache.delete(`user:${id}`)
             return updated;
           }),
 
@@ -287,12 +281,12 @@ export class UserRepository extends Context.Tag('UserRepository')<
           Effect.gen(function*() {
             yield* database.query((db) =>
               db.deleteFrom('users').where('id', '=', id).execute(),
-            );
-            yield* cache.delete(`user:${id}`);
-          }),
-      };
+            )
+            yield* cache.delete(`user:${id}`)
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -318,32 +312,30 @@ Effect provides built-in caching operators for **operation-level memoization**, 
 **Cache operation result after first execution.** Subsequent calls return the cached value without re-executing.
 
 ```typescript
-import { Effect } from "effect";
-
-// User profile lookup with caching
+import { Effect } from "effect"// User profile lookup with caching
 const getUserProfile = (userId: string) =>
   Effect.gen(function*() {
     const repo = yield* UserRepository;
-    const user = yield* repo.findById(userId);
+    const user = yield* repo.findById(userId)
 
     if (Option.isNone(user)) {
-      return yield* Effect.fail(new UserNotFoundError({ userId }));
+      return yield* Effect.fail(new UserNotFoundError({ userId }))
     }
 
-    return user.value;
+    return user.value
   }).pipe(
     Effect.cached // ✅ Result cached indefinitely
-  );
+  )
 
 // First call: Executes and caches
-const profile1 = yield* getUserProfile("user-123");
+const profile1 = yield* getUserProfile("user-123")
 
 // Second call: Returns cached value (no DB query)
-const profile2 = yield* getUserProfile("user-123");
+const profile2 = yield* getUserProfile("user-123")
 
 // ⚠️ Cache is per Effect instance
 // Creating a new Effect creates a new cache
-const freshLookup = getUserProfile("user-123"); // New cache
+const freshLookup = getUserProfile("user-123") // New cache
 ```
 
 **Important:** Cache is bound to the Effect instance. To share cache across the application, create the cached Effect once and reuse:
@@ -355,7 +347,7 @@ export class UserService extends Context.Tag("UserService")<
   {
     readonly getProfile: (
       userId: string
-    ) => Effect.Effect<User, UserNotFoundError>;
+    ) => Effect.Effect<User, UserNotFoundError>
   }
 >() {
   static readonly Live = Layer.sync(this, () => {
@@ -363,21 +355,21 @@ export class UserService extends Context.Tag("UserService")<
     const cachedGetProfile = (userId: string) =>
       Effect.gen(function*() {
         const repo = yield* UserRepository;
-        const user = yield* repo.findById(userId);
+        const user = yield* repo.findById(userId)
         // ...
         return user.value;
-      }).pipe(Effect.cached);
+      }).pipe(Effect.cached)
 
     return {
       getProfile: cachedGetProfile,
-    };
-  });
+    }
+  })
 }
 
 // All calls share the same cache
 const service = yield* UserService;
-const user1 = yield* service.getProfile("user-123"); // Cached
-const user2 = yield* service.getProfile("user-123"); // Cache hit
+const user1 = yield* service.getProfile("user-123") // Cached
+const user2 = yield* service.getProfile("user-123") // Cache hit
 ```
 
 ---
@@ -387,34 +379,32 @@ const user2 = yield* service.getProfile("user-123"); // Cache hit
 **Auto-refresh cache after duration.** Perfect for rate-limited APIs or time-sensitive data.
 
 ```typescript
-import { Effect } from "effect";
-
-// Exchange rate caching with 5-minute TTL
+import { Effect } from "effect"// Exchange rate caching with 5-minute TTL
 const getExchangeRate = (currency: string) =>
   Effect.gen(function*() {
     const api = yield* ExchangeRateAPI;
-    yield* Effect.log(`Fetching exchange rate for ${currency}`);
+    yield* Effect.log(`Fetching exchange rate for ${currency}`)
 
     const rate = yield* Effect.tryPromise({
       try: () => api.getRates(currency),
       catch: (error) => new APIError({ message: String(error) }),
-    });
+    })
 
-    return rate;
+    return rate
   }).pipe(
     Effect.cachedWithTTL("5 minutes") // ✅ Refreshes every 5 minutes
-  );
+  )
 
 // First call: Fetches from API
-const rate1 = yield* getExchangeRate("USD");
+const rate1 = yield* getExchangeRate("USD")
 
 // Within 5 minutes: Returns cached value
-yield* Effect.sleep("2 minutes");
-const rate2 = yield* getExchangeRate("USD"); // Cache hit
+yield* Effect.sleep("2 minutes")
+const rate2 = yield* getExchangeRate("USD") // Cache hit
 
 // After 5 minutes: Refreshes from API
-yield* Effect.sleep("4 minutes");
-const rate3 = yield* getExchangeRate("USD"); // Fetches again
+yield* Effect.sleep("4 minutes")
+const rate3 = yield* getExchangeRate("USD") // Fetches again
 ```
 
 **Real-World: Token Refresh with TTL**
@@ -423,24 +413,22 @@ const rate3 = yield* getExchangeRate("USD"); // Fetches again
 // OAuth token with auto-refresh
 const getAccessToken = Effect.gen(function*() {
   const oauth = yield* OAuthService;
-  yield* Effect.log("Refreshing access token");
+  yield* Effect.log("Refreshing access token")
 
-  const token = yield* oauth.refreshToken();
+  const token = yield* oauth.refreshToken()
   return token;
 }).pipe(
   Effect.cachedWithTTL("55 minutes") // Refresh 5min before expiry
-);
+)
 
 // Use in API calls
 const makeAuthenticatedRequest = (endpoint: string) =>
   Effect.gen(function*() {
     const token = yield* getAccessToken; // Cached or refreshed
-    const api = yield* APIClient;
-
-    return yield* api.request(endpoint, {
+    const api = yield* APIClient    return yield* api.request(endpoint, {
       headers: { Authorization: `Bearer ${token}` },
-    });
-  });
+    })
+  })
 ```
 
 ---
@@ -450,22 +438,18 @@ const makeAuthenticatedRequest = (endpoint: string) =>
 **Execute exactly once, even with concurrent calls.** Ideal for SDK initialization, config loading, database migration.
 
 ```typescript
-import { Effect } from "effect";
-
-// Initialize Stripe SDK exactly once
+import { Effect } from "effect"// Initialize Stripe SDK exactly once
 const initializeStripe = Effect.gen(function*() {
-  yield* Effect.log("Initializing Stripe SDK");
-  const config = yield* ConfigService;
+  yield* Effect.log("Initializing Stripe SDK")
+  const config = yield* ConfigService  const stripe = new Stripe(config.stripeApiKey, {
+    apiVersion: "2023-10-16"
+  })
 
-  const stripe = new Stripe(config.stripeApiKey, {
-    apiVersion: "2023-10-16",
-  });
-
-  yield* Effect.log("Stripe SDK initialized");
+  yield* Effect.log("Stripe SDK initialized")
   return stripe;
 }).pipe(
   Effect.once // ✅ Runs only on first call
-);
+)
 
 // All concurrent calls wait for single initialization
 const program = Effect.all(
@@ -475,7 +459,7 @@ const program = Effect.all(
     initializeStripe, // Waits for first call
   ],
   { concurrency: "unbounded" }
-);
+)
 
 yield* program;
 // Logs "Initializing Stripe SDK" only ONCE
@@ -486,14 +470,14 @@ yield* program;
 ```typescript
 const runMigrations = Effect.gen(function*() {
   const database = yield* DatabaseService;
-  yield* Effect.log("Running database migrations");
+  yield* Effect.log("Running database migrations")
 
-  yield* database.migrate();
+  yield* database.migrate()
 
-  yield* Effect.log("Migrations complete");
+  yield* Effect.log("Migrations complete")
 }).pipe(
   Effect.once // ✅ Migrations run exactly once
-);
+)
 
 // Safe to call from multiple services
 export class UserRepository extends Context.Tag("UserRepository")<
@@ -507,9 +491,9 @@ export class UserRepository extends Context.Tag("UserRepository")<
       yield* runMigrations; // Safe: runs once globally
 
       const database = yield* DatabaseService;
-      return createRepository(database);
+      return createRepository(database)
     })
-  );
+  )
 }
 ```
 
@@ -521,44 +505,38 @@ export class UserRepository extends Context.Tag("UserRepository")<
 
 ```typescript
 import { cachedFunction } from "effect/Function";
-import { Effect } from "effect";
-
-// Expensive shipping cost calculation
+import { Effect } from "effect"// Expensive shipping cost calculation
 const calculateShippingCost = cachedFunction(
   (weight: number, distance: number) =>
     Effect.gen(function*() {
-      yield* Effect.log(`Computing shipping for ${weight}kg, ${distance}km`);
+      yield* Effect.log(`Computing shipping for ${weight}kg, ${distance}km`)
 
       // Expensive calculation
       const baseRate = 5;
       const weightCost = weight * 0.5;
-      const distanceCost = distance * 0.1;
-
-      yield* Effect.sleep("100 millis"); // Simulate computation
+      const distanceCost = distance * 0.1      yield* Effect.sleep("100 millis") // Simulate computation
 
       return baseRate + weightCost + distanceCost;
     })
-);
+)
 
 // First call: Computes
-const cost1 = yield* calculateShippingCost(10, 500);
+const cost1 = yield* calculateShippingCost(10, 500)
 // Logs: "Computing shipping for 10kg, 500km"
 
 // Same arguments: Returns cached
-const cost2 = yield* calculateShippingCost(10, 500);
+const cost2 = yield* calculateShippingCost(10, 500)
 // No log - cached result
 
 // Different arguments: Computes new
-const cost3 = yield* calculateShippingCost(20, 500);
+const cost3 = yield* calculateShippingCost(20, 500)
 // Logs: "Computing shipping for 20kg, 500km"
 ```
 
 **Custom Equivalence:**
 
 ```typescript
-import { Equal } from "effect";
-
-interface ProductQuery {
+import { Equal } from "effect"interface ProductQuery {
   category: string;
   minPrice: number;
 }
@@ -568,7 +546,7 @@ const searchProducts = cachedFunction(
   (query: ProductQuery) =>
     Effect.gen(function*() {
       const db = yield* DatabaseService;
-      yield* Effect.log(`Searching products`, query);
+      yield* Effect.log(`Searching products`, query)
 
       const results = yield* db.query((qb) =>
         qb
@@ -577,7 +555,7 @@ const searchProducts = cachedFunction(
           .where("price", ">=", query.minPrice)
           .selectAll()
           .execute()
-      );
+      )
 
       return results;
     }),
@@ -586,13 +564,13 @@ const searchProducts = cachedFunction(
     equivalence: Equal.struct({
       category: Equal.string,
       minPrice: Equal.number,
-    }),
+    })
   }
-);
+)
 
 // Cached by object content, not reference
-const results1 = yield* searchProducts({ category: "books", minPrice: 10 });
-const results2 = yield* searchProducts({ category: "books", minPrice: 10 });
+const results1 = yield* searchProducts({ category: "books", minPrice: 10 })
+const results2 = yield* searchProducts({ category: "books", minPrice: 10 })
 // Second call uses cache (same content)
 ```
 
@@ -603,42 +581,38 @@ const results2 = yield* searchProducts({ category: "books", minPrice: 10 });
 **Combine Effect.cached (in-memory) + CacheService (distributed Redis)** for optimal performance.
 
 ```typescript
-import { Effect, Option } from "effect";
-
-// Two-tier caching: In-memory (L1) + Redis (L2)
+import { Effect, Option } from "effect"// Two-tier caching: In-memory (L1) + Redis (L2)
 const getProductDetails = (productId: string) =>
   Effect.gen(function*() {
     const cache = yield* CacheService; // L2: Redis
-    const db = yield* DatabaseService;
-
-    // Check L2 cache (Redis - shared across processes)
-    const cached = yield* cache.get<Product>(`product:${productId}`);
+    const db = yield* DatabaseService    // Check L2 cache (Redis - shared across processes)
+    const cached = yield* cache.get<Product>(`product:${productId}`)
     if (Option.isSome(cached)) {
-      yield* Effect.log("L2 cache hit (Redis)");
+      yield* Effect.log("L2 cache hit (Redis)")
       return cached.value;
     }
 
     // L2 miss: Query database
-    yield* Effect.log("Cache miss - querying database");
+    yield* Effect.log("Cache miss - querying database")
     const product = yield* db.query((qb) =>
       qb
         .selectFrom("products")
         .where("id", "=", productId)
         .selectAll()
         .executeTakeFirst()
-    );
+    )
 
     if (!product) {
-      return yield* Effect.fail(new ProductNotFoundError({ productId }));
+      return yield* Effect.fail(new ProductNotFoundError({ productId }))
     }
 
     // Store in L2 cache (Redis)
-    yield* cache.set(`product:${productId}`, product, "10 minutes");
+    yield* cache.set(`product:${productId}`, product, "10 minutes")
 
-    return product;
+    return product
   }).pipe(
     Effect.cached // L1: In-memory cache per process
-  );
+  )
 
 // First call (Process A):
 // 1. L1 miss (in-memory)
@@ -702,30 +676,30 @@ const getBadProfile = (userId: string) => {
   // Creates NEW cache on every call
   return Effect.gen(function*() {
     // ...
-  }).pipe(Effect.cached);
-};
+  }).pipe(Effect.cached)
+}
 
 // Each call creates new cache (no benefit)
-yield* getBadProfile("user-123"); // Cache 1
-yield* getBadProfile("user-123"); // Cache 2 (different instance!)
+yield* getBadProfile("user-123") // Cache 1
+yield* getBadProfile("user-123") // Cache 2 (different instance!)
 
 // ✅ CORRECT: Create cached Effect once, reuse
 const cachedGetProfile = Effect.gen(function*() {
   // ...
-}).pipe(Effect.cached);
+}).pipe(Effect.cached)
 
 yield* cachedGetProfile; // Cache
 yield* cachedGetProfile; // Hit same cache
 
 // ❌ WRONG: Using Effect.cached for cross-process data
 // Will NOT share cache across servers
-const sharedData = Effect.succeed(data).pipe(Effect.cached);
+const sharedData = Effect.succeed(data).pipe(Effect.cached)
 
 // ✅ CORRECT: Use CacheService for cross-process
 const sharedData = Effect.gen(function*() {
   const cache = yield* CacheService;
-  return yield* cache.get("shared-key");
-});
+  return yield* cache.get("shared-key")
+})
 ```
 
 ---
@@ -766,57 +740,53 @@ Effect.ts provides declarative control flow operators that work seamlessly with 
 **Use when**: You need to choose between two different effects based on a condition.
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ GOOD: Simple branching with Effect.if
+import { Effect } from "effect"// ✅ GOOD: Simple branching with Effect.if
 const processOrder = (isPriority: boolean) =>
   Effect.if(isPriority, {
     onTrue: () =>
       Effect.gen(function*() {
         const expressService = yield* ExpressShippingService;
-        return yield* expressService.ship();
+        return yield* expressService.ship()
       }),
     onFalse: () =>
       Effect.gen(function*() {
         const standardService = yield* StandardShippingService;
-        return yield* standardService.ship();
+        return yield* standardService.ship()
       })
-  });
+  })
 
 // ⚠️ ACCEPTABLE: Effect.gen with plain if/else
 const processOrderAlternative = (isPriority: boolean) =>
   Effect.gen(function*() {
     if (isPriority) {
       const expressService = yield* ExpressShippingService;
-      return yield* expressService.ship();
+      return yield* expressService.ship()
     } else {
       const standardService = yield* StandardShippingService;
-      return yield* standardService.ship();
+      return yield* standardService.ship()
     }
-  });
+  })
 
 // ❌ AVOID: Effect.if when condition is simple value
 const getBadPrice = (isPremium: boolean) =>
   Effect.if(isPremium, {
     onTrue: () => Effect.succeed(99.99),
     onFalse: () => Effect.succeed(19.99)
-  });
+  })
 
 // ✅ BETTER: Plain JS for simple value branching
 const getGoodPrice = (isPremium: boolean) =>
-  Effect.succeed(isPremium ? 99.99 : 19.99);
+  Effect.succeed(isPremium ? 99.99 : 19.99)
 ```
 
 **Effect.if with Effectful Condition**:
 
 ```typescript
-import { Random } from "effect";
-
-// Condition itself is an Effect
+import { Random } from "effect"// Condition itself is an Effect
 const randomChoice = Effect.if(Random.nextBoolean, {
   onTrue: () => Effect.log("Heads!").pipe(Effect.as("heads")),
   onFalse: () => Effect.log("Tails!").pipe(Effect.as("tails"))
-});
+})
 ```
 
 ---
@@ -826,23 +796,21 @@ const randomChoice = Effect.if(Random.nextBoolean, {
 **Use when**: You want to optionally execute an effect based on a condition. Returns `Option<A>` - `Some` if executed, `None` if skipped.
 
 ```typescript
-import { Effect, Option } from "effect";
-
-// ✅ GOOD: Guard clause with Effect.when
+import { Effect, Option } from "effect"// ✅ GOOD: Guard clause with Effect.when
 const sendNotification = (shouldNotify: boolean, userId: string) =>
   Effect.when(shouldNotify, () =>
     Effect.gen(function*() {
       const userRepo = yield* UserRepository;
-      const user = yield* userRepo.findById(userId);
+      const user = yield* userRepo.findById(userId)
 
       if (Option.isNone(user)) {
-        return yield* Effect.fail(new UserNotFoundError({ userId }));
+        return yield* Effect.fail(new UserNotFoundError({ userId }))
       }
 
       const emailService = yield* EmailService;
-      yield* emailService.send(user.value.email, "Notification");
+      yield* emailService.send(user.value.email, "Notification")
     })
-  );
+  )
 
 // Result type: Effect<Option<void>, Error>
 // - Some(void) when shouldNotify is true and effect succeeds
@@ -853,31 +821,29 @@ const warmCacheIfEnabled = (config: Config) =>
   Effect.when(config.enableCaching, () =>
     Effect.gen(function*() {
       const cache = yield* CacheService;
-      yield* cache.warmup();
-      yield* Effect.log("Cache warmed successfully");
+      yield* cache.warmup()
+      yield* Effect.log("Cache warmed successfully")
     })
-  );
+  )
 
 // Unwrap Option result
-const result = yield* sendNotification(true, "user-123");
+const result = yield* sendNotification(true, "user-123")
 if (Option.isSome(result)) {
-  console.log("Notification sent");
+  console.log("Notification sent")
 } else {
-  console.log("Notification skipped");
+  console.log("Notification skipped")
 }
 ```
 
 **Effect.whenEffect** - Condition is an Effect:
 
 ```typescript
-import { Random } from "effect";
-
-// Random condition
+import { Random } from "effect"// Random condition
 const maybeSendEmail = (email: string) =>
   Effect.whenEffect(
     Random.nextBoolean, // Condition is Effect<boolean>
     () => EmailService.send(email, "Random notification")
-  );
+  )
 ```
 
 ---
@@ -887,13 +853,11 @@ const maybeSendEmail = (email: string) =>
 **Use when**: You want to execute only if condition is **false** (inverted `when`).
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ GOOD: Early exit pattern with Effect.unless
+import { Effect } from "effect"// ✅ GOOD: Early exit pattern with Effect.unless
 const validateUser = (user: User) =>
   Effect.unless(user.isVerified, () =>
     Effect.fail(new UnverifiedUserError({ userId: user.id }))
-  );
+  )
 
 // Equivalent to:
 // if (!user.isVerified) {
@@ -904,19 +868,19 @@ const validateUser = (user: User) =>
 const loadUserProfile = (userId: string) =>
   Effect.gen(function*() {
     const cache = yield* CacheService;
-    const cached = yield* cache.get<UserProfile>(`user:${userId}`);
+    const cached = yield* cache.get<UserProfile>(`user:${userId}`)
 
     // Only fetch if NOT cached
     yield* Effect.unless(Option.isSome(cached), () =>
       Effect.gen(function*() {
         const api = yield* UserAPI;
-        const profile = yield* api.fetchProfile(userId);
-        yield* cache.set(`user:${userId}`, profile);
+        const profile = yield* api.fetchProfile(userId)
+        yield* cache.set(`user:${userId}`, profile)
       })
-    );
+    )
 
-    return Option.getOrElse(cached, () => /* default */);
-  });
+    return Option.getOrElse(cached, () => /* default */)
+  })
 ```
 
 ---
@@ -926,9 +890,7 @@ const loadUserProfile = (userId: string) =>
 **Use when**: You need to run exactly **two** independent effects and combine results as a tuple `[A, B]`.
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ GOOD: Combine two independent queries
+import { Effect } from "effect"// ✅ GOOD: Combine two independent queries
 const getUserProfile = (userId: string) =>
   Effect.zip(
     UserRepository.findById(userId),
@@ -938,7 +900,7 @@ const getUserProfile = (userId: string) =>
       ...user,
       permissions
     }))
-  );
+  )
 
 // Result type: Effect<[User, Permission[]], Error>
 
@@ -950,24 +912,24 @@ const getUserProfileParallel = (userId: string) =>
     { concurrency: "unbounded" } // Run in parallel
   ).pipe(
     Effect.map(([user, permissions]) => ({ ...user, permissions }))
-  );
+  )
 ```
 
 **Comparison: Effect.zip vs Effect.all**:
 
 ```typescript
 // Effect.zip: Exactly 2 effects, tuple result
-const withZip = Effect.zip(effect1, effect2);
+const withZip = Effect.zip(effect1, effect2)
 // Result: Effect<[A, B], E>
 
 // Effect.all: Multiple effects, array or object result
-const withAll = Effect.all([effect1, effect2]);
+const withAll = Effect.all([effect1, effect2])
 // Result: Effect<[A, B], E>
 
 const withAllObject = Effect.all({
   user: effect1,
   permissions: effect2
-});
+})
 // Result: Effect<{ user: A, permissions: B }, E>
 ```
 
@@ -982,18 +944,16 @@ const withAllObject = Effect.all({
 **Use when**: You want to combine two effects with a custom transformation.
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ GOOD: Custom combination logic
+import { Effect } from "effect"// ✅ GOOD: Custom combination logic
 const getTotalPrice = (productId: string, quantity: number) =>
   Effect.zipWith(
     ProductRepository.findById(productId),
     DiscountService.getDiscount(productId),
     (product, discount) => {
       const basePrice = product.price * quantity;
-      return basePrice * (1 - discount);
+      return basePrice * (1 - discount)
     }
-  );
+  )
 
 // Equivalent to:
 const getTotalPriceAlternative = (productId: string, quantity: number) =>
@@ -1001,11 +961,11 @@ const getTotalPriceAlternative = (productId: string, quantity: number) =>
     const [product, discount] = yield* Effect.all([
       ProductRepository.findById(productId),
       DiscountService.getDiscount(productId)
-    ]);
+    ])
 
     const basePrice = product.price * quantity;
-    return basePrice * (1 - discount);
-  });
+    return basePrice * (1 - discount)
+  })
 ```
 
 ---
@@ -1026,7 +986,7 @@ const badBranching = (status: string, user: User) =>
         onTrue: () => pendingFlow(),
         onFalse: () => inactiveFlow()
       })
-  });
+  })
 
 // ✅ CORRECT: Use Effect.gen for complex logic
 const goodBranching = (status: string, user: User) =>
@@ -1034,41 +994,41 @@ const goodBranching = (status: string, user: User) =>
     if (status === "active") {
       return user.isPremium
         ? yield* premiumActive()
-        : yield* standardActive();
+        : yield* standardActive()
     }
 
     if (status === "pending") {
-      return yield* pendingFlow();
+      return yield* pendingFlow()
     }
 
-    return yield* inactiveFlow();
-  });
+    return yield* inactiveFlow()
+  })
 
 // ❌ WRONG: Using Effect operators for non-Effect values
 const badValueBranching = (count: number) =>
   Effect.if(count > 10, {
     onTrue: () => Effect.succeed("many"),
     onFalse: () => Effect.succeed("few")
-  });
+  })
 
 // ✅ CORRECT: Plain JS for simple values
 const goodValueBranching = (count: number) =>
-  Effect.succeed(count > 10 ? "many" : "few");
+  Effect.succeed(count > 10 ? "many" : "few")
 
 // ❌ WRONG: Effect.zip for dependent operations
 const badSequence = (userId: string) =>
   Effect.zip(
     createUser(userId),
     createOrder(userId) // Depends on user being created!
-  );
+  )
 
 // ✅ CORRECT: Sequential with Effect.gen
 const goodSequence = (userId: string) =>
   Effect.gen(function*() {
-    const user = yield* createUser(userId);
-    const order = yield* createOrder(user.id); // Use created user
-    return { user, order };
-  });
+    const user = yield* createUser(userId)
+    const order = yield* createOrder(user.id) // Use created user
+    return { user, order }
+  })
 ```
 
 ---
@@ -1216,13 +1176,13 @@ export class PaymentService extends Context.Tag('PaymentService')<
   PaymentService,
   PaymentServiceInterface
 >() {
-  static readonly Live = Layer.effect(/* ... */);
+  static readonly Live = Layer.effect(/* ... */)
 
   // ✅ Pattern B: Test layer as static property
   static readonly Test = Layer.succeed(this, {
     processPayment: () => Effect.succeed(mockResult),
-    refundPayment: () => Effect.succeed(void 0),
-  });
+    refundPayment: () => Effect.succeed(void 0)
+  })
 }
 ```
 
@@ -1237,7 +1197,7 @@ export class StripeService extends Context.Tag('StripeService')<
   static readonly Live = Layer.sync(
     this,
     () => new Stripe(process.env.STRIPE_KEY!),
-  );
+  )
 }
 ```
 
@@ -1285,9 +1245,9 @@ export const DatabaseServiceLive = Layer.scoped(
     const pool = yield* Effect.acquireRelease(
       Effect.sync(() => createPool(config)),
       (pool) => Effect.sync(() => pool.end()),
-    );
+    )
 
-    const db = new Kysely({ dialect: new PostgresDialect({ pool }) });
+    const db = new Kysely({ dialect: new PostgresDialect({ pool }) })
 
     // Direct object return - no .make() or .of()
     return {
@@ -1296,26 +1256,26 @@ export const DatabaseServiceLive = Layer.scoped(
           try: () => fn(db),
           catch: (error) => new DatabaseQueryError({ cause: error }),
         }),
-    };
+    }
   }),
-);
+)
 
 // Alternative: Using addFinalizer
 export const WebSocketServiceLive = Layer.scoped(
   WebSocketService,
   Effect.gen(function*() {
-    const ws = new WebSocket(url);
+    const ws = new WebSocket(url)
 
     // Register cleanup
-    yield* Effect.addFinalizer(() => Effect.sync(() => ws.close()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => ws.close()))
 
     // Direct object return
     return {
       send: (message) => Effect.sync(() => ws.send(message)),
       close: () => Effect.sync(() => ws.close()),
-    };
+    }
   }),
-);
+)
 ```
 
 ### Layer.succeed - Test/Mock Layers
@@ -1370,8 +1330,8 @@ export const PaymentServiceTest = Layer.succeed(PaymentService, {
       amount: 1000,
       currency: 'usd',
     }),
-  refundPayment: () => Effect.succeed(void 0),
-});
+  refundPayment: () => Effect.succeed(void 0)
+})
 ```
 
 #### Type-Safe Mock Factory (Complex Types)
@@ -1421,11 +1381,11 @@ const createMockPaymentIntent = (
     payment_method_types: ['card'],
     status: 'succeeded',
     // ... ALL other required fields
-  };
+  }
 
   return { ...base, ...overrides };
   // ✅ No type assertion (as any, as Type) - compiler validates completeness
-};
+}
 
 // ✅ PATTERN B: Use factory in test layer (static property)
 export class StripeService extends Context.Tag('StripeService')<
@@ -1435,7 +1395,7 @@ export class StripeService extends Context.Tag('StripeService')<
   static readonly Live = Layer.sync(
     this,
     () => new Stripe(process.env.STRIPE_KEY!),
-  );
+  )
 
   // ✅ Pattern B: Test layer with factory function
   static readonly Test = Layer.succeed(this, {
@@ -1447,8 +1407,8 @@ export class StripeService extends Context.Tag('StripeService')<
         }),
       ),
     retrievePaymentIntent: (id) =>
-      Effect.succeed(createMockPaymentIntent({ id })),
-  });
+      Effect.succeed(createMockPaymentIntent({ id }))
+  })
 }
 ```
 
@@ -1533,12 +1493,10 @@ export class PaymentService extends Context.Tag("PaymentService")<
 ```typescript
 // Test file - just import the service
 import { PaymentService } from './payment-service';
-import { DatabaseService } from '@samuelho-dev/infra-database';
-
-const TestLayer = Layer.mergeAll(
+import { DatabaseService } from '@samuelho-dev/infra-database'const TestLayer = Layer.mergeAll(
   DatabaseService.Test, // ✅ Clear and discoverable
   PaymentService.Test, // ✅ Clear and discoverable
-);
+)
 ```
 
 ### Pattern Comparison
@@ -1548,15 +1506,15 @@ const TestLayer = Layer.mergeAll(
 ```typescript
 // service.ts
 export class MyService extends Context.Tag('MyService')</*...*/> {
-  static readonly Live = Layer.effect(/* ... */);
+  static readonly Live = Layer.effect(/* ... */)
   static readonly Test = Layer.succeed(this, {
     /* mock */
-  });
+  })
 }
 
 // test.ts
 import { MyService } from './service';
-Effect.provide(MyService.Test); // ✅ Discoverable
+Effect.provide(MyService.Test) // ✅ Discoverable
 ```
 
 **Pros**:
@@ -1575,18 +1533,18 @@ Effect.provide(MyService.Test); // ✅ Discoverable
 ```typescript
 // service.ts
 export class MyService extends Context.Tag('MyService')</*...*/> {
-  static readonly Live = Layer.effect(/* ... */);
+  static readonly Live = Layer.effect(/* ... */)
 }
 
 // service.test-utils.ts (separate file)
 export const MyServiceTest = Layer.succeed(MyService, {
   /* mock */
-});
+})
 
 // test.ts
 import { MyService } from './service';
 import { MyServiceTest } from './service.test-utils';
-Effect.provide(MyServiceTest); // ⚠️ Less discoverable
+Effect.provide(MyServiceTest) // ⚠️ Less discoverable
 ```
 
 **Pros**:
@@ -1616,25 +1574,25 @@ Only use separate exports when:
 
 ```typescript
 export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
-  static readonly Live = Layer.effect(/* ... */);
+  static readonly Live = Layer.effect(/* ... */)
 
   // Default test layer
   static readonly Test = Layer.succeed(this, {
-    processPayment: () => Effect.succeed(successResult),
-  });
+    processPayment: () => Effect.succeed(successResult)
+  })
 
   // Failure test layer
   static readonly TestFailure = Layer.succeed(this, {
     processPayment: () =>
-      Effect.fail(new PaymentError({ message: 'Card declined' })),
-  });
+      Effect.fail(new PaymentError({ message: 'Card declined' }))
+  })
 
   // Mock with configurable overrides
   static readonly Mock = (overrides?: Partial<PaymentServiceInterface>) =>
     Layer.succeed(this, {
       processPayment:
         overrides?.processPayment ?? (() => Effect.succeed(mockResult)),
-    });
+    })
 }
 ```
 
@@ -1642,8 +1600,8 @@ export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
 
 ```typescript
 export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
-  static readonly Live = Layer.effect(/* production */);
-  static readonly Test = Layer.succeed(/* fast mocks */);
+  static readonly Live = Layer.effect(/* production */)
+  static readonly Test = Layer.succeed(/* fast mocks */)
 
   // Dev layer with logging and delays
   static readonly Dev = Layer.effect(
@@ -1653,13 +1611,13 @@ export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
       return {
         processPayment: (amount) =>
           Effect.gen(function*() {
-            yield* logger.info(`[DEV] Processing payment: ${amount}`);
-            yield* Effect.sleep('100 millis');
+            yield* logger.info(`[DEV] Processing payment: ${amount}`)
+            yield* Effect.sleep('100 millis')
             return mockResult;
-          }),
-      };
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -1667,14 +1625,14 @@ export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
 
 ```typescript
 export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
-  static readonly Live = Layer.effect(/* production */);
-  static readonly Test = Layer.succeed(/* test */);
-  static readonly Dev = Layer.effect(/* dev */);
+  static readonly Live = Layer.effect(/* production */)
+  static readonly Test = Layer.succeed(/* test */)
+  static readonly Dev = Layer.effect(/* dev */)
 
   // Auto-select based on NODE_ENV
   static readonly Auto = Layer.unwrapEffect(
     Effect.gen(function*() {
-      const env = yield* Config.string('NODE_ENV');
+      const env = yield* Config.string('NODE_ENV')
       switch (env) {
         case 'test':
           return PaymentService.Test;
@@ -1684,7 +1642,7 @@ export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
           return PaymentService.Live;
       }
     }),
-  );
+  )
 }
 ```
 
@@ -1695,13 +1653,13 @@ export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
 ```typescript
 // service.ts
 export class MyService extends Context.Tag('MyService')</*...*/> {
-  static readonly Live = Layer.effect(/* ... */);
+  static readonly Live = Layer.effect(/* ... */)
 }
 
 // service.test-utils.ts
 export const MyServiceTest = Layer.succeed(MyService, {
   /* mock */
-});
+})
 ```
 
 **After (Pattern B)**:
@@ -1709,12 +1667,12 @@ export const MyServiceTest = Layer.succeed(MyService, {
 ```typescript
 // service.ts
 export class MyService extends Context.Tag('MyService')</*...*/> {
-  static readonly Live = Layer.effect(/* ... */);
+  static readonly Live = Layer.effect(/* ... */)
 
   // ✅ Moved test layer here
   static readonly Test = Layer.succeed(this, {
     /* mock */
-  });
+  })
 }
 
 // Delete service.test-utils.ts
@@ -1726,11 +1684,11 @@ export class MyService extends Context.Tag('MyService')</*...*/> {
 // Before
 import { MyService } from './service';
 import { MyServiceTest } from './service.test-utils';
-Effect.provide(MyServiceTest);
+Effect.provide(MyServiceTest)
 
 // After
 import { MyService } from './service';
-Effect.provide(MyService.Test); // ✅ Cleaner
+Effect.provide(MyService.Test) // ✅ Cleaner
 ```
 
 ## Error Handling Patterns
@@ -1755,9 +1713,7 @@ Effect.provide(MyService.Test); // ✅ Cleaner
 
 ```typescript
 // ✅ Domain errors in contracts layer
-import { Data } from 'effect';
-
-export class ProductNotFoundError extends Data.TaggedError(
+import { Data } from 'effect'export class ProductNotFoundError extends Data.TaggedError(
   'ProductNotFoundError',
 )<{
   readonly productId: string;
@@ -1778,21 +1734,19 @@ export class InsufficientFundsError extends Data.TaggedError(
 }> {}
 
 // Union type for exhaustive error matching
-export type PaymentErrors = PaymentError | InsufficientFundsError;
-
-// Usage in service
+export type PaymentErrors = PaymentError | InsufficientFundsError// Usage in service
 const processPayment = (amount: number) =>
   Effect.gen(function*() {
-    const balance = yield* getBalance();
+    const balance = yield* getBalance()
 
     if (balance < amount) {
       return yield* Effect.fail(
         new InsufficientFundsError({ available: balance, required: amount }),
-      );
+      )
     }
 
-    return yield* chargePayment(amount);
-  });
+    return yield* chargePayment(amount)
+  })
 ```
 
 **Benefits:**
@@ -1816,22 +1770,18 @@ const processPayment = (amount: number) =>
 
 ```typescript
 // ✅ RPC errors that cross boundaries
-import { Schema } from 'effect';
-
-export class PaymentRpcError extends Schema.TaggedError<PaymentRpcError>()(
+import { Schema } from 'effect'export class PaymentRpcError extends Schema.TaggedError<PaymentRpcError>()(
   'PaymentRpcError',
   {
     message: Schema.String,
     code: Schema.String,
     timestamp: Schema.DateTimeUtc, // Schema encoding needed for Date
-    metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+    metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown))
   },
 ) {}
 
 // Usage in RPC router
-import { Rpc } from '@effect/rpc';
-
-export const paymentRouter = Rpc.make([
+import { Rpc } from '@effect/rpc'export const paymentRouter = Rpc.make([
   ProcessPaymentRequest.pipe(
     Rpc.toHandler((req) =>
       processPayment(req.amount).pipe(
@@ -1841,14 +1791,14 @@ export const paymentRouter = Rpc.make([
             new PaymentRpcError({
               message: domainError.message,
               code: 'PAYMENT_FAILED',
-              timestamp: new Date().toISOString(),
-            }),
+              timestamp: new Date().toISOString()
+            })
           ),
         ),
       ),
     ),
   ),
-]);
+])
 ```
 
 **Benefits:**
@@ -1888,7 +1838,7 @@ export class ProductNotFoundRpcError extends Schema.TaggedError<ProductNotFoundR
   'ProductNotFoundRpcError',
   {
     productId: Schema.String,
-    timestamp: Schema.DateTimeUtc,
+    timestamp: Schema.DateTimeUtc
   },
 ) {}
 
@@ -1901,14 +1851,14 @@ export const productRouter = Rpc.make([
           Effect.fail(
             new ProductNotFoundRpcError({
               productId: error.productId,
-              timestamp: new Date().toISOString(),
-            }),
+              timestamp: new Date().toISOString()
+            })
           ),
         ),
       ),
     ),
   ),
-]);
+])
 ```
 
 ### Effect 4.0 Compatibility
@@ -1959,9 +1909,7 @@ When in doubt:
 **Use when**: You have multiple independent operations to run in parallel.
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ GOOD: Load multiple users in parallel
+import { Effect } from "effect"// ✅ GOOD: Load multiple users in parallel
 const loadDashboardData = (userId: string, teamIds: readonly string[]) =>
   Effect.all([
     UserRepository.findById(userId),
@@ -1975,7 +1923,7 @@ const loadDashboardData = (userId: string, teamIds: readonly string[]) =>
       notifications,
       activities
     }))
-  );
+  )
 
 // Result type: Effect<{user: User, teams: Team[], ...}, Error>
 ```
@@ -1987,21 +1935,19 @@ const loadDashboardData = (userId: string, teamIds: readonly string[]) =>
 **Use when**: You want readable, self-documenting result access.
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ BETTER: Named results for clarity
+import { Effect } from "effect"// ✅ BETTER: Named results for clarity
 const loadDashboardData = (userId: string) =>
   Effect.all({
     user: UserRepository.findById(userId),
     teams: TeamRepository.findByUserId(userId),
     notifications: NotificationRepository.findUnread(userId),
     activities: ActivityRepository.findRecent(userId, 10)
-  });
+  })
 
 // Access with dot notation
-const dashboard = yield* loadDashboardData("user-123");
-console.log(dashboard.user.name);
-console.log(dashboard.teams.length);
+const dashboard = yield* loadDashboardData("user-123")
+console.log(dashboard.user.name)
+console.log(dashboard.teams.length)
 
 // Result type: Effect<{
 //   user: User,
@@ -2018,34 +1964,32 @@ console.log(dashboard.teams.length);
 **Use when**: You need to limit concurrent operations to avoid overwhelming downstream services.
 
 ```typescript
-import { Effect } from "effect";
-
-// ❌ WRONG: Unbounded concurrency (10,000 users = 10,000 concurrent DB queries!)
+import { Effect } from "effect"// ❌ WRONG: Unbounded concurrency (10,000 users = 10,000 concurrent DB queries!)
 const loadAllUsersBad = (userIds: readonly string[]) =>
   Effect.all(
     userIds.map(id => UserRepository.findById(id))
-  );
+  )
 
 // ✅ CORRECT: Bounded concurrency
 const loadAllUsers = (userIds: readonly string[]) =>
   Effect.all(
     userIds.map(id => UserRepository.findById(id)),
     { concurrency: 10 } // Max 10 concurrent queries
-  );
+  )
 
 // ✅ CORRECT: Sequential execution (one at a time)
 const loadSequentially = (userIds: readonly string[]) =>
   Effect.all(
     userIds.map(id => UserRepository.findById(id)),
     { concurrency: 1 } // Process one by one
-  );
+  )
 
 // ✅ CORRECT: Inherit parent concurrency
 const loadWithInheritance = (userIds: readonly string[]) =>
   Effect.all(
     userIds.map(id => UserRepository.findById(id)),
     { concurrency: "inherit" } // Use parent's concurrency setting
-  );
+  )
 ```
 
 **Concurrency Options**:
@@ -2066,12 +2010,10 @@ const loadWithInheritance = (userIds: readonly string[]) =>
 **Important**: `Effect.all` uses fail-fast semantics - it stops on the first error.
 
 ```typescript
-import { Effect } from "effect";
-
-const validateAllFields = (fields: readonly Field[]) =>
+import { Effect } from "effect"const validateAllFields = (fields: readonly Field[]) =>
   Effect.all(
     fields.map(field => validateField(field))
-  );
+  )
 
 // If field[2] fails, fields[3+] never execute
 // Remaining operations are interrupted
@@ -2099,25 +2041,21 @@ For these cases, use `Effect.allSuccesses` (Pattern 5).
 **Use when**: You want to process all items even if some fail, collecting both successes and failures.
 
 ```typescript
-import { Effect, Option } from "effect";
-
-// Process all items, collect successes and failures
+import { Effect, Option } from "effect"// Process all items, collect successes and failures
 const processAllItems = (items: readonly Item[]) =>
   Effect.allSuccesses(
     items.map(item => processItem(item))
   ).pipe(
     Effect.map((results) => {
-      const successes = results.filter(Option.isSome).map(opt => opt.value);
-      const failureCount = results.filter(Option.isNone).length;
-
-      return {
+      const successes = results.filter(Option.isSome).map(opt => opt.value)
+      const failureCount = results.filter(Option.isNone).length      return {
         successes,
         failureCount,
         total: results.length,
         successRate: successes.length / results.length
       };
     })
-  );
+  )
 
 // Result type: Effect<Option<Result>[], never>
 // - Some(result) for successful operations
@@ -2128,9 +2066,7 @@ const processAllItems = (items: readonly Item[]) =>
 **Real-World Example: Batch User Import**
 
 ```typescript
-import { Effect, Option, Exit } from "effect";
-
-interface ImportResult {
+import { Effect, Option, Exit } from "effect"interface ImportResult {
   readonly imported: readonly User[];
   readonly failed: readonly { email: string; error: string }[];
 }
@@ -2140,19 +2076,19 @@ const importUsers = (emails: readonly string[]): Effect.Effect<ImportResult> =>
     emails.map(email =>
       Effect.gen(function*() {
         // Validate email
-        const validated = yield* validateEmail(email);
+        const validated = yield* validateEmail(email)
 
         // Check if user exists
-        const existing = yield* UserRepository.findByEmail(email);
+        const existing = yield* UserRepository.findByEmail(email)
         if (Option.isSome(existing)) {
-          return yield* Effect.fail(new DuplicateEmailError({ email }));
+          return yield* Effect.fail(new DuplicateEmailError({ email }))
         }
 
         // Create user
         const user = yield* UserRepository.create({
           email: validated,
           createdAt: new Date()
-        });
+        })
 
         return user;
       }).pipe(
@@ -2162,26 +2098,24 @@ const importUsers = (emails: readonly string[]): Effect.Effect<ImportResult> =>
   ).pipe(
     Effect.map((exits) => {
       const imported: User[] = [];
-      const failed: { email: string; error: string }[] = [];
-
-      exits.forEach((exit, index) => {
+      const failed: { email: string; error: string }[] = []      exits.forEach((exit, index) => {
         if (Exit.isSuccess(exit)) {
-          imported.push(exit.value);
+          imported.push(exit.value)
         } else {
           failed.push({
             email: emails[index],
             error: Exit.isFailure(exit) ? exit.cause.toString() : "Unknown error"
-          });
+          })
         }
-      });
+      })
 
       return { imported, failed };
     })
-  );
+  )
 
 // Usage
-const result = yield* importUsers(["user1@example.com", "user2@example.com"]);
-console.log(`Imported: ${result.imported.length}, Failed: ${result.failed.length}`);
+const result = yield* importUsers(["user1@example.com", "user2@example.com"])
+console.log(`Imported: ${result.imported.length}, Failed: ${result.failed.length}`)
 ```
 
 ---
@@ -2191,17 +2125,15 @@ console.log(`Imported: ${result.imported.length}, Failed: ${result.failed.length
 **Use when**: You want to transform an iterable with effects (more functional than Effect.all + map).
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ GOOD: Effect.forEach for transformation
+import { Effect } from "effect"// ✅ GOOD: Effect.forEach for transformation
 const enrichUsers = (userIds: readonly string[]) =>
   Effect.forEach(
     userIds,
     (id) =>
       Effect.gen(function*() {
-        const user = yield* UserRepository.findById(id);
-        const orders = yield* OrderRepository.countByUserId(id);
-        const lastLogin = yield* ActivityRepository.getLastLogin(id);
+        const user = yield* UserRepository.findById(id)
+        const orders = yield* OrderRepository.countByUserId(id)
+        const lastLogin = yield* ActivityRepository.getLastLogin(id)
 
         return {
           ...user,
@@ -2210,7 +2142,7 @@ const enrichUsers = (userIds: readonly string[]) =>
         };
       }),
     { concurrency: 10 }
-  );
+  )
 
 // Equivalent to:
 const enrichUsersAlternative = (userIds: readonly string[]) =>
@@ -2221,7 +2153,7 @@ const enrichUsersAlternative = (userIds: readonly string[]) =>
       })
     ),
     { concurrency: 10 }
-  );
+  )
 ```
 
 **Effect.forEach vs Effect.all + map**:
@@ -2239,45 +2171,43 @@ const fetchAllExternalUsers = (ids: readonly string[]) =>
   Effect.all(
     ids.map(id => ExternalAPI.fetchUser(id))
     // 1000 IDs = 1000 concurrent HTTP requests = rate limit! 💥
-  );
+  )
 
 // ✅ CORRECT: Bounded concurrency
 const fetchAllExternalUsersCorrect = (ids: readonly string[]) =>
   Effect.all(
     ids.map(id => ExternalAPI.fetchUser(id)),
     { concurrency: 5 } // Respectful rate limiting
-  );
+  )
 
 // ❌ WRONG: Effect.all for dependent operations
 const createUserAndOrder = (userId: string) =>
   Effect.all({
     user: createUser(userId),
     order: createOrder(userId) // Depends on user being created first!
-  });
+  })
 
 // ✅ CORRECT: Sequential with Effect.gen
 const createUserAndOrderCorrect = (userId: string) =>
   Effect.gen(function*() {
-    const user = yield* createUser(userId);
-    const order = yield* createOrder(user.id); // Use created user's ID
-    return { user, order };
-  });
+    const user = yield* createUser(userId)
+    const order = yield* createOrder(user.id) // Use created user's ID
+    return { user, order }
+  })
 
 // ❌ WRONG: Effect.all for large datasets
 const processThousandsOfFiles = (files: readonly File[]) =>
   Effect.all(
     files.map(file => processFile(file))
     // 10,000 files loaded into memory at once! 💥
-  );
+  )
 
 // ✅ CORRECT: Use Stream for large datasets
-import { Stream } from "effect";
-
-const processThousandsOfFilesCorrect = (files: readonly File[]) =>
+import { Stream } from "effect"const processThousandsOfFilesCorrect = (files: readonly File[]) =>
   Stream.fromIterable(files).pipe(
     Stream.mapEffect(file => processFile(file), { concurrency: 10 }),
     Stream.runCollect
-  );
+  )
 ```
 
 ---
@@ -2336,7 +2266,7 @@ const loadUserDashboard = (userId: string) =>
         recentActivity: []
       }) // Graceful degradation
     )
-  );
+  )
 ```
 
 **Example 2: Batch Data Enrichment**
@@ -2361,7 +2291,7 @@ const enrichProducts = (productIds: readonly string[]) =>
         }))
       ),
     { concurrency: 20 } // Process 20 products at a time
-  );
+  )
 ```
 
 ---
@@ -2410,12 +2340,10 @@ Use this matrix to quickly identify which pattern best fits your use case:
 Multi-tier fallback strategy for external service calls with graceful degradation:
 
 ```typescript
-import { Effect, Schedule, Option } from "effect";
-
-const resilientGet = (id: string) =>
+import { Effect, Schedule, Option } from "effect"const resilientGet = (id: string) =>
   Effect.tryPromise({
     try: () => sdkClient.get(id),
-    catch: (error) => new SDKError({ cause: error }),
+    catch: (error) => new SDKError({ cause: error })
   }).pipe(
     Effect.timeout("5 seconds"),
     Effect.retry({
@@ -2424,16 +2352,16 @@ const resilientGet = (id: string) =>
     }),
     Effect.catchTag("TimeoutException", () =>
       Effect.gen(function*() {
-        const cached = yield* cache.get<Resource>(`resource:${id}`);
+        const cached = yield* cache.get<Resource>(`resource:${id}`)
         return yield* Option.match(cached, {
           onSome: Effect.succeed,
           onNone: () => Effect.fail(new ResourceUnavailableError({
             message: "Resource unavailable and no cache"
           }))
-        });
+        })
       })
     )
-  );
+  )
 ```
 
 **Use for:** External APIs with unreliable networks, SLA-critical operations requiring graceful degradation.
@@ -2446,7 +2374,7 @@ const resilientGet = (id: string) =>
 >
 > **Core Implementation:**
 > ```typescript
-> const breaker = yield* createCircuitBreaker(effect, threshold, resetAfter);
+> const breaker = yield* createCircuitBreaker(effect, threshold, resetAfter)
 > const result = yield* breaker.call;  // Fails fast when circuit is open
 > ```
 >
@@ -2478,9 +2406,7 @@ Conditional cleanup based on operation outcome using `Scope.addFinalizer` + `Exi
 #### Database Transaction Pattern
 
 ```typescript
-import { Effect, Exit, Scope } from "effect";
-
-const withTransaction = <A, E>(
+import { Effect, Exit, Scope } from "effect"const withTransaction = <A, E>(
   operation: (conn: Connection) => Effect.Effect<A, E>
 ) =>
   Effect.acquireRelease(
@@ -2488,8 +2414,8 @@ const withTransaction = <A, E>(
       const connection = yield* Effect.tryPromise({
         try: () => pool.connect(),
         catch: (error) => new DatabaseConnectionError({ cause: error })
-      });
-      yield* Effect.sync(() => connection.beginTransaction());
+      })
+      yield* Effect.sync(() => connection.beginTransaction())
 
       // Exit-aware finalizer: commit or rollback based on outcome
       yield* Scope.addFinalizer((exit) =>
@@ -2498,8 +2424,8 @@ const withTransaction = <A, E>(
             Effect.gen(function*() {
               yield* Effect.tryPromise(() => connection.rollback()).pipe(
                 Effect.catchAll(() => Effect.void)
-              );
-              yield* Effect.sync(() => connection.release());
+              )
+              yield* Effect.sync(() => connection.release())
             }),
           onSuccess: () =>
             Effect.gen(function*() {
@@ -2509,18 +2435,18 @@ const withTransaction = <A, E>(
                     Effect.catchAll(() => Effect.void)
                   )
                 )
-              );
-              yield* Effect.sync(() => connection.release());
+              )
+              yield* Effect.sync(() => connection.release())
             })
         })
-      );
+      )
       return connection;
     }),
     (connection) =>
       Effect.sync(() => connection.isConnected && connection.release()).pipe(
         Effect.catchAll(() => Effect.void)
       )
-  ).pipe(Effect.flatMap(operation));
+  ).pipe(Effect.flatMap(operation))
 ```
 
 **Full implementation with error handling:** See infrastructure template `interface.template.ts:232-291`
@@ -2574,7 +2500,7 @@ const processedData = yield* Effect.succeed(userData).pipe(
   ),
   // Process validated data
   Effect.flatMap((validUser) => repository.save(validUser))
-);
+)
 ```
 
 #### Validation Pattern Variations
@@ -2618,7 +2544,7 @@ const validateForm = (formData: FormData) =>
         fields: errors.map((e) => ({ field: e.field, error: e.message }))
       }))
     )
-  );
+  )
 ```
 
 ---
@@ -2674,7 +2600,7 @@ const normalizedResult = yield* externalAPI.fetchUser(userId).pipe(
         retryable: apiError.status_code >= 500
       })
   })
-);
+)
 ```
 
 ---
@@ -2696,13 +2622,13 @@ const normalizedResult = yield* externalAPI.fetchUser(userId).pipe(
 // Using mapBoth (preferred when transforming both channels)
 const result = yield* operation.pipe(
   Effect.mapBoth({ onSuccess: transform, onFailure: transformError })
-);
+)
 
 // Using separate operators (use when only one channel needs transformation)
 const result = yield* operation.pipe(
   Effect.map(transform),           // Only success
   Effect.mapError(transformError)  // Only error
-);
+)
 ```
 
 **Use `mapBoth` when:** Both channels need transformation. **Use `map`/`mapError` when:** Only one channel needs transformation.
@@ -2739,18 +2665,18 @@ Resilience:
 // ✅ Good use of Effect.gen
 const processOrder = (orderId: string) =>
   Effect.gen(function*() {
-    const order = yield* getOrder(orderId);
-    const user = yield* getUser(order.userId);
+    const order = yield* getOrder(orderId)
+    const user = yield* getUser(order.userId)
 
     if (!user.verified) {
-      return yield* Effect.fail(new UnverifiedUserError());
+      return yield* Effect.fail(new UnverifiedUserError())
     }
 
-    const payment = yield* processPayment(order.total);
-    yield* sendConfirmation(user.email, payment.id);
+    const payment = yield* processPayment(order.total)
+    yield* sendConfirmation(user.email, payment.id)
 
-    return payment;
-  });
+    return payment
+  })
 ```
 
 ### Use Combinators for:
@@ -2767,13 +2693,13 @@ const getUserWithPermissions = (id: string) =>
       ...user,
       permissions,
     })),
-  );
+  )
 
 // ✅ Error handling with combinators
 const safeGetUser = (id: string) =>
   getUser(id).pipe(
     Effect.catchTag('UserNotFound', () => Effect.succeed(defaultUser)),
-  );
+  )
 ```
 
 ## Schema Patterns (Advanced Validation & Documentation)
@@ -2785,9 +2711,7 @@ Effect Schema provides powerful runtime validation with TypeScript type inferenc
 Add metadata to schemas for auto-generated documentation, API specs, and better error messages.
 
 ```typescript
-import { Schema } from "effect";
-
-// ✅ Field-level annotations
+import { Schema } from "effect"// ✅ Field-level annotations
 export const Email = Schema.String.pipe(
   Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
   Schema.annotations({
@@ -2800,7 +2724,7 @@ export const Email = Schema.String.pipe(
       maxLength: 255
     }
   })
-);
+)
 
 // ✅ Class-level annotations for entities
 export class User extends Schema.Class<User>("User")({
@@ -2821,7 +2745,7 @@ export class User extends Schema.Class<User>("User")({
     description: "User age in years",
     examples: [25, 42],
     jsonSchema: { minimum: 0, maximum: 150 }
-  }),
+  })
 }).pipe(
   Schema.annotations({
     identifier: "User",
@@ -2834,7 +2758,7 @@ export class User extends Schema.Class<User>("User")({
 ) {}
 
 // ✅ Generate OpenAPI schemas from annotations
-const openApiSchema = Schema.make(User); // Includes all annotations
+const openApiSchema = Schema.make(User) // Includes all annotations
 ```
 
 **Use Cases:**
@@ -2851,19 +2775,17 @@ const openApiSchema = Schema.make(User); // Includes all annotations
 Add custom validation predicates beyond built-in validators for business rules.
 
 ```typescript
-import { Schema } from "effect";
-
-// ✅ Single field filter
+import { Schema } from "effect"// ✅ Single field filter
 export const PositiveEven = Schema.Number.pipe(
   Schema.filter((n) =>
     n > 0 && n % 2 === 0 || "Must be a positive even number"
   )
-);
+)
 
 // ✅ Cross-field validation
 export class DateRange extends Schema.Class<DateRange>("DateRange")({
   startDate: Schema.DateTimeUtc,
-  endDate: Schema.DateTimeUtc,
+  endDate: Schema.DateTimeUtc
 }).pipe(
   Schema.filter((range) => {
     if (range.endDate <= range.startDate) {
@@ -2872,33 +2794,31 @@ export class DateRange extends Schema.Class<DateRange>("DateRange")({
         message: "End date must be after start date"
       };
     }
-    return true;
+    return true
   })
 ) {}
 
 // ✅ Multiple validation errors
 export class PasswordInput extends Schema.Class<PasswordInput>("PasswordInput")({
   password: Schema.String,
-  confirmPassword: Schema.String,
+  confirmPassword: Schema.String
 }).pipe(
   Schema.filter((input) => {
-    const errors: Array<{ path: string[]; message: string }> = [];
-
-    if (input.password.length < 8) {
+    const errors: Array<{ path: string[]; message: string }> = []    if (input.password.length < 8) {
       errors.push({
         path: ["password"],
         message: "Password must be at least 8 characters"
-      });
+      })
     }
 
     if (input.password !== input.confirmPassword) {
       errors.push({
         path: ["confirmPassword"],
         message: "Passwords must match"
-      });
+      })
     }
 
-    return errors.length === 0 || errors;
+    return errors.length === 0 || errors
   })
 ) {}
 
@@ -2908,19 +2828,19 @@ export const UniqueEmail = Schema.String.pipe(
   Schema.filterEffect((email) =>
     Effect.gen(function*() {
       const userRepo = yield* UserRepository;
-      const exists = yield* userRepo.existsByEmail(email);
+      const exists = yield* userRepo.existsByEmail(email)
 
       if (exists) {
         return yield* Effect.fail({
           path: ["email"],
           message: "Email already registered"
-        });
+        })
       }
 
       return true;
     })
   )
-);
+)
 
 // Usage in forms
 const validateUserInput = (input: unknown) =>
@@ -2933,7 +2853,7 @@ const validateUserInput = (input: unknown) =>
       success: false,
       errors: error.message // Array of { path, message }
     }))
-  );
+  )
 ```
 
 **Use Cases:**
@@ -2950,9 +2870,7 @@ const validateUserInput = (input: unknown) =>
 Bi-directional transformations between encoded (API) and decoded (domain) formats.
 
 ```typescript
-import { Schema } from "effect";
-
-// ✅ String normalization
+import { Schema } from "effect"// ✅ String normalization
 export const NormalizedEmail = Schema.String.pipe(
   Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
   Schema.transform(
@@ -2962,7 +2880,7 @@ export const NormalizedEmail = Schema.String.pipe(
       encode: (email) => email // Already normalized
     }
   )
-);
+)
 
 // ✅ Type transformation (string → number)
 export const PriceInCents = Schema.String.pipe(
@@ -2974,7 +2892,7 @@ export const PriceInCents = Schema.String.pipe(
       encode: (cents) => (cents / 100).toFixed(2) // → "19.99"
     }
   )
-);
+)
 
 // ✅ Async transformation with transformOrFail
 export const ValidatedUserId = Schema.String.pipe(
@@ -2984,7 +2902,7 @@ export const ValidatedUserId = Schema.String.pipe(
       decode: (id) =>
         Effect.gen(function*() {
           const userApi = yield* UserAPI;
-          const exists = yield* userApi.checkExists(id);
+          const exists = yield* userApi.checkExists(id)
 
           if (!exists) {
             return yield* Effect.fail(
@@ -2993,21 +2911,21 @@ export const ValidatedUserId = Schema.String.pipe(
                 id,
                 "User not found"
               )
-            );
+            )
           }
 
-          return id;
+          return id
         }),
       encode: (id) => Effect.succeed(id)
     }
   )
-);
+)
 
 // ✅ Object transformation for API compatibility
 export const UserDto = Schema.Struct({
   id: Schema.UUID,
   email_address: NormalizedEmail,  // snake_case for API
-  created_at: Schema.DateTimeUtc,
+  created_at: Schema.DateTimeUtc
 }).pipe(
   Schema.transform(
     Schema.Struct({
@@ -3028,7 +2946,7 @@ export const UserDto = Schema.Struct({
       })
     }
   )
-);
+)
 ```
 
 **Use Cases:**
@@ -3045,13 +2963,11 @@ export const UserDto = Schema.Struct({
 Extract Type (domain) or Encoded (API) portions from schemas with transformations.
 
 ```typescript
-import { Schema } from "effect";
-
-// Define full schema with transformation
+import { Schema } from "effect"// Define full schema with transformation
 const UserSchema = Schema.Struct({
   id: Schema.UUID,
   email: NormalizedEmail,      // Has transform
-  created_at: Schema.DateTimeUtc,
+  created_at: Schema.DateTimeUtc
 }).pipe(
   Schema.transform(
     Schema.Struct({
@@ -3072,32 +2988,32 @@ const UserSchema = Schema.Struct({
       })
     }
   )
-);
+)
 
 // ✅ Extract API format (pre-transformation)
-const UserApiSchema = Schema.encodedSchema(UserSchema);
-type UserApi = Schema.Schema.Type<typeof UserApiSchema>;
+const UserApiSchema = Schema.encodedSchema(UserSchema)
+type UserApi = Schema.Schema.Type<typeof UserApiSchema>
 // { id: string; email: string; created_at: string }
 
 // ✅ Extract Domain format (post-transformation)
-const UserDomainSchema = Schema.typeSchema(UserSchema);
-type UserDomain = Schema.Schema.Type<typeof UserDomainSchema>;
+const UserDomainSchema = Schema.typeSchema(UserSchema)
+type UserDomain = Schema.Schema.Type<typeof UserDomainSchema>
 // { id: string; email: string; createdAt: Date }
 
 // ✅ Use in different layers
 // Contract layer: Full UserSchema (with transformations)
-export { UserSchema };
+export { UserSchema }
 
 // Feature RPC layer: API format only (no transformations)
-export const UserResponse = Schema.encodedSchema(UserSchema);
+export const UserResponse = Schema.encodedSchema(UserSchema)
 
 // Data-access layer: Domain format
-export const UserEntity = Schema.typeSchema(UserSchema);
+export const UserEntity = Schema.typeSchema(UserSchema)
 
 // ✅ encodedBoundSchema - Preserve filters before transformation
 const FilteredEmail = Schema.String.pipe(
   Schema.filter((s) => s.includes("@") || "Invalid email")
-);
+)
 
 const TransformedEmail = FilteredEmail.pipe(
   Schema.transform(
@@ -3107,10 +3023,10 @@ const TransformedEmail = FilteredEmail.pipe(
       encode: (s) => s
     }
   )
-);
+)
 
 // Get Encoded + filters (without transform)
-const EncodedWithFilters = Schema.encodedBoundSchema(TransformedEmail);
+const EncodedWithFilters = Schema.encodedBoundSchema(TransformedEmail)
 // Includes email filter, but NOT the lowercase transform
 ```
 
@@ -3128,27 +3044,25 @@ const EncodedWithFilters = Schema.encodedBoundSchema(TransformedEmail);
 Improve error messages for debugging and user-facing validation.
 
 ```typescript
-import { Schema, Pretty } from "effect";
-
-// ✅ Custom pretty formatter
+import { Schema, Pretty } from "effect"// ✅ Custom pretty formatter
 export const ProductSchema = Schema.Struct({
   id: Schema.UUID,
   name: Schema.String,
-  price: Schema.Number,
+  price: Schema.Number
 }).pipe(
   Schema.annotations({
     pretty: () => (product) =>
       `Product(id="${product.id}", name="${product.name}", price=$${product.price.toFixed(2)})`
   })
-);
+)
 
 // Usage
-const formatter = Pretty.make(ProductSchema);
+const formatter = Pretty.make(ProductSchema)
 console.log(formatter({
   id: "123e4567-e89b-12d3-a456-426614174000",
   name: "Widget",
   price: 19.99
-}));
+}))
 // Output: Product(id="123e4567-e89b-12d3-a456-426614174000", name="Widget", price=$19.99)
 
 // ✅ Error message customization
@@ -3159,10 +3073,10 @@ export const Age = Schema.Number.pipe(
   Schema.annotations({
     message: () => "Age must be an integer between 0 and 150"
   })
-);
+)
 
 // Invalid age shows custom message instead of generic error
-Schema.decodeUnknownSync(Age)(-5);
+Schema.decodeUnknownSync(Age)(-5)
 // Error: Age must be an integer between 0 and 150
 ```
 
@@ -3179,54 +3093,52 @@ Schema.decodeUnknownSync(Age)(-5);
 Combine schemas with extend, partial, pick, and omit for reusability.
 
 ```typescript
-import { Schema } from "effect";
-
-// ✅ Base entity pattern
+import { Schema } from "effect"// ✅ Base entity pattern
 export const BaseEntity = Schema.Struct({
   id: Schema.UUID,
   createdAt: Schema.DateTimeUtc,
-  updatedAt: Schema.DateTimeUtc,
-});
+  updatedAt: Schema.DateTimeUtc
+})
 
 // ✅ Extend base entity
 export const Product = Schema.Struct({
   name: Schema.String,
   price: Schema.Number,
-  sku: Schema.String,
+  sku: Schema.String
 }).pipe(
   Schema.extend(BaseEntity)
-);
+)
 // Result: { id, createdAt, updatedAt, name, price, sku }
 
 // ✅ Partial for updates
 export const UpdateProduct = Schema.partial(
   Schema.pick(Product, "name", "price", "sku")
-);
+)
 // Result: { name?, price?, sku? }
 
 // ✅ Omit for creation
-export const CreateProduct = Schema.omit(Product, "id", "createdAt", "updatedAt");
+export const CreateProduct = Schema.omit(Product, "id", "createdAt", "updatedAt")
 // Result: { name, price, sku }
 
 // ✅ Pick for specific fields
-export const ProductSummary = Schema.pick(Product, "id", "name", "price");
+export const ProductSummary = Schema.pick(Product, "id", "name", "price")
 // Result: { id, name, price }
 
 // ✅ Required - make all fields required
-export const RequiredProduct = Schema.required(UpdateProduct);
+export const RequiredProduct = Schema.required(UpdateProduct)
 // Result: { name, price, sku } (all required)
 
 // ✅ Branded types for nominal typing
-export const UserId = Schema.String.pipe(Schema.brand("UserId"));
-export const ProductId = Schema.String.pipe(Schema.brand("ProductId"));
+export const UserId = Schema.String.pipe(Schema.brand("UserId"))
+export const ProductId = Schema.String.pipe(Schema.brand("ProductId"))
 
 // Type-safe - cannot mix UserIds and ProductIds
 const processUser = (id: Schema.Schema.Type<typeof UserId>) => {
   // id is branded as UserId
-};
+}
 
 const productId: Schema.Schema.Type<typeof ProductId> = "123";
-processUser(productId); // ❌ Type error: ProductId is not assignable to UserId
+processUser(productId) // ❌ Type error: ProductId is not assignable to UserId
 ```
 
 **Use Cases:**
@@ -3272,60 +3184,54 @@ Effect's **Stream** provides constant-memory data processing for large or unboun
 **Creating Streams:**
 
 ```typescript
-import { Stream, Effect } from "effect";
-
-// From iterable
-const numbersStream = Stream.fromIterable([1, 2, 3, 4, 5]);
+import { Stream, Effect } from "effect"// From iterable
+const numbersStream = Stream.fromIterable([1, 2, 3, 4, 5])
 
 // From range
-const rangeStream = Stream.range(1, 100); // 1 to 100
+const rangeStream = Stream.range(1, 100) // 1 to 100
 
 // From single value
-const singleStream = Stream.succeed(42);
+const singleStream = Stream.succeed(42)
 
 // Empty stream
-const emptyStream = Stream.empty;
-
-// From Effect
+const emptyStream = Stream.empty// From Effect
 const effectStream = Stream.fromEffect(
   Effect.gen(function*() {
-    const data = yield* fetchData();
-    return data;
+    const data = yield* fetchData()
+    return data
   })
-);
+)
 
 // Infinite stream
-const infiniteStream = Stream.iterate(0, (n) => n + 1); // 0, 1, 2, 3, ...
+const infiniteStream = Stream.iterate(0, (n) => n + 1) // 0, 1, 2, 3, ...
 ```
 
 **Consuming Streams:**
 
 ```typescript
 // Collect all elements (use with caution on large streams)
-const allItems = yield* Stream.runCollect(numbersStream);
+const allItems = yield* Stream.runCollect(numbersStream)
 // Returns: Chunk.Chunk<number>
 
 // Run forEach (side effects)
 yield* Stream.runForEach(numbersStream, (n) =>
   Effect.log(`Processing: ${n}`)
-);
+)
 
 // Run to sink
 const sum = yield* Stream.run(
   numbersStream,
   Sink.foldLeft(0, (acc, n: number) => acc + n)
-);
+)
 
 // Take first N
-const firstFive = yield* Stream.run(numbersStream, Sink.take(5));
+const firstFive = yield* Stream.run(numbersStream, Sink.take(5))
 ```
 
 **Real-World Example: Processing Paginated API Results**
 
 ```typescript
-import { Stream, Effect } from "effect";
-
-interface PaginatedResponse<T> {
+import { Stream, Effect } from "effect"interface PaginatedResponse<T> {
   items: T[];
   nextCursor: string | null;
 }
@@ -3336,20 +3242,20 @@ const paginatedStream = <T>(
 ) =>
   Stream.unfoldEffect(null , (cursor) =>
     Effect.gen(function*() {
-      const response = yield* fetchPage(cursor);
+      const response = yield* fetchPage(cursor)
 
       if (response.items.length === 0) {
-        return Option.none(); // End stream
+        return Option.none() // End stream
       }
 
       return Option.some([
         response.items, // Current chunk
         response.nextCursor // Next state
-      ] as const);
+      ] as const)
     })
   ).pipe(
     Stream.flatMap(Stream.fromIterable) // Flatten chunks
-  );
+  )
 
 // Usage
 const allUsers = paginatedStream((cursor) =>
@@ -3357,12 +3263,12 @@ const allUsers = paginatedStream((cursor) =>
     try: () => api.users.list({ cursor, limit: 100 }),
     catch: (error) => new Error(`Failed to fetch users: ${error}`)
   })
-);
+)
 
 // Process stream
 yield* Stream.runForEach(allUsers, (user) =>
   Effect.log("Processing user", user.id)
-);
+)
 ```
 
 ---
@@ -3370,39 +3276,37 @@ yield* Stream.runForEach(allUsers, (user) =>
 ### Stream Pattern 2: Stream Transformations
 
 ```typescript
-import { Stream, Effect } from "effect";
-
-const numbers = Stream.range(1, 10);
+import { Stream, Effect } from "effect"const numbers = Stream.range(1, 10)
 
 // map - Transform elements
 const doubled = numbers.pipe(
   Stream.map((n) => n * 2)
-);
+)
 
 // filter - Keep only matching elements
 const evens = numbers.pipe(
   Stream.filter((n) => n % 2 === 0)
-);
+)
 
 // flatMap - Transform to streams and flatten
 const expanded = numbers.pipe(
   Stream.flatMap((n) => Stream.range(1, n))
-);
+)
 
 // take - Limit elements
 const firstThree = numbers.pipe(
   Stream.take(3)
-);
+)
 
 // drop - Skip elements
 const skipFirstTwo = numbers.pipe(
   Stream.drop(2)
-);
+)
 
 // rechunk - Change chunk size (important for performance)
 const largeChunks = numbers.pipe(
   Stream.rechunk(100) // Process in batches of 100
-);
+)
 
 // mapEffect - Async transformations
 const fetchedData = Stream.fromIterable(["id1", "id2", "id3"]).pipe(
@@ -3412,15 +3316,13 @@ const fetchedData = Stream.fromIterable(["id1", "id2", "id3"]).pipe(
       catch: (error) => new Error(`Fetch failed: ${error}`)
     })
   )
-);
+)
 ```
 
 **Real-World Example: Data Processing Pipeline**
 
 ```typescript
-import { Stream, Effect } from "effect";
-
-interface RawData {
+import { Stream, Effect } from "effect"interface RawData {
   id: string;
   value: string;
 }
@@ -3439,7 +3341,7 @@ const processDataPipeline = (inputStream: Stream.Stream<RawData, Error>) =>
     // Transform with Effect (async validation)
     Stream.mapEffect((data) =>
       Effect.gen(function*() {
-        const validated = yield* validateData(data);
+        const validated = yield* validateData(data)
         return validated;
       })
     ),
@@ -3453,15 +3355,15 @@ const processDataPipeline = (inputStream: Stream.Stream<RawData, Error>) =>
 
     // Process in chunks for efficiency
     Stream.rechunk(50)
-  );
+  )
 
 // Usage
-const rawStream = Stream.fromIterable(rawData);
-const processedStream = processDataPipeline(rawStream);
+const rawStream = Stream.fromIterable(rawData)
+const processedStream = processDataPipeline(rawStream)
 
 yield* Stream.runForEach(processedStream, (item) =>
   Effect.log("Processed", item)
-);
+)
 ```
 
 ---
@@ -3471,22 +3373,20 @@ yield* Stream.runForEach(processedStream, (item) =>
 **Stream.acquireRelease** ensures resources are properly cleaned up even if stream processing fails or is interrupted.
 
 ```typescript
-import { Stream, Effect } from "effect";
-
-// Database connection stream with auto-cleanup
+import { Stream, Effect } from "effect"// Database connection stream with auto-cleanup
 const queryStream = <T>(query: string): Stream.Stream<T, Error> =>
   Stream.acquireRelease(
     // Acquire: Open database connection
     Effect.gen(function*() {
-      const connection = yield* database.connect();
-      yield* Effect.log("Database connection opened");
+      const connection = yield* database.connect()
+      yield* Effect.log("Database connection opened")
       return connection;
     }),
     // Release: Close connection (called even on error/interruption)
     (connection) =>
       Effect.gen(function*() {
-        yield* connection.close();
-        yield* Effect.log("Database connection closed");
+        yield* connection.close()
+        yield* Effect.log("Database connection closed")
       })
   ).pipe(
     Stream.flatMap((connection) =>
@@ -3499,7 +3399,7 @@ const queryStream = <T>(query: string): Stream.Stream<T, Error> =>
         Stream.flatMap(Stream.fromIterable)
       )
     )
-  );
+  )
 
 // File stream with auto-close
 const fileStream = (path: string): Stream.Stream<string, Error> =>
@@ -3528,13 +3428,13 @@ const fileStream = (path: string): Stream.Stream<string, Error> =>
         )
       )
     )
-  );
+  )
 
 // Usage - resource automatically cleaned up
 yield* Stream.runForEach(
   queryStream<User>("SELECT * FROM users"),
   (user) => Effect.log("User:", user)
-);
+)
 // Database connection automatically closed here
 ```
 
@@ -3545,7 +3445,7 @@ const streamWithCleanup = Stream.range(1, 100).pipe(
   Stream.ensuring(
     Effect.log("Stream processing completed - running cleanup")
   )
-);
+)
 ```
 
 **Stream.finalizer** - Add finalizer to current scope:
@@ -3555,10 +3455,10 @@ const streamWithFinalizer = Stream.fromEffect(
   Effect.gen(function*() {
     yield* Stream.finalizer(
       Effect.log("Finalizer running")
-    );
-    return 42;
+    )
+    return 42
   })
-);
+)
 ```
 
 ---
@@ -3566,9 +3466,7 @@ const streamWithFinalizer = Stream.fromEffect(
 ### Stream Pattern 4: Concurrency & Backpressure Control
 
 ```typescript
-import { Stream, Effect, Schedule } from "effect";
-
-// mapEffect with concurrency control
+import { Stream, Effect, Schedule } from "effect"// mapEffect with concurrency control
 const concurrentStream = Stream.fromIterable(urls).pipe(
   Stream.mapEffect(
     (url) =>
@@ -3578,36 +3476,34 @@ const concurrentStream = Stream.fromIterable(urls).pipe(
       }),
     { concurrency: 5 } // Process up to 5 URLs concurrently
   )
-);
+)
 
 // Buffer for backpressure
 const bufferedStream = dataStream.pipe(
   Stream.buffer({ capacity: 100 }) // Buffer up to 100 items
-);
+)
 
 // Merge multiple streams
-const merged = Stream.merge(stream1, stream2);
+const merged = Stream.merge(stream1, stream2)
 
 // Zip streams (combine elements)
-const zipped = Stream.zip(numbersStream, lettersStream);
+const zipped = Stream.zip(numbersStream, lettersStream)
 
 // Rate limiting with delays
 const rateLimited = Stream.fromIterable(requests).pipe(
   Stream.mapEffect((req) =>
     Effect.gen(function*() {
-      yield* Effect.sleep("100 millis"); // 100ms between requests
-      return yield* processRequest(req);
+      yield* Effect.sleep("100 millis") // 100ms between requests
+      return yield* processRequest(req)
     })
   )
-);
+)
 ```
 
 **Real-World Example: Concurrent API Calls with Rate Limiting**
 
 ```typescript
-import { Stream, Effect, Schedule } from "effect";
-
-interface ProcessingResult {
+import { Stream, Effect, Schedule } from "effect"interface ProcessingResult {
   id: string;
   status: "success" | "failed";
   data?: unknown;
@@ -3658,7 +3554,7 @@ const processItemsWithRateLimit = (
     ),
     // Buffer results
     Stream.buffer({ capacity: 50 })
-  );
+  )
 
 // Usage
 const results = processItemsWithRateLimit(
@@ -3668,13 +3564,13 @@ const results = processItemsWithRateLimit(
       try: () => api.processItem(id),
       catch: (error) => new Error(`Processing failed: ${error}`)
     })
-);
+)
 
 yield* Stream.runForEach(results, (result) =>
   result.status === "success"
     ? Effect.log("Success:", result.id)
     : Effect.log("Failed:", result.id, result.error)
-);
+)
 ```
 
 ---
@@ -3682,16 +3578,14 @@ yield* Stream.runForEach(results, (result) =>
 ### Stream Pattern 5: Error Handling in Streams
 
 ```typescript
-import { Stream, Effect } from "effect";
-
-// catchAll - Handle all errors
+import { Stream, Effect } from "effect"// catchAll - Handle all errors
 const safeStream = dangerousStream.pipe(
   Stream.catchAll((error) =>
     Stream.fromEffect(Effect.log("Error occurred:", error)).pipe(
       Stream.flatMap(() => Stream.empty)
     )
   )
-);
+)
 
 // catchSome - Handle specific errors
 const partiallyHandled = dataStream.pipe(
@@ -3700,14 +3594,14 @@ const partiallyHandled = dataStream.pipe(
       ? Option.some(Stream.empty)
       : Option.none()
   )
-);
+)
 
 // retry - Retry failed stream elements
 const retriedStream = Stream.fromEffect(unstableEffect).pipe(
   Stream.retry({
     schedule: Schedule.exponential("100 millis")
   })
-);
+)
 
 // Graceful degradation - continue on error
 const resilientStream = Stream.fromIterable(items).pipe(
@@ -3715,29 +3609,25 @@ const resilientStream = Stream.fromIterable(items).pipe(
     processItem(item).pipe(
       Effect.catchAll((error) =>
         Effect.gen(function*() {
-          yield* Effect.log("Processing failed, using default", error);
-          return defaultValue;
+          yield* Effect.log("Processing failed, using default", error)
+          return defaultValue
         })
       )
     )
   )
-);
+)
 ```
 
 **Real-World Example: Resilient Stream Processing**
 
 ```typescript
-import { Stream, Effect, Schedule } from "effect";
-
-const processStreamWithErrorHandling = <T, E, R>(
+import { Stream, Effect, Schedule } from "effect"const processStreamWithErrorHandling = <T, E, R>(
   stream: Stream.Stream<T, E, R>,
   processor: (item: T) => Effect.Effect<void, Error>
 ): Effect.Effect<{ processed: number; failed: number }, never, R> =>
   Effect.gen(function*() {
     let processed = 0;
-    let failed = 0;
-
-    yield* stream.pipe(
+    let failed = 0    yield* stream.pipe(
       // Retry individual items
       Stream.mapEffect((item) =>
         processor(item).pipe(
@@ -3749,7 +3639,7 @@ const processStreamWithErrorHandling = <T, E, R>(
           Effect.match({
             onFailure: (error) => {
               failed++;
-              return Effect.log("Item processing failed:", error);
+              return Effect.log("Item processing failed:", error)
             },
             onSuccess: () => {
               processed++;
@@ -3766,10 +3656,10 @@ const processStreamWithErrorHandling = <T, E, R>(
         )
       ),
       Stream.runDrain
-    );
+    )
 
-    return { processed, failed };
-  });
+    return { processed, failed }
+  })
 ```
 
 ---
@@ -3781,29 +3671,27 @@ const processStreamWithErrorHandling = <T, E, R>(
 ### Sink Pattern 1: Basic Sink Usage
 
 ```typescript
-import { Stream, Sink, Chunk } from "effect";
-
-const numbers = Stream.range(1, 100);
+import { Stream, Sink, Chunk } from "effect"const numbers = Stream.range(1, 100)
 
 // collectAll - Collect into Chunk
-const allNumbers = yield* Stream.run(numbers, Sink.collectAll());
+const allNumbers = yield* Stream.run(numbers, Sink.collectAll())
 // Returns: Chunk.Chunk<number>
 
 // take - Take first N elements
-const firstTen = yield* Stream.run(numbers, Sink.take(10));
+const firstTen = yield* Stream.run(numbers, Sink.take(10))
 
 // drain - Run stream for side effects, discard results
 yield* Stream.run(
   numbers.pipe(Stream.mapEffect((n) => Effect.log(n))),
   Sink.drain
-);
+)
 
 // head - Take first element
-const first = yield* Stream.run(numbers, Sink.head());
+const first = yield* Stream.run(numbers, Sink.head())
 // Returns: Option.Option<number>
 
 // last - Take last element
-const last = yield* Stream.run(numbers, Sink.last());
+const last = yield* Stream.run(numbers, Sink.last())
 ```
 
 ---
@@ -3811,13 +3699,11 @@ const last = yield* Stream.run(numbers, Sink.last());
 ### Sink Pattern 2: Custom Sinks for Aggregation
 
 ```typescript
-import { Sink, Stream, Effect } from "effect";
-
-// foldLeft - Accumulate with function
+import { Sink, Stream, Effect } from "effect"// foldLeft - Accumulate with function
 const sum = yield* Stream.run(
   Stream.range(1, 100),
   Sink.foldLeft(0, (acc, n: number) => acc + n)
-);
+)
 
 // Custom sink for average
 const average = <N extends number>(
@@ -3836,25 +3722,23 @@ const average = <N extends number>(
     Effect.map((result) =>
       result.count === 0 ? 0 : result.sum / result.count
     )
-  );
+  )
 
 // Usage
-const avg = yield* average(Stream.fromIterable([1, 2, 3, 4, 5]));
+const avg = yield* average(Stream.fromIterable([1, 2, 3, 4, 5]))
 // Returns: 3
 
 // forEach - Side effects for each element
 yield* Stream.run(
   numbers,
   Sink.forEach((n) => Effect.log("Processing:", n))
-);
+)
 ```
 
 **Real-World Example: Computing Statistics**
 
 ```typescript
-import { Sink, Stream, Effect } from "effect";
-
-interface Stats {
+import { Sink, Stream, Effect } from "effect"interface Stats {
   count: number;
   sum: number;
   min: number;
@@ -3881,10 +3765,10 @@ const computeStats = (
       ...result,
       avg: result.count === 0 ? 0 : result.sum / result.count
     }))
-  );
+  )
 
 // Usage
-const stats = yield* computeStats(Stream.range(1, 1000));
+const stats = yield* computeStats(Stream.range(1, 1000))
 // Returns: { count: 1000, sum: 500500, min: 1, max: 1000, avg: 500.5 }
 ```
 
@@ -3896,9 +3780,7 @@ const stats = yield* computeStats(Stream.range(1, 1000));
 
 ```typescript
 import { Stream, Sink, Effect } from "effect";
-import * as fs from "fs";
-
-interface User {
+import * as fs from "fs"interface User {
   id: string;
   name: string;
   email: string;
@@ -3913,10 +3795,10 @@ const exportUsersToCSV = (
     const writeStream = yield* Effect.tryPromise({
       try: () => Promise.resolve(fs.createWriteStream(filePath)),
       catch: (error) => new Error(`Failed to create file: ${error}`)
-    });
+    })
 
     // Add CSV header
-    writeStream.write("id,name,email\n");
+    writeStream.write("id,name,email\n")
 
     // Process stream and write to file
     yield* users.pipe(
@@ -3930,30 +3812,30 @@ const exportUsersToCSV = (
           try: () =>
             new Promise<void>((resolve, reject) => {
               if (!writeStream.write(row)) {
-                writeStream.once("drain", () => resolve());
+                writeStream.once("drain", () => resolve())
               } else {
-                resolve();
+                resolve()
               }
             }),
           catch: (error) => new Error(`Write failed: ${error}`)
         })
       ),
       Stream.runDrain
-    );
+    )
 
     // Close stream
     yield* Effect.tryPromise({
       try: () =>
         new Promise<void>((resolve) => {
-          writeStream.end(() => resolve());
+          writeStream.end(() => resolve())
         }),
       catch: () => new Error("Failed to close file")
-    });
-  });
+    })
+  })
 
 // Usage
-const userStream = Stream.fromIterable(users);
-yield* exportUsersToCSV(userStream, "users.csv");
+const userStream = Stream.fromIterable(users)
+yield* exportUsersToCSV(userStream, "users.csv")
 ```
 
 ---
@@ -3963,19 +3845,15 @@ yield* exportUsersToCSV(userStream, "users.csv");
 **End-to-End: Database → Stream → Transform → Aggregate → Export**
 
 ```typescript
-import { Stream, Sink, Effect } from "effect";
-
-// Full data processing pipeline
+import { Stream, Sink, Effect } from "effect"// Full data processing pipeline
 const dataProcessingPipeline = Effect.gen(function*() {
   const database = yield* DatabaseService;
-  const logger = yield* LoggingService;
-
-  yield* logger.info("Starting data export pipeline");
+  const logger = yield* LoggingService  yield* logger.info("Starting data export pipeline")
 
   // Step 1: Stream from database
   const rawDataStream = Stream.acquireRelease(
     Effect.gen(function*() {
-      const connection = yield* database.connect();
+      const connection = yield* database.connect()
       return connection;
     }),
     (connection) => connection.close()
@@ -3988,7 +3866,7 @@ const dataProcessingPipeline = Effect.gen(function*() {
         })
       ).pipe(Stream.flatMap(Stream.fromIterable))
     )
-  );
+  )
 
   // Step 2: Transform data
   const transformedStream = rawDataStream.pipe(
@@ -3999,15 +3877,15 @@ const dataProcessingPipeline = Effect.gen(function*() {
     Stream.mapEffect(
       (record) =>
         Effect.gen(function*() {
-          const customer = yield* fetchCustomer(record.customerId);
-          return { ...record, customerName: customer.name };
+          const customer = yield* fetchCustomer(record.customerId)
+          return { ...record, customerName: customer.name }
         }),
       { concurrency: 10 }
     ),
 
     // Process in chunks
     Stream.rechunk(100)
-  );
+  )
 
   // Step 3: Compute aggregates (using Sink)
   const stats = yield* Stream.run(
@@ -4025,12 +3903,12 @@ const dataProcessingPipeline = Effect.gen(function*() {
       ...result,
       avgSale: result.count > 0 ? result.totalSales / result.count : 0
     }))
-  );
+  )
 
-  yield* logger.info("Pipeline complete", stats);
+  yield* logger.info("Pipeline complete", stats)
 
   return stats;
-});
+})
 ```
 
 ---
@@ -4041,8 +3919,8 @@ const dataProcessingPipeline = Effect.gen(function*() {
 
 ```typescript
 // ❌ BAD: Loads all 1 million records into memory
-const allUsers = yield* database.query("SELECT * FROM users");
-const processed = allUsers.map(processUser);
+const allUsers = yield* database.query("SELECT * FROM users")
+const processed = allUsers.map(processUser)
 
 // ✅ GOOD: Constant memory usage
 const userStream = Stream.acquireRelease(
@@ -4059,9 +3937,9 @@ const userStream = Stream.acquireRelease(
   ),
   Stream.mapEffect((user) => processUser(user)),
   Stream.rechunk(100) // Process in batches
-);
+)
 
-yield* Stream.runDrain(userStream);
+yield* Stream.runDrain(userStream)
 // Only 100 users in memory at a time
 ```
 
@@ -4069,17 +3947,17 @@ yield* Stream.runDrain(userStream);
 
 ```typescript
 // Default chunk size (16)
-const defaultStream = Stream.fromIterable(items);
+const defaultStream = Stream.fromIterable(items)
 
 // Optimized for bulk operations (larger chunks = fewer allocations)
 const bulkStream = Stream.fromIterable(items).pipe(
   Stream.rechunk(1000) // Process 1000 items at a time
-);
+)
 
 // Optimized for low latency (smaller chunks = faster response)
 const realTimeStream = Stream.fromIterable(items).pipe(
   Stream.rechunk(1) // Process immediately
-);
+)
 ```
 
 ---
@@ -4138,13 +4016,13 @@ const AppLayer = Layer.mergeAll(
   // Features (depend on repos + providers)
   PaymentService.Live,
   EmailService.Live,
-);
+)
 
 // Use in application
 const program = Effect.gen(function*() {
   const payment = yield* PaymentService;
-  return yield* payment.processPayment(100);
-}).pipe(Effect.provide(AppLayer), Effect.runPromise);
+  return yield* payment.processPayment(100)
+}).pipe(Effect.provide(AppLayer), Effect.runPromise)
 
 // For testing - compose with test layers
 const TestLayer = Layer.mergeAll(
@@ -4157,7 +4035,7 @@ const TestLayer = Layer.mergeAll(
   ProductRepository.Live,
   PaymentService.Live,
   EmailService.Live,
-);
+)
 ```
 
 ### Service Composition Decision Matrix
@@ -4202,7 +4080,7 @@ const AppLayer = Layer.mergeAll(
   PaymentService.Live,
   EmailService.Live,
   NotificationService.Live,
-);
+)
 ```
 
 #### Pattern 2: Conditional Feature Composition
@@ -4214,15 +4092,15 @@ const CoreLayer = Layer.mergeAll(
   CacheService.Live,
   UserRepository.Live,
   AuthService.Live, // Needed by payment service
-);
+)
 
 // Payment service depends on AuthService
-const PaymentLayer = CoreLayer.pipe(Layer.provide(PaymentService.Live));
+const PaymentLayer = CoreLayer.pipe(Layer.provide(PaymentService.Live))
 
 // Notification depends on auth but not payment
 const NotificationLayer = CoreLayer.pipe(
   Layer.provide(NotificationService.Live),
-);
+)
 ```
 
 #### Pattern 3: Testing Layer Composition
@@ -4242,7 +4120,7 @@ const TestLayer = Layer.mergeAll(
   // Feature services use real repos with test data
   PaymentService.Live,
   EmailService.Live,
-);
+)
 ```
 
 #### Pattern 4: Development Layer Composition
@@ -4259,7 +4137,7 @@ const DevLayer = Layer.mergeAll(
   ProductRepository.Live,
   PaymentService.Live, // Real services with mocked SDKs
   EmailService.Live,
-);
+)
 ```
 
 ### When to Use Layer.provide vs Layer.mergeAll
@@ -4314,41 +4192,37 @@ const AppLayer = Layer.mergeAll(...)
 ### Basic Ref Pattern (Pure Updates)
 
 ```typescript
-import { Ref, Effect, Context, Layer } from 'effect';
-
-// Create ref in service layer
+import { Ref, Effect, Context, Layer } from 'effect'// Create ref in service layer
 export class CacheService extends Context.Tag('CacheService')<
   CacheService,
   {
-    readonly increment: () => Effect.Effect<void>;
-    readonly get: () => Effect.Effect<number>;
+    readonly increment: () => Effect.Effect<void>
+    readonly get: () => Effect.Effect<number>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const counter = yield* Ref.make(0);
+      const counter = yield* Ref.make(0)
 
       return {
         increment: () => Ref.update(counter, (n) => n + 1),
-        get: () => Ref.get(counter),
-      };
+        get: () => Ref.get(counter)
+      } ;
     }),
-  );
+  )
 }
 
 // Usage - thread-safe concurrent updates
 const program = Effect.gen(function*() {
-  const cache = yield* CacheService;
-
-  // 100 concurrent increments - all will be applied correctly
+  const cache = yield* CacheService  // 100 concurrent increments - all will be applied correctly
   yield* Effect.all(
     Array.from({ length: 100 }, () => cache.increment()),
     { concurrency: 'unbounded' },
-  );
+  )
 
-  const value = yield* cache.get(); // ✅ Guaranteed to be 100
-});
+  const value = yield* cache.get() // ✅ Guaranteed to be 100
+})
 ```
 
 ### Ref API
@@ -4378,24 +4252,24 @@ const program = Effect.gen(function*() {
 
 ```typescript
 // ✅ CORRECT with Ref - Perform effects before update
-const data = yield * fetchData();
-yield * Ref.update(state, (current) => ({ ...current, data }));
+const data = yield * fetchData()
+yield * Ref.update(state, (current) => ({ ...current, data }))
 
 // ❌ WRONG with Ref - Effects inside update function (pure functions only!)
 yield *
   Ref.update(state, (current) => {
-    const data = yield * fetchData(); // ERROR - can't use yield* in pure function!
-    return { ...current, data };
-  });
+    const data = yield * fetchData() // ERROR - can't use yield* in pure function!
+    return { ...current, data }
+  })
 
 // ✅ CORRECT with SynchronizedRef - Effects ARE allowed in updateEffect
 yield *
   SynchronizedRef.updateEffect(state, (current) =>
     Effect.gen(function*() {
-      const data = yield* fetchData(); // ✅ This works with SynchronizedRef!
+      const data = yield* fetchData() // ✅ This works with SynchronizedRef!
       return { ...current, data };
     }),
-  );
+  )
 ```
 
 ### SynchronizedRef Pattern (Effectful Updates)
@@ -4403,32 +4277,30 @@ yield *
 Use **SynchronizedRef** when state updates require effects (database queries, API calls):
 
 ```typescript
-import { SynchronizedRef, Effect, Context, Layer } from 'effect';
-
-export class DataCache extends Context.Tag('DataCache')<
+import { SynchronizedRef, Effect, Context, Layer } from 'effect'export class DataCache extends Context.Tag('DataCache')<
   DataCache,
   {
-    readonly refresh: (id: string) => Effect.Effect<void>;
+    readonly refresh: (id: string) => Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const cache = yield* SynchronizedRef.make<Map<string, Data>>(new Map());
+      const cache = yield* SynchronizedRef.make<Map<string, Data>>(new Map())
 
       return {
         refresh: (id) =>
           SynchronizedRef.updateEffect(cache, (current) =>
             Effect.gen(function*() {
-              const data = yield* fetchFromDatabase(id); // ✅ Effects allowed!
-              const updated = new Map(current);
-              updated.set(id, data);
+              const data = yield* fetchFromDatabase(id) // ✅ Effects allowed!
+              const updated = new Map(current)
+              updated.set(id, data)
               return updated;
             }),
-          ),
-      };
+          )
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -4456,27 +4328,25 @@ export class DataCache extends Context.Tag('DataCache')<
 ```typescript
 // ✅ Client-side: Create atom in service layer
 import { Atom } from '@effect-atom/atom-react';
-import { Effect, Context, Layer } from 'effect';
-
-export class CartService extends Context.Tag('CartService')<
+import { Effect, Context, Layer } from 'effect'export class CartService extends Context.Tag('CartService')<
   CartService,
   {
-    readonly getItems: () => Effect.Effect<CartItem[]>;
-    readonly addItem: (item: CartItem) => Effect.Effect<void>;
-    readonly removeItem: (productId: string) => Effect.Effect<void>;
-    readonly getTotalPrice: () => Effect.Effect<number>;
+    readonly getItems: () => Effect.Effect<CartItem[]>
+    readonly addItem: (item: CartItem) => Effect.Effect<void>
+    readonly removeItem: (productId: string) => Effect.Effect<void>
+    readonly getTotalPrice: () => Effect.Effect<number>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
       // Create reactive atom for cart state
-      const cartAtom = yield* Atom.make<{ items: CartItem[] }>({ items: [] });
+      const cartAtom = yield* Atom.make<{ items: CartItem[] }>({ items: [] })
 
       return {
         getItems: () =>
           Effect.gen(function*() {
-            const state = yield* Atom.get(cartAtom);
+            const state = yield* Atom.get(cartAtom)
             return state.items;
           }),
 
@@ -4485,25 +4355,25 @@ export class CartService extends Context.Tag('CartService')<
             items: [
               ...state.items.filter((i) => i.productId !== item.productId),
               item,
-            ],
+            ]
           })),
 
         removeItem: (productId) =>
           Atom.update(cartAtom, (state) => ({
-            items: state.items.filter((item) => item.productId !== productId),
+            items: state.items.filter((item) => item.productId !== productId)
           })),
 
         getTotalPrice: () =>
           Effect.gen(function*() {
-            const state = yield* Atom.get(cartAtom);
+            const state = yield* Atom.get(cartAtom)
             return state.items.reduce(
               (sum, item) => sum + item.price * item.quantity,
               0,
-            );
-          }),
-      };
+            )
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -4526,20 +4396,18 @@ Use React hooks to read and update atom values in components:
 ```typescript
 // ✅ React component using Atom
 import { useAtomValue, useAtomSet } from '@effect-atom/atom-react';
-import { CartService } from './cart-service';
-
-export function CartComponent() {
-  const cartService = useCartService(); // Get service from context
+import { CartService } from './cart-service'export function CartComponent() {
+  const cartService = useCartService() // Get service from context
   const cartAtom = cartService.cartAtom; // Reference to atom
 
   // Read atom value with hook
-  const cart = useAtomValue(cartAtom);
+  const cart = useAtomValue(cartAtom)
 
   // Get setter function for atom
-  const setCart = useAtomSet(cartAtom);
+  const setCart = useAtomSet(cartAtom)
 
   // Combined hook (read + write)
-  const [cart, setCart] = useAtom(cartAtom);
+  const [cart, setCart] = useAtom(cartAtom)
 
   return (
     <div>
@@ -4547,14 +4415,14 @@ export function CartComponent() {
       <button
         onClick={() =>
           setCart((state) => ({
-            items: [...state.items, newItem],
+            items: [...state.items, newItem]
           }))
         }
       >
         Add Item
       </button>
     </div>
-  );
+  )
 }
 ```
 
@@ -4565,9 +4433,7 @@ Provide the Atom runtime to your React application:
 ```typescript
 // ✅ app/layout.tsx
 import { AtomRuntimeProvider } from '@samuelho-dev/ui-state/client';
-import { ClientRuntimeProvider } from '@samuelho-dev/ui-state/client';
-
-export default function RootLayout({
+import { ClientRuntimeProvider } from '@samuelho-dev/ui-state/client'export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -4582,7 +4448,7 @@ export default function RootLayout({
         </AtomRuntimeProvider>
       </body>
     </html>
-  );
+  )
 }
 ```
 
@@ -4596,13 +4462,13 @@ const userPreferencesFamily = Atom.family((userId: string) =>
   Atom.make({
     theme: 'light',
     notifications: true,
-    language: 'en',
+    language: 'en'
   }),
-);
+)
 
 // Usage: Different atom instance per userId
-const user1Prefs = userPreferencesFamily('user-123');
-const user2Prefs = userPreferencesFamily('user-456');
+const user1Prefs = userPreferencesFamily('user-123')
+const user2Prefs = userPreferencesFamily('user-456')
 ```
 
 ### Atom.map for Derived State
@@ -4660,8 +4526,8 @@ const searchAtom =
     query: '',
     filters: {},
     page: 1,
-    sortBy: '_text_match:desc',
-  });
+    sortBy: '_text_match:desc'
+  })
 
 // React component updates
 const setFilters = (newFilters) =>
@@ -4669,7 +4535,7 @@ const setFilters = (newFilters) =>
     ...state,
     filters: newFilters,
     page: 1, // Reset to first page
-  }));
+  }))
 ```
 
 **Pattern 2: Form State with Atom**
@@ -4681,16 +4547,16 @@ const formAtom =
   Atom.make({
     values: { name: '', email: '' },
     errors: {},
-    touched: {},
-  });
+    touched: {}
+  })
 
 // Validate on change
 const handleFieldChange = (field: string, value: string) =>
   Atom.update(formAtom, (state) => ({
     ...state,
     values: { ...state.values, [field]: value },
-    errors: validateField(field, value),
-  }));
+    errors: validateField(field, value)
+  }))
 ```
 
 ### Effect 4.0 Compatibility
@@ -4749,25 +4615,23 @@ const handleFieldChange = (field: string, value: string) =>
 **Use when**: Running Effect at application boundaries (main function, server startup).
 
 ```typescript
-import { Effect, Layer } from "effect";
-
-// ✅ CORRECT: Application entry point (apps/api/src/main.ts)
+import { Effect, Layer } from "effect"// ✅ CORRECT: Application entry point (apps/api/src/main.ts)
 async function main() {
   const program = Effect.gen(function*() {
     const server = yield* HttpServer;
-    yield* server.start();
-    yield* Effect.log("Server started successfully");
-  });
+    yield* server.start()
+    yield* Effect.log("Server started successfully")
+  })
 
   await Effect.runPromise(
     program.pipe(Effect.provide(AppLayer))
-  );
+  )
 }
 
 main().catch((error) => {
-  console.error("Application failed:", error);
-  process.exit(1);
-});
+  console.error("Application failed:", error)
+  process.exit(1)
+})
 ```
 
 **Characteristics**:
@@ -4784,15 +4648,15 @@ export async function saveUser(user: User) {
   // DON'T DO THIS in libraries!
   return await Effect.runPromise(
     UserRepository.save(user).pipe(Effect.provide(AppLayer))
-  );
+  )
 }
 
 // ✅ CORRECT: Return Effect, let consumer run it
 export const saveUser = (user: User): Effect.Effect<void, RepositoryError, UserRepository> =>
   Effect.gen(function*() {
     const repo = yield* UserRepository;
-    yield* repo.save(user);
-  });
+    yield* repo.save(user)
+  })
 ```
 
 ---
@@ -4802,20 +4666,18 @@ export const saveUser = (user: User): Effect.Effect<void, RepositoryError, UserR
 **Use when**: Effect is guaranteed synchronous (rare in practice).
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ CORRECT: Pure sync effect
+import { Effect } from "effect"// ✅ CORRECT: Pure sync effect
 const config = Effect.runSync(
   Effect.succeed({ apiKey: "test", port: 3000 })
-);
+)
 
 // ❌ WRONG: Running async effect
 const userData = Effect.runSync(
   Effect.gen(function*() {
     const db = yield* DatabaseService; // RUNTIME ERROR! Async operation
-    return yield* db.query(...);
+    return yield* db.query(...)
   })
-);
+)
 // Error: "Running sync effects requires that the effect be synchronous"
 ```
 
@@ -4843,34 +4705,32 @@ const userData = Effect.runSync(
 **Use when**: Fire-and-forget operations or callback integration.
 
 ```typescript
-import { Effect, Runtime } from "effect";
-
-// ✅ CORRECT: Background task with runtime preservation
+import { Effect, Runtime } from "effect"// ✅ CORRECT: Background task with runtime preservation
 const scheduleCleanup = Effect.gen(function*() {
-  const runtime = yield* Effect.runtime();
-  const runFork = Runtime.runFork(runtime);
+  const runtime = yield* Effect.runtime()
+  const runFork = Runtime.runFork(runtime)
 
   // Schedule cleanup every hour
   setInterval(() => {
     runFork(
       Effect.gen(function*() {
         const cache = yield* CacheService;
-        yield* cache.cleanup();
-        yield* Effect.log("Cache cleaned");
+        yield* cache.cleanup()
+        yield* Effect.log("Cache cleaned")
       })
-    );
-  }, 3600000);
-});
+    )
+  }, 3600000)
+})
 
 // ✅ CORRECT: WebSocket with preserved runtime
 const setupWebSocket = Effect.gen(function*() {
-  const runtime = yield* Effect.runtime();
-  const runFork = Runtime.runFork(runtime);
+  const runtime = yield* Effect.runtime()
+  const runFork = Runtime.runFork(runtime)
 
   websocket.on("message", (data) => {
-    runFork(handleMessage(data)); // Preserves context and layers
-  });
-});
+    runFork(handleMessage(data)) // Preserves context and layers
+  })
+})
 ```
 
 **Characteristics**:
@@ -4895,18 +4755,16 @@ See [Runtime Preservation](#runtime-preservation-for-callbacks) section below fo
 
 ```typescript
 import { NodeRuntime } from "@effect/platform-node";
-import { Effect, Layer } from "effect";
-
-// ✅ CORRECT: CLI application (apps/cli/src/main.ts)
+import { Effect, Layer } from "effect"// ✅ CORRECT: CLI application (apps/cli/src/main.ts)
 const program = Effect.gen(function*() {
   const cli = yield* CliService;
-  const args = yield* cli.parseArgs(process.argv);
-  yield* cli.execute(args);
-});
+  const args = yield* cli.parseArgs(process.argv)
+  yield* cli.execute(args)
+})
 
 NodeRuntime.runMain(
   program.pipe(Effect.provide(AppLayer))
-);
+)
 
 // Benefits:
 // - Graceful shutdown on SIGTERM/SIGINT
@@ -4921,29 +4779,25 @@ NodeRuntime.runMain(
 
 ```typescript
 // ✅ Recommended: Effect.runPromise for async contexts
-await Effect.runPromise(program.pipe(Effect.provide(AppLayer)));
+await Effect.runPromise(program.pipe(Effect.provide(AppLayer)))
 
 // ✅ For Node.js CLI applications
-import { NodeRuntime } from '@effect/platform-node';
-
-NodeRuntime.runMain(program.pipe(Effect.provide(AppLayer)));
+import { NodeRuntime } from '@effect/platform-node'NodeRuntime.runMain(program.pipe(Effect.provide(AppLayer)))
 
 // ✅ For testing - use @effect/vitest (see TESTING_PATTERNS.md)
 import { Effect, Layer } from 'effect';
-import { expect, it } from '@effect/vitest';
-
-it.scoped('should process payment', () =>
+import { expect, it } from '@effect/vitest'it.scoped('should process payment', () =>
   Effect.gen(function*() {
-    const result = yield* processPayment(100);
-    expect(result.status).toBe('success');
+    const result = yield* processPayment(100)
+    expect(result.status).toBe('success')
   }).pipe(Effect.provide(Layer.fresh(TestLayer))),
-);
+)
 
 // ❌ AVOID: runSync for async effects
-Effect.runSync(asyncEffect); // Will throw if effect is async
+Effect.runSync(asyncEffect) // Will throw if effect is async
 
 // ✅ Use runSync only for pure synchronous effects
-Effect.runSync(Effect.succeed(42));
+Effect.runSync(Effect.succeed(42))
 ```
 
 ---
@@ -4953,7 +4807,7 @@ Effect.runSync(Effect.succeed(42));
 **Application Layer** (apps/*/src/main.ts):
 ```typescript
 // Entry point - ONLY place to run effects in apps
-await Effect.runPromise(program.pipe(Effect.provide(AppLayer)));
+await Effect.runPromise(program.pipe(Effect.provide(AppLayer)))
 ```
 
 **Test Layer** (\*.spec.ts files):
@@ -4963,18 +4817,18 @@ it.scoped("test", () =>
   Effect.gen(function*() {
     // Test code here - framework runs it
   }).pipe(Effect.provide(Layer.fresh(TestLayer)))
-);
+)
 ```
 
 **Callback Layer** (WebSocket, event handlers):
 ```typescript
 // Callbacks - Runtime preservation pattern (see below)
-const runtime = yield* Effect.runtime();
-const runFork = Runtime.runFork(runtime);
+const runtime = yield* Effect.runtime()
+const runFork = Runtime.runFork(runtime)
 
 websocket.on("message", (data) => {
-  runFork(handleMessage(data)); // Preserves context
-});
+  runFork(handleMessage(data)) // Preserves context
+})
 ```
 
 **Library Layer** (libs/\*\*/src/\*\*/\*.ts):
@@ -4983,7 +4837,7 @@ websocket.on("message", (data) => {
 export const operation = (): Effect.Effect<A, E, R> =>
   Effect.gen(function*() {
     // Implementation - returns Effect, doesn't run it
-  });
+  })
 ```
 
 ---
@@ -4998,9 +4852,9 @@ export class UserRepository {
     return await Effect.runPromise(
       Effect.gen(function*() {
         const db = yield* DatabaseService;
-        return yield* db.query(...);
+        return yield* db.query(...)
       })
-    );
+    )
   }
 }
 
@@ -5009,8 +4863,8 @@ export class UserRepository {
   findById(id: string): Effect.Effect<User, Error, DatabaseService> {
     return Effect.gen(function*() {
       const db = yield* DatabaseService;
-      return yield* db.query(...);
-    });
+      return yield* db.query(...)
+    })
   }
 }
 
@@ -5018,34 +4872,34 @@ export class UserRepository {
 it("should find user", async () => {
   const result = await Effect.runPromise(
     UserRepository.findById("123").pipe(Effect.provide(TestLayer))
-  );
-  expect(result).toBeDefined();
-});
+  )
+  expect(result).toBeDefined()
+})
 
 // ✅ CORRECT: Use it.scoped (see TESTING_PATTERNS.md)
 it.scoped("should find user", () =>
   Effect.gen(function*() {
     const repo = yield* UserRepository;
-    const result = yield* repo.findById("123");
-    expect(result).toBeDefined();
+    const result = yield* repo.findById("123")
+    expect(result).toBeDefined()
   }).pipe(Effect.provide(Layer.fresh(TestLayer)))
-);
+)
 
 // ❌ WRONG: runSync with async operations
 const user = Effect.runSync(
   Effect.gen(function*() {
     const repo = yield* UserRepository; // THROWS! Async operation
-    return yield* repo.findById("123");
+    return yield* repo.findById("123")
   })
-);
+)
 
 // ✅ CORRECT: Use runPromise for async
 const user = await Effect.runPromise(
   Effect.gen(function*() {
     const repo = yield* UserRepository;
-    return yield* repo.findById("123");
+    return yield* repo.findById("123")
   }).pipe(Effect.provide(AppLayer))
-);
+)
 ```
 
 ---
@@ -5088,21 +4942,21 @@ When you call `Effect.runPromise()` or `Effect.runSync()` without the current ru
 ```typescript
 // ❌ WRONG - Runtime context lost
 websocket.on('message', (data) => {
-  Effect.runPromise(handleMessage(data)); // Creates new runtime!
-});
+  Effect.runPromise(handleMessage(data)) // Creates new runtime!
+})
 
 // ✅ CORRECT - Preserve runtime with Effect.runtime
 const setupWebSocket = Effect.gen(function*() {
-  const runtime = yield* Effect.runtime();
-  const runFork = Runtime.runFork(runtime);
+  const runtime = yield* Effect.runtime()
+  const runFork = Runtime.runFork(runtime)
 
   websocket.on('message', (data) => {
-    runFork(handleMessage(data)); // Preserves context and layers
-  });
+    runFork(handleMessage(data)) // Preserves context and layers
+  })
 
   // Cleanup on scope exit
-  yield* Effect.addFinalizer(() => Effect.sync(() => websocket.close()));
-});
+  yield* Effect.addFinalizer(() => Effect.sync(() => websocket.close()))
+})
 ```
 
 **Why this matters**: The `handleMessage` Effect now has access to all services (DatabaseService, CurrentUser context, etc.) that were provided via layers.
@@ -5114,15 +4968,15 @@ Use when you need explicit control over forked fibers:
 ```typescript
 // ✅ Alternative: Use FiberHandle for managed callbacks
 const setupWebSocket = Effect.gen(function*() {
-  const handle = yield* FiberHandle.make();
+  const handle = yield* FiberHandle.make()
 
   websocket.on('message', (data) => {
-    FiberHandle.run(handle, handleMessage(data)); // Runtime preserved
-  });
+    FiberHandle.run(handle, handleMessage(data)) // Runtime preserved
+  })
 
   // Cleanup on scope exit - all forked fibers cleaned up
-  yield* Effect.addFinalizer(() => Effect.sync(() => websocket.close()));
-});
+  yield* Effect.addFinalizer(() => Effect.sync(() => websocket.close()))
+})
 ```
 
 **Advantage**: FiberHandle automatically manages all forked fibers and cleans them up when the scope exits.
@@ -5138,27 +4992,25 @@ export const UserRepository = class extends Context.Tag('UserRepository')<
   {
     readonly createWithRelated: (
       data: CreateUserData,
-    ) => Effect.Effect<User, RepositoryError>;
+    ) => Effect.Effect<User, RepositoryError>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
-
-      return {
+      const database = yield* DatabaseService      return {
         createWithRelated: (data) =>
           database.query((db) =>
             db.transaction().execute(async (trx) => {
               // ❌ PROBLEM: Can't use Effect here - runtime lost
               // const something = yield* SomeService  // ERROR!
-              return await createUser(trx, data);
+              return await createUser(trx, data)
             }),
-          ),
-      };
+          )
+      } ;
     }),
-  );
-};
+  )
+}
 
 // ✅ CORRECT - Preserve runtime for Effect execution within transaction
 export const UserRepository = class extends Context.Tag('UserRepository')<
@@ -5166,14 +5018,14 @@ export const UserRepository = class extends Context.Tag('UserRepository')<
   {
     readonly createWithRelated: (
       data: CreateUserData,
-    ) => Effect.Effect<User, RepositoryError>;
+    ) => Effect.Effect<User, RepositoryError>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
       const database = yield* DatabaseService;
-      const runtime = yield* Effect.runtime();
+      const runtime = yield* Effect.runtime()
 
       return {
         createWithRelated: (data) =>
@@ -5182,16 +5034,16 @@ export const UserRepository = class extends Context.Tag('UserRepository')<
               // ✅ CORRECT: Preserve runtime for Effect execution within transaction
               return await Runtime.runPromise(runtime)(
                 Effect.gen(function*() {
-                  const user = yield* createUser(trx, data);
-                  const profile = yield* createProfile(trx, user.id);
+                  const user = yield* createUser(trx, data)
+                  const profile = yield* createProfile(trx, user.id)
                   return { ...user, profile };
                 }),
-              );
+              )
             }),
-          ),
-      };
+          )
+      } ;
     }),
-  );
+  )
 };
 ```
 
@@ -5206,7 +5058,7 @@ When creating an adapter around an SDK with callbacks:
 export class StripeWebhookService extends Context.Tag('StripeWebhookService')<
   StripeWebhookService,
   {
-    readonly setupWebhookListener: () => Effect.Effect<void>;
+    readonly setupWebhookListener: () => Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.effect(
@@ -5214,26 +5066,26 @@ export class StripeWebhookService extends Context.Tag('StripeWebhookService')<
     Effect.gen(function*() {
       const stripe = yield* StripeService;
       const logger = yield* LoggingService;
-      const runtime = yield* Effect.runtime();
+      const runtime = yield* Effect.runtime()
 
       return {
         setupWebhookListener: () =>
           Effect.gen(function*() {
-            const runFork = Runtime.runFork(runtime);
+            const runFork = Runtime.runFork(runtime)
 
             // SDK provides callbacks, we need to preserve runtime
             stripe.webhooks.onEvent('payment_intent.succeeded', (event) => {
               runFork(
                 Effect.gen(function*() {
-                  yield* logger.info(`Webhook received: ${event.id}`);
-                  yield* handlePaymentSuccess(event);
+                  yield* logger.info(`Webhook received: ${event.id}`)
+                  yield* handlePaymentSuccess(event)
                 }),
-              );
-            });
-          }),
-      };
+              )
+            })
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -5244,8 +5096,8 @@ export class StripeWebhookService extends Context.Tag('StripeWebhookService')<
 ```typescript
 // ❌ WRONG - Creates new runtime for each message
 websocket.on('message', (data) => {
-  Effect.runPromise(handleMessage(data)); // WRONG!
-});
+  Effect.runPromise(handleMessage(data)) // WRONG!
+})
 ```
 
 **Mistake 2: Using await instead of Runtime.runPromise**
@@ -5253,34 +5105,34 @@ websocket.on('message', (data) => {
 ```typescript
 // ❌ WRONG - Mixing async/await (different runtime)
 websocket.on('message', async (data) => {
-  await Effect.runPromise(handleMessage(data)); // WRONG!
-});
+  await Effect.runPromise(handleMessage(data)) // WRONG!
+})
 ```
 
 **Mistake 3: Forgetting runtime in nested callbacks**
 
 ```typescript
 // ❌ WRONG - Runtime lost in nested promise chain
-const runtime = yield * Effect.runtime();
+const runtime = yield * Effect.runtime()
 sdk.onEvent(() => {
   sdk.nested.callback(() => {
     // Runtime NOT available here - lost through callback chain
-  });
-});
+  })
+})
 ```
 
 **Correct approach for nested callbacks**:
 
 ```typescript
 // ✅ CORRECT - Preserve runtime through entire callback chain
-const runtime = yield * Effect.runtime();
-const runFork = Runtime.runFork(runtime);
+const runtime = yield * Effect.runtime()
+const runFork = Runtime.runFork(runtime)
 
 sdk.onEvent(() => {
   sdk.nested.callback(() => {
-    runFork(nestedEffect); // Runtime available here
-  });
-});
+    runFork(nestedEffect) // Runtime available here
+  })
+})
 ```
 
 ### Testing Runtime Preservation
@@ -5289,24 +5141,22 @@ Use `@effect/vitest` to test runtime preservation:
 
 ```typescript
 import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
-import { Effect, Layer, Runtime } from 'effect';
-
-describe('RuntimePreservation', () => {
+import { Effect, Layer, Runtime } from 'effect'describe('RuntimePreservation', () => {
   it.scoped('should preserve runtime in callbacks', () => // ✅ Always it.scoped
     Effect.gen(function*() {
-      const runtime = yield* Effect.runtime();
-      const runFork = Runtime.runFork(runtime);
+      const runtime = yield* Effect.runtime()
+      const runFork = Runtime.runFork(runtime)
 
       let called = false;
       runFork(
         Effect.gen(function*() {
-          called = true;
+          called = true
         }),
-      );
+      )
 
-      expect(called).toBe(true);
-    }).pipe(Effect.provide(Layer.fresh(Layer.empty)))); // ✅ Always Layer.fresh
-});
+      expect(called).toBe(true)
+    }).pipe(Effect.provide(Layer.fresh(Layer.empty)))) // ✅ Always Layer.fresh
+})
 ```
 
 ### Effect 4.0 Compatibility
@@ -5332,18 +5182,14 @@ describe('RuntimePreservation', () => {
 ### Fiber Basics
 
 ```typescript
-import { Effect, Fiber } from 'effect';
-
-// Fork background work
+import { Effect, Fiber } from 'effect'// Fork background work
 const program = Effect.gen(function*() {
-  const fiber = yield* Effect.fork(expensiveTask);
+  const fiber = yield* Effect.fork(expensiveTask)
 
   // Do other work while fiber runs
-  yield* otherWork;
-
-  // Wait for result
-  const result = yield* Fiber.join(fiber);
-});
+  yield* otherWork  // Wait for result
+  const result = yield* Fiber.join(fiber)
+})
 ```
 
 ### FiberSet - Unkeyed Concurrent Tasks
@@ -5351,25 +5197,23 @@ const program = Effect.gen(function*() {
 Auto-manages lifecycle of concurrent operations.
 
 ```typescript
-import { FiberSet } from 'effect';
-
-export class JobProcessor extends Context.Tag('JobProcessor')<
+import { FiberSet } from 'effect'export class JobProcessor extends Context.Tag('JobProcessor')<
   JobProcessor,
   {
-    readonly processJob: (job: Job) => Effect.Effect<void>;
+    readonly processJob: (job: Job) => Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const fiberSet = yield* FiberSet.make();
+      const fiberSet = yield* FiberSet.make()
 
       return {
         processJob: (job) => FiberSet.run(fiberSet, processJobLogic(job)),
         // FiberSet auto-cleaned up by Layer.scoped
       };
     }),
-  );
+  )
 }
 ```
 
@@ -5378,35 +5222,33 @@ export class JobProcessor extends Context.Tag('JobProcessor')<
 Prevents duplicate concurrent work for the same key.
 
 ```typescript
-import { FiberMap, Option } from 'effect';
-
-export class CacheRefresh extends Context.Tag('CacheRefresh')<
+import { FiberMap, Option } from 'effect'export class CacheRefresh extends Context.Tag('CacheRefresh')<
   CacheRefresh,
   {
-    readonly refresh: (key: string) => Effect.Effect<void>;
+    readonly refresh: (key: string) => Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const fiberMap = yield* FiberMap.make<string>();
+      const fiberMap = yield* FiberMap.make<string>()
 
       return {
         refresh: (key) =>
           Effect.gen(function*() {
             // Check if already refreshing
-            const existing = yield* FiberMap.get(fiberMap, key);
+            const existing = yield* FiberMap.get(fiberMap, key)
             if (Option.isSome(existing)) {
-              yield* Fiber.join(existing.value); // Wait for existing
+              yield* Fiber.join(existing.value) // Wait for existing
               return;
             }
 
             // Start new refresh
-            yield* FiberMap.run(fiberMap, key, refreshLogic(key));
-          }),
-      };
+            yield* FiberMap.run(fiberMap, key, refreshLogic(key))
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -5430,21 +5272,19 @@ Effect provides five core concurrency primitives for coordination and resource m
 **Queue** provides type-safe, asynchronous queuing with automatic backpressure for work distribution and task processing.
 
 ```typescript
-import { Queue, Effect, Scope } from "effect";
-
-// ✅ Background job processing with bounded queue
+import { Queue, Effect, Scope } from "effect"// ✅ Background job processing with bounded queue
 export class JobQueueService extends Context.Tag("JobQueueService")<
   JobQueueService,
   {
-    readonly enqueue: <T>(job: Job<T>) => Effect.Effect<boolean>;
-    readonly start: Effect.Effect<void, never, Scope.Scope>;
+    readonly enqueue: <T>(job: Job<T>) => Effect.Effect<boolean>
+    readonly start: Effect.Effect<void, never, Scope.Scope>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
       // Bounded queue with backpressure (max 1000 pending jobs)
-      const jobQueue = yield* Queue.bounded<Job<unknown>>(1000);
+      const jobQueue = yield* Queue.bounded<Job<unknown>>(1000)
 
       return {
         enqueue: (job) => Queue.offer(jobQueue, job),
@@ -5453,33 +5293,31 @@ export class JobQueueService extends Context.Tag("JobQueueService")<
           // Background processor (runs until scope closes)
           while (true) {
             // Take batch of jobs
-            const jobs = yield* Queue.takeUpTo(jobQueue, 10);
+            const jobs = yield* Queue.takeUpTo(jobQueue, 10)
 
             // Process with controlled concurrency
             yield* Effect.all(
               jobs.map(job => processJob(job)),
               { concurrency: 5 }
-            );
+            )
           }
         }).pipe(Effect.forkScoped)
       };
     })
-  );
+  )
 }
 
 // ✅ Email queue with fire-and-forget pattern
 export class EmailService extends Context.Tag("EmailService")<
   EmailService,
   {
-    readonly sendEmail: (email: Email) => Effect.Effect<void>;
+    readonly sendEmail: (email: Email) => Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const jobQueue = yield* JobQueueService;
-
-      return {
+      const jobQueue = yield* JobQueueService      return {
         sendEmail: (email) =>
           jobQueue.enqueue({
             type: "send_email",
@@ -5488,7 +5326,7 @@ export class EmailService extends Context.Tag("EmailService")<
           }).pipe(Effect.asVoid)
       };
     })
-  );
+  )
 }
 ```
 
@@ -5521,22 +5359,20 @@ export class EmailService extends Context.Tag("EmailService")<
 **Semaphore** provides permit-based concurrency control for protecting shared resources and rate limiting.
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ API rate limiting (max 5 concurrent requests)
+import { Effect } from "effect"// ✅ API rate limiting (max 5 concurrent requests)
 export class StripeService extends Context.Tag("StripeService")<
   StripeService,
   {
-    readonly createCharge: (params: ChargeParams) => Effect.Effect<Charge, StripeError>;
+    readonly createCharge: (params: ChargeParams) => Effect.Effect<Charge, StripeError>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const stripe = new Stripe(config.apiKey);
+      const stripe = new Stripe(config.apiKey)
 
       // Limit to 5 concurrent API calls
-      const rateLimiter = yield* Effect.makeSemaphore(5);
+      const rateLimiter = yield* Effect.makeSemaphore(5)
 
       return {
         createCharge: (params) =>
@@ -5548,23 +5384,23 @@ export class StripeService extends Context.Tag("StripeService")<
           )
       };
     })
-  );
+  )
 }
 
 // ✅ Database connection pool protection
 export class DatabaseService extends Context.Tag("DatabaseService")<
   DatabaseService,
   {
-    readonly query: <T>(fn: (db: Kysely<DB>) => Promise<T>) => Effect.Effect<T, DatabaseError>;
+    readonly query: <T>(fn: (db: Kysely<DB>) => Promise<T>) => Effect.Effect<T, DatabaseError>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const pool = yield* createDatabasePool();
+      const pool = yield* createDatabasePool()
 
       // Protect pool with semaphore (max 20 connections)
-      const poolLimiter = yield* Effect.makeSemaphore(20);
+      const poolLimiter = yield* Effect.makeSemaphore(20)
 
       return {
         query: (fn) =>
@@ -5576,11 +5412,11 @@ export class DatabaseService extends Context.Tag("DatabaseService")<
           )
       };
     })
-  );
+  )
 }
 
 // ✅ Sequential execution (1-permit semaphore)
-const sequential = Effect.makeSemaphore(1);
+const sequential = Effect.makeSemaphore(1)
 
 const tasks = [task1, task2, task3];
 yield* Effect.all(
@@ -5589,7 +5425,7 @@ yield* Effect.all(
       Effect.flatMap(sem => sem.withPermits(1)(task))
     )
   )
-);
+)
 // Executes sequentially despite Effect.all
 ```
 
@@ -5613,43 +5449,39 @@ yield* Effect.all(
 **PubSub** broadcasts messages to all subscribers with built-in backpressure strategies.
 
 ```typescript
-import { PubSub, Queue, Effect, Scope } from "effect";
-
-// ✅ Event bus for domain events
+import { PubSub, Queue, Effect, Scope } from "effect"// ✅ Event bus for domain events
 export class EventBusService extends Context.Tag("EventBusService")<
   EventBusService,
   {
-    readonly publish: (event: DomainEvent) => Effect.Effect<boolean>;
-    readonly subscribe: Effect.Effect<Queue.Dequeue<DomainEvent>, never, Scope.Scope>;
+    readonly publish: (event: DomainEvent) => Effect.Effect<boolean>
+    readonly subscribe: Effect.Effect<Queue.Dequeue<DomainEvent>, never, Scope.Scope>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
       // Sliding strategy handles slow consumers
-      const eventBus = yield* PubSub.bounded<DomainEvent>(1000);
+      const eventBus = yield* PubSub.bounded<DomainEvent>(1000)
 
       return {
         publish: (event) => PubSub.publish(eventBus, event),
         subscribe: PubSub.subscribe(eventBus)
       };
     })
-  );
+  )
 }
 
 // ✅ Real-time notifications with multiple subscribers
 export class NotificationService extends Context.Tag("NotificationService")<
   NotificationService,
   {
-    readonly notifyUserCreated: (user: User) => Effect.Effect<void>;
+    readonly notifyUserCreated: (user: User) => Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const eventBus = yield* EventBusService;
-
-      return {
+      const eventBus = yield* EventBusService      return {
         notifyUserCreated: (user) =>
           eventBus.publish({
             type: "UserCreated",
@@ -5658,34 +5490,32 @@ export class NotificationService extends Context.Tag("NotificationService")<
           }).pipe(Effect.asVoid)
       };
     })
-  );
+  )
 }
 
 // ✅ Subscribe and process events
 const processEvents = Effect.gen(function*() {
   const eventBus = yield* EventBusService;
-  const subscription = yield* eventBus.subscribe;
-
-  // Process events forever
+  const subscription = yield* eventBus.subscribe  // Process events forever
   yield* Queue.take(subscription).pipe(
     Effect.flatMap(event => handleEvent(event)),
     Effect.forever,
     Effect.forkScoped
-  );
-});
+  )
+})
 
 // ✅ WebSocket broadcasting
 export class WebSocketServer extends Context.Tag("WebSocketServer")<
   WebSocketServer,
   {
-    readonly broadcast: (message: Message) => Effect.Effect<void>;
-    readonly registerClient: (ws: WebSocket) => Effect.Effect<void, never, Scope.Scope>;
+    readonly broadcast: (message: Message) => Effect.Effect<void>
+    readonly registerClient: (ws: WebSocket) => Effect.Effect<void, never, Scope.Scope>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const messageBus = yield* PubSub.unbounded<Message>();
+      const messageBus = yield* PubSub.unbounded<Message>()
 
       return {
         broadcast: (message) =>
@@ -5693,7 +5523,7 @@ export class WebSocketServer extends Context.Tag("WebSocketServer")<
 
         registerClient: (ws) =>
           Effect.gen(function*() {
-            const subscription = yield* PubSub.subscribe(messageBus);
+            const subscription = yield* PubSub.subscribe(messageBus)
 
             // Forward messages to this client
             yield* Queue.take(subscription).pipe(
@@ -5702,11 +5532,11 @@ export class WebSocketServer extends Context.Tag("WebSocketServer")<
               ),
               Effect.forever,
               Effect.forkScoped
-            );
+            )
           })
       };
     })
-  );
+  )
 }
 ```
 
@@ -5735,29 +5565,27 @@ export class WebSocketServer extends Context.Tag("WebSocketServer")<
 **Latch** provides one-time synchronization gates for coordinating initialization.
 
 ```typescript
-import { Effect } from "effect";
-
-// ✅ Block operations until database migrations complete
+import { Effect } from "effect"// ✅ Block operations until database migrations complete
 export class DatabaseService extends Context.Tag("DatabaseService")<
   DatabaseService,
   {
-    readonly query: <T>(fn: QueryFn<T>) => Effect.Effect<T, DatabaseError>;
-    readonly waitForMigrations: Effect.Effect<void>;
+    readonly query: <T>(fn: QueryFn<T>) => Effect.Effect<T, DatabaseError>
+    readonly waitForMigrations: Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const db = yield* initializeDatabase();
-      const migrationLatch = yield* Effect.makeLatch(false); // Closed
+      const db = yield* initializeDatabase()
+      const migrationLatch = yield* Effect.makeLatch(false) // Closed
 
       // Run migrations in background, open when done
       yield* Effect.forkScoped(
         Effect.gen(function*() {
-          yield* runMigrations(db);
-          yield* migrationLatch.open();
+          yield* runMigrations(db)
+          yield* migrationLatch.open()
         })
-      );
+      )
 
       return {
         query: (fn) =>
@@ -5771,40 +5599,38 @@ export class DatabaseService extends Context.Tag("DatabaseService")<
         waitForMigrations: migrationLatch.await()
       };
     })
-  );
+  )
 }
 
 // ✅ Application startup coordination
 const app = Effect.gen(function*() {
-  const db = yield* DatabaseService;
-
-  // Block until migrations complete
-  yield* db.waitForMigrations();
+  const db = yield* DatabaseService  // Block until migrations complete
+  yield* db.waitForMigrations()
 
   // Now safe to handle requests
-  yield* startHttpServer();
-});
+  yield* startHttpServer()
+})
 
 // ✅ Cache warmup coordination
 export class CacheService extends Context.Tag("CacheService")<
   CacheService,
   {
-    readonly get: <T>(key: string) => Effect.Effect<Option.Option<T>>;
+    readonly get: <T>(key: string) => Effect.Effect<Option.Option<T>>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const cache = new Map<string, unknown>();
-      const warmupLatch = yield* Effect.makeLatch(false);
+      const cache = new Map<string, unknown>()
+      const warmupLatch = yield* Effect.makeLatch(false)
 
       // Background warmup
       yield* Effect.forkScoped(
         Effect.gen(function*() {
-          yield* loadCriticalData(cache);
-          yield* warmupLatch.open();
+          yield* loadCriticalData(cache)
+          yield* warmupLatch.open()
         })
-      );
+      )
 
       return {
         get: (key) =>
@@ -5813,7 +5639,7 @@ export class CacheService extends Context.Tag("CacheService")<
           )
       };
     })
-  );
+  )
 }
 ```
 
@@ -5836,102 +5662,100 @@ export class CacheService extends Context.Tag("CacheService")<
 **Deferred** is a promise-like primitive for one-time value resolution with fiber coordination.
 
 ```typescript
-import { Deferred, Effect } from "effect";
-
-// ✅ Lazy resource initialization
+import { Deferred, Effect } from "effect"// ✅ Lazy resource initialization
 export class ResourceService extends Context.Tag("ResourceService")<
   ResourceService,
   {
-    readonly getHandle: Effect.Effect<ResourceHandle, InitError>;
+    readonly getHandle: Effect.Effect<ResourceHandle, InitError>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const handleDeferred = yield* Deferred.make<ResourceHandle, InitError>();
+      const handleDeferred = yield* Deferred.make<ResourceHandle, InitError>()
 
       // Initialize on first access
       const initOnce = Effect.gen(function*() {
         // Check if already initialized
-        const result = yield* Deferred.poll(handleDeferred);
+        const result = yield* Deferred.poll(handleDeferred)
 
         if (Option.isNone(result)) {
           // Not initialized yet, do it now
-          const handle = yield* initializeResource();
-          yield* Deferred.succeed(handleDeferred, handle);
+          const handle = yield* initializeResource()
+          yield* Deferred.succeed(handleDeferred, handle)
         }
-      });
+      })
 
       return {
         getHandle: Effect.gen(function*() {
           yield* initOnce;
-          return yield* Deferred.await(handleDeferred);
+          return yield* Deferred.await(handleDeferred)
         })
       };
     })
-  );
+  )
 }
 
 // ✅ Cache warmup with result passing
 export class CacheService extends Context.Tag("CacheService")<
   CacheService,
   {
-    readonly warmup: Effect.Effect<Map<string, unknown>, CacheError>;
-    readonly get: <T>(key: string) => Effect.Effect<Option.Option<T>, CacheError>;
+    readonly warmup: Effect.Effect<Map<string, unknown>, CacheError>
+    readonly get: <T>(key: string) => Effect.Effect<Option.Option<T>, CacheError>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const cacheDeferred = yield* Deferred.make<Map<string, unknown>, CacheError>();
+      const cacheDeferred = yield* Deferred.make<Map<string, unknown>, CacheError>()
 
       // Background warmup
       yield* Effect.forkScoped(
         Effect.gen(function*() {
-          const cache = new Map<string, unknown>();
-          yield* loadUserCache(cache);
-          yield* loadProductCache(cache);
-          yield* Deferred.succeed(cacheDeferred, cache);
+          const cache = new Map<string, unknown>()
+          yield* loadUserCache(cache)
+          yield* loadProductCache(cache)
+          yield* Deferred.succeed(cacheDeferred, cache)
         }).pipe(
           Effect.catchAll((error) =>
             Deferred.fail(cacheDeferred, error)
           )
         )
-      );
+      )
 
       return {
         warmup: Deferred.await(cacheDeferred),
 
         get: (key) =>
           Effect.gen(function*() {
-            const cache = yield* Deferred.await(cacheDeferred);
-            return Option.fromNullable(cache.get(key));
+            const cache = yield* Deferred.await(cacheDeferred)
+            return Option.fromNullable(cache.get(key))
           })
       };
     })
-  );
+  )
 }
 
 // ✅ Work handoff between fibers
 const coordinatedWork = Effect.gen(function*() {
-  const resultDeferred = yield* Deferred.make<Result, WorkError>();
+  const resultDeferred = yield* Deferred.make<Result, WorkError>()
 
   // Producer fiber
   yield* Effect.forkScoped(
     Effect.gen(function*() {
-      const result = yield* doExpensiveWork();
-      yield* Deferred.succeed(resultDeferred, result);
+      const result = yield* doExpensiveWork()
+      yield* Deferred.succeed(resultDeferred, result)
     })
-  );
+  )
 
   // Consumer fiber (waits for result)
   yield* Effect.forkScoped(
     Effect.gen(function*() {
-      const result = yield* Deferred.await(resultDeferred);
-      yield* processResult(result);
+      const result = yield* Deferred.await(resultDeferred)
+      yield* processResult(result)
     })
-  );
-});
+  )
+})
 ```
 
 **Deferred API:**
@@ -5986,14 +5810,14 @@ const getUserData = (userId: string) =>
       orders,
       preferences,
     })),
-  );
+  )
 
 // ✅ Good for processing similar items
 const validateFields = (fields: string[]) =>
   Effect.all(
     fields.map((field) => validateField(field)),
     { concurrency: 'unbounded' },
-  ).pipe(Effect.map((results) => results.every((valid) => valid)));
+  ).pipe(Effect.map((results) => results.every((valid) => valid)))
 ```
 
 **When to use**:
@@ -6021,16 +5845,16 @@ const getProductPage = (productId: string) =>
         product: productRepo.findById(productId),
         reviews: reviewRepo.findByProduct(productId),
         seller: Effect.gen(function*() {
-          const prod = yield* productRepo.findById(productId);
-          return yield* sellerRepo.findById(prod.sellerId);
+          const prod = yield* productRepo.findById(productId)
+          return yield* sellerRepo.findById(prod.sellerId)
         }),
-        viewCount: analytics.getProductViews(productId),
+        viewCount: analytics.getProductViews(productId)
       },
       { concurrency: 'unbounded' },
-    );
+    )
 
-    return { product, reviews, seller, analytics: { viewCount } };
-  });
+    return { product, reviews, seller, analytics: { viewCount } }
+  })
 
 // ✅ Good for dashboard data aggregation
 const getDashboardData = (userId: string) =>
@@ -6042,7 +5866,7 @@ const getDashboardData = (userId: string) =>
       preferences: fetchPreferences(userId),
     },
     { concurrency: 'unbounded' },
-  );
+  )
 ```
 
 **When to use**:
@@ -6058,19 +5882,19 @@ Both syntaxes support the same options:
 
 ```typescript
 // ✅ Parallel with early exit on first error (default)
-Effect.all(effects, { concurrency: 'unbounded', mode: 'default' });
+Effect.all(effects, { concurrency: 'unbounded', mode: 'default' })
 
 // ✅ Collect all results, even with errors (Either)
-Effect.all(effects, { concurrency: 'unbounded', mode: 'either' });
+Effect.all(effects, { concurrency: 'unbounded', mode: 'either' })
 
 // ✅ Validate all, collecting all errors
-Effect.all(effects, { concurrency: 'unbounded', mode: 'validate' });
+Effect.all(effects, { concurrency: 'unbounded', mode: 'validate' })
 
 // ✅ Limited concurrency
-Effect.all(effects, { concurrency: 5 }); // Max 5 parallel operations
+Effect.all(effects, { concurrency: 5 }) // Max 5 parallel operations
 
 // ✅ Sequential execution
-Effect.all(effects, { concurrency: 1 }); // Same as sequential
+Effect.all(effects, { concurrency: 1 }) // Same as sequential
 ```
 
 #### Decision Matrix
@@ -6100,7 +5924,7 @@ const processBatch = (items: Item[]) =>
     items,
     (item) => processItem(item),
     { concurrency: 5 }, // Process max 5 items at once
-  );
+  )
 
 // ✅ Race effects - first to complete wins
 const fetchWithTimeout = (url: string) =>
@@ -6109,7 +5933,7 @@ const fetchWithTimeout = (url: string) =>
     Effect.sleep('5 seconds').pipe(
       Effect.flatMap(() => Effect.fail(new TimeoutError())),
     ),
-  );
+  )
 
 // ✅ Collect errors with validate mode
 const validateAllFields = (data: FormData) =>
@@ -6123,7 +5947,7 @@ const validateAllFields = (data: FormData) =>
       concurrency: 'unbounded',
       mode: 'validate', // Collect all validation errors
     },
-  );
+  )
 ```
 
 #### Migration Between Syntaxes
@@ -6139,7 +5963,7 @@ const [product, reviews, seller] =
       sellerRepo.findById(sellerId),
     ],
     { concurrency: 'unbounded' },
-  );
+  )
 
 // After: Object syntax (better readability)
 const { product, reviews, seller } =
@@ -6151,7 +5975,7 @@ const { product, reviews, seller } =
       seller: sellerRepo.findById(sellerId),
     },
     { concurrency: 'unbounded' },
-  );
+  )
 ```
 
 ### Effect 4.0 Compatibility Notes
@@ -6175,28 +5999,26 @@ export class PaymentService extends Context.Tag('PaymentService')<
     Effect.gen(function*() {
       const stripe = yield* StripeService;
       const db = yield* DatabaseService;
-      const logger = yield* LoggingService;
-
-      return {
+      const logger = yield* LoggingService      return {
         processPayment: (amount) =>
           Effect.gen(function*() {
-            yield* logger.info(`Processing payment: ${amount}`);
+            yield* logger.info(`Processing payment: ${amount}`)
             const result = yield* Effect.tryPromise({
               try: () =>
                 stripe.paymentIntents.create({ amount, currency: 'usd' }),
               catch: (error) => new PaymentError({ cause: error }),
-            });
+            })
             yield* db.query((db) =>
               db
                 .insertInto('payments')
                 .values({ amount, stripeId: result.id })
                 .execute(),
-            );
+            )
             return result;
-          }),
-      };
+          })
+      } ;
     }),
-  );
+  )
 
   // Test layer with deterministic results
   static readonly Test = Layer.succeed(this, {
@@ -6207,20 +6029,18 @@ export class PaymentService extends Context.Tag('PaymentService')<
         amount,
         created: 1234567890,
       }),
-    refundPayment: () => Effect.succeed(void 0),
-  });
+    refundPayment: () => Effect.succeed(void 0)
+  })
 
   // Dev layer with logging and delays for local development
   static readonly Dev = Layer.effect(
     this,
     Effect.gen(function*() {
-      const logger = yield* LoggingService;
-
-      return {
+      const logger = yield* LoggingService      return {
         processPayment: (amount) =>
           Effect.gen(function*() {
-            yield* logger.info(`[DEV] Processing payment: ${amount}`);
-            yield* Effect.sleep('100 millis'); // Simulate network delay
+            yield* logger.info(`[DEV] Processing payment: ${amount}`)
+            yield* Effect.sleep('100 millis') // Simulate network delay
             return {
               id: `dev-${Date.now()}`,
               status: 'success' as const,
@@ -6230,12 +6050,12 @@ export class PaymentService extends Context.Tag('PaymentService')<
           }),
         refundPayment: (id) =>
           Effect.gen(function*() {
-            yield* logger.info(`[DEV] Refunding payment: ${id}`);
-            yield* Effect.sleep('50 millis');
-          }),
-      };
+            yield* logger.info(`[DEV] Refunding payment: ${id}`)
+            yield* Effect.sleep('50 millis')
+          })
+      } ;
     }),
-  );
+  )
 
   // Configurable mock layer for specific test scenarios
   static readonly Mock = (overrides?: Partial<PaymentServiceInterface>) =>
@@ -6247,17 +6067,17 @@ export class PaymentService extends Context.Tag('PaymentService')<
             id: 'mock-123',
             status: 'success',
             amount,
-            created: Date.now(),
+            created: Date.now()
           })),
       refundPayment: overrides?.refundPayment ?? (() => Effect.succeed(void 0)),
-    });
+    })
 
   // Auto layer - selects appropriate layer based on environment
   static readonly Auto = Layer.unwrapEffect(
     Effect.gen(function*() {
       const env = yield* Config.string('NODE_ENV').pipe(
         Effect.orElse(() => Effect.succeed('production')),
-      );
+      )
 
       switch (env) {
         case 'test':
@@ -6269,7 +6089,7 @@ export class PaymentService extends Context.Tag('PaymentService')<
           return PaymentService.Live;
       }
     }),
-  );
+  )
 }
 
 // Usage in tests with specific scenarios
@@ -6282,30 +6102,30 @@ describe('PaymentService', () => {
       LoggingService.Test,
       PaymentService.Mock({
         processPayment: () =>
-          Effect.fail(new PaymentError({ message: 'Card declined' })),
-      }),
-    );
+          Effect.fail(new PaymentError({ message: 'Card declined' }))
+      } ),
+    )
 
     return Effect.gen(function*() {
-      const result = yield* processPayment(100).pipe(Effect.either);
-      expect(Either.isLeft(result)).toBe(true);
-    }).pipe(Effect.provide(Layer.fresh(TestLayer))); // ✅ Always Layer.fresh
-  });
+      const result = yield* processPayment(100).pipe(Effect.either)
+      expect(Either.isLeft(result)).toBe(true)
+    }).pipe(Effect.provide(Layer.fresh(TestLayer))) // ✅ Always Layer.fresh
+  })
 
   it.scoped('should process payment successfully', () => { // ✅ Always it.scoped
     const TestLayer = Layer.mergeAll(
       DatabaseService.Test,
       LoggingService.Test,
       PaymentService.Test,
-    );
+    )
 
     return Effect.gen(function*() {
-      const result = yield* processPayment(100);
-      expect(result.status).toBe('success');
-      expect(result.amount).toBe(100);
-    }).pipe(Effect.provide(Layer.fresh(TestLayer))); // ✅ Always Layer.fresh
-  });
-});
+      const result = yield* processPayment(100)
+      expect(result.status).toBe('success')
+      expect(result.amount).toBe(100)
+    }).pipe(Effect.provide(Layer.fresh(TestLayer))) // ✅ Always Layer.fresh
+  })
+})
 ```
 
 ### Layer.fresh - Test Isolation
@@ -6321,19 +6141,19 @@ Effect layers are memoized by default for performance. In tests, use `Layer.fres
 it.scoped("test 1 adds item to cache", () =>
   Effect.gen(function*() {
     const cache = yield* CacheService;
-    yield* cache.set("key", "value1");
+    yield* cache.set("key", "value1")
     // Cache now has: { key: "value1" }
   }).pipe(Effect.provide(CacheService.Test))
-);
+)
 
 it.scoped("test 2 expects empty cache", () =>
   Effect.gen(function*() {
     const cache = yield* CacheService;
-    const result = yield* cache.get("key");
+    const result = yield* cache.get("key")
     // ❌ FLAKY: key="value1" still exists from test 1!
-    expect(Option.isNone(result)).toBe(true);
+    expect(Option.isNone(result)).toBe(true)
   }).pipe(Effect.provide(CacheService.Test))
-);
+)
 ```
 
 **The Solution**: Wrap test layers with `Layer.fresh` to create fresh instances:
@@ -6343,19 +6163,19 @@ it.scoped("test 2 expects empty cache", () =>
 it.scoped("test 1 adds item to cache", () =>
   Effect.gen(function*() {
     const cache = yield* CacheService;
-    yield* cache.set("key", "value1");
+    yield* cache.set("key", "value1")
     // Cache has: { key: "value1" }
   }).pipe(Effect.provide(Layer.fresh(CacheService.Test)))
-);
+)
 
 it.scoped("test 2 expects empty cache", () =>
   Effect.gen(function*() {
     const cache = yield* CacheService;
-    const result = yield* cache.get("key");
+    const result = yield* cache.get("key")
     // ✅ PASSES: Fresh cache instance, no key
-    expect(Option.isNone(result)).toBe(true);
+    expect(Option.isNone(result)).toBe(true)
   }).pipe(Effect.provide(Layer.fresh(CacheService.Test)))
-);
+)
 ```
 
 #### When to Use Layer.fresh
@@ -6386,19 +6206,19 @@ When composing multiple layers, wrap the entire composition:
 // Repository with mocked database
 const MockDatabase = Layer.succeed(DatabaseService, {
   query: () => Effect.succeed([{ id: 1, name: "Test" }])
-});
+})
 
 it.scoped("repository test with mock", () =>
   Effect.gen(function*() {
     const repo = yield* UserRepository;
-    const users = yield* repo.findAll();
-    expect(users.length).toBe(1);
+    const users = yield* repo.findAll()
+    expect(users.length).toBe(1)
   }).pipe(
     Effect.provide(Layer.fresh(
       UserRepositoryLive.pipe(Layer.provide(MockDatabase))
     ))
   )
-);
+)
 ```
 
 #### Pattern: Layer.fresh with Multiple Services
@@ -6410,17 +6230,15 @@ it.scoped("orchestration test", () =>
   Effect.gen(function*() {
     const payment = yield* PaymentService;
     const email = yield* EmailService;
-    const logger = yield* LoggerService;
-
-    yield* payment.processPayment(100);
-    yield* email.sendReceipt("user@example.com");
-    yield* logger.info("Payment completed");
+    const logger = yield* LoggerService    yield* payment.processPayment(100)
+    yield* email.sendReceipt("user@example.com")
+    yield* logger.info("Payment completed")
   }).pipe(
     Effect.provide(PaymentService.Live),
     Effect.provide(Layer.fresh(EmailService.Test)),
     Effect.provide(Layer.fresh(LoggerService.Test))
   )
-);
+)
 ```
 
 #### Benefits of Layer.fresh
@@ -6492,28 +6310,28 @@ it.scoped("orchestration test", () =>
 
 ```typescript
 // Infrastructure (no dependencies)
-const InfraLayer = Layer.mergeAll(ConfigService.Live, LoggingService.Live);
+const InfraLayer = Layer.mergeAll(ConfigService.Live, LoggingService.Live)
 
 // Providers (depend on infra)
 const ProviderLayer = Layer.mergeAll(
   DatabaseService.Live,
   CacheService.Live,
   StripeService.Live,
-).pipe(Layer.provide(InfraLayer));
+).pipe(Layer.provide(InfraLayer))
 
 // Repositories (depend on providers)
 const RepositoryLayer = Layer.mergeAll(
   UserRepository.Live,
   ProductRepository.Live,
   OrderRepository.Live,
-).pipe(Layer.provide(ProviderLayer));
+).pipe(Layer.provide(ProviderLayer))
 
 // Features (depend on repos and providers)
 const FeatureLayer = Layer.mergeAll(
   PaymentService.Live,
   EmailService.Live,
   NotificationService.Live,
-).pipe(Layer.provide(Layer.merge(RepositoryLayer, ProviderLayer)));
+).pipe(Layer.provide(Layer.merge(RepositoryLayer, ProviderLayer)))
 
 // Complete application layer
 export const AppLayer = Layer.mergeAll(
@@ -6521,7 +6339,7 @@ export const AppLayer = Layer.mergeAll(
   ProviderLayer,
   RepositoryLayer,
   FeatureLayer,
-);
+)
 
 // For development
 export const DevLayer = Layer.mergeAll(
@@ -6536,7 +6354,7 @@ export const DevLayer = Layer.mergeAll(
   PaymentService.Dev,
   EmailService.Test,
   NotificationService.Test,
-);
+)
 
 // For testing
 export const TestLayer = Layer.mergeAll(
@@ -6551,7 +6369,7 @@ export const TestLayer = Layer.mergeAll(
   PaymentService.Test,
   EmailService.Test,
   NotificationService.Test,
-);
+)
 ```
 
 ## Common Anti-Patterns to Avoid
@@ -6562,7 +6380,7 @@ export const TestLayer = Layer.mergeAll(
 // ❌ WRONG - Unnecessary
 export const PaymentService = Context.GenericTag<PaymentServiceInterface>(
   '@feature/payment/PaymentService',
-);
+)
 
 // ✅ CORRECT - Use Context.Tag
 export class PaymentService extends Context.Tag('PaymentService')<
@@ -6616,13 +6434,13 @@ export const PaymentServiceLive = Layer.effect(
 ).pipe(
   Layer.provide(StripeServiceLive), // ❌ Don't do this
   Layer.provide(DatabaseServiceLive), // ❌ Let app compose
-);
+)
 
 // ✅ CORRECT - Let application compose dependencies
 export const PaymentServiceLive = Layer.effect(
   PaymentService,
   makePaymentService,
-);
+)
 ```
 
 ### ❌ Type Assertions in Error Handling
@@ -6634,9 +6452,9 @@ catch: (error) => error as PaymentError
 // ✅ CORRECT - Proper error mapping
 catch: (error) => {
   if (error instanceof Error) {
-    return new PaymentError({ message: error.message });
+    return new PaymentError({ message: error.message })
   }
-  return new PaymentError({ message: String(error) });
+  return new PaymentError({ message: String(error) })
 }
 ```
 
@@ -6645,7 +6463,7 @@ catch: (error) => {
 ```typescript
 // ❌ WRONG - Mixing async/await with Effect
 async function processPayment() {
-  const result = await Effect.runPromise(paymentEffect);
+  const result = await Effect.runPromise(paymentEffect)
   return result;
 }
 
@@ -6658,23 +6476,23 @@ const processPayment = () => paymentEffect;
 ```typescript
 // ❌ WRONG - Nested generators are unnecessary
 const processOrder = Effect.gen(function*() {
-  const order = yield* getOrder();
+  const order = yield* getOrder()
 
   // ❌ Nested gen is unnecessary
   const payment = yield* Effect.gen(function*() {
     const amount = order.total;
-    return yield* processPayment(amount);
-  });
+    return yield* processPayment(amount)
+  })
 
   return payment;
-});
+})
 
 // ✅ CORRECT - Flat structure
 const processOrder = Effect.gen(function*() {
-  const order = yield* getOrder();
-  const payment = yield* processPayment(order.total);
+  const order = yield* getOrder()
+  const payment = yield* processPayment(order.total)
   return payment;
-});
+})
 ```
 
 ### ❌ Creating Runtime in Loops
@@ -6682,7 +6500,7 @@ const processOrder = Effect.gen(function*() {
 ```typescript
 // ❌ WRONG - Creates runtime per iteration
 for (const item of items) {
-  await Effect.runPromise(processItem(item).pipe(Effect.provide(AppLayer)));
+  await Effect.runPromise(processItem(item).pipe(Effect.provide(AppLayer)))
 }
 
 // ✅ CORRECT - Single runtime for all iterations
@@ -6691,7 +6509,7 @@ await Effect.runPromise(
     items.map((item) => processItem(item)),
     { concurrency: 5 },
   ).pipe(Effect.provide(AppLayer)),
-);
+)
 ```
 
 ### ❌ Unnecessary Type Annotations with Effect
@@ -6703,15 +6521,15 @@ const getUser = (
 ): Effect.Effect<User, DatabaseError, DatabaseService> =>
   Effect.gen(function*() {
     const db = yield* DatabaseService;
-    return yield* db.query(/* ... */);
-  });
+    return yield* db.query(/* ... */)
+  })
 
 // ✅ CORRECT - Let TypeScript infer
 const getUser = (id: string) =>
   Effect.gen(function*() {
     const db = yield* DatabaseService;
-    return yield* db.query(/* ... */);
-  });
+    return yield* db.query(/* ... */)
+  })
 ```
 
 ## Type Safety & Inference Patterns
@@ -6727,15 +6545,15 @@ const processPayment = (
 ): Effect.Effect<Payment, PaymentError, PaymentService> =>
   Effect.gen(function*() {
     const service = yield* PaymentService;
-    return yield* service.process(amount);
-  });
+    return yield* service.process(amount)
+  })
 
 // ✅ Let inference work
 const processPayment = (amount: number) =>
   Effect.gen(function*() {
     const service = yield* PaymentService;
-    return yield* service.process(amount);
-  });
+    return yield* service.process(amount)
+  })
 // TypeScript infers: Effect<Payment, PaymentError, PaymentService>
 ```
 
@@ -6748,16 +6566,16 @@ const processPayment = (amount: number) =>
 const handler = (amount: number) =>
   Effect.gen(function*() {
     const service = yield* PaymentService;
-    const result = yield* service.process(amount);
-    return result;
-  });
+    const result = yield* service.process(amount)
+    return result
+  })
 // Effect infers: Effect<Payment, PaymentError, PaymentService>
 
 // Service composition automatically satisfies this:
-const layer = Layer.mergeAll(PaymentService.Live, OtherService.Live);
+const layer = Layer.mergeAll(PaymentService.Live, OtherService.Live)
 
 // All dependencies are automatically provided
-await Effect.runPromise(handler(100).pipe(Effect.provide(layer)));
+await Effect.runPromise(handler(100).pipe(Effect.provide(layer)))
 ```
 
 ### Rule 3: Error Type Inference
@@ -6780,9 +6598,9 @@ export class ServiceError extends Data.TaggedError('ServiceError')<{
 // Effect automatically infers error union
 const getProduct = (id: string) =>
   Effect.gen(function*() {
-    const product = yield* findProduct(id); // Effect<Product, ProductNotFoundError>
-    return yield* enrichProduct(product); // Effect<EnrichedProduct, ServiceError>
-  });
+    const product = yield* findProduct(id) // Effect<Product, ProductNotFoundError>
+    return yield* enrichProduct(product) // Effect<EnrichedProduct, ServiceError>
+  })
 // TypeScript infers: Effect<EnrichedProduct, ProductNotFoundError | ServiceError>
 ```
 
@@ -6827,25 +6645,23 @@ export const UserRepositoryLive = Layer.effect(
 **Use schemas for runtime validation AND type safety:**
 
 ```typescript
-import { Schema } from 'effect';
-
-// ✅ Single source of truth for types
+import { Schema } from 'effect'// ✅ Single source of truth for types
 export const UserSchema = Schema.Struct({
   id: Schema.String,
   email: Schema.String,
   name: Schema.String,
-  createdAt: Schema.DateTimeUtc,
-});
+  createdAt: Schema.DateTimeUtc
+})
 
 // Type is automatically derived from schema
-export type User = Schema.Schema.Type<typeof UserSchema>;
+export type User = Schema.Schema.Type<typeof UserSchema>
 
 // Validation is type-safe
 const parseUser = (data: unknown) =>
   Effect.try({
     try: () => Schema.decodeSync(UserSchema)(data),
-    catch: (error) => new ValidationError({ cause: error }),
-  });
+    catch: (error) => new ValidationError({ cause: error })
+  })
 ```
 
 ### Rule 6: Generic Service Type Safety
@@ -6855,16 +6671,16 @@ const parseUser = (data: unknown) =>
 ```typescript
 // ✅ Generic service with proper type constraints
 export const KyselyService = <DB>() =>
-  Context.Tag<KyselyServiceInterface<DB>>('KyselyService');
+  Context.Tag<KyselyServiceInterface<DB>>('KyselyService')
 
 // Usage maintains type safety
-const db = KyselyService<Database>();
+const db = KyselyService<Database>()
 
 const query = (sql: string) =>
   Effect.gen(function*() {
     const service = yield* db;
-    return yield* service.execute(sql); // SQL type-checked for Database
-  });
+    return yield* service.execute(sql) // SQL type-checked for Database
+  })
 ```
 
 ### Anti-Pattern: Type Assertions
@@ -6877,8 +6693,8 @@ const user = data as User; // Compiler can't catch missing fields
 const parseUser = (data: unknown): Effect.Effect<User, ValidationError> =>
   Effect.try({
     try: () => Schema.decodeSync(UserSchema)(data),
-    catch: (error) => new ValidationError({ cause: error }),
-  });
+    catch: (error) => new ValidationError({ cause: error })
+  })
 ```
 
 ### Type Safety Checklist
@@ -6936,7 +6752,7 @@ const parseUser = (data: unknown): Effect.Effect<User, ValidationError> =>
 ```typescript
 // Before
 export const MyService =
-  Context.GenericTag<MyServiceInterface>('@app/MyService');
+  Context.GenericTag<MyServiceInterface>('@app/MyService')
 
 // After
 export class MyService extends Context.Tag('MyService')<
@@ -6962,7 +6778,7 @@ export class PaymentService extends Context.Tag('PaymentService')<
         Effect.gen(function*() {
           // implementation
         }),
-    });
+    })
   }
 }
 
@@ -6971,9 +6787,9 @@ export const PaymentServiceLive = Layer.effect(
   Effect.gen(function*() {
     const stripe = yield* StripeService;
     const database = yield* DatabaseService;
-    return PaymentService.make(stripe, database);
+    return PaymentService.make(stripe, database)
   }),
-);
+)
 
 // ✅ NEW - Modern pattern with inline interface and static Live
 export class PaymentService extends Context.Tag('PaymentService')<
@@ -6981,26 +6797,24 @@ export class PaymentService extends Context.Tag('PaymentService')<
   {
     readonly processPayment: (
       amount: number,
-    ) => Effect.Effect<Payment, PaymentError>;
+    ) => Effect.Effect<Payment, PaymentError>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
       const stripe = yield* StripeService;
-      const database = yield* DatabaseService;
-
-      // Direct object return - no factories
+      const database = yield* DatabaseService      // Direct object return - no factories
       return {
         processPayment: (amount) =>
           Effect.tryPromise({
             try: () =>
               stripe.paymentIntents.create({ amount, currency: 'usd' }),
-            catch: (error) => new PaymentError({ cause: error }),
-          }),
-      };
+            catch: (error) => new PaymentError({ cause: error })
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -7023,18 +6837,16 @@ The monorepo uses **@effect/vitest** for ALL testing with standardized patterns:
 ```typescript
 import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer } from 'effect';
-import { MyService } from './my-service';
-
-describe('MyService', () => {
+import { MyService } from './my-service'describe('MyService', () => {
   it.scoped('should perform operation', () => // ✅ Always it.scoped
     Effect.gen(function*() {
       const service = yield* MyService;
-      const result = yield* service.operation();
+      const result = yield* service.operation()
 
-      expect(result).toBe(expectedValue);
+      expect(result).toBe(expectedValue)
     }).pipe(Effect.provide(Layer.fresh(MyService.Test))) // ✅ Always Layer.fresh
-  );
-});
+  )
+})
 ```
 
 **Key Standards:**
@@ -7048,26 +6860,22 @@ describe('MyService', () => {
 
 ```typescript
 import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
-import { Effect, Layer } from 'effect';
-
-describe('ServiceWithDependencies', () => {
+import { Effect, Layer } from 'effect'describe('ServiceWithDependencies', () => {
   const TestLayer = Layer.mergeAll(
     TestDatabaseService,
     TestCacheService,
     MyServiceLive,
-  );
+  )
 
   it.scoped('should use injected dependencies', () => // ✅ Always it.scoped
     Effect.gen(function*() {
       const service = yield* MyService;
       const db = yield* DatabaseService;
-      const cache = yield* CacheService;
+      const cache = yield* CacheService      const result = yield* service.operationWithDeps()
 
-      const result = yield* service.operationWithDeps();
-
-      expect(result).toBeDefined();
-    }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
-});
+      expect(result).toBeDefined()
+    }).pipe(Effect.provide(Layer.fresh(TestLayer)))) // ✅ Always Layer.fresh
+})
 ```
 
 ### Testing with TestClock
@@ -7076,23 +6884,21 @@ describe('ServiceWithDependencies', () => {
 
 ```typescript
 import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
-import { Effect, TestClock } from 'effect';
-
-describe('TimeBasedOperations', () => {
+import { Effect, TestClock } from 'effect'describe('TimeBasedOperations', () => {
   it.scoped('should handle time-based operations', () => // ✅ Always it.scoped
     Effect.gen(function*() {
       // Start async operation
-      const fiber = yield* Effect.fork(delayedOperation());
+      const fiber = yield* Effect.fork(delayedOperation())
 
       // Advance test clock
-      yield* TestClock.adjust('1000 millis');
+      yield* TestClock.adjust('1000 millis')
 
       // Operation completes
-      const result = yield* Fiber.join(fiber);
+      const result = yield* Fiber.join(fiber)
 
-      expect(result).toBe(expectedValue);
-    }).pipe(Effect.provide(Layer.fresh(MyServiceLive)))); // ✅ Always Layer.fresh
-});
+      expect(result).toBe(expectedValue)
+    }).pipe(Effect.provide(Layer.fresh(MyServiceLive)))) // ✅ Always Layer.fresh
+})
 ```
 
 ### Testing Scoped Resources
@@ -7101,19 +6907,17 @@ Use `it.scoped()` for Effects that require resource management:
 
 ```typescript
 import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
-import { Effect, Scope } from 'effect';
-
-describe('ResourceManagement', () => {
+import { Effect, Scope } from 'effect'describe('ResourceManagement', () => {
   it.scoped('should manage resources', () =>
     Effect.gen(function*() {
-      const resource = yield* acquireResource();
+      const resource = yield* acquireResource()
       // Resource is automatically cleaned up
-      const result = yield* useResource(resource);
+      const result = yield* useResource(resource)
 
-      expect(result).toBeDefined();
+      expect(result).toBeDefined()
     }).pipe(Effect.provide(Layer.fresh(MyServiceLive))), // ✅ Always Layer.fresh
-  );
-});
+  )
+})
 ```
 
 ### Testing with Live Environment
@@ -7122,16 +6926,14 @@ Use `it.live()` to run tests with the real (live) Effect environment without Tes
 
 ```typescript
 import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
-import { Effect, Layer } from 'effect';
-
-it.live('should use real environment', () =>
+import { Effect, Layer } from 'effect'it.live('should use real environment', () =>
   Effect.gen(function*() {
     // Uses real time, real services, etc.
-    const result = yield* realServiceCall();
+    const result = yield* realServiceCall()
 
-    expect(result).toBeDefined();
+    expect(result).toBeDefined()
   }).pipe(Effect.provide(Layer.fresh(MyServiceLive))), // ✅ Always Layer.fresh
-);
+)
 ```
 
 ### Testing Error Cases
@@ -7140,21 +6942,19 @@ Capture errors using `Effect.exit()` to verify error handling:
 
 ```typescript
 import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
-import { Effect, Exit, Layer } from 'effect';
-
-describe('ErrorHandling', () => {
+import { Effect, Exit, Layer } from 'effect'describe('ErrorHandling', () => {
   it.scoped('should handle errors correctly', () => // ✅ Always it.scoped
     Effect.gen(function*() {
-      const exit = yield* Effect.exit(failingOperation());
+      const exit = yield* Effect.exit(failingOperation())
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit)).toBe(true)
       if (Exit.isFailure(exit)) {
         expect(exit.cause).toStrictEqual(
           new MyError({ reason: 'ValidationFailed' }),
-        );
+        )
       }
-    }).pipe(Effect.provide(Layer.fresh(MyServiceLive)))); // ✅ Always Layer.fresh
-});
+    }).pipe(Effect.provide(Layer.fresh(MyServiceLive)))) // ✅ Always Layer.fresh
+})
 ```
 
 ### Test Control Modifiers
@@ -7163,28 +6963,26 @@ describe('ErrorHandling', () => {
 
 ```typescript
 import { it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
-
-// Run only this test (skip all others)
+import { Effect, Layer } from 'effect'// Run only this test (skip all others)
 it.scoped.only('focused test', () => // ✅ Use it.scoped.only
   Effect.gen(function*() {
     /* ... */
   }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
-);
+)
 
 // Skip this test temporarily
 it.scoped.skip('skipped test', () => // ✅ Use it.scoped.skip
   Effect.gen(function*() {
     /* ... */
   }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
-);
+)
 
 // Mark test as expected to fail
 it.scoped.fails('known issue', () => // ✅ Use it.scoped.fails
   Effect.gen(function*() {
     /* ... */
   }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
-);
+)
 ```
 
 ### Test Layer Pattern
@@ -7194,9 +6992,7 @@ it.scoped.fails('known issue', () => // ✅ Use it.scoped.fails
 ```typescript
 // my-service.ts
 import { Effect, Layer, Context } from 'effect';
-import { DatabaseService } from '@samuelho-dev/infra-database';
-
-export class MyService extends Context.Tag('MyService')<
+import { DatabaseService } from '@samuelho-dev/infra-database'export class MyService extends Context.Tag('MyService')<
   MyService,
   MyServiceInterface
 >() {
@@ -7205,37 +7001,35 @@ export class MyService extends Context.Tag('MyService')<
     Effect.gen(function*() {
       const db = yield* DatabaseService;
       return {
-        operation: () => db.query(/* ... */),
-      };
+        operation: () => db.query(/* ... */)
+      } ;
     }),
-  );
+  )
 
   // ✅ Pattern B: Test layer as static property
   static readonly Test = Layer.succeed(this, {
-    operation: () => Effect.succeed(mockResult),
-  });
+    operation: () => Effect.succeed(mockResult)
+  })
 }
 
 // my-service.spec.ts - Tests use static Test property
 import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer } from 'effect';
 import { MyService } from './my-service';
-import { DatabaseService } from '@samuelho-dev/infra-database';
-
-// Compose test layers
+import { DatabaseService } from '@samuelho-dev/infra-database'// Compose test layers
 const TestLayer = Layer.mergeAll(
   DatabaseService.Test, // ✅ Use static Test property
   MyService.Test, // ✅ Use static Test property
-);
+)
 
 describe('MyService', () => {
   it.scoped('should work with test layer', () => // ✅ Always it.scoped
     Effect.gen(function*() {
       const service = yield* MyService;
-      const result = yield* service.operation();
-      expect(result).toBeDefined();
-    }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
-});
+      const result = yield* service.operation()
+      expect(result).toBeDefined()
+    }).pipe(Effect.provide(Layer.fresh(TestLayer)))) // ✅ Always Layer.fresh
+})
 ```
 
 **Alternative: Separate Test Export (Legacy)**
@@ -7245,13 +7039,11 @@ Only use when test layer must be in separate file:
 ```typescript
 // my-service.test-utils.ts (separate file)
 import { Layer } from 'effect';
-import { DatabaseService } from '@samuelho-dev/infra-database';
-
-// ⚠️ Less discoverable - only when test must be separate
+import { DatabaseService } from '@samuelho-dev/infra-database'// ⚠️ Less discoverable - only when test must be separate
 export const TestDatabaseService = Layer.succeed(DatabaseService, {
   query: () => Effect.succeed(mockData),
-  execute: () => Effect.succeed(undefined),
-});
+  execute: () => Effect.succeed(undefined)
+})
 ```
 
 ### Common Testing Patterns
@@ -7262,16 +7054,14 @@ export const TestDatabaseService = Layer.succeed(DatabaseService, {
 
 ```typescript
 import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
-import { Effect, Layer } from 'effect';
-
-it.scoped('should call dependencies', () => // ✅ Always it.scoped
+import { Effect, Layer } from 'effect'it.scoped('should call dependencies', () => // ✅ Always it.scoped
   Effect.gen(function*() {
     const service = yield* MyService;
-    yield* service.operation();
+    yield* service.operation()
 
     // Verify via mock/spy if needed
-    expect(mockDatabase.query).toHaveBeenCalled();
-  }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
+    expect(mockDatabase.query).toHaveBeenCalled()
+  }).pipe(Effect.provide(Layer.fresh(TestLayer)))) // ✅ Always Layer.fresh
 ```
 
 **Pattern 2: Test Error Recovery**
@@ -7281,10 +7071,10 @@ it.scoped('should recover from errors', () => // ✅ Always it.scoped
   Effect.gen(function*() {
     const result = yield* riskyOperation().pipe(
       Effect.catchAll(() => Effect.succeed(fallbackValue)),
-    );
+    )
 
-    expect(result).toBe(fallbackValue);
-  }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
+    expect(result).toBe(fallbackValue)
+  }).pipe(Effect.provide(Layer.fresh(TestLayer)))) // ✅ Always Layer.fresh
 ```
 
 **Pattern 3: Test Concurrent Operations**
@@ -7295,10 +7085,10 @@ it.scoped('should handle concurrent operations', () => // ✅ Always it.scoped
     const results = yield* Effect.all(
       [operation1(), operation2(), operation3()],
       { concurrency: 'unbounded' },
-    );
+    )
 
-    expect(results).toHaveLength(3);
-  }).pipe(Effect.provide(Layer.fresh(TestLayer)))); // ✅ Always Layer.fresh
+    expect(results).toHaveLength(3)
+  }).pipe(Effect.provide(Layer.fresh(TestLayer)))) // ✅ Always Layer.fresh
 ```
 
 ### Configuration
@@ -7307,18 +7097,16 @@ Vitest configuration for Effect projects:
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from 'vitest/config';
-
-export default defineConfig({
+import { defineConfig } from 'vitest/config'export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-    },
-  },
-});
+    }
+  }
+})
 ```
 
 ## Effect 4.0 Compatibility & Migration Guide
@@ -7386,16 +7174,16 @@ Follow these patterns to minimize migration effort when Effect 4.0 arrives:
 // ✅ Use Effect.gen instead of pipe chains (more stable)
 const program = Effect.gen(function*() {
   const user = yield* UserService;
-  const result = yield* user.findById("123");
+  const result = yield* user.findById("123")
   return result;
-});
+})
 
 // ❌ Avoid deep pipe chains (harder to migrate)
 const program = Effect.succeed("123").pipe(
   Effect.flatMap((id) => UserService.pipe(
     Effect.flatMap((service) => service.findById(id))
   ))
-);
+)
 
 // ✅ Use Context.Tag or Effect.Service (both stable)
 export class MyService extends Context.Tag("MyService")<...>() {}
@@ -7406,17 +7194,17 @@ export class MyService extends Effect.Service<MyService>()("MyService", {...}) {
 export class MyError extends Data.TaggedError("MyError")<{...}> {}
 
 // ✅ Preserve runtime for callbacks
-const runtime = yield* Effect.runtime();
-callback(() => Runtime.runFork(runtime)(effect));
+const runtime = yield* Effect.runtime()
+callback(() => Runtime.runFork(runtime)(effect))
 
 // ✅ Use Ref for pure state (not external state)
-const state = yield* Ref.make(initialValue);
-yield* Ref.update(state, (s) => newState);
+const state = yield* Ref.make(initialValue)
+yield* Ref.update(state, (s) => newState)
 
 // ✅ Use structured logging
 yield* Effect.logInfo("Operation started").pipe(
   Effect.annotateLogs({ userId, operation: "create" })
-);
+)
 ```
 
 ### Resources
@@ -7452,9 +7240,7 @@ Use `Schema.TaggedRequest` for commands and `Schema.Struct` for events:
 
 ```typescript
 import { Schema } from "effect";
-import { Effect, Data } from "effect";
-
-// Command (request to change state)
+import { Effect, Data } from "effect"// Command (request to change state)
 export class CreateUserCommand extends Schema.TaggedRequest<CreateUserCommand>()(
   "CreateUserCommand",
   {
@@ -7467,7 +7253,7 @@ export class CreateUserCommand extends Schema.TaggedRequest<CreateUserCommand>()
       userId: Schema.String,
       email: Schema.String,
       name: Schema.String,
-    },
+    }
   }
 ) {}
 
@@ -7480,8 +7266,8 @@ export class UserCreatedEvent extends Schema.Struct({
   version: Schema.Number,
   data: Schema.Struct({
     email: Schema.String,
-    name: Schema.String,
-  }),
+    name: Schema.String
+  })
 }) {}
 
 export class UserEmailChangedEvent extends Schema.Struct({
@@ -7492,8 +7278,8 @@ export class UserEmailChangedEvent extends Schema.Struct({
   version: Schema.Number,
   data: Schema.Struct({
     oldEmail: Schema.String,
-    newEmail: Schema.String,
-  }),
+    newEmail: Schema.String
+  })
 }) {}
 
 // Event union for type safety
@@ -7506,22 +7292,20 @@ export type UserEvent =
 
 ```typescript
 import { Context, Effect, Layer } from "effect";
-import type { UserEvent } from "./events";
-
-export interface EventStoreInterface {
+import type { UserEvent } from "./events"export interface EventStoreInterface {
   readonly append: (
     aggregateId: string,
     events: UserEvent[],
     expectedVersion: number
-  ) => Effect.Effect<void, EventStoreError>;
+  ) => Effect.Effect<void, EventStoreError>
 
   readonly loadEvents: (
     aggregateId: string
-  ) => Effect.Effect<UserEvent[], EventStoreError>;
+  ) => Effect.Effect<UserEvent[], EventStoreError>
 
   readonly loadEventsSince: (
     timestamp: number
-  ) => Effect.Effect<UserEvent[], EventStoreError>;
+  ) => Effect.Effect<UserEvent[], EventStoreError>
 }
 
 export class EventStore extends Context.Tag("EventStore")<
@@ -7531,9 +7315,7 @@ export class EventStore extends Context.Tag("EventStore")<
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const database = yield* KyselyService;
-
-      return {
+      const database = yield* KyselyService      return {
         append: (aggregateId, events, expectedVersion) =>
           Effect.gen(function*() {
             yield* database.transaction((trx) =>
@@ -7545,7 +7327,7 @@ export class EventStore extends Context.Tag("EventStore")<
                     .where("aggregateId", "=", aggregateId)
                     .select((eb) => eb.fn.max("version").as("maxVersion"))
                     .executeTakeFirst()
-                );
+                )
 
                 if (currentVersion?.maxVersion !== expectedVersion) {
                   return yield* Effect.fail(
@@ -7554,7 +7336,7 @@ export class EventStore extends Context.Tag("EventStore")<
                       expected: expectedVersion,
                       actual: currentVersion?.maxVersion ?? 0,
                     })
-                  );
+                  )
                 }
 
                 // Append events
@@ -7572,9 +7354,9 @@ export class EventStore extends Context.Tag("EventStore")<
                       }))
                     )
                     .execute()
-                );
+                )
               })
-            );
+            )
           }),
 
         loadEvents: (aggregateId) =>
@@ -7586,7 +7368,7 @@ export class EventStore extends Context.Tag("EventStore")<
                 .orderBy("version", "asc")
                 .selectAll()
                 .execute()
-            );
+            )
 
             return rows.map((row) => ({
               _tag: row.eventType,
@@ -7595,7 +7377,7 @@ export class EventStore extends Context.Tag("EventStore")<
               timestamp: row.timestamp,
               version: row.version,
               data: JSON.parse(row.eventData),
-            }));
+            }))
           }),
 
         loadEventsSince: (timestamp) =>
@@ -7607,7 +7389,7 @@ export class EventStore extends Context.Tag("EventStore")<
                 .orderBy("timestamp", "asc")
                 .selectAll()
                 .execute()
-            );
+            )
 
             return rows.map((row) => ({
               _tag: row.eventType,
@@ -7616,11 +7398,11 @@ export class EventStore extends Context.Tag("EventStore")<
               timestamp: row.timestamp,
               version: row.version,
               data: JSON.parse(row.eventData),
-            }));
-          }),
-      };
+            }))
+          })
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -7641,17 +7423,15 @@ export interface UserProjection {
 export class UserProjectionService extends Context.Tag("UserProjectionService")<
   UserProjectionService,
   {
-    readonly project: (events: UserEvent[]) => Effect.Effect<UserProjection>;
-    readonly rebuild: (userId: string) => Effect.Effect<void, ProjectionError>;
+    readonly project: (events: UserEvent[]) => Effect.Effect<UserProjection>
+    readonly rebuild: (userId: string) => Effect.Effect<void, ProjectionError>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
       const eventStore = yield* EventStore;
-      const database = yield* KyselyService;
-
-      return {
+      const database = yield* KyselyService      return {
         project: (events) =>
           Effect.succeed(
             events.reduce((state, event) => {
@@ -7664,7 +7444,7 @@ export class UserProjectionService extends Context.Tag("UserProjectionService")<
                     version: event.version,
                     createdAt: event.timestamp,
                     updatedAt: event.timestamp,
-                  };
+                  }
 
                 case "UserEmailChanged":
                   return {
@@ -7672,7 +7452,7 @@ export class UserProjectionService extends Context.Tag("UserProjectionService")<
                     email: event.data.newEmail,
                     version: event.version,
                     updatedAt: event.timestamp,
-                  };
+                  }
 
                 default:
                   return state;
@@ -7682,8 +7462,8 @@ export class UserProjectionService extends Context.Tag("UserProjectionService")<
 
         rebuild: (userId) =>
           Effect.gen(function*() {
-            const events = yield* eventStore.loadEvents(userId);
-            const projection = yield* this.project(events);
+            const events = yield* eventStore.loadEvents(userId)
+            const projection = yield* this.project(events)
 
             yield* database.query((db) =>
               db
@@ -7693,11 +7473,11 @@ export class UserProjectionService extends Context.Tag("UserProjectionService")<
                   oc.column("userId").doUpdateSet(projection)
                 )
                 .execute()
-            );
-          }),
-      };
+            )
+          })
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -7709,18 +7489,16 @@ export class UserQueryService extends Context.Tag("UserQueryService")<
   {
     readonly findById: (
       userId: string
-    ) => Effect.Effect<Option.Option<UserProjection>, QueryError>;
+    ) => Effect.Effect<Option.Option<UserProjection>, QueryError>
     readonly findByEmail: (
       email: string
-    ) => Effect.Effect<Option.Option<UserProjection>, QueryError>;
+    ) => Effect.Effect<Option.Option<UserProjection>, QueryError>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const database = yield* KyselyService;
-
-      return {
+      const database = yield* KyselyService      return {
         findById: (userId) =>
           database.query((db) =>
             db
@@ -7737,10 +7515,10 @@ export class UserQueryService extends Context.Tag("UserQueryService")<
               .where("email", "=", email)
               .selectAll()
               .executeTakeFirst()
-          ).pipe(Effect.map(Option.fromNullable)),
-      };
+          ).pipe(Effect.map(Option.fromNullable))
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -7780,9 +7558,7 @@ Define RPC requests and responses with full type safety:
 
 ```typescript
 import { Schema } from "effect";
-import { Rpc } from "@effect/rpc";
-
-// Request schema with validation
+import { Rpc } from "@effect/rpc"// Request schema with validation
 export class GetUserRequest extends Schema.TaggedRequest<GetUserRequest>()(
   "GetUserRequest",
   {
@@ -7793,8 +7569,8 @@ export class GetUserRequest extends Schema.TaggedRequest<GetUserRequest>()(
       }),
       Schema.Struct({
         _tag: Schema.Literal("ValidationError"),
-        errors: Schema.Array(Schema.String),
-      })
+        errors: Schema.Array(Schema.String)
+      } )
     ),
     success: Schema.Struct({
       id: Schema.String,
@@ -7804,7 +7580,7 @@ export class GetUserRequest extends Schema.TaggedRequest<GetUserRequest>()(
     }),
     payload: {
       userId: Schema.String.pipe(Schema.uuid()),
-    },
+    }
   }
 ) {}
 
@@ -7829,7 +7605,7 @@ export class GetUsersRequest extends Schema.TaggedRequest<GetUsersRequest>()(
       includeDeleted: Schema.optional(Schema.Boolean).pipe(
         Schema.withDefault(() => false)
       ),
-    },
+    }
   }
 ) {}
 
@@ -7844,8 +7620,8 @@ export class CreateUserRequest extends Schema.TaggedRequest<CreateUserRequest>()
       }),
       Schema.Struct({
         _tag: Schema.Literal("ValidationError"),
-        errors: Schema.Array(Schema.String),
-      })
+        errors: Schema.Array(Schema.String)
+      } )
     ),
     success: Schema.Struct({
       id: Schema.String,
@@ -7856,7 +7632,7 @@ export class CreateUserRequest extends Schema.TaggedRequest<CreateUserRequest>()
     payload: {
       email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
       name: Schema.String.pipe(Schema.minLength(1)),
-    },
+    }
   }
 ) {}
 ```
@@ -7866,9 +7642,7 @@ export class CreateUserRequest extends Schema.TaggedRequest<CreateUserRequest>()
 Properly serialize errors across RPC boundary:
 
 ```typescript
-import { Data } from "effect";
-
-// Define serializable errors
+import { Data } from "effect"// Define serializable errors
 export class UserNotFoundError extends Data.TaggedError("UserNotFound")<{
   userId: string;
 }> {}
@@ -7889,7 +7663,7 @@ function toRpcError(error: UserServiceError) {
     case "EmailAlreadyExists":
       return { _tag: "EmailAlreadyExists" as const, email: error.email };
     case "ValidationError":
-      return { _tag: "ValidationError" as const, errors: error.errors };
+      return { _tag: "ValidationError" as const, errors: error.errors }
   }
 }
 ```
@@ -7901,29 +7675,27 @@ Implement request handlers with full type safety:
 ```typescript
 import { Context, Effect, Layer } from "effect";
 import { Rpc, RpcRouter } from "@effect/rpc";
-import { HttpRpcResolver } from "@effect/rpc-http";
-
-// Define RPC router
+import { HttpRpcResolver } from "@effect/rpc-http"// Define RPC router
 export const UserRpcRouter = RpcRouter.make(
   // Handler for GetUserRequest
   Rpc.effect(GetUserRequest, (request) =>
     Effect.gen(function*() {
       const userService = yield* UserService;
-      const user = yield* userService.findById(request.userId);
+      const user = yield* userService.findById(request.userId)
 
       if (Option.isNone(user)) {
         return yield* Effect.fail({
           _tag: "UserNotFound" as const,
           userId: request.userId,
-        });
+        })
       }
 
       return {
         id: user.value.id,
         email: user.value.email,
         name: user.value.name,
-        createdAt: user.value.createdAt,
-      };
+        createdAt: user.value.createdAt
+      }
     })
   ),
 
@@ -7934,56 +7706,54 @@ export const UserRpcRouter = RpcRouter.make(
       const users = yield* userService.findByIds(
         request.userIds,
         request.includeDeleted
-      );
+      )
 
       return users.map((user) => ({
         id: user.id,
         email: user.email,
         name: user.name,
         createdAt: user.createdAt,
-      }));
+      }))
     })
   ),
 
   // Handler for CreateUserRequest
   Rpc.effect(CreateUserRequest, (request) =>
     Effect.gen(function*() {
-      const userService = yield* UserService;
-
-      // Check if email exists
-      const existing = yield* userService.findByEmail(request.email);
+      const userService = yield* UserService      // Check if email exists
+      const existing = yield* userService.findByEmail(request.email)
       if (Option.isSome(existing)) {
         return yield* Effect.fail({
           _tag: "EmailAlreadyExists" as const,
           email: request.email,
-        });
+        })
       }
 
       const user = yield* userService.create({
         email: request.email,
         name: request.name,
-      });
+      })
 
       return {
         id: user.id,
         email: user.email,
         name: user.name,
-        createdAt: user.createdAt,
-      };
+        createdAt: user.createdAt
+      }
     })
   )
-);
+)
 
 // RPC Server Layer
 export const UserRpcServerLive = Layer.effect(
   Rpc.Server,
   Effect.gen(function*() {
-    return Rpc.server(UserRpcRouter);
+    return Rpc.server(UserRpcRouter)
   })
 ).pipe(
   Layer.provide(UserService.Live),
   Layer.provide(DatabaseService.Live)
-);
+)
 ```
 
 ### RPC Client Usage
@@ -7991,23 +7761,19 @@ export const UserRpcServerLive = Layer.effect(
 Use the RPC client with full type safety:
 
 ```typescript
-import { HttpRpcResolver } from "@effect/rpc-http";
-
-// Client resolver
+import { HttpRpcResolver } from "@effect/rpc-http"// Client resolver
 export const UserRpcClientLive = HttpRpcResolver.make<typeof UserRpcRouter>({
-  url: "http://localhost:3000/rpc/users",
-}).pipe(Layer.effect(Rpc.Resolver));
+  url: "http://localhost:3000/rpc/users"
+}).pipe(Layer.effect(Rpc.Resolver))
 
 // Usage in application
 const program = Effect.gen(function*() {
-  const resolver = yield* Rpc.Resolver;
-
-  // Type-safe request - compiler ensures correct payload
+  const resolver = yield* Rpc.Resolver  // Type-safe request - compiler ensures correct payload
   const user = yield* resolver.execute(
     new GetUserRequest({ userId: "123e4567-e89b-12d3-a456-426614174000" })
-  );
+  )
 
-  console.log(user); // { id, email, name, createdAt }
+  console.log(user) // { id, email, name, createdAt }
 
   // Batch request
   const users = yield* resolver.execute(
@@ -8018,7 +7784,7 @@ const program = Effect.gen(function*() {
       ],
       includeDeleted: false,
     })
-  );
+  )
 
   // Handle typed errors
   yield* resolver.execute(
@@ -8030,8 +7796,8 @@ const program = Effect.gen(function*() {
     Effect.catchTag("ValidationError", (error) =>
       Effect.logError(`Validation failed: ${error.errors.join(", ")}`)
     )
-  );
-});
+  )
+})
 ```
 
 ### RPC Best Practices
@@ -8078,20 +7844,18 @@ Client-side layers cannot access Node.js APIs:
 ```typescript
 // ❌ WRONG - Node.js dependencies break in browser
 import { KyselyService } from "@custom-repo/infra-kysely"; // Uses 'fs', 'path'
-import { readFileSync } from "fs";
-
-// ✅ CORRECT - Browser-safe implementation
+import { readFileSync } from "fs"// ✅ CORRECT - Browser-safe implementation
 export class ClientStorageService extends Context.Tag("ClientStorageService")<
   ClientStorageService,
   {
-    readonly get: (key: string) => Effect.Effect<Option.Option<string>>;
-    readonly set: (key: string, value: string) => Effect.Effect<void>;
+    readonly get: (key: string) => Effect.Effect<Option.Option<string>>
+    readonly set: (key: string, value: string) => Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.succeed(this, {
     get: (key) => Effect.sync(() => Option.fromNullable(localStorage.getItem(key))),
-    set: (key, value) => Effect.sync(() => localStorage.setItem(key, value)),
-  });
+    set: (key, value) => Effect.sync(() => localStorage.setItem(key, value))
+  })
 }
 ```
 
@@ -8109,31 +7873,31 @@ import fs from "fs"; // File system not available
 export class EdgeCacheService extends Context.Tag("EdgeCacheService")<
   EdgeCacheService,
   {
-    readonly get: (key: string) => Effect.Effect<Option.Option<string>>;
-    readonly set: (key: string, value: string, ttl: number) => Effect.Effect<void>;
+    readonly get: (key: string) => Effect.Effect<Option.Option<string>>
+    readonly set: (key: string, value: string, ttl: number) => Effect.Effect<void>
   }
 >() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
       // Use platform-provided KV storage
-      const kv = yield* Effect.sync(() => globalThis.KV_NAMESPACE);
+      const kv = yield* Effect.sync(() => globalThis.KV_NAMESPACE)
 
       return {
         get: (key) =>
           Effect.tryPromise({
             try: () => kv.get(key),
-            catch: () => new CacheError({ key }),
+            catch: () => new CacheError({ key })
           }).pipe(Effect.map(Option.fromNullable)),
 
         set: (key, value, ttl) =>
           Effect.tryPromise({
             try: () => kv.put(key, value, { expirationTtl: ttl }),
-            catch: () => new CacheError({ key }),
-          }),
-      };
+            catch: () => new CacheError({ key })
+          })
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -8143,9 +7907,7 @@ Structure exports for different platforms:
 
 ```typescript
 // src/index.ts (main entry - server only)
-export * from "./server";
-
-// src/server.ts (Node.js server)
+export * from "./server"// src/server.ts (Node.js server)
 export { UserService } from "./lib/service";
 export { UserServiceLive, UserServiceTest } from "./lib/layers";
 export { UserRepository } from "./lib/repository"; // Uses Kysely
@@ -8187,17 +7949,15 @@ export const UserServiceClient = Layer.effect(
   UserService,
   Effect.gen(function*() {
     // Client uses RPC to call server
-    const rpcClient = yield* RpcClient;
-
-    return {
+    const rpcClient = yield* RpcClient    return {
       findById: (id) =>
         rpcClient.execute(new GetUserRequest({ userId: id })),
 
       create: (data) =>
         rpcClient.execute(new CreateUserRequest(data)),
-    };
+    }
   })
-);
+)
 ```
 
 **Best Practices**:
@@ -8220,20 +7980,16 @@ Manage environment-specific configuration with Effect's Config system and Contex
 
 ```typescript
 import { Config, Context, Effect, Layer } from "effect";
-import { Schema } from "effect";
-
-// Define config schema
+import { Schema } from "effect"// Define config schema
 export class AppConfigSchema extends Schema.Struct({
   port: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
   logLevel: Schema.Literal("debug", "info", "warn", "error"),
   databaseUrl: Schema.String.pipe(Schema.minLength(1)),
   apiKey: Schema.String.pipe(Schema.minLength(10)),
-  timeout: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
+  timeout: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0))
 }) {}
 
-export type AppConfig = typeof AppConfigSchema.Type;
-
-// Config service tag
+export type AppConfig = typeof AppConfigSchema.Type// Config service tag
 export class AppConfigService extends Context.Tag("AppConfigService")<
   AppConfigService,
   AppConfig
@@ -8248,13 +8004,13 @@ export class AppConfigService extends Context.Tag("AppConfigService")<
           .pipe(Config.withDefault("info" as const)),
         databaseUrl: Config.string("DATABASE_URL"),
         apiKey: Config.secret("API_KEY").pipe(Config.map((secret) => secret.value)),
-        timeout: Config.number("TIMEOUT").pipe(Config.withDefault(30000)),
-      });
+        timeout: Config.number("TIMEOUT").pipe(Config.withDefault(30000))
+      } )
 
       // Validate with schema
-      return yield* Schema.decode(AppConfigSchema)(config);
+      return yield* Schema.decode(AppConfigSchema)(config)
     })
-  );
+  )
 
   // Test config
   static readonly Test = Layer.succeed(this, {
@@ -8262,8 +8018,8 @@ export class AppConfigService extends Context.Tag("AppConfigService")<
     logLevel: "debug",
     databaseUrl: "postgresql://test:test@localhost:5432/test",
     apiKey: "test-api-key",
-    timeout: 5000,
-  });
+    timeout: 5000
+  })
 }
 ```
 
@@ -8277,15 +8033,15 @@ export const AppConfigDev = Layer.effect(
     const base = yield* AppConfigService.Live.pipe(
       Layer.build,
       Effect.map((ctx) => Context.get(ctx, AppConfigService))
-    );
+    )
 
     return {
       ...base,
       logLevel: "debug" as const,
       timeout: 60000, // Longer timeouts for debugging
-    };
+    }
   })
-);
+)
 
 // Production hardening
 export const AppConfigProd = Layer.effect(
@@ -8294,16 +8050,16 @@ export const AppConfigProd = Layer.effect(
     const base = yield* AppConfigService.Live.pipe(
       Layer.build,
       Effect.map((ctx) => Context.get(ctx, AppConfigService))
-    );
+    )
 
     // Validate required production settings
     if (!base.apiKey || base.apiKey === "test-api-key") {
-      return yield* Effect.fail(new ConfigError("Production API key required"));
+      return yield* Effect.fail(new ConfigError("Production API key required"))
     }
 
-    return base;
+    return base
   })
-);
+)
 ```
 
 ### Configuration Composition
@@ -8313,7 +8069,7 @@ export const AppConfigProd = Layer.effect(
 export class DatabaseConfig extends Schema.Struct({
   url: Schema.String,
   maxConnections: Schema.Number,
-  connectionTimeout: Schema.Number,
+  connectionTimeout: Schema.Number
 }) {}
 
 export class DatabaseConfigService extends Context.Tag("DatabaseConfigService")<
@@ -8324,15 +8080,13 @@ export class DatabaseConfigService extends Context.Tag("DatabaseConfigService")<
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const appConfig = yield* AppConfigService;
-
-      return {
+      const appConfig = yield* AppConfigService      return {
         url: appConfig.databaseUrl,
         maxConnections: 10,
-        connectionTimeout: appConfig.timeout,
-      };
+        connectionTimeout: appConfig.timeout
+      }
     })
-  ).pipe(Layer.provide(AppConfigService.Live));
+  ).pipe(Layer.provide(AppConfigService.Live))
 }
 ```
 
@@ -8369,9 +8123,7 @@ export interface PaginatedResult<T> {
 findAll: (params: PaginationParams) =>
   Effect.gen(function*() {
     const database = yield* KyselyService;
-    const offset = (params.page - 1) * params.limit;
-
-    const [data, countResult] = yield* Effect.all([
+    const offset = (params.page - 1) * params.limit    const [data, countResult] = yield* Effect.all([
       database.query((db) =>
         db
           .selectFrom("users")
@@ -8386,9 +8138,9 @@ findAll: (params: PaginationParams) =>
           .select((eb) => eb.fn.countAll().as("count"))
           .executeTakeFirst()
       ),
-    ]);
+    ])
 
-    const total = Number(countResult?.count ?? 0);
+    const total = Number(countResult?.count ?? 0)
 
     return {
       data,
@@ -8396,7 +8148,7 @@ findAll: (params: PaginationParams) =>
       limit: params.limit,
       total,
       totalPages: Math.ceil(total / params.limit),
-    };
+    }
   })
 ```
 
@@ -8419,31 +8171,27 @@ export interface CursorResult<T> {
 // Repository operation with cursor
 findAllCursor: (params: CursorParams) =>
   Effect.gen(function*() {
-    const database = yield* KyselyService;
-
-    const data = yield* database.query((db) => {
+    const database = yield* KyselyService    const data = yield* database.query((db) => {
       let query = db
         .selectFrom("users")
         .selectAll()
         .orderBy("id", "asc")
-        .limit(params.limit + 1); // Fetch one extra to check hasMore
+        .limit(params.limit + 1) // Fetch one extra to check hasMore
 
       if (params.cursor) {
-        query = query.where("id", ">", params.cursor);
+        query = query.where("id", ">", params.cursor)
       }
 
-      return query.execute();
-    });
+      return query.execute()
+    })
 
     const hasMore = data.length > params.limit;
     const results = hasMore ? data.slice(0, -1) : data;
-    const nextCursor = hasMore ? results[results.length - 1].id : null;
-
-    return {
+    const nextCursor = hasMore ? results[results.length - 1].id : null    return {
       data: results,
       nextCursor,
       hasMore,
-    };
+    }
   })
 ```
 
@@ -8464,28 +8212,26 @@ Advanced Effect testing patterns with Layer.fresh and test composition.
 
 ```typescript
 import { it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
-
-describe("UserService", () => {
+import { Effect, Layer } from "effect"describe("UserService", () => {
   // ✅ CORRECT - Each test gets fresh layer
   it.effect("creates user", () =>
     Effect.gen(function*() {
       const service = yield* UserService;
-      const user = yield* service.create({ email: "test@example.com" });
-      expect(user.id).toBeDefined();
+      const user = yield* service.create({ email: "test@example.com" })
+      expect(user.id).toBeDefined()
     }).pipe(Effect.provide(Layer.fresh(UserService.Test)))
-  );
+  )
 
   // ✅ CORRECT - Tests are isolated
   it.effect("finds user by ID", () =>
     Effect.gen(function*() {
       const service = yield* UserService;
-      const created = yield* service.create({ email: "test@example.com" });
-      const found = yield* service.findById(created.id);
-      expect(Option.isSome(found)).toBe(true);
+      const created = yield* service.create({ email: "test@example.com" })
+      const found = yield* service.findById(created.id)
+      expect(Option.isSome(found)).toBe(true)
     }).pipe(Effect.provide(Layer.fresh(UserService.Test)))
-  );
-});
+  )
+})
 ```
 
 ### Test Layer Composition
@@ -8496,21 +8242,19 @@ const TestLayers = Layer.mergeAll(
   Layer.fresh(UserService.Test),
   Layer.fresh(EmailService.Test),
   Layer.fresh(LoggingService.Test)
-);
+)
 
 it.effect("registers user and sends email", () =>
   Effect.gen(function*() {
     const userService = yield* UserService;
-    const emailService = yield* EmailService;
-
-    const user = yield* userService.create({ email: "test@example.com" });
-    yield* emailService.sendWelcome(user.email);
+    const emailService = yield* EmailService    const user = yield* userService.create({ email: "test@example.com" })
+    yield* emailService.sendWelcome(user.email)
 
     // Verify email was sent (mock tracks calls)
-    const sent = yield* emailService.getSentEmails();
-    expect(sent).toHaveLength(1);
+    const sent = yield* emailService.getSentEmails()
+    expect(sent).toHaveLength(1)
   }).pipe(Effect.provide(TestLayers))
-);
+)
 ```
 
 ### Integration Testing with Real Database
@@ -8521,27 +8265,27 @@ const IntegrationLayers = Layer.mergeAll(
   UserRepository.Live, // Real repository
   KyselyService.Test, // Test database connection
   LoggingService.Test
-);
+)
 
 describe("UserRepository Integration", () => {
   beforeEach(async () => {
     // Migrate test database
     await Effect.runPromise(
       migrateDatabase.pipe(Effect.provide(KyselyService.Test))
-    );
-  });
+    )
+  })
 
   it.effect("persists user to database", () =>
     Effect.gen(function*() {
       const repo = yield* UserRepository;
-      const user = yield* repo.create({ email: "test@example.com" });
+      const user = yield* repo.create({ email: "test@example.com" })
 
       // Verify in database
-      const found = yield* repo.findById(user.id);
-      expect(Option.isSome(found)).toBe(true);
+      const found = yield* repo.findById(user.id)
+      expect(Option.isSome(found)).toBe(true)
     }).pipe(Effect.provide(IntegrationLayers))
-  );
-});
+  )
+})
 ```
 
 **Best Practices**:
@@ -8563,18 +8307,16 @@ Different operation types require specific error handling strategies.
 // Create - Handle conflicts
 create: (input) =>
   Effect.gen(function*() {
-    const database = yield* KyselyService;
-
-    return yield* database.query((db) =>
+    const database = yield* KyselyService    return yield* database.query((db) =>
       db.insertInto("users").values(input).returning("id").executeTakeFirst()
     ).pipe(
       Effect.catchTag("DatabaseError", (error) => {
         if (error.code === "23505") { // Unique violation
-          return Effect.fail(new EmailAlreadyExistsError({ email: input.email }));
+          return Effect.fail(new EmailAlreadyExistsError({ email: input.email }))
         }
-        return Effect.fail(new DatabaseError({ cause: error }));
+        return Effect.fail(new DatabaseError({ cause: error }))
       })
-    );
+    )
   })
 
 // Read - Handle not found
@@ -8589,14 +8331,14 @@ findById: (id) =>
 // Update - Handle not found + conflicts
 update: (id, input) =>
   Effect.gen(function*() {
-    const existing = yield* findById(id);
+    const existing = yield* findById(id)
     if (Option.isNone(existing)) {
-      return yield* Effect.fail(new UserNotFoundError({ id }));
+      return yield* Effect.fail(new UserNotFoundError({ id }))
     }
 
     return yield* database.query((db) =>
       db.updateTable("users").set(input).where("id", "=", id).execute()
-    );
+    )
   })
 
 // Delete - Idempotent
@@ -8609,12 +8351,10 @@ delete: (id) =>
 ### Schema Validation Errors
 
 ```typescript
-import { Schema } from "effect";
-
-const UserSchema = Schema.Struct({
+import { Schema } from "effect"const UserSchema = Schema.Struct({
   email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
-  age: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(18)),
-});
+  age: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(18))
+})
 
 create: (input) =>
   Effect.gen(function*() {
@@ -8625,9 +8365,9 @@ create: (input) =>
           errors: error.message.split("\n"),
         })
       )
-    );
+    )
 
-    return yield* createUser(validated);
+    return yield* createUser(validated)
   })
 ```
 
@@ -8638,7 +8378,7 @@ create: (input) =>
 callExternalAPI: (url) =>
   Effect.tryPromise({
     try: () => fetch(url),
-    catch: (error) => new APIError({ cause: error }),
+    catch: (error) => new APIError({ cause: error })
   }).pipe(
     Effect.retry({
       times: 3,
@@ -8673,11 +8413,11 @@ fetchData: (id) =>
 validateAll: (inputs) =>
   Effect.forEach(inputs, validate, { mode: "either" }).pipe(
     Effect.flatMap((results) => {
-      const errors = results.filter(Either.isLeft);
+      const errors = results.filter(Either.isLeft)
       if (errors.length > 0) {
-        return Effect.fail(new BatchValidationError({ errors }));
+        return Effect.fail(new BatchValidationError({ errors }))
       }
-      return Effect.succeed(results.map((r) => r.right));
+      return Effect.succeed(results.map((r) => r.right))
     })
   )
 ```
@@ -8884,12 +8624,12 @@ START: I need to...
 export const getUserName = (id: string): string => {
   return Effect.runSync(repo.findById(id).pipe(
     Effect.map(user => user.name)
-  ));
-};
+  ))
+}
 
 // ✅ CORRECT: Return Effect, let caller run it
 export const getUserName = (id: string): Effect.Effect<string, UserError> =>
-  repo.findById(id).pipe(Effect.map(user => user.name));
+  repo.findById(id).pipe(Effect.map(user => user.name))
 ```
 
 **Why**: Library code should return Effects, not run them. Only application boundaries (main, route handlers) should run effects.
@@ -8902,13 +8642,13 @@ export const getUserName = (id: string): Effect.Effect<string, UserError> =>
 // ❌ WRONG: Silent error suppression
 const result = yield* operation().pipe(
   Effect.catchAll(() => Effect.succeed(null))
-);
+)
 
 // ✅ CORRECT: Log before recovering
 const result = yield* operation().pipe(
   Effect.tapError((error) => logger.error("Operation failed", { error })),
   Effect.catchAll(() => Effect.succeed(null))
-);
+)
 ```
 
 **Why**: Silent failures make debugging impossible. Always observe errors before recovery.
@@ -8921,13 +8661,13 @@ const result = yield* operation().pipe(
 // ❌ WRONG: No concurrency limit
 yield* Effect.all(
   userIds.map(id => stripe.createCharge({ userId: id }))
-);
+)
 
 // ✅ CORRECT: Bounded concurrency
 yield* Effect.all(
   userIds.map(id => stripe.createCharge({ userId: id })),
   { concurrency: 5 } // Max 5 concurrent API calls
-);
+)
 ```
 
 **Why**: Unbounded concurrency can overwhelm external services, cause rate limiting (429 errors), or exhaust resources.
@@ -8940,12 +8680,12 @@ yield* Effect.all(
 // ❌ WRONG: Unnecessary Effect wrapping
 const names = yield* users.pipe(
   Effect.flatMap((users) => Effect.succeed(users.map(u => u.name)))
-);
+)
 
 // ✅ CORRECT: Use map for pure transformations
 const names = yield* users.pipe(
   Effect.map((users) => users.map(u => u.name))
-);
+)
 ```
 
 **Why**: `flatMap` is for effectful transformations. Use `map` for pure transformations.
@@ -8956,14 +8696,14 @@ const names = yield* users.pipe(
 
 ```typescript
 // ❌ WRONG: Load all 100,000 items into memory
-const allUsers = yield* repo.findAll();
-yield* Effect.forEach(allUsers, processUser);
+const allUsers = yield* repo.findAll()
+yield* Effect.forEach(allUsers, processUser)
 
 // ✅ CORRECT: Stream for constant memory
 yield* repo.streamAll({ batchSize: 100 }).pipe(
   Stream.mapEffect(processUser),
   Stream.runDrain
-);
+)
 ```
 
 **Why**: Arrays load everything into memory. Streams process items one-at-a-time with constant memory.
@@ -8975,7 +8715,7 @@ yield* repo.streamAll({ batchSize: 100 }).pipe(
 ```typescript
 // ❌ WRONG: Mixing try/catch with Effects
 try {
-  const user = yield* repo.findById(id);
+  const user = yield* repo.findById(id)
   return user;
 } catch (error) {
   return null;
@@ -8984,7 +8724,7 @@ try {
 // ✅ CORRECT: Use Effect operators
 const user = yield* repo.findById(id).pipe(
   Effect.catchAll((error) => Effect.succeed(null))
-);
+)
 ```
 
 **Why**: try/catch doesn't work with Effect errors. Use Effect's error handling operators.
@@ -8998,18 +8738,18 @@ const user = yield* repo.findById(id).pipe(
 const result = yield* operation().pipe(
   Effect.catchAll((error) => {
     if (error.message.includes("not found")) {
-      return handleNotFound();
+      return handleNotFound()
     }
-    return handleOther();
+    return handleOther()
   })
-);
+)
 
 // ✅ CORRECT: Use catchTag for type-safe error handling
 const result = yield* operation().pipe(
   Effect.catchTag("NotFoundError", () => handleNotFound()),
   Effect.catchTag("ValidationError", () => handleValidation()),
   Effect.catchAll((error) => handleUnexpected(error))
-);
+)
 ```
 
 **Why**: Tagged errors provide type safety and clear intent. String matching is error-prone.
@@ -9022,10 +8762,10 @@ const result = yield* operation().pipe(
 // ❌ WRONG: Effects inside map aren't executed
 const results = yield* Effect.succeed([1, 2, 3]).pipe(
   Effect.map((nums) => nums.map(n => repo.findById(n))) // Returns Effect[]
-);
+)
 
 // ✅ CORRECT: Use forEach or flatMap
-const results = yield* Effect.forEach([1, 2, 3], (n) => repo.findById(n));
+const results = yield* Effect.forEach([1, 2, 3], (n) => repo.findById(n))
 ```
 
 **Why**: `map` doesn't execute Effects. Use `forEach`, `all`, or `flatMap` for effectful operations.
@@ -9036,13 +8776,13 @@ const results = yield* Effect.forEach([1, 2, 3], (n) => repo.findById(n));
 
 ```typescript
 // ❌ WRONG: Manual cleanup is error-prone
-const conn = yield* createConnection();
+const conn = yield* createConnection()
 try {
-  const result = yield* conn.query("...");
-  yield* conn.close();
+  const result = yield* conn.query("...")
+  yield* conn.close()
   return result;
 } catch (error) {
-  yield* conn.close(); // Cleanup in catch too!
+  yield* conn.close() // Cleanup in catch too!
   throw error;
 }
 
@@ -9052,7 +8792,7 @@ const result = yield* Effect.acquireRelease(
   (conn) => conn.close()
 ).pipe(
   Effect.flatMap((conn) => conn.query("..."))
-);
+)
 ```
 
 **Why**: acquireRelease guarantees cleanup even on errors/interrupts. Manual cleanup is error-prone.

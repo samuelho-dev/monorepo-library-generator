@@ -270,9 +270,7 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
   "${className}.ListAll": ({ filters, pagination }) =>
     Effect.gen(function*() {
       const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
-
-      // Verify admin role
+      const service = yield* ${className}Service      // Verify admin role
       if (!user.roles.includes("admin")) {
         return yield* Effect.fail({
           _tag: "Forbidden" as const,
@@ -295,9 +293,7 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
   "${className}.UpdateStatus": ({ id, status }) =>
     Effect.gen(function*() {
       const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
-
-      if (!user.roles.includes("admin")) {
+      const service = yield* ${className}Service      if (!user.roles.includes("admin")) {
         return yield* Effect.fail({
           _tag: "Forbidden" as const,
           message: "Admin role required"
@@ -321,9 +317,7 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
   "${className}.BulkUpdate": ({ ids, updates }) =>
     Effect.gen(function*() {
       const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
-
-      if (!user.roles.includes("admin")) {
+      const service = yield* ${className}Service      if (!user.roles.includes("admin")) {
         return yield* Effect.fail({
           _tag: "Forbidden" as const,
           message: "Admin role required"
@@ -346,9 +340,7 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
   "${className}.GenerateReport": ({ type, dateRange }) =>
     Effect.gen(function*() {
       const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
-
-      if (!user.roles.includes("admin")) {
+      const service = yield* ${className}Service      if (!user.roles.includes("admin")) {
         return yield* Effect.fail({
           _tag: "Forbidden" as const,
           message: "Admin role required"

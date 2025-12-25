@@ -196,7 +196,7 @@ export const AllMiddlewareTest = Layer.mergeAll(
   AuthMiddlewareTest,
   ServiceMiddlewareTest,
   RequestMetaMiddlewareLive,
-);
+)
 
 /**
  * Combined middleware layer for production
@@ -208,7 +208,7 @@ export const AllMiddlewareLive = Layer.mergeAll(
   AuthMiddlewareLive,
   ServiceMiddlewareLive,
   RequestMetaMiddlewareLive,
-);
+)
 
 /**
  * Default middleware selector configuration for development

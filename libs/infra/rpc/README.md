@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-rpc
 
-Rpc
+RPC infrastructure with @effect/rpc middleware, transport, and router
 
 ## Overview
 

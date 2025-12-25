@@ -150,10 +150,10 @@ export class CreateUserJob extends Schema.Class<CreateUserJob>(
   initiatedBy: Schema.optional(Schema.UUID)
 }) {
   static create(params: {
-    data: Record<string, unknown>;
+    data: Record<string, unknown>
     initiatedBy?: string;
     correlationId?: string;
-    priority?: number;
+    priority?: number
   }) {
     return new CreateUserJob({
       jobId: crypto.randomUUID(),
@@ -188,10 +188,10 @@ export class UpdateUserJob extends Schema.Class<UpdateUserJob>(
 }) {
   static create(params: {
     entityId: string;
-    data: Record<string, unknown>;
+    data: Record<string, unknown>
     initiatedBy?: string;
     correlationId?: string;
-    priority?: number;
+    priority?: number
   }) {
     return new UpdateUserJob({
       jobId: crypto.randomUUID(),
@@ -230,7 +230,7 @@ export class DeleteUserJob extends Schema.Class<DeleteUserJob>(
     softDelete?: boolean;
     initiatedBy?: string;
     correlationId?: string;
-    priority?: number;
+    priority?: number
   }) {
     return new DeleteUserJob({
       jobId: crypto.randomUUID(),
@@ -273,11 +273,11 @@ export class BulkUserJob extends Schema.Class<BulkUserJob>(
 }) {
   static create(params: {
     operation: "create" | "update" | "delete";
-    items: Array<Record<string, unknown>>;
+    items: Array<Record<string, unknown>>
     initiatedBy?: string;
     correlationId?: string;
     priority?: number;
-    continueOnError?: boolean;
+    continueOnError?: boolean
   }) {
     return new BulkUserJob({
       jobId: crypto.randomUUID(),
@@ -475,8 +475,8 @@ const processJob = <CreateData, UpdateData, BulkItemData>(
   schemas: UserJobProcessorSchemas<CreateData, UpdateData, BulkItemData>
 ) =>
   Effect.gen(function*() {
-    const histogram = yield* metrics.histogram("user_job_duration_seconds");
-    const counter = yield* metrics.counter("user_jobs_processed_total");
+    const histogram = yield* metrics.histogram("user_job_duration_seconds")
+    const counter = yield* metrics.counter("user_jobs_processed_total")
 
     yield* logger.info("Processing user job", {
       jobId: job.jobId,
@@ -532,12 +532,12 @@ const processJob = <CreateData, UpdateData, BulkItemData>(
  *   const job = CreateUserJob.create({
  *     data: { name: "example" },
  *     initiatedBy: "user-123",
- *   });
+ *   })
  *
- *   yield* queue.enqueue(job);
- * });
+ *   yield* queue.enqueue(job)
+ * })
  *
- * program.pipe(Effect.provide(UserJobQueue.Live(schemas)));
+ * program.pipe(Effect.provide(UserJobQueue.Live(schemas)))
  * ```
  */
 export class UserJobQueue extends Context.Tag("UserJobQueue")<
@@ -558,25 +558,22 @@ export class UserJobQueue extends Context.Tag("UserJobQueue")<
       const service = yield* UserService;
       const logger = yield* LoggingService;
       const metrics = yield* MetricsService;
-
-      const failedCounter = yield* metrics.counter("user_jobs_failed_total");
-      const pendingGauge = yield* metrics.gauge("user_jobs_pending");
-      const processingGauge = yield* metrics.gauge("user_jobs_processing");
+      const failedCounter = yield* metrics.counter("user_jobs_failed_total")
+      const pendingGauge = yield* metrics.gauge("user_jobs_pending")
+      const processingGauge = yield* metrics.gauge("user_jobs_processing")
 
       // Create bounded queue for job storage
-      const jobQueue = yield* queueService.bounded<UserJob>(1000);
+      const jobQueue = yield* queueService.bounded<UserJob>(1000)
 
       // Stats tracking
       let pending = 0;
       let processing = 0;
       let completed = 0;
       let failed = 0;
-      let isProcessing = false;
-
-      // Retry schedule: fixed delay with max retries
+      let isProcessing = false      // Retry schedule: fixed delay with max retries
       const retrySchedule = Schedule.spaced(UserQueueConfig.RETRY_DELAY).pipe(
         Schedule.compose(Schedule.recurs(UserQueueConfig.DEFAULT_RETRIES))
-      );
+      )
 
       // Process jobs from the queue with retry logic
       const processWithRetry = (job: UserJob) =>

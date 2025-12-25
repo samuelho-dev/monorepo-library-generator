@@ -23,7 +23,7 @@ export function validateApiKey(apiKey: string) {
 export function validateTimeout(timeout: number) {
   return (
     typeof timeout === "number" && timeout > 0 && timeout <= 300000 // Max 5 minutes
-  );
+  )
 }
 /**
  * Validate email format (client-safe)
@@ -34,7 +34,7 @@ export function validateEmail(email: string) {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return emailRegex.test(email)
 }
 /**
  * Validate URL format (client-safe)
@@ -45,7 +45,7 @@ export function validateUrl(url: string) {
   }
 
   try {
-    new URL(url);
+    new URL(url)
     return true;
   } catch {
     return false;
@@ -65,5 +65,5 @@ export function sanitizeString(input: string) {
     return "";
   }
 
-  return input.trim().slice(0, 1000); // Max 1000 chars
+  return input.trim().slice(0, 1000) // Max 1000 chars
 }

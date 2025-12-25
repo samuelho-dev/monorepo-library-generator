@@ -106,7 +106,7 @@ function toScreamingSnakeCase(input: string) {
  *
  * @example
  * ```typescript
- * const variants = createNamingVariants("user-profile");
+ * const variants = createNamingVariants("user-profile")
  * // {
  * //   name: "user-profile",
  * //   className: "UserProfile",
@@ -118,7 +118,7 @@ function toScreamingSnakeCase(input: string) {
  *
  * @example
  * ```typescript
- * const variants = createNamingVariants("UserProfile");
+ * const variants = createNamingVariants("UserProfile")
  * // {
  * //   name: "UserProfile",
  * //   className: "UserProfile",

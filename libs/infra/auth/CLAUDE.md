@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-auth
 
-Auth
+Auth infrastructure with session/token verification and RPC middleware integration
 
 ## AI Agent Reference
 
@@ -13,21 +13,17 @@ This is an infrastructure library following Effect-based service patterns.
 - **lib/errors.ts**: Data.TaggedError-based error types
 - **lib/config.ts**: Service configuration types
 - **lib/memory.ts**: In-memory provider implementation
-
+- **lib/client/hooks/use-auth.ts**: React hook
 
 ### Import Patterns
 
 ```typescript
 // Type-only import (zero runtime)
-import type { AuthConfig } from '@samuelho-dev/infra-auth/types';
-
-// Service import
-import { AuthService } from '@samuelho-dev/infra-auth';
-
-Effect.gen(function*() {
+import type { AuthConfig } from '@samuelho-dev/infra-auth/types'// Service import
+import { AuthService } from '@samuelho-dev/infra-auth'Effect.gen(function*() {
   const service = yield* AuthService;
   // Use service...
-});
+})
 ```
 
 ### Customization Guide
@@ -52,20 +48,27 @@ Effect.gen(function*() {
 
 ```typescript
 import { AuthService } from '@samuelho-dev/infra-auth';
-import type { AuthConfig } from '@samuelho-dev/infra-auth/types';
-
-// Standard usage
+import type { AuthConfig } from '@samuelho-dev/infra-auth/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* AuthService;
   // Use service...
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(AuthService.Live)  // Production
   // or Effect.provide(AuthService.Test)   // Testing
   // or Effect.provide(AuthService.Auto)   // NODE_ENV-based
-);
+)
+```
+
+### Client Usage
+
+```typescript
+import { useAuth } from '@samuelho-dev/infra-auth/client/hooks'function MyComponent() {
+  const auth = useAuth()
+  // Use service in React component
+}
 ```
 
 ### Testing Strategy

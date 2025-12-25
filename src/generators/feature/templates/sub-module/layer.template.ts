@@ -83,12 +83,12 @@ All infrastructure dependencies are properly wired.`,
  *
  * const program = Effect.gen(function*() {
  *   const service = yield* ${subModuleClassName}Service;
- *   return yield* service.getById(id);
- * });
+ *   return yield* service.getById(id)
+ * })
  *
  * const result = yield* program.pipe(
  *   Effect.provide(${subModuleClassName}Live)
- * );
+ * )
  * \`\`\`
  */
 export const ${subModuleClassName}Live = ${subModuleClassName}ServiceLive.pipe(
@@ -114,13 +114,13 @@ export const ${subModuleClassName}Live = ${subModuleClassName}ServiceLive.pipe(
  *
  * const testProgram = Effect.gen(function*() {
  *   const service = yield* ${subModuleClassName}Service;
- *   const result = yield* service.create({ ... });
+ *   const result = yield* service.create({ ... })
  *   // assertions
- * });
+ * })
  *
  * await Effect.runPromise(testProgram.pipe(
  *   Effect.provide(${subModuleClassName}Test)
- * ));
+ * ))
  * \`\`\`
  */
 export const ${subModuleClassName}Test = ${subModuleClassName}ServiceLive.pipe(

@@ -9,35 +9,34 @@
 
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
-import { useState } from 'react';
-
+import { useState } from 'react'
 import { useOperations } from '../bridge/operations-context';
-import { colors } from '../theme/colors';
+import { colors } from '../theme/colors'
 
 interface ExternalServiceInputProps {
   readonly onSubmit: (service: string) => void;
 }
 
 export function ExternalServiceInput({ onSubmit }: ExternalServiceInputProps) {
-  const { validation } = useOperations();
-  const [service, setService] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const { validation } = useOperations()
+  const [service, setService] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const handleChange = (value: string) => {
-    setService(value);
-    setError(null);
-  };
+    setService(value)
+    setError(null)
+  }
 
   useInput((input, key) => {
     if (key.return) {
-      const result = validation.validateExternalService(service);
+      const result = validation.validateExternalService(service)
       if (!result.isValid) {
-        setError(result.error);
+        setError(result.error)
       } else {
-        onSubmit(service.trim());
+        onSubmit(service.trim())
       }
     }
-  });
+  })
 
   return (
     <Box flexDirection="column">
@@ -60,5 +59,5 @@ export function ExternalServiceInput({ onSubmit }: ExternalServiceInputProps) {
         <Text color={colors.muted}>Press Enter to continue</Text>
       </Box>
     </Box>
-  );
+  )
 }

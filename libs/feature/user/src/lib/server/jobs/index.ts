@@ -12,7 +12,7 @@ export {
   DeleteUserJob,
   BulkUserJob,
   JobMetadata,
-} from "./queue";
+} from "./queue"
 
 export type {
   UserJob,

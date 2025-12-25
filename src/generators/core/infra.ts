@@ -231,15 +231,11 @@ ${
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
-
-// Service import
-import { ${templateOptions.className}Service } from '${templateOptions.packageName}';
-
-Effect.gen(function*() {
+import type { ${templateOptions.className}Config } from '${templateOptions.packageName}/types'// Service import
+import { ${templateOptions.className}Service } from '${templateOptions.packageName}'Effect.gen(function*() {
   const service = yield* ${templateOptions.className}Service;
   // Use service...
-});
+})
 \`\`\`
 
 ### Customization Guide
@@ -264,20 +260,18 @@ Effect.gen(function*() {
 
 \`\`\`typescript
 import { ${templateOptions.className}Service } from '${templateOptions.packageName}';
-import type { ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
-
-// Standard usage
+import type { ${templateOptions.className}Config } from '${templateOptions.packageName}/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* ${templateOptions.className}Service;
   // Use service...
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(${templateOptions.className}Service.Live)  // Production
   // or Effect.provide(${templateOptions.className}Service.Test)   // Testing
   // or Effect.provide(${templateOptions.className}Service.Auto)   // NODE_ENV-based
-);
+)
 \`\`\`
 ${
       includeClientServer
@@ -285,10 +279,8 @@ ${
 ### Client Usage
 
 \`\`\`typescript
-import { use${templateOptions.className} } from '${templateOptions.packageName}/client/hooks';
-
-function MyComponent() {
-  const ${templateOptions.propertyName} = use${templateOptions.className}();
+import { use${templateOptions.className} } from '${templateOptions.packageName}/client/hooks'function MyComponent() {
+  const ${templateOptions.propertyName} = use${templateOptions.className}()
   // Use service in React component
 }
 \`\`\`

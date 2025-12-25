@@ -1,5 +1,3 @@
-import { FileSystem } from "@effect/platform"
-import { NodeFileSystem } from "@effect/platform-node"
 import { Config, ConfigProvider, Effect, Layer, ManagedRuntime } from "effect"
 
 /**
@@ -19,6 +17,8 @@ Features:
  *
  * @module @workspace/env/createEnv
  */
+import fs from "node:fs"
+import path from "node:path"
 
 // ============================================================================
 // Re-export Config
@@ -59,8 +59,8 @@ interface CreateEnvOptions<
   server: TServer
   /** Client-safe environment variables (must have clientPrefix) */
   client: TClient
-  /** Shared environment variables (available in both contexts) */
-  shared?: TShared
+  /** Shared environment variables (available in both contexts, e.g., NODE_ENV) */
+  shared: TShared
   /** Required prefix for client variables (e.g., 'PUBLIC_') */
   clientPrefix: string
   /** Custom runtime env source (defaults to process.env) */
@@ -102,32 +102,49 @@ function parseDotEnv(content: string) {
 }
 
 // ============================================================================
+// Load .env File
+// ============================================================================
+/**
+ * Load .env file synchronously and merge with process.env
+ *
+ * Returns a Map of all environment variables with .env values
+ * overriding process.env where both exist.
+ */
+function loadEnvSync(): Map<string, string> {
+  const envMap = new Map<string, string>()
+  // First, load from process.env
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined) {
+      envMap.set(key, value)
+    }
+  }
+  // On server, also read .env file if it exists
+  if (isServer) {
+    try {
+      const envPath = path.resolve(process.cwd(), ".env")
+      const content = fs.readFileSync(envPath, "utf-8")
+      const dotEnvVars = parseDotEnv(content)
+      // .env values override process.env
+      for (const [key, value] of Object.entries(dotEnvVars)) {
+        envMap.set(key, value)
+      }
+    } catch {
+      // .env file doesn't exist or can't be read - that's OK
+    }
+  }
+  return envMap
+}
+
+// ============================================================================
 // ConfigProvider Layer
 // ============================================================================
 /**
- * Create ConfigProvider Layer with .env file support
+ * ConfigProvider from merged process.env + .env file
  */
-const makeConfigLayer = () => {
-  if (!isServer) {
-    return Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv())
-  }
-  // Server: read .env file and provide NodeContext
-  return Layer.unwrapEffect(
-    Effect.gen(function*() {
-      const fs = yield* FileSystem.FileSystem
-      const path = ".env"
-      const content = yield* fs.readFileString(path).pipe(
-        Effect.catchAll(() => Effect.succeed(""))
-      )
-      const envVars = parseDotEnv(content)
-      return Layer.succeed(
-        ConfigProvider.ConfigProvider,
-        ConfigProvider.fromMap(new Map(Object.entries(envVars)))
-      )
-    })
-  ).pipe(Layer.provide(NodeFileSystem.layer))
-}
-const ConfigLayer = makeConfigLayer()
+const ConfigLayer = Layer.succeed(
+  ConfigProvider.ConfigProvider,
+  ConfigProvider.fromMap(loadEnvSync())
+)
 
 // ============================================================================
 // ManagedRuntime
@@ -174,11 +191,11 @@ const runtime = ManagedRuntime.make(ConfigLayer)
 export function createEnv<
   TServer extends Record<string, Config.Config<unknown>>,
   TClient extends Record<string, Config.Config<unknown>>,
-  TShared extends Record<string, Config.Config<unknown>> = Record<string, never>
+  TShared extends Record<string, Config.Config<unknown>>
 >(
   options: CreateEnvOptions<TServer, TClient, TShared>
 ) {
-  const { server, client, shared = {}, clientPrefix } = options
+  const { server, client, shared, clientPrefix } = options
   // Validate client keys have correct prefix
   for (const key of Object.keys(client)) {
     if (!key.startsWith(clientPrefix)) {

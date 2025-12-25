@@ -64,11 +64,13 @@ Event publishing is done IN the service implementation using helpers:
   ])
 
   // Add sub-module service imports if subModules are provided
+  // NOTE: Sub-modules don't have index.ts (biome noBarrelFile compliance)
+  // Import directly from layer.ts
   if (options.subModules && options.subModules.length > 0) {
     for (const subModule of options.subModules) {
       const subClassName = createNamingVariants(subModule).className
       builder.addImports([
-        { from: `./${subModule}`, imports: [`${subClassName}Live`, `${subClassName}Test`] }
+        { from: `./${subModule}/layer`, imports: [`${subClassName}Live`, `${subClassName}Test`] }
       ])
     }
   }
@@ -149,10 +151,10 @@ Event publishing is done IN the service implementation using helpers:
  * \`\`\`typescript
  * const program = Effect.gen(function*() {
  *   const service = yield* ${className}Service;
- *   const entity = yield* service.create({ name: "test" });
- * });
+ *   const entity = yield* service.create({ name: "test" })
+ * })
  *
- * program.pipe(Effect.provide(${className}FeatureLive));
+ * program.pipe(Effect.provide(${className}FeatureLive))
  * \`\`\`
  */
 export const ${className}FeatureLive = Layer.mergeAll(
@@ -179,12 +181,12 @@ export const ${className}FeatureLive = Layer.mergeAll(
  *   it("should create entity", () =>
  *     Effect.gen(function*() {
  *       const service = yield* ${className}Service;
- *       const result = yield* service.create({ name: "test" });
+ *       const result = yield* service.create({ name: "test" })
  *       // No events published - isolated unit test
- *       expect(result).toBeDefined();
+ *       expect(result).toBeDefined()
  *     }).pipe(Effect.provide(${className}FeatureTest))
- *   );
- * });
+ *   )
+ * })
  * \`\`\`
  */
 export const ${className}FeatureTest = Layer.mergeAll(

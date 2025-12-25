@@ -19,15 +19,11 @@ This is an infrastructure library following Effect-based service patterns.
 
 ```typescript
 // Type-only import (zero runtime)
-import type { PubsubConfig } from '@samuelho-dev/infra-pubsub/types';
-
-// Service import
-import { PubsubService } from '@samuelho-dev/infra-pubsub';
-
-Effect.gen(function*() {
+import type { PubsubConfig } from '@samuelho-dev/infra-pubsub/types'// Service import
+import { PubsubService } from '@samuelho-dev/infra-pubsub'Effect.gen(function*() {
   const service = yield* PubsubService;
   // Use service...
-});
+})
 ```
 
 ### Customization Guide
@@ -52,29 +48,25 @@ Effect.gen(function*() {
 
 ```typescript
 import { PubsubService } from '@samuelho-dev/infra-pubsub';
-import type { PubsubConfig } from '@samuelho-dev/infra-pubsub/types';
-
-// Standard usage
+import type { PubsubConfig } from '@samuelho-dev/infra-pubsub/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* PubsubService;
   // Use service...
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(PubsubService.Live)  // Production
   // or Effect.provide(PubsubService.Test)   // Testing
   // or Effect.provide(PubsubService.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ### Client Usage
 
 ```typescript
-import { usePubsub } from '@samuelho-dev/infra-pubsub/client/hooks';
-
-function MyComponent() {
-  const pubsub = usePubsub();
+import { usePubsub } from '@samuelho-dev/infra-pubsub/client/hooks'function MyComponent() {
+  const pubsub = usePubsub()
   // Use service in React component
 }
 ```

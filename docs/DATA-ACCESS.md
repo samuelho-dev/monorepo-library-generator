@@ -51,32 +51,28 @@ Data-access repositories should use Ref or SynchronizedRef ONLY for infrastructu
 
 ```typescript
 // ✅ Use FiberMap to prevent duplicate concurrent queries
-import { FiberMap, Option } from 'effect';
-
-export class UserRepository extends Context.Tag('UserRepository')<
+import { FiberMap, Option } from 'effect'export class UserRepository extends Context.Tag('UserRepository')<
   UserRepository,
   {
     readonly findById: (
       id: string,
-    ) => Effect.Effect<Option.Option<User>, RepositoryError>;
+    ) => Effect.Effect<Option.Option<User>, RepositoryError>
   }
 >() {
   static readonly Live = Layer.scoped(
     this,
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
-
-      // Fiber map to deduplicate queries by user ID
-      const queryDedup = yield* FiberMap.make<string>();
+      const database = yield* DatabaseService      // Fiber map to deduplicate queries by user ID
+      const queryDedup = yield* FiberMap.make<string>()
 
       return {
         findById: (id: string) =>
           Effect.gen(function*() {
             // Check if already querying this user
-            const existing = yield* FiberMap.get(queryDedup, id);
+            const existing = yield* FiberMap.get(queryDedup, id)
             if (Option.isSome(existing)) {
               // Wait for existing query to complete
-              return yield* Fiber.join(existing.value);
+              return yield* Fiber.join(existing.value)
             }
 
             // Start new query
@@ -91,11 +87,11 @@ export class UserRepository extends Context.Tag('UserRepository')<
                   .executeTakeFirst()
                   .then(Option.fromNullable),
               ),
-            );
-          }),
-      };
+            )
+          })
+      } ;
     }),
-  );
+  )
 }
 ```
 
@@ -147,22 +143,16 @@ import {
   ProductListProjection,
 } from '@samuelho-dev/contract-product';
 import { DatabaseService } from '@samuelho-dev/infra-database/server';
-import { CacheService } from '@samuelho-dev/infra-cache/server';
-
-export const ProductProjectionRepositoryLive = Layer.effect(
+import { CacheService } from '@samuelho-dev/infra-cache/server'export const ProductProjectionRepositoryLive = Layer.effect(
   ProductProjectionRepository,
   Effect.gen(function*() {
     const db = yield* DatabaseService;
-    const cache = yield* CacheService;
-
-    return {
+    const cache = yield* CacheService    return {
       // Build projection via JOIN query from existing tables
       findListProjection: (query) =>
         Effect.gen(function*() {
-          const cacheKey = `projection:list:${JSON.stringify(query)}`;
-
-          // Check cache first
-          const cached = yield* cache.get<ProductListProjection[]>(cacheKey);
+          const cacheKey = `projection:list:${JSON.stringify(query)}`          // Check cache first
+          const cached = yield* cache.get<ProductListProjection[]>(cacheKey)
 
           // Use Option.match for clearer intent (Effect best practice)
           return yield* Option.match(cached, {
@@ -199,34 +189,34 @@ export const ProductProjectionRepositoryLive = Layer.effect(
                     .limit(query.limit)
                     .offset((query.page - 1) * query.limit)
                     .execute(),
-                );
+                )
 
                 const total = yield* db.query((kysely) =>
                   kysely
                     .selectFrom('products')
                     .select((eb) => eb.fn.countAll().as('count'))
                     .executeTakeFirstOrThrow(),
-                );
+                )
 
                 const result = {
                   items: results,
                   total: Number(total.count),
-                };
+                }
 
                 // Cache the built projection
-                yield* cache.set(cacheKey, result, { ttl: '5 minutes' });
+                yield* cache.set(cacheKey, result, { ttl: '5 minutes' })
 
                 return result;
-              }),
-          });
+              })
+          })
         }),
 
       // Invalidate cache - next query rebuilds projection
       invalidateProjectionCache: (productId) =>
         cache.invalidatePattern(`projection:*:*${productId}*`),
-    };
+    }
   }),
-);
+)
 ```
 
 ### Cache Invalidation Strategy (Event-Driven)
@@ -235,13 +225,13 @@ Commands invalidate projection caches via events:
 
 ```typescript
 // In feature command handler
-yield* repository.updateProduct(productId, changes);
+yield* repository.updateProduct(productId, changes)
 
 // Publish event
-yield* messaging.publish("product.updated", new ProductUpdatedEvent({ ... }));
+yield* messaging.publish("product.updated", new ProductUpdatedEvent({ ... }))
 
 // Event handler invalidates cache
-yield* projectionRepository.invalidateProjectionCache(productId);
+yield* projectionRepository.invalidateProjectionCache(productId)
 
 // Next query automatically rebuilds projection from current DB state
 ```
@@ -349,9 +339,9 @@ libs/data-access/{domain}/
 
 ```typescript
 if (contractHasSeparateCommandAndQueryPorts) {
-  generateCQRSStructure(); // commands/ + queries/
+  generateCQRSStructure() // commands/ + queries/
 } else {
-  generateStandardRepository(); // repository.ts
+  generateStandardRepository() // repository.ts
 }
 ```
 
@@ -383,9 +373,7 @@ import { Effect, Schema } from 'effect';
 import { DatabaseService } from '@samuelho-dev/infra-database';
 import { EventBus } from '@samuelho-dev/infra-messaging';
 import { ProductCreatedEvent } from '@samuelho-dev/contract-product';
-import type { ProductInsert } from '@samuelho-dev/types-database';
-
-/**
+import type { ProductInsert } from '@samuelho-dev/types-database'/**
  * Create Product Command
  */
 export class CreateProductCommand extends Schema.Class<CreateProductCommand>(
@@ -393,7 +381,7 @@ export class CreateProductCommand extends Schema.Class<CreateProductCommand>(
 )({
   name: Schema.String,
   price: Schema.Number,
-  sellerId: Schema.UUID,
+  sellerId: Schema.UUID
 }) {}
 
 /**
@@ -403,14 +391,12 @@ export class CreateProductCommand extends Schema.Class<CreateProductCommand>(
 export const createProductHandler = (cmd: CreateProductCommand) =>
   Effect.gen(function*() {
     const database = yield* DatabaseService;
-    const events = yield* EventBus;
-
-    // Map command to database insert
+    const events = yield* EventBus    // Map command to database insert
     const productData: ProductInsert = {
       name: cmd.name,
       price: cmd.price,
       seller_id: cmd.sellerId,
-    };
+    }
 
     // Persist to database
     const product = yield* database.query((db) =>
@@ -419,7 +405,7 @@ export const createProductHandler = (cmd: CreateProductCommand) =>
         .values(productData)
         .returningAll()
         .executeTakeFirstOrThrow(),
-    );
+    )
 
     // Publish domain event
     yield* events.publish(
@@ -427,10 +413,10 @@ export const createProductHandler = (cmd: CreateProductCommand) =>
         productId: product.id,
         aggregateVersion: 1,
       }),
-    );
+    )
 
-    return product;
-  });
+    return product
+  })
 ```
 
 **Command Test Pattern:**
@@ -441,17 +427,15 @@ import { Effect } from 'effect';
 import { describe, it, expect } from 'vitest';
 import { CreateProductCommand, createProductHandler } from './create';
 import { DatabaseService } from '@samuelho-dev/infra-database';
-import { EventBus } from '@samuelho-dev/infra-messaging';
-
-describe('CreateProductCommand', () => {
+import { EventBus } from '@samuelho-dev/infra-messaging'describe('CreateProductCommand', () => {
   it.scoped('creates product and publishes event', () =>
     Effect.gen(function*() {
       // Mock layers with Layer.succeed
       // Execute handler with test data
       // Verify product was created and event published
     }),
-  );
-});
+  )
+})
 ```
 
 ### Query Structure (Read Operations)
@@ -463,15 +447,13 @@ Queries retrieve data directly from the database without repository abstraction.
 import { Effect, Option, Schema } from 'effect';
 import { DatabaseService } from '@samuelho-dev/infra-database';
 import { CacheService } from '@samuelho-dev/infra-cache';
-import type { ProductSelect } from '@samuelho-dev/types-database';
-
-/**
+import type { ProductSelect } from '@samuelho-dev/types-database'/**
  * Get Product Query
  */
 export class GetProductQuery extends Schema.Class<GetProductQuery>(
   'GetProductQuery',
 )({
-  productId: Schema.UUID,
+  productId: Schema.UUID
 }) {}
 
 /**
@@ -481,11 +463,9 @@ export class GetProductQuery extends Schema.Class<GetProductQuery>(
 export const getProductHandler = (query: GetProductQuery) =>
   Effect.gen(function*() {
     const database = yield* DatabaseService;
-    const cache = yield* CacheService;
-
-    // Check cache first
+    const cache = yield* CacheService    // Check cache first
     const cacheKey = `product:${query.productId}`;
-    const cached = yield* cache.get<ProductSelect>(cacheKey);
+    const cached = yield* cache.get<ProductSelect>(cacheKey)
 
     if (Option.isSome(cached)) {
       return cached;
@@ -499,24 +479,22 @@ export const getProductHandler = (query: GetProductQuery) =>
         .where('id', '=', query.productId)
         .where('deleted_at', 'is', null)
         .executeTakeFirst(),
-    );
+    )
 
     // Cache result
     if (result) {
-      yield* cache.set(cacheKey, result, { ttl: '5 minutes' });
+      yield* cache.set(cacheKey, result, { ttl: '5 minutes' })
     }
 
-    return Option.fromNullable(result);
-  });
+    return Option.fromNullable(result)
+  })
 ```
 
 ```typescript
 // libs/data-access/product/src/lib/queries/list.ts
 import { Effect, Schema } from 'effect';
 import { DatabaseService } from '@samuelho-dev/infra-database';
-import type { ProductSelect } from '@samuelho-dev/types-database';
-
-/**
+import type { ProductSelect } from '@samuelho-dev/types-database'/**
  * List Products Query
  */
 export class ListProductsQuery extends Schema.Class<ListProductsQuery>(
@@ -526,7 +504,7 @@ export class ListProductsQuery extends Schema.Class<ListProductsQuery>(
   sellerId: Schema.optional(Schema.UUID),
   search: Schema.optional(Schema.String),
   limit: Schema.optional(Schema.Number.pipe(Schema.int())),
-  offset: Schema.optional(Schema.Number.pipe(Schema.int())),
+  offset: Schema.optional(Schema.Number.pipe(Schema.int()))
 }) {}
 
 /**
@@ -535,38 +513,34 @@ export class ListProductsQuery extends Schema.Class<ListProductsQuery>(
  */
 export const listProductsHandler = (query: ListProductsQuery) =>
   Effect.gen(function*() {
-    const database = yield* DatabaseService;
-
-    const result = yield* database.query((db) => {
+    const database = yield* DatabaseService    const result = yield* database.query((db) => {
       let q = db
         .selectFrom('products')
         .selectAll()
-        .where('deleted_at', 'is', null);
+        .where('deleted_at', 'is', null)
 
       // Apply filters dynamically
       if (query.category) {
-        q = q.where('category', '=', query.category);
+        q = q.where('category', '=', query.category)
       }
       if (query.sellerId) {
-        q = q.where('seller_id', '=', query.sellerId);
+        q = q.where('seller_id', '=', query.sellerId)
       }
       if (query.search) {
-        q = q.where('name', 'ilike', `%${query.search}%`);
+        q = q.where('name', 'ilike', `%${query.search}%`)
       }
 
       // Pagination
       const limit = query.limit ?? 50;
-      const offset = query.offset ?? 0;
-
-      return q
+      const offset = query.offset ?? 0      return q
         .orderBy('created_at', 'desc')
         .limit(limit)
         .offset(offset)
-        .execute();
-    });
+        .execute()
+    })
 
-    return result;
-  });
+    return result
+  })
 ```
 
 ### Layer Composition (CQRS)
@@ -588,9 +562,7 @@ import {
   updateProductHandler,
   deleteProductHandler,
 } from './commands';
-import { getProductHandler, listProductsHandler } from './queries';
-
-/**
+import { getProductHandler, listProductsHandler } from './queries'/**
  * Command Layer (Write Side)
  * Dependencies: Database + EventBus
  */
@@ -601,9 +573,9 @@ export const ProductCommandLayer = Layer.effect(
       createProduct: createProductHandler,
       updateProduct: updateProductHandler,
       deleteProduct: deleteProductHandler,
-    };
+    }
   }),
-).pipe(Layer.provide(DatabaseServiceLive), Layer.provide(EventBusServiceLive));
+).pipe(Layer.provide(DatabaseServiceLive), Layer.provide(EventBusServiceLive))
 
 /**
  * Query Layer (Read Side)
@@ -615,15 +587,15 @@ export const ProductQueryLayer = Layer.effect(
     return {
       getProduct: getProductHandler,
       listProducts: listProductsHandler,
-    };
+    }
   }),
-).pipe(Layer.provide(DatabaseServiceLive), Layer.provide(CacheServiceLive));
+).pipe(Layer.provide(DatabaseServiceLive), Layer.provide(CacheServiceLive))
 
 /**
  * Combined Layer
  * For consumers needing both commands and queries
  */
-export const ProductLayer = Layer.merge(ProductCommandLayer, ProductQueryLayer);
+export const ProductLayer = Layer.merge(ProductCommandLayer, ProductQueryLayer)
 ```
 
 ### Standard Repository (Non-CQRS)
@@ -640,36 +612,30 @@ import type {
   ProductSelect,
   ProductInsert,
   ProductUpdate,
-} from '@samuelho-dev/types-database';
-
-export const ProductRepositoryLive = Layer.effect(
+} from '@samuelho-dev/types-database'export const ProductRepositoryLive = Layer.effect(
   ProductRepository,
   Effect.gen(function*() {
     const database = yield* DatabaseService;
-    const cache = yield* CacheService;
-
-    return {
+    const cache = yield* CacheService    return {
       findById: (id: string) =>
         Effect.gen(function*() {
           const cacheKey = `product:${id}`;
-          const cached = yield* cache.get<ProductSelect>(cacheKey);
+          const cached = yield* cache.get<ProductSelect>(cacheKey)
 
-          if (Option.isSome(cached)) return cached;
-
-          const result = yield* database.query((db) =>
+          if (Option.isSome(cached)) return cached          const result = yield* database.query((db) =>
             db
               .selectFrom('products')
               .selectAll()
               .where('id', '=', id)
               .where('deleted_at', 'is', null)
               .executeTakeFirst(),
-          );
+          )
 
           if (result) {
-            yield* cache.set(cacheKey, result, { ttl: '5 minutes' });
+            yield* cache.set(cacheKey, result, { ttl: '5 minutes' })
           }
 
-          return Option.fromNullable(result);
+          return Option.fromNullable(result)
         }),
 
       findAll: (filters) =>
@@ -678,21 +644,21 @@ export const ProductRepositoryLive = Layer.effect(
             let q = db
               .selectFrom('products')
               .selectAll()
-              .where('deleted_at', 'is', null);
+              .where('deleted_at', 'is', null)
 
             // Apply filters
             if (filters?.category) {
-              q = q.where('category', '=', filters.category);
+              q = q.where('category', '=', filters.category)
             }
 
             return q
               .orderBy('created_at', 'desc')
               .limit(filters?.limit ?? 50)
               .offset(filters?.offset ?? 0)
-              .execute();
-          });
+              .execute()
+          })
 
-          return result;
+          return result
         }),
 
       create: (input: ProductInsert) =>
@@ -703,11 +669,11 @@ export const ProductRepositoryLive = Layer.effect(
               .values(input)
               .returningAll()
               .executeTakeFirstOrThrow(),
-          );
+          )
 
-          yield* cache.invalidatePattern('product:*');
+          yield* cache.invalidatePattern('product:*')
 
-          return result;
+          return result
         }),
 
       update: (id: string, input: ProductUpdate) =>
@@ -719,11 +685,11 @@ export const ProductRepositoryLive = Layer.effect(
               .where('id', '=', id)
               .returningAll()
               .executeTakeFirstOrThrow(),
-          );
+          )
 
-          yield* cache.delete(`product:${id}`);
+          yield* cache.delete(`product:${id}`)
 
-          return result;
+          return result
         }),
 
       delete: (id: string) =>
@@ -734,13 +700,13 @@ export const ProductRepositoryLive = Layer.effect(
               .set({ deleted_at: new Date() })
               .where('id', '=', id)
               .execute(),
-          );
+          )
 
-          yield* cache.delete(`product:${id}`);
+          yield* cache.delete(`product:${id}`)
         }),
-    };
+    }
   }),
-);
+)
 ```
 
 ---
@@ -811,9 +777,7 @@ import type {
   ProductSelect,
   ProductInsert,
 } from '@samuelho-dev/types-database';
-import { ProductRepository } from '@samuelho-dev/contract-product';
-
-// Implementation class following the contract
+import { ProductRepository } from '@samuelho-dev/contract-product'// Implementation class following the contract
 export class ProductRepositoryImpl implements ProductRepository {
   constructor(
     private readonly database: DatabaseService,
@@ -824,12 +788,12 @@ export class ProductRepositoryImpl implements ProductRepository {
 
   readonly findById = (id: string) =>
     Effect.gen(function*() {
-      yield* this.logger.debug('Finding product', { productId: id });
+      yield* this.logger.debug('Finding product', { productId: id })
 
       // Check cache first
-      const cached = yield* this.cache.get<ProductSelect>(`product:${id}`);
+      const cached = yield* this.cache.get<ProductSelect>(`product:${id}`)
       if (Option.isSome(cached)) {
-        yield* this.logger.debug('Cache hit', { productId: id });
+        yield* this.logger.debug('Cache hit', { productId: id })
         return cached;
       }
 
@@ -840,21 +804,21 @@ export class ProductRepositoryImpl implements ProductRepository {
           .where('id', '=', id)
           .selectAll()
           .executeTakeFirst(),
-      );
+      )
 
       // Cache result and emit metrics
       if (product) {
-        yield* this.cache.set(`product:${id}`, product, 300);
-        yield* this.eventBus.emit(new ProductAccessedEvent(product.id));
+        yield* this.cache.set(`product:${id}`, product, 300)
+        yield* this.eventBus.emit(new ProductAccessedEvent(product.id))
       }
 
-      return Option.fromNullable(product);
+      return Option.fromNullable(product)
     }).pipe(
       Effect.mapError(toRepositoryError),
       Effect.withSpan('ProductRepository.findById', {
         attributes: { productId: id },
       }),
-    );
+    )
 
   // ... other methods
 }
@@ -866,11 +830,9 @@ export const ProductRepositoryLive = Layer.effect(
     const database = yield* DatabaseService;
     const cache = yield* CacheService;
     const logger = yield* LoggingService;
-    const eventBus = yield* MessagePublisher;
-
-    return new ProductRepositoryImpl(database, cache, logger, eventBus);
+    const eventBus = yield* MessagePublisher    return new ProductRepositoryImpl(database, cache, logger, eventBus)
   }),
-);
+)
 ```
 
 **Why This Adds Value:**
@@ -904,14 +866,14 @@ export const ProductRepository = {
       .where('id', '=', id)
       .selectAll()
       .executeTakeFirst(),
-};
+}
 
 // Just use Kysely directly in your feature service:
 const product = await db
   .selectFrom('product')
   .where('id', '=', id)
   .selectAll()
-  .executeTakeFirst();
+  .executeTakeFirst()
 ```
 
 **Why This Adds No Value:**
@@ -1012,12 +974,8 @@ import type {
   ProductInsert,
   ProductUpdate,
 } from '@samuelho-dev/types-database';
-import type { ProductRepositoryError } from '@samuelho-dev/contract-product';
-
-// 1. Import the repository interface from contracts (NEVER define here!)
-import { ProductRepository } from '@samuelho-dev/contract-product';
-
-// 2. Create implementation class
+import type { ProductRepositoryError } from '@samuelho-dev/contract-product'// 1. Import the repository interface from contracts (NEVER define here!)
+import { ProductRepository } from '@samuelho-dev/contract-product'// 2. Create implementation class
 export class ProductRepositoryImpl implements ProductRepository {
   constructor(
     private readonly database: DatabaseService,
@@ -1028,16 +986,16 @@ export class ProductRepositoryImpl implements ProductRepository {
   readonly findById = (id: string) =>
     Effect.gen(function*() {
       // Implementation
-      yield* this.logger.debug('Finding product', { productId: id });
+      yield* this.logger.debug('Finding product', { productId: id })
       const product = yield* this.database.query((db) =>
         db
           .selectFrom('product')
           .where('id', '=', id)
           .selectAll()
           .executeTakeFirst(),
-      );
-      return Option.fromNullable(product);
-    });
+      )
+      return Option.fromNullable(product)
+    })
 
   readonly create = (input: ProductInsert) =>
     Effect.gen(function*() {
@@ -1048,8 +1006,8 @@ export class ProductRepositoryImpl implements ProductRepository {
           .values(input)
           .returningAll()
           .executeTakeFirstOrThrow(),
-      );
-    });
+      )
+    })
 
   // ... other methods
 }
@@ -1060,11 +1018,9 @@ export const ProductRepositoryLive = Layer.effect(
   Effect.gen(function*() {
     const database = yield* DatabaseService;
     const cache = yield* CacheService;
-    const logger = yield* LoggingService;
-
-    return new ProductRepositoryImpl(database, cache, logger);
+    const logger = yield* LoggingService    return new ProductRepositoryImpl(database, cache, logger)
   }),
-);
+)
 ```
 
 **Source:** [Effect Context Documentation](https://effect.website/docs/guides/context-management/services) - Dependency injection with Context.Tag.
@@ -1094,9 +1050,9 @@ export interface Product {
 }
 
 // Kysely generated types
-export type ProductSelect = Selectable<Product>; // All fields (for queries)
-export type ProductInsert = Insertable<Product>; // Omit auto-generated fields (for INSERT)
-export type ProductUpdate = Updateable<Product>; // All fields optional (for UPDATE)
+export type ProductSelect = Selectable<Product> // All fields (for queries)
+export type ProductInsert = Insertable<Product> // Omit auto-generated fields (for INSERT)
+export type ProductUpdate = Updateable<Product> // All fields optional (for UPDATE)
 ```
 
 **Usage in Repository:**
@@ -1106,13 +1062,9 @@ import type {
   ProductSelect,
   ProductInsert,
   ProductUpdate,
-} from '@samuelho-dev/types-database';
-
-// ✅ IMPORTANT: Repository interface defined in contracts, NOT here
+} from '@samuelho-dev/types-database'// ✅ IMPORTANT: Repository interface defined in contracts, NOT here
 // Import from contracts:
-import { ProductRepository } from '@samuelho-dev/contract-product';
-
-// Repository interface in contracts uses generated types:
+import { ProductRepository } from '@samuelho-dev/contract-product'// Repository interface in contracts uses generated types:
 // export class ProductRepository extends Context.Tag("ProductRepository")<
 //   ProductRepository,
 //   {
@@ -1163,27 +1115,25 @@ export class ProductRepositoryImpl implements ProductRepository {
       // Logging (if available)
       yield* Option.match(this.logger, {
         onNone: () => Effect.void,
-        onSome: (log) => log.debug('Finding product', { productId: id }),
-      });
+        onSome: (log) => log.debug('Finding product', { productId: id })
+      } )
 
       // Caching (if available)
       const cached = yield* Option.match(this.cache, {
         onNone: () => Effect.succeed(Option.none()),
-        onSome: (c) => c.get<ProductSelect>(`product:${id}`),
-      });
-      if (Option.isSome(cached)) return cached;
-
-      // Database query (always required)
+        onSome: (c) => c.get<ProductSelect>(`product:${id}`)
+      } )
+      if (Option.isSome(cached)) return cached      // Database query (always required)
       const product = yield* this.database.query((db) =>
         db
           .selectFrom('product')
           .where('id', '=', id)
           .selectAll()
           .executeTakeFirst(),
-      );
+      )
 
-      return Option.fromNullable(product);
-    });
+      return Option.fromNullable(product)
+    })
 }
 
 // Layer with optional dependencies
@@ -1191,12 +1141,12 @@ export const ProductRepositoryLive = Layer.effect(
   ProductRepository,
   Effect.gen(function*() {
     const database = yield* DatabaseService;
-    const cache = yield* Effect.serviceOption(CacheService);
-    const logger = yield* Effect.serviceOption(LoggingService);
+    const cache = yield* Effect.serviceOption(CacheService)
+    const logger = yield* Effect.serviceOption(LoggingService)
 
-    return new ProductRepositoryImpl(database, cache, logger);
+    return new ProductRepositoryImpl(database, cache, logger)
   }),
-);
+)
 ```
 
 **Source:** [Clean Architecture (Robert Martin)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) - Dependency inversion: depend on interfaces, not implementations.
@@ -1215,17 +1165,13 @@ import type { ProductSelect, ProductInsert, ProductUpdate } from "@samuelho-dev/
 import { ProductRepository, type ProductRepositoryError } from "@samuelho-dev/contract-product";
 import { DatabaseService } from "@samuelho-dev/infra-database";
 import { CacheService } from "@samuelho-dev/infra-cache";
-import { LoggingService } from "@samuelho-dev/infra-observability";
-
-/**
+import { LoggingService } from "@samuelho-dev/infra-observability"/**
  * Product Repository implementation
  * Implements interface from @samuelho-dev/contract-product
  */
 export class ProductRepositoryImpl implements ProductRepository {
   private readonly CACHE_TTL = 300; // 5 minutes
-  private readonly CACHE_PREFIX = "product:";
-
-  constructor(
+  private readonly CACHE_PREFIX = "product:"  constructor(
     private readonly database: DatabaseService,
     private readonly cache: CacheService,
     private readonly logger: LoggingService
@@ -1233,14 +1179,14 @@ export class ProductRepositoryImpl implements ProductRepository {
 
   readonly findById = (id: string) =>
     Effect.gen(function*() {
-      yield* this.logger.debug("ProductRepository.findById", { productId: id });
+      yield* this.logger.debug("ProductRepository.findById", { productId: id })
 
       // Try cache first
       const cacheKey = `${this.CACHE_PREFIX}${id}`;
-      const cached = yield* this.cache.get<ProductSelect>(cacheKey);
+      const cached = yield* this.cache.get<ProductSelect>(cacheKey)
 
       if (Option.isSome(cached)) {
-        yield* this.logger.debug("Cache hit", { productId: id });
+        yield* this.logger.debug("Cache hit", { productId: id })
         return cached;
       }
 
@@ -1251,14 +1197,14 @@ export class ProductRepositoryImpl implements ProductRepository {
             .where("deleted_at", "is", null)
             .selectAll()
             .executeTakeFirst()
-        );
+        )
 
         // Cache result
         if (product) {
-          yield* this.cache.set(cacheKey, product, this.CACHE_TTL);
+          yield* this.cache.set(cacheKey, product, this.CACHE_TTL)
         }
 
-        return Option.fromNullable(product);
+        return Option.fromNullable(product)
       }).pipe(
         Effect.mapError(toRepositoryError),
         Effect.withSpan("ProductRepository.findById", { attributes: { productId: id } })
@@ -1266,18 +1212,18 @@ export class ProductRepositoryImpl implements ProductRepository {
 
     create: (input: ProductInsert) =>
       Effect.gen(function*() {
-        yield* this.logger.info("ProductRepository.create", { input });
+        yield* this.logger.info("ProductRepository.create", { input })
 
         const product = yield* this.database.query((db) =>
           db.insertInto("product")
             .values(input)
             .returningAll()
             .executeTakeFirstOrThrow()
-        );
+        )
 
         // Invalidate cache patterns
         if (input.seller_id) {
-          yield* this.cache.invalidatePattern(`${this.CACHE_PREFIX}seller:${input.seller_id}:*`);
+          yield* this.cache.invalidatePattern(`${this.CACHE_PREFIX}seller:${input.seller_id}:*`)
         }
 
         return product;
@@ -1288,7 +1234,7 @@ export class ProductRepositoryImpl implements ProductRepository {
 
     update: (id: string, input: ProductUpdate) =>
       Effect.gen(function*() {
-        yield* this.logger.info("ProductRepository.update", { productId: id, input });
+        yield* this.logger.info("ProductRepository.update", { productId: id, input })
 
         const product = yield* this.database.query((db) =>
           db.updateTable("product")
@@ -1296,10 +1242,10 @@ export class ProductRepositoryImpl implements ProductRepository {
             .where("id", "=", id)
             .returningAll()
             .executeTakeFirstOrThrow()
-        );
+        )
 
         // Invalidate cache
-        yield* this.cache.delete(`${this.CACHE_PREFIX}${id}`);
+        yield* this.cache.delete(`${this.CACHE_PREFIX}${id}`)
 
         return product;
       }).pipe(
@@ -1309,28 +1255,28 @@ export class ProductRepositoryImpl implements ProductRepository {
 
     delete: (id: string) =>
       Effect.gen(function*() {
-        yield* this.logger.warn("ProductRepository.delete", { productId: id });
+        yield* this.logger.warn("ProductRepository.delete", { productId: id })
 
         yield* this.database.query((db) =>
           db.updateTable("product")
             .set({ deleted_at: new Date() })
             .where("id", "=", id)
             .execute()
-        );
+        )
 
-        yield* this.cache.delete(`${this.CACHE_PREFIX}${id}`);
+        yield* this.cache.delete(`${this.CACHE_PREFIX}${id}`)
       }).pipe(
         Effect.mapError(toRepositoryError),
         Effect.withSpan("ProductRepository.delete", { attributes: { productId: id } })
-      ),
-  });
-});
+      )
+  })
+})
 
 // Export Layer
 export const ProductRepositoryLive = Layer.effect(
   ProductRepository,
   makeProductRepository
-);
+)
 ```
 
 **Generator Must Create:**
@@ -1362,9 +1308,7 @@ export const ProductRepositoryLive = Layer.effect(
 
 ```typescript
 import type { Kysely } from 'kysely';
-import type { Database } from '@samuelho-dev/types-database';
-
-interface ProductFilters {
+import type { Database } from '@samuelho-dev/types-database'interface ProductFilters {
   readonly status?:
     | 'DRAFT'
     | 'PUBLISHED'
@@ -1380,31 +1324,27 @@ function applyProductFilters(
   query: ReturnType<Kysely<Database>['selectFrom']>,
   filters?: ProductFilters,
 ) {
-  if (!filters) return query;
-
-  let q = query;
-
-  if (filters.status) {
+  if (!filters) return query  let q = query  if (filters.status) {
     const statuses = Array.isArray(filters.status)
       ? filters.status
       : [filters.status];
-    q = q.where('status', 'in', statuses);
+    q = q.where('status', 'in', statuses)
   }
 
   if (filters.sellerId) {
-    q = q.where('seller_id', '=', filters.sellerId);
+    q = q.where('seller_id', '=', filters.sellerId)
   }
 
   if (filters.createdAfter) {
-    q = q.where('created_at', '>=', filters.createdAfter);
+    q = q.where('created_at', '>=', filters.createdAfter)
   }
 
   if (filters.createdBefore) {
-    q = q.where('created_at', '<=', filters.createdBefore);
+    q = q.where('created_at', '<=', filters.createdBefore)
   }
 
   if (!filters.includeDeleted) {
-    q = q.where('deleted_at', 'is', null);
+    q = q.where('deleted_at', 'is', null)
   }
 
   return q;
@@ -1415,20 +1355,18 @@ const findAll = (filters?: ProductFilters, pagination?: PaginationParams) =>
   Effect.gen(function*() {
     const database = yield* DatabaseService;
     const limit = pagination?.limit ?? 50;
-    const offset = pagination?.offset ?? 0;
-
-    const products = yield* database.query((db) => {
-      const q = applyProductFilters(db.selectFrom('product'), filters);
+    const offset = pagination?.offset ?? 0    const products = yield* database.query((db) => {
+      const q = applyProductFilters(db.selectFrom('product'), filters)
       return q
         .selectAll()
         .orderBy('created_at', 'desc')
         .limit(limit)
         .offset(offset)
-        .execute();
-    });
+        .execute()
+    })
 
-    return products;
-  });
+    return products
+  })
 ```
 
 ### ⚠️ CRITICAL: Transactions with Effect Runtime Preservation
@@ -1440,9 +1378,7 @@ const findAll = (filters?: ProductFilters, pagination?: PaginationParams) =>
 #### Pattern: DatabaseService.transaction with Runtime Preservation
 
 ```typescript
-import { Effect } from 'effect';
-
-const createProductWithVariants = (
+import { Effect } from 'effect'const createProductWithVariants = (
   product: ProductInsert,
   variants: ProductVariantInsert[],
 ) =>
@@ -1464,9 +1400,9 @@ const createProductWithVariants = (
           catch: (error) =>
             new ProductDatabaseError({
               message: 'Failed to insert product',
-              cause: error,
-            }),
-        });
+              cause: error
+            })
+        })
 
         // Create variants
         yield* Effect.tryPromise({
@@ -1483,18 +1419,18 @@ const createProductWithVariants = (
           catch: (error) =>
             new ProductDatabaseError({
               message: 'Failed to insert variants',
-              cause: error,
-            }),
-        });
+              cause: error
+            })
+        })
 
         // ✅ CRITICAL: All services (cache, logging, telemetry) remain accessible inside transaction
         // This works ONLY because DatabaseService preserves runtime internally
-        yield* cache.invalidate(`product:${createdProduct.id}`);
+        yield* cache.invalidate(`product:${createdProduct.id}`)
 
         return createdProduct;
       }),
-    );
-  }).pipe(Effect.withSpan('ProductRepository.createProductWithVariants'));
+    )
+  }).pipe(Effect.withSpan('ProductRepository.createProductWithVariants'))
 ```
 
 #### Why This Pattern is Critical
@@ -1520,16 +1456,14 @@ The `DatabaseService.transaction` method is implemented to preserve the Effect r
 // Inside infra/database - how it preserves runtime
 transaction: <T>(fn: (trx: Transaction<DB>) => Effect.Effect<T, E>) =>
   Effect.gen(function*() {
-    const runtime = yield* Effect.runtime(); // ← Capture current runtime
-    const database = yield* DatabaseService;
-
-    return yield* database.query((db) =>
+    const runtime = yield* Effect.runtime() // ← Capture current runtime
+    const database = yield* DatabaseService    return yield* database.query((db) =>
       db.transaction().execute(async (trx) => {
         // ← Inside async callback, runtime is preserved
-        return await Runtime.runPromise(runtime)(fn(trx));
+        return await Runtime.runPromise(runtime)(fn(trx))
       }),
-    );
-  });
+    )
+  })
 ```
 
 > **Critical Rule**: Consumers of DatabaseService.transaction should NOT manually capture runtime - the infrastructure handles this. Simply use `yield* database.transaction()` and write normal Effect.gen inside. All services remain accessible.
@@ -1568,11 +1502,11 @@ See **EFFECT_PATTERNS.md - Pattern 3: Kysely Transactions with Effect Runtime Pr
 const multiStepOperation = (data: Input) =>
   database.transaction((trx) =>
     Effect.gen(function*() {
-      const step1 = yield* trx.insertInto("table1").values(...).returningAll().executeTakeFirstOrThrow();
-      const step2 = yield* trx.insertInto("table2").values(...).returningAll().executeTakeFirstOrThrow();
+      const step1 = yield* trx.insertInto("table1").values(...).returningAll().executeTakeFirstOrThrow()
+      const step2 = yield* trx.insertInto("table2").values(...).returningAll().executeTakeFirstOrThrow()
       return { step1, step2 };
     })
-  );
+  )
 ```
 
 ---
@@ -1637,7 +1571,7 @@ Data-access libraries implement repository interfaces defined in contract librar
 │          create: (data) => /* IMPL */,    │
 │        };                                 │
 │      })                                   │
-│    );                                     │
+│    )                                     │
 └───────────────────────────────────────────┘
 ```
 
@@ -1665,9 +1599,7 @@ import {
 } from '@samuelho-dev/contract-product';
 import { DatabaseService } from '@samuelho-dev/infra-database';
 import { CacheService } from '@samuelho-dev/infra-cache';
-import { LoggingService } from '@samuelho-dev/infra-observability';
-
-/**
+import { LoggingService } from '@samuelho-dev/infra-observability'/**
  * Live implementation of ProductRepository contract
  * Implements: ProductRepository from @samuelho-dev/contract-product
  */
@@ -1677,17 +1609,15 @@ export const ProductRepositoryLive = Layer.effect(
     // Access infrastructure services
     const database = yield* DatabaseService;
     const cache = yield* CacheService;
-    const logger = yield* LoggingService;
-
-    // Return object implementing contract interface
+    const logger = yield* LoggingService    // Return object implementing contract interface
     return {
       // ✅ Implement findById exactly as defined in contract
       findById: (id: ProductId) =>
         Effect.gen(function*() {
           // Check cache first
-          const cached = yield* cache.get<Product>(`product:${id}`);
+          const cached = yield* cache.get<Product>(`product:${id}`)
           if (Option.isSome(cached)) {
-            yield* logger.debug('Cache hit for product', { id });
+            yield* logger.debug('Cache hit for product', { id })
             return cached;
           }
 
@@ -1698,24 +1628,24 @@ export const ProductRepositoryLive = Layer.effect(
               .where('id', '=', id)
               .selectAll()
               .executeTakeFirst(),
-          );
+          )
 
           // Return Option.Option<Product> as per contract
           if (!result) {
-            return Option.none();
+            return Option.none()
           }
 
           // Kysely's type inference provides the correct type from database schema
           // Update cache
-          yield* cache.set(`product:${id}`, result, '1 hour');
+          yield* cache.set(`product:${id}`, result, '1 hour')
 
-          return Option.some(result);
+          return Option.some(result)
         }),
 
       // ✅ Implement create exactly as defined in contract
       create: (data: ProductInsert) =>
         Effect.gen(function*() {
-          yield* logger.info('Creating product', { data });
+          yield* logger.info('Creating product', { data })
 
           const result = yield* database.query((db) =>
             db
@@ -1723,13 +1653,13 @@ export const ProductRepositoryLive = Layer.effect(
               .values(data)
               .returningAll()
               .executeTakeFirstOrThrow(),
-          );
+          )
 
           // Kysely's type inference provides the correct type from database schema
           // Invalidate cache
-          yield* cache.delete('products:list');
+          yield* cache.delete('products:list')
 
-          return result;
+          return result
         }),
 
       // ✅ Implement all other methods from contract
@@ -1742,27 +1672,27 @@ export const ProductRepositoryLive = Layer.effect(
               .where('id', '=', id)
               .returningAll()
               .executeTakeFirst(),
-          );
+          )
 
           if (!result) {
             return yield* Effect.fail(
               new ProductNotFoundError({ productId: id }),
-            );
+            )
           }
 
           // Invalidate cache
-          yield* cache.delete(`product:${id}`);
+          yield* cache.delete(`product:${id}`)
 
-          return result;
+          return result
         }),
 
       delete: (id: ProductId) =>
         Effect.gen(function*() {
           yield* database.query((db) =>
             db.deleteFrom('products').where('id', '=', id).execute(),
-          );
+          )
 
-          yield* cache.delete(`product:${id}`);
+          yield* cache.delete(`product:${id}`)
         }),
 
       // Batch operations
@@ -1774,9 +1704,9 @@ export const ProductRepositoryLive = Layer.effect(
               .where('id', 'in', ids)
               .selectAll()
               .execute(),
-          );
+          )
 
-          return results;
+          return results
         }),
 
       findBySeller: (sellerId: string, options) =>
@@ -1786,21 +1716,21 @@ export const ProductRepositoryLive = Layer.effect(
               .selectFrom('products')
               .where('seller_id', '=', sellerId)
               .selectAll(),
-          );
+          )
 
           if (options?.limit) {
-            query.limit(options.limit);
+            query.limit(options.limit)
           }
           if (options?.offset) {
-            query.offset(options.offset);
+            query.offset(options.offset)
           }
 
-          const results = yield* query.execute();
-          return results;
+          const results = yield* query.execute()
+          return results
         }),
-    };
+    }
   }),
-);
+)
 ```
 
 **Generator Must Create Layer:**
@@ -1837,7 +1767,7 @@ export const AppLayerLive = Layer.mergeAll(
   // Provide infrastructure to repositories
   Layer.provideMerge(ProductRepositoryLive),
   Layer.provideMerge(UserRepositoryLive),
-);
+)
 ```
 
 ---
@@ -1862,7 +1792,7 @@ When implementing a repository, verify:
 // ❌ WRONG: Creating a new tag instead of using contract
 export class ProductRepositoryImpl extends Context.Tag("ProductRepositoryImpl")<...>() {}
 
-export const ProductRepositoryLive = Layer.succeed(ProductRepositoryImpl, {...});
+export const ProductRepositoryLive = Layer.succeed(ProductRepositoryImpl, {...})
 ```
 
 **Why Wrong**: This creates a different tag than the contract. Feature services won't be able to use it.
@@ -1871,9 +1801,7 @@ export const ProductRepositoryLive = Layer.succeed(ProductRepositoryImpl, {...})
 
 ```typescript
 // ✅ Use tag from contract
-import { ProductRepository } from "@samuelho-dev/contract-product";
-
-export const ProductRepositoryLive = Layer.effect(ProductRepository, ...);
+import { ProductRepository } from "@samuelho-dev/contract-product"export const ProductRepositoryLive = Layer.effect(ProductRepository, ...)
 ```
 
 #### ❌ Implementing Subset of Methods
@@ -1886,9 +1814,9 @@ export const ProductRepositoryLive = Layer.effect(
     return {
       findById: (id) => /* implementation */,
       // Missing: create, update, delete, etc.
-    };
+    }
   })
-);
+)
 ```
 
 **Why Wrong**: TypeScript will error because not all contract methods are implemented.
@@ -1901,9 +1829,9 @@ export const ProductRepositoryLive = Layer.effect(
 // ❌ WRONG: Returning Product directly instead of Option.Option<Product>
 findById: (id) =>
   Effect.gen(function*() {
-    const result = yield* database.query(/* ... */);
+    const result = yield* database.query(/* ... */)
     return result
-  });
+  })
 ```
 
 **Why Wrong**: Contract signature is `Effect.Effect<Option.Option<Product>, ProductError>`.
@@ -1914,10 +1842,10 @@ findById: (id) =>
 // ✅ Return Option as contract specifies
 findById: (id) =>
   Effect.gen(function*() {
-    const result = yield* database.query(/* ... */);
+    const result = yield* database.query(/* ... */)
     // Kysely's type inference provides correct type from database schema
-    return Option.fromNullable(result);
-  });
+    return Option.fromNullable(result)
+  })
 ```
 
 ### Creating Layers
@@ -1928,20 +1856,16 @@ findById: (id) =>
 import { Layer, Effect } from "effect";
 import { ProductRepository } from "@samuelho-dev/contract-product";
 import { DatabaseService } from "@samuelho-dev/infra-database";
-import { CacheService } from "@samuelho-dev/infra-cache";
-
-export const ProductRepositoryLive = Layer.effect(
+import { CacheService } from "@samuelho-dev/infra-cache"export const ProductRepositoryLive = Layer.effect(
   ProductRepository,
   Effect.gen(function*() {
     const database = yield* DatabaseService;
-    const cache = yield* CacheService;
-
-    return {
+    const cache = yield* CacheService    return {
       findById: (id) => /* implementation */,
       // ... other methods
-    };
+    }
   })
-);
+)
 ```
 
 **Application Layer Composition:**
@@ -1952,9 +1876,7 @@ import { DatabaseServiceLive } from '@samuelho-dev/infra-database';
 import { CacheServiceLive } from '@samuelho-dev/infra-cache';
 import { LoggingServiceLive } from '@samuelho-dev/infra-observability';
 import { ProductRepositoryLive } from '@samuelho-dev/data-access-product';
-import { ProductServiceLive } from '@samuelho-dev/feature-product';
-
-// Compose all layers
+import { ProductServiceLive } from '@samuelho-dev/feature-product'// Compose all layers
 export const AppLayer = Layer.mergeAll(
   // Infrastructure
   DatabaseServiceLive,
@@ -1967,14 +1889,14 @@ export const AppLayer = Layer.mergeAll(
 
   // Services
   ProductServiceLive,
-);
+)
 
 // Use in application
 const result = await ProductService.pipe(
   Effect.flatMap((service) => service.createProduct(input)),
   Effect.provide(AppLayer),
   Effect.runPromise,
-);
+)
 ```
 
 **Source:** [Effect Layers Documentation](https://effect.website/docs/guides/context-management/layers) - Layer composition and dependency injection.
@@ -2000,9 +1922,7 @@ APIError (HTTP response)
 **Domain Errors (Data.TaggedError):**
 
 ```typescript
-import { Data } from 'effect';
-
-// Domain error (NOT RPC-serializable)
+import { Data } from 'effect'// Domain error (NOT RPC-serializable)
 export class ProductNotFoundError extends Data.TaggedError(
   'ProductNotFoundError',
 )<{
@@ -2014,9 +1934,7 @@ export class ProductNotFoundError extends Data.TaggedError(
 **Repository Errors (Data.TaggedError):**
 
 ```typescript
-import { Data } from 'effect';
-
-// Repository errors (domain layer - NOT serialized)
+import { Data } from 'effect'// Repository errors (domain layer - NOT serialized)
 export class ProductNotFoundError extends Data.TaggedError(
   'ProductNotFoundError',
 )<{
@@ -2046,9 +1964,7 @@ export type ProductRepositoryError =
 ```typescript
 import { Effect, Data } from 'effect';
 import type { DatabaseError } from '@samuelho-dev/infra-database';
-import { ProductDatabaseError } from './errors';
-
-/**
+import { ProductDatabaseError } from './errors'/**
  * Transform database errors to repository errors
  */
 const toRepositoryError = (error: DatabaseError): ProductRepositoryError => {
@@ -2060,15 +1976,15 @@ const toRepositoryError = (error: DatabaseError): ProductRepositoryError => {
       message: `Product with duplicate constraint: ${error.constraintName}`,
       operation: 'create',
       cause: error,
-    });
+    })
   }
 
   return new ProductDatabaseError({
     message: error.message,
     operation: 'unknown',
-    cause: error,
-  });
-};
+    cause: error
+  })
+}
 
 // Usage:
 const create = (input: ProductInsert) =>
@@ -2083,7 +1999,7 @@ const create = (input: ProductInsert) =>
     .pipe(
       Effect.mapError(toRepositoryError), // Transform error at boundary
       Effect.withSpan('ProductRepository.create'),
-    );
+    )
 ```
 
 ---
@@ -2136,9 +2052,7 @@ import { Effect, Option, Layer } from 'effect';
 import { describe, expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { ProductRepository } from '@samuelho-dev/contract-product';
 import { KyselyService } from '@samuelho-dev/provider-kysely';
-import type { ProductSelect } from '@samuelho-dev/types-database';
-
-// Mock Kysely layer inline for testing
+import type { ProductSelect } from '@samuelho-dev/types-database'// Mock Kysely layer inline for testing
 const KyselyServiceMock = Layer.succeed(KyselyService, {
   db: {
     // Minimal mock - implement only what you need for your tests
@@ -2152,13 +2066,13 @@ const KyselyServiceMock = Layer.succeed(KyselyService, {
               price: 1000,
               sellerId: 'seller-456',
               createdAt: new Date(),
-              updatedAt: new Date(),
-            }),
-        }),
-      }),
-    }),
-  },
-});
+              updatedAt: new Date()
+            })
+        })
+      } ),
+    })
+  }
+})
 
 // Test repository implementation
 describe('ProductRepository', () => {
@@ -2166,12 +2080,12 @@ describe('ProductRepository', () => {
   it.scoped('findById returns product when it exists', () => // ✅ Always it.scoped
     Effect.gen(function*() {
       const repo = yield* ProductRepository;
-      const result = yield* repo.findById('prod-123');
+      const result = yield* repo.findById('prod-123')
 
-      expect(Option.isSome(result)).toBe(true);
+      expect(Option.isSome(result)).toBe(true)
       if (Option.isSome(result)) {
-        expect(result.value.id).toBe('prod-123');
-        expect(result.value.name).toBe('Test Product');
+        expect(result.value.id).toBe('prod-123')
+        expect(result.value.name).toBe('Test Product')
       }
     }).pipe(
       Effect.provide(
@@ -2180,7 +2094,7 @@ describe('ProductRepository', () => {
         ),
       ),
     ),
-  );
+  )
 
   it.scoped('findById returns None when product does not exist', () => // ✅ Always it.scoped
     Effect.gen(function*() {
@@ -2191,15 +2105,15 @@ describe('ProductRepository', () => {
               where: () => ({
                 executeTakeFirst: () => Effect.succeed(null),
               }),
-            }),
+            })
           }),
         },
-      });
+      })
 
       const repo = yield* ProductRepository;
-      const result = yield* repo.findById('nonexistent');
+      const result = yield* repo.findById('nonexistent')
 
-      expect(Option.isNone(result)).toBe(true);
+      expect(Option.isNone(result)).toBe(true)
     }).pipe(
       Effect.provide(
         Layer.fresh( // ✅ Always Layer.fresh
@@ -2207,7 +2121,7 @@ describe('ProductRepository', () => {
         )
       ),
     ),
-  );
+  )
 
   it.scoped('create inserts new product', () => // ✅ Always it.scoped
     Effect.gen(function*() {
@@ -2226,20 +2140,20 @@ describe('ProductRepository', () => {
                     updatedAt: new Date(),
                   }),
               }),
-            }),
+            })
           }),
         },
-      });
+      })
 
       const repo = yield* ProductRepository;
       const result = yield* repo.create({
         name: 'New Product',
         price: 2000,
         sellerId: 'seller-456',
-      });
+      })
 
-      expect(result.id).toBe('new-prod-789');
-      expect(result.name).toBe('New Product');
+      expect(result.id).toBe('new-prod-789')
+      expect(result.name).toBe('New Product')
     }).pipe(
       Effect.provide(
         Layer.fresh( // ✅ Always Layer.fresh
@@ -2247,8 +2161,8 @@ describe('ProductRepository', () => {
         )
       ),
     ),
-  );
-});
+  )
+})
 ```
 
 ### Vitest Configuration
@@ -2257,14 +2171,12 @@ describe('ProductRepository', () => {
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from 'vitest/config';
-
-export default defineConfig({
+import { defineConfig } from 'vitest/config'export default defineConfig({
   test: {
     globals: true,
-    setupFiles: ['@effect/vitest/setup'],
-  },
-});
+    setupFiles: ['@effect/vitest/setup']
+  }
+})
 ```
 
 ### Best Practices
@@ -2562,15 +2474,11 @@ Data-access layer should use Effect's structured logging for all operations. Thi
 ### Repository Logging Pattern
 
 ```typescript
-import { Effect } from 'effect';
-
-export const ProductRepositoryLive = Layer.effect(
+import { Effect } from 'effect'export const ProductRepositoryLive = Layer.effect(
   ProductRepository,
   Effect.gen(function*() {
     const database = yield* DatabaseService;
-    const cache = yield* CacheService;
-
-    return {
+    const cache = yield* CacheService    return {
       findById: (id) =>
         Effect.gen(function*() {
           // Log operation start with structured metadata
@@ -2578,18 +2486,18 @@ export const ProductRepositoryLive = Layer.effect(
             Effect.annotateLogs({
               productId: id,
               operation: 'findById',
-              layer: 'data-access',
-            }),
-          );
+              layer: 'data-access'
+            })
+          )
 
           // Check cache
-          const cached = yield* cache.get(`product:${id}`);
+          const cached = yield* cache.get(`product:${id}`)
           if (Option.isSome(cached)) {
-            yield* Effect.logDebug('Cache hit');
+            yield* Effect.logDebug('Cache hit')
             return cached;
           }
 
-          yield* Effect.logDebug('Cache miss, querying database');
+          yield* Effect.logDebug('Cache miss, querying database')
 
           // Query database
           const product = yield* database.query((db) =>
@@ -2598,18 +2506,18 @@ export const ProductRepositoryLive = Layer.effect(
               .where('id', '=', id)
               .selectAll()
               .executeTakeFirst(),
-          );
+          )
 
           if (Option.isSome(product)) {
-            yield* cache.set(`product:${id}`, product.value, '5 minutes');
-            yield* Effect.logDebug('Product cached');
+            yield* cache.set(`product:${id}`, product.value, '5 minutes')
+            yield* Effect.logDebug('Product cached')
           }
 
-          return product;
+          return product
         }),
-    };
+    }
   }),
-);
+)
 ```
 
 ### Query Performance Logging
@@ -2617,40 +2525,38 @@ export const ProductRepositoryLive = Layer.effect(
 ```typescript
 const findAll = (filters: ProductFilters) =>
   Effect.gen(function*() {
-    const startTime = Date.now();
+    const startTime = Date.now()
 
     yield* Effect.logInfo('Querying products').pipe(
       Effect.annotateLogs({
         operation: 'findAll',
-        filters: JSON.stringify(filters),
-      }),
-    );
+        filters: JSON.stringify(filters)
+      } ),
+    )
 
     const products = yield* database.query((db) => {
-      let query = db.selectFrom('product').selectAll();
+      let query = db.selectFrom('product').selectAll()
 
       if (filters.category) {
-        query = query.where('category', '=', filters.category);
+        query = query.where('category', '=', filters.category)
       }
 
       if (filters.minPrice) {
-        query = query.where('price', '>=', filters.minPrice);
+        query = query.where('price', '>=', filters.minPrice)
       }
 
-      return query.execute();
-    });
+      return query.execute()
+    })
 
-    const duration = Date.now() - startTime;
-
-    yield* Effect.logInfo('Query completed').pipe(
+    const duration = Date.now() - startTime    yield* Effect.logInfo('Query completed').pipe(
       Effect.annotateLogs({
         resultCount: products.length,
         durationMs: duration,
       }),
-    );
+    )
 
-    return products;
-  });
+    return products
+  })
 ```
 
 ### Error Logging with Context
@@ -2667,7 +2573,7 @@ const create = (input: ProductInsert) =>
           price: input.price,
         },
       }),
-    );
+    )
 
     return yield* database.query((db) =>
       db
@@ -2675,7 +2581,7 @@ const create = (input: ProductInsert) =>
         .values(input)
         .returningAll()
         .executeTakeFirstOrThrow(),
-    );
+    )
   }).pipe(
     Effect.catchAll((error) =>
       Effect.gen(function*() {
@@ -2683,14 +2589,14 @@ const create = (input: ProductInsert) =>
           Effect.annotateLogs({
             errorType: error._tag,
             errorMessage: error.message,
-            productName: input.name,
+            productName: input.name
           }),
-        );
+        )
 
-        return Effect.fail(error);
+        return Effect.fail(error)
       }),
     ),
-  );
+  )
 ```
 
 ### Transaction Logging
@@ -2706,16 +2612,14 @@ const createProductWithVariants = (
         operation: 'createProductWithVariants',
         variantCount: variants.length,
       }),
-    );
+    )
 
-    const database = yield* DatabaseService;
-
-    // ✅ CORRECT: Just yield* transaction - infra handles runtime preservation
+    const database = yield* DatabaseService    // ✅ CORRECT: Just yield* transaction - infra handles runtime preservation
     return yield* database
       .transaction((tx) =>
         Effect.gen(function*() {
           // ✅ Effect.log* works inside transaction - infra preserves context
-          yield* Effect.logDebug('Creating product record');
+          yield* Effect.logDebug('Creating product record')
 
           const createdProduct = yield* Effect.tryPromise({
             try: () =>
@@ -2728,12 +2632,12 @@ const createProductWithVariants = (
               new ProductDatabaseError({
                 message: 'Failed to insert product',
                 cause: error,
-              }),
-          });
+              })
+          })
 
           yield* Effect.logDebug('Creating variant records', {
-            productId: createdProduct.id,
-          });
+            productId: createdProduct.id
+          })
 
           yield* Effect.tryPromise({
             try: () =>
@@ -2750,17 +2654,17 @@ const createProductWithVariants = (
               new ProductDatabaseError({
                 message: 'Failed to insert variants',
                 cause: error,
-              }),
-          });
+              })
+          })
 
           yield* Effect.logInfo('Transaction completed successfully').pipe(
             Effect.annotateLogs({
               productId: createdProduct.id,
-              variantCount: variants.length,
-            }),
-          );
+              variantCount: variants.length
+            })
+          )
 
-          return createdProduct;
+          return createdProduct
         }),
       )
       .pipe(
@@ -2771,12 +2675,12 @@ const createProductWithVariants = (
                 errorMessage: String(error),
                 productName: product.name,
               }),
-            );
-            return Effect.fail(error);
+            )
+            return Effect.fail(error)
           }),
         ),
-      );
-  });
+      )
+  })
 ```
 
 ### Log Levels in Data-Access
@@ -2804,13 +2708,13 @@ yield *
       userId: context.userId,
       cached: false,
     }),
-  );
+  )
 
 // ❌ BAD - String concatenation, hard to query
 yield *
   Effect.logInfo(
     `Product search for "${searchTerm}" returned ${results.length} results in ${duration}ms`,
-  );
+  )
 
 // ✅ GOOD - Consistent field names across operations
 yield *
@@ -2819,7 +2723,7 @@ yield *
     productId: id, // Always use "productId"
     userId: userId, // Always use "userId"
     durationMs: duration, // Always use "durationMs"
-  });
+  })
 
 // ❌ BAD - Inconsistent naming
 yield *
@@ -2828,7 +2732,7 @@ yield *
     id: id, // Ambiguous - what kind of ID?
     user: userId, // Inconsistent with "userId"
     time: duration, // Unclear units
-  });
+  })
 ```
 
 ### Integration with Telemetry
@@ -2838,22 +2742,22 @@ Combine logging with spans for full observability:
 ```typescript
 const findById = (id: string) =>
   Effect.withSpan('ProductRepository.findById', {
-    attributes: { productId: id },
+    attributes: { productId: id }
   })(
     Effect.gen(function*() {
       yield* Effect.logInfo('Finding product').pipe(
         Effect.annotateLogs({ productId: id }),
-      );
+      )
 
-      const product = yield* database.query(/* ... */);
+      const product = yield* database.query(/* ... */)
 
       yield* Effect.annotateCurrentSpan({
-        found: Option.isSome(product),
-      });
+        found: Option.isSome(product)
+      } )
 
       return product;
     }),
-  );
+  )
 ```
 
 This ensures:
@@ -2883,13 +2787,13 @@ Use Stream for:
 ```typescript
 export interface ProductRepository {
   // Standard operations
-  readonly findAll: () => Effect.Effect<Product[], ProductRepositoryError>;
+  readonly findAll: () => Effect.Effect<Product[], ProductRepositoryError>
 
   // Stream-based operations for large datasets
   readonly streamAll: (options?: {
     batchSize?: number;
-    filters?: ProductFilters;
-  }) => Stream.Stream<Product, ProductRepositoryError, never>;
+    filters?: ProductFilters
+  }) => Stream.Stream<Product, ProductRepositoryError, never>
 }
 
 // Implementation
@@ -2898,9 +2802,7 @@ streamAll: (options = {}) =>
     Effect.gen(function*() {
       const db = yield* KyselyService;
       const batchSize = options.batchSize ?? 100;
-      let offset = 0;
-
-      while (true) {
+      let offset = 0      while (true) {
         // Fetch batch from database
         const batch = yield* Effect.tryPromise({
           try: () =>
@@ -2913,16 +2815,14 @@ streamAll: (options = {}) =>
           catch: (error) =>
             new ProductRepositoryError({
               message: 'Failed to stream products',
-              cause: error,
-            }),
-        });
+              cause: error
+            })
+        })
 
         // End stream if no more results
-        if (batch.length === 0) break;
-
-        // Emit each product
+        if (batch.length === 0) break        // Emit each product
         for (const product of batch) {
-          yield* emit.single(product);
+          yield* emit.single(product)
         }
 
         offset += batchSize;
@@ -2937,16 +2837,14 @@ streamAll: (options = {}) =>
 // Feature service using repository stream
 processAllProducts: () =>
   Effect.gen(function*() {
-    const repo = yield* ProductRepository;
-
-    // Process with constant memory
+    const repo = yield* ProductRepository    // Process with constant memory
     const summary = yield* repo.streamAll({ batchSize: 100 }).pipe(
       // Transform each product
       Stream.mapEffect((product) =>
         Effect.gen(function*() {
-          yield* validateProduct(product);
-          yield* enrichProduct(product);
-          return product;
+          yield* validateProduct(product)
+          yield* enrichProduct(product)
+          return product
         }),
       ),
       // Group into batches for bulk operations
@@ -2958,9 +2856,9 @@ processAllProducts: () =>
         processed: Chunk.size(results),
         success: true,
       })),
-    );
+    )
 
-    return summary;
+    return summary
   }),
 ```
 
@@ -2972,9 +2870,7 @@ Use Sink for constant-memory aggregations:
 // Calculate total revenue across all orders
 calculateTotalRevenue: (startDate: Date, endDate: Date) =>
   Effect.gen(function*() {
-    const repo = yield* OrderRepository;
-
-    const total = yield* repo
+    const repo = yield* OrderRepository    const total = yield* repo
       .streamByCriteria({
         status: 'completed',
         createdAt: { gte: startDate, lte: endDate },
@@ -2982,9 +2878,9 @@ calculateTotalRevenue: (startDate: Date, endDate: Date) =>
       .pipe(
         Stream.map((order) => order.amount),
         Stream.run(Sink.sum), // Constant memory aggregation!
-      );
+      )
 
-    return total;
+    return total
   }),
 ```
 
@@ -3010,17 +2906,15 @@ calculateTotalRevenue: (startDate: Date, endDate: Date) =>
 ```typescript
 it.scoped('streamAll processes all products', () =>
   Effect.gen(function*() {
-    const repo = yield* ProductRepository;
-
-    const products = yield* repo.streamAll({ batchSize: 10 }).pipe(
+    const repo = yield* ProductRepository    const products = yield* repo.streamAll({ batchSize: 10 }).pipe(
       Stream.take(5), // Test first 5 items
       Stream.runCollect,
       Effect.map(Chunk.toArray),
-    );
+    )
 
-    expect(products.length).toBe(5);
+    expect(products.length).toBe(5)
   }).pipe(Effect.provide(Layer.fresh(ProductRepositoryLive))),
-);
+)
 ```
 
 **See Also:**

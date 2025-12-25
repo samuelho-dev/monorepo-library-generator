@@ -398,8 +398,7 @@ Provider Type: ${providerType}`,
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Data", "Effect", "Option"] },
-    { from: "@effect/schema", imports: ["Schema"] }
+    { from: "effect", imports: ["Data", "Effect", "Option", "Schema"] }
   ])
   builder.addBlankLine()
 
@@ -422,7 +421,7 @@ export function run${className}Operation<A>(
 ) {
   return Effect.tryPromise({
     try: operation,
-    catch: map${className}Error,
+    catch: map${className}Error
   })
 }`)
     builder.addBlankLine()

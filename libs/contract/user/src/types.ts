@@ -43,4 +43,6 @@ export type * from "./lib/events"
 // RPC Types
 // ============================================================================
 
-export type * from "./lib/rpc"
+export type * from "./lib/rpc-errors"
+export type * from "./lib/rpc-definitions"
+export type * from "./lib/rpc-group"

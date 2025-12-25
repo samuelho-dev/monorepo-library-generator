@@ -52,7 +52,7 @@ export {
   isServiceRoute,
   isPublicRoute,
   UserRpcsByRoute
-} from "@samuelho-dev/contract-user/rpc"
+} from "@samuelho-dev/contract-user"
 
 // ============================================================================
 // Handler Exports

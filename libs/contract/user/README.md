@@ -1,6 +1,6 @@
 # @samuelho-dev/contract-user
 
-user domain contracts
+User domain contract with auth integration
 
 ## Overview
 

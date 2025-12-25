@@ -21,7 +21,7 @@ import type { RouteType } from "./rpc-definitions"
  *   DeleteUser: (input) => Effect.flatMap(UserService, s => s.delete(input.id)),
  *   ValidateUser: (input) => Effect.flatMap(UserService, s => s.validate(input)),
  *   BulkGetUsers: (input) => Effect.flatMap(UserService, s => s.bulkGet(input.ids)),
- * });
+ * })
  * ```
  *
  * @module @samuelho-dev/contract-user/rpc-group
@@ -51,10 +51,10 @@ export { RouteTag, type RouteType } from "./rpc-definitions"
  *   GetUser: (input) => service.get(input.id),
  *   ListUsers: (input) => service.list(input),
  *   // ... other handlers
- * });
+ * })
  *
  * // Merge with router
- * const app = RouterBuilder.make(UserRpcs).handle(handlers);
+ * const app = RouterBuilder.make(UserRpcs).handle(handlers)
  * ```
  */
 export const UserRpcs = RpcGroup.make(BulkGetUsers, CreateUser, DeleteUser, GetUser, ListUsers, UpdateUser, ValidateUser)

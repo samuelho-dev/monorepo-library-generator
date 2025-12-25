@@ -22,7 +22,7 @@ Usage:
     createRpcClientLayer,
     AuthMiddleware,
     ServiceMiddleware,
-    createMiddlewareSelector,
+    createMiddlewareSelector
   } from '@samuelho-dev/infra-rpc';
  *
  */

@@ -27,18 +27,18 @@ Tests cover:
   })
   builder.addBlankLine()
 
-  // Imports
+  // Imports - use ../index since spec is in lib/ folder
   builder.addImports([
     { from: "effect", imports: ["Effect"] },
     { from: "vitest", imports: ["describe", "expect", "it"] },
-    { from: "./index", imports: ["mapRedisError", "Redis"] }
+    { from: "../index", imports: ["mapRedisError", "Redis"] }
   ])
 
   // Test helpers
   builder.addSectionComment("Test Helpers")
   builder.addBlankLine()
 
-  builder.addRaw(`const runTest = <A, E>(effect: Effect.Effect<A, E, typeof Redis>) =>
+  builder.addRaw(`const runTest = <A, E>(effect: Effect.Effect<A, E, Redis>) =>
   Effect.runPromise(effect.pipe(Effect.provide(Redis.Test)))`)
   builder.addBlankLine()
 
@@ -49,7 +49,7 @@ Tests cover:
   builder.addRaw(`describe("Redis", () => {
   describe("Test Layer", () => {
     it("should provide a working test layer", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return redis.config
       })
@@ -60,7 +60,7 @@ Tests cover:
     })
 
     it("should pass health check in test mode", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.healthCheck
       })
@@ -72,7 +72,7 @@ Tests cover:
 
   describe("Cache Operations", () => {
     it("should return null for non-existent keys", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.cache.get("non-existent-key")
       })
@@ -82,7 +82,7 @@ Tests cover:
     })
 
     it("should complete set operation", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         yield* redis.cache.set("test-key", "test-value")
         return "success"
@@ -93,7 +93,7 @@ Tests cover:
     })
 
     it("should complete setex operation", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         yield* redis.cache.setex("test-key", 60, "test-value")
         return "success"
@@ -104,7 +104,7 @@ Tests cover:
     })
 
     it("should return 0 for del on non-existent key", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.cache.del("non-existent-key")
       })
@@ -114,7 +114,7 @@ Tests cover:
     })
 
     it("should respond to ping", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.cache.ping()
       })
@@ -126,7 +126,7 @@ Tests cover:
 
   describe("PubSub Operations", () => {
     it("should return 0 subscribers for publish in test mode", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.pubsub.publish("test-channel", "test-message")
       })
@@ -136,7 +136,7 @@ Tests cover:
     })
 
     it("should complete subscribe operation", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         yield* redis.pubsub.subscribe("test-channel", () => { /* test handler */ })
         return "subscribed"
@@ -147,7 +147,7 @@ Tests cover:
     })
 
     it("should complete unsubscribe operation", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         yield* redis.pubsub.unsubscribe("test-channel")
         return "unsubscribed"
@@ -160,7 +160,7 @@ Tests cover:
 
   describe("Queue Operations", () => {
     it("should return 1 for lpush", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.queue.lpush("test-queue", "test-item")
       })
@@ -170,7 +170,7 @@ Tests cover:
     })
 
     it("should return null for brpop in test mode", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.queue.brpop("test-queue", 0)
       })
@@ -180,7 +180,7 @@ Tests cover:
     })
 
     it("should return null for rpop on empty queue", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.queue.rpop("test-queue")
       })
@@ -190,7 +190,7 @@ Tests cover:
     })
 
     it("should return 0 for llen on empty queue", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.queue.llen("test-queue")
       })
@@ -200,7 +200,7 @@ Tests cover:
     })
 
     it("should return empty array for lrange on empty queue", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.queue.lrange("test-queue", 0, -1)
       })
@@ -212,7 +212,7 @@ Tests cover:
 
   describe("Extended Operations", () => {
     it("should return false for exists on non-existent key", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.exists("non-existent-key")
       })
@@ -222,7 +222,7 @@ Tests cover:
     })
 
     it("should return false for expire on non-existent key", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.expire("non-existent-key", 60)
       })
@@ -232,7 +232,7 @@ Tests cover:
     })
 
     it("should return -2 for ttl on non-existent key", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.ttl("non-existent-key")
       })
@@ -242,7 +242,7 @@ Tests cover:
     })
 
     it("should return empty array for keys", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.keys("*")
       })
@@ -252,7 +252,7 @@ Tests cover:
     })
 
     it("should return empty scan result", async () => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const redis = yield* Redis
         return yield* redis.scan(0)
       })

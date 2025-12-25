@@ -3,7 +3,7 @@ index a74df59f8a5988f458a3476087399f5e6dfe4818..ce5e60ef9916eb0cb76ab1e9dd422abc
 --- a/dist/changesets-get-github-info.cjs.js
 +++ b/dist/changesets-get-github-info.cjs.js
 @@ -251,18 +251,13 @@ async function getInfo(request) {
-     b = new Date(b.mergedAt);
+     b = new Date(b.mergedAt)
      return a > b ? 1 : a < b ? -1 : 0;
    })[0] : null;
 -
@@ -27,7 +27,7 @@ index 27e5c972ab1202ff16f5124b471f4bbcc46be2b5..3940a8fe86e10cb46d8ff6436dea1103
 --- a/dist/changesets-get-github-info.esm.js
 +++ b/dist/changesets-get-github-info.esm.js
 @@ -242,18 +242,13 @@ async function getInfo(request) {
-     b = new Date(b.mergedAt);
+     b = new Date(b.mergedAt)
      return a > b ? 1 : a < b ? -1 : 0;
    })[0] : null;
 -

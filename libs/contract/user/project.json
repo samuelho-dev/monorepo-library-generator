@@ -6,7 +6,10 @@
   "tags": [
     "type:contract",
     "scope:user",
-    ""
+    "contract",
+    "domain",
+    "user",
+    "builtin"
   ],
   "targets": {
     "build": {

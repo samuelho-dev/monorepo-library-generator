@@ -34,12 +34,10 @@ Contract-First Architecture:
 
 Integration with infra-rpc:
   import { AuthMiddlewareLive } from '${scope}/infra-rpc';
-  import { AuthVerifierLive } from '${packageName}';
-
-  // Compose layers
+  import { AuthVerifierLive } from '${packageName}'  // Compose layers
   const middleware = AuthMiddlewareLive.pipe(
     Layer.provide(AuthVerifierLive)
-  );`
+  )`
   })
   builder.addBlankLine()
 
@@ -104,12 +102,12 @@ export { AuthUserSchema } from "${scope}/provider-supabase"`)
   builder.addComment("  Layer.provide(AuthVerifierLive),")
   builder.addComment("  Layer.provide(AuthService.Live),")
   builder.addComment("  Layer.provide(SupabaseAuth.Live),")
-  builder.addComment(");")
+  builder.addComment(")")
   builder.addComment("")
   builder.addComment("// Use with RPC router")
   builder.addComment("const router = MyRpcGroup.toRouter(handlers).pipe(")
   builder.addComment("  Effect.provide(RpcAuthLayer),")
-  builder.addComment(");")
+  builder.addComment(")")
   builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   return builder.toString()

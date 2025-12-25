@@ -94,7 +94,7 @@ return {
 //   never,
 //   never
 // > {
-//   return Layer.succeed(Memory${className}Provider, createMemory${className}Provider());
+//   return Layer.succeed(Memory${className}Provider, createMemory${className}Provider())
 // }`)
 
   return builder.toString()

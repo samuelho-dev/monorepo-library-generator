@@ -78,9 +78,7 @@ import type {
   ProductInsert,
   ProductUpdate,
 } from "@creativetoolkits/types-database";
-import type { ProductRepositoryError } from "./errors";
-
-/**
+import type { ProductRepositoryError } from "./errors"/**
  * Repository interface using modern Context.Tag pattern with inline interface
  * Uses generated database types directly - NO transformation in contract layer
  */
@@ -89,47 +87,47 @@ export class ProductRepository extends Context.Tag("ProductRepository")<
   {
     readonly findById: (
       id: string,
-    ) => Effect.Effect<Option.Option<ProductSelect>, ProductRepositoryError>;
+    ) => Effect.Effect<Option.Option<ProductSelect>, ProductRepositoryError>
 
     readonly findBySlug: (
       slug: string,
-    ) => Effect.Effect<Option.Option<ProductSelect>, ProductRepositoryError>;
+    ) => Effect.Effect<Option.Option<ProductSelect>, ProductRepositoryError>
 
     readonly create: (
       input: ProductInsert,
-    ) => Effect.Effect<ProductSelect, ProductRepositoryError>;
+    ) => Effect.Effect<ProductSelect, ProductRepositoryError>
 
     readonly update: (
       id: string,
       input: ProductUpdate,
-    ) => Effect.Effect<ProductSelect, ProductRepositoryError>;
+    ) => Effect.Effect<ProductSelect, ProductRepositoryError>
 
     readonly delete: (
       id: string,
-    ) => Effect.Effect<void, ProductRepositoryError>;
+    ) => Effect.Effect<void, ProductRepositoryError>
 
     // Domain-specific queries
     readonly findBySeller: (
       sellerId: string,
       options?: { limit?: number; offset?: number },
-    ) => Effect.Effect<readonly ProductSelect[], ProductRepositoryError>;
+    ) => Effect.Effect<readonly ProductSelect[], ProductRepositoryError>
 
     readonly findByCategory: (
       category: string,
-    ) => Effect.Effect<readonly ProductSelect[], ProductRepositoryError>;
+    ) => Effect.Effect<readonly ProductSelect[], ProductRepositoryError>
 
     // Batch operations
     readonly createMany: (
       inputs: readonly ProductInsert[],
-    ) => Effect.Effect<readonly ProductSelect[], ProductRepositoryError>;
+    ) => Effect.Effect<readonly ProductSelect[], ProductRepositoryError>
 
     readonly updateMany: (
       updates: readonly { id: string; input: ProductUpdate }[],
-    ) => Effect.Effect<readonly ProductSelect[], ProductRepositoryError>;
+    ) => Effect.Effect<readonly ProductSelect[], ProductRepositoryError>
 
     readonly deleteMany: (
       ids: readonly string[],
-    ) => Effect.Effect<number, ProductRepositoryError>; // Returns count deleted
+    ) => Effect.Effect<number, ProductRepositoryError> // Returns count deleted
 
     // Pagination patterns
     readonly findPaginated: (options: {
@@ -144,7 +142,7 @@ export class ProductRepository extends Context.Tag("ProductRepository")<
         hasMore: boolean;
       },
       ProductRepositoryError
-    >;
+    >
 
     // Cursor-based pagination
     readonly findByCursor: (options: {
@@ -158,21 +156,21 @@ export class ProductRepository extends Context.Tag("ProductRepository")<
         prevCursor?: string;
       },
       ProductRepositoryError
-    >;
+    >
 
     // Soft delete support
     readonly softDelete: (
       id: string,
-    ) => Effect.Effect<void, ProductRepositoryError>;
+    ) => Effect.Effect<void, ProductRepositoryError>
 
     readonly restore: (
       id: string,
-    ) => Effect.Effect<ProductSelect, ProductRepositoryError>;
+    ) => Effect.Effect<ProductSelect, ProductRepositoryError>
 
     // Transaction support
     readonly inTransaction: <R, E, A>(
       fn: (repo: ProductRepository) => Effect.Effect<A, E, R>,
-    ) => Effect.Effect<A, E | ProductRepositoryError, R>;
+    ) => Effect.Effect<A, E | ProductRepositoryError, R>
   }
 >() {}
 ```
@@ -209,9 +207,7 @@ Entities use Schema.Class for validation and serialization:
 
 ```typescript
 // libs/contract/product/src/lib/entities.ts
-import { Schema } from "effect";
-
-// Domain entity with validation rules
+import { Schema } from "effect"// Domain entity with validation rules
 export class Product extends Schema.Class<Product>("Product")({
   id: Schema.String,
   name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(200)),
@@ -228,13 +224,13 @@ export class Product extends Schema.Class<Product>("Product")({
   ),
   stock: Schema.propertySignature(Schema.Number).pipe(
     Schema.withConstructorDefault(() => 0),
-  ),
+  )
 }) {}
 
 // Value objects
 export class Money extends Schema.Class<Money>("Money")({
   amount: Schema.Number.pipe(Schema.finite()),
-  currency: Schema.Literal("USD", "EUR", "GBP"),
+  currency: Schema.Literal("USD", "EUR", "GBP")
 }) {}
 
 export class ProductStatus extends Schema.Literal(
@@ -286,9 +282,7 @@ Use Data.TaggedError for all runtime errors within your application:
 
 ```typescript
 // libs/contract/product/src/lib/errors.ts
-import { Data } from "effect";
-
-// ✅ CORRECT - Domain error for business logic violations
+import { Data } from "effect"// ✅ CORRECT - Domain error for business logic violations
 export class ProductNotFoundError extends Data.TaggedError(
   "ProductNotFoundError",
 )<{
@@ -316,7 +310,7 @@ export class InsufficientStockError extends Data.TaggedError(
 }> {
   // Optional: Add computed properties
   get shortage() {
-    return this.requested - this.available;
+    return this.requested - this.available
   }
 }
 
@@ -357,9 +351,7 @@ Contracts define RPC request/response schemas using Effect Schema for type-safe 
 
 ```typescript
 // libs/contract/product/src/lib/rpc.ts
-import { Schema } from "effect";
-
-// Request/Response Schemas
+import { Schema } from "effect"// Request/Response Schemas
 export const ListProductsRequest = Schema.Struct({
   page: Schema.optionalWith(Schema.Number, { default: () => 1 }),
   limit: Schema.optionalWith(Schema.Number, { default: () => 20 }),
@@ -370,39 +362,39 @@ export const ListProductsRequest = Schema.Struct({
       minPrice: Schema.optional(Schema.Number),
       maxPrice: Schema.optional(Schema.Number),
     }),
-  ),
-});
+  )
+})
 
 export const ListProductsResponse = Schema.Struct({
   products: Schema.Array(ProductSchema),
   total: Schema.Number,
   page: Schema.Number,
-  hasMore: Schema.Boolean,
-});
+  hasMore: Schema.Boolean
+})
 
 export const CreateProductRequest = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(100)),
   description: Schema.String.pipe(Schema.maxLength(1000)),
   price: Schema.Number.pipe(Schema.positive()),
   category: Schema.String,
-  stock: Schema.optional(Schema.Number.pipe(Schema.nonNegative())),
-});
+  stock: Schema.optional(Schema.Number.pipe(Schema.nonNegative()))
+})
 
 export const CreateProductResponse = Schema.Struct({
-  product: ProductSchema,
-});
+  product: ProductSchema
+})
 
 export const UpdateProductRequest = Schema.Struct({
   id: Schema.String,
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
   price: Schema.optional(Schema.Number.pipe(Schema.positive())),
-  stock: Schema.optional(Schema.Number.pipe(Schema.nonNegative())),
-});
+  stock: Schema.optional(Schema.Number.pipe(Schema.nonNegative()))
+})
 
 export const UpdateProductResponse = Schema.Struct({
-  product: ProductSchema,
-});
+  product: ProductSchema
+})
 
 // RPC Error Classes - Use Schema.TaggedError for serialization
 export class ProductNotFoundRpcError extends Schema.TaggedError<ProductNotFoundRpcError>()(
@@ -410,7 +402,7 @@ export class ProductNotFoundRpcError extends Schema.TaggedError<ProductNotFoundR
   {
     productId: Schema.String,
     message: Schema.String,
-    timestamp: Schema.DateTimeUtc,
+    timestamp: Schema.DateTimeUtc
   },
 ) {}
 
@@ -423,7 +415,7 @@ export class ProductValidationRpcError extends Schema.TaggedError<ProductValidat
         message: Schema.String,
       }),
     ),
-    timestamp: Schema.DateTimeUtc,
+    timestamp: Schema.DateTimeUtc
   },
 ) {}
 
@@ -431,7 +423,7 @@ export class ProductUnauthorizedRpcError extends Schema.TaggedError<ProductUnaut
   "ProductUnauthorizedRpcError",
   {
     message: Schema.String,
-    timestamp: Schema.DateTimeUtc,
+    timestamp: Schema.DateTimeUtc
   },
 ) {}
 
@@ -440,7 +432,7 @@ export class ProductForbiddenRpcError extends Schema.TaggedError<ProductForbidde
   {
     resource: Schema.String,
     action: Schema.String,
-    timestamp: Schema.DateTimeUtc,
+    timestamp: Schema.DateTimeUtc
   },
 ) {}
 
@@ -457,15 +449,13 @@ export type ProductRpcError =
 Use `Schema.TaggedError` classes ONLY when errors must be serialized for network transmission:
 
 ```typescript
-import { Schema } from "effect";
-
-// ✅ CORRECT - Schema.TaggedError for RPC boundaries
+import { Schema } from "effect"// ✅ CORRECT - Schema.TaggedError for RPC boundaries
 export class ProductNotFoundRpcError extends Schema.TaggedError<ProductNotFoundRpcError>()(
   "ProductNotFoundRpcError",
   {
     productId: Schema.String,
     message: Schema.String,
-    timestamp: Schema.DateTimeUtc,
+    timestamp: Schema.DateTimeUtc
   },
 ) {}
 
@@ -473,7 +463,7 @@ export class ProductNotFoundRpcError extends Schema.TaggedError<ProductNotFoundR
 export class InternalProductError extends Schema.TaggedError<InternalProductError>()(
   "InternalProductError", // ❌ This will never be serialized
   {
-    message: Schema.String,
+    message: Schema.String
   },
 ) {}
 ```
@@ -492,12 +482,12 @@ const translateToRpcError = (error: ProductError): Schema.TaggedError => {
           productId: e.productId,
           message: e.message,
           timestamp: new Date(),
-        });
+        })
       }
       // Handle other error types...
     },
-    onSuccess: (value) => value,
-  });
+    onSuccess: (value) => value
+  })
 };
 ```
 
@@ -551,14 +541,12 @@ Domain events for async communication between bounded contexts:
 
 ```typescript
 // libs/contract/product/src/lib/events.ts
-import { Schema } from "effect";
-
-// Base event class
+import { Schema } from "effect"// Base event class
 export class ProductEvent extends Schema.Class<ProductEvent>("ProductEvent")({
   eventId: Schema.UUID,
   productId: Schema.String,
   occurredAt: Schema.DateTimeUtc,
-  correlationId: Schema.optional(Schema.String),
+  correlationId: Schema.optional(Schema.String)
 }) {}
 
 // Specific domain events - Use spread operator for field inheritance
@@ -569,7 +557,7 @@ export class ProductCreatedEvent extends Schema.Class<ProductCreatedEvent>(
   sellerId: Schema.String,
   name: Schema.String,
   price: Schema.Number,
-  categoryId: Schema.String,
+  categoryId: Schema.String
 }) {
   // Static method for creating from product
   static fromProduct(product: ProductSelect, correlationId?: string) {
@@ -582,7 +570,7 @@ export class ProductCreatedEvent extends Schema.Class<ProductCreatedEvent>(
       name: product.name,
       price: product.price,
       categoryId: product.categoryId,
-    });
+    })
   }
 }
 
@@ -592,7 +580,7 @@ export class ProductUpdatedEvent extends Schema.Class<ProductUpdatedEvent>(
   ...ProductEvent.fields, // Spread base event fields
   updatedFields: Schema.Array(Schema.String),
   previousValues: Schema.Record(Schema.String, Schema.Unknown),
-  newValues: Schema.Record(Schema.String, Schema.Unknown),
+  newValues: Schema.Record(Schema.String, Schema.Unknown)
 }) {
   // Helper to track what changed
   static fromChanges(
@@ -603,7 +591,7 @@ export class ProductUpdatedEvent extends Schema.Class<ProductUpdatedEvent>(
   ) {
     const changedFields = Object.keys(updated).filter(
       (key) => previous[key] !== updated[key],
-    );
+    )
 
     return new ProductUpdatedEvent({
       eventId: Schema.UUID.make(),
@@ -617,7 +605,7 @@ export class ProductUpdatedEvent extends Schema.Class<ProductUpdatedEvent>(
       newValues: Object.fromEntries(
         changedFields.map((key) => [key, updated[key]]),
       ),
-    });
+    })
   }
 }
 
@@ -626,7 +614,7 @@ export class ProductPublishedEvent extends Schema.Class<ProductPublishedEvent>(
 )({
   ...ProductEvent.fields,
   publishedBy: Schema.String,
-  publishedAt: Schema.DateTimeUtc,
+  publishedAt: Schema.DateTimeUtc
 }) {}
 
 export class ProductArchivedEvent extends Schema.Class<ProductArchivedEvent>(
@@ -634,7 +622,7 @@ export class ProductArchivedEvent extends Schema.Class<ProductArchivedEvent>(
 )({
   ...ProductEvent.fields,
   archivedBy: Schema.String,
-  archivedReason: Schema.optional(Schema.String),
+  archivedReason: Schema.optional(Schema.String)
 }) {}
 ```
 
@@ -711,9 +699,7 @@ Commands represent **write intentions** with validation rules.
 **File:** `src/lib/commands.ts`
 
 ```typescript
-import { Schema } from "effect";
-
-/**
+import { Schema } from "effect"/**
  * Command to create a new product
  * Commands use Schema.Class for validation
  */
@@ -722,19 +708,19 @@ export class CreateProductCommand extends Schema.Class<CreateProductCommand>("Cr
   price: Schema.Number.pipe(Schema.positive),
   sellerId: Schema.String.pipe(Schema.uuid),
   description: Schema.optional(Schema.String),
-  categoryId: Schema.String,
+  categoryId: Schema.String
 }) {}
 
 export class UpdateProductCommand extends Schema.Class<UpdateProductCommand>("UpdateProductCommand")({
   productId: Schema.String.pipe(Schema.uuid),
   name: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
   price: Schema.optional(Schema.Number.pipe(Schema.positive)),
-  description: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String)
 }) {}
 
 export class DeleteProductCommand extends Schema.Class<DeleteProductCommand>("DeleteProductCommand")({
   productId: Schema.String.pipe(Schema.uuid),
-  reason: Schema.optional(Schema.String),
+  reason: Schema.optional(Schema.String)
 }) {}
 ```
 
@@ -745,10 +731,8 @@ Queries represent **read intentions** without side effects.
 **File:** `src/lib/queries.ts`
 
 ```typescript
-import { Schema } from "effect";
-
-export class GetProductQuery extends Schema.Class<GetProductQuery>("GetProductQuery")({
-  productId: Schema.String.pipe(Schema.uuid),
+import { Schema } from "effect"export class GetProductQuery extends Schema.Class<GetProductQuery>("GetProductQuery")({
+  productId: Schema.String.pipe(Schema.uuid)
 }) {}
 
 export class ListProductsQuery extends Schema.Class<ListProductsQuery>("ListProductsQuery")({
@@ -757,14 +741,14 @@ export class ListProductsQuery extends Schema.Class<ListProductsQuery>("ListProd
   sellerId: Schema.optional(Schema.String.pipe(Schema.uuid)),
   categoryId: Schema.optional(Schema.String),
   sortBy: Schema.optional(Schema.Literal("price", "createdAt", "name")),
-  order: Schema.optional(Schema.Literal("asc", "desc")),
+  order: Schema.optional(Schema.Literal("asc", "desc"))
 }) {}
 
 export class SearchProductsQuery extends Schema.Class<SearchProductsQuery>("SearchProductsQuery")({
   searchTerm: Schema.String.pipe(Schema.minLength(2)),
   filters: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
   page: Schema.Number.pipe(Schema.int, Schema.positive),
-  limit: Schema.Number.pipe(Schema.int, Schema.positive, Schema.lessThanOrEqualTo(100)),
+  limit: Schema.Number.pipe(Schema.int, Schema.positive, Schema.lessThanOrEqualTo(100))
 }) {}
 ```
 
@@ -777,9 +761,7 @@ Projections are **TypeScript type schemas** that describe the shape of query res
 **File:** `src/lib/projections.ts`
 
 ```typescript
-import { Schema } from "effect";
-
-/**
+import { Schema } from "effect"/**
  * Product List Projection
  * Optimized for product listing queries with seller info embedded
  */
@@ -803,7 +785,7 @@ export class ProductListProjection extends Schema.Class<ProductListProjection>("
   averageRating: Schema.Number,
 
   createdAt: Schema.DateTimeUtc,
-  updatedAt: Schema.DateTimeUtc,
+  updatedAt: Schema.DateTimeUtc
 }) {}
 
 /**
@@ -823,7 +805,7 @@ export class ProductDetailProjection extends Schema.Class<ProductDetailProjectio
     name: Schema.String,
     avatarUrl: Schema.optional(Schema.String),
     rating: Schema.Number,
-    productsCount: Schema.Number,
+    productsCount: Schema.Number
   }),
 
   // Category hierarchy (denormalized)
@@ -831,20 +813,20 @@ export class ProductDetailProjection extends Schema.Class<ProductDetailProjectio
     id: Schema.String,
     name: Schema.String,
     parentId: Schema.optional(Schema.String),
-    parentName: Schema.optional(Schema.String),
+    parentName: Schema.optional(Schema.String)
   }),
 
   // Review statistics (aggregated)
   reviews: Schema.Struct({
     count: Schema.Number,
     averageRating: Schema.Number,
-    ratingDistribution: Schema.Record(Schema.String, Schema.Number),
+    ratingDistribution: Schema.Record(Schema.String, Schema.Number)
   }),
 
   stock: Schema.Number,
 
   createdAt: Schema.DateTimeUtc,
-  updatedAt: Schema.DateTimeUtc,
+  updatedAt: Schema.DateTimeUtc
 }) {}
 ```
 
@@ -855,9 +837,7 @@ Projections have their own repository interfaces optimized for reads.
 **Addition to `src/lib/ports.ts`:**
 
 ```typescript
-import { Context, Effect, Option } from "effect";
-
-/**
+import { Context, Effect, Option } from "effect"/**
  * Product Projection Repository
  * Read-optimized queries against denormalized projections
  */
@@ -870,17 +850,17 @@ export class ProductProjectionRepository extends Context.Tag("ProductProjectionR
     ) => Effect.Effect<
       { items: readonly ProductListProjection[]; total: number },
       ProjectionError
-    >;
+    >
 
     // Detail projection queries
     readonly findDetailProjection: (
       productId: string
-    ) => Effect.Effect<Option.Option<ProductDetailProjection>, ProjectionError>;
+    ) => Effect.Effect<Option.Option<ProductDetailProjection>, ProjectionError>
 
     // Invalidate projection cache (triggers rebuild on next query via cache-aside pattern)
     readonly invalidateProjectionCache: (
       productId: string
-    ) => Effect.Effect<void, ProjectionError>;
+    ) => Effect.Effect<void, ProjectionError>
   }
 >() {}
 ```
@@ -905,8 +885,8 @@ export class ProductCreatedEvent extends Schema.Class<ProductCreatedEvent>(
   _metadata: Schema.Struct({
     eventId: Schema.String.pipe(Schema.uuid),
     version: Schema.Number,
-    timestamp: Schema.DateTimeUtc,
-  }),
+    timestamp: Schema.DateTimeUtc
+  })
 }) {}
 ```
 
@@ -918,27 +898,13 @@ export class ProductCreatedEvent extends Schema.Class<ProductCreatedEvent>(
 
 ```typescript
 // Write Model (Canonical entities)
-export * from "./lib/entities";
-
-// CQRS: Commands
-export * from "./lib/commands";
-
-// CQRS: Queries
-export * from "./lib/queries";
-
-// CQRS: Projections (read models)
-export * from "./lib/projections";
-
-// CQRS: Domain Events
-export * from "./lib/events";
-
-// Repository Interfaces (write and read models)
-export * from "./lib/ports";
-
-// Error Types
-export * from "./lib/errors";
-
-// RPC Schemas (if using RPC)
+export * from "./lib/entities"// CQRS: Commands
+export * from "./lib/commands"// CQRS: Queries
+export * from "./lib/queries"// CQRS: Projections (read models)
+export * from "./lib/projections"// CQRS: Domain Events
+export * from "./lib/events"// Repository Interfaces (write and read models)
+export * from "./lib/ports"// Error Types
+export * from "./lib/errors"// RPC Schemas (if using RPC)
 export * from "./lib/rpc";
 ```
 
@@ -975,9 +941,7 @@ For business services (not repositories), use the same modern pattern:
 // libs/contract/product/src/lib/ports.ts
 import { Context, Effect } from "effect";
 import type { Product } from "./entities";
-import type { ProductError } from "./errors";
-
-/**
+import type { ProductError } from "./errors"/**
  * Business service interface with inline type definition
  * Separate from repository - handles business logic, not data access
  */
@@ -988,17 +952,17 @@ export class ProductService extends Context.Tag("ProductService")<
     readonly publish: (
       productId: string,
       userId: string,
-    ) => Effect.Effect<Product, ProductError>;
+    ) => Effect.Effect<Product, ProductError>
 
     readonly archive: (
       productId: string,
       reason?: string,
-    ) => Effect.Effect<void, ProductError>;
+    ) => Effect.Effect<void, ProductError>
 
     readonly calculateDiscount: (
       productId: string,
       couponCode?: string,
-    ) => Effect.Effect<number, ProductError>;
+    ) => Effect.Effect<number, ProductError>
 
     // Complex queries with business logic
     readonly searchProducts: (params: {
@@ -1013,20 +977,20 @@ export class ProductService extends Context.Tag("ProductService")<
       {
         products: readonly Product[];
         total: number;
-        facets: Record<string, number>;
+        facets: Record<string, number>
       },
       ProductError
-    >;
+    >
 
     // Workflow operations
     readonly cloneProduct: (
       productId: string,
       modifications?: Partial<ProductInsert>,
-    ) => Effect.Effect<Product, ProductError>;
+    ) => Effect.Effect<Product, ProductError>
 
     readonly bulkUpdatePrices: (
       updates: readonly { productId: string; priceChange: number }[],
-    ) => Effect.Effect<readonly Product[], ProductError>;
+    ) => Effect.Effect<readonly Product[], ProductError>
   }
 >() {}
 ```
@@ -1098,9 +1062,7 @@ import type {
   ProductInsert,
   ProductUpdate,
 } from "./entities";
-import type { ProductError } from "./errors";
-
-/**
+import type { ProductError } from "./errors"/**
  * Repository interface for product data access
  * Implemented by: libs/data-access/product
  * Used by: Feature services (ProductService, etc.)
@@ -1111,37 +1073,37 @@ export class ProductRepository extends Context.Tag("ProductRepository")<
     // Query operations
     readonly findById: (
       id: ProductId,
-    ) => Effect.Effect<Option.Option<Product>, ProductError>;
+    ) => Effect.Effect<Option.Option<Product>, ProductError>
 
     readonly findByIds: (
       ids: readonly ProductId[],
-    ) => Effect.Effect<readonly Product[], ProductError>;
+    ) => Effect.Effect<readonly Product[], ProductError>
 
     readonly findBySeller: (
       sellerId: string,
       options?: { limit?: number; offset?: number },
-    ) => Effect.Effect<readonly Product[], ProductError>;
+    ) => Effect.Effect<readonly Product[], ProductError>
 
     // Mutation operations
     readonly create: (
       data: ProductInsert,
-    ) => Effect.Effect<Product, ProductError>;
+    ) => Effect.Effect<Product, ProductError>
 
     readonly update: (
       id: ProductId,
       data: ProductUpdate,
-    ) => Effect.Effect<Product, ProductError>;
+    ) => Effect.Effect<Product, ProductError>
 
-    readonly delete: (id: ProductId) => Effect.Effect<void, ProductError>;
+    readonly delete: (id: ProductId) => Effect.Effect<void, ProductError>
 
     // Batch operations
     readonly createMany: (
       data: readonly ProductInsert[],
-    ) => Effect.Effect<readonly Product[], ProductError>;
+    ) => Effect.Effect<readonly Product[], ProductError>
 
     readonly updateMany: (
       updates: readonly { id: ProductId; data: ProductUpdate }[],
-    ) => Effect.Effect<readonly Product[], ProductError>;
+    ) => Effect.Effect<readonly Product[], ProductError>
   }
 >() {}
 ```
@@ -1163,9 +1125,7 @@ When a service is used by multiple features, define it as a contract:
 // libs/contract/payment/src/lib/ports.ts
 import { Context, Effect } from "effect";
 import type { Payment, PaymentId, ProcessPaymentRequest } from "./entities";
-import type { PaymentError } from "./errors";
-
-/**
+import type { PaymentError } from "./errors"/**
  * Payment service interface for cross-feature usage
  * Implemented by: libs/feature/payment
  * Used by: libs/feature/order, libs/feature/subscription
@@ -1175,16 +1135,16 @@ export class PaymentService extends Context.Tag("PaymentService")<
   {
     readonly processPayment: (
       req: ProcessPaymentRequest,
-    ) => Effect.Effect<Payment, PaymentError>;
+    ) => Effect.Effect<Payment, PaymentError>
 
     readonly refundPayment: (
       id: PaymentId,
       reason?: string,
-    ) => Effect.Effect<Payment, PaymentError>;
+    ) => Effect.Effect<Payment, PaymentError>
 
     readonly getPaymentStatus: (
       id: PaymentId,
-    ) => Effect.Effect<Payment, PaymentError>;
+    ) => Effect.Effect<Payment, PaymentError>
   }
 >() {}
 ```
@@ -1209,9 +1169,7 @@ import {
   PaymentId,
   ProcessPaymentRequest,
 } from "@creativetoolkits/contract-payment";
-import { PaymentError } from "@creativetoolkits/contract-payment";
-
-// ✅ RPC request schema uses contract types
+import { PaymentError } from "@creativetoolkits/contract-payment"// ✅ RPC request schema uses contract types
 export const ProcessPaymentRpcRequest = ProcessPaymentRequest; // Direct reuse
 
 // ✅ RPC response schema uses contract entity
@@ -1221,8 +1179,8 @@ export const ProcessPaymentRpcResponse = Payment; // Contract entity
 export const PaymentRpcError = Schema.TaggedError("PaymentRpcError")({
   message: Schema.String,
   code: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}); // Can extend with RPC-specific fields
+  cause: Schema.optional(Schema.Unknown)
+}) // Can extend with RPC-specific fields
 ```
 
 **Benefits of contract reuse in RPC**:
@@ -1273,7 +1231,7 @@ export class Product extends Schema.Class<Product>("Product")({
   id: Schema.String,
   name: Schema.String,
   price: Schema.Number,
-  sellerId: Schema.String,
+  sellerId: Schema.String
 }) {}
 
 // libs/contract/product/src/lib/ports.ts
@@ -1282,10 +1240,10 @@ export class ProductRepository extends Context.Tag("ProductRepository")<
   {
     readonly findById: (
       id: string,
-    ) => Effect.Effect<Option.Option<Product>, ProductError>;
+    ) => Effect.Effect<Option.Option<Product>, ProductError>
     readonly create: (
       data: ProductInsert,
-    ) => Effect.Effect<Product, ProductError>;
+    ) => Effect.Effect<Product, ProductError>
   }
 >() {}
 ```
@@ -1294,28 +1252,22 @@ export class ProductRepository extends Context.Tag("ProductRepository")<
 
 ```typescript
 // libs/data-access/product/src/lib/server/repository.ts
-import { ProductRepository } from "@creativetoolkits/contract-product";
-
-export const ProductRepositoryLive = Layer.effect(
+import { ProductRepository } from "@creativetoolkits/contract-product"export const ProductRepositoryLive = Layer.effect(
   ProductRepository, // ← Implements contract interface
   Effect.gen(function*() {
-    const database = yield* DatabaseService;
-
-    return {
+    const database = yield* DatabaseService    return {
       findById: (id) => /* Kysely query */,
       create: (data) => /* Kysely query */,
-    };
+    }
   })
-);
+)
 ```
 
 **Feature Layer (Service)**:
 
 ```typescript
 // libs/feature/product/src/lib/server/service.ts
-import { ProductRepository } from "@creativetoolkits/contract-product";
-
-export class ProductService extends Context.Tag("ProductService")<...>() {
+import { ProductRepository } from "@creativetoolkits/contract-product"export class ProductService extends Context.Tag("ProductService")<...>() {
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
@@ -1325,12 +1277,12 @@ export class ProductService extends Context.Tag("ProductService")<...>() {
         createProduct: (data) =>
           Effect.gen(function*() {
             // Business logic
-            const product = yield* repository.create(data);
+            const product = yield* repository.create(data)
             return product;
-          }),
-      };
+          })
+      } ;
     })
-  );
+  )
 }
 ```
 
@@ -1346,9 +1298,7 @@ import { ProductService } from "./server/service";
 import {
   CreateProductRequest,
   ProductRpcError,
-} from "@creativetoolkits/contract-product/rpc";
-
-/**
+} from "@creativetoolkits/contract-product/rpc"/**
  * Product RPC Router
  * Modern @effect/rpc 0.40+ pattern with inline handlers
  */
@@ -1367,10 +1317,10 @@ export const ProductRpcs = Rpc.router({
         return yield* service.createProduct({
           ...req,
           sellerId: user.id,
-        });
-      }),
-  }),
-});
+        })
+      })
+  })
+})
 ```
 
 ### Benefits of This Architecture
@@ -1429,9 +1379,7 @@ import {
   ProductCreatedEvent,
   ProductNotFoundError,
   ProductValidationError,
-} from "./entities";
-
-describe("Product Contract", () => {
+} from "./entities"describe("Product Contract", () => {
   // ========================================
   // Schema Validation Tests
   // ========================================
@@ -1444,15 +1392,13 @@ describe("Product Contract", () => {
         price: 1000,
         sellerId: "seller-456",
         createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+        updatedAt: new Date()
+      }       const result = yield* Schema.decode(ProductEntity)(validProduct)
 
-      const result = yield* Schema.decode(ProductEntity)(validProduct);
-
-      expect(result.id).toBe("prod-123");
-      expect(result.price).toBe(1000);
+      expect(result.id).toBe("prod-123")
+      expect(result.price).toBe(1000)
     }),
-  );
+  )
 
   it.scoped("ProductEntity rejects invalid price", () => // ✅ Always it.scoped
     Effect.gen(function*() {
@@ -1460,16 +1406,16 @@ describe("Product Contract", () => {
         id: "prod-123",
         name: "Test Product",
         price: -100, // Invalid: negative price
-        sellerId: "seller-456",
-      };
+        sellerId: "seller-456"
+      }
 
       const result = yield* Effect.either(
         Schema.decode(ProductEntity)(invalidProduct),
-      );
+      )
 
-      expect(Option.isNone(result)).toBe(true);
+      expect(Option.isNone(result)).toBe(true)
     }),
-  );
+  )
 
   // ========================================
   // Event Schema Tests
@@ -1481,15 +1427,13 @@ describe("Product Contract", () => {
         type: "ProductCreated",
         productId: "prod-123",
         sellerId: "seller-456",
-        timestamp: new Date().toISOString(),
-      };
+        timestamp: new Date().toISOString()
+      }       const result = yield* Schema.decode(ProductCreatedEvent)(event)
 
-      const result = yield* Schema.decode(ProductCreatedEvent)(event);
-
-      expect(result.type).toBe("ProductCreated");
-      expect(result.productId).toBe("prod-123");
+      expect(result.type).toBe("ProductCreated")
+      expect(result.productId).toBe("prod-123")
     }),
-  );
+  )
 
   // ========================================
   // Error Type Tests
@@ -1497,26 +1441,26 @@ describe("Product Contract", () => {
 
   it.scoped("ProductNotFoundError constructs with product ID", () => // ✅ Always it.scoped
     Effect.sync(() => {
-      const error = new ProductNotFoundError({ productId: "prod-123" });
+      const error = new ProductNotFoundError({ productId: "prod-123" })
 
-      expect(error._tag).toBe("ProductNotFoundError");
-      expect(error.productId).toBe("prod-123");
+      expect(error._tag).toBe("ProductNotFoundError")
+      expect(error.productId).toBe("prod-123")
     }),
-  );
+  )
 
   it.scoped("ProductValidationError includes field details", () => // ✅ Always it.scoped
     Effect.sync(() => {
       const error = new ProductValidationError({
         field: "price",
         reason: "Price must be positive",
-      });
+      })
 
-      expect(error._tag).toBe("ProductValidationError");
-      expect(error.field).toBe("price");
-      expect(error.reason).toBe("Price must be positive");
+      expect(error._tag).toBe("ProductValidationError")
+      expect(error.field).toBe("price")
+      expect(error.reason).toBe("Price must be positive")
     }),
-  );
-});
+  )
+})
 ```
 
 ### Testing Best Practices
@@ -1545,14 +1489,12 @@ describe("Product Contract", () => {
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({
+import { defineConfig } from "vitest/config"export default defineConfig({
   test: {
     globals: true,
-    setupFiles: ["@effect/vitest/setup"],
-  },
-});
+    setupFiles: ["@effect/vitest/setup"]
+  }
+})
 ```
 
 ### When NOT to Test
@@ -1699,9 +1641,7 @@ Contracts can depend on other contracts to compose domain boundaries:
 // libs/contract/order/src/lib/ports.ts
 import { ProductRepository } from "@creativetoolkits/contract-product";
 import { UserRepository } from "@creativetoolkits/contract-user";
-import { PaymentRepository } from "@creativetoolkits/contract-payment";
-
-export class OrderService extends Context.Tag("OrderService")<
+import { PaymentRepository } from "@creativetoolkits/contract-payment"export class OrderService extends Context.Tag("OrderService")<
   OrderService,
   {
     // Service that orchestrates multiple domain contracts
@@ -1712,7 +1652,7 @@ export class OrderService extends Context.Tag("OrderService")<
     }) => Effect.Effect<
       Order,
       OrderError | ProductError | UserError | PaymentError
-    >;
+    >
   }
 >() {}
 ```
@@ -1845,29 +1785,27 @@ import type {
   UserInsert,
   UserUpdate,
 } from "@creativetoolkits/types-database";
-import type { UserRepositoryError } from "./errors";
-
-export class UserRepository extends Context.Tag("UserRepository")<
+import type { UserRepositoryError } from "./errors"export class UserRepository extends Context.Tag("UserRepository")<
   UserRepository,
   {
     readonly findById: (
       id: string,
-    ) => Effect.Effect<Option.Option<UserSelect>, UserRepositoryError>;
+    ) => Effect.Effect<Option.Option<UserSelect>, UserRepositoryError>
 
     readonly findByEmail: (
       email: string,
-    ) => Effect.Effect<Option.Option<UserSelect>, UserRepositoryError>;
+    ) => Effect.Effect<Option.Option<UserSelect>, UserRepositoryError>
 
     readonly create: (
       input: UserInsert,
-    ) => Effect.Effect<UserSelect, UserRepositoryError>;
+    ) => Effect.Effect<UserSelect, UserRepositoryError>
 
     readonly update: (
       id: string,
       input: UserUpdate,
-    ) => Effect.Effect<UserSelect, UserRepositoryError>;
+    ) => Effect.Effect<UserSelect, UserRepositoryError>
 
-    readonly delete: (id: string) => Effect.Effect<void, UserRepositoryError>;
+    readonly delete: (id: string) => Effect.Effect<void, UserRepositoryError>
   }
 >() {}
 ```
@@ -1881,32 +1819,30 @@ import type {
   PaymentSelect,
   PaymentInsert,
 } from "@creativetoolkits/types-database";
-import type { PaymentRepositoryError, PaymentStatus } from "./errors";
-
-export class PaymentRepository extends Context.Tag("PaymentRepository")<
+import type { PaymentRepositoryError, PaymentStatus } from "./errors"export class PaymentRepository extends Context.Tag("PaymentRepository")<
   PaymentRepository,
   {
     readonly findById: (
       id: string,
-    ) => Effect.Effect<Option.Option<PaymentSelect>, PaymentRepositoryError>;
+    ) => Effect.Effect<Option.Option<PaymentSelect>, PaymentRepositoryError>
 
     readonly findByUserId: (
       userId: string,
-    ) => Effect.Effect<readonly PaymentSelect[], PaymentRepositoryError>;
+    ) => Effect.Effect<readonly PaymentSelect[], PaymentRepositoryError>
 
     readonly create: (
       input: PaymentInsert,
-    ) => Effect.Effect<PaymentSelect, PaymentRepositoryError>;
+    ) => Effect.Effect<PaymentSelect, PaymentRepositoryError>
 
     readonly updateStatus: (
       id: string,
       status: PaymentStatus,
-    ) => Effect.Effect<PaymentSelect, PaymentRepositoryError>;
+    ) => Effect.Effect<PaymentSelect, PaymentRepositoryError>
 
     readonly findByDateRange: (
       startDate: Date,
       endDate: Date,
-    ) => Effect.Effect<readonly PaymentSelect[], PaymentRepositoryError>;
+    ) => Effect.Effect<readonly PaymentSelect[], PaymentRepositoryError>
   }
 >() {}
 ```
@@ -1916,25 +1852,23 @@ export class PaymentRepository extends Context.Tag("PaymentRepository")<
 ```typescript
 // libs/contract/messaging/src/lib/ports.ts
 import { Context, Effect } from "effect";
-import type { Message, MessageError } from "./entities";
-
-export class MessagingService extends Context.Tag("MessagingService")<
+import type { Message, MessageError } from "./entities"export class MessagingService extends Context.Tag("MessagingService")<
   MessagingService,
   {
     readonly send: (
       to: string,
       subject: string,
       body: string,
-    ) => Effect.Effect<Message, MessageError>;
+    ) => Effect.Effect<Message, MessageError>
 
     readonly sendBatch: (
       messages: readonly { to: string; subject: string; body: string }[],
-    ) => Effect.Effect<readonly Message[], MessageError>;
+    ) => Effect.Effect<readonly Message[], MessageError>
 
     readonly scheduleMessage: (
       message: Message,
       sendAt: Date,
-    ) => Effect.Effect<string, MessageError>; // Returns schedule ID
+    ) => Effect.Effect<string, MessageError> // Returns schedule ID
   }
 >() {}
 ```

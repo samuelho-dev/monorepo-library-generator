@@ -6,7 +6,10 @@
   "tags": [
     "type:data-access",
     "scope:user",
-    ""
+    "data-access",
+    "domain",
+    "user",
+    "builtin"
   ],
   "targets": {
     "build": {

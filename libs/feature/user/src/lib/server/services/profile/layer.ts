@@ -44,12 +44,12 @@ import { ProfileRepositoryLive, ProfileRepositoryTest } from "@samuelho-dev/data
  *
  * const program = Effect.gen(function*() {
  *   const service = yield* ProfileService;
- *   return yield* service.getById(id);
- * });
+ *   return yield* service.getById(id)
+ * })
  *
  * const result = yield* program.pipe(
  *   Effect.provide(ProfileLive)
- * );
+ * )
  * ```
  */
 export const ProfileLive = ProfileServiceLive.pipe(
@@ -75,13 +75,13 @@ export const ProfileLive = ProfileServiceLive.pipe(
  *
  * const testProgram = Effect.gen(function*() {
  *   const service = yield* ProfileService;
- *   const result = yield* service.create({ ... });
+ *   const result = yield* service.create({ ... })
  *   // assertions
- * });
+ * })
  *
  * await Effect.runPromise(testProgram.pipe(
  *   Effect.provide(ProfileTest)
- * ));
+ * ))
  * ```
  */
 export const ProfileTest = ProfileServiceLive.pipe(

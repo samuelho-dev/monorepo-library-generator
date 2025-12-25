@@ -37,9 +37,8 @@ See middleware.ts for AuthMiddleware usage.`,
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Option", "Cause", "Exit"] },
-    { from: "effect", imports: ["Layer"], isTypeOnly: true },
-    { from: "@effect/schema", imports: ["Schema"] }
+    { from: "effect", imports: ["Effect", "Option", "Cause", "Exit", "Schema"] },
+    { from: "effect", imports: ["Layer"], isTypeOnly: true }
   ])
 
   builder.addSectionComment("Router Composition")
@@ -58,10 +57,10 @@ See middleware.ts for AuthMiddleware usage.`,
  * import { ProductHandlers } from "@scope/feature-product/rpc";
  *
  * // Create combined router
- * const router = RpcRouter.make(UserRpcs, ProductRpcs);
+ * const router = RpcRouter.make(UserRpcs, ProductRpcs)
  *
  * // Combine handler layers
- * const handlers = Layer.mergeAll(UserHandlers, ProductHandlers);
+ * const handlers = Layer.mergeAll(UserHandlers, ProductHandlers)
  * \`\`\`
  */
 
@@ -111,11 +110,11 @@ export const defaultRouterConfig: Required<RouterConfig> = {
  * import { HttpRouter, HttpServer } from "@effect/platform";
  * import { RpcServer } from "@effect/rpc-http";
  *
- * const rpcRouter = RpcRouter.make(UserRpcs, ProductRpcs);
+ * const rpcRouter = RpcRouter.make(UserRpcs, ProductRpcs)
  *
  * const httpApp = HttpRouter.empty.pipe(
  *   HttpRouter.mount("/rpc", RpcServer.toHttpApp(rpcRouter))
- * );
+ * )
  *
  * // Provide handler and middleware layers
  * const app = httpApp.pipe(
@@ -127,7 +126,7 @@ export const defaultRouterConfig: Required<RouterConfig> = {
  *       RequestMetaMiddlewareLive
  *     )
  *   )
- * );
+ * )
  * \`\`\`
  */
 
@@ -171,23 +170,23 @@ export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps>
  *   ProductHandlers,
  *   rpcMiddleware.AuthMiddlewareLive,
  *   rpcMiddleware.RequestMetaMiddlewareLive
- * );
+ * )
  *
  * // Create RPC HTTP app
  * const rpcApp = RpcServer.toHttpApp(rpcRouter).pipe(
  *   Effect.provide(appLayer)
- * );
+ * )
  *
  * // Export handlers
  * export const POST = async (request: Request) => {
- *   const result = await Effect.runPromise(rpcApp(request));
+ *   const result = await Effect.runPromise(rpcApp(request))
  *   return new Response(JSON.stringify(result), {
  *     headers: { "Content-Type": "application/json" }
- *   });
+ *   })
  * };
  *
  * export const GET = () => {
- *   return Response.json({ message: "RPC endpoint - use POST" });
+ *   return Response.json({ message: "RPC endpoint - use POST" })
  * };
  * \`\`\`
  */
@@ -206,7 +205,7 @@ export type RpcHandlerMap<R = unknown> = Record<string, (payload: unknown) => Ef
  *   userHandlers,
  *   productHandlers,
  *   orderHandlers
- * );
+ * )
  * \`\`\`
  */
 export const combineHandlers = <R>(
@@ -255,7 +254,7 @@ export interface NextRpcHandlerOptions<R, E> {
  * const handler = createNextRpcHandler({
  *   handlers: allHandlers,
  *   layer: appLayer,
- * });
+ * })
  *
  * export const POST = handler.POST;
  * export const GET = handler.GET;
@@ -271,7 +270,7 @@ export interface NextRpcHandler {
 
 export const createNextRpcHandler = <R, E>(
   options: NextRpcHandlerOptions<R, E>
-): NextRpcHandler => {
+) => {
   const config = { ...defaultRouterConfig, ...options.config }
 
   // Schema for RPC request body validation
@@ -377,23 +376,23 @@ export const createNextRpcHandler = <R, E>(
  * const getUserHandler = (input: { id: string }) =>
  *   Effect.gen(function*() {
  *     const repo = yield* UserRepository;
- *     return yield* repo.findById(input.id);
- *   });
+ *     return yield* repo.findById(input.id)
+ *   })
  *
  * // Create fully-satisfied layer (no remaining requirements)
  * const layer = UserRepository.Live.pipe(
  *   Layer.provide(DatabaseLive)
- * );
+ * )
  *
  * // Export as Server Action
- * export const getUser = createServerAction(getUserHandler, layer);
+ * export const getUser = createServerAction(getUserHandler, layer)
  * \`\`\`
  */
 export const createServerAction = <Payload, Success, Failure, R>(
   handler: (payload: Payload) => Effect.Effect<Success, Failure, R>,
   layer: Layer.Layer<R, never, never>
-): ((payload: Payload) => Promise<Success>) => {
-  return (payload: Payload): Promise<Success> => {
+) => {
+  return (payload: Payload) => {
     const program = handler(payload).pipe(Effect.provide(layer))
     return Effect.runPromise(program)
   }
@@ -409,14 +408,14 @@ export const createServerAction = <Payload, Success, Failure, R>(
  * import { Exit } from "effect";
  * import { createServerActionSafe } from "@scope/infra-rpc/router";
  *
- * export const getUser = createServerActionSafe(getUserHandler, layer);
+ * export const getUser = createServerActionSafe(getUserHandler, layer)
  *
  * // In client component
- * const result = await getUser({ id: "123" });
+ * const result = await getUser({ id: "123" })
  * if (Exit.isSuccess(result)) {
- *   console.log(result.value);
+ *   console.log(result.value)
  * } else {
- *   console.error(result.cause);
+ *   console.error(result.cause)
  * }
  * \`\`\`
  */
@@ -458,7 +457,7 @@ export interface HealthCheckResponse {
  *     database: () => dbClient.ping().pipe(Effect.as("ok" as const)),
  *     cache: () => cacheClient.ping().pipe(Effect.as("ok" as const))
  *   }
- * });
+ * })
  * \`\`\`
  */
 export const healthCheck = (options?: {

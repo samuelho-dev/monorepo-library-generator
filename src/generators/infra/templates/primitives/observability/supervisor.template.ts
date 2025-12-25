@@ -97,9 +97,9 @@ export interface SupervisorConfig {
  *   trackStart: false,  // Don't log fiber starts (too noisy)
  *   trackEnd: false,    // Don't log fiber ends (too noisy)
  *   trackFailure: true, // DO log fiber failures (important!)
- * });
+ * })
  *
- * yield* Effect.supervised(supervisor)(myProgram);
+ * yield* Effect.supervised(supervisor)(myProgram)
  * \`\`\`
  */
 export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
@@ -182,7 +182,7 @@ export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
  *   Observability.Auto,
  *   Observability.withFiberTracking({ trackFailure: true }),
  *   MyService.Live,
- * );
+ * )
  * \`\`\`
  *
  * @param config - Supervisor configuration
@@ -208,7 +208,7 @@ export const FiberTrackingMinimal = withFiberTracking({
   trackStart: false,
   trackEnd: false,
   trackFailure: true,
-  logLevel: "warning",
+  logLevel: "warning"
 })
 
 /**
@@ -221,7 +221,7 @@ export const FiberTrackingFull = withFiberTracking({
   trackStart: true,
   trackEnd: true,
   trackFailure: true,
-  logLevel: "debug",
+  logLevel: "debug"
 })
 
 /**
@@ -233,10 +233,10 @@ export const FiberTrackingFull = withFiberTracking({
  * @example
  * \`\`\`typescript
  * // Only track API-related fibers
- * const ApiTracking = FiberTrackingFiltered(/^api-/);
+ * const ApiTracking = FiberTrackingFiltered(/^api-/)
  *
  * // Only track database fibers
- * const DbTracking = FiberTrackingFiltered(/database/i);
+ * const DbTracking = FiberTrackingFiltered(/database/i)
  * \`\`\`
  */
 export const FiberTrackingFiltered = (pattern: RegExp) =>
@@ -245,7 +245,7 @@ export const FiberTrackingFiltered = (pattern: RegExp) =>
     trackEnd: true,
     trackFailure: true,
     filterPattern: pattern,
-    logLevel: "debug",
+    logLevel: "debug"
   })
 `)
 

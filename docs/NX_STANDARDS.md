@@ -225,15 +225,9 @@ The `exports` field defines entry points for your library. This enables platform
 
 ```typescript
 // Import from main entry (universal)
-import { ProductService } from '@samuelho-dev/feature-product';
-
-// Import from client entry (browser-specific)
-import { useProduct } from '@samuelho-dev/feature-product/client';
-
-// Import from server entry (Node.js-specific)
-import { ProductRepository } from '@samuelho-dev/feature-product/server';
-
-// Import from edge entry (Edge runtime-specific)
+import { ProductService } from '@samuelho-dev/feature-product'// Import from client entry (browser-specific)
+import { useProduct } from '@samuelho-dev/feature-product/client'// Import from server entry (Node.js-specific)
+import { ProductRepository } from '@samuelho-dev/feature-product/server'// Import from edge entry (Edge runtime-specific)
 import { createEdgeAuth } from '@samuelho-dev/feature-auth/edge';
 ```
 
@@ -319,9 +313,7 @@ All libraries are workspace packages resolved via pnpm workspaces. Imports use t
 // ✅ CORRECT - Import workspace packages by name
 import { ProductRepository } from '@samuelho-dev/contract-product';
 import { DatabaseService } from '@samuelho-dev/infra-database';
-import { Button } from '@samuelho-dev/ui-components';
-
-// ❌ INCORRECT - No relative imports between libraries
+import { Button } from '@samuelho-dev/ui-components'// ❌ INCORRECT - No relative imports between libraries
 import { ProductRepository } from '../../../contract/product';
 import { DatabaseService } from '../../infra/database';
 import { Button } from 'ui/components';
@@ -340,12 +332,8 @@ Libraries can provide platform-specific exports through separate entry points:
 
 ```typescript
 // Client code (React hooks, browser-only)
-import { useAuth } from '@samuelho-dev/feature-auth/client';
-
-// Server code (Node.js, backend services)
-import { AuthService } from '@samuelho-dev/feature-auth/server';
-
-// Edge code (Cloudflare Workers, Vercel Edge)
+import { useAuth } from '@samuelho-dev/feature-auth/client'// Server code (Node.js, backend services)
+import { AuthService } from '@samuelho-dev/feature-auth/server'// Edge code (Cloudflare Workers, Vercel Edge)
 import { verifyToken } from '@samuelho-dev/feature-auth/edge';
 ```
 
@@ -648,9 +636,7 @@ Enable TypeScript sync in `nx.json`:
 
 ```bash
 # 1. Add import to your code
-import { UserService } from '@samuelho-dev/feature-user';
-
-# 2. Add to package.json dependencies
+import { UserService } from '@samuelho-dev/feature-user'# 2. Add to package.json dependencies
 {
   "dependencies": {
     "@samuelho-dev/feature-user": "workspace:*"
@@ -720,24 +706,22 @@ Nx sync automatically updates these files based on the project graph:
 
 ```typescript
 import { describe, test, expect } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
-
-describe('ServiceName', () => {
+import { Effect, Layer } from 'effect'describe('ServiceName', () => {
   // Test layer setup
   const TestLayer = Layer.mergeAll(
     TestDatabaseService,
     TestCacheService,
     ServiceLive,
-  );
+  )
 
   test('should perform operation', () =>
     Effect.gen(function*() {
       const service = yield* Service;
-      const result = yield* service.operation();
+      const result = yield* service.operation()
 
-      expect(result).toEqual(expectedValue);
-    }).pipe(Effect.provide(TestLayer), Effect.runPromise));
-});
+      expect(result).toEqual(expectedValue)
+    }).pipe(Effect.provide(TestLayer), Effect.runPromise))
+})
 ```
 
 ## Effect.ts Service Patterns
@@ -753,11 +737,11 @@ export class PaymentService extends Context.Tag('PaymentService')<
   {
     readonly processPayment: (
       amount: number,
-    ) => Effect.Effect<PaymentResult, PaymentError>;
-    readonly refund: (paymentId: string) => Effect.Effect<void, RefundError>;
+    ) => Effect.Effect<PaymentResult, PaymentError>
+    readonly refund: (paymentId: string) => Effect.Effect<void, RefundError>
     readonly validateCard: (
       card: CardDetails,
-    ) => Effect.Effect<boolean, ValidationError>;
+    ) => Effect.Effect<boolean, ValidationError>
   }
 >() {}
 
@@ -781,18 +765,16 @@ export class PaymentServiceImpl extends PaymentService {
     PaymentService,
     Effect.gen(function*() {
       const stripe = yield* StripeService;
-      const logger = yield* LoggingService;
-
-      return {
+      const logger = yield* LoggingService      return {
         processPayment: (amount) =>
           Effect.gen(function*() {
-            yield* logger.info(`Processing payment: ${amount}`);
-            return yield* stripe.paymentIntents.create({ amount });
+            yield* logger.info(`Processing payment: ${amount}`)
+            return yield* stripe.paymentIntents.create({ amount })
           }),
         // ... other methods
       };
     }),
-  );
+  )
 }
 ```
 
@@ -821,7 +803,7 @@ const createMockPayment = (): PaymentResult => ({
   status: 'succeeded',
   created: Date.now(),
   // ... all required fields
-});
+})
 
 // ❌ INCORRECT: Type assertions
 const mockPayment = { id: 'test' } as PaymentResult; // NEVER do this

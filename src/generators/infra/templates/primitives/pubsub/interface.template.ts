@@ -62,15 +62,15 @@ Effect.PubSub Features:
  * Metrics for tracking PubSub operations
  */
 const pubsubPublishCounter = Metric.counter("pubsub.publish.count", {
-  description: "Number of messages published to topics",
+  description: "Number of messages published to topics"
 })
 
 const pubsubPublishErrorCounter = Metric.counter("pubsub.publish.errors", {
-  description: "Number of validation errors during publish",
+  description: "Number of validation errors during publish"
 })
 
 const pubsubSubscriberGauge = Metric.gauge("pubsub.subscribers", {
-  description: "Current number of subscribers per topic",
+  description: "Current number of subscribers per topic"
 })
 `)
 
@@ -161,18 +161,18 @@ export class ${className}Service extends Context.Tag(
      * const OrderEventSchema = Schema.Union(
      *   Schema.Struct({ type: Schema.Literal("created"), orderId: Schema.String }),
      *   Schema.Struct({ type: Schema.Literal("paid"), orderId: Schema.String, amount: Schema.Number })
-     * );
-     * type OrderEvent = Schema.Schema.Type<typeof OrderEventSchema>;
+     * )
+     * type OrderEvent = Schema.Schema.Type<typeof OrderEventSchema>
      *
      * // Create topic with schema
-     * const orderEvents = yield* pubsub.topic("orders", OrderEventSchema);
+     * const orderEvents = yield* pubsub.topic("orders", OrderEventSchema)
      *
      * // Type-safe publish (validated by Schema)
-     * yield* orderEvents.publish({ type: "created", orderId: "123" });
+     * yield* orderEvents.publish({ type: "created", orderId: "123" })
      *
      * // Type-safe subscribe
      * const subscription = yield* orderEvents.subscribe;
-     * const event = yield* Queue.take(subscription);
+     * const event = yield* Queue.take(subscription)
      * // event is properly typed as OrderEvent
      * \`\`\`
      */
@@ -582,7 +582,7 @@ export class ${className}Service extends Context.Tag(
  * const AppLayer = Layer.mergeAll(
  *   Observability.Auto,  // OTEL SDK for metrics export
  *   ${className}Service.Live,
- * );
+ * )
  * \`\`\`
  */
 `)
@@ -611,13 +611,13 @@ export class ${className}Service extends Context.Tag(
  *     orderId: Schema.String,
  *     trackingNumber: Schema.String
  *   })
- * );
- * type OrderEvent = Schema.Schema.Type<typeof OrderEventSchema>;
+ * )
+ * type OrderEvent = Schema.Schema.Type<typeof OrderEventSchema>
  *
  * const program = Effect.gen(function*() {
  *   const pubsub = yield* ${className}Service;
  *   // Pass schema for type-safe messaging
- *   const orderEvents = yield* pubsub.topic("order-events", OrderEventSchema);
+ *   const orderEvents = yield* pubsub.topic("order-events", OrderEventSchema)
  *
  *   // Start event processor
  *   yield* Effect.forkScoped(
@@ -628,21 +628,21 @@ export class ${className}Service extends Context.Tag(
  *         Effect.tap((event) => {
  *           switch (event.type) {
  *             case "created":
- *               return sendWelcomeEmail(event.userId);
+ *               return sendWelcomeEmail(event.userId)
  *             case "paid":
- *               return startFulfillment(event.orderId);
+ *               return startFulfillment(event.orderId)
  *             case "shipped":
- *               return sendTrackingEmail(event.orderId, event.trackingNumber);
+ *               return sendTrackingEmail(event.orderId, event.trackingNumber)
  *           }
  *         }),
  *         Effect.forever
- *       );
+ *       )
  *     })
- *   );
+ *   )
  *
  *   // Type-safe publish (Schema validates at compile time)
- *   yield* orderEvents.publish({ type: "created", orderId: "123", userId: "456" });
- * });
+ *   yield* orderEvents.publish({ type: "created", orderId: "123", userId: "456" })
+ * })
  * \`\`\`
  */
 `)

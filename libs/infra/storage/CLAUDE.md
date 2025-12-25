@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-storage
 
-Storage
+Storage infrastructure for file operations (coordinates storage providers)
 
 ## AI Agent Reference
 
@@ -13,21 +13,17 @@ This is an infrastructure library following Effect-based service patterns.
 - **lib/errors.ts**: Data.TaggedError-based error types
 - **lib/config.ts**: Service configuration types
 - **lib/memory.ts**: In-memory provider implementation
-
+- **lib/client/hooks/use-storage.ts**: React hook
 
 ### Import Patterns
 
 ```typescript
 // Type-only import (zero runtime)
-import type { StorageConfig } from '@samuelho-dev/infra-storage/types';
-
-// Service import
-import { StorageService } from '@samuelho-dev/infra-storage';
-
-Effect.gen(function*() {
+import type { StorageConfig } from '@samuelho-dev/infra-storage/types'// Service import
+import { StorageService } from '@samuelho-dev/infra-storage'Effect.gen(function*() {
   const service = yield* StorageService;
   // Use service...
-});
+})
 ```
 
 ### Customization Guide
@@ -52,20 +48,27 @@ Effect.gen(function*() {
 
 ```typescript
 import { StorageService } from '@samuelho-dev/infra-storage';
-import type { StorageConfig } from '@samuelho-dev/infra-storage/types';
-
-// Standard usage
+import type { StorageConfig } from '@samuelho-dev/infra-storage/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* StorageService;
   // Use service...
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(StorageService.Live)  // Production
   // or Effect.provide(StorageService.Test)   // Testing
   // or Effect.provide(StorageService.Auto)   // NODE_ENV-based
-);
+)
+```
+
+### Client Usage
+
+```typescript
+import { useStorage } from '@samuelho-dev/infra-storage/client/hooks'function MyComponent() {
+  const storage = useStorage()
+  // Use service in React component
+}
 ```
 
 ### Testing Strategy

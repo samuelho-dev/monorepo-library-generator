@@ -19,15 +19,11 @@ This is an infrastructure library following Effect-based service patterns.
 
 ```typescript
 // Type-only import (zero runtime)
-import type { CacheConfig } from '@samuelho-dev/infra-cache/types';
-
-// Service import
-import { CacheService } from '@samuelho-dev/infra-cache';
-
-Effect.gen(function*() {
+import type { CacheConfig } from '@samuelho-dev/infra-cache/types'// Service import
+import { CacheService } from '@samuelho-dev/infra-cache'Effect.gen(function*() {
   const service = yield* CacheService;
   // Use service...
-});
+})
 ```
 
 ### Customization Guide
@@ -52,29 +48,25 @@ Effect.gen(function*() {
 
 ```typescript
 import { CacheService } from '@samuelho-dev/infra-cache';
-import type { CacheConfig } from '@samuelho-dev/infra-cache/types';
-
-// Standard usage
+import type { CacheConfig } from '@samuelho-dev/infra-cache/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* CacheService;
   // Use service...
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(CacheService.Live)  // Production
   // or Effect.provide(CacheService.Test)   // Testing
   // or Effect.provide(CacheService.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ### Client Usage
 
 ```typescript
-import { useCache } from '@samuelho-dev/infra-cache/client/hooks';
-
-function MyComponent() {
-  const cache = useCache();
+import { useCache } from '@samuelho-dev/infra-cache/client/hooks'function MyComponent() {
+  const cache = useCache()
   // Use service in React component
 }
 ```

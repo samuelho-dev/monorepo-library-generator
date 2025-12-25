@@ -10,8 +10,7 @@
 
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
-import { useState } from 'react';
-
+import { useState } from 'react'
 import {
   getOptionsForType,
   type BooleanOptionConfig,
@@ -23,7 +22,7 @@ import type { LibraryType, WizardOptions } from '../../interactive/types';
 import { tagExists } from '../../../utils/workspace-tags';
 import { useWorkspaceTags } from '../hooks/useWorkspaceTags';
 import { colors, statusIcons } from '../theme/colors';
-import { TagsSelector } from './TagsSelector';
+import { TagsSelector } from './TagsSelector'
 
 interface OptionsFormProps {
   readonly libraryType?: LibraryType;
@@ -48,35 +47,35 @@ export function OptionsForm({
   workspaceRoot,
 }: OptionsFormProps) {
   const availableOptions = libraryType ? getOptionsForType(libraryType) : [];
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [description, setDescription] = useState(options.description ?? '');
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [textInputValue, setTextInputValue] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [description, setDescription] = useState(options.description ?? '')
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [textInputValue, setTextInputValue] = useState('')
 
   // Tags multi-select state
   const [tagsState, setTagsState] = useState<TagsState>({
     mode: 'navigation',
     focusedIndex: 0,
-    newTagValue: '',
-  });
+    newTagValue: ''
+  })
 
   // Fetch workspace tags
-  const { customTags } = useWorkspaceTags(workspaceRoot);
+  const { customTags } = useWorkspaceTags(workspaceRoot)
 
   // Field indices
   const DESCRIPTION_INDEX = availableOptions.length;
   const TAGS_INDEX = availableOptions.length + 1;
-  const SUBMIT_INDEX = availableOptions.length + 2;
+  const SUBMIT_INDEX = availableOptions.length + 2
 
   // Total items: options + description + tags + submit
-  const totalItems = availableOptions.length + 3;
+  const totalItems = availableOptions.length + 3
 
   // Get the currently selected option config
   const currentOption =
-    selectedIndex < availableOptions.length ? availableOptions[selectedIndex] : null;
+    selectedIndex < availableOptions.length ? availableOptions[selectedIndex] : null
 
   // Check if tags field is active (selected and not editing another field)
-  const isTagsActive = selectedIndex === TAGS_INDEX && editingField === null;
+  const isTagsActive = selectedIndex === TAGS_INDEX && editingField === null
 
   useInput((input, key) => {
     // Handle text editing mode for description and config text options
@@ -84,16 +83,16 @@ export function OptionsForm({
       if (key.return) {
         // Save and exit edit mode
         if (editingField === 'description') {
-          onOptionsChange({ ...options, description: description.trim() || undefined });
+          onOptionsChange({ ...options, description: description.trim() || undefined })
         } else {
           // It's a text option from config
-          onOptionsChange({ ...options, [editingField]: textInputValue.trim() || undefined });
+          onOptionsChange({ ...options, [editingField]: textInputValue.trim() || undefined })
         }
-        setEditingField(null);
-        setTextInputValue('');
+        setEditingField(null)
+        setTextInputValue('')
       } else if (key.escape) {
-        setEditingField(null);
-        setTextInputValue('');
+        setEditingField(null)
+        setTextInputValue('')
       }
       return;
     }
@@ -102,29 +101,29 @@ export function OptionsForm({
     if (isTagsActive) {
       if (tagsState.mode === 'adding-tag') {
         if (key.return && tagsState.newTagValue.trim()) {
-          const newTag = tagsState.newTagValue.trim();
-          const allExisting = [...(options.selectedTags ?? []), ...customTags];
+          const newTag = tagsState.newTagValue.trim()
+          const allExisting = [...(options.selectedTags ?? []), ...customTags]
 
           if (!tagExists(newTag, allExisting)) {
             onOptionsChange({
               ...options,
               selectedTags: [...(options.selectedTags ?? []), newTag],
-            });
+            })
           }
-          setTagsState({ mode: 'navigation', focusedIndex: 0, newTagValue: '' });
+          setTagsState({ mode: 'navigation', focusedIndex: 0, newTagValue: '' })
         } else if (key.escape) {
-          setTagsState((s) => ({ ...s, mode: 'navigation', newTagValue: '' }));
+          setTagsState((s) => ({ ...s, mode: 'navigation', newTagValue: '' }))
         }
         return; // TextInput handles typing
       }
 
       // Tags navigation mode
       if (key.upArrow) {
-        setTagsState((s) => ({ ...s, focusedIndex: Math.max(0, s.focusedIndex - 1) }));
+        setTagsState((s) => ({ ...s, focusedIndex: Math.max(0, s.focusedIndex - 1) }))
         return;
       } else if (key.downArrow) {
         const maxIdx = customTags.length; // Including "Add new tag" option
-        setTagsState((s) => ({ ...s, focusedIndex: Math.min(maxIdx, s.focusedIndex + 1) }));
+        setTagsState((s) => ({ ...s, focusedIndex: Math.min(maxIdx, s.focusedIndex + 1) }))
         return;
       } else if (input === ' ' && tagsState.focusedIndex < customTags.length) {
         // Toggle tag selection
@@ -132,19 +131,19 @@ export function OptionsForm({
         if (tag) {
           const current = options.selectedTags ?? [];
           if (current.includes(tag)) {
-            onOptionsChange({ ...options, selectedTags: current.filter((t) => t !== tag) });
+            onOptionsChange({ ...options, selectedTags: current.filter((t) => t !== tag) })
           } else {
-            onOptionsChange({ ...options, selectedTags: [...current, tag] });
+            onOptionsChange({ ...options, selectedTags: [...current, tag] })
           }
         }
         return;
       } else if (key.return) {
         if (tagsState.focusedIndex === customTags.length) {
           // Enter "Add new tag" mode
-          setTagsState((s) => ({ ...s, mode: 'adding-tag' }));
+          setTagsState((s) => ({ ...s, mode: 'adding-tag' }))
         } else {
           // Move to next field when pressing Enter on a tag (not adding)
-          setSelectedIndex(SUBMIT_INDEX);
+          setSelectedIndex(SUBMIT_INDEX)
         }
         return;
       }
@@ -152,16 +151,16 @@ export function OptionsForm({
 
     // General navigation (not in tags or editing mode)
     if (key.upArrow) {
-      setSelectedIndex((i) => Math.max(0, i - 1));
+      setSelectedIndex((i) => Math.max(0, i - 1))
       // Reset tags state when leaving tags field
       if (selectedIndex === TAGS_INDEX) {
-        setTagsState({ mode: 'navigation', focusedIndex: 0, newTagValue: '' });
+        setTagsState({ mode: 'navigation', focusedIndex: 0, newTagValue: '' })
       }
     } else if (key.downArrow) {
-      setSelectedIndex((i) => Math.min(totalItems - 1, i + 1));
+      setSelectedIndex((i) => Math.min(totalItems - 1, i + 1))
       // Reset tags state when leaving tags field
       if (selectedIndex === TAGS_INDEX) {
-        setTagsState({ mode: 'navigation', focusedIndex: 0, newTagValue: '' });
+        setTagsState({ mode: 'navigation', focusedIndex: 0, newTagValue: '' })
       }
     } else if (key.leftArrow || key.rightArrow) {
       // Handle select option cycling
@@ -170,26 +169,26 @@ export function OptionsForm({
         const currentValue = options[selectOpt.key];
         const valueStr = typeof currentValue === 'string' ? currentValue : '';
         const currentIdx = valueStr ? selectOpt.options.indexOf(valueStr) : -1;
-        let newIdx: number;
+        let newIdx: number
 
         if (key.rightArrow) {
-          newIdx = currentIdx < selectOpt.options.length - 1 ? currentIdx + 1 : 0;
+          newIdx = currentIdx < selectOpt.options.length - 1 ? currentIdx + 1 : 0
         } else {
-          newIdx = currentIdx > 0 ? currentIdx - 1 : selectOpt.options.length - 1;
+          newIdx = currentIdx > 0 ? currentIdx - 1 : selectOpt.options.length - 1
         }
 
-        onOptionsChange({ ...options, [selectOpt.key]: selectOpt.options[newIdx] });
+        onOptionsChange({ ...options, [selectOpt.key]: selectOpt.options[newIdx] })
       }
     } else if (key.return || input === ' ') {
       if (selectedIndex < availableOptions.length && currentOption) {
         // Handle option based on type
         if (currentOption.type === 'boolean') {
           const currentValue = options[currentOption.key];
-          onOptionsChange({ ...options, [currentOption.key]: !currentValue });
+          onOptionsChange({ ...options, [currentOption.key]: !currentValue })
         } else if (currentOption.type === 'text') {
           const textValue = options[currentOption.key];
-          setTextInputValue(typeof textValue === 'string' ? textValue : '');
-          setEditingField(currentOption.key);
+          setTextInputValue(typeof textValue === 'string' ? textValue : '')
+          setEditingField(currentOption.key)
         } else if (currentOption.type === 'select') {
           // Cycle to next option on Enter
           const selectOpt = currentOption;
@@ -197,21 +196,21 @@ export function OptionsForm({
           const valueStr = typeof currentValue === 'string' ? currentValue : '';
           const currentIdx = valueStr ? selectOpt.options.indexOf(valueStr) : -1;
           const newIdx = currentIdx < selectOpt.options.length - 1 ? currentIdx + 1 : 0;
-          onOptionsChange({ ...options, [selectOpt.key]: selectOpt.options[newIdx] });
+          onOptionsChange({ ...options, [selectOpt.key]: selectOpt.options[newIdx] })
         }
       } else if (selectedIndex === DESCRIPTION_INDEX) {
-        setEditingField('description');
+        setEditingField('description')
       } else if (selectedIndex === SUBMIT_INDEX) {
-        onSubmit();
+        onSubmit()
       }
       // Tags field handled above in isTagsActive block
     }
-  });
+  })
 
   // Render a single option based on its type
   const renderOption = (opt: OptionConfig, index: number) => {
     const isSelected = selectedIndex === index;
-    const prefix = isSelected ? statusIcons.chevronRight : ' ';
+    const prefix = isSelected ? statusIcons.chevronRight : ' '
 
     if (opt.type === 'boolean') {
       const boolOpt = opt as BooleanOptionConfig;
@@ -225,7 +224,7 @@ export function OptionsForm({
           <Text> {boolOpt.label}</Text>
           <Text color={colors.muted}> - {boolOpt.description}</Text>
         </Box>
-      );
+      )
     }
 
     if (opt.type === 'text') {
@@ -248,7 +247,7 @@ export function OptionsForm({
             </Text>
           )}
         </Box>
-      );
+      )
     }
 
     if (opt.type === 'select') {
@@ -269,11 +268,11 @@ export function OptionsForm({
           ))}
           {isSelected && <Text color={colors.muted}> (use left/right)</Text>}
         </Box>
-      );
+      )
     }
 
-    return null;
-  };
+    return null
+  }
 
   return (
     <Box flexDirection="column">
@@ -340,5 +339,5 @@ export function OptionsForm({
         </Text>
       </Box>
     </Box>
-  );
+  )
 }

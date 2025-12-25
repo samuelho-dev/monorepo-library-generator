@@ -15,7 +15,7 @@ Contract-First Architecture:
 Usage:
   // In Next.js App Router (app/api/user/route.ts)
   import { createUserHandler } from "@samuelho-dev/feature-user/rpc";
-  export const POST = createUserHandler();
+  export const POST = createUserHandler()
  *
  */
 // ============================================================================
@@ -67,13 +67,13 @@ export const UserTestLayer = Layer.mergeAll(
  * // Mount RPC handlers
  * const httpApp = HttpRouter.empty.pipe(
  *   HttpRouter.mount("/rpc", RpcServer.toHttpApp(UserRpcs))
- * );
+ * )
  *
  * // Provide layers and run
  * const runnable = httpApp.pipe(
  *   Effect.provide(UserHandlers),
  *   Effect.provide(UserProductionLayer)
- * );
+ * )
  * ```
  *
  * For simpler Next.js integration, use Effect.runPromise directly:
@@ -81,15 +81,15 @@ export const UserTestLayer = Layer.mergeAll(
  * ```typescript
  * // app/api/user/route.ts
  * export async function POST(request: Request) {
- *   const body = await request.json();
+ *   const body = await request.json()
  *   // Handle RPC call using provided layers
  *   const result = await Effect.runPromise(
  *     handleRpcRequest(body).pipe(
  *       Effect.provide(UserHandlers),
  *       Effect.provide(UserProductionLayer)
  *     )
- *   );
- *   return Response.json(result);
+ *   )
+ *   return Response.json(result)
  * }
  * ```
  */

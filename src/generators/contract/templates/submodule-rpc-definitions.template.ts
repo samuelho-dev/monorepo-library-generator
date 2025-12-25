@@ -58,7 +58,7 @@ export function generateSubModuleRpcDefinitionsFile(options: SubModuleRpcDefinit
  * export const ${subModuleClassName}Handlers = ${subModuleClassName}Rpcs.toLayer({
  *   "${subModuleClassName}.Get": (input) =>
  *     Effect.flatMap(${subModuleClassName}Service, s => s.get(input.id)),
- * });
+ * })
  * \`\`\`
  *
  * @module ${scope}/contract-${parentName}/${subModuleName}/rpc

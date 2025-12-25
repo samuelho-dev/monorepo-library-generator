@@ -71,20 +71,16 @@ Usage:
 export type ProjectionHandler<TEvent, TModel> = (
   event: TEvent,
   currentModel: TModel | null
-) => Effect.Effect<TModel>;
+) => Effect.Effect<TModel>
 
 /**
  * Projection definition
  */
 export interface ProjectionDefinition<TEvent, TModel> {
   /** Unique projection name */
-  readonly name: string;
-
-  /** Event type this projection handles */
-  readonly eventType: string;
-
-  /** Handler function */
-  readonly handler: ProjectionHandler<TEvent, TModel>;
+  readonly name: string  /** Event type this projection handles */
+  readonly eventType: string  /** Handler function */
+  readonly handler: ProjectionHandler<TEvent, TModel>
 }
 
 /**
@@ -92,13 +88,13 @@ export interface ProjectionDefinition<TEvent, TModel> {
  */
 export interface ReadModelStore<T> {
   /** Get a model by ID */
-  readonly get: (id: string) => Effect.Effect<T | null>;
+  readonly get: (id: string) => Effect.Effect<T | null>
 
   /** Save a model */
-  readonly save: (id: string, model: T) => Effect.Effect<void>;
+  readonly save: (id: string, model: T) => Effect.Effect<void>
 
   /** Delete a model */
-  readonly delete: (id: string) => Effect.Effect<void>;
+  readonly delete: (id: string) => Effect.Effect<void>
 }`)
   builder.addBlankLine()
 
@@ -114,22 +110,22 @@ export interface ProjectionBuilderInterface<TModel> {
   /**
    * Process a domain event and update projections
    */
-  readonly processEvent: (event: ${className}DomainEvent) => Effect.Effect<void>;
+  readonly processEvent: (event: ${className}DomainEvent) => Effect.Effect<void>
 
   /**
    * Start consuming events from the message broker
    */
-  readonly startProjecting: () => Effect.Effect<void>;
+  readonly startProjecting: () => Effect.Effect<void>
 
   /**
    * Rebuild all projections from event history
    */
-  readonly rebuild: (events: ReadonlyArray<${className}DomainEvent>) => Effect.Effect<void>;
+  readonly rebuild: (events: ReadonlyArray<${className}DomainEvent>) => Effect.Effect<void>
 
   /**
    * Get current projection state
    */
-  readonly getProjection: (id: string) => Effect.Effect<TModel | null>;
+  readonly getProjection: (id: string) => Effect.Effect<TModel | null>
 }`)
   builder.addBlankLine()
 
@@ -146,7 +142,7 @@ export interface ${className}ReadModel {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly version: number;
-  readonly data: Record<string, unknown>;
+  readonly data: Record<string, unknown>
 }`)
   builder.addBlankLine()
 
@@ -164,22 +160,22 @@ const createProjectionBuilderImpl = (
 ) => {
   const processEvent = (event: ${className}DomainEvent) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("${name.toLowerCase()}_projections_processed_total");
+      const counter = yield* metrics.counter("${name.toLowerCase()}_projections_processed_total")
 
       yield* logger.debug("Processing projection event", {
         eventType: event.eventType,
         correlationId: event.correlationId,
-      });
+      })
 
       // Extract ID from event
       const getId = (e: ${className}DomainEvent): string => {
         if ("${propertyName}Id" in e) return e.${propertyName}Id;
         if ("id" in e) return e.id;
         return event.correlationId || "";
-      };
+      }
 
-      const id = getId(event);
-      const current = yield* store.get(id);
+      const id = getId(event)
+      const current = yield* store.get(id)
 
       // Use _tag discriminated union instead of instanceof
       switch (event._tag) {
@@ -189,8 +185,8 @@ const createProjectionBuilderImpl = (
             createdAt: new Date(event.occurredAt),
             updatedAt: new Date(event.occurredAt),
             version: 1,
-            data: {},
-          });
+            data: {}
+          })
           break;
         case "${className}UpdatedEvent":
           if (current) {
@@ -198,54 +194,52 @@ const createProjectionBuilderImpl = (
               ...current,
               updatedAt: new Date(event.occurredAt),
               version: current.version + 1,
-            });
+            })
           }
           break;
         case "${className}DeletedEvent":
-          yield* store.delete(id);
+          yield* store.delete(id)
           break;
       }
 
-      yield* counter.increment;
-
-      yield* logger.info("Projection updated", {
+      yield* counter.increment      yield* logger.info("Projection updated", {
         eventType: event.eventType,
         entityId: id,
-      });
+      })
     }).pipe(
       Effect.withSpan("${className}Projection.processEvent", {
         attributes: {
           eventType: event.eventType,
         },
       })
-    );
+    )
 
   return {
     processEvent,
 
     startProjecting: () =>
       Effect.gen(function*() {
-        yield* logger.info("Starting ${className} projection consumer");
+        yield* logger.info("Starting ${className} projection consumer")
 
         // Subscribe to all events
         yield* pubsub.subscribe("${propertyName}.events", (event) =>
           processEvent(event as ${className}DomainEvent)
-        );
+        )
       }),
 
     rebuild: (events) =>
       Effect.gen(function*() {
-        yield* logger.info(\`Rebuilding projections from \${events.length} events\`);
+        yield* logger.info(\`Rebuilding projections from \${events.length} events\`)
 
         for (const event of events) {
-          yield* processEvent(event);
+          yield* processEvent(event)
         }
 
-        yield* logger.info("Projection rebuild complete");
+        yield* logger.info("Projection rebuild complete")
       }),
 
-    getProjection: (id) => store.get(id),
-  };
+    getProjection: (id) => store.get(id)
+  }
 };`)
   builder.addBlankLine()
 
@@ -263,14 +257,14 @@ const createProjectionBuilderImpl = (
  *   const projections = yield* ${className}ProjectionBuilder;
  *
  *   // Start consuming events
- *   yield* projections.startProjecting();
+ *   yield* projections.startProjecting()
  *
  *   // Or manually process an event
- *   yield* projections.processEvent(event);
+ *   yield* projections.processEvent(event)
  *
  *   // Query the projection
- *   const model = yield* projections.getProjection("entity-123");
- * });
+ *   const model = yield* projections.getProjection("entity-123")
+ * })
  * \`\`\`
  */
 export class ${className}ProjectionBuilder extends Context.Tag("${className}ProjectionBuilder")<
@@ -286,29 +280,27 @@ export class ${className}ProjectionBuilder extends Context.Tag("${className}Proj
       Effect.gen(function*() {
         const pubsub = yield* PubsubService;
         const logger = yield* LoggingService;
-        const metrics = yield* MetricsService;
-
-        return createProjectionBuilderImpl(pubsub, logger, metrics, store);
+        const metrics = yield* MetricsService        return createProjectionBuilderImpl(pubsub, logger, metrics, store)
       })
-    );
+    )
   }
 
   /**
    * In-memory store for testing
    */
   static readonly InMemoryStore: ReadModelStore<${className}ReadModel> = (() => {
-    const store = new Map<string, ${className}ReadModel>();
+    const store = new Map<string, ${className}ReadModel>()
     return {
       get: (id) => Effect.succeed(store.get(id) ?? null),
-      save: (id, model) => Effect.sync(() => { store.set(id, model); }),
-      delete: (id) => Effect.sync(() => { store.delete(id); }),
-    };
-  })();
+      save: (id, model) => Effect.sync(() => { store.set(id, model) }),
+      delete: (id) => Effect.sync(() => { store.delete(id) }),
+    }
+  })()
 
   /**
    * Test layer with in-memory store
    */
-  static readonly Test = this.Live(this.InMemoryStore);
+  static readonly Test = this.Live(this.InMemoryStore)
 }`)
 
   return builder.toString()

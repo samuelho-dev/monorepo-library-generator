@@ -7,9 +7,8 @@
  */
 
 import { Box, Text, useInput } from 'ink';
-import { useState } from 'react';
-
-import { colors, statusIcons } from '../theme/colors';
+import { useState } from 'react'
+import { colors, statusIcons } from '../theme/colors'
 
 interface ConfirmPromptProps {
   readonly targetDirectory: string;
@@ -27,23 +26,23 @@ export function ConfirmPrompt({
   onConfirm,
   onCancel,
 }: ConfirmPromptProps) {
-  const [selected, setSelected] = useState<'yes' | 'no'>('yes');
+  const [selected, setSelected] = useState<'yes' | 'no'>('yes')
 
   useInput((input, key) => {
     if (key.leftArrow || key.rightArrow) {
-      setSelected((s) => (s === 'yes' ? 'no' : 'yes'));
+      setSelected((s) => (s === 'yes' ? 'no' : 'yes'))
     } else if (input === 'y' || input === 'Y') {
-      onConfirm();
+      onConfirm()
     } else if (input === 'n' || input === 'N' || key.escape) {
-      onCancel();
+      onCancel()
     } else if (key.return) {
       if (selected === 'yes') {
-        onConfirm();
+        onConfirm()
       } else {
-        onCancel();
+        onCancel()
       }
     }
-  });
+  })
 
   return (
     <Box flexDirection="column">
@@ -78,5 +77,5 @@ export function ConfirmPrompt({
         <Text color={colors.muted}>Use arrow keys or Y/N to select, Enter to confirm</Text>
       </Box>
     </Box>
-  );
+  )
 }

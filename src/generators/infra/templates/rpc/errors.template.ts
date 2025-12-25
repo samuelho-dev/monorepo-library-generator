@@ -264,7 +264,7 @@ export const getHttpStatus = (error: RpcError): number =>
  *       issues: e.issues
  *     }))
  *   )
- * );
+ * )
  * \`\`\`
  *
  * For catch-all transformation to RpcInternalError:
@@ -274,7 +274,7 @@ export const getHttpStatus = (error: RpcError): number =>
  *   Effect.catchAll(() =>
  *     Effect.fail(new RpcInternalError({ message: "An error occurred" }))
  *   )
- * );
+ * )
  * \`\`\`
  */
 export const withRpcErrorBoundary = <A, E, R>(

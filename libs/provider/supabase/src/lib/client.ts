@@ -36,20 +36,18 @@ export interface SupabaseClientServiceInterface {
   /**
    * Configuration used to initialize the client
    */
-  readonly config: SupabaseConfig;
-
-  /**
+  readonly config: SupabaseConfig  /**
    * Get the underlying Supabase client
    *
    * Use this for advanced operations not covered by SupabaseAuth/SupabaseStorage.
    * Prefer the specialized services for auth and storage operations.
    */
-  readonly getClient: () => Effect.Effect<SupabaseSDKClient, SupabaseError>;
+  readonly getClient: () => Effect.Effect<SupabaseSDKClient, SupabaseError>
 
   /**
    * Health check - verifies Supabase connectivity
    */
-  readonly healthCheck: () => Effect.Effect<boolean, SupabaseConnectionError>;
+  readonly healthCheck: () => Effect.Effect<boolean, SupabaseConnectionError>
 }
 
 // ============================================================================
@@ -92,8 +90,8 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
         }),
 
       healthCheck: () =>
-        Effect.gen(function* () {
-          const client = createClient(config.url, config.anonKey);
+        Effect.gen(function*() {
+          const client = createClient(config.url, config.anonKey)
           // Simple health check - verify we can reach Supabase
           const { error } = yield* Effect.tryPromise({
             try: () => client.auth.getSession(),
@@ -101,8 +99,8 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
               new SupabaseConnectionError({
                 message: "Failed to connect to Supabase",
                 cause: error
-              }),
-          });
+              })
+          })
           // getSession returns null session when not authenticated, that's OK
           // We only care if there's an actual error
           if (error && error.status !== 400) {
@@ -111,11 +109,11 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
                 message: "Supabase health check failed",
                 cause: error
               })
-            );
+            )
           }
-          return true;
+          return true
         }),
-    });
+    })
   }
 
   /**
@@ -137,7 +135,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
         serviceRoleKey,
       }
 
-      const client = createClient(config.url, config.anonKey);
+      const client = createClient(config.url, config.anonKey)
 
       return {
         config,
@@ -145,7 +143,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
         getClient: () => Effect.succeed(client),
 
         healthCheck: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const { error } = yield* Effect.tryPromise({
               try: () => client.auth.getSession(),
               catch: (error) =>
@@ -153,19 +151,19 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
                   message: "Failed to connect to Supabase",
                   cause: error
                 }),
-            });
+            })
             if (error && error.status !== 400) {
               return yield* Effect.fail(
                 new SupabaseConnectionError({
                   message: "Supabase health check failed",
                   cause: error
                 })
-              );
+              )
             }
             return true;
-          }),
-      };
-  });
+          })
+      } 
+  })
 
   /**
    * Test layer with mock client
@@ -191,8 +189,8 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
         })
       ),
 
-    healthCheck: () => Effect.succeed(true),
-  }));
+    healthCheck: () => Effect.succeed(true)
+  }))
 
   /**
    * Dev layer with debug logging
@@ -201,34 +199,34 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
    */
   static readonly Dev = Layer.effect(
     SupabaseClient,
-    Effect.gen(function* () {
-      yield* Effect.logDebug("[SupabaseClient] Initializing dev client...");
+    Effect.gen(function*() {
+      yield* Effect.logDebug("[SupabaseClient] Initializing dev client...")
 
       // Read from centralized env library
       const url = env.SUPABASE_URL
       const anonKey = Redacted.value(env.SUPABASE_ANON_KEY)
       const serviceRoleKey = Redacted.value(env.SUPABASE_SERVICE_ROLE_KEY)
 
-      const config: SupabaseConfig = { url, anonKey, serviceRoleKey };
+      const config: SupabaseConfig = { url, anonKey, serviceRoleKey }
 
-      yield* Effect.logDebug("[SupabaseClient] Config loaded", { url: config.url });
+      yield* Effect.logDebug("[SupabaseClient] Config loaded", { url: config.url })
 
       return {
         config,
 
         getClient: () =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseClient] Creating client...");
-            return createClient(config.url, config.anonKey);
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseClient] Creating client...")
+            return createClient(config.url, config.anonKey)
           }),
 
         healthCheck: () =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug("[SupabaseClient] Running health check...");
-            yield* Effect.logDebug("[SupabaseClient] Health check passed (dev mode)");
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[SupabaseClient] Running health check...")
+            yield* Effect.logDebug("[SupabaseClient] Health check passed (dev mode)")
             return true;
-          }),
-      };
+          })
+      } ;
     })
-  );
+  )
 }

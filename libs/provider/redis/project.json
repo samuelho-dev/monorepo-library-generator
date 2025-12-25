@@ -6,7 +6,9 @@
   "tags": [
     "type:provider",
     "scope:redis",
-    ""
+    "provider",
+    "effect",
+    "builtin"
   ],
   "targets": {
     "build": {

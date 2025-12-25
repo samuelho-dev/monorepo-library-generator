@@ -19,15 +19,11 @@ This is an infrastructure library following Effect-based service patterns.
 
 ```typescript
 // Type-only import (zero runtime)
-import type { ObservabilityConfig } from '@samuelho-dev/infra-observability/types';
-
-// Service import
-import { ObservabilityService } from '@samuelho-dev/infra-observability';
-
-Effect.gen(function*() {
+import type { ObservabilityConfig } from '@samuelho-dev/infra-observability/types'// Service import
+import { ObservabilityService } from '@samuelho-dev/infra-observability'Effect.gen(function*() {
   const service = yield* ObservabilityService;
   // Use service...
-});
+})
 ```
 
 ### Customization Guide
@@ -52,29 +48,25 @@ Effect.gen(function*() {
 
 ```typescript
 import { ObservabilityService } from '@samuelho-dev/infra-observability';
-import type { ObservabilityConfig } from '@samuelho-dev/infra-observability/types';
-
-// Standard usage
+import type { ObservabilityConfig } from '@samuelho-dev/infra-observability/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* ObservabilityService;
   // Use service...
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(ObservabilityService.Live)  // Production
   // or Effect.provide(ObservabilityService.Test)   // Testing
   // or Effect.provide(ObservabilityService.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ### Client Usage
 
 ```typescript
-import { useObservability } from '@samuelho-dev/infra-observability/client/hooks';
-
-function MyComponent() {
-  const observability = useObservability();
+import { useObservability } from '@samuelho-dev/infra-observability/client/hooks'function MyComponent() {
+  const observability = useObservability()
   // Use service in React component
 }
 ```

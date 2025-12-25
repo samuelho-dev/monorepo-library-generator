@@ -40,16 +40,13 @@ NOTE: These hooks provide RPC access only.
 State management is centralized in the parent ${parentClassName} atoms.
 
 Usage:
-  import { use${subModuleClassName}Rpc } from "${scope}/feature-${parentName}/client";
-
-  const { mutate, isLoading } = use${subModuleClassName}Rpc();
-  await mutate.create(data);`
+  import { use${subModuleClassName}Rpc } from "${scope}/feature-${parentName}/client"  const { mutate, isLoading } = use${subModuleClassName}Rpc()
+  await mutate.create(data)`
   })
 
   builder.addImports([
     { from: "react", imports: ["useCallback", "useState"] },
-    { from: "@effect/schema", imports: ["Schema"] },
-    { from: "effect", imports: ["Option"] }
+    { from: "effect", imports: ["Option", "Schema"] }
   ])
 
   builder.addSectionComment("RPC Utilities")
@@ -116,10 +113,10 @@ async function rpcCall<T>(operation: string, payload: unknown): Promise<T> {
  * @example
  * \`\`\`tsx
  * function MyComponent() {
- *   const { call, isLoading, error } = use${subModuleClassName}Rpc();
+ *   const { call, isLoading, error } = use${subModuleClassName}Rpc()
  *
  *   const handleAction = async () => {
- *     const result = await call<SomeType>("Get${subModuleClassName}", { id: "123" });
+ *     const result = await call<SomeType>("Get${subModuleClassName}", { id: "123" })
  *   };
  * }
  * \`\`\`

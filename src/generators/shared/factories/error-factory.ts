@@ -11,14 +11,14 @@
  * import { createErrorFactory, createContractReExports } from './error-factory';
  * import { ERROR_SETS } from './presets/error-presets';
  *
- * const builder = new TypeScriptBuilder();
+ * const builder = new TypeScriptBuilder()
  *
  * // Re-export domain errors from contract
  * createContractReExports({
  *   className: 'User',
  *   scope: '@myorg',
  *   fileName: 'user',
- * })(builder);
+ * })(builder)
  *
  * // Generate infrastructure errors
  * createErrorFactory({
@@ -26,7 +26,7 @@
  *   style: 'data',
  *   errors: ERROR_SETS.dataAccess('User'),
  *   includeUnionType: true,
- * })(builder);
+ * })(builder)
  * ```
  */
 
@@ -182,9 +182,9 @@ function generateError(
  *     ERROR_DEFINITIONS.validation('User'),
  *   ],
  *   includeUnionType: true,
- * });
+ * })
  *
- * factory(builder);
+ * factory(builder)
  * ```
  */
 export function createErrorFactory(config: ErrorFactoryConfig) {
@@ -244,7 +244,7 @@ export type ${typeName} =${unionType}`)
  *   className: 'User',
  *   scope: '@myorg',
  *   fileName: 'user',
- * })(builder);
+ * })(builder)
  *
  * // Generates:
  * // export {
@@ -312,7 +312,7 @@ export interface DataAccessContractReExportConfig {
  *   className: 'User',
  *   scope: '@myorg',
  *   fileName: 'user',
- * })(builder);
+ * })(builder)
  * ```
  */
 export function createDataAccessContractReExports(config: DataAccessContractReExportConfig) {
@@ -377,7 +377,7 @@ export {
  *   libraryType: 'data-access',
  *   errors: ERROR_SETS.dataAccess('User'),
  *   contractReExports: true,
- * });
+ * })
  * ```
  */
 export function generateErrorFile(config: {
@@ -414,7 +414,7 @@ export function generateErrorFile(config: {
 
   // Imports
   if (style === "schema") {
-    builder.addImports([{ from: "@effect/schema/Schema", imports: ["Schema"] }])
+    builder.addImports([{ from: "effect", imports: ["Schema"] }])
   } else {
     builder.addImports([{ from: "effect", imports: ["Data"] }])
   }

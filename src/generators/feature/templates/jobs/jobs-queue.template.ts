@@ -179,10 +179,10 @@ export class Create${className}Job extends Schema.Class<Create${className}Job>(
   initiatedBy: Schema.optional(Schema.UUID)
 }) {
   static create(params: {
-    data: Record<string, unknown>;
+    data: Record<string, unknown>
     initiatedBy?: string;
     correlationId?: string;
-    priority?: number;
+    priority?: number
   }) {
     return new Create${className}Job({
       jobId: crypto.randomUUID(),
@@ -218,10 +218,10 @@ export class Update${className}Job extends Schema.Class<Update${className}Job>(
 }) {
   static create(params: {
     entityId: string;
-    data: Record<string, unknown>;
+    data: Record<string, unknown>
     initiatedBy?: string;
     correlationId?: string;
-    priority?: number;
+    priority?: number
   }) {
     return new Update${className}Job({
       jobId: crypto.randomUUID(),
@@ -261,7 +261,7 @@ export class Delete${className}Job extends Schema.Class<Delete${className}Job>(
     softDelete?: boolean;
     initiatedBy?: string;
     correlationId?: string;
-    priority?: number;
+    priority?: number
   }) {
     return new Delete${className}Job({
       jobId: crypto.randomUUID(),
@@ -305,11 +305,11 @@ export class Bulk${className}Job extends Schema.Class<Bulk${className}Job>(
 }) {
   static create(params: {
     operation: "create" | "update" | "delete";
-    items: Array<Record<string, unknown>>;
+    items: Array<Record<string, unknown>>
     initiatedBy?: string;
     correlationId?: string;
     priority?: number;
-    continueOnError?: boolean;
+    continueOnError?: boolean
   }) {
     return new Bulk${className}Job({
       jobId: crypto.randomUUID(),
@@ -508,8 +508,8 @@ const processJob = <CreateData, UpdateData, BulkItemData>(
   schemas: ${className}JobProcessorSchemas<CreateData, UpdateData, BulkItemData>
 ) =>
   Effect.gen(function*() {
-    const histogram = yield* metrics.histogram("${name.toLowerCase()}_job_duration_seconds");
-    const counter = yield* metrics.counter("${name.toLowerCase()}_jobs_processed_total");
+    const histogram = yield* metrics.histogram("${name.toLowerCase()}_job_duration_seconds")
+    const counter = yield* metrics.counter("${name.toLowerCase()}_jobs_processed_total")
 
     yield* logger.info("Processing ${name} job", {
       jobId: job.jobId,
@@ -565,12 +565,12 @@ const processJob = <CreateData, UpdateData, BulkItemData>(
  *   const job = Create${className}Job.create({
  *     data: { name: "example" },
  *     initiatedBy: "user-123",
- *   });
+ *   })
  *
- *   yield* queue.enqueue(job);
- * });
+ *   yield* queue.enqueue(job)
+ * })
  *
- * program.pipe(Effect.provide(${className}JobQueue.Live(schemas)));
+ * program.pipe(Effect.provide(${className}JobQueue.Live(schemas)))
  * \`\`\`
  */
 export class ${className}JobQueue extends Context.Tag("${className}JobQueue")<
@@ -591,25 +591,22 @@ export class ${className}JobQueue extends Context.Tag("${className}JobQueue")<
       const service = yield* ${className}Service;
       const logger = yield* LoggingService;
       const metrics = yield* MetricsService;
-
-      const failedCounter = yield* metrics.counter("${name.toLowerCase()}_jobs_failed_total");
-      const pendingGauge = yield* metrics.gauge("${name.toLowerCase()}_jobs_pending");
-      const processingGauge = yield* metrics.gauge("${name.toLowerCase()}_jobs_processing");
+      const failedCounter = yield* metrics.counter("${name.toLowerCase()}_jobs_failed_total")
+      const pendingGauge = yield* metrics.gauge("${name.toLowerCase()}_jobs_pending")
+      const processingGauge = yield* metrics.gauge("${name.toLowerCase()}_jobs_processing")
 
       // Create bounded queue for job storage
-      const jobQueue = yield* queueService.bounded<${className}Job>(1000);
+      const jobQueue = yield* queueService.bounded<${className}Job>(1000)
 
       // Stats tracking
       let pending = 0;
       let processing = 0;
       let completed = 0;
       let failed = 0;
-      let isProcessing = false;
-
-      // Retry schedule: fixed delay with max retries
+      let isProcessing = false      // Retry schedule: fixed delay with max retries
       const retrySchedule = Schedule.spaced(${className}QueueConfig.RETRY_DELAY).pipe(
         Schedule.compose(Schedule.recurs(${className}QueueConfig.DEFAULT_RETRIES))
-      );
+      )
 
       // Process jobs from the queue with retry logic
       const processWithRetry = (job: ${className}Job) =>

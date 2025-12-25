@@ -1,6 +1,6 @@
 # @samuelho-dev/provider-redis
 
-Redis
+Redis provider for cache, queue, and pubsub backing with ioredis
 
 ## Overview
 

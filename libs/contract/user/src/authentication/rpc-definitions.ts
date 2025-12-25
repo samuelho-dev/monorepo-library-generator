@@ -24,7 +24,7 @@ import { AuthenticationRpcError } from "./rpc-errors"
  * export const AuthenticationHandlers = AuthenticationRpcs.toLayer({
  *   "Authentication.Get": (input) =>
  *     Effect.flatMap(AuthenticationService, s => s.get(input.id)),
- * });
+ * })
  * ```
  *
  * @module @samuelho-dev/contract-user/authentication/rpc

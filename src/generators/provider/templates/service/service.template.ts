@@ -313,7 +313,7 @@ export interface ${className}ServiceInterface {
   // // Implementation:
   // streamAll: (params) =>
   //   Stream.asyncScoped<Resource, ${className}ServiceError>((emit) =>
-  //     Effect.gen(function* () {
+  //     Effect.gen(function*() {
   //       const client = yield* ${className}Client;
   //       let page = 1;
   //       let hasMore = true;
@@ -325,10 +325,10 @@ export interface ${className}ServiceInterface {
   //               Schedule.compose(Schedule.recurs(3))
   //             )
   //           })
-  //         );
+  //         )
   //
   //         for (const item of result.data) {
-  //           yield* emit.single(item);
+  //           yield* emit.single(item)
   //         }
   //
   //         hasMore = result.data.length === result.limit;
@@ -336,7 +336,7 @@ export interface ${className}ServiceInterface {
   //
   //         // Rate limiting: delay between pages
   //         if (hasMore) {
-  //           yield* Effect.sleep("100 millis");
+  //           yield* Effect.sleep("100 millis")
   //         }
   //       }
   //     })
@@ -346,7 +346,7 @@ export interface ${className}ServiceInterface {
   // const all = yield* provider.streamAll({ limit: 100 }).pipe(
   //   Stream.runCollect,
   //   Effect.map(Chunk.toArray)
-  // );
+  // )
   //
   // Benefits:
   // - Constant memory regardless of total items
@@ -375,7 +375,7 @@ export interface ${className}ServiceInterface {
   // const created = yield* provider.bulkCreate(items).pipe(
   //   Stream.runCollect,
   //   Effect.map(Chunk.toArray)
-  // );
+  // )
   //
   // Benefits:
   // - Respects API rate limits
@@ -393,23 +393,23 @@ export interface ${className}ServiceInterface {
   // // Implementation with Queue:
   // streamEvents: () =>
   //   Stream.asyncScoped<${className}Event, ${className}ServiceError>((emit) =>
-  //     Effect.gen(function* () {
+  //     Effect.gen(function*() {
   //       const client = yield* ${className}Client;
   //
   //       // Subscribe to webhook/SSE/websocket
   //       const subscription = yield* Effect.acquireRelease(
-  //         Effect.gen(function* () {
-  //           const sub = yield* client.subscribe();
+  //         Effect.gen(function*() {
+  //           const sub = yield* client.subscribe()
   //
   //           // Emit events as they arrive
   //           sub.on("event", (event) => {
-  //             emit.single(event);
+  //             emit.single(event)
   //           })
   //
   //           return sub;
   //         }),
   //         (sub) => Effect.sync(() => sub.unsubscribe())
-  //       );
+  //       )
   //
   //       // Keep stream alive
   //       yield* Effect.never;
@@ -420,7 +420,7 @@ export interface ${className}ServiceInterface {
   // yield* provider.streamEvents().pipe(
   //   Stream.mapEffect((event) => processEvent(event)),
   //   Stream.runDrain
-  // );
+  // )
   //
   // Example 4: Batch delete with retry
   //
@@ -434,7 +434,7 @@ export interface ${className}ServiceInterface {
   //     // Process 10 at a time
   //     Stream.grouped(10),
   //     Stream.mapEffect((batch) =>
-  //       Effect.gen(function* () {
+  //       Effect.gen(function*() {
   //         yield* Effect.forEach(
   //           batch,
   //           (id) => this.delete(id).pipe(
@@ -445,14 +445,14 @@ export interface ${className}ServiceInterface {
   //             })
   //           ),
   //           { concurrency: 10 }
-  //         );
+  //         )
   //       })
   //     ),
   //     Stream.tap(() => Effect.sleep("500 millis")) // Rate limiting
   //   ),
   //
   // // Usage:
-  // yield* provider.bulkDelete(idsToDelete).pipe(Stream.runDrain);
+  // yield* provider.bulkDelete(idsToDelete).pipe(Stream.runDrain)
   //
   // See EFFECT_PATTERNS.md "Streaming & Queuing Patterns" for comprehensive examples.
   // See PROVIDER.md for provider-specific Stream integration patterns.
@@ -493,7 +493,7 @@ export class ${className} extends Context.Tag("${className}")<
    */
   static readonly Live = Layer.effect(
     ${className},
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* ${className}Config
 
       const execute = (args: readonly string[]) =>
@@ -555,7 +555,7 @@ export class ${className} extends Context.Tag("${className}")<
    */
   static readonly Live = Layer.effect(
     ${className},
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const client = yield* HttpClient.HttpClient
       const config = yield* ${className}Config
 
@@ -692,7 +692,7 @@ export class ${className} extends Context.Tag("${className}")<
    */
   static readonly Live = Layer.effect(
     ${className},
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const client = yield* HttpClient.HttpClient
       const config = yield* ${className}Config
 
@@ -803,7 +803,7 @@ export class ${className} extends Context.Tag("${className}")<
    * // 2. Replace in-memory store with SDK calls:
    * static readonly Live = Layer.effect(
    *   this,
-   *   Effect.gen(function* () {
+   *   Effect.gen(function*() {
    *     const client = new ${externalService}Client(config)
    *     return {
    *       get: (id) => Effect.tryPromise({
@@ -813,12 +813,12 @@ export class ${className} extends Context.Tag("${className}")<
    *       // ... other methods
    *     };
    *   })
-   * );
+   * )
    * \`\`\`
    */
   static readonly Live = Layer.effect(
     ${className},
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Lazy import env - only loads when Live layer is built, not at module parse time
       // This allows tests to import service.ts without triggering env validation
       const { env } = yield* Effect.promise(() => import("${scope}/env"))
@@ -855,7 +855,7 @@ export class ${className} extends Context.Tag("${className}")<
           }),
 
         get: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const item = store.get(id)
             if (!item) {
               return yield* Effect.fail(
@@ -884,7 +884,7 @@ export class ${className} extends Context.Tag("${className}")<
           }),
 
         update: (id, data) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const item = store.get(id)
             if (!item) {
               return yield* Effect.fail(
@@ -907,7 +907,7 @@ export class ${className} extends Context.Tag("${className}")<
           }),
 
         delete: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const existed = store.delete(id)
             if (!existed) {
               return yield* Effect.fail(
@@ -918,10 +918,10 @@ export class ${className} extends Context.Tag("${className}")<
                 })
               )
             }
-          }),
-      };
+          })
+      } ;
     })
-  );
+  )
 
   /**
    * Test Layer - Placeholder implementation
@@ -965,7 +965,7 @@ export class ${className} extends Context.Tag("${className}")<
 
         // Get by ID with proper error handling
         get: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const item = store.get(id)
             if (!item) {
               return yield* Effect.fail(
@@ -996,7 +996,7 @@ export class ${className} extends Context.Tag("${className}")<
 
         // Update existing resource
         update: (id, data) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const item = store.get(id)
             if (!item) {
               return yield* Effect.fail(
@@ -1020,7 +1020,7 @@ export class ${className} extends Context.Tag("${className}")<
 
         // Delete with existence check
         delete: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const existed = store.delete(id)
             if (!existed) {
               return yield* Effect.fail(
@@ -1031,10 +1031,10 @@ export class ${className} extends Context.Tag("${className}")<
                 })
               )
             }
-          }),
-      };
+          })
+      } ;
     }
-  );
+  )
 
   /**
    * Dev Layer - Development with enhanced logging
@@ -1044,7 +1044,7 @@ export class ${className} extends Context.Tag("${className}")<
    */
   static readonly Dev = Layer.effect(
     ${className},
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       yield* Effect.logDebug("[${className}] [DEV] Initializing development layer")
 
       // Get actual implementation from Live layer
@@ -1057,7 +1057,7 @@ export class ${className} extends Context.Tag("${className}")<
       return {
         config: liveService.config,
 
-        healthCheck: Effect.gen(function* () {
+        healthCheck: Effect.gen(function*() {
           yield* Effect.logDebug("[${className}] [DEV] healthCheck called")
           const result = yield* liveService.healthCheck
           yield* Effect.logDebug("[${className}] [DEV] healthCheck result", { result })
@@ -1065,7 +1065,7 @@ export class ${className} extends Context.Tag("${className}")<
         }),
 
         list: (params) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[${className}] [DEV] list called", { params })
             const result = yield* liveService.list(params)
             yield* Effect.logDebug("[${className}] [DEV] list result", { count: result.data.length, total: result.total })
@@ -1073,7 +1073,7 @@ export class ${className} extends Context.Tag("${className}")<
           }),
 
         get: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[${className}] [DEV] get called", { id })
             const result = yield* liveService.get(id)
             yield* Effect.logDebug("[${className}] [DEV] get result", { result })
@@ -1081,7 +1081,7 @@ export class ${className} extends Context.Tag("${className}")<
           }),
 
         create: (data) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[${className}] [DEV] create called", { data })
             const result = yield* liveService.create(data)
             yield* Effect.logDebug("[${className}] [DEV] create result", { result })
@@ -1089,7 +1089,7 @@ export class ${className} extends Context.Tag("${className}")<
           }),
 
         update: (id, data) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[${className}] [DEV] update called", { id, data })
             const result = yield* liveService.update(id, data)
             yield* Effect.logDebug("[${className}] [DEV] update result", { result })
@@ -1097,14 +1097,14 @@ export class ${className} extends Context.Tag("${className}")<
           }),
 
         delete: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[${className}] [DEV] delete called", { id })
             yield* liveService.delete(id)
             yield* Effect.logDebug("[${className}] [DEV] delete completed", { id })
           })
       }
     })
-  );
+  )
 
   /**
    * Auto Layer - Environment-aware layer selection

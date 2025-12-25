@@ -81,7 +81,7 @@ export interface OtlpPresetConfig {
  *     endpoint: "http://otel-collector:4318",
  *   }),
  *   MyService.Live,
- * );
+ * )
  * ```
  */
 export const OtlpPreset = (config: OtlpPresetConfig) => {
@@ -107,7 +107,7 @@ export const OtlpPreset = (config: OtlpPresetConfig) => {
         headers,
       }),
       exportIntervalMillis: config.metricsIntervalMs ?? 60000,
-    }),
+    })
   }))
 }
 
@@ -157,7 +157,7 @@ export interface JaegerPresetConfig {
  *     environment: "production",
  *   }),
  *   MyService.Live,
- * );
+ * )
  * ```
  */
 export const JaegerPreset = (config: JaegerPresetConfig) => {
@@ -209,7 +209,7 @@ export interface ConsolePresetConfig {
  * const DebugLayer = Layer.mergeAll(
  *   ConsolePreset({ serviceName: "my-api" }),
  *   MyService.Live,
- * );
+ * )
  * ```
  */
 export const ConsolePreset = (config: ConsolePresetConfig) =>
@@ -223,7 +223,7 @@ export const ConsolePreset = (config: ConsolePresetConfig) =>
     metricReader: new PeriodicExportingMetricReader({
       exporter: new ConsoleMetricExporter(),
       exportIntervalMillis: 10000, // Export every 10 seconds
-    }),
+    })
   }))
 
 // ============================================================================
@@ -242,12 +242,12 @@ export const ConsolePreset = (config: ConsolePresetConfig) =>
  *   it("should work", () =>
  *     Effect.gen(function*() {
  *       const result = yield* myOperation;
- *       expect(result).toBe(expected);
+ *       expect(result).toBe(expected)
  *     }).pipe(
  *       Effect.provide(Layer.mergeAll(NoopPreset, MyService.Test))
  *     )
- *   );
- * });
+ *   )
+ * })
  * ```
  */
 export const NoopPreset = Layer.empty
@@ -307,7 +307,7 @@ export interface GrafanaCloudPresetConfig {
  *     region: "prod-us-central-0",
  *   }),
  *   MyService.Live,
- * );
+ * )
  * ```
  */
 export const GrafanaCloudPreset = (config: GrafanaCloudPresetConfig) => {
@@ -332,6 +332,6 @@ export const GrafanaCloudPreset = (config: GrafanaCloudPresetConfig) => {
         headers: { Authorization: authorization },
       }),
       exportIntervalMillis: 60000,
-    }),
+    })
   }))
 }

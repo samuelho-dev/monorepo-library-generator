@@ -47,9 +47,7 @@ Domain errors are defined in ${scope}/contract-${fileName} - import directly fro
 This file only contains infrastructure errors specific to data-access operations.
 
 For domain errors, import from contract:
-  import { ${className}NotFoundError, ${className}ValidationError } from "${scope}/contract-${fileName}";
-
-Infrastructure Errors (defined here):
+  import { ${className}NotFoundError, ${className}ValidationError } from "${scope}/contract-${fileName}"Infrastructure Errors (defined here):
   - ${className}ConnectionError - Database connection failure
   - ${className}TimeoutError - Operation timeout
   - ${className}TransactionError - Transaction failure
@@ -129,13 +127,11 @@ Use this type for repository method signatures:
 
 @example
 \`\`\`typescript
-import { ${className}NotFoundError } from "${scope}/contract-${fileName}";
-
-export interface ${className}Repository {
+import { ${className}NotFoundError } from "${scope}/contract-${fileName}"export interface ${className}Repository {
   readonly findById: (id: string) => Effect.Effect<
     Option.Option<${className}>,
     ${className}DataAccessError
-  >;
+  >
 }
 \`\`\``
   })

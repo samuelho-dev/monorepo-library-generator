@@ -1,6 +1,5 @@
 import { HttpClient, HttpClientRequest } from "@effect/platform"
-import { Schema } from "@effect/schema"
-import { Cause, Context, Effect, Exit, Layer, Option } from "effect"
+import { Cause, Context, Effect, Exit, Layer, Option, Schema } from "effect"
 import { RpcInfraError } from "./errors"
 
 /**
@@ -105,16 +104,16 @@ export interface HttpRpcClientConfig {
  * const HttpClientLive = HttpRpcClient.layer({
  *   baseUrl: "https://api.example.com/rpc",
  *   headers: { "x-api-key": env.API_KEY }
- * });
+ * })
  *
- * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String })
  *
  * // Use in Effect
  * const program = Effect.gen(function*() {
  *   const client = yield* HttpRpcClient;
- *   const user = yield* client.call("getUser", { id: "123" }, UserSchema);
+ *   const user = yield* client.call("getUser", { id: "123" }, UserSchema)
  *   return user;
- * }).pipe(Effect.provide(HttpClientLive));
+ * }).pipe(Effect.provide(HttpClientLive))
  * ```
  */
 export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
@@ -287,7 +286,7 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
  *
  * export const { POST } = createNextHandler({
  *   handlers: UserHandlers,
- * });
+ * })
  * ```
  */
 /**
@@ -491,14 +490,14 @@ const checkTransportError = (body: unknown) => {
  * const HttpClientLive = RpcTransportClient.layer({
  *   mode: "http",
  *   baseUrl: "https://api.example.com/rpc"
- * });
+ * })
  *
- * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String })
  *
  * const program = Effect.gen(function*() {
  *   const client = yield* RpcTransportClient;
- *   return yield* client.call("getUser", { id: "123" }, UserSchema);
- * });
+ *   return yield* client.call("getUser", { id: "123" }, UserSchema)
+ * })
  * ```
  */
 export class RpcTransportClient extends Context.Tag("RpcTransportClient")<

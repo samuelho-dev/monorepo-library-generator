@@ -44,12 +44,12 @@ import { AuthenticationRepositoryLive, AuthenticationRepositoryTest } from "@sam
  *
  * const program = Effect.gen(function*() {
  *   const service = yield* AuthenticationService;
- *   return yield* service.getById(id);
- * });
+ *   return yield* service.getById(id)
+ * })
  *
  * const result = yield* program.pipe(
  *   Effect.provide(AuthenticationLive)
- * );
+ * )
  * ```
  */
 export const AuthenticationLive = AuthenticationServiceLive.pipe(
@@ -75,13 +75,13 @@ export const AuthenticationLive = AuthenticationServiceLive.pipe(
  *
  * const testProgram = Effect.gen(function*() {
  *   const service = yield* AuthenticationService;
- *   const result = yield* service.create({ ... });
+ *   const result = yield* service.create({ ... })
  *   // assertions
- * });
+ * })
  *
  * await Effect.runPromise(testProgram.pipe(
  *   Effect.provide(AuthenticationTest)
- * ));
+ * ))
  * ```
  */
 export const AuthenticationTest = AuthenticationServiceLive.pipe(

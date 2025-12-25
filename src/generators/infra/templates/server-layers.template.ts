@@ -50,10 +50,10 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
 // \`\`\`typescript
 // const program = Effect.gen(function*() {
 //   const service = yield* ${className}Service;
-//   return yield* service.get("id");
+//   return yield* service.get("id")
 // }).pipe(
 //   Effect.provide(${className}Service.Live)  // Use static Live layer
-// );
+// )
 // \`\`\``)
   builder.addBlankLine()
 
@@ -154,20 +154,20 @@ export const ${className}ServiceDev = Layer.effect(
  *     // Acquire resource with automatic cleanup
  *     const resource = yield* Effect.acquireRelease(
  *       Effect.sync(() => {
- *         console.log("[${className}] Acquiring resource");
- *         return createResource();
+ *         console.log("[${className}] Acquiring resource")
+ *         return createResource()
  *       }),
  *       (r) => Effect.sync(() => {
- *         console.log("[${className}] Releasing resource");
- *         r.close();
+ *         console.log("[${className}] Releasing resource")
+ *         r.close()
  *       })
- *     );
+ *     )
  *
  *     return {
  *       get: (id: string) => Effect.succeed(resource.query(id))
  *     };
  *   })
- * );
+ * )
  * \`\`\`
  */`)
   builder.addBlankLine()
@@ -313,7 +313,7 @@ export const ${className}ServiceCustom = (customConfig: {
  *       healthCheck: () => service.healthCheck(),
  *     };
  *   }),
- * ).pipe(Layer.provide(${className}Service.Live));
+ * ).pipe(Layer.provide(${className}Service.Live))
  * \`\`\`
  */`)
   builder.addBlankLine()
@@ -333,10 +333,10 @@ export const ${className}ServiceCustom = (customConfig: {
  * \`\`\`typescript
  * const program = Effect.gen(function*() {
  *   const service = yield* ${className}Service;
- *   return yield* service.get("id");
+ *   return yield* service.get("id")
  * }).pipe(
  *   Effect.provide(${className}ServiceWithDeps)  // Provides ${className}Service + all deps
- * );
+ * )
  * \`\`\`
  */
 // export const ${className}ServiceWithDeps = Layer.mergeAll(
@@ -344,7 +344,7 @@ export const ${className}ServiceCustom = (customConfig: {
 //   ${className}ConfigLive,
 //   LoggingServiceLive,
 //   // ... other dependency layers
-// );`)
+// )`)
 
   return builder.toString()
 }

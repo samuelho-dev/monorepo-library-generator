@@ -10,7 +10,7 @@ import type { KyselyServiceInterface } from "./interface"
  * Kysely query builder provider with Effect integration.
 
 Generic over DB type - specify your database schema when creating the service:
-  const service = yield* makeKyselyService<DB>(config);
+  const service = yield* makeKyselyService<DB>(config)
 
 Architecture:
   prisma-effect-kysely → generates DB types
@@ -53,7 +53,7 @@ export interface KyselyConfig {
  * Returns Effect for Effect-idiomatic error handling (no try-catch)
  */
 const validateConnectionConfig = (config: KyselyConfig) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     if (config.connectionString) {
       yield* Effect.try({
         try: () => {
@@ -93,7 +93,7 @@ const validateConnectionConfig = (config: KyselyConfig) =>
  * ```typescript
  * import type { DB } from "@samuelho-dev/types-database";
  *
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const kysely = yield* makeKyselyService<DB>({
  *     connectionString: process.env.DATABASE_URL
  *   })
@@ -105,7 +105,7 @@ const validateConnectionConfig = (config: KyselyConfig) =>
  * ```
  */
 export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Validate configuration (Effect-idiomatic - no try-catch)
     yield* validateConnectionConfig(config)
 
@@ -488,7 +488,7 @@ export const makeTestKyselyService = <DB = unknown>(
  *
  * const KyselyTag = KyselyService<DB>()
  *
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const kysely = yield* KyselyTag
  *   // Use kysely service...
  * })

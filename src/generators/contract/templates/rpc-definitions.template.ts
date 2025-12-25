@@ -50,7 +50,7 @@ export function generateRpcDefinitionsFile(options: ContractTemplateOptions) {
  *
  * export const ${className}Handlers = ${className}Rpcs.toLayer({
  *   Get${className}: (input) => Effect.flatMap(${className}Service, s => s.get(input.id)),
- * });
+ * })
  * \`\`\`
  *
  * @module ${scope}/contract-${fileName}/rpc

@@ -19,15 +19,11 @@ This is an infrastructure library following Effect-based service patterns.
 
 ```typescript
 // Type-only import (zero runtime)
-import type { DatabaseConfig } from '@samuelho-dev/infra-database/types';
-
-// Service import
-import { DatabaseService } from '@samuelho-dev/infra-database';
-
-Effect.gen(function*() {
+import type { DatabaseConfig } from '@samuelho-dev/infra-database/types'// Service import
+import { DatabaseService } from '@samuelho-dev/infra-database'Effect.gen(function*() {
   const service = yield* DatabaseService;
   // Use service...
-});
+})
 ```
 
 ### Customization Guide
@@ -52,29 +48,25 @@ Effect.gen(function*() {
 
 ```typescript
 import { DatabaseService } from '@samuelho-dev/infra-database';
-import type { DatabaseConfig } from '@samuelho-dev/infra-database/types';
-
-// Standard usage
+import type { DatabaseConfig } from '@samuelho-dev/infra-database/types'// Standard usage
 const program = Effect.gen(function*() {
   const service = yield* DatabaseService;
   // Use service...
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(DatabaseService.Live)  // Production
   // or Effect.provide(DatabaseService.Test)   // Testing
   // or Effect.provide(DatabaseService.Auto)   // NODE_ENV-based
-);
+)
 ```
 
 ### Client Usage
 
 ```typescript
-import { useDatabase } from '@samuelho-dev/infra-database/client/hooks';
-
-function MyComponent() {
-  const database = useDatabase();
+import { useDatabase } from '@samuelho-dev/infra-database/client/hooks'function MyComponent() {
+  const database = useDatabase()
   // Use service in React component
 }
 ```

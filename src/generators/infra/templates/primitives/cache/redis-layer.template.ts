@@ -66,7 +66,7 @@ On cache miss:
  * }).pipe(
  *   Effect.provide(${className}RedisLayer),
  *   Effect.provide(Redis.Live) // or Redis.Test for testing
- * );
+ * )
  * \`\`\`
  */
 export const ${className}RedisLayer = Layer.effect(
@@ -185,12 +185,12 @@ export const ${className}RedisLayer = Layer.effect(
  *       Effect.succeed({ id: userId, name: "John", email: "john@example.com" }),
  *     capacity: 1000,
  *     ttl: Duration.minutes(5)
- *   });
+ *   })
  *
  *   // Get user from cache (fetches from lookup if not cached)
- *   const user = yield* userCache.get("user-123");
+ *   const user = yield* userCache.get("user-123")
  *   return user;
- * });
+ * })
  *
  * // Run with Redis layer (production)
  * Effect.runPromise(
@@ -198,14 +198,14 @@ export const ${className}RedisLayer = Layer.effect(
  *     Effect.provide(${className}RedisLayer),
  *     Effect.provide(Redis.Live)
  *   )
- * );
+ * )
  *
  * // Run with Memory layer (no Redis needed)
  * Effect.runPromise(
  *   program.pipe(
  *     Effect.provide(${className}Service.Memory)
  *   )
- * );
+ * )
  * \`\`\`
  */
 `)

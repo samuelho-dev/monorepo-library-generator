@@ -179,16 +179,12 @@ This is a data-access library following Effect-based repository patterns.
 
 \`\`\`typescript
 // Type-only import (zero runtime)
-import type { ${templateOptions.className}, ${templateOptions.className}CreateInput } from '${templateOptions.packageName}/types';
-
-// Repository import
-import { ${templateOptions.className}Repository } from '${templateOptions.packageName}';
-
-Effect.gen(function*() {
+import type { ${templateOptions.className}, ${templateOptions.className}CreateInput } from '${templateOptions.packageName}/types'// Repository import
+import { ${templateOptions.className}Repository } from '${templateOptions.packageName}'Effect.gen(function*() {
   const repo = yield* ${templateOptions.className}Repository;
-  const result = yield* repo.findById("id-123");
+  const result = yield* repo.findById("id-123")
   // ...
-});
+})
 \`\`\`
 
 ### Customization Guide
@@ -215,32 +211,26 @@ Effect.gen(function*() {
 
 \`\`\`typescript
 import { ${templateOptions.className}Repository } from '${templateOptions.packageName}';
-import type { ${templateOptions.className}CreateInput } from '${templateOptions.packageName}/types';
-
-// Standard usage
+import type { ${templateOptions.className}CreateInput } from '${templateOptions.packageName}/types'// Standard usage
 const program = Effect.gen(function*() {
   const repo = yield* ${templateOptions.className}Repository;
-  const entity = yield* repo.findById("id-123");
+  const entity = yield* repo.findById("id-123")
   return entity;
-});
+})
 
 // With layers
 const result = program.pipe(
   Effect.provide(${templateOptions.className}Repository.Live)  // Production
   // or Effect.provide(${templateOptions.className}Repository.Test)   // Testing
   // or Effect.provide(${templateOptions.className}Repository.Auto)   // NODE_ENV-based
-);
+)
 
 // With caching layer
-import { ${templateOptions.className}Cache } from '${templateOptions.packageName}';
-
-Effect.gen(function*() {
+import { ${templateOptions.className}Cache } from '${templateOptions.packageName}'Effect.gen(function*() {
   const repo = yield* ${templateOptions.className}Repository;
-  const cache = yield* ${templateOptions.className}Cache;
-
-  // Reads go through cache (automatic lookup on miss)
-  const entity = yield* cache.get("id-123", () => repo.findById("id-123"));
-});
+  const cache = yield* ${templateOptions.className}Cache  // Reads go through cache (automatic lookup on miss)
+  const entity = yield* cache.get("id-123", () => repo.findById("id-123"))
+})
 \`\`\`
 
 ### Testing Strategy

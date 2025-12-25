@@ -11,9 +11,7 @@ Domain errors are defined in @samuelho-dev/contract-user - import directly from 
 This file only contains infrastructure errors specific to data-access operations.
 
 For domain errors, import from contract:
-  import { UserNotFoundError, UserValidationError } from "@samuelho-dev/contract-user";
-
-Infrastructure Errors (defined here):
+  import { UserNotFoundError, UserValidationError } from "@samuelho-dev/contract-user"Infrastructure Errors (defined here):
   - UserConnectionError - Database connection failure
   - UserTimeoutError - Operation timeout
   - UserTransactionError - Transaction failure
@@ -137,13 +135,11 @@ export type UserInfrastructureError = UserConnectionError | UserTimeoutError | U
  *
  * @example
  * ```typescript
- * import { UserNotFoundError } from "@samuelho-dev/contract-user";
- *
- * export interface UserRepository {
+ * import { UserNotFoundError } from "@samuelho-dev/contract-user"export interface UserRepository {
  *   readonly findById: (id: string) => Effect.Effect<
  *     Option.Option<User>,
  *     UserDataAccessError
- *   >;
+ *   >
  * }
  * ```
  */

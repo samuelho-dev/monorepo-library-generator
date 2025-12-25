@@ -16,20 +16,20 @@
  * } from './factories';
  *
  * // Generate data-access errors
- * const builder = new TypeScriptBuilder();
+ * const builder = new TypeScriptBuilder()
  *
  * createContractReExports({
  *   className: 'User',
  *   scope: '@myorg',
  *   fileName: 'user',
- * })(builder);
+ * })(builder)
  *
  * createErrorFactory({
  *   className: 'User',
  *   style: 'data',
  *   errors: ERROR_SETS.dataAccess('User'),
  *   includeUnionType: true,
- * })(builder);
+ * })(builder)
  * ```
  */
 

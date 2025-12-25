@@ -56,7 +56,7 @@ The generator **validates that the corresponding contract library exists** befor
 ```typescript
 const contractLibPath = `libs/contract/${options.fileName}`;
 if (!tree.exists(contractLibPath)) {
-  console.warn('WARNING: Contract library not found. Contract-First Architecture requires contract to exist first.');
+  console.warn('WARNING: Contract library not found. Contract-First Architecture requires contract to exist first.')
 }
 ```
 

@@ -125,7 +125,7 @@ export interface AdditionalStaticMethod {
  *   ],
  *   staticCreate: {
  *     params: [{ name: 'id', type: 'string' }],
- *     body: 'return new UserNotFoundError({ message: `User not found: ${id}`, id });',
+ *     body: 'return new UserNotFoundError({ message: `User not found: ${id}`, id })',
  *   },
  * };
  * ```

@@ -17,7 +17,7 @@
  * ];
  *
  * // Or use predefined sets for a library type
- * const infraErrors = ERROR_SETS.infra('Cache');
+ * const infraErrors = ERROR_SETS.infra('Cache')
  * ```
  */
 
@@ -641,7 +641,7 @@ Includes context fields for error tracing:
           type: `{
     message: string;
     field?: string;
-    constraint?: string;
+    constraint?: string
   }`
         }
       ],
@@ -701,7 +701,7 @@ Includes context fields for error tracing:
           type: `{
     message: string;
     operation: string;
-    cause?: string;
+    cause?: string
   }`
         }
       ],

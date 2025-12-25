@@ -1,5 +1,4 @@
-import { Schema } from "@effect/schema"
-import { Data, Option } from "effect"
+import { Data, Option, Schema } from "effect"
 
 /**
  * Redis Provider - Error Types
@@ -127,7 +126,7 @@ export type RedisProviderError =
  */
 const SdkErrorSchema = Schema.Struct({
   message: Schema.optional(Schema.String),
-  code: Schema.optional(Schema.String),
+  code: Schema.optional(Schema.String)
 })
 
 /**

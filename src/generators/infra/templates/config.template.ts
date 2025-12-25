@@ -123,7 +123,7 @@ export const production${className}Config: ${className}Config = {
       {
         name: "nodeEnv",
         type: "string",
-        defaultValue: "env.NODE_ENV"
+        defaultValue: 'env.NODE_ENV ?? "development"'
       }
     ],
     body: `switch (nodeEnv) {
@@ -136,7 +136,7 @@ export const production${className}Config: ${className}Config = {
     return development${className}Config;
 }`,
     jsdoc:
-      `Get configuration for environment\n\n@param nodeEnv - Environment name ('development', 'test', 'production')\n@returns Configuration for the environment\n\n@example\n\`\`\`typescript\nimport { env } from '${scope}/env';\nconst config = get${className}ConfigForEnvironment(env.NODE_ENV);\n\`\`\``
+      `Get configuration for environment\n\n@param nodeEnv - Environment name ('development', 'test', 'production')\n@returns Configuration for the environment\n\n@example\n\`\`\`typescript\nconst config = get${className}ConfigForEnvironment(env.NODE_ENV)\n\`\`\``
   })
 
   // Section: Configuration Validation
@@ -147,16 +147,16 @@ export const production${className}Config: ${className}Config = {
     params: [{ name: "config", type: `${className}Config` }],
     body: `// Basic validation - extend as needed
 if (config.timeout !== undefined && config.timeout < 0) {
-  throw new Error('Invalid timeout: must be non-negative');
+  throw new Error('Invalid timeout: must be non-negative')
 }
 
 // TODO: Add additional validation logic as needed
 // Example:
 // if (config.retries !== undefined && config.retries < 0) {
-//   throw new Error('Invalid retries: must be non-negative');
+//   throw new Error('Invalid retries: must be non-negative')
 // }`,
     jsdoc:
-      `Validate configuration\n\nPerforms basic validation on configuration object.\nExtend with additional validation as needed.\n\n@param config - Configuration to validate\n@throws Error if configuration is invalid\n\n@example\n\`\`\`typescript\nconst config = get${className}ConfigForEnvironment();\nvalidate${className}Config(config);\n\`\`\``
+      `Validate configuration\n\nPerforms basic validation on configuration object.\nExtend with additional validation as needed.\n\n@param config - Configuration to validate\n@throws Error if configuration is invalid\n\n@example\n\`\`\`typescript\nconst config = get${className}ConfigForEnvironment()\nvalidate${className}Config(config)\n\`\`\``
   })
 
   return builder.toString()

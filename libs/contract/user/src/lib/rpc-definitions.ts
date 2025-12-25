@@ -19,7 +19,7 @@ import { UserRpcError } from "./rpc-errors"
  *
  * export const UserHandlers = UserRpcs.toLayer({
  *   GetUser: (input) => Effect.flatMap(UserService, s => s.get(input.id)),
- * });
+ * })
  * ```
  *
  * @module @samuelho-dev/contract-user/rpc
