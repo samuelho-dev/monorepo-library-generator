@@ -53,13 +53,10 @@ rather than defining their own.
 @see https://effect.website/docs/other/data/tagged-error`,
     module: `${scope}/contract-${parentName}/${subModuleName}/errors`
   })
-  builder.addBlankLine()
 
   builder.addImports([{ from: "effect", imports: ["Data"] }])
-  builder.addBlankLine()
 
   builder.addSectionComment("Domain Errors (Data.TaggedError)")
-  builder.addBlankLine()
 
   // NotFoundError
   builder.addClass(
@@ -77,8 +74,8 @@ rather than defining their own.
           returnType: `${subModuleClassName}NotFoundError`,
           body: `return new ${subModuleClassName}NotFoundError({
   message: \`${subModuleClassName} not found: \${id}\`,
-  id,
-});`
+  id
+})`
         }
       ],
       jsdoc: `Error thrown when ${subModuleName} entity is not found`
@@ -107,8 +104,8 @@ rather than defining their own.
           body: `return new ${subModuleClassName}ValidationError({
   message,
   field,
-  ...(value !== undefined && { value }),
-});`
+  ...(value !== undefined && { value })
+})`
         },
         {
           name: "required",
@@ -116,8 +113,8 @@ rather than defining their own.
           returnType: `${subModuleClassName}ValidationError`,
           body: `return new ${subModuleClassName}ValidationError({
   message: \`\${field} is required\`,
-  field,
-});`
+  field
+})`
         }
       ],
       jsdoc: `Error thrown when ${subModuleName} validation fails`
@@ -146,8 +143,8 @@ rather than defining their own.
           body: `return new ${subModuleClassName}OperationError({
   message,
   operation,
-  ...(cause !== undefined && { cause }),
-});`
+  ...(cause !== undefined && { cause })
+})`
         }
       ],
       jsdoc: `Error thrown when ${subModuleName} operation fails (e.g., database, network)`
@@ -157,15 +154,11 @@ rather than defining their own.
   // Add sub-module specific errors based on common patterns
   const additionalErrors = getSubModuleSpecificErrors(subModuleName, subModuleClassName)
   if (additionalErrors) {
-    builder.addBlankLine()
     builder.addSectionComment("Sub-Module Specific Errors")
-    builder.addBlankLine()
     builder.addRaw(additionalErrors)
   }
 
-  builder.addBlankLine()
   builder.addSectionComment("Error Union Types")
-  builder.addBlankLine()
 
   // Domain error union type
   builder.addTypeAlias({
@@ -180,8 +173,7 @@ rather than defining their own.
   // Repository/Operation error union type
   builder.addTypeAlias({
     name: `${subModuleClassName}RepositoryError`,
-    type: `
-  | ${subModuleClassName}OperationError`,
+    type: `${subModuleClassName}OperationError`,
     exported: true,
     jsdoc: `Union of ${subModuleName} repository/infrastructure errors`
   })
@@ -189,15 +181,18 @@ rather than defining their own.
   // All errors union type
   builder.addTypeAlias({
     name: `${subModuleClassName}Error`,
-    type: `${subModuleClassName}DomainError | ${subModuleClassName}RepositoryError`,
+    type: `
+  | ${subModuleClassName}DomainError
+  | ${subModuleClassName}RepositoryError`,
     exported: true,
     jsdoc: `All possible ${subModuleName} errors`
   })
 
-  builder.addBlankLine()
   builder.addComment("TODO: Add domain-specific errors here")
-  builder.addComment(`Example: ${subModuleClassName}InsufficientFundsError, ${subModuleClassName}ExpiredError, etc.`)
-  builder.addBlankLine()
+  builder.addComment(
+    `Example: ${subModuleClassName}InsufficientFundsError, ` +
+    `${subModuleClassName}ExpiredError, etc.`
+  )
 
   return builder.toString()
 }
@@ -213,16 +208,16 @@ function getSubModuleSpecificErrors(subModuleName: string, subModuleClassName: s
  * Error thrown when cart item limit is exceeded
  */
 export class ${subModuleClassName}ItemLimitError extends Data.TaggedError("${subModuleClassName}ItemLimitError")<{
-  readonly message: string;
-  readonly currentCount: number;
-  readonly maxAllowed: number;
+  readonly message: string
+  readonly currentCount: number
+  readonly maxAllowed: number
 }> {
   static create(currentCount: number, maxAllowed: number) {
     return new ${subModuleClassName}ItemLimitError({
       message: \`Cart item limit exceeded: \${currentCount}/\${maxAllowed}\`,
       currentCount,
-      maxAllowed,
-    });
+      maxAllowed
+    })
   }
 }
 
@@ -230,14 +225,14 @@ export class ${subModuleClassName}ItemLimitError extends Data.TaggedError("${sub
  * Error thrown when cart is empty
  */
 export class ${subModuleClassName}EmptyError extends Data.TaggedError("${subModuleClassName}EmptyError")<{
-  readonly message: string;
-  readonly cartId: string;
+  readonly message: string
+  readonly cartId: string
 }> {
   static create(cartId: string) {
     return new ${subModuleClassName}EmptyError({
       message: "Cart is empty",
-      cartId,
-    });
+      cartId
+    })
   }
 }`
   }
@@ -247,16 +242,16 @@ export class ${subModuleClassName}EmptyError extends Data.TaggedError("${subModu
  * Error thrown when checkout session expires
  */
 export class ${subModuleClassName}ExpiredError extends Data.TaggedError("${subModuleClassName}ExpiredError")<{
-  readonly message: string;
-  readonly checkoutId: string;
-  readonly expiredAt: string;
+  readonly message: string
+  readonly checkoutId: string
+  readonly expiredAt: string
 }> {
   static create(checkoutId: string, expiredAt: Date) {
     return new ${subModuleClassName}ExpiredError({
       message: "Checkout session has expired",
       checkoutId,
-      expiredAt: expiredAt.toISOString(),
-    });
+      expiredAt: expiredAt.toISOString()
+    })
   }
 }
 
@@ -264,18 +259,18 @@ export class ${subModuleClassName}ExpiredError extends Data.TaggedError("${subMo
  * Error thrown when payment fails
  */
 export class ${subModuleClassName}PaymentError extends Data.TaggedError("${subModuleClassName}PaymentError")<{
-  readonly message: string;
-  readonly checkoutId: string;
-  readonly reason: string;
-  readonly code?: string;
+  readonly message: string
+  readonly checkoutId: string
+  readonly reason: string
+  readonly code?: string
 }> {
   static create(checkoutId: string, reason: string, code?: string) {
     return new ${subModuleClassName}PaymentError({
       message: \`Payment failed: \${reason}\`,
       checkoutId,
       reason,
-      ...(code !== undefined && { code }),
-    });
+      ...(code !== undefined && { code })
+    })
   }
 }`
   }
@@ -285,18 +280,18 @@ export class ${subModuleClassName}PaymentError extends Data.TaggedError("${subMo
  * Error thrown when order state transition is invalid
  */
 export class ${subModuleClassName}InvalidStateError extends Data.TaggedError("${subModuleClassName}InvalidStateError")<{
-  readonly message: string;
-  readonly orderId: string;
-  readonly currentState: string;
-  readonly targetState: string;
+  readonly message: string
+  readonly orderId: string
+  readonly currentState: string
+  readonly targetState: string
 }> {
   static create(orderId: string, currentState: string, targetState: string) {
     return new ${subModuleClassName}InvalidStateError({
       message: \`Cannot transition order from \${currentState} to \${targetState}\`,
       orderId,
       currentState,
-      targetState,
-    });
+      targetState
+    })
   }
 }
 
@@ -304,16 +299,16 @@ export class ${subModuleClassName}InvalidStateError extends Data.TaggedError("${
  * Error thrown when order cannot be cancelled
  */
 export class ${subModuleClassName}CancellationError extends Data.TaggedError("${subModuleClassName}CancellationError")<{
-  readonly message: string;
-  readonly orderId: string;
-  readonly reason: string;
+  readonly message: string
+  readonly orderId: string
+  readonly reason: string
 }> {
   static create(orderId: string, reason: string) {
     return new ${subModuleClassName}CancellationError({
       message: \`Order cannot be cancelled: \${reason}\`,
       orderId,
-      reason,
-    });
+      reason
+    })
   }
 }`
   }

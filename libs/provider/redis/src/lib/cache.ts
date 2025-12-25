@@ -1,4 +1,7 @@
 import { Context, Effect, Layer } from "effect"
+import type { Redis as IORedis } from "ioredis"
+import { RedisCommandError } from "./errors"
+import type { RedisCacheClient } from "./types"
 
 /**
  * Redis Cache Sub-Service
@@ -17,15 +20,9 @@ Used by infra-cache's Redis layer.
  * @module @samuelho-dev/provider-redis/service/cache
  */
 
-
-import type { Redis as IORedis } from "ioredis";
-import { RedisCommandError } from "./errors";
-import type { RedisCacheClient } from "./types";
-
 // ============================================================================
 // Cache Sub-Service Factory
 // ============================================================================
-
 
 /**
  * Create cache sub-service from ioredis client
@@ -118,7 +115,6 @@ export function makeCacheClient(client: IORedis) {
 // ============================================================================
 // Context.Tag
 // ============================================================================
-
 
 /**
  * Redis Cache Service Tag

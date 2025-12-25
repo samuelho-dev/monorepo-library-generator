@@ -28,27 +28,12 @@ Bundle optimization: Import this file directly for smallest bundle size:
   })
   builder.addBlankLine()
 
-  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
-  builder.addBlankLine()
-
   builder.addImports([
-    {
-      from: "../../shared/types",
-      imports: [`${className}Filter`],
-      isTypeOnly: true
-    },
-    {
-      from: "../../shared/errors",
-      imports: [`${className}TimeoutError`],
-      isTypeOnly: false
-    }
+    { from: "effect", imports: ["Duration", "Effect"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
+    { from: "../../shared/errors", imports: [`${className}TimeoutError`] },
+    { from: "../../shared/types", imports: [`${className}Filter`], isTypeOnly: true }
   ])
-  builder.addBlankLine()
-
-  // Import infrastructure services
-  builder.addComment("Infrastructure services - Database for persistence")
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
-  builder.addBlankLine()
 
   builder.addSectionComment("Aggregate Operations")
   builder.addBlankLine()
@@ -61,7 +46,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
  *
  * @example
  * \`\`\`typescript
- * const count = yield* aggregateOperations.count({ search: "test" });
+ * const count = yield* aggregateOperations.count({ search: "test" })
  * \`\`\`
  */
 export const aggregateOperations = {
@@ -70,28 +55,28 @@ export const aggregateOperations = {
    */
   count: (filter?: ${className}Filter) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Counting ${className} entities (filter: \${JSON.stringify(filter)})\`);
+      yield* Effect.logDebug(\`Counting ${className} entities (filter: \${JSON.stringify(filter)})\`)
 
       const count = yield* database.query((db) => {
-        let query = db.selectFrom("${fileName}").select((eb) => eb.fn.countAll().as("count"));
+        let query = db.selectFrom("${fileName}").select((eb) => eb.fn.countAll().as("count"))
 
         // Apply filters if provided
         if (filter?.search) {
           query = query.where((eb) =>
             eb.or([
-              eb("name", "ilike", \`%\${filter.search}%\`),
+              eb("name", "ilike", \`%\${filter.search}%\`)
             ])
-          );
+          )
         }
 
-        return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
-      });
+        return query.executeTakeFirstOrThrow().then((result) => Number(result.count))
+      })
 
-      yield* Effect.logDebug(\`Counted \${count} ${className} entities\`);
+      yield* Effect.logDebug(\`Counted \${count} ${className} entities\`)
 
-      return count;
+      return count
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -105,9 +90,9 @@ export const aggregateOperations = {
    */
   exists: (id: string) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Checking if ${className} exists: \${id}\`);
+      yield* Effect.logDebug(\`Checking if ${className} exists: \${id}\`)
 
       const result = yield* database.query((db) =>
         db
@@ -116,24 +101,25 @@ export const aggregateOperations = {
           .where("id", "=", id)
           .executeTakeFirstOrThrow()
           .then((result) => Number(result.count) > 0)
-      );
+      )
 
-      yield* Effect.logDebug(\`${className} exists check: \${id} = \${result}\`);
+      yield* Effect.logDebug(\`${className} exists check: \${id} = \${result}\`)
 
-      return result;
+      return result
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => ${className}TimeoutError.create("exists", 30000)
       }),
       Effect.withSpan("${className}Repository.exists")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the aggregate operations object
  */
-export type Aggregate${className}Operations = typeof aggregateOperations;`)
+export type Aggregate${className}Operations = typeof aggregateOperations
+`)
 
   return builder.toString()
 }

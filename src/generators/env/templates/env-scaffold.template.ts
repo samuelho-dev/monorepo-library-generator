@@ -38,7 +38,7 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
   })
 
   // Imports
-  builder.addRaw("import { createEnv, Config } from \"./createEnv\"")
+  builder.addRaw("import { Config, createEnv } from \"./createEnv\"")
   builder.addBlankLine()
 
   // Separate vars by context
@@ -60,15 +60,201 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
   // Server section
   builder.addRaw("  // Server-only variables (secrets, internal config)")
   builder.addRaw("  server: {")
-  if (serverVars.length === 0) {
-    builder.addRaw("    // Add server-only env vars here")
-    builder.addRaw("    // DATABASE_URL: Config.redacted(\"DATABASE_URL\"),")
+
+  // Always include infrastructure variables with defaults
+  builder.addRaw("    // Database")
+  builder.addRaw(
+    "    DATABASE_URL: Config.redacted(\"DATABASE_URL\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"postgresql://localhost:5432/dev\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addBlankLine()
+
+  builder.addRaw("    // Supabase")
+  builder.addRaw(
+    "    SUPABASE_URL: Config.string(\"SUPABASE_URL\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"http://localhost:54321\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    SUPABASE_ANON_KEY: Config.redacted(\"SUPABASE_ANON_KEY\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"dev-anon-key\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    SUPABASE_SERVICE_ROLE_KEY: Config.redacted(\"SUPABASE_SERVICE_ROLE_KEY\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"dev-service-role-key\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addBlankLine()
+
+  builder.addRaw("    // Redis")
+  builder.addRaw(
+    "    REDIS_URL: Config.string(\"REDIS_URL\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"redis://localhost:6379\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addBlankLine()
+
+  builder.addRaw("    // Service Authentication (server-only, protected by context)")
+  builder.addRaw(
+    "    SERVICE_AUTH_SECRET: Config.string(\"SERVICE_AUTH_SECRET\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"dev-service-secret\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    JWT_SECRET: Config.string(\"JWT_SECRET\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"dev-jwt-secret\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addBlankLine()
+
+  builder.addRaw("    // OpenTelemetry")
+  builder.addRaw(
+    "    OTEL_SERVICE_NAME: Config.string(\"OTEL_SERVICE_NAME\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"dev-service\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    OTEL_SERVICE_VERSION: Config.string(\"OTEL_SERVICE_VERSION\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"0.0.0\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    OTEL_EXPORTER_OTLP_ENDPOINT: Config.string(\"OTEL_EXPORTER_OTLP_ENDPOINT\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"http://localhost:4318\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: Config.string(\"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"http://localhost:4318/v1/traces\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: Config.string(\"OTEL_EXPORTER_OTLP_METRICS_ENDPOINT\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"http://localhost:4318/v1/metrics\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    OTEL_TRACES_ENABLED: Config.string(\"OTEL_TRACES_ENABLED\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"true\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    OTEL_METRICS_ENABLED: Config.string(\"OTEL_METRICS_ENABLED\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"true\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  // Add any user-defined server vars (excluding infrastructure vars already defined above)
+  const infraVars = new Set([
+    "DATABASE_URL",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "REDIS_URL",
+    "SERVICE_AUTH_SECRET",
+    "JWT_SECRET",
+    "OTEL_SERVICE_NAME",
+    "OTEL_SERVICE_VERSION",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+    "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
+    "OTEL_TRACES_ENABLED",
+    "OTEL_METRICS_ENABLED",
+    "OTEL_METRICS_EXPORT_INTERVAL_MS"
+  ])
+  const userServerVars = serverVars.filter((v) => !infraVars.has(v.name))
+
+  // Last infra var - add comma only if there are user vars
+  if (userServerVars.length > 0) {
+    builder.addRaw(
+      "    OTEL_METRICS_EXPORT_INTERVAL_MS: Config.string(\"OTEL_METRICS_EXPORT_INTERVAL_MS\").pipe("
+    )
+    builder.addRaw(
+      "      Config.withDefault(\"60000\")"
+    )
+    builder.addRaw(
+      "    ),"
+    )
   } else {
-    for (const varDef of serverVars) {
+    builder.addRaw(
+      "    OTEL_METRICS_EXPORT_INTERVAL_MS: Config.string(\"OTEL_METRICS_EXPORT_INTERVAL_MS\").pipe("
+    )
+    builder.addRaw(
+      "      Config.withDefault(\"60000\")"
+    )
+    builder.addRaw(
+      "    )"
+    )
+  }
+
+  if (userServerVars.length > 0) {
+    builder.addBlankLine()
+    builder.addRaw("    // User-defined server variables")
+    for (let i = 0; i < userServerVars.length; i++) {
+      const varDef = userServerVars[i]
       const configCall = generateConfigCall(varDef)
-      builder.addRaw(`    ${varDef.name}: ${configCall},`)
+      const isLast = i === userServerVars.length - 1
+      builder.addRaw(`    ${varDef.name}: ${configCall}${isLast ? "" : ","}`)
     }
   }
+
   builder.addRaw("  },")
   builder.addBlankLine()
 
@@ -77,11 +263,13 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
   builder.addRaw("  client: {")
   if (clientVars.length === 0) {
     builder.addRaw("    // Add client-safe env vars here")
-    builder.addRaw("    // PUBLIC_API_URL: Config.string(\"PUBLIC_API_URL\"),")
+    builder.addRaw("    // PUBLIC_API_URL: Config.string(\"PUBLIC_API_URL\")")
   } else {
-    for (const varDef of clientVars) {
+    for (let i = 0; i < clientVars.length; i++) {
+      const varDef = clientVars[i]
       const configCall = generateConfigCall(varDef)
-      builder.addRaw(`    ${varDef.name}: ${configCall},`)
+      const isLast = i === clientVars.length - 1
+      builder.addRaw(`    ${varDef.name}: ${configCall}${isLast ? "" : ","}`)
     }
   }
   builder.addRaw("  },")
@@ -92,12 +280,20 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
   builder.addRaw("  shared: {")
   if (sharedVars.length === 0) {
     builder.addRaw(
-      "    NODE_ENV: Config.string(\"NODE_ENV\").pipe(Config.withDefault(\"development\")),"
+      "    NODE_ENV: Config.string(\"NODE_ENV\").pipe("
+    )
+    builder.addRaw(
+      "      Config.withDefault(\"development\")"
+    )
+    builder.addRaw(
+      "    )"
     )
   } else {
-    for (const varDef of sharedVars) {
+    for (let i = 0; i < sharedVars.length; i++) {
+      const varDef = sharedVars[i]
       const configCall = generateConfigCall(varDef)
-      builder.addRaw(`    ${varDef.name}: ${configCall},`)
+      const isLast = i === sharedVars.length - 1
+      builder.addRaw(`    ${varDef.name}: ${configCall}${isLast ? "" : ","}`)
     }
   }
   builder.addRaw("  },")
@@ -105,7 +301,7 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
 
   // Client prefix
   builder.addRaw("  // Required prefix for client variables")
-  builder.addRaw("  clientPrefix: \"PUBLIC_\",")
+  builder.addRaw("  clientPrefix: \"PUBLIC_\"")
   builder.addRaw("})")
   builder.addBlankLine()
 

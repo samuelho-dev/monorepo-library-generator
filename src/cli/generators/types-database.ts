@@ -99,6 +99,7 @@ export function generateTypesDatabase(options: TypesDatabaseOptions = {}) {
     )
 
     // 3. Generate src/index.ts (barrel export)
+    // Use named exports to satisfy biome noReExportAll rule
     const indexContent = `/**
  * ${packageName}
  *
@@ -108,11 +109,19 @@ export function generateTypesDatabase(options: TypesDatabaseOptions = {}) {
  * @module ${packageName}
  */
 
-// Re-export generated types
-export * from "./lib/types";
+// Re-export generated types (named exports for biome noReExportAll compliance)
+export type {
+  UserTable,
+  User,
+  UserSelect,
+  UserInsert,
+  UserUpdate,
+  DB,
+  Json
+} from "./lib/types"
 
-// Re-export enums if they exist
-export * from "./lib/enums";
+// Re-export enums (placeholder - add enum types here after prisma generate)
+export {} from "./lib/enums"
 `
     yield* adapter.writeFile(
       `${workspaceRoot}/${sourceRoot}/index.ts`,
@@ -131,7 +140,7 @@ export * from "./lib/enums";
  * Prisma schema is configured. Replace with actual schema types.
  */
 
-import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely";
+import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely"
 
 // ============================================================================
 // Placeholder Entity Types (Replace with Prisma-generated types)

@@ -58,7 +58,7 @@ const SHARED_OPTIONS = {
     label: "Platform",
     description: "Target platform for the library",
     options: PLATFORM_OPTIONS
-  } satisfies SelectOptionConfig,
+  },
 
   scope: {
     type: "text",
@@ -66,21 +66,21 @@ const SHARED_OPTIONS = {
     label: "Scope",
     description: "Custom scope for the library",
     placeholder: "@myorg"
-  } satisfies TextOptionConfig,
+  },
 
   includeCQRS: {
     type: "boolean",
     key: "includeCQRS",
     label: "Include CQRS",
     description: "Include CQRS pattern files (commands, queries, projections)"
-  } satisfies BooleanOptionConfig,
+  },
 
   includeClientServer: {
     type: "boolean",
     key: "includeClientServer",
     label: "Include Client/Server",
     description: "Generate client-side hooks and state management"
-  } satisfies BooleanOptionConfig
+  }
 } as const
 
 /**

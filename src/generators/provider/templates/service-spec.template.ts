@@ -38,8 +38,10 @@ Testing Guidelines:
   builder.addBlankLine()
 
   // Imports
-  builder.addRaw(`import { describe, expect, it } from "@effect/vitest"`)
-  builder.addRaw(`import { Context, Effect, Layer } from "effect"`)
+  builder.addImports([
+    { from: "@effect/vitest", imports: ["describe", "expect", "it"] },
+    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+  ])
   builder.addBlankLine()
 
   // Test service tag

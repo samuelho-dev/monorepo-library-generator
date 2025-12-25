@@ -42,16 +42,12 @@ export type AuthMethod = Schema.Schema.Type<typeof AuthMethodSchema>
 export const CurrentUserDataSchema = Schema.Struct({
   /** Unique user identifier */
   id: Schema.String,
-
   /** User's email address */
   email: Schema.String,
-
   /** User's display name */
   name: Schema.optional(Schema.String),
-
   /** User's roles for authorization */
   roles: Schema.optional(Schema.Array(Schema.String)),
-
   /** Additional metadata */
   metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
 })
@@ -62,13 +58,10 @@ export type CurrentUserData = Schema.Schema.Type<typeof CurrentUserDataSchema>
  */
 export const AuthenticatedUserDataSchema = Schema.Struct({
   ...CurrentUserDataSchema.fields,
-
   /** How the user was authenticated */
   authMethod: AuthMethodSchema,
-
   /** When the session was created */
   authenticatedAt: Schema.Date,
-
   /** Session expiration time */
   expiresAt: Schema.optional(Schema.Date)
 })
@@ -80,22 +73,16 @@ export type AuthenticatedUserData = Schema.Schema.Type<typeof AuthenticatedUserD
 export const AuthSessionSchema = Schema.Struct({
   /** Session ID */
   sessionId: Schema.String,
-
   /** User ID */
   userId: Schema.String,
-
   /** Session creation time */
   createdAt: Schema.Date,
-
   /** Session expiration time */
   expiresAt: Schema.Date,
-
   /** Last activity time */
   lastActivityAt: Schema.optional(Schema.Date),
-
   /** Device/client info */
   userAgent: Schema.optional(Schema.String),
-
   /** IP address */
   ipAddress: Schema.optional(Schema.String)
 })
@@ -111,22 +98,16 @@ export type AuthSession = Schema.Schema.Type<typeof AuthSessionSchema>
 export const ServiceIdentitySchema = Schema.Struct({
   /** Service name (e.g., "user-service", "payment-service") */
   serviceName: Schema.String,
-
   /** Service version */
   version: Schema.optional(Schema.String),
-
   /** Service instance ID */
   instanceId: Schema.optional(Schema.String),
-
   /** Allowed permissions/scopes */
   permissions: Schema.optional(Schema.Array(Schema.String)),
-
   /** Service environment */
-  environment: Schema.optional(Schema.Union(
-    Schema.Literal("development"),
-    Schema.Literal("staging"),
-    Schema.Literal("production")
-  ))
+  environment: Schema.optional(
+    Schema.Union(Schema.Literal("development"), Schema.Literal("staging"), Schema.Literal("production"))
+  )
 })
 export type ServiceIdentity = Schema.Schema.Type<typeof ServiceIdentitySchema>
 

@@ -13,11 +13,9 @@ Uses Data.TaggedError for internal infrastructure errors:
  * @module @samuelho-dev/infra-pubsub/errors
  * @see Effect documentation for Data.TaggedError patterns
  */
-
 // ============================================================================
 // Error Types
 // ============================================================================
-
 /**
  * Base Pubsub error
  *
@@ -28,10 +26,9 @@ export class PubsubError extends Data.TaggedError(
   "PubsubError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
-
+  readonly message: string
   /** Optional underlying cause */
-  readonly cause?: unknown;
+  readonly cause?: unknown
 }> {}
 
 /**
@@ -43,10 +40,9 @@ export class PubsubInternalError extends Data.TaggedError(
   "PubsubInternalError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
-
+  readonly message: string
   /** Underlying error cause */
-  readonly cause: unknown;
+  readonly cause: unknown
 }> {}
 
 /**
@@ -58,10 +54,9 @@ export class PubsubConfigError extends Data.TaggedError(
   "PubsubConfigError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
-
+  readonly message: string
   /** Configuration property that is invalid */
-  readonly property: string;
+  readonly property: string
 }> {}
 
 /**
@@ -73,13 +68,11 @@ export class PubsubConnectionError extends Data.TaggedError(
   "PubsubConnectionError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
-
+  readonly message: string
   /** Connection target (service name, host, etc.) */
-  readonly target: string;
-
+  readonly target: string
   /** Underlying connection error */
-  readonly cause: unknown;
+  readonly cause: unknown
 }> {}
 
 /**
@@ -91,19 +84,16 @@ export class PubsubTimeoutError extends Data.TaggedError(
   "PubsubTimeoutError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
-
+  readonly message: string
   /** Timeout duration in milliseconds */
-  readonly timeoutMs: number;
-
+  readonly timeoutMs: number
   /** Operation that timed out */
-  readonly operation: string;
+  readonly operation: string
 }> {}
 
 // ============================================================================
 // Error Type Union
 // ============================================================================
-
 /**
  * Union of all Pubsub error types
  *

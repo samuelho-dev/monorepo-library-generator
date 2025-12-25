@@ -1,5 +1,6 @@
-import { UserTimeoutError } from "../../shared/errors"
+import { DatabaseService } from "@samuelho-dev/infra-database"
 import { Duration, Effect } from "effect"
+import { UserTimeoutError } from "../../shared/errors"
 import type { UserCreateInput } from "../../shared/types"
 
 /**
@@ -13,17 +14,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @samuelho-dev/data-access-user/repository/operations
  */
 
-
-
-
-// Infrastructure services - Database for persistence
-
-import { DatabaseService } from "@samuelho-dev/infra-database";
-
 // ============================================================================
 // Create Operations
 // ============================================================================
-
 
 /**
  * Create operations for User repository
@@ -33,7 +26,7 @@ import { DatabaseService } from "@samuelho-dev/infra-database";
  *
  * @example
  * ```typescript
- * const entity = yield* createOperations.create({ name: "example" });
+ * const entity = yield* createOperations.create({ name: "example" })
  * ```
  */
 export const createOperations = {
@@ -42,9 +35,9 @@ export const createOperations = {
    */
   create: (input: UserCreateInput) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Creating User: ${JSON.stringify(input)}`);
+      yield* Effect.logDebug(`Creating User: ${JSON.stringify(input)}`)
 
       const entity = yield* database.query((db) =>
         db
@@ -52,15 +45,15 @@ export const createOperations = {
           .values({
             ...input,
             createdAt: new Date(),
-            updatedAt: new Date(),
+            updatedAt: new Date()
           })
           .returningAll()
           .executeTakeFirstOrThrow()
-      );
+      )
 
-      yield* Effect.logDebug("User created successfully");
+      yield* Effect.logDebug("User created successfully")
 
-      return entity;
+      return entity
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -74,9 +67,9 @@ export const createOperations = {
    */
   createMany: (inputs: ReadonlyArray<UserCreateInput>) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Creating ${inputs.length} User entities`);
+      yield* Effect.logDebug(`Creating ${inputs.length} User entities`)
 
       const entities = yield* database.query((db) =>
         db
@@ -85,26 +78,26 @@ export const createOperations = {
             inputs.map((input) => ({
               ...input,
               createdAt: new Date(),
-              updatedAt: new Date(),
+              updatedAt: new Date()
             }))
           )
           .returningAll()
           .execute()
-      );
+      )
 
-      yield* Effect.logDebug(`Created ${entities.length} User entities successfully`);
+      yield* Effect.logDebug(`Created ${entities.length} User entities successfully`)
 
-      return entities;
+      return entities
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => UserTimeoutError.create("createMany", 30000)
       }),
       Effect.withSpan("UserRepository.createMany")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the create operations object
  */
-export type CreateUserOperations = typeof createOperations;
+export type CreateUserOperations = typeof createOperations

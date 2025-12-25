@@ -1,4 +1,14 @@
+import { UserRepository } from "@samuelho-dev/data-access-user"
+import { env } from "@samuelho-dev/env"
+import { CacheService } from "@samuelho-dev/infra-cache"
+import { DatabaseService } from "@samuelho-dev/infra-database"
+import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
+import { PubsubService } from "@samuelho-dev/infra-pubsub"
+import { QueueService } from "@samuelho-dev/infra-queue"
 import { Layer } from "effect"
+import { AuthenticationLive, AuthenticationTest } from "./authentication"
+import { ProfileLive, ProfileTest } from "./profile"
+import { UserService } from "./service"
 
 /**
  * User Layers
@@ -17,47 +27,9 @@ Event publishing is done IN the service implementation using helpers:
  *
  */
 
-
-
-// ============================================================================
-// Service Layer
-// ============================================================================
-
-import { UserService } from "./service";
-
-// ============================================================================
-// Sub-Module Service Layers
-// ============================================================================
-
-import { AuthenticationLive, AuthenticationTest } from "./authentication";
-import { ProfileLive, ProfileTest } from "./profile";
-
-// ============================================================================
-// Data Access Layer
-// ============================================================================
-
-import { UserRepository } from "@samuelho-dev/data-access-user";
-
-// ============================================================================
-// Infrastructure Layers
-// ============================================================================
-
-import { DatabaseService } from "@samuelho-dev/infra-database";
-import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability";
-import { CacheService } from "@samuelho-dev/infra-cache";
-import { PubsubService } from "@samuelho-dev/infra-pubsub";
-import { QueueService } from "@samuelho-dev/infra-queue";
-
-// ============================================================================
-// Environment Configuration
-// ============================================================================
-
-import { env } from "@samuelho-dev/env";
-
 // ============================================================================
 // Service Layer Notes
 // ============================================================================
-
 
 /**
  * Service Layer Pattern:
@@ -73,11 +45,9 @@ import { env } from "@samuelho-dev/env";
 // Composed Infrastructure Layers
 // ============================================================================
 
-
 // ============================================================================
 // Infrastructure Layer Compositions
 // ============================================================================
-
 
 /**
  * Live Infrastructure Layer
@@ -91,7 +61,7 @@ export const InfrastructureLive = Layer.mergeAll(
   CacheService.Live,
   PubsubService.Live,
   QueueService.Live
-);
+)
 
 /**
  * Test Infrastructure Layer
@@ -105,7 +75,7 @@ export const InfrastructureTest = Layer.mergeAll(
   CacheService.Test,
   PubsubService.Test,
   QueueService.Test
-);
+)
 
 /**
  * Dev Infrastructure Layer
@@ -119,12 +89,11 @@ export const InfrastructureDev = Layer.mergeAll(
   CacheService.Dev,
   PubsubService.Dev,
   QueueService.Dev
-);
+)
 
 // ============================================================================
 // Full Feature Layers
 // ============================================================================
-
 
 /**
  * Full Live Layer for production
@@ -150,7 +119,7 @@ export const UserFeatureLive = Layer.mergeAll(
   UserRepository.Live,
   AuthenticationLive,
   ProfileLive
-).pipe(Layer.provide(InfrastructureLive));
+).pipe(Layer.provide(InfrastructureLive))
 
 /**
  * Full Test Layer for testing
@@ -177,7 +146,7 @@ export const UserFeatureTest = Layer.mergeAll(
   UserRepository.Live,
   AuthenticationTest,
   ProfileTest
-).pipe(Layer.provide(InfrastructureTest));
+).pipe(Layer.provide(InfrastructureTest))
 
 /**
  * Full Dev Layer for development
@@ -189,12 +158,11 @@ export const UserFeatureDev = Layer.mergeAll(
   UserRepository.Live,
   AuthenticationLive,
   ProfileLive
-).pipe(Layer.provide(InfrastructureDev));
+).pipe(Layer.provide(InfrastructureDev))
 
 // ============================================================================
 // Auto-selecting Layer
 // ============================================================================
-
 
 /**
  * Auto layer - automatically selects based on NODE_ENV
@@ -206,10 +174,10 @@ export const UserFeatureDev = Layer.mergeAll(
 export const UserFeatureAuto = Layer.suspend(() => {
   switch (env.NODE_ENV) {
     case "test":
-      return UserFeatureTest;
+      return UserFeatureTest
     case "development":
-      return UserFeatureDev;
+      return UserFeatureDev
     default:
-      return UserFeatureLive;
+      return UserFeatureLive
   }
-});
+})

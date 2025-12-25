@@ -139,6 +139,7 @@ export interface ExportConfig {
   includeClientServer?: boolean
   hasEntities?: boolean
   entityNames?: Array<string>
+  subModuleNames?: Array<string>
 }
 
 // ============================================================================
@@ -639,6 +640,17 @@ export function generateContractExports(config: ExportConfig) {
   }
 
   exports["./events"] = { import: "./src/lib/events.ts", types: "./src/lib/events.ts" }
+
+  // Add sub-module subpath exports (Hybrid DDD pattern)
+  // e.g., "./authentication" -> "./src/authentication/index.ts"
+  if (config.subModuleNames && config.subModuleNames.length > 0) {
+    for (const subModuleName of config.subModuleNames) {
+      exports[`./${subModuleName}`] = {
+        import: `./src/${subModuleName}/index.ts`,
+        types: `./src/${subModuleName}/index.ts`
+      }
+    }
+  }
 
   return exports
 }

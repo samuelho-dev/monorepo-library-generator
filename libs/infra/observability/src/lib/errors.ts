@@ -16,11 +16,9 @@ Error types:
  *
  * @module @samuelho-dev/infra-observability/errors
  */
-
 // ============================================================================
 // Base Error
 // ============================================================================
-
 /**
  * Base error for all observability errors
  */
@@ -34,7 +32,6 @@ export class ObservabilityError extends Data.TaggedError(
 // ============================================================================
 // Configuration Error
 // ============================================================================
-
 /**
  * Invalid observability configuration
  *
@@ -59,7 +56,6 @@ export class ObservabilityConfigError extends Data.TaggedError(
 // ============================================================================
 // Export Error
 // ============================================================================
-
 /**
  * Failed to export telemetry data
  *
@@ -93,7 +89,6 @@ export class ObservabilityExportError extends Data.TaggedError(
 // ============================================================================
 // Connection Error
 // ============================================================================
-
 /**
  * Cannot connect to OTEL collector
  *
@@ -118,7 +113,6 @@ export class ObservabilityConnectionError extends Data.TaggedError(
 // ============================================================================
 // Initialization Error
 // ============================================================================
-
 /**
  * SDK initialization failed
  *
@@ -141,7 +135,6 @@ export class ObservabilityInitError extends Data.TaggedError(
 // ============================================================================
 // Error Union
 // ============================================================================
-
 /**
  * Union of all observability error types
  */

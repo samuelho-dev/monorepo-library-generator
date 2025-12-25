@@ -21,9 +21,8 @@ Behavior:
  *
  * @module @workspace/env
  */
-
 export { env } from "./env"
 export type { Env } from "./env"
 
 // Re-export for advanced usage
-export { createEnv, Config } from "./createEnv"
+export { Config, createEnv } from "./createEnv"

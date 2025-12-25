@@ -1,4 +1,9 @@
+import { AuthenticationOperationError } from "@samuelho-dev/contract-user/authentication"
+import type { AuthenticationError } from "@samuelho-dev/contract-user/authentication"
+import { AuthenticationRepository } from "@samuelho-dev/data-access-user/authentication"
 import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
+import { Context, Effect, Layer } from "effect"
+import type { Option } from "effect"
 
 /**
  * User Authentication Service
@@ -10,53 +15,19 @@ Integrates with infrastructure services (Logging, Metrics) and data-access layer
  *
  * @module @samuelho-dev/feature-user/server/services/authentication
  */
-
-
-import { Context, Effect, Layer, type Option } from "effect"
-
 // ============================================================================
 // Contract Imports (Contract-First Architecture)
 // ============================================================================
-
 // Errors are the SINGLE SOURCE OF TRUTH from contract library
-
-import {
-  AuthenticationOperationError,
-  type AuthenticationError,
-} from "@samuelho-dev/contract-user/authentication";
-
 // ============================================================================
 // Data Access Imports
 // ============================================================================
-
-import { AuthenticationRepository } from "@samuelho-dev/data-access-user/authentication";
-
 // ============================================================================
 // Infrastructure Imports
 // ============================================================================
-
-
-// ============================================================================
-// Re-export Errors (Contract-First)
-// ============================================================================
-
-// Re-export errors from contract for convenience
-
-export {
-  AuthenticationNotFoundError,
-  AuthenticationValidationError,
-  AuthenticationOperationError,
-  AuthenticationServiceError,
-  type AuthenticationDomainError,
-  type AuthenticationRepositoryError,
-  type AuthenticationError,
-} from "@samuelho-dev/contract-user/authentication";
-
 // ============================================================================
 // Service Interface
 // ============================================================================
-
-
 /**
  * AuthenticationService interface
  *
@@ -65,26 +36,23 @@ export {
  */
 export interface AuthenticationServiceInterface {
   /** Get by ID */
-  readonly getById: (id: string) => Effect.Effect<Option.Option<unknown>, AuthenticationError>;
+  readonly getById: (id: string) => Effect.Effect<Option.Option<unknown>, AuthenticationError>
 
   /** List with pagination */
-  readonly list: (criteria: unknown, pagination?: { page: number; pageSize: number }) => Effect.Effect<unknown, AuthenticationError>;
+  readonly list: (criteria: unknown, pagination?: { page: number; pageSize: number }) => Effect.Effect<unknown, AuthenticationError>
 
   /** Create new entity */
-  readonly create: (input: unknown) => Effect.Effect<unknown, AuthenticationError>;
+  readonly create: (input: unknown) => Effect.Effect<unknown, AuthenticationError>
 
   /** Update existing entity */
-  readonly update: (id: string, input: unknown) => Effect.Effect<unknown, AuthenticationError>;
+  readonly update: (id: string, input: unknown) => Effect.Effect<unknown, AuthenticationError>
 
   /** Delete entity */
-  readonly delete: (id: string) => Effect.Effect<void, AuthenticationError>;
+  readonly delete: (id: string) => Effect.Effect<void, AuthenticationError>
 }
-
 // ============================================================================
 // Context.Tag Definition (Class Pattern)
 // ============================================================================
-
-
 /**
  * AuthenticationService Context.Tag
  *
@@ -95,12 +63,9 @@ export class AuthenticationService extends Context.Tag("AuthenticationService")<
   AuthenticationService,
   AuthenticationServiceInterface
 >() {}
-
 // ============================================================================
 // Live Layer Implementation
 // ============================================================================
-
-
 /**
  * AuthenticationServiceLive Layer
  *
@@ -112,11 +77,11 @@ export class AuthenticationService extends Context.Tag("AuthenticationService")<
 export const AuthenticationServiceLive = Layer.effect(
   AuthenticationService,
   Effect.gen(function*() {
-    const repo = yield* AuthenticationRepository;
-    const logger = yield* LoggingService;
-    const metrics = yield* MetricsService;
+    const repo = yield* AuthenticationRepository
+    const logger = yield* LoggingService
+    const metrics = yield* MetricsService
 
-    yield* logger.debug("AuthenticationService initialized");
+    yield* logger.debug("AuthenticationService initialized")
 
     // Map repository errors to service errors using Effect.catchAll
     // Repository errors are Data.TaggedError - use String() to extract message
@@ -131,78 +96,78 @@ export const AuthenticationServiceLive = Layer.effect(
             )
           )
         )
-      );
+      )
 
     return {
       getById: (id) =>
         Effect.gen(function*() {
-          const histogram = yield* metrics.histogram("authentication_get_duration_seconds");
+          const histogram = yield* metrics.histogram("authentication_get_duration_seconds")
 
           return yield* histogram.timer(
             Effect.gen(function*() {
-              yield* logger.debug("AuthenticationService.getById", { id });
-              return yield* mapRepoError(repo.findById(id));
+              yield* logger.debug("AuthenticationService.getById", { id })
+              return yield* mapRepoError(repo.findById(id))
             })
-          );
+          )
         }).pipe(Effect.withSpan("AuthenticationService.getById")),
 
       list: (criteria, pagination) =>
         Effect.gen(function*() {
-          const histogram = yield* metrics.histogram("authentication_list_duration_seconds");
+          const histogram = yield* metrics.histogram("authentication_list_duration_seconds")
 
           return yield* histogram.timer(
             Effect.gen(function*() {
-              yield* logger.debug("AuthenticationService.list", { criteria, pagination });
-              const skip = pagination ? (pagination.page - 1) * pagination.pageSize : 0;
-              const limit = pagination?.pageSize ?? 20;
-              return yield* mapRepoError(repo.findAll(criteria, { skip, limit }));
+              yield* logger.debug("AuthenticationService.list", { criteria, pagination })
+              const skip = pagination ? (pagination.page - 1) * pagination.pageSize : 0
+              const limit = pagination?.pageSize ?? 20
+              return yield* mapRepoError(repo.findAll(criteria, { skip, limit }))
             })
-          );
+          )
         }).pipe(Effect.withSpan("AuthenticationService.list")),
 
       create: (input) =>
         Effect.gen(function*() {
-          const counter = yield* metrics.counter("authentication_created_total");
-          const histogram = yield* metrics.histogram("authentication_create_duration_seconds");
+          const counter = yield* metrics.counter("authentication_created_total")
+          const histogram = yield* metrics.histogram("authentication_create_duration_seconds")
 
           return yield* histogram.timer(
             Effect.gen(function*() {
-              yield* logger.info("AuthenticationService.create", { input });
-              const result = yield* mapRepoError(repo.create(input));
-              yield* counter.increment;
-              return result;
+              yield* logger.info("AuthenticationService.create", { input })
+              const result = yield* mapRepoError(repo.create(input))
+              yield* counter.increment
+              return result
             })
-          );
+          )
         }).pipe(Effect.withSpan("AuthenticationService.create")),
 
       update: (id, input) =>
         Effect.gen(function*() {
-          const counter = yield* metrics.counter("authentication_updated_total");
-          const histogram = yield* metrics.histogram("authentication_update_duration_seconds");
+          const counter = yield* metrics.counter("authentication_updated_total")
+          const histogram = yield* metrics.histogram("authentication_update_duration_seconds")
 
           return yield* histogram.timer(
             Effect.gen(function*() {
-              yield* logger.info("AuthenticationService.update", { id, input });
-              const result = yield* mapRepoError(repo.update(id, input));
-              yield* counter.increment;
-              return result;
+              yield* logger.info("AuthenticationService.update", { id, input })
+              const result = yield* mapRepoError(repo.update(id, input))
+              yield* counter.increment
+              return result
             })
-          );
+          )
         }).pipe(Effect.withSpan("AuthenticationService.update")),
 
       delete: (id) =>
         Effect.gen(function*() {
-          const counter = yield* metrics.counter("authentication_deleted_total");
-          const histogram = yield* metrics.histogram("authentication_delete_duration_seconds");
+          const counter = yield* metrics.counter("authentication_deleted_total")
+          const histogram = yield* metrics.histogram("authentication_delete_duration_seconds")
 
           return yield* histogram.timer(
             Effect.gen(function*() {
-              yield* logger.info("AuthenticationService.delete", { id });
-              yield* mapRepoError(repo.delete(id));
-              yield* counter.increment;
+              yield* logger.info("AuthenticationService.delete", { id })
+              yield* mapRepoError(repo.delete(id))
+              yield* counter.increment
             })
-          );
-        }).pipe(Effect.withSpan("AuthenticationService.delete")),
-    } satisfies AuthenticationServiceInterface
+          )
+        }).pipe(Effect.withSpan("AuthenticationService.delete"))
+    }
   })
-);
+)

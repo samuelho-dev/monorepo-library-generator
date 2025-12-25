@@ -214,8 +214,8 @@ export function generateCommandsIndexFile(options: FeatureTemplateOptions) {
   })
   builder.addBlankLine()
 
-  builder.addRaw(`export { Command, ${className}CommandBus } from "./base";
-export type { CommandBusInterface } from "./base";`)
+  builder.addRaw(`export { Command, ${className}CommandBus } from "./base"
+export type { CommandBusInterface } from "./base"`)
 
   return builder.toString()
 }

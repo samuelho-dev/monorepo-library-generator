@@ -13,11 +13,9 @@ Uses Data.TaggedError for internal infrastructure errors:
  * @module @samuelho-dev/infra-cache/errors
  * @see Effect documentation for Data.TaggedError patterns
  */
-
 // ============================================================================
 // Error Types
 // ============================================================================
-
 /**
  * Base Cache error
  *
@@ -29,7 +27,6 @@ export class CacheError extends Data.TaggedError(
 )<{
   /** Human-readable error message */
   readonly message: string
-
   /** Optional underlying cause */
   readonly cause?: unknown
 }> {}
@@ -44,7 +41,6 @@ export class CacheInternalError extends Data.TaggedError(
 )<{
   /** Human-readable error message */
   readonly message: string
-
   /** Underlying error cause */
   readonly cause: unknown
 }> {}
@@ -59,7 +55,6 @@ export class CacheConfigError extends Data.TaggedError(
 )<{
   /** Human-readable error message */
   readonly message: string
-
   /** Configuration property that is invalid */
   readonly property: string
 }> {}
@@ -74,10 +69,8 @@ export class CacheConnectionError extends Data.TaggedError(
 )<{
   /** Human-readable error message */
   readonly message: string
-
   /** Connection target (service name, host, etc.) */
   readonly target: string
-
   /** Underlying connection error */
   readonly cause: unknown
 }> {}
@@ -92,10 +85,8 @@ export class CacheTimeoutError extends Data.TaggedError(
 )<{
   /** Human-readable error message */
   readonly message: string
-
   /** Timeout duration in milliseconds */
   readonly timeoutMs: number
-
   /** Operation that timed out */
   readonly operation: string
 }> {}
@@ -103,7 +94,6 @@ export class CacheTimeoutError extends Data.TaggedError(
 // ============================================================================
 // Error Type Union
 // ============================================================================
-
 /**
  * Union of all Cache error types
  *

@@ -12,11 +12,9 @@ import { Schema } from "effect"
  * @module @samuelho-dev/contract-user/rpc-errors
  */
 
-
 // ============================================================================
 // RPC Errors (Schema.TaggedError for serialization)
 // ============================================================================
-
 
 /**
  * RPC error for User not found
@@ -33,7 +31,7 @@ export class UserNotFoundRpcError extends Schema.TaggedError<UserNotFoundRpcErro
     userId: Schema.String.annotations({
       title: "User ID",
       description: "ID of the User that was not found"
-    }),
+    })
   },
   {
     identifier: "UserNotFoundRpcError",
@@ -44,8 +42,8 @@ export class UserNotFoundRpcError extends Schema.TaggedError<UserNotFoundRpcErro
   static create(userId: string) {
     return new UserNotFoundRpcError({
       message: `User not found: ${userId}`,
-      userId,
-    });
+      userId
+    })
   }
 }
 
@@ -66,7 +64,7 @@ export class UserValidationRpcError extends Schema.TaggedError<UserValidationRpc
     constraint: Schema.optional(Schema.String).annotations({
       title: "Constraint",
       description: "Validation constraint that was violated"
-    }),
+    })
   },
   {
     identifier: "UserValidationRpcError",
@@ -75,7 +73,7 @@ export class UserValidationRpcError extends Schema.TaggedError<UserValidationRpc
   }
 ) {
   static create(params: { message: string; field?: string; constraint?: string }) {
-    return new UserValidationRpcError(params);
+    return new UserValidationRpcError(params)
   }
 }
 
@@ -96,7 +94,7 @@ export class UserPermissionRpcError extends Schema.TaggedError<UserPermissionRpc
     userId: Schema.optional(Schema.String).annotations({
       title: "User ID",
       description: "ID of the User if applicable"
-    }),
+    })
   },
   {
     identifier: "UserPermissionRpcError",
@@ -108,8 +106,8 @@ export class UserPermissionRpcError extends Schema.TaggedError<UserPermissionRpc
     return new UserPermissionRpcError({
       message: `Permission denied: ${action}`,
       action,
-      ...(userId ? { userId } : {}),
-    });
+      ...(userId ? { userId } : {})
+    })
   }
 }
 
@@ -119,7 +117,7 @@ export class UserPermissionRpcError extends Schema.TaggedError<UserPermissionRpc
 export type UserRpcError =
   | UserNotFoundRpcError
   | UserValidationRpcError
-  | UserPermissionRpcError;
+  | UserPermissionRpcError
 
 /**
  * Schema for the RPC error union (for Rpc.make error type)
@@ -127,5 +125,5 @@ export type UserRpcError =
 export const UserRpcError = Schema.Union(
   UserNotFoundRpcError,
   UserValidationRpcError,
-  UserPermissionRpcError,
-);
+  UserPermissionRpcError
+)

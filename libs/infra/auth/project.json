@@ -6,9 +6,7 @@
   "tags": [
     "type:infra",
     "scope:auth",
-    "infra",
-    "orchestration",
-    "builtin"
+    ""
   ],
   "targets": {
     "build": {

@@ -1,4 +1,9 @@
+import { env } from "@samuelho-dev/env"
+import { CacheService } from "@samuelho-dev/infra-cache"
+import { DatabaseService } from "@samuelho-dev/infra-database"
+import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
 import { Layer } from "effect"
+import { UserRepository } from "../repository"
 
 /**
  * User Data Access Layers
@@ -21,31 +26,21 @@ Infrastructure included:
  */
 
 
-
 // ============================================================================
 // Repository
 // ============================================================================
-
-import { UserRepository } from "../repository";
 
 // ============================================================================
 // Infrastructure Layers
 // ============================================================================
 
-import { DatabaseService } from "@samuelho-dev/infra-database";
-import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability";
-import { CacheService } from "@samuelho-dev/infra-cache";
-
 // ============================================================================
 // Environment Configuration
 // ============================================================================
 
-import { env } from "@samuelho-dev/env";
-
 // ============================================================================
 // Infrastructure Layer Compositions
 // ============================================================================
-
 
 /**
  * Live Infrastructure Layer
@@ -57,7 +52,7 @@ export const InfrastructureLive = Layer.mergeAll(
   LoggingService.Live,
   MetricsService.Live,
   CacheService.Live
-);
+)
 
 /**
  * Test Infrastructure Layer
@@ -69,7 +64,7 @@ export const InfrastructureTest = Layer.mergeAll(
   LoggingService.Test,
   MetricsService.Test,
   CacheService.Test
-);
+)
 
 /**
  * Dev Infrastructure Layer
@@ -81,12 +76,11 @@ export const InfrastructureDev = Layer.mergeAll(
   LoggingService.Dev,
   MetricsService.Dev,
   CacheService.Dev
-);
+)
 
 // ============================================================================
 // Data Access Layer Compositions
 // ============================================================================
-
 
 /**
  * User DataAccess Live Layer
@@ -96,17 +90,17 @@ export const InfrastructureDev = Layer.mergeAll(
  *
  * @example
  * ```typescript
- * const program = Effect.gen(function*() {
- *   const repo = yield* UserRepository;
- *   const entity = yield* repo.findById("id-123");
- * });
+ * const program = Effect.gen(function* () {
+ *   const repo = yield* UserRepository
+ *   const entity = yield* repo.findById("id-123")
+ * })
  *
- * program.pipe(Effect.provide(UserDataAccessLive));
+ * program.pipe(Effect.provide(UserDataAccessLive))
  * ```
  */
 export const UserDataAccessLive = Layer.mergeAll(
   UserRepository.Live
-).pipe(Layer.provide(InfrastructureLive));
+).pipe(Layer.provide(InfrastructureLive))
 
 /**
  * User DataAccess Test Layer
@@ -117,18 +111,18 @@ export const UserDataAccessLive = Layer.mergeAll(
  * ```typescript
  * describe("UserRepository", () => {
  *   it("should create entity", () =>
- *     Effect.gen(function*() {
- *       const repo = yield* UserRepository;
- *       const result = yield* repo.create({ name: "test" });
- *       expect(result).toBeDefined();
+ *     Effect.gen(function* () {
+ *       const repo = yield* UserRepository
+ *       const result = yield* repo.create({ name: "test" })
+ *       expect(result).toBeDefined()
  *     }).pipe(Effect.provide(UserDataAccessTest))
- *   );
- * });
+ *   )
+ * })
  * ```
  */
 export const UserDataAccessTest = Layer.mergeAll(
   UserRepository.Live
-).pipe(Layer.provide(InfrastructureTest));
+).pipe(Layer.provide(InfrastructureTest))
 
 /**
  * User DataAccess Dev Layer
@@ -138,12 +132,11 @@ export const UserDataAccessTest = Layer.mergeAll(
  */
 export const UserDataAccessDev = Layer.mergeAll(
   UserRepository.Live
-).pipe(Layer.provide(InfrastructureDev));
+).pipe(Layer.provide(InfrastructureDev))
 
 // ============================================================================
 // Auto-selecting Layer
 // ============================================================================
-
 
 /**
  * Auto layer - automatically selects based on NODE_ENV
@@ -155,10 +148,10 @@ export const UserDataAccessDev = Layer.mergeAll(
 export const UserDataAccessAuto = Layer.suspend(() => {
   switch (env.NODE_ENV) {
     case "test":
-      return UserDataAccessTest;
+      return UserDataAccessTest
     case "development":
-      return UserDataAccessDev;
+      return UserDataAccessDev
     default:
-      return UserDataAccessLive;
+      return UserDataAccessLive
   }
-});
+})

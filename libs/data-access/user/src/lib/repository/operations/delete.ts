@@ -1,5 +1,6 @@
-import { UserNotFoundRepositoryError, UserTimeoutError } from "../../shared/errors"
+import { DatabaseService } from "@samuelho-dev/infra-database"
 import { Duration, Effect } from "effect"
+import { UserNotFoundRepositoryError, UserTimeoutError } from "../../shared/errors"
 
 /**
  * User Delete Operations
@@ -12,17 +13,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @samuelho-dev/data-access-user/repository/operations
  */
 
-
-
-
-// Infrastructure services - Database for persistence
-
-import { DatabaseService } from "@samuelho-dev/infra-database";
-
 // ============================================================================
 // Delete Operations
 // ============================================================================
-
 
 /**
  * Delete operations for User repository
@@ -32,7 +25,7 @@ import { DatabaseService } from "@samuelho-dev/infra-database";
  *
  * @example
  * ```typescript
- * yield* deleteOperations.delete("id-123");
+ * yield* deleteOperations.delete("id-123")
  * ```
  */
 export const deleteOperations = {
@@ -41,25 +34,25 @@ export const deleteOperations = {
    */
   delete: (id: string) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Deleting User with id: ${id}`);
+      yield* Effect.logDebug(`Deleting User with id: ${id}`)
 
       const result = yield* database.query((db) =>
         db
           .deleteFrom("user")
           .where("id", "=", id)
           .executeTakeFirst()
-      );
+      )
 
-      const deletedCount = Number(result.numDeletedRows);
+      const deletedCount = Number(result.numDeletedRows)
       if (deletedCount === 0) {
         // Throw NotFoundRepositoryError when record doesn't exist
         // This ensures callers can distinguish "deleted" from "nothing to delete"
-        return yield* Effect.fail(UserNotFoundRepositoryError.create(id));
+        return yield* Effect.fail(UserNotFoundRepositoryError.create(id))
       }
 
-      yield* Effect.logDebug(`User deleted successfully (id: ${id})`);
+      yield* Effect.logDebug(`User deleted successfully (id: ${id})`)
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -79,35 +72,35 @@ export const deleteOperations = {
    */
   deleteMany: (ids: ReadonlyArray<string>) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
       if (ids.length === 0) {
-        return 0;
+        return 0
       }
 
-      yield* Effect.logDebug(`Deleting ${ids.length} User entities`);
+      yield* Effect.logDebug(`Deleting ${ids.length} User entities`)
 
       const result = yield* database.query((db) =>
         db
           .deleteFrom("user")
           .where("id", "in", ids)
           .executeTakeFirst()
-      );
+      )
 
-      const deletedCount = Number(result.numDeletedRows);
-      yield* Effect.logDebug(`Deleted ${deletedCount}/${ids.length} User entities`);
+      const deletedCount = Number(result.numDeletedRows)
+      yield* Effect.logDebug(`Deleted ${deletedCount}/${ids.length} User entities`)
 
-      return deletedCount;
+      return deletedCount
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => UserTimeoutError.create("deleteMany", 30000)
       }),
       Effect.withSpan("UserRepository.deleteMany")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the delete operations object
  */
-export type DeleteUserOperations = typeof deleteOperations;
+export type DeleteUserOperations = typeof deleteOperations

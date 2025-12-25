@@ -42,7 +42,7 @@ Usage:
   DatabaseQueryError,
   DatabaseTransactionError,
   type DatabaseError,
-} from "./lib/errors";
+} from "./lib/errors"
 `)
 
   builder.addBlankLine()
@@ -51,7 +51,7 @@ Usage:
   builder.addSectionComment("Interface")
   builder.addBlankLine()
 
-  builder.addRaw(`export type { ${className}ServiceInterface } from "./lib/interface";
+  builder.addRaw(`export type { ${className}ServiceInterface } from "./lib/interface"
 `)
 
   builder.addBlankLine()
@@ -61,12 +61,12 @@ Usage:
   builder.addBlankLine()
 
   builder.addRaw(`export {
-  make${className}Service,
-  makeMemory${className}Service,
   ${className}Service,
+  make${className}Service,
+  makeTest${className}Service,
   type ${className}Config,
   type MockServiceOptions,
-} from "./lib/service";
+} from "./lib/service"
 `)
 
   builder.addBlankLine()
@@ -91,7 +91,7 @@ Usage:
   builder.addComment("});")
   builder.addComment("")
   builder.addComment("// For testing:")
-  builder.addComment(`const mockService = makeMemory${className}Service<DB>({`)
+  builder.addComment(`const mockService = makeTest${className}Service<DB>({`)
   builder.addComment("  mockTables: ['users', 'posts']")
   builder.addComment("});")
   builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")

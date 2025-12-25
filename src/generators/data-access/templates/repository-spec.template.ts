@@ -37,9 +37,12 @@ Testing Guidelines:
     module: `${scope}/data-access-${fileName}`
   })
 
-  builder.addRaw(`import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer, Option } from "effect"
+  builder.addImports([
+    { from: "@effect/vitest", imports: ["describe", "expect", "it"] },
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Option"] }
+  ])
 
+  builder.addRaw(`
 /**
  * Test entity type for repository tests
  */
@@ -58,8 +61,13 @@ class ${className}Repository extends Context.Tag("${className}Repository")<
   {
     readonly findById: (id: string) => Effect.Effect<Option.Option<${className}Entity>>
     readonly findAll: () => Effect.Effect<ReadonlyArray<${className}Entity>>
-    readonly create: (data: Omit<${className}Entity, "id" | "createdAt" | "updatedAt">) => Effect.Effect<${className}Entity>
-    readonly update: (id: string, data: Partial<Omit<${className}Entity, "id" | "createdAt" | "updatedAt">>) => Effect.Effect<Option.Option<${className}Entity>>
+    readonly create: (
+      data: Omit<${className}Entity, "id" | "createdAt" | "updatedAt">
+    ) => Effect.Effect<${className}Entity>
+    readonly update: (
+      id: string,
+      data: Partial<Omit<${className}Entity, "id" | "createdAt" | "updatedAt">>
+    ) => Effect.Effect<Option.Option<${className}Entity>>
     readonly delete: (id: string) => Effect.Effect<boolean>
   }
 >() {}
@@ -76,7 +84,6 @@ function createInMemory${className}Repository() {
 
     findAll: () =>
       Effect.sync(() => Array.from(store.values())),
-
     create: (data) =>
       Effect.sync(() => {
         const entity: ${className}Entity = {
@@ -88,7 +95,6 @@ function createInMemory${className}Repository() {
         store.set(entity.id, entity)
         return entity
       }),
-
     update: (id, data) =>
       Effect.sync(() => {
         const existing = store.get(id)
@@ -102,7 +108,6 @@ function createInMemory${className}Repository() {
         store.set(id, updated)
         return Option.some(updated)
       }),
-
     delete: (id) =>
       Effect.sync(() => store.delete(id))
   })

@@ -22,8 +22,4 @@ export {
   getCommonErrorNames
 } from "./base-errors.template"
 
-export {
-  generateTracingConfig,
-  generateTraceErrorUtility,
-  generateTracingModule
-} from "./tracing.template"
+export { generateTraceErrorUtility, generateTracingConfig, generateTracingModule } from "./tracing.template"

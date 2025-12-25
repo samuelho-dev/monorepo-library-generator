@@ -134,7 +134,7 @@ function generateLiveLayer(className: string, layerType: string, impl: string) {
   static readonly Live = Layer.${layerMethod}(
     this,
     ${impl}
-  );`
+  )`
 }
 
 /**
@@ -147,7 +147,7 @@ function generateTestLayerAlias() {
    * Testing is done by composing with test infrastructure layers
    * (e.g., DatabaseService.Test) rather than a separate implementation.
    */
-  static readonly Test = this.Live;`
+  static readonly Test = this.Live`
 }
 
 /**
@@ -165,7 +165,7 @@ function generateTestLayer(className: string, layerType: string, impl: string) {
   static readonly Test = Layer.${layerMethod}(
     this,
     ${impl}
-  );`
+  )`
 }
 
 /**
@@ -186,7 +186,7 @@ function generateDevLayer(
   static readonly Dev = Layer.effect(
     this,
     ${devImpl}
-  );`
+  )`
   }
 
   // Default: wrap Live with logging (no console.log to satisfy linter)
@@ -202,13 +202,13 @@ function generateDevLayer(
       const liveService = yield* ${className}.Live.pipe(
         Layer.build,
         Effect.map(Context.unsafeGet(${className}))
-      );
+      )
 
       // Return wrapped service with logging
       // TODO: Add method-level logging wrappers using Effect.log()
-      return liveService;
+      return liveService
     })
-  );`
+  )`
 }
 
 /**
@@ -234,13 +234,13 @@ function generateAutoLayer(className: string, envVar: string) {
   static readonly Auto = Layer.suspend(() => {
     switch (env.${envVar}) {
       case "test":
-        return ${className}.Test;
+        return ${className}.Test
       case "development":
-        return ${className}.Dev;
+        return ${className}.Dev
       default:
-        return ${className}.Live;
+        return ${className}.Live
     }
-  });`
+  })`
 }
 
 /**

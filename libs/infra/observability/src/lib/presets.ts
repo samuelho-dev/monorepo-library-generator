@@ -21,11 +21,9 @@ Each preset is ready to use with minimal configuration.
  *
  * @module @samuelho-dev/infra-observability/presets
  */
-
 // ============================================================================
 // OTLP HTTP Preset
 // ============================================================================
-
 /**
  * Configuration for OTLP preset
  */
@@ -116,7 +114,6 @@ export const OtlpPreset = (config: OtlpPresetConfig) => {
 // ============================================================================
 // Jaeger Preset
 // ============================================================================
-
 /**
  * Configuration for Jaeger preset
  */
@@ -185,7 +182,6 @@ export const JaegerPreset = (config: JaegerPresetConfig) => {
 // ============================================================================
 // Console Preset
 // ============================================================================
-
 /**
  * Configuration for Console preset
  */
@@ -233,7 +229,6 @@ export const ConsolePreset = (config: ConsolePresetConfig) =>
 // ============================================================================
 // Noop Preset
 // ============================================================================
-
 /**
  * Noop Preset
  *
@@ -260,7 +255,6 @@ export const NoopPreset = Layer.empty
 // ============================================================================
 // Grafana Cloud Preset
 // ============================================================================
-
 /**
  * Configuration for Grafana Cloud preset
  */

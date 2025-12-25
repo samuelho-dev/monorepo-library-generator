@@ -29,9 +29,10 @@ Includes:
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: "effect", imports: ["Effect"], isTypeOnly: true }])
-  builder.addRaw(`import type { RedisCommandError, RedisPubSubError } from "./errors";`)
-  builder.addBlankLine()
+  builder.addImports([
+    { from: "effect", imports: ["Effect"], isTypeOnly: true },
+    { from: "./errors", imports: ["RedisCommandError", "RedisPubSubError"], isTypeOnly: true }
+  ])
 
   // Configuration - re-export from native SDK
   builder.addSectionComment("Configuration")
@@ -43,7 +44,7 @@ Includes:
  * Re-exported from ioredis for native SDK type compatibility.
  * Use RedisOptions for full configuration options.
  */
-export type { RedisOptions } from "ioredis";
+export type { RedisOptions } from "ioredis"
 
 /**
  * Simplified Redis config for common use cases
@@ -52,16 +53,16 @@ export type { RedisOptions } from "ioredis";
  * use Redacted.value() to unwrap it before passing to the config.
  */
 export interface RedisConfig {
-  readonly host?: string;
-  readonly port?: number;
+  readonly host?: string
+  readonly port?: number
   /** Password as plain string (use Redacted.value() to unwrap if needed) */
-  readonly password?: string;
-  readonly db?: number;
-  readonly tls?: boolean | object;
-  readonly connectTimeout?: number;
-  readonly commandTimeout?: number;
-  readonly retryDelayMs?: number;
-  readonly maxRetriesPerRequest?: number;
+  readonly password?: string
+  readonly db?: number
+  readonly tls?: boolean | object
+  readonly connectTimeout?: number
+  readonly commandTimeout?: number
+  readonly retryDelayMs?: number
+  readonly maxRetriesPerRequest?: number
 }`)
   builder.addBlankLine()
 
@@ -74,11 +75,11 @@ export interface RedisConfig {
  */
 export interface ScanOptions {
   /** Pattern to match keys */
-  readonly match?: string;
+  readonly match?: string
   /** Number of keys to return per iteration */
-  readonly count?: number;
+  readonly count?: number
   /** Key type filter */
-  readonly type?: "string" | "list" | "set" | "zset" | "hash" | "stream";
+  readonly type?: "string" | "list" | "set" | "zset" | "hash" | "stream"
 }
 
 /**
@@ -86,9 +87,9 @@ export interface ScanOptions {
  */
 export interface ScanResult {
   /** Cursor for next iteration (0 = iteration complete) */
-  readonly cursor: number;
+  readonly cursor: number
   /** Keys found in this iteration */
-  readonly keys: ReadonlyArray<string>;
+  readonly keys: ReadonlyArray<string>
 }`)
   builder.addBlankLine()
 
@@ -106,32 +107,32 @@ export interface RedisCacheClient {
   /**
    * Get value by key
    */
-  readonly get: (key: string) => Effect.Effect<string | null, RedisCommandError>;
+  readonly get: (key: string) => Effect.Effect<string | null, RedisCommandError>
 
   /**
    * Set value with key
    */
-  readonly set: (key: string, value: string) => Effect.Effect<void, RedisCommandError>;
+  readonly set: (key: string, value: string) => Effect.Effect<void, RedisCommandError>
 
   /**
    * Set value with expiration in seconds
    */
-  readonly setex: (key: string, seconds: number, value: string) => Effect.Effect<void, RedisCommandError>;
+  readonly setex: (key: string, seconds: number, value: string) => Effect.Effect<void, RedisCommandError>
 
   /**
    * Delete key
    */
-  readonly del: (key: string) => Effect.Effect<number, RedisCommandError>;
+  readonly del: (key: string) => Effect.Effect<number, RedisCommandError>
 
   /**
    * Flush database
    */
-  readonly flushdb: () => Effect.Effect<void, RedisCommandError>;
+  readonly flushdb: () => Effect.Effect<void, RedisCommandError>
 
   /**
    * Health check ping
    */
-  readonly ping: () => Effect.Effect<string, RedisCommandError>;
+  readonly ping: () => Effect.Effect<string, RedisCommandError>
 }`)
   builder.addBlankLine()
 
@@ -152,7 +153,7 @@ export interface RedisPubSubClient {
    * Publish message to channel
    * @returns Number of subscribers that received the message
    */
-  readonly publish: (channel: string, message: string) => Effect.Effect<number, RedisPubSubError>;
+  readonly publish: (channel: string, message: string) => Effect.Effect<number, RedisPubSubError>
 
   /**
    * Subscribe to channel
@@ -161,17 +162,17 @@ export interface RedisPubSubClient {
   readonly subscribe: (
     channel: string,
     handler: (message: string) => void
-  ) => Effect.Effect<void, RedisPubSubError>;
+  ) => Effect.Effect<void, RedisPubSubError>
 
   /**
    * Unsubscribe from channel
    */
-  readonly unsubscribe: (channel: string) => Effect.Effect<void, RedisPubSubError>;
+  readonly unsubscribe: (channel: string) => Effect.Effect<void, RedisPubSubError>
 
   /**
    * Health check ping
    */
-  readonly ping: () => Effect.Effect<string, RedisPubSubError>;
+  readonly ping: () => Effect.Effect<string, RedisPubSubError>
 }`)
   builder.addBlankLine()
 
@@ -189,44 +190,44 @@ export interface RedisQueueClient {
   /**
    * Push item to left of list (LPUSH)
    */
-  readonly lpush: (key: string, value: string) => Effect.Effect<number, RedisCommandError>;
+  readonly lpush: (key: string, value: string) => Effect.Effect<number, RedisCommandError>
 
   /**
    * Pop item from right of list with blocking (BRPOP)
    * @param timeout - Timeout in seconds (0 = block indefinitely)
    * @returns [key, value] tuple or null if timeout
    */
-  readonly brpop: (key: string, timeout: number) => Effect.Effect<[string, string] | null, RedisCommandError>;
+  readonly brpop: (key: string, timeout: number) => Effect.Effect<[string, string] | null, RedisCommandError>
 
   /**
    * Pop item from right of list (RPOP)
    */
-  readonly rpop: (key: string) => Effect.Effect<string | null, RedisCommandError>;
+  readonly rpop: (key: string) => Effect.Effect<string | null, RedisCommandError>
 
   /**
    * Get list length (LLEN)
    */
-  readonly llen: (key: string) => Effect.Effect<number, RedisCommandError>;
+  readonly llen: (key: string) => Effect.Effect<number, RedisCommandError>
 
   /**
    * Get range of list items (LRANGE)
    */
-  readonly lrange: (key: string, start: number, stop: number) => Effect.Effect<Array<string>, RedisCommandError>;
+  readonly lrange: (key: string, start: number, stop: number) => Effect.Effect<Array<string>, RedisCommandError>
 
   /**
    * Trim list to specified range (LTRIM)
    */
-  readonly ltrim: (key: string, start: number, stop: number) => Effect.Effect<void, RedisCommandError>;
+  readonly ltrim: (key: string, start: number, stop: number) => Effect.Effect<void, RedisCommandError>
 
   /**
    * Delete key (DEL)
    */
-  readonly del: (key: string) => Effect.Effect<number, RedisCommandError>;
+  readonly del: (key: string) => Effect.Effect<number, RedisCommandError>
 
   /**
    * Health check ping
    */
-  readonly ping: () => Effect.Effect<string, RedisCommandError>;
+  readonly ping: () => Effect.Effect<string, RedisCommandError>
 }`)
 
   return builder.toString()

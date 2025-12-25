@@ -1,5 +1,6 @@
-import { UserTimeoutError } from "../../shared/errors"
+import { DatabaseService } from "@samuelho-dev/infra-database"
 import { Duration, Effect } from "effect"
+import { UserTimeoutError } from "../../shared/errors"
 import type { UserFilter } from "../../shared/types"
 
 /**
@@ -13,17 +14,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @samuelho-dev/data-access-user/repository/operations
  */
 
-
-
-
-// Infrastructure services - Database for persistence
-
-import { DatabaseService } from "@samuelho-dev/infra-database";
-
 // ============================================================================
 // Aggregate Operations
 // ============================================================================
-
 
 /**
  * Aggregate operations for User repository
@@ -33,7 +26,7 @@ import { DatabaseService } from "@samuelho-dev/infra-database";
  *
  * @example
  * ```typescript
- * const count = yield* aggregateOperations.count({ search: "test" });
+ * const count = yield* aggregateOperations.count({ search: "test" })
  * ```
  */
 export const aggregateOperations = {
@@ -42,28 +35,28 @@ export const aggregateOperations = {
    */
   count: (filter?: UserFilter) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Counting User entities (filter: ${JSON.stringify(filter)})`);
+      yield* Effect.logDebug(`Counting User entities (filter: ${JSON.stringify(filter)})`)
 
       const count = yield* database.query((db) => {
-        let query = db.selectFrom("user").select((eb) => eb.fn.countAll().as("count"));
+        let query = db.selectFrom("user").select((eb) => eb.fn.countAll().as("count"))
 
         // Apply filters if provided
         if (filter?.search) {
           query = query.where((eb) =>
             eb.or([
-              eb("name", "ilike", `%${filter.search}%`),
+              eb("name", "ilike", `%${filter.search}%`)
             ])
-          );
+          )
         }
 
-        return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
-      });
+        return query.executeTakeFirstOrThrow().then((result) => Number(result.count))
+      })
 
-      yield* Effect.logDebug(`Counted ${count} User entities`);
+      yield* Effect.logDebug(`Counted ${count} User entities`)
 
-      return count;
+      return count
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -77,9 +70,9 @@ export const aggregateOperations = {
    */
   exists: (id: string) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Checking if User exists: ${id}`);
+      yield* Effect.logDebug(`Checking if User exists: ${id}`)
 
       const result = yield* database.query((db) =>
         db
@@ -88,21 +81,21 @@ export const aggregateOperations = {
           .where("id", "=", id)
           .executeTakeFirstOrThrow()
           .then((result) => Number(result.count) > 0)
-      );
+      )
 
-      yield* Effect.logDebug(`User exists check: ${id} = ${result}`);
+      yield* Effect.logDebug(`User exists check: ${id} = ${result}`)
 
-      return result;
+      return result
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => UserTimeoutError.create("exists", 30000)
       }),
       Effect.withSpan("UserRepository.exists")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the aggregate operations object
  */
-export type AggregateUserOperations = typeof aggregateOperations;
+export type AggregateUserOperations = typeof aggregateOperations

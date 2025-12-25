@@ -75,6 +75,7 @@ export {
 // ============================================================================
 
 export {
+  AuthMethodContext,
   // User context
   CurrentUser,
   // Handler context helpers

@@ -1,9 +1,10 @@
+import { env } from "@samuelho-dev/env"
+import { Chunk, Context, Effect, Layer, Option, Stream } from "effect"
 import { aggregateOperations } from "./operations/aggregate"
 import { createOperations } from "./operations/create"
 import { deleteOperations } from "./operations/delete"
 import { readOperations } from "./operations/read"
 import { updateOperations } from "./operations/update"
-import { Chunk, Context, Effect, Layer, Option, Stream } from "effect"
 
 /**
  * User Repository
@@ -21,21 +22,9 @@ ARCHITECTURE PATTERN:
  * @module @samuelho-dev/data-access-user/repository
  */
 
-
-
-// ============================================================================
-// Environment Configuration
-// ============================================================================
-
-import { env } from "@samuelho-dev/env";
-
-// Import operation implementations
-
-
 // ============================================================================
 // Repository Context.Tag
 // ============================================================================
-
 
 /**
  * User Repository implementation
@@ -51,20 +40,20 @@ const repositoryImpl = {
   ...aggregateOperations,
 
   streamAll: (options?: { batchSize?: number }) => {
-    const batchSize = options?.batchSize ?? 100;
+    const batchSize = options?.batchSize ?? 100
     return Stream.paginateChunkEffect(0, (offset) =>
       readOperations.findAll(undefined, { skip: offset, limit: batchSize }).pipe(
         Effect.map((result) => {
-          const chunk = Chunk.fromIterable(result.items);
-          const next = result.hasMore ? Option.some(offset + batchSize) : Option.none();
-          return [chunk, next] as const;
+          const chunk = Chunk.fromIterable(result.items)
+          const next = result.hasMore ? Option.some(offset + batchSize) : Option.none()
+          return [chunk, next] as const
         })
       )
-    );
-  },
-} as const;
+    )
+  }
+} as const
 
-export type UserRepositoryInterface = typeof repositoryImpl;
+export type UserRepositoryInterface = typeof repositoryImpl
 
 /**
  * User Repository Tag
@@ -105,7 +94,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
   static readonly Live = Layer.succeed(
     this,
     repositoryImpl
-  );
+  )
 
   /**
    * Test layer - Same as Live
@@ -113,7 +102,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
    * Testing is done by composing with test infrastructure layers
    * (e.g., DatabaseService.Test) rather than a separate implementation.
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 
   /**
    * Dev layer - Development with enhanced logging
@@ -123,17 +112,17 @@ export class UserRepository extends Context.Tag("UserRepository")<
    */
   static readonly Dev = Layer.effect(
     this,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const liveService = yield* UserRepository.Live.pipe(
         Layer.build,
         Effect.map(Context.unsafeGet(UserRepository))
-      );
+      )
 
       // Return wrapped service with logging
       // TODO: Add method-level logging wrappers using Effect.log()
-      return liveService;
+      return liveService
     })
-  );
+  )
 
   /**
    * Auto layer - Environment-aware layer selection
@@ -148,11 +137,11 @@ export class UserRepository extends Context.Tag("UserRepository")<
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "test":
-        return UserRepository.Test;
+        return UserRepository.Test
       case "development":
-        return UserRepository.Dev;
+        return UserRepository.Dev
       default:
-        return UserRepository.Live;
+        return UserRepository.Live
     }
-  });
+  })
 }

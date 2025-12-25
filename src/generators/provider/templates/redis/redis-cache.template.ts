@@ -35,12 +35,11 @@ Used by infra-cache's Redis layer.`,
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+    { from: "effect", imports: ["Context", "Effect", "Layer"] },
+    { from: "ioredis", imports: [{ name: "Redis", alias: "IORedis" }], isTypeOnly: true },
+    { from: "./errors", imports: ["RedisCommandError"] },
+    { from: "./types", imports: ["RedisCacheClient"], isTypeOnly: true }
   ])
-  builder.addRaw(`import type { Redis as IORedis } from "ioredis";`)
-  builder.addRaw(`import { RedisCommandError } from "./errors";`)
-  builder.addRaw(`import type { RedisCacheClient } from "./types";`)
-  builder.addBlankLine()
 
   // Factory function
   builder.addSectionComment("Cache Sub-Service Factory")

@@ -1,6 +1,6 @@
-import { QueueService } from "./service"
 import { Redis } from "@samuelho-dev/provider-redis"
 import { Chunk, Effect, Layer, Option, Schema } from "effect"
+import { QueueService } from "./service"
 import type { BoundedQueueHandle, QueueOptions, UnboundedQueueHandle } from "./service"
 
 /**
@@ -23,11 +23,9 @@ Use Cases:
  * @see EFFECT_PATTERNS.md for queue patterns
  * @see @samuelho-dev/provider-redis for Redis provider
  */
-
 // ============================================================================
 // Redis Queue Layer
 // ============================================================================
-
 /**
  * Redis-backed distributed queue layer
  *
@@ -39,9 +37,14 @@ Use Cases:
  *
  * @example
  * ```typescript
+ * const JobSchema = Schema.Struct({
+ *   type: Schema.String,
+ *   data: Schema.Unknown
+ * });
+ *
  * const program = Effect.gen(function*() {
  *   const queue = yield* QueueService;
- *   const jobQueue = yield* queue.bounded<Job>(1000, { name: "jobs" });
+ *   const jobQueue = yield* queue.bounded(1000, JobSchema, { name: "jobs" });
  *
  *   // Producer (can be on different instance)
  *   yield* jobQueue.offer({ type: "process", data: "..." });
@@ -64,22 +67,18 @@ export const QueueRedisLayer = Layer.effect(
     // Serialization helpers using Effect Schema
     // Schema.parseJson handles JSON parsing + validation in one step
     // Errors flow through Effect's error channel (no exceptions)
-    const JsonValue = Schema.parseJson(Schema.Unknown)
-    const decodeJson = Schema.decode(JsonValue)
-    const encodeJson = Schema.encode(JsonValue)
+    const serialize = <T, I>(value: T, schema: Schema.Schema<T, I>) =>
+      Schema.encode(Schema.parseJson(schema))(value).pipe(Effect.orDie)
 
-    const serialize = <T>(value: T) =>
-      encodeJson(value).pipe(Effect.orDie)
+    const deserialize = <T, I>(data: string, schema: Schema.Schema<T, I>) =>
+      Schema.decode(Schema.parseJson(schema))(data).pipe(Effect.orDie)
 
-    const deserialize = <T>(data: string) =>
-      decodeJson(data).pipe(Effect.map((v) => v as T), Effect.orDie)
-
-    const makeQueueKey = (name?: string) =>
-      name ? `queue:${name}` : `queue:${crypto.randomUUID()}`
+    const makeQueueKey = (name?: string) => name ? `queue:${name}` : `queue:${crypto.randomUUID()}`
 
     return {
-      bounded: <T>(capacity: number, options?: QueueOptions) =>
+      bounded: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
         Effect.gen(function*() {
+          yield* Effect.void
           const key = makeQueueKey(options?.name)
           let isShutdownFlag = false
 
@@ -99,22 +98,21 @@ export const QueueRedisLayer = Layer.effect(
               Effect.gen(function*() {
                 if (isShutdownFlag) return false
                 yield* enforceCapacity
-                const serialized = yield* serialize(item)
+                const serialized = yield* serialize(item, schema)
                 yield* queueClient.lpush(key, serialized)
                 return true
               }),
 
-            take:
-              Effect.gen(function*() {
-                if (isShutdownFlag) {
-                  return yield* Effect.die("Queue is shutdown")
-                }
-                const result = yield* queueClient.brpop(key, 0) // Block indefinitely
-                if (!result) {
-                  return yield* Effect.die("Queue closed unexpectedly")
-                }
-                return yield* deserialize<T>(result[1])
-              }),
+            take: Effect.gen(function*() {
+              if (isShutdownFlag) {
+                return yield* Effect.die("Queue is shutdown")
+              }
+              const result = yield* queueClient.brpop(key, 0) // Block indefinitely
+              if (!result) {
+                return yield* Effect.die("Queue closed unexpectedly")
+              }
+              return yield* deserialize(result[1], schema)
+            }),
 
             takeUpTo: (n: number) =>
               Effect.gen(function*() {
@@ -122,44 +120,41 @@ export const QueueRedisLayer = Layer.effect(
                 for (let i = 0; i < n; i++) {
                   const item = yield* queueClient.rpop(key)
                   if (!item) break
-                  items.push(yield* deserialize<T>(item))
+                  items.push(yield* deserialize(item, schema))
                 }
                 return Chunk.fromIterable(items)
               }),
 
-            takeAll:
-              Effect.gen(function*() {
-                const items = yield* queueClient.lrange(key, 0, -1)
-                yield* queueClient.del(key)
-                const deserialized: Array<T> = []
-                for (const item of items) {
-                  deserialized.push(yield* deserialize<T>(item))
-                }
-                return Chunk.fromIterable(deserialized.reverse())
-              }),
+            takeAll: Effect.gen(function*() {
+              const items = yield* queueClient.lrange(key, 0, -1)
+              yield* queueClient.del(key)
+              const deserialized: Array<T> = []
+              for (const item of items) {
+                deserialized.push(yield* deserialize(item, schema))
+              }
+              return Chunk.fromIterable(deserialized.reverse())
+            }),
 
-            poll:
-              Effect.gen(function*() {
-                const item = yield* queueClient.rpop(key)
-                if (!item) return Option.none()
-                const value = yield* deserialize<T>(item)
-                return Option.some(value)
-              }),
+            poll: Effect.gen(function*() {
+              const item = yield* queueClient.rpop(key)
+              if (!item) return Option.none()
+              const value = yield* deserialize(item, schema)
+              return Option.some(value)
+            }),
 
             size: queueClient.llen(key),
 
-            shutdown:
-              Effect.sync(() => {
-                isShutdownFlag = true
-              }),
+            shutdown: Effect.sync(() => {
+              isShutdownFlag = true
+            }),
 
             isShutdown: Effect.sync(() => isShutdownFlag)
-          // TS infers BoundedQueueHandle<T> via Context.Tag
           }
         }),
 
-      unbounded: <T>(options?: QueueOptions) =>
+      unbounded: <T, I = T>(schema: Schema.Schema<T, I>, options?: QueueOptions) =>
         Effect.gen(function*() {
+          yield* Effect.void
           const key = makeQueueKey(options?.name)
           let isShutdownFlag = false
 
@@ -167,22 +162,21 @@ export const QueueRedisLayer = Layer.effect(
             offer: (item: T) =>
               Effect.gen(function*() {
                 if (isShutdownFlag) return false
-                const serialized = yield* serialize(item)
+                const serialized = yield* serialize(item, schema)
                 yield* queueClient.lpush(key, serialized)
                 return true
               }),
 
-            take:
-              Effect.gen(function*() {
-                if (isShutdownFlag) {
-                  return yield* Effect.die("Queue is shutdown")
-                }
-                const result = yield* queueClient.brpop(key, 0)
-                if (!result) {
-                  return yield* Effect.die("Queue closed unexpectedly")
-                }
-                return yield* deserialize<T>(result[1])
-              }),
+            take: Effect.gen(function*() {
+              if (isShutdownFlag) {
+                return yield* Effect.die("Queue is shutdown")
+              }
+              const result = yield* queueClient.brpop(key, 0)
+              if (!result) {
+                return yield* Effect.die("Queue closed unexpectedly")
+              }
+              return yield* deserialize(result[1], schema)
+            }),
 
             takeUpTo: (n: number) =>
               Effect.gen(function*() {
@@ -190,34 +184,32 @@ export const QueueRedisLayer = Layer.effect(
                 for (let i = 0; i < n; i++) {
                   const item = yield* queueClient.rpop(key)
                   if (!item) break
-                  items.push(yield* deserialize<T>(item))
+                  items.push(yield* deserialize(item, schema))
                 }
                 return Chunk.fromIterable(items)
               }),
 
-            takeAll:
-              Effect.gen(function*() {
-                const items = yield* queueClient.lrange(key, 0, -1)
-                yield* queueClient.del(key)
-                const deserialized: Array<T> = []
-                for (const item of items) {
-                  deserialized.push(yield* deserialize<T>(item))
-                }
-                return Chunk.fromIterable(deserialized.reverse())
-              }),
+            takeAll: Effect.gen(function*() {
+              const items = yield* queueClient.lrange(key, 0, -1)
+              yield* queueClient.del(key)
+              const deserialized: Array<T> = []
+              for (const item of items) {
+                deserialized.push(yield* deserialize(item, schema))
+              }
+              return Chunk.fromIterable(deserialized.reverse())
+            }),
 
             size: queueClient.llen(key),
 
-            shutdown:
-              Effect.sync(() => {
-                isShutdownFlag = true
-              })
-          // TS infers UnboundedQueueHandle<T> via Context.Tag
+            shutdown: Effect.sync(() => {
+              isShutdownFlag = true
+            })
           }
         }),
 
-      dropping: <T>(capacity: number, options?: QueueOptions) =>
+      dropping: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
         Effect.gen(function*() {
+          yield* Effect.void
           const key = makeQueueKey(options?.name)
           let isShutdownFlag = false
 
@@ -230,19 +222,18 @@ export const QueueRedisLayer = Layer.effect(
                   // Drop the item silently
                   return false
                 }
-                const serialized = yield* serialize(item)
+                const serialized = yield* serialize(item, schema)
                 yield* queueClient.lpush(key, serialized)
                 return true
               }),
 
-            take:
-              Effect.gen(function*() {
-                const result = yield* queueClient.brpop(key, 0)
-                if (!result) {
-                  return yield* Effect.die("Queue closed")
-                }
-                return yield* deserialize<T>(result[1])
-              }),
+            take: Effect.gen(function*() {
+              const result = yield* queueClient.brpop(key, 0)
+              if (!result) {
+                return yield* Effect.die("Queue closed")
+              }
+              return yield* deserialize(result[1], schema)
+            }),
 
             takeUpTo: (n: number) =>
               Effect.gen(function*() {
@@ -250,39 +241,39 @@ export const QueueRedisLayer = Layer.effect(
                 for (let i = 0; i < n; i++) {
                   const item = yield* queueClient.rpop(key)
                   if (!item) break
-                  items.push(yield* deserialize<T>(item))
+                  items.push(yield* deserialize(item, schema))
                 }
                 return Chunk.fromIterable(items)
               }),
 
-            takeAll:
-              Effect.gen(function*() {
-                const items = yield* queueClient.lrange(key, 0, -1)
-                yield* queueClient.del(key)
-                const deserialized: Array<T> = []
-                for (const item of items) {
-                  deserialized.push(yield* deserialize<T>(item))
-                }
-                return Chunk.fromIterable(deserialized.reverse())
-              }),
+            takeAll: Effect.gen(function*() {
+              const items = yield* queueClient.lrange(key, 0, -1)
+              yield* queueClient.del(key)
+              const deserialized: Array<T> = []
+              for (const item of items) {
+                deserialized.push(yield* deserialize(item, schema))
+              }
+              return Chunk.fromIterable(deserialized.reverse())
+            }),
 
-            poll:
-              Effect.gen(function*() {
-                const item = yield* queueClient.rpop(key)
-                if (!item) return Option.none()
-                const value = yield* deserialize<T>(item)
-                return Option.some(value)
-              }),
+            poll: Effect.gen(function*() {
+              const item = yield* queueClient.rpop(key)
+              if (!item) return Option.none()
+              const value = yield* deserialize(item, schema)
+              return Option.some(value)
+            }),
 
             size: queueClient.llen(key),
-            shutdown: Effect.sync(() => { isShutdownFlag = true }),
+            shutdown: Effect.sync(() => {
+              isShutdownFlag = true
+            }),
             isShutdown: Effect.sync(() => isShutdownFlag)
-          // TS infers BoundedQueueHandle<T> via Context.Tag
           }
         }),
 
-      sliding: <T>(capacity: number, options?: QueueOptions) =>
+      sliding: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
         Effect.gen(function*() {
+          yield* Effect.void
           const key = makeQueueKey(options?.name)
           let isShutdownFlag = false
 
@@ -290,21 +281,20 @@ export const QueueRedisLayer = Layer.effect(
             offer: (item: T) =>
               Effect.gen(function*() {
                 if (isShutdownFlag) return false
-                const serialized = yield* serialize(item)
+                const serialized = yield* serialize(item, schema)
                 yield* queueClient.lpush(key, serialized)
                 // Trim to capacity (keep only the newest items)
                 yield* queueClient.ltrim(key, 0, capacity - 1)
                 return true
               }),
 
-            take:
-              Effect.gen(function*() {
-                const result = yield* queueClient.brpop(key, 0)
-                if (!result) {
-                  return yield* Effect.die("Queue closed")
-                }
-                return yield* deserialize<T>(result[1])
-              }),
+            take: Effect.gen(function*() {
+              const result = yield* queueClient.brpop(key, 0)
+              if (!result) {
+                return yield* Effect.die("Queue closed")
+              }
+              return yield* deserialize(result[1], schema)
+            }),
 
             takeUpTo: (n: number) =>
               Effect.gen(function*() {
@@ -312,34 +302,33 @@ export const QueueRedisLayer = Layer.effect(
                 for (let i = 0; i < n; i++) {
                   const item = yield* queueClient.rpop(key)
                   if (!item) break
-                  items.push(yield* deserialize<T>(item))
+                  items.push(yield* deserialize(item, schema))
                 }
                 return Chunk.fromIterable(items)
               }),
 
-            takeAll:
-              Effect.gen(function*() {
-                const items = yield* queueClient.lrange(key, 0, -1)
-                yield* queueClient.del(key)
-                const deserialized: Array<T> = []
-                for (const item of items) {
-                  deserialized.push(yield* deserialize<T>(item))
-                }
-                return Chunk.fromIterable(deserialized.reverse())
-              }),
+            takeAll: Effect.gen(function*() {
+              const items = yield* queueClient.lrange(key, 0, -1)
+              yield* queueClient.del(key)
+              const deserialized: Array<T> = []
+              for (const item of items) {
+                deserialized.push(yield* deserialize(item, schema))
+              }
+              return Chunk.fromIterable(deserialized.reverse())
+            }),
 
-            poll:
-              Effect.gen(function*() {
-                const item = yield* queueClient.rpop(key)
-                if (!item) return Option.none()
-                const value = yield* deserialize<T>(item)
-                return Option.some(value)
-              }),
+            poll: Effect.gen(function*() {
+              const item = yield* queueClient.rpop(key)
+              if (!item) return Option.none()
+              const value = yield* deserialize(item, schema)
+              return Option.some(value)
+            }),
 
             size: queueClient.llen(key),
-            shutdown: Effect.sync(() => { isShutdownFlag = true }),
+            shutdown: Effect.sync(() => {
+              isShutdownFlag = true
+            }),
             isShutdown: Effect.sync(() => isShutdownFlag)
-          // TS infers BoundedQueueHandle<T> via Context.Tag
           }
         }),
 
@@ -356,7 +345,6 @@ export const QueueRedisLayer = Layer.effect(
 // ============================================================================
 // Job Enqueuing Helper
 // ============================================================================
-
 /**
  * Wrap an Effect with job enqueuing
  *
@@ -378,7 +366,7 @@ export const QueueRedisLayer = Layer.effect(
  *   Effect.gen(function*() {
  *     const repo = yield* UserRepository
  *     const queue = yield* QueueService
- *     const emailQueue = yield* queue.bounded<Schema.Schema.Type<typeof SendEmailJobSchema>>(1000, { name: "email-jobs" })
+ *     const emailQueue = yield* queue.bounded(1000, SendEmailJobSchema, { name: "email-jobs" })
  *
  *     return {
  *       create: (input) =>
@@ -408,9 +396,7 @@ export const withJobEnqueuing = <A, E, R, Job>(
   effect.pipe(
     Effect.tap((result) =>
       queue.offer(buildJob(result)).pipe(
-        Effect.catchAll((error) =>
-          Effect.logWarning("Job enqueuing failed", { error })
-        )
+        Effect.catchAll((error) => Effect.logWarning("Job enqueuing failed", { error }))
       )
     )
   )

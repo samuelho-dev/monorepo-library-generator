@@ -42,12 +42,6 @@ Router utilities are in router.ts.`,
     { from: "@effect/rpc", imports: ["Rpc", "RpcGroup"] }
   ])
 
-  builder.addSectionComment("Re-exports from @effect/rpc")
-
-  builder.addRaw(`// Re-export core RPC primitives for convenience
-export { Rpc, RpcGroup } from "@effect/rpc"
-`)
-
   builder.addSectionComment("RPC Definition Helpers")
 
   builder.addRaw(`/**
@@ -143,17 +137,69 @@ export type RpcHandler<Payload, Success, Failure, Deps> = (
 /**
  * Type helper to extract handler requirements from an RPC group
  *
+ * Extracts the handler function signatures for all RPCs in a group.
+ * This is useful for creating handler implementations with proper typing.
+ *
  * Note: For simpler handler typing, use RpcGroup.toLayer directly
  * which provides full type inference.
+ *
+ * @example
+ * \`\`\`typescript
+ * import { UserRpcs } from "@scope/contract-user/rpc";
+ *
+ * type UserHandlers = HandlersFor<typeof UserRpcs>;
+ * // {
+ * //   GetUser: (payload: { id: string }) => Effect<User, UserNotFoundError | AuthError, UserRepository>;
+ * //   CreateUser: (payload: CreateUserInput) => Effect<User, ValidationError | AuthError, UserRepository>;
+ * // }
+ * \`\`\`
  */
 export type HandlersFor<G> =
   G extends RpcGroup.RpcGroup<infer Rpcs>
     ? {
-        [K in keyof Rpcs]: Rpcs[K] extends Rpc.Rpc<infer _Tag, infer Payload, infer Success, infer Failure>
-          ? (payload: Schema.Schema.Type<Payload>) => Effect.Effect<Schema.Schema.Type<Success>, Schema.Schema.Type<Failure>>
+        [K in keyof Rpcs]: Rpcs[K] extends Rpc.Rpc<
+          infer _Tag,
+          infer Payload,
+          infer Success,
+          infer Failure
+        >
+          ? (
+              payload: Schema.Schema.Type<Payload>
+            ) => Effect.Effect<
+              Schema.Schema.Type<Success>,
+              Schema.Schema.Type<Failure>
+            >
           : never
       }
     : never
+
+/**
+ * Extract RPC tag/name from an RPC definition
+ */
+export type RpcTag<R> = R extends Rpc.Rpc<infer Tag, unknown, unknown, unknown>
+  ? Tag
+  : never
+
+/**
+ * Extract payload type from an RPC definition
+ */
+export type RpcPayload<R> = R extends Rpc.Rpc<string, infer Payload, unknown, unknown>
+  ? Schema.Schema.Type<Payload>
+  : never
+
+/**
+ * Extract success type from an RPC definition
+ */
+export type RpcSuccess<R> = R extends Rpc.Rpc<string, unknown, infer Success, unknown>
+  ? Schema.Schema.Type<Success>
+  : never
+
+/**
+ * Extract failure type from an RPC definition
+ */
+export type RpcFailure<R> = R extends Rpc.Rpc<string, unknown, unknown, infer Failure>
+  ? Schema.Schema.Type<Failure>
+  : never
 `)
 
   builder.addSectionComment("Schema Helpers")

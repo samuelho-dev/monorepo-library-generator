@@ -59,20 +59,58 @@ import {
 
   builder.addSectionComment("Error Exports (Contract-First)")
   builder.addComment("Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these")
-  builder.addRaw(`export * from "./errors";`)
+  builder.addRaw(`export {
+  ${subModuleClassName}NotFoundError,
+  ${subModuleClassName}ValidationError,
+  ${subModuleClassName}OperationError,
+  type ${subModuleClassName}DomainError,
+  type ${subModuleClassName}RepositoryError,
+  type ${subModuleClassName}Error
+} from "./errors"`)
   builder.addBlankLine()
 
   builder.addSectionComment("Entity Exports")
-  builder.addRaw(`export * from "./entities";`)
+  builder.addRaw(`export {
+  ${subModuleClassName}Id,
+  ${subModuleClassName},
+  ${subModuleClassName}Item,
+  parse${subModuleClassName},
+  encode${subModuleClassName},
+  parse${subModuleClassName}Item
+} from "./entities"`)
   builder.addBlankLine()
 
   builder.addSectionComment("Event Exports")
-  builder.addRaw(`export * from "./events";`)
+  builder.addRaw(`export {
+  ${subModuleClassName}Created,
+  ${subModuleClassName}Updated,
+  ${subModuleClassName}Deleted,
+  ${subModuleClassName}Events,
+  type ${subModuleClassName}Event
+} from "./events"`)
   builder.addBlankLine()
 
   builder.addSectionComment("RPC Exports")
-  builder.addRaw(`export * from "./rpc-definitions";`)
-  builder.addRaw(`export * from "./rpc-errors";`)
+  builder.addRaw(`export {
+  RouteTag,
+  type RouteType,
+  Create${subModuleClassName}Input,
+  Update${subModuleClassName}Input,
+  ${subModuleClassName}Get,
+  ${subModuleClassName}List,
+  ${subModuleClassName}Create,
+  ${subModuleClassName}Update,
+  ${subModuleClassName}Delete,
+  ${subModuleClassName}Rpcs,
+  ${subModuleClassName}RpcsByRoute
+} from "./rpc-definitions"
+
+export {
+  ${subModuleClassName}NotFoundRpcError,
+  ${subModuleClassName}ValidationRpcError,
+  ${subModuleClassName}PermissionRpcError,
+  ${subModuleClassName}RpcError
+} from "./rpc-errors"`)
   builder.addBlankLine()
 
   return builder.toString()

@@ -38,16 +38,19 @@ Effect.Queue Features:
     see: ["EFFECT_PATTERNS.md for queue patterns"]
   })
 
+  // Import order: effect first, then external packages
   builder.addImports([
     {
       from: "effect",
-      imports: ["Context", "Effect", "Layer", "Queue"]
+      imports: ["Chunk", "Context", "Effect", "Layer", "Option", "Queue", "Schema"]
     },
     {
       from: "effect",
-      imports: ["Chunk", "Option", "Scope"],
+      imports: ["Scope"],
       isTypeOnly: true
-    },
+    }
+  ])
+  builder.addImports([
     { from: `${scope}/env`, imports: ["env"] }
   ])
 
@@ -170,9 +173,14 @@ export class ${className}Service extends Context.Tag(
      * When the queue is full, offer() suspends until space is available.
      * Use for controlled concurrency and preventing memory exhaustion.
      *
+     * @param capacity - Maximum number of items in queue
+     * @param schema - Schema for type-safe serialization/deserialization
+     * @param options - Optional queue configuration
+     *
      * @example
      * \`\`\`typescript
-     * const jobQueue = yield* queue.bounded<Job>(100);
+     * const JobSchema = Schema.Struct({ type: Schema.String, data: Schema.Unknown });
+     * const jobQueue = yield* queue.bounded(100, JobSchema);
      *
      * // Producer
      * yield* jobQueue.offer({ type: "send_email", data: emailData });
@@ -182,8 +190,9 @@ export class ${className}Service extends Context.Tag(
      * yield* processJob(job);
      * \`\`\`
      */
-    readonly bounded: <T>(
+    readonly bounded: <T, I = T>(
       capacity: number,
+      schema: Schema.Schema<T, I>,
       options?: QueueOptions
     ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>
 
@@ -193,13 +202,18 @@ export class ${className}Service extends Context.Tag(
      * WARNING: No capacity limit. Use with caution to prevent memory exhaustion.
      * Prefer bounded queues for production workloads.
      *
+     * @param schema - Schema for type-safe serialization/deserialization
+     * @param options - Optional queue configuration
+     *
      * @example
      * \`\`\`typescript
-     * const eventQueue = yield* queue.unbounded<Event>();
+     * const EventSchema = Schema.Struct({ type: Schema.String, payload: Schema.Unknown });
+     * const eventQueue = yield* queue.unbounded(EventSchema);
      * yield* eventQueue.offer(event);
      * \`\`\`
      */
-    readonly unbounded: <T>(
+    readonly unbounded: <T, I = T>(
+      schema: Schema.Schema<T, I>,
       options?: QueueOptions
     ) => Effect.Effect<UnboundedQueueHandle<T>, never, Scope.Scope>
 
@@ -209,15 +223,21 @@ export class ${className}Service extends Context.Tag(
      * When the queue is full, new items are silently dropped.
      * Use when it's acceptable to lose messages under load.
      *
+     * @param capacity - Maximum number of items in queue
+     * @param schema - Schema for type-safe serialization/deserialization
+     * @param options - Optional queue configuration
+     *
      * @example
      * \`\`\`typescript
-     * const metricsQueue = yield* queue.dropping<Metric>(1000);
+     * const MetricSchema = Schema.Struct({ name: Schema.String, value: Schema.Number });
+     * const metricsQueue = yield* queue.dropping(1000, MetricSchema);
      * // If queue is full, metrics are dropped (acceptable for non-critical data)
      * yield* metricsQueue.offer(metric);
      * \`\`\`
      */
-    readonly dropping: <T>(
+    readonly dropping: <T, I = T>(
       capacity: number,
+      schema: Schema.Schema<T, I>,
       options?: QueueOptions
     ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>
 
@@ -227,15 +247,21 @@ export class ${className}Service extends Context.Tag(
      * When the queue is full, oldest items are removed to make room.
      * Use for "latest N items" patterns.
      *
+     * @param capacity - Maximum number of items in queue
+     * @param schema - Schema for type-safe serialization/deserialization
+     * @param options - Optional queue configuration
+     *
      * @example
      * \`\`\`typescript
-     * const recentEvents = yield* queue.sliding<Event>(100);
+     * const EventSchema = Schema.Struct({ type: Schema.String, timestamp: Schema.Number });
+     * const recentEvents = yield* queue.sliding(100, EventSchema);
      * // Always keeps the 100 most recent events
      * yield* recentEvents.offer(event);
      * \`\`\`
      */
-    readonly sliding: <T>(
+    readonly sliding: <T, I = T>(
       capacity: number,
+      schema: Schema.Schema<T, I>,
       options?: QueueOptions
     ) => Effect.Effect<BoundedQueueHandle<T>, never, Scope.Scope>
 
@@ -256,62 +282,151 @@ export class ${className}Service extends Context.Tag(
    * Queues are automatically cleaned up when scope closes.
    */
   static readonly Memory = Layer.succeed(this, {
-    bounded: <T>(capacity: number, _options?: QueueOptions) =>
+    bounded: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
       Effect.gen(function*() {
-        const queue = yield* Queue.bounded<T>(capacity)
-        // Return object literal - TS infers BoundedQueueHandle<T> from Context.Tag
+        const queueName = options?.name ?? "anonymous"
+        const queue = yield* Queue.bounded<T>(capacity).pipe(Effect.withSpan(\`Queue.bounded(\${queueName})\`))
+        const encode = Schema.encode(schema)
+        const decode = Schema.decode(schema)
+
         return {
-          offer: (item: T) => Queue.offer(queue, item),
-          take: Queue.take(queue),
-          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
-          takeAll: Queue.takeAll(queue),
-          poll: Queue.poll(queue),
+          offer: (item: T) =>
+            encode(item).pipe(
+              Effect.flatMap((validated) => Queue.offer(queue, validated)),
+              Effect.orDie
+            ),
+          take: Queue.take(queue).pipe(
+            Effect.flatMap((item) => decode(item)),
+            Effect.orDie
+          ),
+          takeUpTo: (n: number) =>
+            Queue.takeUpTo(queue, n).pipe(
+              Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+              Effect.map((arr) => Chunk.fromIterable(arr))
+            ),
+          takeAll: Queue.takeAll(queue).pipe(
+            Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+            Effect.map((arr) => Chunk.fromIterable(arr))
+          ),
+          poll: Queue.poll(queue).pipe(
+            Effect.flatMap((opt) =>
+              Option.match(opt, {
+                onNone: () => Effect.succeed(Option.none()),
+                onSome: (item) => decode(item).pipe(Effect.map(Option.some), Effect.orDie)
+              })
+            )
+          ),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)
         }
       }),
 
-    unbounded: <T>(_options?: QueueOptions) =>
+    unbounded: <T, I = T>(schema: Schema.Schema<T, I>, options?: QueueOptions) =>
       Effect.gen(function*() {
-        const queue = yield* Queue.unbounded<T>()
-        // Return object literal - TS infers UnboundedQueueHandle<T> from Context.Tag
+        const queueName = options?.name ?? "anonymous"
+        const queue = yield* Queue.unbounded<T>().pipe(Effect.withSpan(\`Queue.unbounded(\${queueName})\`))
+        const encode = Schema.encode(schema)
+        const decode = Schema.decode(schema)
+
         return {
-          offer: (item: T) => Queue.offer(queue, item),
-          take: Queue.take(queue),
-          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
-          takeAll: Queue.takeAll(queue),
+          offer: (item: T) =>
+            encode(item).pipe(
+              Effect.flatMap((validated) => Queue.offer(queue, validated)),
+              Effect.orDie
+            ),
+          take: Queue.take(queue).pipe(
+            Effect.flatMap((item) => decode(item)),
+            Effect.orDie
+          ),
+          takeUpTo: (n: number) =>
+            Queue.takeUpTo(queue, n).pipe(
+              Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+              Effect.map((arr) => Chunk.fromIterable(arr))
+            ),
+          takeAll: Queue.takeAll(queue).pipe(
+            Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+            Effect.map((arr) => Chunk.fromIterable(arr))
+          ),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue)
         }
       }),
 
-    dropping: <T>(capacity: number, _options?: QueueOptions) =>
+    dropping: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
       Effect.gen(function*() {
-        const queue = yield* Queue.dropping<T>(capacity)
-        // Return object literal - TS infers BoundedQueueHandle<T> from Context.Tag
+        const queueName = options?.name ?? "anonymous"
+        const queue = yield* Queue.dropping<T>(capacity).pipe(Effect.withSpan(\`Queue.dropping(\${queueName})\`))
+        const encode = Schema.encode(schema)
+        const decode = Schema.decode(schema)
+
         return {
-          offer: (item: T) => Queue.offer(queue, item),
-          take: Queue.take(queue),
-          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
-          takeAll: Queue.takeAll(queue),
-          poll: Queue.poll(queue),
+          offer: (item: T) =>
+            encode(item).pipe(
+              Effect.flatMap((validated) => Queue.offer(queue, validated)),
+              Effect.orDie
+            ),
+          take: Queue.take(queue).pipe(
+            Effect.flatMap((item) => decode(item)),
+            Effect.orDie
+          ),
+          takeUpTo: (n: number) =>
+            Queue.takeUpTo(queue, n).pipe(
+              Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+              Effect.map((arr) => Chunk.fromIterable(arr))
+            ),
+          takeAll: Queue.takeAll(queue).pipe(
+            Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+            Effect.map((arr) => Chunk.fromIterable(arr))
+          ),
+          poll: Queue.poll(queue).pipe(
+            Effect.flatMap((opt) =>
+              Option.match(opt, {
+                onNone: () => Effect.succeed(Option.none()),
+                onSome: (item) => decode(item).pipe(Effect.map(Option.some), Effect.orDie)
+              })
+            )
+          ),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)
         }
       }),
 
-    sliding: <T>(capacity: number, _options?: QueueOptions) =>
+    sliding: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
       Effect.gen(function*() {
-        const queue = yield* Queue.sliding<T>(capacity)
-        // Return object literal - TS infers BoundedQueueHandle<T> from Context.Tag
+        const queueName = options?.name ?? "anonymous"
+        const queue = yield* Queue.sliding<T>(capacity).pipe(Effect.withSpan(\`Queue.sliding(\${queueName})\`))
+        const encode = Schema.encode(schema)
+        const decode = Schema.decode(schema)
+
         return {
-          offer: (item: T) => Queue.offer(queue, item),
-          take: Queue.take(queue),
-          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
-          takeAll: Queue.takeAll(queue),
-          poll: Queue.poll(queue),
+          offer: (item: T) =>
+            encode(item).pipe(
+              Effect.flatMap((validated) => Queue.offer(queue, validated)),
+              Effect.orDie
+            ),
+          take: Queue.take(queue).pipe(
+            Effect.flatMap((item) => decode(item)),
+            Effect.orDie
+          ),
+          takeUpTo: (n: number) =>
+            Queue.takeUpTo(queue, n).pipe(
+              Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+              Effect.map((arr) => Chunk.fromIterable(arr))
+            ),
+          takeAll: Queue.takeAll(queue).pipe(
+            Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+            Effect.map((arr) => Chunk.fromIterable(arr))
+          ),
+          poll: Queue.poll(queue).pipe(
+            Effect.flatMap((opt) =>
+              Option.match(opt, {
+                onNone: () => Effect.succeed(Option.none()),
+                onSome: (item) => decode(item).pipe(Effect.map(Option.some), Effect.orDie)
+              })
+            )
+          ),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)
@@ -349,76 +464,155 @@ export class ${className}Service extends Context.Tag(
    * Dev Layer - Memory with debug logging
    */
   static readonly Dev = Layer.succeed(this, {
-    bounded: <T>(capacity: number, options?: QueueOptions) =>
+    bounded: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
       Effect.gen(function*() {
         yield* Effect.logDebug("[${className}Service] [DEV] Creating bounded queue", { capacity, name: options?.name })
         const queue = yield* Queue.bounded<T>(capacity)
+        const encode = Schema.encode(schema)
+        const decode = Schema.decode(schema)
+
         return {
           offer: (item: T) =>
             Effect.gen(function*() {
               yield* Effect.logDebug("[${className}Service] [DEV] bounded.offer")
-              return yield* Queue.offer(queue, item)
+              const validated = yield* encode(item).pipe(Effect.orDie)
+              return yield* Queue.offer(queue, validated)
             }),
           take: Effect.gen(function*() {
             yield* Effect.logDebug("[${className}Service] [DEV] bounded.take")
-            return yield* Queue.take(queue)
+            const item = yield* Queue.take(queue)
+            return yield* decode(item).pipe(Effect.orDie)
           }),
-          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
-          takeAll: Queue.takeAll(queue),
-          poll: Queue.poll(queue),
+          takeUpTo: (n: number) =>
+            Queue.takeUpTo(queue, n).pipe(
+              Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+              Effect.map((arr) => Chunk.fromIterable(arr))
+            ),
+          takeAll: Queue.takeAll(queue).pipe(
+            Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+            Effect.map((arr) => Chunk.fromIterable(arr))
+          ),
+          poll: Queue.poll(queue).pipe(
+            Effect.flatMap((opt) =>
+              Option.match(opt, {
+                onNone: () => Effect.succeed(Option.none()),
+                onSome: (item) => decode(item).pipe(Effect.map(Option.some), Effect.orDie)
+              })
+            )
+          ),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)
         }
       }),
 
-    unbounded: <T>(options?: QueueOptions) =>
+    unbounded: <T, I = T>(schema: Schema.Schema<T, I>, options?: QueueOptions) =>
       Effect.gen(function*() {
         yield* Effect.logDebug("[${className}Service] [DEV] Creating unbounded queue", { name: options?.name })
         const queue = yield* Queue.unbounded<T>()
+        const encode = Schema.encode(schema)
+        const decode = Schema.decode(schema)
+
         return {
           offer: (item: T) =>
             Effect.gen(function*() {
               yield* Effect.logDebug("[${className}Service] [DEV] unbounded.offer")
-              return yield* Queue.offer(queue, item)
+              const validated = yield* encode(item).pipe(Effect.orDie)
+              return yield* Queue.offer(queue, validated)
             }),
           take: Effect.gen(function*() {
             yield* Effect.logDebug("[${className}Service] [DEV] unbounded.take")
-            return yield* Queue.take(queue)
+            const item = yield* Queue.take(queue)
+            return yield* decode(item).pipe(Effect.orDie)
           }),
-          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
-          takeAll: Queue.takeAll(queue),
+          takeUpTo: (n: number) =>
+            Queue.takeUpTo(queue, n).pipe(
+              Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+              Effect.map((arr) => Chunk.fromIterable(arr))
+            ),
+          takeAll: Queue.takeAll(queue).pipe(
+            Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+            Effect.map((arr) => Chunk.fromIterable(arr))
+          ),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue)
         }
       }),
 
-    dropping: <T>(capacity: number, options?: QueueOptions) =>
+    dropping: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
       Effect.gen(function*() {
         yield* Effect.logDebug("[${className}Service] [DEV] Creating dropping queue", { capacity, name: options?.name })
         const queue = yield* Queue.dropping<T>(capacity)
+        const encode = Schema.encode(schema)
+        const decode = Schema.decode(schema)
+
         return {
-          offer: (item: T) => Queue.offer(queue, item),
-          take: Queue.take(queue),
-          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
-          takeAll: Queue.takeAll(queue),
-          poll: Queue.poll(queue),
+          offer: (item: T) =>
+            encode(item).pipe(
+              Effect.flatMap((validated) => Queue.offer(queue, validated)),
+              Effect.orDie
+            ),
+          take: Queue.take(queue).pipe(
+            Effect.flatMap((item) => decode(item)),
+            Effect.orDie
+          ),
+          takeUpTo: (n: number) =>
+            Queue.takeUpTo(queue, n).pipe(
+              Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+              Effect.map((arr) => Chunk.fromIterable(arr))
+            ),
+          takeAll: Queue.takeAll(queue).pipe(
+            Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+            Effect.map((arr) => Chunk.fromIterable(arr))
+          ),
+          poll: Queue.poll(queue).pipe(
+            Effect.flatMap((opt) =>
+              Option.match(opt, {
+                onNone: () => Effect.succeed(Option.none()),
+                onSome: (item) => decode(item).pipe(Effect.map(Option.some), Effect.orDie)
+              })
+            )
+          ),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)
         }
       }),
 
-    sliding: <T>(capacity: number, options?: QueueOptions) =>
+    sliding: <T, I = T>(capacity: number, schema: Schema.Schema<T, I>, options?: QueueOptions) =>
       Effect.gen(function*() {
         yield* Effect.logDebug("[${className}Service] [DEV] Creating sliding queue", { capacity, name: options?.name })
         const queue = yield* Queue.sliding<T>(capacity)
+        const encode = Schema.encode(schema)
+        const decode = Schema.decode(schema)
+
         return {
-          offer: (item: T) => Queue.offer(queue, item),
-          take: Queue.take(queue),
-          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
-          takeAll: Queue.takeAll(queue),
-          poll: Queue.poll(queue),
+          offer: (item: T) =>
+            encode(item).pipe(
+              Effect.flatMap((validated) => Queue.offer(queue, validated)),
+              Effect.orDie
+            ),
+          take: Queue.take(queue).pipe(
+            Effect.flatMap((item) => decode(item)),
+            Effect.orDie
+          ),
+          takeUpTo: (n: number) =>
+            Queue.takeUpTo(queue, n).pipe(
+              Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+              Effect.map((arr) => Chunk.fromIterable(arr))
+            ),
+          takeAll: Queue.takeAll(queue).pipe(
+            Effect.flatMap((chunk) => Effect.forEach(chunk, (item) => decode(item).pipe(Effect.orDie))),
+            Effect.map((arr) => Chunk.fromIterable(arr))
+          ),
+          poll: Queue.poll(queue).pipe(
+            Effect.flatMap((opt) =>
+              Option.match(opt, {
+                onNone: () => Effect.succeed(Option.none()),
+                onSome: (item) => decode(item).pipe(Effect.map(Option.some), Effect.orDie)
+              })
+            )
+          ),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)

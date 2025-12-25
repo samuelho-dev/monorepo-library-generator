@@ -67,7 +67,7 @@ Usage:
       items: [
         {
           comment: "Service types and interfaces",
-          exports: "export type * from \"./lib/types\";"
+          exports: "export type * from \"./lib/types\""
         }
       ]
     }
@@ -94,7 +94,7 @@ Usage:
   builder.addComment(`       const layer = ${className}.Live;`)
   builder.addBlankLine()
 
-  builder.addRaw(`export { ${className} } from "./lib/service";\n`)
+  builder.addRaw(`export { ${className} } from "./lib/service"`)
 
   builder.addBlankLine()
 
@@ -102,7 +102,10 @@ Usage:
   builder.addSectionComment("Validation Utilities")
   builder.addBlankLine()
   builder.addComment("Input validation functions")
-  builder.addRaw("export * from \"./lib/validation\";\n")
+  builder.addRaw(`export {
+  validate${className}Config,
+  validate${className}Input
+} from "./lib/validation"`)
 
   builder.addBlankLine()
 
@@ -115,12 +118,12 @@ Usage:
   builder.addComment(`import { ${className} } from '${packageName}';`)
   builder.addComment("")
   builder.addComment("const program = Effect.gen(function* () {")
-  builder.addComment(`  const service = yield* ${className};`)
+  builder.addComment(`  const service = yield* ${className}`)
   builder.addComment("  // Use service methods...")
-  builder.addComment("});")
+  builder.addComment("})")
   builder.addComment("")
   builder.addComment("// Layers are static members on the service class:")
-  builder.addComment(`const runnable = program.pipe(Effect.provide(${className}.Live));`)
+  builder.addComment(`const runnable = program.pipe(Effect.provide(${className}.Live))`)
   builder.addComment(`// Also available: ${className}.Test, ${className}.Dev, ${className}.Auto`)
   builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 

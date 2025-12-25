@@ -20,11 +20,9 @@ Features:
  * @module @workspace/env/createEnv
  */
 
-
 // ============================================================================
 // Re-export Config
 // ============================================================================
-
 /**
  * Re-export Effect Config for use in env definitions
  *
@@ -35,12 +33,12 @@ Features:
  * export const env = createEnv({
  *   server: {
  *     DATABASE_URL: Config.redacted("DATABASE_URL"),
- *     PORT: Config.number("PORT").pipe(Config.withDefault(3000)),
+ *     PORT: Config.number("PORT").pipe(Config.withDefault(3000))
  *   },
  *   client: {
- *     PUBLIC_API_URL: Config.string("PUBLIC_API_URL"),
+ *     PUBLIC_API_URL: Config.string("PUBLIC_API_URL")
  *   },
- *   clientPrefix: "PUBLIC_",
+ *   clientPrefix: "PUBLIC_"
  * })
  * ```
  */
@@ -49,21 +47,13 @@ export { Config }
 // ============================================================================
 // Type Definitions
 // ============================================================================
-
-/**
- * Infer the success type from a record of Config definitions
- */
-type InferConfigRecord<T extends Record<string, Config.Config<unknown>>> = {
-  [K in keyof T]: Config.Config.Success<T[K]>
-}
-
 /**
  * Options for createEnv function
  */
 interface CreateEnvOptions<
   TServer extends Record<string, Config.Config<unknown>>,
   TClient extends Record<string, Config.Config<unknown>>,
-  TShared extends Record<string, Config.Config<unknown>>,
+  TShared extends Record<string, Config.Config<unknown>>
 > {
   /** Server-only environment variables (secrets, internal config) */
   server: TServer
@@ -82,7 +72,6 @@ interface CreateEnvOptions<
 // ============================================================================
 // Context Detection
 // ============================================================================
-
 /**
  * Detect server vs client context
  *
@@ -96,7 +85,6 @@ const isServer =
 // ============================================================================
 // .env Parser
 // ============================================================================
-
 /**
  * Parse .env file format
  */
@@ -116,7 +104,6 @@ function parseDotEnv(content: string) {
 // ============================================================================
 // ConfigProvider Layer
 // ============================================================================
-
 /**
  * Create ConfigProvider Layer with .env file support
  */
@@ -124,17 +111,14 @@ const makeConfigLayer = () => {
   if (!isServer) {
     return Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv())
   }
-
   // Server: read .env file and provide NodeContext
   return Layer.unwrapEffect(
     Effect.gen(function*() {
       const fs = yield* FileSystem.FileSystem
       const path = ".env"
-
       const content = yield* fs.readFileString(path).pipe(
         Effect.catchAll(() => Effect.succeed(""))
       )
-
       const envVars = parseDotEnv(content)
       return Layer.succeed(
         ConfigProvider.ConfigProvider,
@@ -143,13 +127,11 @@ const makeConfigLayer = () => {
     })
   ).pipe(Layer.provide(NodeFileSystem.layer))
 }
-
 const ConfigLayer = makeConfigLayer()
 
 // ============================================================================
 // ManagedRuntime
 // ============================================================================
-
 /**
  * Managed runtime with ConfigProvider
  */
@@ -158,7 +140,6 @@ const runtime = ManagedRuntime.make(ConfigLayer)
 // ============================================================================
 // createEnv Function
 // ============================================================================
-
 /**
  * Create a type-safe environment object from Config definitions
  *
@@ -173,15 +154,15 @@ const runtime = ManagedRuntime.make(ConfigLayer)
  * export const env = createEnv({
  *   server: {
  *     DATABASE_URL: Config.redacted("DATABASE_URL"),
- *     PORT: Config.number("PORT").pipe(Config.withDefault(3000)),
+ *     PORT: Config.number("PORT").pipe(Config.withDefault(3000))
  *   },
  *   client: {
- *     PUBLIC_API_URL: Config.string("PUBLIC_API_URL"),
+ *     PUBLIC_API_URL: Config.string("PUBLIC_API_URL")
  *   },
  *   shared: {
- *     NODE_ENV: Config.string("NODE_ENV").pipe(Config.withDefault("development")),
+ *     NODE_ENV: Config.string("NODE_ENV").pipe(Config.withDefault("development"))
  *   },
- *   clientPrefix: "PUBLIC_",
+ *   clientPrefix: "PUBLIC_"
  * })
  *
  * // Usage:
@@ -193,12 +174,11 @@ const runtime = ManagedRuntime.make(ConfigLayer)
 export function createEnv<
   TServer extends Record<string, Config.Config<unknown>>,
   TClient extends Record<string, Config.Config<unknown>>,
-  TShared extends Record<string, Config.Config<unknown>> = Record<string, never>,
+  TShared extends Record<string, Config.Config<unknown>> = Record<string, never>
 >(
   options: CreateEnvOptions<TServer, TClient, TShared>
-): InferConfigRecord<TServer> & InferConfigRecord<TClient> & InferConfigRecord<TShared> {
-  const { server, client, shared = {} as TShared, clientPrefix } = options
-
+) {
+  const { server, client, shared = {}, clientPrefix } = options
   // Validate client keys have correct prefix
   for (const key of Object.keys(client)) {
     if (!key.startsWith(clientPrefix)) {
@@ -207,14 +187,11 @@ export function createEnv<
       )
     }
   }
-
   // Build combined config
   const allConfigs = { ...server, ...client, ...shared }
-
   // Load via Effect Config
   const envConfig = Config.all(allConfigs)
   const result = runtime.runSync(envConfig)
-
   // On client, return proxy that protects server vars
   if (!isServer) {
     const serverKeys = new Set(Object.keys(server))
@@ -225,10 +202,9 @@ export function createEnv<
             `Cannot access server-only env var "${prop}" on the client. This variable is only available in server context.`
           )
         }
-        return target[prop as keyof typeof target]
+        return target[prop]
       }
-    }) as InferConfigRecord<TServer> & InferConfigRecord<TClient> & InferConfigRecord<TShared>
+    })
   }
-
-  return result as InferConfigRecord<TServer> & InferConfigRecord<TClient> & InferConfigRecord<TShared>
+  return result
 }

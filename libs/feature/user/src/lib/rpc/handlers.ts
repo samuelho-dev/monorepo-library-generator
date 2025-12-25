@@ -1,4 +1,7 @@
+import { UserNotFoundRpcError, UserPermissionRpcError, UserRpcs, UserValidationRpcError } from "@samuelho-dev/contract-user"
+import { RequestMeta, ServiceContext, getHandlerContext } from "@samuelho-dev/infra-rpc"
 import { Array as EffectArray, DateTime, Effect, Layer, Option } from "effect"
+import { UserService } from "../server/services"
 
 /**
  * User RPC Handlers
@@ -16,49 +19,16 @@ Usage:
   See router.ts for Next.js/Express integration.
  *
  */
-
-
-// ============================================================================
-// Contract Imports (Single Source of Truth)
-// ============================================================================
-
-import {
-  UserRpcs,
-  UserNotFoundRpcError,
-  UserValidationRpcError,
-  UserPermissionRpcError,
-} from "@samuelho-dev/contract-user";
-
-// ============================================================================
-// Infrastructure Imports
-// ============================================================================
-
-import {
-  // Middleware context (automatically provided based on RouteTag)
-  ServiceContext,
-  RequestMeta,
-  getHandlerContext,
-} from "@samuelho-dev/infra-rpc";
-
-// ============================================================================
-// Service Layer Import
-// ============================================================================
-
-import { UserService } from "../server/services";
-
 // ============================================================================
 // Sub-Module Handler Imports
 // ============================================================================
+import { AuthenticationHandlers } from "../server/services/authentication/handlers"
 
-import { AuthenticationHandlers } from "../server/services/authentication/handlers";
-
-import { ProfileHandlers } from "../server/services/profile/handlers";
-
+import { ProfileHandlers } from "../server/services/profile/handlers"
 
 // ============================================================================
 // Handler Implementations
 // ============================================================================
-
 /**
  * User RPC Handler Implementations
  *
@@ -93,8 +63,8 @@ export const UserHandlers = UserRpcs.toLayer({
 
       yield* Effect.logDebug("Getting user", {
         id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       const result = yield* service.get(id).pipe(
         Effect.catchTags({
@@ -122,16 +92,16 @@ export const UserHandlers = UserRpcs.toLayer({
           Effect.fail(new UserValidationRpcError({
             message: `Service error: ${e.message}`,
             field: "service"
-          })),
+          }))
       })
       );
 
       // Handle Option.none case - return typed RPC error
       if (Option.isNone(result)) {
-        return yield* Effect.fail(UserNotFoundRpcError.create(id));
+        return yield* Effect.fail(UserNotFoundRpcError.create(id))
       }
 
-      return result.value;
+      return result.value
     }),
 
   /**
@@ -141,11 +111,11 @@ export const UserHandlers = UserRpcs.toLayer({
    */
   ListUsers: ({ page, pageSize }) =>
     Effect.gen(function*() {
-      const service = yield* UserService;
+      const service = yield* UserService
 
-      const currentPage = page ?? 1;
-      const currentPageSize = pageSize ?? 20;
-      const offset = (currentPage - 1) * currentPageSize;
+      const currentPage = page ?? 1
+      const currentPageSize = pageSize ?? 20
+      const offset = (currentPage - 1) * currentPageSize
 
       const [items, total] = yield* Effect.all([
         service.findByCriteria({}, offset, currentPageSize).pipe(
@@ -174,7 +144,7 @@ export const UserHandlers = UserRpcs.toLayer({
           Effect.fail(new UserValidationRpcError({
             message: `Service error: ${e.message}`,
             field: "service"
-          })),
+          }))
       })
         ),
         service.count({}).pipe(
@@ -203,18 +173,18 @@ export const UserHandlers = UserRpcs.toLayer({
           Effect.fail(new UserValidationRpcError({
             message: `Service error: ${e.message}`,
             field: "service"
-          })),
+          }))
       })
-        ),
-      ]);
+        )
+      ])
 
       return {
         page: currentPage,
         pageSize: currentPageSize,
         items,
         total,
-        hasMore: offset + items.length < total,
-      };
+        hasMore: offset + items.length < total
+      }
     }),
 
   /**
@@ -224,13 +194,13 @@ export const UserHandlers = UserRpcs.toLayer({
    */
   CreateUser: (input) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* UserService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* UserService
 
       yield* Effect.logInfo("Creating user", {
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       // RPC input type should match service create input type
       // If types differ, use Schema.decode for transformation at this boundary
@@ -260,9 +230,9 @@ export const UserHandlers = UserRpcs.toLayer({
           Effect.fail(new UserValidationRpcError({
             message: `Service error: ${e.message}`,
             field: "service"
-          })),
+          }))
       })
-      );
+      )
     }),
 
   /**
@@ -272,14 +242,14 @@ export const UserHandlers = UserRpcs.toLayer({
    */
   UpdateUser: ({ id, data }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* UserService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* UserService
 
       yield* Effect.logInfo("Updating user", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       // RPC data type should match service update input type
       // If types differ, use Schema.decode for transformation at this boundary
@@ -309,19 +279,19 @@ export const UserHandlers = UserRpcs.toLayer({
           Effect.fail(new UserValidationRpcError({
             message: `Service error: ${e.message}`,
             field: "service"
-          })),
+          }))
       })
-      );
+      )
 
       // Handle Option.none case - return typed RPC error
       if (Option.isNone(result)) {
         return yield* Effect.fail(new UserNotFoundRpcError({
           message: `User not found: ${id}`,
           userId: id
-        }));
+        }))
       }
 
-      return result.value;
+      return result.value
     }),
 
   /**
@@ -331,14 +301,14 @@ export const UserHandlers = UserRpcs.toLayer({
    */
   DeleteUser: ({ id }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* UserService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* UserService
 
       yield* Effect.logInfo("Deleting user", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       yield* service.delete(id).pipe(
         Effect.catchTags({
@@ -366,13 +336,13 @@ export const UserHandlers = UserRpcs.toLayer({
           Effect.fail(new UserValidationRpcError({
             message: `Service error: ${e.message}`,
             field: "service"
-          })),
+          }))
       })
-      );
+      )
       return {
         success: true as const,
-        deletedAt: DateTime.unsafeNow(),
-      };
+        deletedAt: DateTime.unsafeNow()
+      }
     }),
 
   /**
@@ -382,14 +352,14 @@ export const UserHandlers = UserRpcs.toLayer({
    */
   ValidateUser: ({ userId, validationType }) =>
     Effect.gen(function*() {
-      const serviceCtx = yield* ServiceContext;
-      const service = yield* UserService;
+      const serviceCtx = yield* ServiceContext
+      const service = yield* UserService
 
       yield* Effect.logDebug("Validating user for service", {
         userId,
         validationType,
-        callingService: serviceCtx.serviceName,
-      });
+        callingService: serviceCtx.serviceName
+      })
 
       const exists = yield* service.exists(userId).pipe(
         Effect.catchTags({
@@ -417,23 +387,23 @@ export const UserHandlers = UserRpcs.toLayer({
           Effect.fail(new UserValidationRpcError({
             message: `Service error: ${e.message}`,
             field: "service"
-          })),
+          }))
       })
-      );
+      )
 
       // Build response with proper handling for exactOptionalPropertyTypes
       const baseResponse = {
         valid: exists,
         userId,
-        validatedAt: DateTime.unsafeNow(),
-      };
+        validatedAt: DateTime.unsafeNow()
+      }
 
       // Use typed constant to avoid type assertion
-      const notFoundErrors: ReadonlyArray<string> = ["User not found"];
+      const notFoundErrors: ReadonlyArray<string> = ["User not found"]
 
       return exists
         ? baseResponse
-        : { ...baseResponse, errors: notFoundErrors };
+        : { ...baseResponse, errors: notFoundErrors }
     }),
 
   /**
@@ -443,7 +413,7 @@ export const UserHandlers = UserRpcs.toLayer({
    */
   BulkGetUsers: ({ ids }) =>
     Effect.gen(function*() {
-      const service = yield* UserService;
+      const service = yield* UserService
 
       // Fetch all entities in parallel using individual gets
       const results = yield* Effect.all(
@@ -473,28 +443,27 @@ export const UserHandlers = UserRpcs.toLayer({
           Effect.fail(new UserValidationRpcError({
             message: `Service error: ${e.message}`,
             field: "service"
-          })),
+          }))
       })
         )),
         { concurrency: "unbounded" }
-      );
+      )
 
       // Extract found items (filter out None results)
-      const items = EffectArray.getSomes(results);
-      const foundIds = new Set(items.map((item) => item.id));
-      const notFound = ids.filter((id) => !foundIds.has(id));
+      const items = EffectArray.getSomes(results)
+      const foundIds = new Set(items.map((item) => item.id))
+      const notFound = ids.filter((id) => !foundIds.has(id))
 
       return {
         items,
-        notFound,
-      };
-    }),
-});
+        notFound
+      }
+    })
+})
 
 // ============================================================================
 // Combined Handlers (with Sub-Modules)
 // ============================================================================
-
 /**
  * Combined handlers including all sub-modules
  *
@@ -503,13 +472,12 @@ export const UserHandlers = UserRpcs.toLayer({
 export const AllUserHandlers = {
   ...UserHandlers,
   ...AuthenticationHandlers,
-  ...ProfileHandlers,
-};
+  ...ProfileHandlers
+}
 
 // ============================================================================
 // Handler Layer
 // ============================================================================
-
 /**
  * Handler dependencies layer
  *
@@ -519,4 +487,4 @@ export const AllUserHandlers = {
 export const UserHandlersLayer = Layer.mergeAll(
   UserService.Live
   // Add other service layers as needed
-);
+)

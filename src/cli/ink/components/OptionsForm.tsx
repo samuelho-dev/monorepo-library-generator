@@ -184,7 +184,7 @@ export function OptionsForm({
       if (selectedIndex < availableOptions.length && currentOption) {
         // Handle option based on type
         if (currentOption.type === 'boolean') {
-          const currentValue = options[currentOption.key] as boolean | undefined;
+          const currentValue = options[currentOption.key];
           onOptionsChange({ ...options, [currentOption.key]: !currentValue });
         } else if (currentOption.type === 'text') {
           const textValue = options[currentOption.key];
@@ -215,7 +215,7 @@ export function OptionsForm({
 
     if (opt.type === 'boolean') {
       const boolOpt = opt as BooleanOptionConfig;
-      const isEnabled = options[boolOpt.key] as boolean | undefined;
+      const isEnabled = options[boolOpt.key];
       return (
         <Box key={boolOpt.key}>
           <Text color={isSelected ? colors.primary : undefined}>{prefix} </Text>

@@ -1,4 +1,6 @@
+import { RpcConflictError, RpcForbiddenError, RpcInternalError, RpcNotFoundError, RpcValidationError } from "@samuelho-dev/infra-rpc"
 import { Effect } from "effect"
+import type { UserFeatureError } from "../shared/errors"
 
 /**
  * User RPC Errors
@@ -17,79 +19,17 @@ Error Flow:
  * @see infra-rpc for RPC error types
  * @see shared/errors for domain errors
  */
-
-
 // ============================================================================
-// RPC Errors (Schema.TaggedError - Serializable)
+// Import Notes
 // ============================================================================
-
-
-/**
- * RPC errors from infra-rpc
- *
- * These are Schema.TaggedError types that can cross RPC boundaries.
- * Use these in RPC handlers after transforming domain errors.
- */
-export {
-  // RPC Error Types
-  RpcNotFoundError,
-  RpcValidationError,
-  RpcForbiddenError,
-  RpcConflictError,
-  RpcServiceError,
-  RpcInternalError,
-  RpcTimeoutError,
-  RpcRateLimitError,
-  type RpcError,
-
-  // HTTP Status Mapping (single source of truth)
-  RpcHttpStatus,
-  getHttpStatus,
-
-  // Generic Error Boundary
-  withRpcErrorBoundary,
-} from "@samuelho-dev/infra-rpc";
-
-// ============================================================================
-// Domain Errors (Data.TaggedError - Internal)
-// ============================================================================
-
-
-/**
- * Domain errors for Effect.catchTag transformations
- *
- * These are Data.TaggedError types that stay within the service layer.
- * Use Effect.catchTag to transform these to RPC errors at handler boundaries.
- */
-export {
-  // Domain Errors (from contract)
-  UserNotFoundError,
-  UserValidationError,
-  UserAlreadyExistsError,
-  UserPermissionError,
-  type UserDomainError,
-
-  // Repository Errors
-  UserNotFoundRepositoryError,
-  UserValidationRepositoryError,
-  UserConflictRepositoryError,
-  UserDatabaseRepositoryError,
-  type UserRepositoryError,
-
-  // Service Error
-  UserServiceError,
-  type UserServiceErrorCode,
-
-  // Union Types
-  type UserError,
-  type UserFeatureError,
-} from "../shared/errors";
-
+// NOTE: For RPC errors (Schema.TaggedError), import directly from @samuelho-dev/infra-rpc:
+// import { RpcNotFoundError, RpcValidationError, ... } from "@samuelho-dev/infra-rpc"
+//
+// For domain errors (Data.TaggedError), import directly from ../shared/errors:
+// import { UserNotFoundError, ... } from "../shared/errors"
 // ============================================================================
 // Domain-Specific RPC Boundary
 // ============================================================================
-
-
 /**
  * Transform User domain errors to RPC errors
  *
@@ -162,4 +102,4 @@ export const withUserRpcBoundary = <A, R>(
         message: "An unexpected error occurred"
       }))
     )
-  );
+  )

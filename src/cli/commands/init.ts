@@ -198,9 +198,12 @@ const USER_SUBMODULES = "authentication,profile"
  *
  * Must run LAST - depends on contract-auth and all infrastructure.
  *
- * Sub-modules:
+ * Sub-modules (contract and feature only):
  * - authentication: Login/logout, token/session management
  * - profile: User profile info modification
+ *
+ * Note: data-access uses a flat repository pattern (no submodules).
+ * Feature layer has submodules for business capabilities.
  */
 function generateUserDomainSlice() {
   return Effect.gen(function*() {
@@ -222,14 +225,12 @@ function generateUserDomainSlice() {
     })
     yield* Console.log("  ✓ contract-user created")
 
-    // 2. Generate data-access-user with sub-module repositories
-    yield* Console.log("  Generating data-access-user (with authentication, profile sub-modules)...")
+    // 2. Generate data-access-user (flat repository - no submodules)
+    yield* Console.log("  Generating data-access-user...")
     yield* generateDataAccess({
       name: "user",
       description: "User data access with cache integration",
-      tags: "data-access,domain,user,builtin",
-      includeSubModules: true,
-      subModules: USER_SUBMODULES
+      tags: "data-access,domain,user,builtin"
     })
     yield* Console.log("  ✓ data-access-user created")
 
@@ -245,7 +246,7 @@ function generateUserDomainSlice() {
     yield* Console.log("  ✓ feature-user created")
 
     yield* Console.log("")
-    yield* Console.log("✨ Generated user domain slice (3 libraries with authentication + profile sub-modules)")
+    yield* Console.log("✨ Generated user domain slice (3 libraries)")
   })
 }
 

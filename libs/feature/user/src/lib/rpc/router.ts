@@ -1,4 +1,6 @@
+import { AllMiddlewareLive, AllMiddlewareTest } from "@samuelho-dev/infra-rpc"
 import { Layer } from "effect"
+import { UserHandlersLayer } from "./handlers"
 
 /**
  * User RPC Router
@@ -16,28 +18,15 @@ Usage:
   export const POST = createUserHandler();
  *
  */
-
-
 // ============================================================================
 // Handler Imports
 // ============================================================================
-
-import { UserHandlersLayer } from "./handlers";
-
 // ============================================================================
 // Middleware Imports
 // ============================================================================
-
-import {
-  // Middleware layers
-  AllMiddlewareLive,
-  AllMiddlewareTest,
-} from "@samuelho-dev/infra-rpc";
-
 // ============================================================================
 // Layer Composition
 // ============================================================================
-
 /**
  * Combined layer for production
  *
@@ -46,8 +35,8 @@ import {
  */
 export const UserProductionLayer = Layer.mergeAll(
   UserHandlersLayer,
-  AllMiddlewareLive,
-);
+  AllMiddlewareLive
+)
 
 /**
  * Combined layer for testing
@@ -56,13 +45,12 @@ export const UserProductionLayer = Layer.mergeAll(
  */
 export const UserTestLayer = Layer.mergeAll(
   UserHandlersLayer,
-  AllMiddlewareTest,
-);
+  AllMiddlewareTest
+)
 
 // ============================================================================
 // HTTP Handler (Next.js / Express)
 // ============================================================================
-
 /**
  * Create Next.js App Router handler
  *
@@ -106,12 +94,8 @@ export const UserTestLayer = Layer.mergeAll(
  * ```
  */
 
-
 // ============================================================================
-// Re-exports
+// Handler Import Notes
 // ============================================================================
-
-/**
- * Re-export handlers for direct composition
- */
-export { UserHandlers, AllUserHandlers, UserHandlersLayer } from "./handlers";
+// NOTE: For handler access, import directly from ./handlers:
+// import { UserHandlers, AllUserHandlers, UserHandlersLayer } from "./handlers"

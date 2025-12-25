@@ -56,7 +56,9 @@ Job Types:
   builder.addBlankLine()
 
   builder.addSectionComment("Service Dependencies")
-  builder.addRaw(`import { ${className}Service } from "../services";`)
+  builder.addImports([
+    { from: "../services", imports: [`${className}Service`] }
+  ])
   builder.addBlankLine()
 
   builder.addSectionComment("Job Validation Error")
@@ -87,8 +89,8 @@ export class JobDataValidationError extends Data.TaggedError("JobDataValidationE
  * const schemas: ${className}JobProcessorSchemas = {
  *   createData: CreateUserInputSchema,
  *   updateData: UpdateUserInputSchema,
- *   bulkItemData: BulkUserItemSchema,
- * };
+ *   bulkItemData: BulkUserItemSchema
+ * }
  * \`\`\`
  */
 export interface ${className}JobProcessorSchemas<
@@ -110,7 +112,8 @@ export interface ${className}JobProcessorSchemas<
    * Schema for bulk job item data validation
    */
   readonly bulkItemData: Schema.Schema<BulkItemData, unknown>
-}`)
+}
+`)
   builder.addBlankLine()
 
   builder.addSectionComment("Job Definitions")
@@ -130,8 +133,8 @@ export const ${className}QueueConfig = {
   RETRY_DELAY: Duration.seconds(5),
 
   /** Default job timeout */
-  JOB_TIMEOUT: Duration.minutes(5),
-} as const;`)
+  JOB_TIMEOUT: Duration.minutes(5)
+} as const`)
   builder.addBlankLine()
 
   builder.addSectionComment("Job Types")
@@ -154,8 +157,8 @@ export const JobMetadata = Schema.Struct({
   priority: Schema.optionalWith(Schema.Number, { default: () => 0 }),
 
   /** When the job was enqueued */
-  enqueuedAt: Schema.optionalWith(Schema.Date, { default: () => new Date() }),
-});`)
+  enqueuedAt: Schema.optionalWith(Schema.Date, { default: () => new Date() })
+})`)
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -173,7 +176,7 @@ export class Create${className}Job extends Schema.Class<Create${className}Job>(
   data: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
 
   /** User who initiated the job */
-  initiatedBy: Schema.optional(Schema.UUID),
+  initiatedBy: Schema.optional(Schema.UUID)
 }) {
   static create(params: {
     data: Record<string, unknown>;
@@ -187,8 +190,8 @@ export class Create${className}Job extends Schema.Class<Create${className}Job>(
       data: params.data,
       ...(params.initiatedBy && { initiatedBy: params.initiatedBy }),
       ...(params.correlationId && { correlationId: params.correlationId }),
-      ...(params.priority && { priority: params.priority }),
-    });
+      ...(params.priority && { priority: params.priority })
+    })
   }
 }`)
   builder.addBlankLine()
@@ -211,7 +214,7 @@ export class Update${className}Job extends Schema.Class<Update${className}Job>(
   data: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
 
   /** User who initiated the job */
-  initiatedBy: Schema.optional(Schema.UUID),
+  initiatedBy: Schema.optional(Schema.UUID)
 }) {
   static create(params: {
     entityId: string;
@@ -227,8 +230,8 @@ export class Update${className}Job extends Schema.Class<Update${className}Job>(
       data: params.data,
       ...(params.initiatedBy && { initiatedBy: params.initiatedBy }),
       ...(params.correlationId && { correlationId: params.correlationId }),
-      ...(params.priority && { priority: params.priority }),
-    });
+      ...(params.priority && { priority: params.priority })
+    })
   }
 }`)
   builder.addBlankLine()
@@ -251,7 +254,7 @@ export class Delete${className}Job extends Schema.Class<Delete${className}Job>(
   softDelete: Schema.optionalWith(Schema.Boolean, { default: () => false }),
 
   /** User who initiated the job */
-  initiatedBy: Schema.optional(Schema.UUID),
+  initiatedBy: Schema.optional(Schema.UUID)
 }) {
   static create(params: {
     entityId: string;
@@ -267,8 +270,8 @@ export class Delete${className}Job extends Schema.Class<Delete${className}Job>(
       ...(params.softDelete !== undefined && { softDelete: params.softDelete }),
       ...(params.initiatedBy && { initiatedBy: params.initiatedBy }),
       ...(params.correlationId && { correlationId: params.correlationId }),
-      ...(params.priority && { priority: params.priority }),
-    });
+      ...(params.priority && { priority: params.priority })
+    })
   }
 }`)
   builder.addBlankLine()
@@ -298,7 +301,7 @@ export class Bulk${className}Job extends Schema.Class<Bulk${className}Job>(
   initiatedBy: Schema.optional(Schema.UUID),
 
   /** Continue on individual item errors */
-  continueOnError: Schema.optionalWith(Schema.Boolean, { default: () => true }),
+  continueOnError: Schema.optionalWith(Schema.Boolean, { default: () => true })
 }) {
   static create(params: {
     operation: "create" | "update" | "delete";
@@ -317,9 +320,9 @@ export class Bulk${className}Job extends Schema.Class<Bulk${className}Job>(
       ...(params.correlationId && { correlationId: params.correlationId }),
       ...(params.priority && { priority: params.priority }),
       ...(params.continueOnError !== undefined && {
-        continueOnError: params.continueOnError,
-      }),
-    });
+        continueOnError: params.continueOnError
+      })
+    })
   }
 }`)
   builder.addBlankLine()
@@ -331,7 +334,7 @@ export type ${className}Job =
   | Create${className}Job
   | Update${className}Job
   | Delete${className}Job
-  | Bulk${className}Job;`)
+  | Bulk${className}Job`)
   builder.addBlankLine()
 
   builder.addSectionComment("Job Queue Interface")
@@ -346,7 +349,7 @@ export interface ${className}JobQueueInterface {
   /**
    * Enqueue a job for async processing
    */
-  readonly enqueue: (job: ${className}Job) => Effect.Effect<void>;
+  readonly enqueue: (job: ${className}Job) => Effect.Effect<void>
 
   /**
    * Enqueue a job with priority
@@ -354,28 +357,138 @@ export interface ${className}JobQueueInterface {
   readonly enqueueWithPriority: (
     job: ${className}Job,
     priority: number
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 
   /**
    * Start processing jobs from the queue
    */
-  readonly startProcessing: () => Effect.Effect<void>;
+  readonly startProcessing: () => Effect.Effect<void>
 
   /**
    * Stop processing jobs
    */
-  readonly stopProcessing: () => Effect.Effect<void>;
+  readonly stopProcessing: () => Effect.Effect<void>
 
   /**
    * Get queue statistics
    */
   readonly stats: Effect.Effect<{
-    readonly pending: number;
-    readonly processing: number;
-    readonly completed: number;
-    readonly failed: number;
-  }>;
-}`)
+    readonly pending: number
+    readonly processing: number
+    readonly completed: number
+    readonly failed: number
+  }>
+}
+`)
+  builder.addBlankLine()
+
+  builder.addSectionComment("Job Processor Helpers")
+  builder.addBlankLine()
+
+  builder.addRaw(`/**
+ * Validate data against schema with typed error
+ */
+const validateJobData = <T>(
+  data: unknown,
+  schema: Schema.Schema<T, unknown>,
+  jobId: string,
+  jobType: string
+) =>
+  Schema.decodeUnknown(schema)(data).pipe(
+    Effect.mapError((parseError) =>
+      new JobDataValidationError({
+        message: \`Job data validation failed: \${parseError.message}\`,
+        jobId,
+        jobType,
+        cause: parseError
+      })
+    )
+  )
+
+/**
+ * Process a create job
+ */
+const processCreateJob = <CreateData>(
+  job: Create${className}Job,
+  service: Context.Tag.Service<typeof ${className}Service>,
+  schemas: { createData: Schema.Schema<CreateData, unknown> }
+) =>
+  Effect.gen(function*() {
+    const validatedData = yield* validateJobData(job.data, schemas.createData, job.jobId, "create")
+    yield* service.create(validatedData)
+  })
+
+/**
+ * Process an update job
+ */
+const processUpdateJob = <UpdateData>(
+  job: Update${className}Job,
+  service: Context.Tag.Service<typeof ${className}Service>,
+  schemas: { updateData: Schema.Schema<UpdateData, unknown> }
+) =>
+  Effect.gen(function*() {
+    const validatedData = yield* validateJobData(job.data, schemas.updateData, job.jobId, "update")
+    yield* service.update(job.entityId, validatedData)
+  })
+
+/**
+ * Process a delete job
+ */
+const processDeleteJob = (
+  job: Delete${className}Job,
+  service: Context.Tag.Service<typeof ${className}Service>
+) => service.delete(job.entityId)
+
+/**
+ * Process a single bulk item
+ */
+const processBulkItem = <BulkItemData>(
+  item: Record<string, unknown>,
+  operation: "create" | "update" | "delete",
+  service: Context.Tag.Service<typeof ${className}Service>,
+  validatedItem: BulkItemData
+) =>
+  Effect.gen(function*() {
+    if (operation === "create") {
+      yield* service.create(validatedItem)
+    } else if (operation === "update" && "id" in item && typeof item.id === "string") {
+      yield* service.update(item.id, validatedItem)
+    } else if (operation === "delete" && "id" in item && typeof item.id === "string") {
+      yield* service.delete(item.id)
+    }
+  })
+
+/**
+ * Process a bulk job
+ */
+const processBulkJob = <BulkItemData>(
+  job: Bulk${className}Job,
+  service: Context.Tag.Service<typeof ${className}Service>,
+  logger: Context.Tag.Service<typeof LoggingService>,
+  schemas: { bulkItemData: Schema.Schema<BulkItemData, unknown> }
+) =>
+  Effect.gen(function*() {
+    for (const item of job.items) {
+      const validatedItem = yield* validateJobData(item, schemas.bulkItemData, job.jobId, "bulk").pipe(
+        Effect.catchAll((error) =>
+          job.continueOnError
+            ? Effect.gen(function*() {
+                yield* logger.warn("Bulk job item validation failed, skipping", {
+                  item,
+                  error: error.message
+                })
+                return null
+              })
+            : Effect.fail(error)
+        )
+      )
+
+      if (validatedItem !== null) {
+        yield* processBulkItem(item, job.operation, service, validatedItem)
+      }
+    }
+  })
+`)
   builder.addBlankLine()
 
   builder.addSectionComment("Job Processor Implementation")
@@ -398,102 +511,34 @@ const processJob = <CreateData, UpdateData, BulkItemData>(
     const histogram = yield* metrics.histogram("${name.toLowerCase()}_job_duration_seconds");
     const counter = yield* metrics.counter("${name.toLowerCase()}_jobs_processed_total");
 
-    // Helper to validate data against schema
-    const validateData = <T>(
-      data: unknown,
-      schema: Schema.Schema<T, unknown>,
-      jobType: string
-    ) =>
-      Schema.decodeUnknown(schema)(data).pipe(
-        Effect.mapError((parseError) =>
-          new JobDataValidationError({
-            message: \`Job data validation failed: \${parseError.message}\`,
-            jobId: job.jobId,
-            jobType,
-            cause: parseError,
-          })
-        )
-      )
+    yield* logger.info("Processing ${name} job", {
+      jobId: job.jobId,
+      type: job.type,
+      attempt: job.attempt
+    })
 
-    return yield* histogram.timer(
+    yield* histogram.timer(
       Effect.gen(function*() {
-        yield* logger.info("Processing ${name} job", {
-          jobId: job.jobId,
-          type: job.type,
-          attempt: job.attempt,
-        });
-
-        switch (job.type) {
-          case "create": {
-            const validatedData = yield* validateData(job.data, schemas.createData, "create");
-            yield* service.create(validatedData as Parameters<typeof service.create>[0]);
-            break;
-          }
-
-          case "update": {
-            const validatedData = yield* validateData(job.data, schemas.updateData, "update");
-            yield* service.update(
-              job.entityId,
-              validatedData as Parameters<typeof service.update>[1]
-            );
-            break;
-          }
-
-          case "delete":
-            yield* service.delete(job.entityId);
-            break;
-
-          case "bulk": {
-            for (const item of job.items) {
-              const validatedItem = yield* validateData(item, schemas.bulkItemData, "bulk").pipe(
-                Effect.catchAll((error) => {
-                  if (job.continueOnError) {
-                    return Effect.gen(function*() {
-                      yield* logger.warn("Bulk job item validation failed, skipping", {
-                        item,
-                        error: error.message,
-                      });
-                      return null;
-                    });
-                  }
-                  return Effect.fail(error);
-                })
-              );
-
-              if (validatedItem === null) continue;
-
-              switch (job.operation) {
-                case "create":
-                  yield* service.create(validatedItem as Parameters<typeof service.create>[0]);
-                  break;
-                case "update":
-                  if ("id" in item && typeof item.id === "string") {
-                    yield* service.update(
-                      item.id,
-                      validatedItem as Parameters<typeof service.update>[1]
-                    );
-                  }
-                  break;
-                case "delete":
-                  if ("id" in item && typeof item.id === "string") {
-                    yield* service.delete(item.id);
-                  }
-                  break;
-              }
-            }
-            break;
-          }
+        if (job.type === "create") {
+          yield* processCreateJob(job, service, schemas)
+        } else if (job.type === "update") {
+          yield* processUpdateJob(job, service, schemas)
+        } else if (job.type === "delete") {
+          yield* processDeleteJob(job, service)
+        } else if (job.type === "bulk") {
+          yield* processBulkJob(job, service, logger, schemas)
         }
-
-        yield* counter.increment;
-        yield* logger.info("${name} job completed", { jobId: job.jobId, type: job.type });
       })
-    );
+    )
+
+    yield* counter.increment
+    yield* logger.info("${name} job completed", { jobId: job.jobId, type: job.type })
   }).pipe(
     Effect.withSpan("${className}JobQueue.processJob", {
-      attributes: { jobId: job.jobId, type: job.type },
+      attributes: { jobId: job.jobId, type: job.type }
     })
-  );`)
+  )
+`)
   builder.addBlankLine()
 
   builder.addSectionComment("Context.Tag")
@@ -573,96 +618,96 @@ export class ${className}JobQueue extends Context.Tag("${className}JobQueue")<
           Effect.timeout(${className}QueueConfig.JOB_TIMEOUT),
           Effect.catchTag("JobDataValidationError", (error) =>
             Effect.gen(function*() {
-              yield* failedCounter.increment;
-              failed++;
+              yield* failedCounter.increment
+              failed++
               yield* logger.error("${name} job failed after retries", {
                 jobId: job.jobId,
                 type: job.type,
-                error: { message: error.message, jobType: error.jobType },
-              });
+                error: { message: error.message, jobType: error.jobType }
+              })
             })
           ),
           Effect.catchAll((error) =>
             Effect.gen(function*() {
-              yield* failedCounter.increment;
-              failed++;
+              yield* failedCounter.increment
+              failed++
               yield* logger.error("${name} job failed after retries", {
                 jobId: job.jobId,
                 type: job.type,
-                error: error.message,
-              });
+                error: error.message
+              })
             })
           ),
           Effect.tap(() => {
-            completed++;
+            completed++
           }),
           Effect.ensuring(Effect.sync(() => {
-            processing--;
+            processing--
           }))
-        );
+        )
 
       return {
         enqueue: (job) =>
           Effect.gen(function*() {
-            yield* jobQueue.offer(job);
-            pending++;
-            yield* pendingGauge.set(pending);
+            yield* jobQueue.offer(job)
+            pending++
+            yield* pendingGauge.set(pending)
             yield* logger.debug("Job enqueued", {
               jobId: job.jobId,
-              type: job.type,
-            });
+              type: job.type
+            })
           }).pipe(Effect.withSpan("${className}JobQueue.enqueue")),
 
         enqueueWithPriority: (job, priority) =>
           Effect.gen(function*() {
             // For priority, we'd need a priority queue - using regular offer for now
-            yield* jobQueue.offer({ ...job, priority });
-            pending++;
-            yield* pendingGauge.set(pending);
+            yield* jobQueue.offer({ ...job, priority })
+            pending++
+            yield* pendingGauge.set(pending)
             yield* logger.debug("Job enqueued with priority", {
               jobId: job.jobId,
               type: job.type,
-              priority,
-            });
+              priority
+            })
           }).pipe(Effect.withSpan("${className}JobQueue.enqueueWithPriority")),
 
         startProcessing: () =>
           Effect.gen(function*() {
-            if (isProcessing) return;
-            isProcessing = true;
+            if (isProcessing) return
+            isProcessing = true
 
-            yield* logger.info("${name} job queue started");
+            yield* logger.info("${name} job queue started")
 
             // Start processing loop in background
             yield* Effect.forkDaemon(
               Effect.forever(
                 Effect.gen(function*() {
-                  const job = yield* jobQueue.take;
-                  pending--;
-                  processing++;
-                  yield* pendingGauge.set(pending);
-                  yield* processingGauge.set(processing);
-                  yield* Effect.fork(processWithRetry(job));
+                  const job = yield* jobQueue.take
+                  pending--
+                  processing++
+                  yield* pendingGauge.set(pending)
+                  yield* processingGauge.set(processing)
+                  yield* Effect.fork(processWithRetry(job))
                 })
               )
-            );
+            )
           }).pipe(Effect.withSpan("${className}JobQueue.startProcessing")),
 
         stopProcessing: () =>
           Effect.gen(function*() {
-            isProcessing = false;
-            yield* logger.info("${name} job queue stopped");
+            isProcessing = false
+            yield* logger.info("${name} job queue stopped")
           }).pipe(Effect.withSpan("${className}JobQueue.stopProcessing")),
 
         stats: Effect.succeed({
           pending,
           processing,
           completed,
-          failed,
-        }).pipe(Effect.withSpan("${className}JobQueue.stats")),
-      };
+          failed
+        }).pipe(Effect.withSpan("${className}JobQueue.stats"))
+      }
     })
-  );
+  )
 
   /**
    * Test layer - uses same implementation as Live
@@ -671,8 +716,9 @@ export class ${className}JobQueue extends Context.Tag("${className}JobQueue")<
    */
   static readonly Test = <CreateData, UpdateData, BulkItemData>(
     schemas: ${className}JobProcessorSchemas<CreateData, UpdateData, BulkItemData>
-  ) => this.Live(schemas);
-}`)
+  ) => this.Live(schemas)
+}
+`)
 
   return builder.toString()
 }

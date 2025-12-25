@@ -12,11 +12,9 @@ Includes:
  *
  * @module @samuelho-dev/infra-observability/constants
  */
-
 // ============================================================================
 // Histogram Boundaries
 // ============================================================================
-
 /**
  * Common histogram boundaries for different use cases
  *
@@ -75,7 +73,6 @@ export const HistogramBoundaries = {
 // ============================================================================
 // Standard Metric Names
 // ============================================================================
-
 /**
  * Standard metric names following OpenTelemetry semantic conventions
  *
@@ -131,7 +128,6 @@ export const StandardMetricNames = {
 // ============================================================================
 // Log Level Configurations
 // ============================================================================
-
 /**
  * Pre-configured log level layers for different environments
  *
@@ -197,7 +193,6 @@ export const withMinLogLevel = (minLevel: LogLevel.LogLevel) =>
 // ============================================================================
 // Semantic Span Attribute Names
 // ============================================================================
-
 /**
  * Standard span attribute names following OpenTelemetry semantic conventions
  *

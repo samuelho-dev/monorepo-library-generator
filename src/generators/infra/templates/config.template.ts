@@ -40,22 +40,22 @@ export function generateConfigFile(options: InfraTemplateOptions) {
  * \`\`\`typescript
  * export interface ${className}Config {
  *   // Connection settings
- *   readonly host: string;
- *   readonly port: number;
- *   readonly timeout: number;
+ *   readonly host: string
+ *   readonly port: number
+ *   readonly timeout: number
  *
  *   // Feature flags
- *   readonly enableCache: boolean;
- *   readonly cacheTtlMs: number;
+ *   readonly enableCache: boolean
+ *   readonly cacheTtlMs: number
  *
  *   // Logging
- *   readonly logLevel: 'debug' | 'info' | 'warn' | 'error';
+ *   readonly logLevel: 'debug' | 'info' | 'warn' | 'error'
  * }
  * \`\`\`
  */
 export interface ${className}Config {
   // TODO: Add configuration properties
-  readonly timeout?: number;
+  readonly timeout?: number
 }`)
   builder.addBlankLine()
 

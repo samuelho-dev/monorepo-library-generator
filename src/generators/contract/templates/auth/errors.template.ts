@@ -45,16 +45,7 @@ Error Categories:
   builder.addRaw(`/**
  * Authentication error codes
  */
-export const AuthErrorCodeSchema = Schema.Union(
-  Schema.Literal("UNAUTHENTICATED"),
-  Schema.Literal("TOKEN_EXPIRED"),
-  Schema.Literal("TOKEN_INVALID"),
-  Schema.Literal("TOKEN_MISSING"),
-  Schema.Literal("SESSION_EXPIRED"),
-  Schema.Literal("INSUFFICIENT_PERMISSIONS"),
-  Schema.Literal("ACCOUNT_DISABLED"),
-  Schema.Literal("ACCOUNT_LOCKED")
-)
+export const AuthErrorCodeSchema = Schema.Union(Schema.Literal("UNAUTHENTICATED"), Schema.Literal("TOKEN_EXPIRED"), Schema.Literal("TOKEN_INVALID"), Schema.Literal("TOKEN_MISSING"), Schema.Literal("SESSION_EXPIRED"), Schema.Literal("INSUFFICIENT_PERMISSIONS"), Schema.Literal("ACCOUNT_DISABLED"), Schema.Literal("ACCOUNT_LOCKED"))
 export type AuthErrorCode = Schema.Schema.Type<typeof AuthErrorCodeSchema>
 
 /**
@@ -68,19 +59,17 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
   {
     /** Error message */
     message: Schema.String,
-
     /** Error code for programmatic handling */
     code: AuthErrorCodeSchema,
-
     /** HTTP status code hint */
-    statusCode: Schema.optionalWith(Schema.Number, { default: () => 401 }),
+    statusCode: Schema.optionalWith(Schema.Number, { default: () => 401 })
   }
 ) {
   static unauthenticated(message = "Authentication required") {
     return new AuthError({
       message,
       code: "UNAUTHENTICATED",
-      statusCode: 401,
+      statusCode: 401
     })
   }
 
@@ -88,7 +77,7 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
     return new AuthError({
       message,
       code: "TOKEN_EXPIRED",
-      statusCode: 401,
+      statusCode: 401
     })
   }
 
@@ -96,7 +85,7 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
     return new AuthError({
       message,
       code: "TOKEN_INVALID",
-      statusCode: 401,
+      statusCode: 401
     })
   }
 
@@ -104,7 +93,7 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
     return new AuthError({
       message,
       code: "TOKEN_MISSING",
-      statusCode: 401,
+      statusCode: 401
     })
   }
 
@@ -112,7 +101,7 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
     return new AuthError({
       message,
       code: "INSUFFICIENT_PERMISSIONS",
-      statusCode: 403,
+      statusCode: 403
     })
   }
 }
@@ -125,13 +114,7 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
   builder.addRaw(`/**
  * Service authentication error codes
  */
-export const ServiceAuthErrorCodeSchema = Schema.Union(
-  Schema.Literal("SERVICE_UNAUTHENTICATED"),
-  Schema.Literal("SERVICE_TOKEN_INVALID"),
-  Schema.Literal("SERVICE_TOKEN_EXPIRED"),
-  Schema.Literal("SERVICE_UNKNOWN"),
-  Schema.Literal("SERVICE_PERMISSION_DENIED")
-)
+export const ServiceAuthErrorCodeSchema = Schema.Union(Schema.Literal("SERVICE_UNAUTHENTICATED"), Schema.Literal("SERVICE_TOKEN_INVALID"), Schema.Literal("SERVICE_TOKEN_EXPIRED"), Schema.Literal("SERVICE_UNKNOWN"), Schema.Literal("SERVICE_PERMISSION_DENIED"))
 export type ServiceAuthErrorCode = Schema.Schema.Type<typeof ServiceAuthErrorCodeSchema>
 
 /**
@@ -145,15 +128,12 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()(
   {
     /** Error message */
     message: Schema.String,
-
     /** Error code for programmatic handling */
     code: ServiceAuthErrorCodeSchema,
-
     /** Service that attempted authentication */
     serviceName: Schema.optional(Schema.String),
-
     /** HTTP status code hint */
-    statusCode: Schema.optionalWith(Schema.Number, { default: () => 401 }),
+    statusCode: Schema.optionalWith(Schema.Number, { default: () => 401 })
   }
 ) {
   static unauthenticated(serviceName?: string) {
@@ -163,7 +143,7 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()(
         : "Service authentication required",
       code: "SERVICE_UNAUTHENTICATED",
       ...(serviceName && { serviceName }),
-      statusCode: 401,
+      statusCode: 401
     })
   }
 
@@ -172,7 +152,7 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()(
       message: "Invalid service token",
       code: "SERVICE_TOKEN_INVALID",
       ...(serviceName && { serviceName }),
-      statusCode: 401,
+      statusCode: 401
     })
   }
 
@@ -181,7 +161,7 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()(
       message: \`Unknown service: \${serviceName}\`,
       code: "SERVICE_UNKNOWN",
       serviceName,
-      statusCode: 403,
+      statusCode: 403
     })
   }
 
@@ -190,7 +170,7 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()(
       message: \`Service '\${serviceName}' not permitted to perform '\${operation}'\`,
       code: "SERVICE_PERMISSION_DENIED",
       serviceName,
-      statusCode: 403,
+      statusCode: 403
     })
   }
 }

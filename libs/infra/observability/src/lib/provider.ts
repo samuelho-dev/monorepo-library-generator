@@ -28,11 +28,9 @@ Usage:
  * @module @samuelho-dev/infra-observability/provider
  * @see https://effect.website/docs/observability/otel-tracing
  */
-
 // ============================================================================
 // OtelProvider Interface
 // ============================================================================
-
 /**
  * OtelProvider operations interface
  *

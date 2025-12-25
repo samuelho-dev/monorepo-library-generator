@@ -46,8 +46,8 @@ Includes:
  * Pattern: Data.TaggedError with inline properties
  */
 export class RedisError extends Data.TaggedError("RedisError")<{
-  readonly message: string;
-  readonly cause?: unknown;
+  readonly message: string
+  readonly cause?: unknown
 }> {}`)
   builder.addBlankLine()
 
@@ -61,10 +61,10 @@ export class RedisError extends Data.TaggedError("RedisError")<{
  * Thrown when unable to establish or maintain connection to Redis server.
  */
 export class RedisConnectionError extends Data.TaggedError("RedisConnectionError")<{
-  readonly message: string;
-  readonly host?: string;
-  readonly port?: number;
-  readonly cause?: unknown;
+  readonly message: string
+  readonly host?: string
+  readonly port?: number
+  readonly cause?: unknown
 }> {}`)
   builder.addBlankLine()
 
@@ -75,10 +75,10 @@ export class RedisConnectionError extends Data.TaggedError("RedisConnectionError
  * Thrown when a Redis operation exceeds the configured timeout.
  */
 export class RedisTimeoutError extends Data.TaggedError("RedisTimeoutError")<{
-  readonly message: string;
-  readonly timeout: number;
-  readonly operation?: string;
-  readonly cause?: unknown;
+  readonly message: string
+  readonly timeout: number
+  readonly operation?: string
+  readonly cause?: unknown
 }> {}`)
   builder.addBlankLine()
 
@@ -92,10 +92,10 @@ export class RedisTimeoutError extends Data.TaggedError("RedisTimeoutError")<{
  * Thrown when a Redis command fails to execute.
  */
 export class RedisCommandError extends Data.TaggedError("RedisCommandError")<{
-  readonly message: string;
-  readonly command: string;
-  readonly args?: ReadonlyArray<unknown>;
-  readonly cause?: unknown;
+  readonly message: string
+  readonly command: string
+  readonly args?: ReadonlyArray<unknown>
+  readonly cause?: unknown
 }> {}`)
   builder.addBlankLine()
 
@@ -106,10 +106,10 @@ export class RedisCommandError extends Data.TaggedError("RedisCommandError")<{
  * Thrown for key-related issues (key not found, wrong type, etc.)
  */
 export class RedisKeyError extends Data.TaggedError("RedisKeyError")<{
-  readonly message: string;
-  readonly key: string;
-  readonly expectedType?: string;
-  readonly actualType?: string;
+  readonly message: string
+  readonly key: string
+  readonly expectedType?: string
+  readonly actualType?: string
 }> {}`)
   builder.addBlankLine()
 
@@ -123,9 +123,9 @@ export class RedisKeyError extends Data.TaggedError("RedisKeyError")<{
  * Thrown for pub/sub related failures.
  */
 export class RedisPubSubError extends Data.TaggedError("RedisPubSubError")<{
-  readonly message: string;
-  readonly channel?: string;
-  readonly cause?: unknown;
+  readonly message: string
+  readonly channel?: string
+  readonly cause?: unknown
 }> {}`)
   builder.addBlankLine()
 
@@ -142,7 +142,7 @@ export type RedisProviderError =
   | RedisTimeoutError
   | RedisCommandError
   | RedisKeyError
-  | RedisPubSubError;`)
+  | RedisPubSubError`)
   builder.addBlankLine()
 
   // SDK Error Schema for parsing unknown errors
@@ -157,14 +157,14 @@ export type RedisProviderError =
 const SdkErrorSchema = Schema.Struct({
   message: Schema.optional(Schema.String),
   code: Schema.optional(Schema.String),
-});
+})
 
 /**
  * Parse SDK error using Schema
  */
 function parseSdkError(error: unknown) {
-  const result = Schema.decodeUnknownOption(SdkErrorSchema)(error);
-  return Option.isSome(result) ? result.value : { message: undefined, code: undefined };
+  const result = Schema.decodeUnknownOption(SdkErrorSchema)(error)
+  return Option.isSome(result) ? result.value : { message: undefined, code: undefined }
 }`)
   builder.addBlankLine()
 
@@ -178,14 +178,14 @@ function parseSdkError(error: unknown) {
  * Uses Schema.decodeUnknownOption for type-safe parsing
  */
 export function mapRedisError(error: unknown, command?: string) {
-  const { message, code } = parseSdkError(error);
+  const { message, code } = parseSdkError(error)
 
   // Connection errors
   if (code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "ECONNRESET") {
     return new RedisConnectionError({
       message: message ?? "Connection failed",
-      cause: error,
-    });
+      cause: error
+    })
   }
 
   // Timeout errors
@@ -194,8 +194,8 @@ export function mapRedisError(error: unknown, command?: string) {
       message: message ?? "Operation timed out",
       timeout: 20000,
       ...(command !== undefined ? { operation: command } : {}),
-      cause: error,
-    });
+      cause: error
+    })
   }
 
   // Command errors
@@ -203,15 +203,15 @@ export function mapRedisError(error: unknown, command?: string) {
     return new RedisCommandError({
       message: message ?? "Command failed",
       command,
-      cause: error,
-    });
+      cause: error
+    })
   }
 
   // Generic error
   return new RedisError({
     message: message ?? "Unknown Redis error",
-    cause: error,
-  });
+    cause: error
+  })
 }`)
 
   return builder.toString()

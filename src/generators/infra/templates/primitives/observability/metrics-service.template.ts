@@ -236,7 +236,7 @@ export class MetricsService extends Context.Tag(
   /**
    * Create metrics implementation using Effect.Metric
    */
-  static makeMetrics(): MetricsOperations {
+  static makeMetrics() {
     return {
       counter: (name: string, options?: MetricOptions) =>
         Effect.sync(() => {
@@ -308,7 +308,7 @@ export class MetricsService extends Context.Tag(
   /**
    * Create in-memory metrics implementation for testing
    */
-  static makeInMemory(): MetricsOperations {
+  static makeInMemory() {
     // Store metrics by name for test assertions
     const counters = new Map<string, { count: number }>()
     const gauges = new Map<string, { value: number }>()

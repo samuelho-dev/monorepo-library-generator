@@ -8,6 +8,6 @@ export {
   UserEventPublisher,
   UserEventTopics,
   createUserEventSubscription,
-} from "./publisher";
+} from "./publisher"
 
-export type { UserEventPublisherInterface } from "./publisher";
+export type { UserEventPublisherInterface } from "./publisher"

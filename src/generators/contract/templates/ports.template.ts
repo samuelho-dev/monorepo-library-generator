@@ -30,20 +30,22 @@ export function generatePortsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Add imports
-  // Context is a runtime value (used in extends Context.Tag()), but Effect and Option are type-only
-  builder.addRaw(`import { Context, type Effect, type Option } from "effect"`)
-
   // Import entity type from external package if specified, otherwise from local types
   // Note: prisma-effect-kysely generates UserSelect as the type (User is the schema object)
   const entityTypeSource = options.typesDatabasePackage
     ? options.typesDatabasePackage
     : "./types/database"
+
+  // External package imports must come before effect package
   builder.addImports([
     {
       from: entityTypeSource,
       imports: [`${className}Select as ${className}`],
       isTypeOnly: true
-    }
+    },
+    // Context is a runtime value (used in extends Context.Tag()), Effect and Option are type-only
+    { from: "effect", imports: ["Context"] },
+    { from: "effect", imports: ["Effect", "Option"], isTypeOnly: true }
   ])
 
   builder.addImports([
@@ -53,8 +55,6 @@ export function generatePortsFile(options: ContractTemplateOptions) {
       isTypeOnly: true
     }
   ])
-
-  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 1: Supporting Types
@@ -119,11 +119,11 @@ export function generatePortsFile(options: ContractTemplateOptions) {
  * Paginated result with generic item type
  */
 export interface PaginatedResult<T> {
-  readonly items: ReadonlyArray<T>;
-  readonly total: number;
-  readonly limit: number;
-  readonly offset: number;
-  readonly hasMore: boolean;
+  readonly items: ReadonlyArray<T>
+  readonly total: number
+  readonly limit: number
+  readonly offset: number
+  readonly hasMore: boolean
 }
 `)
 
@@ -137,7 +137,6 @@ export interface PaginatedResult<T> {
   // Create repository Context.Tag with inline interface
   const repositoryTag = createRepositoryTag(className, domainName, fileName, scope)
   builder.addRaw(repositoryTag)
-  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 3: Service Port
@@ -149,7 +148,6 @@ export interface PaginatedResult<T> {
   // Create service Context.Tag with inline interface
   const serviceTag = createServiceTag(className, domainName, fileName, scope)
   builder.addRaw(serviceTag)
-  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 4: Projection Repository Port (CQRS only)
@@ -161,7 +159,6 @@ export interface PaginatedResult<T> {
 
     const projectionRepositoryTag = createProjectionRepositoryTag(className, fileName, scope)
     builder.addRaw(projectionRepositoryTag)
-    builder.addBlankLine()
   }
 
   return builder.toString()
@@ -231,7 +228,7 @@ export class ${className}Repository extends Context.Tag(
       Option.Option<${className}>,
       ${className}RepositoryError,
       never
-    >;
+    >
 
     /**
      * Find all ${domainName}s matching filters
@@ -240,21 +237,21 @@ export class ${className}Repository extends Context.Tag(
       filters?: ${className}Filters,
       pagination?: OffsetPaginationParams,
       sort?: SortOptions
-    ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError>;
+    ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError>
 
     /**
      * Count ${domainName}s matching filters
      */
     readonly count: (
       filters?: ${className}Filters
-    ) => Effect.Effect<number, ${className}RepositoryError, never>;
+    ) => Effect.Effect<number, ${className}RepositoryError, never>
 
     /**
      * Create a new ${domainName}
      */
     readonly create: (
       input: Partial<${className}>
-    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>
 
     /**
      * Update an existing ${domainName}
@@ -262,21 +259,21 @@ export class ${className}Repository extends Context.Tag(
     readonly update: (
       id: string,
       input: Partial<${className}>
-    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>
 
     /**
      * Delete a ${domainName} permanently
      */
     readonly delete: (
       id: string
-    ) => Effect.Effect<void, ${className}RepositoryError, never>;
+    ) => Effect.Effect<void, ${className}RepositoryError, never>
 
     /**
      * Check if ${domainName} exists by ID
      */
     readonly exists: (
       id: string
-    ) => Effect.Effect<boolean, ${className}RepositoryError, never>;
+    ) => Effect.Effect<boolean, ${className}RepositoryError, never>
   }
 >() {}`
 }
@@ -311,7 +308,7 @@ export class ${className}Service extends Context.Tag(
      */
     readonly get: (
       id: string
-    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>
 
     /**
      * List ${domainName}s with filters and pagination
@@ -320,14 +317,14 @@ export class ${className}Service extends Context.Tag(
       filters?: ${className}Filters,
       pagination?: OffsetPaginationParams,
       sort?: SortOptions
-    ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError, never>;
+    ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError, never>
 
     /**
      * Create a new ${domainName}
      */
     readonly create: (
       input: Partial<${className}>
-    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>
 
     /**
      * Update an existing ${domainName}
@@ -335,14 +332,14 @@ export class ${className}Service extends Context.Tag(
     readonly update: (
       id: string,
       input: Partial<${className}>
-    ) => Effect.Effect<${className}, ${className}RepositoryError, never>;
+    ) => Effect.Effect<${className}, ${className}RepositoryError, never>
 
     /**
      * Delete a ${domainName}
      */
     readonly delete: (
       id: string
-    ) => Effect.Effect<void, ${className}RepositoryError, never>;
+    ) => Effect.Effect<void, ${className}RepositoryError, never>
   }
 >() {}`
 }
@@ -376,7 +373,7 @@ export class ${className}ProjectionRepository extends Context.Tag(
      */
     readonly findProjection: (
       id: string
-    ) => Effect.Effect<Option.Option<unknown>, ${className}RepositoryError, never>;
+    ) => Effect.Effect<Option.Option<unknown>, ${className}RepositoryError, never>
 
     /**
      * List projections with filters
@@ -384,7 +381,7 @@ export class ${className}ProjectionRepository extends Context.Tag(
     readonly listProjections: (
       filters?: Record<string, unknown>,
       pagination?: PaginationParams
-    ) => Effect.Effect<PaginatedResult<unknown>, ${className}RepositoryError, never>;
+    ) => Effect.Effect<PaginatedResult<unknown>, ${className}RepositoryError, never>
 
     /**
      * Update projection (called by event handlers)
@@ -392,14 +389,14 @@ export class ${className}ProjectionRepository extends Context.Tag(
     readonly updateProjection: (
       id: string,
       data: unknown
-    ) => Effect.Effect<void, ${className}RepositoryError, never>;
+    ) => Effect.Effect<void, ${className}RepositoryError, never>
 
     /**
      * Rebuild projection from event stream
      */
     readonly rebuildProjection: (
       id: string
-    ) => Effect.Effect<void, ${className}RepositoryError, never>;
+    ) => Effect.Effect<void, ${className}RepositoryError, never>
   }
 >() {}`
 }

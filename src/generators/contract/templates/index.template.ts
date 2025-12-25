@@ -1,25 +1,22 @@
 /**
  * Contract Index Template
  *
- * Generates index.ts file for contract libraries with barrel exports
+ * Generates index.ts file for contract libraries with named exports
  * of all contract types and schemas.
+ *
+ * Uses named exports instead of `export *` to comply with
+ * biome noReExportAll and noBarrelFile rules.
  *
  * @module monorepo-library-generator/contract/index-template
  */
 
 import { TypeScriptBuilder } from "../../../utils/code-builder"
-import {
-  addConditionalExports,
-  type ConditionalExport,
-  type ExportSection,
-  generateExportSections
-} from "../../../utils/templates"
 import type { ContractTemplateOptions } from "../../../utils/types"
 
 /**
  * Generate index.ts file for contract library
  *
- * Creates barrel exports for:
+ * Creates named exports for:
  * - Errors
  * - Entities
  * - Ports (Repository and Service)
@@ -47,68 +44,157 @@ export function generateIndexFile(options: ContractTemplateOptions) {
     description: headerDesc
   })
 
-  // Determine entity type export source
-  const entityTypeExport = typesDatabasePackage
-    ? `export * from "${typesDatabasePackage}";`
-    : "export * from \"./lib/types/database\";"
+  builder.addSectionComment("Core Exports")
+  builder.addBlankLine()
 
-  const entityTypeComment = typesDatabasePackage
+  // Errors - named exports
+  builder.addComment("Errors")
+  builder.addRaw(`export {
+  ${className}NotFoundError,
+  ${className}ValidationError,
+  ${className}AlreadyExistsError,
+  ${className}PermissionError,
+  ${className}NotFoundRepositoryError,
+  ${className}ValidationRepositoryError,
+  ${className}ConflictRepositoryError,
+  ${className}DatabaseRepositoryError,
+  type ${className}DomainError,
+  type ${className}RepositoryError,
+  type ${className}Error
+} from "./lib/errors"`)
+  builder.addBlankLine()
+
+  // Entity types - use type-only re-exports
+  const typeSource = typesDatabasePackage || "./lib/types/database"
+  const entityComment = typesDatabasePackage
     ? `Entity types re-exported from ${typesDatabasePackage}`
     : "Entity types from database schema"
+  builder.addComment(entityComment)
+  builder.addRaw(`export type {
+  ${className}Table,
+  ${className},
+  ${className}Select,
+  ${className}Insert,
+  ${className}Update,
+  DB,
+  Json
+} from "${typeSource}"`)
+  builder.addBlankLine()
 
-  // Core exports section (includes RPC - always prewired)
-  const coreExports: Array<ExportSection> = [
-    {
-      title: "Core Exports",
-      items: [
-        { comment: "Errors", exports: "export * from \"./lib/errors\";" },
-        {
-          comment: entityTypeComment,
-          exports: entityTypeExport
-        },
-        {
-          comment: "Ports (Repository and Service interfaces)",
-          exports: "export * from \"./lib/ports\";"
-        },
-        { comment: "Events", exports: "export * from \"./lib/events\";" }
-      ]
-    },
-    {
-      title: "RPC Exports (Contract-First - Always Prewired)",
-      items: [
-        {
-          comment: "RPC definitions, errors, and group (single source of truth)",
-          exports: "export * from \"./lib/rpc\";"
-        }
-      ]
-    }
-  ]
+  // Ports - named exports
+  builder.addComment("Ports (Repository and Service interfaces)")
+  builder.addRaw(`export {
+  ${className}Repository,
+  ${className}Service,
+  type ${className}Filters,
+  type OffsetPaginationParams,
+  type SortOptions,
+  type PaginatedResult
+} from "./lib/ports"`)
+  builder.addBlankLine()
 
-  generateExportSections(builder, coreExports)
+  // Events - named exports
+  builder.addComment("Events")
+  builder.addRaw(`export {
+  EventMetadata,
+  AggregateMetadata,
+  ${className}CreatedEvent,
+  ${className}UpdatedEvent,
+  ${className}DeletedEvent,
+  type ${className}DomainEvent
+} from "./lib/events"`)
+  builder.addBlankLine()
 
-  // Conditional exports (CQRS only - RPC is always included)
-  const conditionalExports: Array<ConditionalExport> = [
-    {
-      condition: includeCQRS,
-      sectionTitle: "CQRS Exports",
-      exports: [
-        {
-          comment: "Commands (Write operations)",
-          exports: "export * from \"./lib/commands\";"
-        },
-        {
-          comment: "Queries (Read operations)",
-          exports: "export * from \"./lib/queries\";"
-        },
-        {
-          comment: "Projections (Read models)",
-          exports: "export * from \"./lib/projections\";"
-        }
-      ]
-    }
-  ]
+  // RPC Exports - named exports (directly from source files, no barrel)
+  builder.addSectionComment("RPC Exports (Contract-First - Always Prewired)")
+  builder.addBlankLine()
 
-  addConditionalExports(builder, conditionalExports)
+  // RPC Errors from rpc-errors.ts
+  builder.addComment("RPC Errors (Schema.TaggedError for network serialization)")
+  builder.addRaw(`export {
+  ${className}NotFoundRpcError,
+  ${className}ValidationRpcError,
+  ${className}PermissionRpcError,
+  ${className}RpcError
+} from "./lib/rpc-errors"`)
+  builder.addBlankLine()
+
+  // RPC Definitions from rpc-definitions.ts
+  builder.addComment("RPC Definitions (Rpc.make with RouteTag)")
+  builder.addRaw(`export {
+  ${className}Id,
+  RouteTag,
+  type RouteType,
+  ${className}Schema,
+  type ${className}Entity,
+  PaginationParams,
+  PaginatedResponse,
+  Create${className}Input,
+  Update${className}Input,
+  Validate${className}Input,
+  ValidationResponse,
+  BulkGet${className}Input,
+  Get${className},
+  List${className}s,
+  Create${className},
+  Update${className},
+  Delete${className},
+  Validate${className},
+  BulkGet${className}s
+} from "./lib/rpc-definitions"`)
+  builder.addBlankLine()
+
+  // RPC Group from rpc-group.ts
+  builder.addComment("RPC Group (RpcGroup.make composition)")
+  builder.addRaw(`export {
+  ${className}Rpcs,
+  type ${className}RpcDefinitions,
+  getRouteType,
+  isProtectedRoute,
+  isServiceRoute,
+  isPublicRoute,
+  ${className}RpcsByRoute
+} from "./lib/rpc-group"`)
+  builder.addBlankLine()
+
+  // CQRS exports (conditional)
+  if (includeCQRS) {
+    builder.addSectionComment("CQRS Exports")
+    builder.addBlankLine()
+
+    builder.addComment("Commands (Write operations)")
+    builder.addRaw(`export {
+  Create${className}Command,
+  Update${className}Command,
+  Delete${className}Command,
+  type ${className}Command
+} from "./lib/commands"`)
+    builder.addBlankLine()
+
+    builder.addComment("Queries (Read operations)")
+    builder.addRaw(`export {
+  Get${className}Query,
+  List${className}sQuery,
+  type ${className}Query
+} from "./lib/queries"`)
+    builder.addBlankLine()
+
+    builder.addComment("Projections (Read models)")
+    builder.addRaw(`export {
+  ${className}Projection,
+  ${className}ListProjection,
+  type ${className}ProjectionState
+} from "./lib/projections"`)
+    builder.addBlankLine()
+  }
+
+  // Sub-module namespace exports use namespace imports to avoid barrel issues
+  builder.addSectionComment("Sub-Module Namespace Exports (Hybrid DDD Pattern)")
+  builder.addBlankLine()
+  builder.addComment("Sub-modules are imported as namespaces to preserve module boundaries")
+  builder.addComment("Import specific items: import { Authentication } from \"@scope/contract-name\"")
+  builder.addComment("Then use: Authentication.AuthenticationNotFoundError")
+  builder.addBlankLine()
 
   return builder.toString()
 }

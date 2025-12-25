@@ -49,22 +49,22 @@ export function generateUseHookFile(options: InfraTemplateOptions) {
 const RpcErrorSchema = Schema.Struct({
   _tag: Schema.String,
   message: Schema.String,
-});
+})
 
 /**
  * RPC error structure from Schema parsing
  */
 export interface RpcError {
-  readonly _tag: string;
-  readonly message: string;
+  readonly _tag: string
+  readonly message: string
 }
 
 /**
  * Parse error response using Schema
  */
 function parseRpcError(error: unknown): RpcError | null {
-  const result = Schema.decodeUnknownOption(RpcErrorSchema)(error);
-  return Option.isSome(result) ? result.value : null;
+  const result = Schema.decodeUnknownOption(RpcErrorSchema)(error)
+  return Option.isSome(result) ? result.value : null
 }`)
   builder.addBlankLine()
 
@@ -78,16 +78,16 @@ function parseRpcError(error: unknown): RpcError | null {
  */
 export interface Use${className}State {
   /** Current data */
-  readonly data: unknown | null;
+  readonly data: unknown | null
 
   /** Current error (parsed RPC error or fallback) */
-  readonly error: RpcError | null;
+  readonly error: RpcError | null
 
   /** Loading state */
-  readonly isLoading: boolean;
+  readonly isLoading: boolean
 
   /** Refetch function */
-  readonly refetch: () => Promise<void>;
+  readonly refetch: () => Promise<void>
 }`)
   builder.addBlankLine()
 
@@ -98,38 +98,38 @@ export interface Use${className}State {
     name: `use${className}`,
     params: [],
     // ESLint: no explicit return type - let TypeScript infer it
-    body: `const [data, setData] = useState<unknown | null>(null);
-const [error, setError] = useState<RpcError | null>(null);
-const [isLoading, setIsLoading] = useState(false);
+    body: `const [data, setData] = useState<unknown | null>(null)
+const [error, setError] = useState<RpcError | null>(null)
+const [isLoading, setIsLoading] = useState(false)
 
 const refetch = useCallback(async () => {
-  setIsLoading(true);
-  setError(null);
+  setIsLoading(true)
+  setError(null)
 
   try {
     // BASELINE: Set placeholder data
     // TODO: Replace with actual service call
     // const result = await serviceCall();
-    setData({ status: "baseline", timestamp: new Date().toISOString() });
+    setData({ status: "baseline", timestamp: new Date().toISOString() })
   } catch (err) {
     // Parse error using Schema - returns typed RpcError or null
-    const rpcError = parseRpcError(err);
-    setError(rpcError ?? { _tag: "UnknownError", message: "An unexpected error occurred" });
+    const rpcError = parseRpcError(err)
+    setError(rpcError ?? { _tag: "UnknownError", message: "An unexpected error occurred" })
   } finally {
-    setIsLoading(false);
+    setIsLoading(false)
   }
-}, []);
+}, [])
 
 useEffect(() => {
-  refetch();
-}, [refetch]);
+  refetch()
+}, [refetch])
 
 return {
   data,
   error,
   isLoading,
   refetch,
-};`,
+}`,
     jsdoc:
       `use${className} Hook\n\nTODO: Implement hook logic\n\n@returns Hook state with data, error, loading, and refetch\n\n@example\n\`\`\`typescript\nfunction MyComponent() {\n  const { data, isLoading, error, refetch } = use${className}();\n\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n\n  return (\n    <div>\n      <p>{JSON.stringify(data)}</p>\n      <button onClick={refetch}>Refresh</button>\n    </div>\n  );\n}\n\`\`\``
   })
@@ -138,12 +138,12 @@ return {
 // Example:
 //
 // export function use${className}Mutation() {
-//   const [isPending, setIsPending] = useState(false);
-//   const [error, setError] = useState<RpcError | null>(null);
+//   const [isPending, setIsPending] = useState(false)
+//   const [error, setError] = useState<RpcError | null>(null)
 //
 //   const mutate = useCallback(async (input: unknown) => {
-//     setIsPending(true);
-//     setError(null);
+//     setIsPending(true)
+//     setError(null)
 //
 //     try {
 //       // TODO: Call service mutation
@@ -151,15 +151,15 @@ return {
 //       // return result;
 //     } catch (err) {
 //       // Parse error using Schema
-//       const rpcError = parseRpcError(err);
-//       setError(rpcError ?? { _tag: "UnknownError", message: "An unexpected error occurred" });
-//       throw err;
+//       const rpcError = parseRpcError(err)
+//       setError(rpcError ?? { _tag: "UnknownError", message: "An unexpected error occurred" })
+//       throw err
 //     } finally {
-//       setIsPending(false);
+//       setIsPending(false)
 //     }
-//   }, []);
+//   }, [])
 //
-//   return { mutate, isPending, error };
+//   return { mutate, isPending, error }
 // }`)
 
   return builder.toString()

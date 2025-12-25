@@ -1,8 +1,8 @@
-import { PubsubService } from "./service"
 import { Redis } from "@samuelho-dev/provider-redis"
 import { Effect, Layer, PubSub, Schema } from "effect"
-import type { TopicHandle, TopicOptions } from "./service"
 import type { Fiber } from "effect"
+import { PubsubService } from "./service"
+import type { TopicHandle, TopicOptions } from "./service"
 
 /**
  * Pubsub Redis Layer
@@ -24,11 +24,9 @@ Use Cases:
  * @see EFFECT_PATTERNS.md for pubsub patterns
  * @see @samuelho-dev/provider-redis for Redis provider
  */
-
 // ============================================================================
 // Redis PubSub Layer
 // ============================================================================
-
 /**
  * Redis-backed distributed pub/sub layer
  *
@@ -217,7 +215,6 @@ export const PubsubRedisLayer = Layer.scoped(
 // ============================================================================
 // Usage Examples
 // ============================================================================
-
 /**
  * Example: Using Redis-backed pub/sub with provider-redis
  *
@@ -277,7 +274,6 @@ export const PubsubRedisLayer = Layer.scoped(
 // ============================================================================
 // Event Publishing Helper
 // ============================================================================
-
 /**
  * Wrap an Effect with event publishing
  *

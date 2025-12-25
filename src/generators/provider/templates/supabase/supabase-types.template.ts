@@ -42,9 +42,9 @@ All schemas are composable and can be extended for domain-specific needs.`,
  * Required for initializing the Supabase client.
  */
 export interface SupabaseConfig {
-  readonly url: string;
-  readonly anonKey: string;
-  readonly serviceRoleKey?: string;
+  readonly url: string
+  readonly anonKey: string
+  readonly serviceRoleKey?: string
 }
 
 /**
@@ -53,8 +53,8 @@ export interface SupabaseConfig {
 export const SupabaseConfigSchema = Schema.Struct({
   url: Schema.String.pipe(Schema.nonEmptyString()),
   anonKey: Schema.String.pipe(Schema.nonEmptyString()),
-  serviceRoleKey: Schema.optional(Schema.String.pipe(Schema.nonEmptyString())),
-});`)
+  serviceRoleKey: Schema.optional(Schema.String.pipe(Schema.nonEmptyString()))
+})`)
   builder.addBlankLine()
 
   // User types
@@ -67,10 +67,10 @@ export const SupabaseConfigSchema = Schema.Struct({
 export const UserMetadataSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   avatar_url: Schema.optional(Schema.String),
-  email_verified: Schema.optional(Schema.Boolean),
-}).pipe(Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })));
+  email_verified: Schema.optional(Schema.Boolean)
+}).pipe(Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })))
 
-export type UserMetadata = Schema.Schema.Type<typeof UserMetadataSchema>;
+export type UserMetadata = Schema.Schema.Type<typeof UserMetadataSchema>
 
 /**
  * Supabase user
@@ -84,10 +84,10 @@ export const SupabaseUserSchema = Schema.Struct({
   last_sign_in_at: Schema.optional(Schema.String),
   role: Schema.optional(Schema.String),
   user_metadata: Schema.optional(UserMetadataSchema),
-  app_metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-});
+  app_metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+})
 
-export type SupabaseUser = Schema.Schema.Type<typeof SupabaseUserSchema>;
+export type SupabaseUser = Schema.Schema.Type<typeof SupabaseUserSchema>
 
 /**
  * Auth user for downstream consumption
@@ -99,10 +99,10 @@ export const AuthUserSchema = Schema.Struct({
   email: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
   role: Schema.optional(Schema.String),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-});
+  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+})
 
-export type AuthUser = Schema.Schema.Type<typeof AuthUserSchema>;`)
+export type AuthUser = Schema.Schema.Type<typeof AuthUserSchema>`)
   builder.addBlankLine()
 
   // Session types
@@ -118,20 +118,20 @@ export const SupabaseSessionSchema = Schema.Struct({
   expires_in: Schema.Number,
   expires_at: Schema.optional(Schema.Number),
   token_type: Schema.String,
-  user: SupabaseUserSchema,
-});
+  user: SupabaseUserSchema
+})
 
-export type SupabaseSession = Schema.Schema.Type<typeof SupabaseSessionSchema>;
+export type SupabaseSession = Schema.Schema.Type<typeof SupabaseSessionSchema>
 
 /**
  * Auth result from sign in operations
  */
 export const AuthResultSchema = Schema.Struct({
   user: SupabaseUserSchema,
-  session: Schema.NullOr(SupabaseSessionSchema),
-});
+  session: Schema.NullOr(SupabaseSessionSchema)
+})
 
-export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>;`)
+export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>`)
   builder.addBlankLine()
 
   // Storage types - re-exported from native SDK
@@ -149,7 +149,7 @@ export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>;`)
  *
  * This avoids type duplication and ensures compatibility with SDK updates.
  */
-export type { FileObject, Bucket, FileOptions, SearchOptions, TransformOptions } from "@supabase/storage-js";`)
+export type { Bucket, FileObject, FileOptions, SearchOptions, TransformOptions } from "@supabase/storage-js"`)
   builder.addBlankLine()
 
   // Auth method types
@@ -161,26 +161,26 @@ export type { FileObject, Bucket, FileOptions, SearchOptions, TransformOptions }
  *
  * Used by RPC middleware to identify how the user was authenticated.
  */
-export type AuthMethod = "session" | "api-key" | "service-role";
+export type AuthMethod = "session" | "api-key" | "service-role"
 
 /**
  * Sign in credentials
  */
 export interface SignInCredentials {
-  readonly email: string;
-  readonly password: string;
+  readonly email: string
+  readonly password: string
 }
 
 /**
  * Sign up credentials
  */
 export interface SignUpCredentials {
-  readonly email: string;
-  readonly password: string;
+  readonly email: string
+  readonly password: string
   readonly options?: {
-    readonly data?: Record<string, unknown>;
-    readonly emailRedirectTo?: string;
-  };
+    readonly data?: Record<string, unknown>
+    readonly emailRedirectTo?: string
+  }
 }
 
 /**
@@ -203,7 +203,7 @@ export type OAuthProvider =
   | "linkedin_oidc"
   | "apple"
   | "keycloak"
-  | "workos";`)
+  | "workos"`)
 
   return builder.toString()
 }

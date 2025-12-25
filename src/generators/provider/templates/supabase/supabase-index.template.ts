@@ -54,8 +54,8 @@ Usage:
   SupabaseStorageError,
   SupabaseFileNotFoundError,
   SupabaseBucketNotFoundError,
-} from "./lib/errors";
-export type { SupabaseProviderError } from "./lib/errors";`)
+} from "./lib/errors"
+export type { SupabaseProviderError } from "./lib/errors"`)
   builder.addBlankLine()
 
   // Type exports
@@ -83,7 +83,7 @@ export type { SupabaseProviderError } from "./lib/errors";`)
   SignInCredentials,
   SignUpCredentials,
   OAuthProvider,
-} from "./lib/types";
+} from "./lib/types"
 
 // Schema exports for runtime validation
 export {
@@ -95,7 +95,7 @@ export {
   AuthResultSchema,
   StorageBucketSchema,
   StorageFileSchema,
-} from "./lib/types";`)
+} from "./lib/types"`)
   builder.addBlankLine()
 
   // Service exports
@@ -112,7 +112,7 @@ export {
   builder.addBlankLine()
 
   builder.addRaw(
-    `export { SupabaseClient, type SupabaseClientServiceInterface } from "./lib/client";`
+    `export { SupabaseClient, type SupabaseClientServiceInterface } from "./lib/client"`
   )
   builder.addBlankLine()
 
@@ -125,7 +125,7 @@ export {
   builder.addBlankLine()
 
   builder.addRaw(
-    `export { SupabaseAuth, type SupabaseAuthServiceInterface } from "./lib/auth";`
+    `export { SupabaseAuth, type SupabaseAuthServiceInterface } from "./lib/auth"`
   )
   builder.addBlankLine()
 
@@ -136,7 +136,7 @@ export {
   builder.addBlankLine()
 
   builder.addRaw(
-    `export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./lib/storage";`
+    `export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./lib/storage"`
   )
   builder.addBlankLine()
 

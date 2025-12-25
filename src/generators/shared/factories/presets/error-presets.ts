@@ -34,7 +34,28 @@ import type { ErrorDefinition, ProviderType } from "../types"
  * The functions accept a className (e.g., 'User') and generate the appropriate
  * field definitions and static create methods.
  */
-export const ERROR_DEFINITIONS = {
+export const ERROR_DEFINITIONS: {
+  readonly base: (className: string) => ErrorDefinition
+  readonly notFound: (className: string, idField?: string) => ErrorDefinition
+  readonly validation: (className: string) => ErrorDefinition
+  readonly conflict: (className: string) => ErrorDefinition
+  readonly config: (className: string) => ErrorDefinition
+  readonly connection: (className: string) => ErrorDefinition
+  readonly timeout: (className: string) => ErrorDefinition
+  readonly internal: (className: string) => ErrorDefinition
+  readonly permission: (className: string, propertyName: string) => ErrorDefinition
+  readonly alreadyExists: (className: string, propertyName: string) => ErrorDefinition
+  readonly transaction: (className: string) => ErrorDefinition
+  readonly database: (className: string) => ErrorDefinition
+  readonly service: (className: string) => ErrorDefinition
+  readonly api: (className: string) => ErrorDefinition
+  readonly rateLimit: (className: string) => ErrorDefinition
+  readonly authentication: (className: string) => ErrorDefinition
+  readonly repositoryNotFound: (className: string, propertyName: string) => ErrorDefinition
+  readonly repositoryValidation: (className: string) => ErrorDefinition
+  readonly repositoryConflict: (className: string) => ErrorDefinition
+  readonly repositoryDatabase: (className: string) => ErrorDefinition
+} = {
   /**
    * Base error - root error that all others extend
    *
@@ -73,8 +94,8 @@ Includes optional context fields for error tracing:
       body: `return new ${className}Error({
       message,
       timestamp: new Date(),
-      ...(cause !== undefined ? { cause } : {}),
-    });`
+      ...(cause !== undefined ? { cause } : {})
+    })`
     }
   }),
 
@@ -96,8 +117,8 @@ Includes optional context fields for error tracing:
       params: [{ name: idField, type: "string" }],
       body: `return new ${className}NotFoundError({
       message: \`${className} not found: \${${idField}}\`,
-      ${idField},
-    });`
+      ${idField}
+    })`
     }
   }),
 
@@ -119,8 +140,8 @@ Includes optional context fields for error tracing:
       params: [{ name: "errors", type: "readonly string[]" }],
       body: `return new ${className}ValidationError({
       message: "Validation failed",
-      errors,
-    });`
+      errors
+    })`
     }
   }),
 
@@ -144,8 +165,8 @@ Includes optional context fields for error tracing:
       message: conflictingId
         ? \`Resource already exists: \${conflictingId}\`
         : "Resource already exists",
-      ...(conflictingId !== undefined ? { conflictingId } : {}),
-    });`
+      ...(conflictingId !== undefined ? { conflictingId } : {})
+    })`
     }
   }),
 
@@ -170,8 +191,8 @@ Includes optional context fields for error tracing:
       ],
       body: `return new ${className}ConfigError({
       message: \`Invalid configuration for \${property}: \${reason}\`,
-      property,
-    });`
+      property
+    })`
     }
   }),
 
@@ -203,8 +224,8 @@ or external service.`,
       body: `return new ${className}ConnectionError({
       message: \`Failed to connect to \${target}\`,
       target,
-      ...(cause !== undefined && { cause }),
-    });`
+      ...(cause !== undefined && { cause })
+    })`
     }
   }),
 
@@ -234,8 +255,8 @@ a database query or transaction takes longer than the configured timeout.`,
       body: `return new ${className}TimeoutError({
       message: \`Operation "\${operation}" timed out after \${timeoutMs}ms\`,
       operation,
-      timeoutMs,
-    });`
+      timeoutMs
+    })`
     }
   }),
 
@@ -271,8 +292,8 @@ Includes context fields for error tracing and cause chain preservation.`,
       body: `return new ${className}InternalError({
       message: \`Internal error: \${reason}\`,
       cause,
-      timestamp: new Date(),
-    });`
+      timestamp: new Date()
+    })`
     }
   }),
 
@@ -300,8 +321,8 @@ Includes context fields for error tracing and cause chain preservation.`,
       body: `return new ${className}PermissionError({
       message: \`Permission denied for operation: \${operation}\`,
       operation,
-      ...(${propertyName}Id !== undefined ? { ${propertyName}Id } : {}),
-    });`
+      ...(${propertyName}Id !== undefined ? { ${propertyName}Id } : {})
+    })`
     }
   }),
 
@@ -325,8 +346,8 @@ Includes context fields for error tracing and cause chain preservation.`,
       message: ${propertyName}Id
         ? \`${className} already exists: \${${propertyName}Id}\`
         : "${className} already exists",
-      ...(${propertyName}Id !== undefined ? { ${propertyName}Id } : {}),
-    });`
+      ...(${propertyName}Id !== undefined ? { ${propertyName}Id } : {})
+    })`
     }
   }),
 
@@ -361,8 +382,8 @@ a database transaction cannot be started, committed, or rolled back.`,
       message: \`Transaction \${phase} failed during \${operation}\`,
       operation,
       phase,
-      ...(cause !== undefined && { cause }),
-    });`
+      ...(cause !== undefined && { cause })
+    })`
     }
   }),
 
@@ -390,8 +411,8 @@ a database transaction cannot be started, committed, or rolled back.`,
       body: `return new ${className}DatabaseError({
       message: \`Database operation failed: \${operation}\`,
       operation,
-      ...(cause !== undefined ? { cause } : {}),
-    });`
+      ...(cause !== undefined ? { cause } : {})
+    })`
     }
   }),
 
@@ -434,8 +455,8 @@ Includes context fields for error tracing:
       operation,
       code: "INTERNAL",
       timestamp: new Date(),
-      ...(cause !== undefined ? { cause } : {}),
-    });`
+      ...(cause !== undefined ? { cause } : {})
+    })`
     },
     additionalMethods: [
       {
@@ -450,8 +471,8 @@ Includes context fields for error tracing:
       operation,
       code: "DEPENDENCY",
       timestamp: new Date(),
-      ...(cause !== undefined ? { cause } : {}),
-    });`
+      ...(cause !== undefined ? { cause } : {})
+    })`
       },
       {
         name: "orchestration",
@@ -465,8 +486,8 @@ Includes context fields for error tracing:
       operation,
       code: "ORCHESTRATION",
       timestamp: new Date(),
-      ...(cause !== undefined ? { cause } : {}),
-    });`
+      ...(cause !== undefined ? { cause } : {})
+    })`
       },
       {
         name: "internal",
@@ -480,8 +501,8 @@ Includes context fields for error tracing:
       operation,
       code: "INTERNAL",
       timestamp: new Date(),
-      ...(cause !== undefined ? { cause } : {}),
-    });`
+      ...(cause !== undefined ? { cause } : {})
+    })`
       }
     ]
   }),
@@ -515,8 +536,8 @@ Includes context fields for error tracing:
         : \`API call to \${endpoint} failed\`,
       endpoint,
       ...(statusCode !== undefined ? { statusCode } : {}),
-      ...(cause !== undefined ? { cause } : {}),
-    });`
+      ...(cause !== undefined ? { cause } : {})
+    })`
     }
   }),
 
@@ -540,8 +561,8 @@ Includes context fields for error tracing:
       message: retryAfterMs
         ? \`Rate limit exceeded. Retry after \${retryAfterMs}ms\`
         : "Rate limit exceeded",
-      ...(retryAfterMs !== undefined ? { retryAfterMs } : {}),
-    });`
+      ...(retryAfterMs !== undefined ? { retryAfterMs } : {})
+    })`
     }
   }),
 
@@ -565,8 +586,8 @@ Includes context fields for error tracing:
       message: reason
         ? \`Authentication failed: \${reason}\`
         : "Authentication failed",
-      ...(reason !== undefined ? { reason } : {}),
-    });`
+      ...(reason !== undefined ? { reason } : {})
+    })`
     }
   }),
 
@@ -592,8 +613,8 @@ Includes context fields for error tracing:
       params: [{ name: `${propertyName}Id`, type: "string" }],
       body: `return new ${className}NotFoundRepositoryError({
       message: \`${className} not found: \${${propertyName}Id}\`,
-      ${propertyName}Id,
-    });`
+      ${propertyName}Id
+    })`
     }
   }),
 
@@ -627,8 +648,8 @@ Includes context fields for error tracing:
       body: `return new ${className}ValidationRepositoryError({
       message: params.message,
       ...(params.field !== undefined && { field: params.field }),
-      ...(params.constraint !== undefined && { constraint: params.constraint }),
-    });`
+      ...(params.constraint !== undefined && { constraint: params.constraint })
+    })`
     }
   }),
 
@@ -652,8 +673,8 @@ Includes context fields for error tracing:
       message: identifier
         ? \`${className} already exists: \${identifier}\`
         : "${className} already exists",
-      ...(identifier !== undefined ? { identifier } : {}),
-    });`
+      ...(identifier !== undefined ? { identifier } : {})
+    })`
     }
   }),
 
@@ -687,8 +708,8 @@ Includes context fields for error tracing:
       body: `return new ${className}DatabaseRepositoryError({
       message: params.message,
       operation: params.operation,
-      ...(params.cause !== undefined && { cause: params.cause }),
-    });`
+      ...(params.cause !== undefined && { cause: params.cause })
+    })`
     }
   })
 }

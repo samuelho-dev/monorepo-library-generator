@@ -1,5 +1,9 @@
 import { Rpc, RpcGroup } from "@effect/rpc"
 import { Schema } from "effect"
+import { RouteTag } from "../lib/rpc-definitions"
+import type { RouteType } from "../lib/rpc-definitions"
+import { Authentication, AuthenticationId } from "./entities"
+import { AuthenticationRpcError } from "./rpc-errors"
 
 /**
  * Authentication RPC Definitions
@@ -26,26 +30,13 @@ import { Schema } from "effect"
  * @module @samuelho-dev/contract-user/authentication/rpc
  */
 
-
-// ============================================================================
-// Import Route System from Parent
-// ============================================================================
-
-import { RouteTag, type RouteType } from "../lib/rpc-definitions";
-
 // ============================================================================
 // Local Imports
 // ============================================================================
-
-import { AuthenticationId, Authentication } from "./entities";
-import { AuthenticationRpcError } from "./rpc-errors";
-
 // ============================================================================
 // Re-export Route System
 // ============================================================================
-
-export { RouteTag, type RouteType };
-
+export { RouteTag, type RouteType }
 // ============================================================================
 // Request/Response Schemas
 // ============================================================================
@@ -54,31 +45,27 @@ export { RouteTag, type RouteType };
  * Create input schema
  */
 export const CreateAuthenticationInput = Schema.Struct({
-  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
+  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))
   // TODO: Add domain-specific fields for Authentication
-}).pipe(
-  Schema.annotations({
-    identifier: "CreateAuthenticationInput",
-    title: "Create Authentication Input",
-  })
-);
+}).pipe(Schema.annotations({
+  identifier: "CreateAuthenticationInput",
+  title: "Create Authentication Input"
+}))
 
-export type CreateAuthenticationInput = Schema.Schema.Type<typeof CreateAuthenticationInput>;
+export type CreateAuthenticationInput = Schema.Schema.Type<typeof CreateAuthenticationInput>
 
 /**
  * Update input schema
  */
 export const UpdateAuthenticationInput = Schema.Struct({
-  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))),
+  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
   // TODO: Add domain-specific update fields for Authentication
-}).pipe(
-  Schema.annotations({
-    identifier: "UpdateAuthenticationInput",
-    title: "Update Authentication Input",
-  })
-);
+}).pipe(Schema.annotations({
+  identifier: "UpdateAuthenticationInput",
+  title: "Update Authentication Input"
+}))
 
-export type UpdateAuthenticationInput = Schema.Schema.Type<typeof UpdateAuthenticationInput>;
+export type UpdateAuthenticationInput = Schema.Schema.Type<typeof UpdateAuthenticationInput>
 
 // ============================================================================
 // RPC Definitions
@@ -91,12 +78,12 @@ export type UpdateAuthenticationInput = Schema.Schema.Type<typeof UpdateAuthenti
  */
 export class AuthenticationGet extends Rpc.make("Authentication.Get", {
   payload: Schema.Struct({
-    id: AuthenticationId,
+    id: AuthenticationId
   }),
   success: Authentication,
-  error: AuthenticationRpcError,
+  error: AuthenticationRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public";
+  static readonly [RouteTag]: RouteType = "public"
 }
 
 /**
@@ -107,21 +94,21 @@ export class AuthenticationGet extends Rpc.make("Authentication.Get", {
 export class AuthenticationList extends Rpc.make("Authentication.List", {
   payload: Schema.Struct({
     page: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-      default: () => 1,
+      default: () => 1
     }),
     pageSize: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-      default: () => 20,
-    }),
+      default: () => 20
+    })
   }),
   success: Schema.Struct({
     items: Schema.Array(Authentication),
     total: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
     page: Schema.Number.pipe(Schema.int(), Schema.positive()),
-    pageSize: Schema.Number.pipe(Schema.int(), Schema.positive()),
+    pageSize: Schema.Number.pipe(Schema.int(), Schema.positive())
   }),
-  error: AuthenticationRpcError,
+  error: AuthenticationRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public";
+  static readonly [RouteTag]: RouteType = "public"
 }
 
 /**
@@ -132,9 +119,9 @@ export class AuthenticationList extends Rpc.make("Authentication.List", {
 export class AuthenticationCreate extends Rpc.make("Authentication.Create", {
   payload: CreateAuthenticationInput,
   success: Authentication,
-  error: AuthenticationRpcError,
+  error: AuthenticationRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -145,12 +132,12 @@ export class AuthenticationCreate extends Rpc.make("Authentication.Create", {
 export class AuthenticationUpdate extends Rpc.make("Authentication.Update", {
   payload: Schema.Struct({
     id: AuthenticationId,
-    data: UpdateAuthenticationInput,
+    data: UpdateAuthenticationInput
   }),
   success: Authentication,
-  error: AuthenticationRpcError,
+  error: AuthenticationRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -160,15 +147,15 @@ export class AuthenticationUpdate extends Rpc.make("Authentication.Update", {
  */
 export class AuthenticationDelete extends Rpc.make("Authentication.Delete", {
   payload: Schema.Struct({
-    id: AuthenticationId,
+    id: AuthenticationId
   }),
   success: Schema.Struct({
     success: Schema.Literal(true),
-    deletedAt: Schema.DateTimeUtc,
+    deletedAt: Schema.DateTimeUtc
   }),
-  error: AuthenticationRpcError,
+  error: AuthenticationRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 // ============================================================================
@@ -185,10 +172,10 @@ export const AuthenticationRpcs = RpcGroup.make(
   AuthenticationList,
   AuthenticationCreate,
   AuthenticationUpdate,
-  AuthenticationDelete,
-);
+  AuthenticationDelete
+)
 
-export type AuthenticationRpcs = typeof AuthenticationRpcs;
+export type AuthenticationRpcs = typeof AuthenticationRpcs
 
 /**
  * RPCs organized by route type
@@ -196,5 +183,5 @@ export type AuthenticationRpcs = typeof AuthenticationRpcs;
 export const AuthenticationRpcsByRoute = {
   public: [AuthenticationGet, AuthenticationList] as const,
   protected: [AuthenticationCreate, AuthenticationUpdate, AuthenticationDelete] as const,
-  service: [] as const,
-} as const;
+  service: [] as const
+}

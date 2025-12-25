@@ -53,7 +53,6 @@ Exports all public API for the sub-module:
 NOTE: State is managed by parent ${parentClassName} atoms.`,
     module: `${scope}/feature-${parentFileName}/server/services/${subModuleName}`
   })
-  builder.addBlankLine()
 
   builder.addSectionComment("Service Exports")
   builder.addRaw(`export {
@@ -64,9 +63,8 @@ NOTE: State is managed by parent ${parentClassName} atoms.`,
   // Service interface type
   type ${subModuleClassName}ServiceInterface,
   // Error type
-  ${subModuleClassName}ServiceError,
-} from "./service";`)
-  builder.addBlankLine()
+  ${subModuleClassName}ServiceError
+} from "./service"`)
 
   builder.addSectionComment("Composed Layer Exports")
   builder.addRaw(`export {
@@ -75,13 +73,11 @@ NOTE: State is managed by parent ${parentClassName} atoms.`,
   // Test layer with mocks
   ${subModuleClassName}Test,
   // Dependencies layer for parent composition
-  ${subModuleClassName}Dependencies,
-} from "./layer";`)
-  builder.addBlankLine()
+  ${subModuleClassName}Dependencies
+} from "./layer"`)
 
   builder.addSectionComment("RPC Handler Exports")
-  builder.addRaw(`export { ${subModuleClassName}Handlers } from "./handlers";`)
-  builder.addBlankLine()
+  builder.addRaw(`export { ${subModuleClassName}Handlers } from "./handlers"`)
 
   return builder.toString()
 }

@@ -38,16 +38,16 @@ Exports:
   Redis,
   RedisService,
   type RedisServiceInterface,
-} from "./service";`)
+} from "./service"`)
   builder.addBlankLine()
 
   // Sub-service factories
   builder.addSectionComment("Sub-Service Factories")
   builder.addBlankLine()
 
-  builder.addRaw(`export { makeCacheClient } from "./cache";
-export { makePubSubClient } from "./pubsub";
-export { makeQueueClient } from "./queue";`)
+  builder.addRaw(`export { makeCacheClient } from "./cache"
+export { makePubSubClient } from "./pubsub"
+export { makeQueueClient } from "./queue"`)
   builder.addBlankLine()
 
   // Error exports
@@ -62,8 +62,8 @@ export { makeQueueClient } from "./queue";`)
   RedisKeyError,
   RedisPubSubError,
   mapRedisError,
-} from "./errors";
-export type { RedisProviderError } from "./errors";`)
+} from "./errors"
+export type { RedisProviderError } from "./errors"`)
   builder.addBlankLine()
 
   // Type exports
@@ -77,9 +77,9 @@ export type { RedisProviderError } from "./errors";`)
   RedisCacheClient,
   RedisPubSubClient,
   RedisQueueClient,
-} from "./types";
+} from "./types"
 
-export { RedisConfigSchema } from "./types";`)
+export { RedisConfigSchema } from "./types"`)
 
   return builder.toString()
 }

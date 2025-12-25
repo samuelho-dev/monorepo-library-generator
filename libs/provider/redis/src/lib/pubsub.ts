@@ -1,4 +1,7 @@
 import { Context, Effect, Layer } from "effect"
+import type { Redis as IORedis } from "ioredis"
+import { RedisPubSubError } from "./errors"
+import type { RedisPubSubClient } from "./types"
 
 /**
  * Redis PubSub Sub-Service
@@ -17,10 +20,6 @@ Used by infra-pubsub's Redis layer.
  *
  * @module @samuelho-dev/provider-redis/service/pubsub
  */
-
-import type { Redis as IORedis } from "ioredis"
-import { RedisPubSubError } from "./errors"
-import type { RedisPubSubClient } from "./types"
 
 // ============================================================================
 // PubSub Sub-Service Factory
@@ -45,20 +44,22 @@ import type { RedisPubSubClient } from "./types"
  */
 export function makePubSubClient(pubClient: IORedis, subClient: IORedis) {
   // Track active subscriptions and handlers for proper lifecycle management
-  const channelHandlers = new Map<string, (message: string) => void>()
-  let messageListenerRegistered = false
+  const channelHandlers = new Map<string, (message: string) => void>();
+  let messageListenerRegistered = false;
 
   // Centralized message handler that routes to channel-specific handlers
   const onMessage = (channel: string, message: string) => {
-    const handler = channelHandlers.get(channel)
+    const handler = channelHandlers.get(channel);
     if (handler) {
       // Effect-idiomatic error handling with logging instead of silent swallowing
       Effect.try(() => handler(message)).pipe(
-        Effect.catchAll((error) => Effect.logWarning("PubSub handler error", { channel, error })),
+        Effect.catchAll((error) =>
+          Effect.logWarning("PubSub handler error", { channel, error })
+        ),
         Effect.runPromise
-      )
+      );
     }
-  }
+  };
 
   return {
     publish: (channel: string, message: string) =>
@@ -68,20 +69,20 @@ export function makePubSubClient(pubClient: IORedis, subClient: IORedis) {
           new RedisPubSubError({
             message: `PUBLISH failed for channel: ${channel}`,
             channel,
-            cause: error
-          })
+            cause: error,
+          }),
       }).pipe(Effect.withSpan("Redis.pubsub.publish", { attributes: { channel } })),
 
     subscribe: (channel: string, handler: (message: string) => void) =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         // Register the global message listener once
         if (!messageListenerRegistered) {
-          subClient.on("message", onMessage)
-          messageListenerRegistered = true
+          subClient.on("message", onMessage);
+          messageListenerRegistered = true;
         }
 
         // Store the handler for this channel
-        channelHandlers.set(channel, handler)
+        channelHandlers.set(channel, handler);
 
         // Subscribe to the channel
         yield* Effect.tryPromise({
@@ -90,15 +91,15 @@ export function makePubSubClient(pubClient: IORedis, subClient: IORedis) {
             new RedisPubSubError({
               message: `SUBSCRIBE failed for channel: ${channel}`,
               channel,
-              cause: error
-            })
-        })
+              cause: error,
+            }),
+        });
       }).pipe(Effect.withSpan("Redis.pubsub.subscribe", { attributes: { channel } })),
 
     unsubscribe: (channel: string) =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         // Remove the handler for this channel
-        channelHandlers.delete(channel)
+        channelHandlers.delete(channel);
 
         // Unsubscribe from the channel
         yield* Effect.tryPromise({
@@ -107,14 +108,14 @@ export function makePubSubClient(pubClient: IORedis, subClient: IORedis) {
             new RedisPubSubError({
               message: `UNSUBSCRIBE failed for channel: ${channel}`,
               channel,
-              cause: error
-            })
-        })
+              cause: error,
+            }),
+        });
 
         // Clean up global listener if no more subscriptions
         if (channelHandlers.size === 0 && messageListenerRegistered) {
-          subClient.removeListener("message", onMessage)
-          messageListenerRegistered = false
+          subClient.removeListener("message", onMessage);
+          messageListenerRegistered = false;
         }
       }).pipe(Effect.withSpan("Redis.pubsub.unsubscribe", { attributes: { channel } })),
 
@@ -124,10 +125,10 @@ export function makePubSubClient(pubClient: IORedis, subClient: IORedis) {
         catch: (error) =>
           new RedisPubSubError({
             message: "PING failed",
-            cause: error
-          })
-      }).pipe(Effect.withSpan("Redis.pubsub.ping"))
-  }
+            cause: error,
+          }),
+      }).pipe(Effect.withSpan("Redis.pubsub.ping")),
+  };
 }
 
 // ============================================================================
@@ -154,13 +155,13 @@ export class RedisPubSubService extends Context.Tag("RedisPubSubService")<
     publish: () => Effect.succeed(0),
     subscribe: () => Effect.void,
     unsubscribe: () => Effect.void,
-    ping: () => Effect.succeed("PONG")
-  })
+    ping: () => Effect.succeed("PONG"),
+  });
 
   /**
    * Create a layer from ioredis clients
    */
   static fromClients(pubClient: IORedis, subClient: IORedis) {
-    return Layer.succeed(RedisPubSubService, makePubSubClient(pubClient, subClient))
+    return Layer.succeed(RedisPubSubService, makePubSubClient(pubClient, subClient));
   }
 }

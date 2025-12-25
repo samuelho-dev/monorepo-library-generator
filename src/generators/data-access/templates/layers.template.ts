@@ -29,7 +29,6 @@ export function generateLayersFile(options: DataAccessTemplateOptions) {
   const { className, fileName, propertyName } = options
   const domainName = propertyName
   const scope = WORKSPACE_CONFIG.getScope()
-
   // File header
   builder.addFileHeader({
     title: `${className} Data Access Layers`,
@@ -80,6 +79,7 @@ Infrastructure included:
     layerPrefix: "DataAccess",
     includeDev: true
   })(builder)
+  builder.addBlankLine()
 
   return builder.toString()
 }

@@ -89,30 +89,30 @@ export abstract class Query<
   /**
    * Unique query tag for routing
    */
-  abstract readonly _tag: string;
+  abstract readonly _tag: string
 
   /**
    * Input schema for validation
    */
-  abstract readonly input: TInput;
+  abstract readonly input: TInput
 
   /**
    * Output schema for response
    */
-  abstract readonly output: TOutput;
+  abstract readonly output: TOutput
 
   /**
    * Optional cache TTL for query results
    * Set to Option.none() to disable caching
    */
-  readonly cacheTTL: Option.Option<Duration.Duration> = Option.none();
+  readonly cacheTTL: Option.Option<Duration.Duration> = Option.none()
 
   /**
    * Generate cache key from input
    * Override for custom cache key generation
    */
   cacheKey(input: Schema.Schema.Type<TInput>) {
-    return \`\${this._tag}:\${JSON.stringify(input)}\`;
+    return \`\${this._tag}:\${JSON.stringify(input)}\`
   }
 
   /**
@@ -123,7 +123,7 @@ export abstract class Query<
    */
   abstract execute(
     input: Schema.Schema.Type<TInput>
-  ): Effect.Effect<Schema.Schema.Type<TOutput>, TError, TDeps>;
+  ): Effect.Effect<Schema.Schema.Type<TOutput>, TError, TDeps>
 }`)
   builder.addBlankLine()
 
@@ -150,7 +150,7 @@ export interface QueryBusInterface {
   >(
     query: Query<TInput, TOutput, TError, TDeps>,
     input: Schema.Schema.Type<TInput>
-  ) => Effect.Effect<Schema.Schema.Type<TOutput>, TError, TDeps>;
+  ) => Effect.Effect<Schema.Schema.Type<TOutput>, TError, TDeps>
 
   /**
    * Invalidate cached query results
@@ -166,7 +166,7 @@ export interface QueryBusInterface {
   >(
     query: Query<TInput, TOutput, TError, TDeps>,
     input?: Schema.Schema.Type<TInput>
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 }`)
   builder.addBlankLine()
 
@@ -216,14 +216,14 @@ export class ${className}QueryBus extends Context.Tag("${className}QueryBus")<
         query.execute(input).pipe(
           Effect.withSpan(\`${className}QueryBus.dispatch.\${query._tag}\`)
         ),
-      invalidate: () => Effect.void,
+      invalidate: () => Effect.void
     }
-  );
+  )
 
   /**
    * Test layer - same as Live, suitable for testing
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 }`)
 
   return builder.toString()
@@ -243,8 +243,8 @@ export function generateQueriesIndexFile(options: FeatureTemplateOptions) {
   })
   builder.addBlankLine()
 
-  builder.addRaw(`export { Query, ${className}QueryBus } from "./base";
-export type { QueryBusInterface } from "./base";`)
+  builder.addRaw(`export { Query, ${className}QueryBus } from "./base"
+export type { QueryBusInterface } from "./base"`)
 
   return builder.toString()
 }

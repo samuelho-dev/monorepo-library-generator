@@ -49,21 +49,18 @@ Usage:
   builder.addImports([
     { from: "effect", imports: ["Layer"] }
   ])
-  builder.addBlankLine()
 
   builder.addSectionComment("Handler Imports")
 
-  builder.addRaw(`import { ${className}HandlersLayer } from "./handlers";
-`)
+  builder.addImports([
+    { from: "./handlers", imports: [`${className}HandlersLayer`] }
+  ])
 
   builder.addSectionComment("Middleware Imports")
 
-  builder.addRaw(`import {
-  // Middleware layers
-  AllMiddlewareLive,
-  AllMiddlewareTest,
-} from "${scope}/infra-rpc";
-`)
+  builder.addImports([
+    { from: `${scope}/infra-rpc`, imports: ["AllMiddlewareLive", "AllMiddlewareTest"] }
+  ])
 
   builder.addSectionComment("Layer Composition")
 
@@ -75,8 +72,8 @@ Usage:
  */
 export const ${className}ProductionLayer = Layer.mergeAll(
   ${className}HandlersLayer,
-  AllMiddlewareLive,
-);
+  AllMiddlewareLive
+)
 
 /**
  * Combined layer for testing
@@ -85,8 +82,8 @@ export const ${className}ProductionLayer = Layer.mergeAll(
  */
 export const ${className}TestLayer = Layer.mergeAll(
   ${className}HandlersLayer,
-  AllMiddlewareTest,
-);
+  AllMiddlewareTest
+)
 `)
 
   builder.addSectionComment("HTTP Handler (Next.js / Express)")
@@ -134,22 +131,15 @@ export const ${className}TestLayer = Layer.mergeAll(
  * \`\`\`
  */
 `)
-  builder.addBlankLine()
 
-  builder.addSectionComment("Re-exports")
+  builder.addSectionComment("Handler Import Notes")
 
   if (hasSubModules) {
-    builder.addRaw(`/**
- * Re-export handlers for direct composition
- */
-export { ${className}Handlers, All${className}Handlers, ${className}HandlersLayer } from "./handlers";
-`)
+    builder.addRaw(`// NOTE: For handler access, import directly from ./handlers:
+// import { ${className}Handlers, All${className}Handlers, ${className}HandlersLayer } from "./handlers"`)
   } else {
-    builder.addRaw(`/**
- * Re-export handlers for direct composition
- */
-export { ${className}Handlers, ${className}HandlersLayer } from "./handlers";
-`)
+    builder.addRaw(`// NOTE: For handler access, import directly from ./handlers:
+// import { ${className}Handlers, ${className}HandlersLayer } from "./handlers"`)
   }
 
   return builder.toString()

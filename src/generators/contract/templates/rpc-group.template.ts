@@ -55,31 +55,34 @@ export function generateRpcGroupFile(options: ContractTemplateOptions) {
 
   // Imports
   builder.addImports([{ from: "@effect/rpc", imports: ["RpcGroup"] }])
-  builder.addBlankLine()
 
   builder.addSectionComment("RPC Definition Imports")
-  builder.addRaw(`import {
-  Get${className},
-  List${className}s,
-  Create${className},
-  Update${className},
-  Delete${className},
-  Validate${className},
-  BulkGet${className}s,
-  RouteTag,
-  type RouteType,
-} from "./rpc-definitions";`)
-  builder.addBlankLine()
+  builder.addImports([
+    {
+      from: "./rpc-definitions",
+      imports: [
+        `BulkGet${className}s`,
+        `Create${className}`,
+        `Delete${className}`,
+        `Get${className}`,
+        `List${className}s`,
+        "RouteTag",
+        `Update${className}`,
+        `Validate${className}`
+      ]
+    }
+  ])
+  builder.addImports([
+    { from: "./rpc-definitions", imports: ["RouteType"], isTypeOnly: true }
+  ])
 
-  // Re-export RouteTag
+  // Re-export RouteTag - needed for Contract-First Architecture
   builder.addSectionComment("Re-export Route System")
-  builder.addBlankLine()
-  builder.addRaw(`export { RouteTag, type RouteType } from "./rpc-definitions";`)
-  builder.addBlankLine()
+  builder.addComment("biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system")
+  builder.addRaw(`export { RouteTag, type RouteType } from "./rpc-definitions"`)
 
   // RpcGroup composition
   builder.addSectionComment("RPC Group Composition")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${className} RPC Group
@@ -100,43 +103,31 @@ export function generateRpcGroupFile(options: ContractTemplateOptions) {
  * const app = RouterBuilder.make(${className}Rpcs).handle(handlers);
  * \`\`\`
  */
-export const ${className}Rpcs = RpcGroup.make(
-  Get${className},
-  List${className}s,
-  Create${className},
-  Update${className},
-  Delete${className},
-  Validate${className},
-  BulkGet${className}s,
-);`)
-  builder.addBlankLine()
+export const ${className}Rpcs = RpcGroup.make(BulkGet${className}s, Create${className}, Delete${className}, Get${className}, List${className}s, Update${className}, Validate${className})`)
 
   // Type exports
   builder.addSectionComment("Type Exports")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Type of the ${className} RPC group
  */
-export type ${className}Rpcs = typeof ${className}Rpcs;
+export type ${className}Rpcs = typeof ${className}Rpcs
 
 /**
  * All ${className} RPC definition types (for handler typing)
  */
 export type ${className}RpcDefinitions = {
-  Get${className}: typeof Get${className};
-  List${className}s: typeof List${className}s;
-  Create${className}: typeof Create${className};
-  Update${className}: typeof Update${className};
-  Delete${className}: typeof Delete${className};
-  Validate${className}: typeof Validate${className};
-  BulkGet${className}s: typeof BulkGet${className}s;
-};`)
-  builder.addBlankLine()
+  Get${className}: typeof Get${className}
+  List${className}s: typeof List${className}s
+  Create${className}: typeof Create${className}
+  Update${className}: typeof Update${className}
+  Delete${className}: typeof Delete${className}
+  Validate${className}: typeof Validate${className}
+  BulkGet${className}s: typeof BulkGet${className}s
+}`)
 
   // Re-export individual RPCs
   builder.addSectionComment("Re-export Individual RPCs")
-  builder.addBlankLine()
 
   builder.addRaw(`export {
   Get${className},
@@ -145,45 +136,43 @@ export type ${className}RpcDefinitions = {
   Update${className},
   Delete${className},
   Validate${className},
-  BulkGet${className}s,
-} from "./rpc-definitions";`)
-  builder.addBlankLine()
+  BulkGet${className}s
+} from "./rpc-definitions"`)
 
   // Route helpers
   builder.addSectionComment("Route Helpers")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Get route type for an RPC definition
  *
  * @example
  * \`\`\`typescript
- * const routeType = getRouteType(Get${className}); // "public"
+ * const routeType = getRouteType(Get${className}) // "public"
  * \`\`\`
  */
-export function getRouteType<T extends { [RouteTag]: RouteType }>(rpc: T){
-  return rpc[RouteTag];
+export function getRouteType<T extends { [RouteTag]: RouteType }>(rpc: T) {
+  return rpc[RouteTag]
 }
 
 /**
  * Check if an RPC requires user authentication
  */
-export function isProtectedRoute<T extends { [RouteTag]: RouteType }>(rpc: T): boolean {
-  return rpc[RouteTag] === "protected";
+export function isProtectedRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
+  return rpc[RouteTag] === "protected"
 }
 
 /**
  * Check if an RPC is for service-to-service communication
  */
-export function isServiceRoute<T extends { [RouteTag]: RouteType }>(rpc: T): boolean {
-  return rpc[RouteTag] === "service";
+export function isServiceRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
+  return rpc[RouteTag] === "service"
 }
 
 /**
  * Check if an RPC is public (no auth required)
  */
-export function isPublicRoute<T extends { [RouteTag]: RouteType }>(rpc: T): boolean {
-  return rpc[RouteTag] === "public";
+export function isPublicRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
+  return rpc[RouteTag] === "public"
 }
 
 /**
@@ -194,9 +183,8 @@ export function isPublicRoute<T extends { [RouteTag]: RouteType }>(rpc: T): bool
 export const ${className}RpcsByRoute = {
   public: [Get${className}, List${className}s] as const,
   protected: [Create${className}, Update${className}, Delete${className}] as const,
-  service: [Validate${className}, BulkGet${className}s] as const,
-} as const;`)
-  builder.addBlankLine()
+  service: [Validate${className}, BulkGet${className}s] as const
+} as const`)
 
   return builder.toString()
 }

@@ -59,14 +59,14 @@ ${className}Service.ClientLive = Layer.sync(
   ${className}Service,
   () => {
     // In-memory store for baseline client implementation
-    const store = new Map<string, { id: string; [key: string]: unknown }>();
-    let idCounter = 0;
+    const store = new Map<string, { id: string; [key: string]: unknown }>()
+    let idCounter = 0
 
     return {
       get: (id: string) =>
         Effect.sync(() => {
-          const item = store.get(id);
-          return item ? Option.some(item) : Option.none();
+          const item = store.get(id)
+          return item ? Option.some(item) : Option.none()
         }),
 
       findByCriteria: (criteria: Record<string, unknown>, skip = 0, limit = 10) =>
@@ -77,35 +77,35 @@ ${className}Service.ClientLive = Layer.sync(
                 ([key, value]) => item[key] === value
               )
             )
-            .slice(skip, skip + limit);
-          return items;
+            .slice(skip, skip + limit)
+          return items
         }),
 
       create: (input: Record<string, unknown>) =>
         Effect.sync(() => {
-          const id = \`client-\${++idCounter}\`;
-          const item = { id, ...input, createdAt: new Date() };
-          store.set(id, item);
-          return item;
+          const id = \`client-\${++idCounter}\`
+          const item = { id, ...input, createdAt: new Date() }
+          store.set(id, item)
+          return item
         }),
 
       update: (id: string, input: Record<string, unknown>) =>
         Effect.sync(() => {
-          const existing = store.get(id);
-          const updated = { ...existing, ...input, id, updatedAt: new Date() };
-          store.set(id, updated);
-          return updated;
+          const existing = store.get(id)
+          const updated = { ...existing, ...input, id, updatedAt: new Date() }
+          store.set(id, updated)
+          return updated
         }),
 
       delete: (id: string) =>
         Effect.sync(() => {
-          store.delete(id);
+          store.delete(id)
         }),
 
-      healthCheck: () => Effect.succeed(true),
-    };
+      healthCheck: () => Effect.succeed(true)
+    }
   }
-);`)
+)`)
   builder.addBlankLine()
 
   // Section: Browser Storage Provider
@@ -123,22 +123,22 @@ export interface BrowserStorageProvider {
   /**
    * Get item from storage
    */
-  readonly getItem: (key: string) => unknown | null;
+  readonly getItem: (key: string) => unknown | null
 
   /**
    * Set item in storage
    */
-  readonly setItem: (key: string, value: unknown) => void;
+  readonly setItem: (key: string, value: unknown) => void
 
   /**
    * Remove item from storage
    */
-  readonly removeItem: (key: string) => void;
+  readonly removeItem: (key: string) => void
 
   /**
    * Clear all storage
    */
-  readonly clear: () => void;
+  readonly clear: () => void
 }`)
   builder.addBlankLine()
 
@@ -150,34 +150,34 @@ export interface BrowserStorageProvider {
 export const localStorageProvider: BrowserStorageProvider = {
   getItem: (key: string) => {
     try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
+      const item = localStorage.getItem(key)
+      return item ? JSON.parse(item) : null
     } catch {
-      return null;
+      return null
     }
   },
   setItem: (key: string, value: unknown) => {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      localStorage.setItem(key, JSON.stringify(value))
     } catch {
       // Storage quota exceeded or other error
     }
   },
   removeItem: (key: string) => {
     try {
-      localStorage.removeItem(key);
+      localStorage.removeItem(key)
     } catch {
       // Ignore errors
     }
   },
   clear: () => {
     try {
-      localStorage.clear();
+      localStorage.clear()
     } catch {
       // Ignore errors
     }
-  },
-};`)
+  }
+}`)
   builder.addBlankLine()
 
   builder.addRaw(`// TODO: Add IndexedDB provider if needed for larger storage

@@ -42,8 +42,8 @@ Architecture:
     { from: `${scope}/env`, imports: ["env"] }
   ])
   builder.addRaw(
-    `import type { SupabaseConfig } from "./types";
-import { createClient, type SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js";`
+    `import type { SupabaseConfig } from "./types"
+import { createClient, type SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js"`
   )
   builder.addBlankLine()
 
@@ -113,7 +113,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
           catch: (error) =>
             new SupabaseError({
               message: "Failed to create Supabase client",
-              cause: error,
+              cause: error
             }),
         }),
 
@@ -126,7 +126,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
             catch: (error) =>
               new SupabaseConnectionError({
                 message: "Failed to connect to Supabase",
-                cause: error,
+                cause: error
               }),
           });
           // getSession returns null session when not authenticated, that's OK
@@ -135,7 +135,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
             return yield* Effect.fail(
               new SupabaseConnectionError({
                 message: "Supabase health check failed",
-                cause: error,
+                cause: error
               })
             );
           }
@@ -177,14 +177,14 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
               catch: (error) =>
                 new SupabaseConnectionError({
                   message: "Failed to connect to Supabase",
-                  cause: error,
+                  cause: error
                 }),
             });
             if (error && error.status !== 400) {
               return yield* Effect.fail(
                 new SupabaseConnectionError({
                   message: "Supabase health check failed",
-                  cause: error,
+                  cause: error
                 })
               );
             }

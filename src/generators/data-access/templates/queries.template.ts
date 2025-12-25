@@ -12,7 +12,6 @@ import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate queries.ts file for data-access library
- *
  * Creates Kysely query builder functions including:
  * - Type-safe query builders
  * - Filter, sort, and pagination helpers
@@ -53,21 +52,18 @@ Encapsulates common query patterns and SQL building logic.
   builder.addSectionComment("Query Type Aliases")
   builder.addBlankLine()
 
-  // Removed unused type alias - add back when needed for query building
-  builder.addBlankLine()
-
   builder.addRaw(`/**
  * ${className} Filter options for queries
  */
-export type ${className}QueryFilters = Record<string, never>;`)
+export type ${className}QueryFilters = Record<string, never>`)
   builder.addBlankLine()
 
   builder.addRaw(`/**
  * Pagination options
  */
 export interface PaginationOptions {
-  readonly skip: number;
-  readonly limit: number;
+  readonly skip: number
+  readonly limit: number
 }`)
   builder.addBlankLine()
 
@@ -81,15 +77,15 @@ export interface PaginationOptions {
  *
  * @example
  * \`\`\`typescript
- * const query = buildFindAllQuery(db, { status: 'active' }, { skip: 0, limit: 10 });
- * const results = await query.execute();
+ * const query = buildFindAllQuery(db, { status: 'active' }, { skip: 0, limit: 10 })
+ * const results = await query.execute()
  * \`\`\`
  */
 export function buildFindAllQuery(
-  db: Kysely<Database>,
+  db: Kysely<Database>
 ) {
-  const query = db.selectFrom("${fileName}");
-  return query;
+  const query = db.selectFrom("${fileName}")
+  return query
 }`)
   builder.addBlankLine()
 
@@ -99,17 +95,17 @@ export function buildFindAllQuery(
  *
  * @example
  * \`\`\`typescript
- * const query = buildFindByIdQuery(db, '123');
- * const result = await query.executeTakeFirst();
+ * const query = buildFindByIdQuery(db, '123')
+ * const result = await query.executeTakeFirst()
  * \`\`\`
  */
 export function buildFindByIdQuery(
   db: Kysely<Database>,
-  id: string,
+  id: string
 ) {
   return db
     .selectFrom("${fileName}")
-    .where("id", "=", id);
+    .where("id", "=", id)
 }`)
   builder.addBlankLine()
 
@@ -119,18 +115,18 @@ export function buildFindByIdQuery(
  *
  * @example
  * \`\`\`typescript
- * const query = buildCountQuery(db, { status: 'active' });
- * const { count } = await query.executeTakeFirstOrThrow();
+ * const query = buildCountQuery(db, { status: 'active' })
+ * const { count } = await query.executeTakeFirstOrThrow()
  * \`\`\`
  */
 export function buildCountQuery(
-  db: Kysely<Database>,
+  db: Kysely<Database>
 ) {
   const query = db
     .selectFrom("${fileName}")
-    .select((eb) => eb.fn.countAll().as("count"));
+    .select((eb) => eb.fn.countAll().as("count"))
 
-  return query;
+  return query
 }`)
   builder.addBlankLine()
 

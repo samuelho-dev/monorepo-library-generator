@@ -25,30 +25,62 @@ import {
  * @module @samuelho-dev/contract-user/authentication
  */
 
-
 // ============================================================================
 // Error Exports (Contract-First)
 // ============================================================================
-
 // Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these
-
-export * from "./errors";
+export {
+  AuthenticationNotFoundError,
+  AuthenticationValidationError,
+  AuthenticationOperationError,
+  type AuthenticationDomainError,
+  type AuthenticationRepositoryError,
+  type AuthenticationError
+} from "./errors"
 
 // ============================================================================
 // Entity Exports
 // ============================================================================
-
-export * from "./entities";
+export {
+  AuthenticationId,
+  Authentication,
+  AuthenticationItem,
+  parseAuthentication,
+  encodeAuthentication,
+  parseAuthenticationItem
+} from "./entities"
 
 // ============================================================================
 // Event Exports
 // ============================================================================
-
-export * from "./events";
+export {
+  AuthenticationCreated,
+  AuthenticationUpdated,
+  AuthenticationDeleted,
+  AuthenticationEvents,
+  type AuthenticationEvent
+} from "./events"
 
 // ============================================================================
 // RPC Exports
 // ============================================================================
+export {
+  RouteTag,
+  type RouteType,
+  CreateAuthenticationInput,
+  UpdateAuthenticationInput,
+  AuthenticationGet,
+  AuthenticationList,
+  AuthenticationCreate,
+  AuthenticationUpdate,
+  AuthenticationDelete,
+  AuthenticationRpcs,
+  AuthenticationRpcsByRoute
+} from "./rpc-definitions"
 
-export * from "./rpc-definitions";
-export * from "./rpc-errors";
+export {
+  AuthenticationNotFoundRpcError,
+  AuthenticationValidationRpcError,
+  AuthenticationPermissionRpcError,
+  AuthenticationRpcError
+} from "./rpc-errors"

@@ -1,6 +1,6 @@
 # @samuelho-dev/data-access-user
 
-User data access with cache integration
+user data access
 
 ## AI Agent Reference
 

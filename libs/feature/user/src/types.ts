@@ -15,25 +15,25 @@
 // Shared Types
 // ============================================================================
 
-export type * from "./lib/shared/types";
+export type * from "./lib/shared/types"
 
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type * from "./lib/shared/errors";
+export type * from "./lib/shared/errors"
 
 // ============================================================================
 // Server Types
 // ============================================================================
 
 // Service interface types
-export type * from "./lib/server/services/service";
+export type * from "./lib/server/services/service"
 
 // ============================================================================
 // RPC Types (Always Prewired)
 // ============================================================================
 
-export type * from "./lib/rpc";
-export type * from "./lib/rpc/errors";
+export type * from "./lib/rpc"
+export type * from "./lib/rpc/errors"
 

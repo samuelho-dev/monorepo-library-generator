@@ -18,7 +18,6 @@ import { Effect } from "effect"
 import type { FileSystemAdapter } from "../../utils/filesystem"
 import { createNamingVariants } from "../../utils/naming"
 import { generateSubModuleHandlersFile } from "../feature/templates/sub-module/handlers.template"
-import { generateSubModuleIndexFile } from "../feature/templates/sub-module/index.template"
 import { generateSubModuleLayerFile } from "../feature/templates/sub-module/layer.template"
 import { generateSubModuleServiceFile } from "../feature/templates/sub-module/service.template"
 
@@ -93,7 +92,7 @@ export const generateSubModules = (adapter: FileSystemAdapter, options: SubModul
 
     const result: SubModuleGenerationResult = {
       generatedModules: options.subModules,
-      filesGenerated: options.subModules.length * 4, // 4 files per module (service, layer, handlers, index)
+      filesGenerated: options.subModules.length * 3, // 3 files per module (service, layer, handlers)
       parentIntegration
     }
     return result
@@ -130,8 +129,8 @@ const generateSingleSubModule = (
     // Generate handlers.ts (RPC handlers - Contract-First)
     yield* adapter.writeFile(`${serviceDir}/handlers.ts`, generateSubModuleHandlersFile(templateOptions))
 
-    // Generate index.ts (barrel exports)
-    yield* adapter.writeFile(`${serviceDir}/index.ts`, generateSubModuleIndexFile(templateOptions))
+    // NOTE: index.ts barrel file eliminated - biome noBarrelFile compliance
+    // Consumers should import directly from service.ts, layer.ts, handlers.ts
   })
 
 /**
@@ -159,7 +158,7 @@ function generateParentIntegrationCode(options: SubModuleOptions) {
 
   // Gap #3: Server barrel exports
   const serverExports = `// Sub-Module Exports
-export * from "./services";`
+export * from "./services"`
 
   return {
     imports,

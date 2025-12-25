@@ -275,7 +275,7 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
         operation: string,
         _payload: unknown,
         responseSchema: Schema.Schema<A, I, Deps>,
-        _options?: { headers?: Record<string, string> }
+        options?: { headers?: Record<string, string> }
       ) => {
         const response = mockResponses[operation]
         if (response !== undefined) {
@@ -285,7 +285,11 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
                 message: \`Mock validation failed: \${parseError.message}\`,
                 code: "VALIDATION_ERROR"
               })
-            )
+            ),
+            // Log headers if provided for debugging
+            options?.headers
+              ? Effect.tap(() => Effect.logDebug(\`Test RPC call with headers: \${JSON.stringify(options.headers)}\`))
+              : (effect) => effect
           )
         }
         return Effect.fail(
@@ -429,7 +433,7 @@ export function createNextHandler<R>(
           JSON.stringify({ error: { message: Cause.pretty(exit.cause), code: "INTERNAL_ERROR" } }),
           { status: 500, headers: { "Content-Type": "application/json" } }
         )
-      } catch (error) {
+      } catch {
         // Only for non-Effect errors (e.g., JSON parsing)
         return new Response(
           JSON.stringify({ error: { message: "Request processing failed", code: "INTERNAL_ERROR" } }),
@@ -482,6 +486,30 @@ export const errorResponse = (error: RpcInfraError): Response =>
   )
 `)
 
+  builder.addSectionComment("Transport Helpers")
+
+  builder.addRaw(`// Schema for RPC error response validation
+const TransportRpcErrorSchema = Schema.Struct({
+  error: Schema.optional(Schema.Struct({
+    message: Schema.optional(Schema.String),
+    code: Schema.optional(Schema.String)
+  }))
+})
+
+// Helper: Check for RPC-level error in body
+const checkTransportError = (body: unknown) => {
+  if (body && typeof body === "object" && "error" in body) {
+    const errorResult = Schema.decodeUnknownOption(TransportRpcErrorSchema)(body)
+    const errorBody = Option.isSome(errorResult) ? errorResult.value : { error: undefined }
+    return Effect.fail(new RpcInfraError({
+      message: errorBody.error?.message ?? "Unknown RPC error",
+      code: errorBody.error?.code ?? "RPC_ERROR"
+    }))
+  }
+  return Effect.succeed(body)
+}
+`)
+
   builder.addSectionComment("Unified RPC Client")
 
   builder.addRaw(`/**
@@ -530,88 +558,31 @@ export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
             responseSchema: Schema.Schema<A, I, Deps>
           ) =>
             Effect.gen(function*() {
-              // Build request
               const request = HttpClientRequest.post(config.baseUrl).pipe(
-                HttpClientRequest.setHeaders({
-                  "Content-Type": "application/json",
-                  ...config.headers
-                }),
-                HttpClientRequest.bodyJson({
-                  operation,
-                  payload
-                })
+                HttpClientRequest.setHeaders({ "Content-Type": "application/json", ...config.headers }),
+                HttpClientRequest.bodyJson({ operation, payload })
               )
 
-              // Execute request
-              const response = yield* Effect.flatMap(
-                request,
-                (req) => httpClient.execute(req)
-              ).pipe(
+              const response = yield* Effect.flatMap(request, (req) => httpClient.execute(req)).pipe(
                 Effect.catchAllCause((cause) =>
-                  Effect.fail(
-                    new RpcInfraError({
-                      message: \`RPC call failed: \${Cause.pretty(cause)}\`,
-                      code: "NETWORK_ERROR"
-                    })
-                  )
+                  Effect.fail(new RpcInfraError({ message: \`RPC call failed: \${Cause.pretty(cause)}\`, code: "NETWORK_ERROR" }))
                 )
               )
 
-              // Parse response
               if (response.status !== 200) {
-                return yield* Effect.fail(
-                  new RpcInfraError({
-                    message: \`RPC error: HTTP \${response.status}\`,
-                    code: "HTTP_ERROR"
-                  })
-                )
+                return yield* Effect.fail(new RpcInfraError({ message: \`RPC error: HTTP \${response.status}\`, code: "HTTP_ERROR" }))
               }
 
               const body = yield* response.json.pipe(
-                Effect.catchAll(() =>
-                  Effect.fail(
-                    new RpcInfraError({
-                      message: "Failed to parse RPC response",
-                      code: "PARSE_ERROR"
-                    })
-                  )
-                )
+                Effect.catchAll(() => Effect.fail(new RpcInfraError({ message: "Failed to parse RPC response", code: "PARSE_ERROR" })))
               )
 
-              // Schema for RPC error response validation
-              const RpcErrorResponseSchema = Schema.Struct({
-                error: Schema.optional(Schema.Struct({
-                  message: Schema.optional(Schema.String),
-                  code: Schema.optional(Schema.String)
-                }))
-              })
+              yield* checkTransportError(body)
 
-              // Check for RPC-level error using Schema validation
-              if (body && typeof body === "object" && "error" in body) {
-                const errorResult = Schema.decodeUnknownOption(RpcErrorResponseSchema)(body)
-                const errorBody = Option.isSome(errorResult) ? errorResult.value : { error: undefined }
-                return yield* Effect.fail(
-                  new RpcInfraError({
-                    message: errorBody.error?.message ?? "Unknown RPC error",
-                    code: errorBody.error?.code ?? "RPC_ERROR"
-                  })
-                )
-              }
-
-              // Validate response against provided schema
-              const decoded = yield* Schema.decodeUnknown(responseSchema)(body).pipe(
-                Effect.mapError((parseError) =>
-                  new RpcInfraError({
-                    message: \`Response validation failed: \${parseError.message}\`,
-                    code: "VALIDATION_ERROR"
-                  })
-                )
+              return yield* Schema.decodeUnknown(responseSchema)(body).pipe(
+                Effect.mapError((parseError) => new RpcInfraError({ message: \`Response validation failed: \${parseError.message}\`, code: "VALIDATION_ERROR" }))
               )
-
-              return decoded
-            }).pipe(
-              Effect.withSpan(\`RpcTransportClient.\${operation}\`)
-            )
+            }).pipe(Effect.withSpan(\`RpcTransportClient.\${operation}\`))
         }
       })
     )

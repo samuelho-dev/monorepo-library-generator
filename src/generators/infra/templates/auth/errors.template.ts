@@ -44,7 +44,7 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
   "AuthError",
   {
     message: Schema.String,
-    code: Schema.optional(Schema.String),
+    code: Schema.optional(Schema.String)
   }
 ) {}
 
@@ -54,7 +54,7 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
 export class UnauthorizedError extends Schema.TaggedError<UnauthorizedError>()(
   "UnauthorizedError",
   {
-    message: Schema.String,
+    message: Schema.String
   }
 ) {}
 
@@ -66,7 +66,7 @@ export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
   {
     message: Schema.String,
     requiredRole: Schema.optional(Schema.String),
-    userRole: Schema.optional(Schema.String),
+    userRole: Schema.optional(Schema.String)
   }
 ) {}
 
@@ -77,7 +77,7 @@ export class InvalidTokenError extends Schema.TaggedError<InvalidTokenError>()(
   "InvalidTokenError",
   {
     message: Schema.String,
-    tokenType: Schema.Literal("access", "refresh", "api-key"),
+    tokenType: Schema.Literal("access", "refresh", "api-key")
   }
 ) {}
 
@@ -87,7 +87,7 @@ export class InvalidTokenError extends Schema.TaggedError<InvalidTokenError>()(
 export class SessionExpiredError extends Schema.TaggedError<SessionExpiredError>()(
   "SessionExpiredError",
   {
-    message: Schema.String,
+    message: Schema.String
   }
 ) {}
 
@@ -97,7 +97,7 @@ export class SessionExpiredError extends Schema.TaggedError<SessionExpiredError>
 export class InvalidApiKeyError extends Schema.TaggedError<InvalidApiKeyError>()(
   "InvalidApiKeyError",
   {
-    message: Schema.String,
+    message: Schema.String
   }
 ) {}`)
   builder.addBlankLine()
@@ -109,13 +109,7 @@ export class InvalidApiKeyError extends Schema.TaggedError<InvalidApiKeyError>()
   builder.addRaw(`/**
  * Union of all auth errors
  */
-export type AuthServiceError =
-  | AuthError
-  | UnauthorizedError
-  | ForbiddenError
-  | InvalidTokenError
-  | SessionExpiredError
-  | InvalidApiKeyError;`)
+export type AuthServiceError = AuthError | UnauthorizedError | ForbiddenError | InvalidTokenError | SessionExpiredError | InvalidApiKeyError`)
 
   return builder.toString()
 }

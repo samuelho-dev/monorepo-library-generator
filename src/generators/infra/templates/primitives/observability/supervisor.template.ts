@@ -36,7 +36,10 @@ create excessive trace data. Use judiciously in production.`,
   })
 
   // Fiber and Option are only used as types, Exit is used as both value and type
-  builder.addRaw(`import { Effect, Exit, type Fiber, FiberId, Layer, type Option, Supervisor } from "effect"`)
+  builder.addImports([
+    { from: "effect", imports: ["Effect", "Exit", "FiberId", "Layer", "Supervisor"] },
+    { from: "effect", imports: ["Fiber", "Option"], isTypeOnly: true }
+  ])
 
   builder.addSectionComment("Supervisor Configuration")
 
@@ -101,7 +104,7 @@ export interface SupervisorConfig {
  */
 export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
   Effect.sync(() => {
-    const shouldTrack = (fiberId: FiberId.FiberId): boolean => {
+    const shouldTrack = (fiberId: FiberId.FiberId) => {
       if (!config.filterPattern) return true
       const name = FiberId.threadName(fiberId)
       return config.filterPattern.test(name)
@@ -125,12 +128,12 @@ export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
     }
 
     return Supervisor.fromEffect(
-      Effect.gen(function*() {
+      Effect.gen(function*(_) {
         return {
           onStart: <A, E, R>(_context: unknown, _effect: Effect.Effect<A, E, R>, _parent: Option.Option<Fiber.RuntimeFiber<unknown, unknown>>, fiber: Fiber.RuntimeFiber<A, E>) => {
             if (config.trackStart !== false && shouldTrack(fiber.id())) {
               return logEvent("Fiber started", {
-                fiberId: FiberId.threadName(fiber.id()),
+                fiberId: FiberId.threadName(fiber.id())
               })
             }
             return Effect.void
@@ -142,14 +145,14 @@ export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
             if (config.trackFailure !== false && Exit.isFailure(exit) && shouldTrack(fiber.id())) {
               return logEvent("Fiber failed", {
                 fiberId,
-                failure: Exit.isFailure(exit) ? String(exit.cause) : undefined,
+                failure: Exit.isFailure(exit) ? String(exit.cause) : undefined
               })
             }
 
             // Track normal ends only if explicitly configured
             if (config.trackEnd === true && Exit.isSuccess(exit) && shouldTrack(fiber.id())) {
               return logEvent("Fiber completed", {
-                fiberId,
+                fiberId
               })
             }
 

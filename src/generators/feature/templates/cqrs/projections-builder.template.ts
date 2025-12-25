@@ -46,12 +46,13 @@ Usage:
   builder.addBlankLine()
 
   builder.addSectionComment("Domain Events")
-  builder.addRaw(`import {
-  ${className}CreatedEvent,
-  ${className}UpdatedEvent,
-  ${className}DeletedEvent,
-  type ${className}DomainEvent,
-} from "${scope}/contract-${name}";`)
+  builder.addImports([
+    {
+      from: `${scope}/contract-${name}`,
+      imports: [`${className}CreatedEvent`, `${className}DeletedEvent`, `${className}UpdatedEvent`]
+    },
+    { from: `${scope}/contract-${name}`, imports: [`${className}DomainEvent`], isTypeOnly: true }
+  ])
   builder.addBlankLine()
 
   builder.addSectionComment("Infrastructure Services")
@@ -327,15 +328,15 @@ export function generateProjectionsIndexFile(options: FeatureTemplateOptions) {
   })
   builder.addBlankLine()
 
-  builder.addRaw(`export { ${className}ProjectionBuilder } from "./builder";
+  builder.addRaw(`export { ${className}ProjectionBuilder } from "./builder"
 
 export type {
   ProjectionHandler,
   ProjectionDefinition,
   ReadModelStore,
   ProjectionBuilderInterface,
-  ${className}ReadModel,
-} from "./builder";`)
+  ${className}ReadModel
+} from "./builder"`)
 
   return builder.toString()
 }

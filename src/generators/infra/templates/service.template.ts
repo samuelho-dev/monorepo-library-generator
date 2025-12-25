@@ -95,13 +95,7 @@ export class ${className}Service extends Context.Tag(
      * }
      * \`\`\`
      */
-    readonly get: (
-      id: string
-    ) => Effect.Effect<
-      Option.Option<unknown>,
-      ${className}ServiceError,
-      never
-    >;
+    readonly get: (id: string) => Effect.Effect<Option.Option<unknown>, ${className}ServiceError, never>
 
     /**
      * Find items by criteria with pagination support
@@ -116,11 +110,7 @@ export class ${className}Service extends Context.Tag(
      * const items = yield* service.findByCriteria({ status: "active" }, 0, 10);
      * \`\`\`
      */
-    readonly findByCriteria: (
-      criteria: Record<string, unknown>,
-      skip?: number,
-      limit?: number
-    ) => Effect.Effect<readonly unknown[], ${className}ServiceError, never>;
+    readonly findByCriteria: (criteria: Record<string, unknown>, skip?: number, limit?: number) => Effect.Effect<readonly unknown[], ${className}ServiceError, never>
 
     /**
      * Create new item
@@ -133,9 +123,7 @@ export class ${className}Service extends Context.Tag(
      * const newItem = yield* service.create({ name: "example" });
      * \`\`\`
      */
-    readonly create: (
-      input: Record<string, unknown>
-    ) => Effect.Effect<unknown, ${className}ServiceError, never>;
+    readonly create: (input: Record<string, unknown>) => Effect.Effect<unknown, ${className}ServiceError, never>
 
     /**
      * Update existing item
@@ -149,10 +137,7 @@ export class ${className}Service extends Context.Tag(
      * const updated = yield* service.update("id-123", { name: "new name" });
      * \`\`\`
      */
-    readonly update: (
-      id: string,
-      input: Record<string, unknown>
-    ) => Effect.Effect<unknown, ${className}ServiceError, never>;
+    readonly update: (id: string, input: Record<string, unknown>) => Effect.Effect<unknown, ${className}ServiceError, never>
 
     /**
      * Delete item by ID
@@ -165,7 +150,7 @@ export class ${className}Service extends Context.Tag(
      * yield* service.delete("id-123");
      * \`\`\`
      */
-    readonly delete: (id: string) => Effect.Effect<void, ${className}ServiceError, never>;
+    readonly delete: (id: string) => Effect.Effect<void, ${className}ServiceError, never>
 
     /**
      * Health check for monitoring and readiness probes
@@ -177,7 +162,7 @@ export class ${className}Service extends Context.Tag(
      * const isHealthy = yield* service.healthCheck();
      * \`\`\`
      */
-    readonly healthCheck: () => Effect.Effect<boolean, never>;${
+    readonly healthCheck: () => Effect.Effect<boolean, never>${
     isDatabaseInfra
       ? `
 

@@ -135,8 +135,16 @@ export const defaultRouterConfig: Required<RouterConfig> = {
  * Layers required for RPC execution
  *
  * This type helps ensure all required layers are provided.
+ * Extracts the dependency requirements from a Layer.
  */
-export type RpcRequiredLayers<R> = R extends Layer.Layer<infer _A, infer _E, infer Deps>
+export type RpcRequiredLayers<R> = R extends Layer.Layer<infer A, infer E, infer Deps>
+  ? { readonly out: A; readonly error: E; readonly deps: Deps }
+  : never
+
+/**
+ * Extract only the dependencies from a Layer (simplified version)
+ */
+export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps>
   ? Deps
   : never
 `)
@@ -318,7 +326,7 @@ export const createNextRpcHandler = <R, E>(
         { _tag: "RpcInfraError", message: Cause.pretty(exit.cause), code: "INTERNAL_ERROR" },
         { status: 500 }
       )
-    } catch (error) {
+    } catch {
       // Only for non-Effect errors (e.g., JSON parsing)
       return Response.json(
         { _tag: "RpcInfraError", message: "Request processing failed", code: "INTERNAL_ERROR" },

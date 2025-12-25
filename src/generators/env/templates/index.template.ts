@@ -44,7 +44,7 @@ export function generateIndexFile() {
 
   // Also export createEnv for advanced usage
   builder.addRaw("// Re-export for advanced usage")
-  builder.addRaw("export { createEnv, Config } from \"./createEnv\"")
+  builder.addRaw("export { Config, createEnv } from \"./createEnv\"")
   builder.addBlankLine()
 
   return builder.toString()

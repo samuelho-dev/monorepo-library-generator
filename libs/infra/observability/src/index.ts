@@ -16,11 +16,9 @@ Key exports:
  * @module @samuelho-dev/infra-observability
  * @see https://effect.website/docs/observability/otel-tracing
  */
-
 // ============================================================================
 // OTEL Provider (Infrastructure)
 // ============================================================================
-
 // OpenTelemetry SDK provider - the "Redis" equivalent for observability
 // This is consumed internally by LoggingService and MetricsService
 export {
@@ -31,7 +29,6 @@ export {
 // ============================================================================
 // SDK Layer Factories (Advanced)
 // ============================================================================
-
 // Advanced: Direct OTEL SDK layer factories for custom setups
 // Most users should use LoggingService.Live and MetricsService.Live instead
 export {
@@ -45,7 +42,6 @@ export {
 // ============================================================================
 // Fiber Tracking Supervisor
 // ============================================================================
-
 // Optional fiber lifecycle tracking
 export {
   makeFiberTrackingSupervisor,
@@ -59,7 +55,6 @@ export {
 // ============================================================================
 // Configuration
 // ============================================================================
-
 // Configuration schema and types
 export {
   ObservabilityConfigSchema,
@@ -78,7 +73,6 @@ export {
 // ============================================================================
 // Presets
 // ============================================================================
-
 // Pre-configured OTEL SDK layers for common backends
 export {
   OtlpPreset,
@@ -95,7 +89,6 @@ export {
 // ============================================================================
 // Error Types
 // ============================================================================
-
 // Error types for observability operations
 export {
   ObservabilityError,
@@ -109,7 +102,6 @@ export {
 // ============================================================================
 // Constants
 // ============================================================================
-
 // Common constants for metrics, logging, and tracing
 export {
   HistogramBoundaries,
@@ -122,7 +114,6 @@ export {
 // ============================================================================
 // Logging Service
 // ============================================================================
-
 // Effect Logger wrapper with structured logging
 export {
   LoggingService,
@@ -133,7 +124,6 @@ export {
 // ============================================================================
 // Metrics Service
 // ============================================================================
-
 // Effect.Metric wrapper with counters, gauges, histograms
 export {
   MetricsService,

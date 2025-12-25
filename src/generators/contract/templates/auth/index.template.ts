@@ -104,6 +104,7 @@ Other libraries import from here:
 
   // User context
   CurrentUser,
+  AuthMethodContext,
 
   // Service context
   ServiceContext,

@@ -6,9 +6,7 @@
   "tags": [
     "type:provider",
     "scope:supabase",
-    "provider",
-    "effect",
-    "builtin"
+    ""
   ],
   "targets": {
     "build": {

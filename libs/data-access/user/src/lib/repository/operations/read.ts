@@ -1,5 +1,6 @@
-import { UserTimeoutError } from "../../shared/errors"
+import { DatabaseService } from "@samuelho-dev/infra-database"
 import { Duration, Effect, Option } from "effect"
+import { UserTimeoutError } from "../../shared/errors"
 import type { PaginationOptions, UserFilter } from "../../shared/types"
 
 /**
@@ -13,17 +14,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @samuelho-dev/data-access-user/repository/operations
  */
 
-
-
-
-// Infrastructure services - Database for persistence
-
-import { DatabaseService } from "@samuelho-dev/infra-database";
-
 // ============================================================================
 // Read Operations
 // ============================================================================
-
 
 /**
  * Read operations for User repository
@@ -33,7 +26,7 @@ import { DatabaseService } from "@samuelho-dev/infra-database";
  *
  * @example
  * ```typescript
- * const maybeEntity = yield* readOperations.findById("id-123");
+ * const maybeEntity = yield* readOperations.findById("id-123")
  * ```
  */
 export const readOperations = {
@@ -42,9 +35,9 @@ export const readOperations = {
    */
   findById: (id: string) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Finding User by ID: ${id}`);
+      yield* Effect.logDebug(`Finding User by ID: ${id}`)
 
       const entity = yield* database.query((db) =>
         db
@@ -52,15 +45,15 @@ export const readOperations = {
           .selectAll()
           .where("id", "=", id)
           .executeTakeFirst()
-      );
+      )
 
       if (entity) {
-        yield* Effect.logDebug(`Found User: ${id}`);
-        return Option.some(entity);
+        yield* Effect.logDebug(`Found User: ${id}`)
+        return Option.some(entity)
       }
 
-      yield* Effect.logDebug(`User not found: ${id}`);
-      return Option.none();
+      yield* Effect.logDebug(`User not found: ${id}`)
+      return Option.none()
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -74,16 +67,16 @@ export const readOperations = {
    */
   findAll: (filter?: UserFilter, pagination?: PaginationOptions) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Finding all User entities (filter: ${JSON.stringify(filter)})`);
+      yield* Effect.logDebug(`Finding all User entities (filter: ${JSON.stringify(filter)})`)
 
-      const limit = pagination?.limit ?? 50;
-      const skip = pagination?.skip ?? 0;
+      const limit = pagination?.limit ?? 50
+      const skip = pagination?.skip ?? 0
 
       // Build query with filtering
       const items = yield* database.query((db) => {
-        let query = db.selectFrom("user").selectAll();
+        let query = db.selectFrom("user").selectAll()
 
         // Apply filters (basic search implementation)
         // TODO: Implement proper full-text search or specific field filtering
@@ -91,36 +84,36 @@ export const readOperations = {
           query = query.where((eb) =>
             eb.or([
               // Add searchable fields here based on your schema
-              eb("name", "ilike", `%${filter.search}%`),
+              eb("name", "ilike", `%${filter.search}%`)
             ])
-          );
+          )
         }
 
-        return query.limit(limit).offset(skip).execute();
-      });
+        return query.limit(limit).offset(skip).execute()
+      })
 
       // Get total count (without pagination)
       const total = yield* database.query((db) => {
-        let query = db.selectFrom("user").select((eb) => eb.fn.countAll().as("count"));
+        let query = db.selectFrom("user").select((eb) => eb.fn.countAll().as("count"))
 
         if (filter?.search) {
           query = query.where((eb) =>
             eb.or([
-              eb("name", "ilike", `%${filter.search}%`),
+              eb("name", "ilike", `%${filter.search}%`)
             ])
-          );
+          )
         }
 
-        return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
-      });
+        return query.executeTakeFirstOrThrow().then((result) => Number(result.count))
+      })
 
-      yield* Effect.logDebug(`Found ${items.length} User entities (total: ${total})`);
+      yield* Effect.logDebug(`Found ${items.length} User entities (total: ${total})`)
 
       return {
         items,
         total,
-        hasMore: skip + items.length < total,
-      };
+        hasMore: skip + items.length < total
+      }
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -134,43 +127,43 @@ export const readOperations = {
    */
   findOne: (filter: UserFilter) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Finding one User entity (filter: ${JSON.stringify(filter)})`);
+      yield* Effect.logDebug(`Finding one User entity (filter: ${JSON.stringify(filter)})`)
 
       // Build query with filtering
       const entity = yield* database.query((db) => {
-        let query = db.selectFrom("user").selectAll();
+        let query = db.selectFrom("user").selectAll()
 
         // Apply filters
         if (filter.search) {
           query = query.where((eb) =>
             eb.or([
-              eb("name", "ilike", `%${filter.search}%`),
+              eb("name", "ilike", `%${filter.search}%`)
             ])
-          );
+          )
         }
 
-        return query.limit(1).executeTakeFirst();
-      });
+        return query.limit(1).executeTakeFirst()
+      })
 
       if (entity) {
-        yield* Effect.logDebug("Found User matching filter");
-        return Option.some(entity);
+        yield* Effect.logDebug("Found User matching filter")
+        return Option.some(entity)
       }
 
-      yield* Effect.logDebug("No User found matching filter");
-      return Option.none();
+      yield* Effect.logDebug("No User found matching filter")
+      return Option.none()
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => UserTimeoutError.create("findOne", 30000)
       }),
       Effect.withSpan("UserRepository.findOne")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the read operations object
  */
-export type ReadUserOperations = typeof readOperations;
+export type ReadUserOperations = typeof readOperations

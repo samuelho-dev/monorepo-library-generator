@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-storage
 
-Storage infrastructure for file operations (coordinates storage providers)
+Storage
 
 ## AI Agent Reference
 
@@ -13,7 +13,7 @@ This is an infrastructure library following Effect-based service patterns.
 - **lib/errors.ts**: Data.TaggedError-based error types
 - **lib/config.ts**: Service configuration types
 - **lib/memory.ts**: In-memory provider implementation
-- **lib/client/hooks/use-storage.ts**: React hook
+
 
 ### Import Patterns
 
@@ -66,17 +66,6 @@ const result = program.pipe(
   // or Effect.provide(StorageService.Test)   // Testing
   // or Effect.provide(StorageService.Auto)   // NODE_ENV-based
 );
-```
-
-### Client Usage
-
-```typescript
-import { useStorage } from '@samuelho-dev/infra-storage/client/hooks';
-
-function MyComponent() {
-  const storage = useStorage();
-  // Use service in React component
-}
 ```
 
 ### Testing Strategy

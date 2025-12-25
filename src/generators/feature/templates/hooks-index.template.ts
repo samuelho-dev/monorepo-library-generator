@@ -12,11 +12,11 @@ import type { FeatureTemplateOptions } from "../../../utils/types"
 /**
  * Generate client/hooks/index.ts file for feature library
  *
- * Creates barrel export for client hooks.
+ * Creates named exports for client hooks to comply with biome rules.
  */
 export function generateHooksIndexFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { fileName } = options
+  const { className, fileName } = options
 
   // Add file header
   builder.addFileHeader({
@@ -24,8 +24,8 @@ export function generateHooksIndexFile(options: FeatureTemplateOptions) {
     description: "Barrel export for client-side hooks"
   })
 
-  // Add export
-  builder.addRaw(`export * from "./use-${fileName}";`)
+  // Add named export
+  builder.addRaw(`export { use${className}, type Use${className}Return } from "./use-${fileName}"`)
   builder.addBlankLine()
 
   return builder.toString()

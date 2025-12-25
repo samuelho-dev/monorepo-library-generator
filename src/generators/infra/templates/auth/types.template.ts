@@ -32,24 +32,13 @@ for middleware and RPC integration.`,
   builder.addImports([{ from: "effect", imports: ["Schema"] }])
   builder.addBlankLine()
 
-  // Re-export from provider-supabase
-  builder.addSectionComment("Re-exports from Provider")
+  // Import from provider-supabase for local use
+  builder.addSectionComment("Provider Imports")
   builder.addBlankLine()
 
-  builder.addRaw(`// Re-export user and session types from provider-supabase
-export type {
-  AuthUser,
-  SupabaseSession,
-  AuthMethod,
-} from "${scope}/provider-supabase";
-
-export {
-  AuthUserSchema,
-  SupabaseSessionSchema,
-} from "${scope}/provider-supabase";
-
-// Import for local use
-import { AuthUserSchema as ProviderAuthUserSchema } from "${scope}/provider-supabase";`)
+  builder.addRaw(`// Import auth schemas from provider-supabase
+// NOTE: Consumers should import types directly from ${scope}/provider-supabase
+import { AuthUserSchema as ProviderAuthUserSchema } from "${scope}/provider-supabase"`)
   builder.addBlankLine()
 
   // Auth context types for RPC
@@ -66,22 +55,22 @@ export interface AuthContext {
   /**
    * The authenticated user (always present in protected routes)
    */
-  readonly user: Schema.Schema.Type<typeof ProviderAuthUserSchema>;
+  readonly user: Schema.Schema.Type<typeof ProviderAuthUserSchema>
 
   /**
    * How the user was authenticated
    */
-  readonly authMethod: "session" | "api-key" | "service-role";
+  readonly authMethod: "session" | "api-key" | "service-role"
 
   /**
    * Session token (for session auth)
    */
-  readonly sessionToken?: string;
+  readonly sessionToken?: string
 
   /**
    * API key ID (for api-key auth, if using ApiKeyRepository)
    */
-  readonly apiKeyId?: string;
+  readonly apiKeyId?: string
 }
 
 /**
@@ -91,25 +80,19 @@ export const AuthContextSchema = Schema.Struct({
   user: ProviderAuthUserSchema,
   authMethod: Schema.Literal("session", "api-key", "service-role"),
   sessionToken: Schema.optional(Schema.String),
-  apiKeyId: Schema.optional(Schema.String),
-});`)
+  apiKeyId: Schema.optional(Schema.String)
+})`)
   builder.addBlankLine()
 
-  // HTTP Headers - re-export from @effect/platform
+  // HTTP Headers note
   builder.addSectionComment("HTTP Headers")
   builder.addBlankLine()
 
-  builder.addRaw(`// Re-export Headers from @effect/platform for type-safe header access
-export { Headers } from "@effect/platform";
-export type { Headers as RequestHeaders } from "@effect/platform";`)
-  builder.addBlankLine()
-
-  // Re-export RequestMeta from infra-rpc
-  builder.addSectionComment("Request Metadata (from infra-rpc)")
-  builder.addBlankLine()
-
-  builder.addRaw(`// Re-export request metadata from infra-rpc (single source of truth)
-export type { RequestMetadata as RequestMeta } from "${scope}/infra-rpc";`)
+  builder.addRaw(`// NOTE: For Headers type, import directly from @effect/platform:
+// import { Headers } from "@effect/platform"
+//
+// For RequestMetadata type, import directly from ${scope}/infra-rpc:
+// import type { RequestMetadata } from "${scope}/infra-rpc"`)
 
   return builder.toString()
 }

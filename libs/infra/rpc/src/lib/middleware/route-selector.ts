@@ -20,7 +20,6 @@ Route Types:
  * @see RouteTag from contract libraries
  */
 
-
 // ============================================================================
 // Contract-Auth Imports (Single Source of Truth)
 // ============================================================================
@@ -38,7 +37,6 @@ export { RouteTag, type RouteType, type RpcWithRouteTag };
 // ============================================================================
 // Route Type Utilities
 // ============================================================================
-
 /**
  * Get route type from an RPC definition
  *
@@ -48,14 +46,13 @@ export { RouteTag, type RouteType, type RpcWithRouteTag };
  * const middleware = selectMiddleware(routeType);
  * ```
  */
-export function getRouteType<T extends RpcWithRouteTag>(rpc: T){
-  return rpc[RouteTag];
+export function getRouteType<T extends RpcWithRouteTag>(rpc: T) {
+  return rpc[RouteTag]
 }
 
 // ============================================================================
 // Route Detection from Request
 // ============================================================================
-
 /**
  * Detect route type from request headers
  *
@@ -67,48 +64,52 @@ export function getRouteType<T extends RpcWithRouteTag>(rpc: T){
  * This is used when RouteTag is not available on the RPC definition
  * (e.g., legacy RPCs or dynamic routing).
  */
-export function detectRouteType(headers: Headers.Headers){
+export function detectRouteType(headers: Headers.Headers) {
   // Service token takes priority
   if (Option.isSome(Headers.get(headers, "x-service-token"))) {
-    return "service";
+    return "service"
   }
 
   // Bearer token indicates protected route
-  const auth = Headers.get(headers, "authorization");
+  const auth = Headers.get(headers, "authorization")
   if (Option.isSome(auth) && auth.value.startsWith("Bearer ")) {
-    return "protected";
+    return "protected"
   }
 
   // API key could be either protected or service
   if (Option.isSome(Headers.get(headers, "x-api-key"))) {
-    return "protected";
+    return "protected"
   }
 
   // Default to public
-  return "public";
+  return "public"
 }
 
 // ============================================================================
 // Middleware Selection
 // ============================================================================
-
 /**
  * Middleware selector configuration
  *
  * Maps route types to middleware layers.
+ * Uses Layer.Layer<any> to accept any middleware layer type.
  */
 export interface MiddlewareSelectorConfig {
   /** Middleware for public routes (optional, typically just RequestMeta) */
-  readonly publicMiddleware?: Layer.Layer<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly publicMiddleware?: Layer.Layer<any, any, any>
 
   /** Middleware for protected routes (user auth) */
-  readonly protectedMiddleware: Layer.Layer<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly protectedMiddleware: Layer.Layer<any, any, any>
 
   /** Middleware for service routes (S2S auth) */
-  readonly serviceMiddleware: Layer.Layer<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly serviceMiddleware: Layer.Layer<any, any, any>
 
   /** Middleware applied to ALL routes (typically RequestMeta) */
-  readonly globalMiddleware?: Layer.Layer<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly globalMiddleware?: Layer.Layer<any, any, any>
 }
 
 /**
@@ -131,28 +132,27 @@ export interface MiddlewareSelectorConfig {
  */
 export function createMiddlewareSelector(config: MiddlewareSelectorConfig) {
   return (routeType: RouteType) => {
-    const baseLayer = config.globalMiddleware ?? Layer.empty;
+    const baseLayer = config.globalMiddleware ?? Layer.empty
 
     // Switch is exhaustive - TypeScript will error if a RouteType case is missing
     switch (routeType) {
       case "public":
         return config.publicMiddleware
           ? Layer.merge(baseLayer, config.publicMiddleware)
-          : baseLayer;
+          : baseLayer
 
       case "protected":
-        return Layer.merge(baseLayer, config.protectedMiddleware);
+        return Layer.merge(baseLayer, config.protectedMiddleware)
 
       case "service":
-        return Layer.merge(baseLayer, config.serviceMiddleware);
+        return Layer.merge(baseLayer, config.serviceMiddleware)
     }
-  };
+  }
 }
 
 // ============================================================================
 // Router Integration
 // ============================================================================
-
 /**
  * Apply middleware to RPC handler based on RouteTag
  *
@@ -182,44 +182,43 @@ export function applyRouteMiddleware<Rpcs extends Record<string, RpcWithRouteTag
   config: MiddlewareSelectorConfig,
   handlers: { [K in keyof Rpcs]: (input: unknown) => Effect.Effect<unknown, unknown, unknown> }
 ) {
-  const selectMiddleware = createMiddlewareSelector(config);
+  const selectMiddleware = createMiddlewareSelector(config)
 
-  const wrappedHandlers: Record<string, unknown> = {};
+  const wrappedHandlers: Record<string, unknown> = {}
 
   for (const [name, rpc] of Object.entries(rpcs)) {
-    const routeType = getRouteType(rpc);
-    const handler = handlers[name];
+    const routeType = getRouteType(rpc)
+    const handler = handlers[name]
 
     // Skip if handler is not defined for this RPC
     if (!handler) {
-      continue;
+      continue
     }
 
     // Apply middleware based on route type
-    const middleware = selectMiddleware(routeType ?? "public");
+    const middleware = selectMiddleware(routeType ?? "public")
 
     // Wrap handler with appropriate middleware
     wrappedHandlers[name] = (input: unknown) =>
       handler(input).pipe(
         Effect.provide(middleware)
-      );
+      )
   }
 
-  return wrappedHandlers;
+  return wrappedHandlers
 }
 
 // ============================================================================
 // Request Context
 // ============================================================================
-
 /**
  * Request context provided to handlers
  *
  * Contains the detected route type for logging/metrics.
  */
 export interface RequestRouteContext {
-  readonly routeType: RouteType;
-  readonly rpcName: string;
+  readonly routeType: RouteType
+  readonly rpcName: string
 }
 
 /**
@@ -241,23 +240,22 @@ export function createRequestRouteContext(
 ) {
   return Layer.succeed(RequestRouteContextTag, {
     routeType,
-    rpcName,
-  });
+    rpcName
+  })
 }
 
 // ============================================================================
 // Development Helpers
 // ============================================================================
-
 /**
  * Log route type for debugging
  */
 export const logRouteType = <R extends RpcWithRouteTag>(rpc: R, name: string) =>
   Effect.gen(function*() {
-    const routeType = getRouteType(rpc);
-    yield* Effect.logDebug(`[RPC] ${name} -> ${routeType}`);
-    return routeType;
-  });
+    const routeType = getRouteType(rpc)
+    yield* Effect.logDebug(`[RPC] ${name} -> ${routeType}`)
+    return routeType
+  })
 
 /**
  * Assert route type matches expected
@@ -269,9 +267,9 @@ export function assertRouteType<R extends RpcWithRouteTag>(
   expected: RouteType,
   name: string
 ) {
-  const actual = getRouteType(rpc);
+  const actual = getRouteType(rpc)
   if (actual !== expected) {
-    throw new Error(`Route type mismatch for ${name}: expected ${expected}, got ${actual}`);
+    throw new Error(`Route type mismatch for ${name}: expected ${expected}, got ${actual}`)
   }
 }
 
@@ -282,10 +280,10 @@ export function validateRpcRoutes<Rpcs extends Record<string, unknown>>(
   rpcs: Rpcs
 ) {
   return Object.entries(rpcs).map(([name, rpc]) => {
-    const hasRouteTag = typeof rpc === "object" && rpc !== null && RouteTag in rpc;
+    const hasRouteTag = typeof rpc === "object" && rpc !== null && RouteTag in rpc
     return {
       name,
-      routeType: hasRouteTag ? (rpc)[RouteTag] : "missing",
-    };
-  });
+      routeType: hasRouteTag ? (rpc)[RouteTag] : "missing"
+    }
+  })
 }

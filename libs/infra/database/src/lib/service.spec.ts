@@ -1,3 +1,6 @@
+import { describe, expect, it } from "@effect/vitest"
+import { Context, Effect, Layer } from "effect"
+
 /**
  * Database Service Tests
  *
@@ -13,8 +16,6 @@ Testing Guidelines:
  * @module @samuelho-dev/infra-database
  */
 
-import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer } from "effect"
 
 /**
  * Test service tag for layer composition tests

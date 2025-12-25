@@ -107,6 +107,9 @@ interface BaseValidatedInput {
   readonly directory?: string | undefined
   readonly description?: string | undefined
   readonly tags?: string | undefined
+  // Contract-specific fields (optional for other library types)
+  readonly subModules?: string | undefined
+  readonly entities?: ReadonlyArray<string> | undefined
 }
 
 /**
@@ -234,7 +237,17 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
           description: metadata.description,
           platform: "node",
           offsetFromRoot: metadata.offsetFromRoot,
-          tags: metadata.tags.split(",").map((t) => t.trim())
+          tags: metadata.tags.split(",").map((t) => t.trim()),
+          // Contract-specific: pass sub-modules for subpath exports
+          ...(validated.subModules !== undefined && {
+            subModules: Array.isArray(validated.subModules)
+              ? validated.subModules
+              : validated.subModules.split(",").map((s) => s.trim())
+          }),
+          // Contract-specific: pass entities for entity exports
+          ...(validated.entities !== undefined && {
+            entities: validated.entities
+          })
         }
 
         const infraResult = yield* generateLibraryInfrastructure(adapter, infraOptions).pipe(

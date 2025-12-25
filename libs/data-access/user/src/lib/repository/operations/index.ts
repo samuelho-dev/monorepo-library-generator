@@ -13,28 +13,12 @@ For convenience, import from this barrel:
  * @module @samuelho-dev/data-access-user/repository/operations
  */
 
-
 // ============================================================================
 // Re-export all operations
 // ============================================================================
 
-
-// Create operations
-export type { CreateUserOperations } from "./create"
-export { createOperations } from "./create"
-
-// Read operations
-export type { ReadUserOperations } from "./read"
-export { readOperations } from "./read"
-
-// Update operations
-export type { UpdateUserOperations } from "./update"
-export { updateOperations } from "./update"
-
-// Delete operations
-export type { DeleteUserOperations } from "./delete"
-export { deleteOperations } from "./delete"
-
-// Aggregate operations
-export type { AggregateUserOperations } from "./aggregate"
-export { aggregateOperations } from "./aggregate"
+export { aggregateOperations, type AggregateUserOperations } from "./aggregate"
+export { createOperations, type CreateUserOperations } from "./create"
+export { deleteOperations, type DeleteUserOperations } from "./delete"
+export { readOperations, type ReadUserOperations } from "./read"
+export { updateOperations, type UpdateUserOperations } from "./update"

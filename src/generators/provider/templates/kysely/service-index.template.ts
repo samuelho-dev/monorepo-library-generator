@@ -45,8 +45,15 @@ Import patterns:
   builder.addBlankLine()
 
   // Kysely only has errors in service/ - no types, validation, or layers
-  builder.addRaw(`// Kysely-specific error types
-export * from "./errors";`)
+  builder.addComment("Kysely-specific error types")
+  builder.addRaw(`export {
+  ${className}ConfigError,
+  ${className}ConnectionError,
+  ${className}QueryError,
+  ${className}MigrationError,
+  ${className}TransactionError,
+  type ${className}Error
+} from "./errors"`)
 
   return builder.toString()
 }

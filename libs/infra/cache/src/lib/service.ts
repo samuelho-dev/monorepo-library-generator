@@ -1,5 +1,6 @@
 import { env } from "@samuelho-dev/env"
-import { Cache, Context, Duration, Effect, Layer, Option } from "effect"
+import { Cache, Context, Duration, Effect, Layer } from "effect"
+import type { Option } from "effect"
 
 /**
  * Cache Service
@@ -20,12 +21,11 @@ Effect.Cache Features:
  * @module @samuelho-dev/infra-cache/service
  * @see EFFECT_PATTERNS.md for cache patterns
  */
-
 // ============================================================================
 // Cache Service Interface (Effect.Cache Wrapper)
 // ============================================================================
-
 /**
+ *
  * Note: The R (requirements) type parameter from the lookup function
  * is captured during cache creation. Methods return Effect without R.
  */

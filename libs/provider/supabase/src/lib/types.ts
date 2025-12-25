@@ -11,6 +11,7 @@ All schemas are composable and can be extended for domain-specific needs.
  * @module @samuelho-dev/provider-supabase/types
  */
 
+
 // ============================================================================
 // Configuration
 // ============================================================================

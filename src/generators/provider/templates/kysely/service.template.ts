@@ -43,23 +43,31 @@ Architecture:
 
   // Imports
   builder.addImports([
+    { from: "effect", imports: ["Context", "Effect"] },
+    {
+      from: "kysely",
+      imports: [
+        "DummyDriver",
+        "Kysely",
+        "PostgresAdapter",
+        "PostgresDialect",
+        "PostgresIntrospector",
+        "PostgresQueryCompiler",
+        "sql"
+      ]
+    },
+    { from: "pg", imports: ["PoolConfig"], isTypeOnly: true },
     { from: "./errors", imports: ["DatabaseConnectionError", "DatabaseQueryError", "DatabaseTransactionError"] },
-    { from: "effect", imports: ["Context", "Effect"] }
+    { from: "./interface", imports: [`${className}ServiceInterface`], isTypeOnly: true }
   ])
-  builder.addRaw(`import {
-  Kysely,
-  PostgresDialect,
-  PostgresAdapter,
-  PostgresIntrospector,
-  PostgresQueryCompiler,
-  DummyDriver,
-  sql,
-} from "kysely";
-import type { Transaction } from "kysely";
-import { Pool } from "pg";
-import type { ${className}ServiceInterface } from "./interface";
+
+  builder.addRaw(`
+// Dynamic import of pg to avoid bundling issues
+const createPool = async (config: PoolConfig) => {
+  const { Pool } = await import("pg")
+  return new Pool(config)
+}
 `)
-  builder.addBlankLine()
 
   // Config interface
   builder.addSectionComment("Configuration")
@@ -69,15 +77,15 @@ import type { ${className}ServiceInterface } from "./interface";
  * Configuration for Kysely connection
  */
 export interface ${className}Config {
-  readonly connectionString?: string;
-  readonly host?: string;
-  readonly port?: number;
-  readonly database?: string;
-  readonly username?: string;
-  readonly password?: string;
-  readonly max?: number;
-  readonly idleTimeoutMillis?: number;
-  readonly connectionTimeoutMillis?: number;
+  readonly connectionString?: string
+  readonly host?: string
+  readonly port?: number
+  readonly database?: string
+  readonly username?: string
+  readonly password?: string
+  readonly max?: number
+  readonly idleTimeoutMillis?: number
+  readonly connectionTimeoutMillis?: number
 }
 
 /**
@@ -90,26 +98,26 @@ const validateConnectionConfig = (config: ${className}Config) =>
     if (config.connectionString) {
       yield* Effect.try({
         try: () => {
-          const url = new URL(config.connectionString!);
+          const url = new URL(config.connectionString!)
           if (!["postgres:", "postgresql:"].includes(url.protocol)) {
-            throw new Error(\`Invalid database protocol: \${url.protocol}. Expected postgres: or postgresql:\`);
+            throw new Error(\`Invalid database protocol: \${url.protocol}. Expected postgres: or postgresql:\`)
           }
         },
         catch: (error) =>
           new DatabaseConnectionError({
             message: \`Invalid connection string: \${String(error)}\`,
-            cause: error,
-          }),
-      });
+            cause: error
+          })
+      })
     } else if (!(config.host && config.database)) {
       return yield* Effect.fail(
         new DatabaseConnectionError({
           message: "Database configuration requires either connectionString or host + database",
-          cause: undefined,
+          cause: undefined
         })
-      );
+      )
     }
-  });`)
+  })`)
   builder.addBlankLine()
 
   // Service factory
@@ -130,43 +138,69 @@ const validateConnectionConfig = (config: ${className}Config) =>
  * const program = Effect.gen(function* () {
  *   const kysely = yield* make${className}Service<DB>({
  *     connectionString: process.env.DATABASE_URL
- *   });
+ *   })
  *
  *   const users = yield* kysely.query((db) =>
  *     db.selectFrom("users").selectAll().execute()
- *   );
- * });
+ *   )
+ * })
  * \`\`\`
  */
 export const make${className}Service = <DB = unknown>(config: ${className}Config = {}) =>
   Effect.gen(function* () {
     // Validate configuration (Effect-idiomatic - no try-catch)
-    yield* validateConnectionConfig(config);
+    yield* validateConnectionConfig(config)
 
-    // Create database connection pool
-    const pool = new Pool({
-      connectionString: config.connectionString,
-      host: config.host,
-      port: config.port || 5432,
-      database: config.database,
-      user: config.username,
-      password: config.password,
-      max: config.max || 20,
-      idleTimeoutMillis: config.idleTimeoutMillis || 30000,
-      connectionTimeoutMillis: config.connectionTimeoutMillis || 5000,
-    });
+    // Build pool config - only include defined properties (exactOptionalPropertyTypes)
+    const poolConfig: PoolConfig = {
+      max: config.max ?? 20,
+      idleTimeoutMillis: config.idleTimeoutMillis ?? 30000,
+      connectionTimeoutMillis: config.connectionTimeoutMillis ?? 5000
+    }
+
+    // Only add optional properties if defined
+    if (config.connectionString !== undefined) {
+      poolConfig.connectionString = config.connectionString
+    }
+    if (config.host !== undefined) {
+      poolConfig.host = config.host
+    }
+    if (config.port !== undefined) {
+      poolConfig.port = config.port
+    } else {
+      poolConfig.port = 5432
+    }
+    if (config.database !== undefined) {
+      poolConfig.database = config.database
+    }
+    if (config.username !== undefined) {
+      poolConfig.user = config.username
+    }
+    if (config.password !== undefined) {
+      poolConfig.password = config.password
+    }
+
+    // Create database connection pool (async import)
+    const pool = yield* Effect.tryPromise({
+      try: () => createPool(poolConfig),
+      catch: (error) =>
+        new DatabaseConnectionError({
+          message: \`Failed to create connection pool: \${error}\`,
+          cause: error
+        })
+    })
 
     // Register cleanup
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
-        await pool.end();
+        await pool.end()
       })
-    );
+    )
 
     // Create Kysely instance with DB type
     const db = new Kysely<DB>({
-      dialect: new PostgresDialect({ pool }),
-    });
+      dialect: new PostgresDialect({ pool })
+    })
 
     // Service implementation - types inferred from interface
     const service: ${className}ServiceInterface<DB> = {
@@ -179,72 +213,87 @@ export const make${className}Service = <DB = unknown>(config: ${className}Config
             new DatabaseQueryError({
               operation: "query",
               message: \`Query failed: \${error}\`,
-              cause: error,
-            }),
+              cause: error
+            })
         }),
 
       execute: (query) =>
         Effect.tryPromise({
           try: async () => {
-            const result = await db.executeQuery(query);
+            const result = await db.executeQuery(query)
             if (!Array.isArray(result.rows)) {
-              throw new Error("Database returned non-array result");
+              throw new Error("Database returned non-array result")
             }
-            return result.rows;
+            return result.rows
           },
           catch: (error) =>
             new DatabaseQueryError({
               operation: "execute",
               message: \`Query execution failed: \${error}\`,
               query: query.sql,
-              cause: error,
-            }),
+              cause: error
+            })
         }),
 
       transaction: (fn) =>
         Effect.tryPromise({
           try: async () => {
             return await db.transaction().execute(async (tx) => {
-              return await Effect.runPromise(fn(tx));
-            });
+              return await Effect.runPromise(fn(tx))
+            })
           },
           catch: (error) =>
             new DatabaseTransactionError({
               message: \`Transaction failed: \${error}\`,
-              cause: error,
-            }),
+              cause: error
+            })
         }),
 
       sql: (query) =>
         Effect.tryPromise({
           try: async () => {
-            const result = await query.execute(db);
+            const result = await query.execute(db)
             if (!Array.isArray(result.rows)) {
-              throw new Error("SQL query returned non-array result");
+              throw new Error("SQL query returned non-array result")
             }
-            return result.rows;
+            return result.rows
           },
           catch: (error) =>
             new DatabaseQueryError({
               operation: "sql",
               message: \`SQL query failed: \${error}\`,
-              cause: error,
-            }),
+              cause: error
+            })
         }),
 
       ping: () =>
         Effect.tryPromise({
           try: async () => {
-            await sql\`SELECT 1\`.execute(db);
+            await sql\`SELECT 1\`.execute(db)
           },
-          catch: (error) =>
-            new DatabaseConnectionError({
+          catch: (error) => {
+            // Build error props conditionally (exactOptionalPropertyTypes)
+            const errorProps: {
+              message: string
+              cause: unknown
+              host?: string
+              port?: number
+              database?: string
+            } = {
               message: \`Database ping failed: \${error}\`,
-              cause: error,
-              host: config.host,
-              port: config.port,
-              database: config.database,
-            }),
+              cause: error
+            }
+            if (config.host !== undefined) {
+              errorProps.host = config.host
+            }
+            if (config.port !== undefined) {
+              errorProps.port = config.port
+            }
+            if (config.database !== undefined) {
+              errorProps.database = config.database
+            }
+            return new DatabaseConnectionError(errorProps)
+          }
         }),
 
       introspection: () =>
@@ -254,33 +303,33 @@ export const make${className}Service = <DB = unknown>(config: ${className}Config
               SELECT table_name
               FROM information_schema.tables
               WHERE table_schema = 'public'
-            \`.execute(db);
+            \`.execute(db)
 
             const tables = result.rows.map((row) => {
               if (row && typeof row === "object" && "table_name" in row) {
-                return String(row.table_name);
+                return String(row.table_name)
               }
-              return "unknown_table";
-            });
+              return "unknown_table"
+            })
 
-            return { tables, dialect: "postgresql" };
+            return { tables, dialect: "postgresql" }
           },
           catch: (error) =>
             new DatabaseQueryError({
               operation: "introspection",
               message: \`Introspection failed: \${error}\`,
-              cause: error,
-            }),
+              cause: error
+            })
         }),
 
       destroy: () =>
         Effect.promise(async () => {
-          await db.destroy();
-        }),
-    };
+          await db.destroy()
+        })
+    }
 
-    return service;
-  });`)
+    return service
+  })`)
   builder.addBlankLine()
 
   // Mock service factory
@@ -292,13 +341,13 @@ export const make${className}Service = <DB = unknown>(config: ${className}Config
  */
 export interface MockServiceOptions {
   /** Simulate errors for testing error paths */
-  simulateErrors?: boolean;
+  simulateErrors?: boolean
   /** Add artificial latency in milliseconds */
-  latency?: number;
+  latency?: number
   /** Custom mock data to return from queries */
-  mockData?: Record<string, Array<unknown>>;
+  mockData?: Record<string, Array<unknown>>
   /** Tables to report in introspection */
-  mockTables?: Array<string>;
+  mockTables?: Array<string>
 }
 
 /**
@@ -317,11 +366,11 @@ export interface MockServiceOptions {
  * \`\`\`typescript
  * const testService = makeTest${className}Service<DB>({
  *   mockTables: ["users", "posts"]
- * });
+ * })
  *
  * // getDb() returns a real Kysely instance with DummyDriver
- * const db = testService.getDb();
- * const query = db.selectFrom("users").selectAll().compile();
+ * const db = testService.getDb()
+ * const query = db.selectFrom("users").selectAll().compile()
  * // query.sql === 'select * from "users"'
  * \`\`\`
  */
@@ -332,8 +381,8 @@ export const makeTest${className}Service = <DB = unknown>(
     simulateErrors = false,
     latency = 0,
     mockData = {},
-    mockTables = [],
-  } = options;
+    mockTables = []
+  } = options
 
   // Create Kysely with DummyDriver - Kysely's native testing approach
   // This provides a real Kysely instance that compiles queries without a database
@@ -342,31 +391,38 @@ export const makeTest${className}Service = <DB = unknown>(
       createAdapter: () => new PostgresAdapter(),
       createDriver: () => new DummyDriver(),
       createIntrospector: (db) => new PostgresIntrospector(db),
-      createQueryCompiler: () => new PostgresQueryCompiler(),
-    },
-  });
+      createQueryCompiler: () => new PostgresQueryCompiler()
+    }
+  })
 
   const withLatency = <T, E>(effect: Effect.Effect<T, E>) =>
-    latency > 0 ? Effect.delay(effect, latency) : effect;
+    latency > 0 ? Effect.delay(effect, latency) : effect
 
   const service: ${className}ServiceInterface<DB> = {
     // Returns real Kysely instance with DummyDriver
     getDb: () => db,
 
-    query: (fn) =>
+    // For mock service, execute the query against DummyDriver
+    // DummyDriver returns empty results, which is expected for testing
+    query: <T>(fn: (db: Kysely<DB>) => Promise<T>) =>
       withLatency(
         simulateErrors && Math.random() > 0.5
           ? Effect.fail(
               new DatabaseQueryError({
                 operation: "query",
                 message: "Mock query error for testing",
-                cause: new Error("Simulated query failure"),
+                cause: new Error("Simulated query failure")
               })
             )
           : Effect.tryPromise({
               try: () => fn(db),
-              catch: () => mockData.query ?? [],
-            }).pipe(Effect.orElseSucceed(() => mockData.query ?? []))
+              catch: (error) =>
+                new DatabaseQueryError({
+                  operation: "query",
+                  message: \`Mock query execution failed: \${error}\`,
+                  cause: error
+                })
+            })
       ),
 
     execute: (query) =>
@@ -377,7 +433,7 @@ export const makeTest${className}Service = <DB = unknown>(
                 operation: "execute",
                 message: "Mock execute error for testing",
                 query: query.sql,
-                cause: new Error("Simulated execution failure"),
+                cause: new Error("Simulated execution failure")
               })
             )
           : Effect.succeed(mockData[query.sql] ?? mockData.execute ?? [])
@@ -390,7 +446,7 @@ export const makeTest${className}Service = <DB = unknown>(
           ? Effect.fail(
               new DatabaseTransactionError({
                 message: "Mock transaction error for testing",
-                cause: new Error("Simulated transaction failure"),
+                cause: new Error("Simulated transaction failure")
               })
             )
           : Effect.tryPromise({
@@ -398,22 +454,33 @@ export const makeTest${className}Service = <DB = unknown>(
               catch: (error) =>
                 new DatabaseTransactionError({
                   message: \`Transaction failed: \${error}\`,
-                  cause: error,
-                }),
+                  cause: error
+                })
             })
       ),
 
-    sql: () =>
+    sql: (sqlQuery) =>
       withLatency(
         simulateErrors && Math.random() > 0.5
           ? Effect.fail(
               new DatabaseQueryError({
                 operation: "sql",
                 message: "Mock SQL error for testing",
-                cause: new Error("Simulated SQL failure"),
+                cause: new Error("Simulated SQL failure")
               })
             )
-          : Effect.succeed(mockData.sql ?? [])
+          : Effect.tryPromise({
+              try: async () => {
+                const result = await sqlQuery.execute(db)
+                return result.rows
+              },
+              catch: (error) =>
+                new DatabaseQueryError({
+                  operation: "sql",
+                  message: \`Mock SQL failed: \${error}\`,
+                  cause: error
+                })
+            })
       ),
 
     ping: () =>
@@ -422,7 +489,7 @@ export const makeTest${className}Service = <DB = unknown>(
           ? Effect.fail(
               new DatabaseConnectionError({
                 message: "Mock connection error for testing",
-                cause: new Error("Simulated connection failure"),
+                cause: new Error("Simulated connection failure")
               })
             )
           : Effect.succeed(undefined)
@@ -435,17 +502,17 @@ export const makeTest${className}Service = <DB = unknown>(
               new DatabaseQueryError({
                 operation: "introspection",
                 message: "Mock introspection error for testing",
-                cause: new Error("Simulated introspection failure"),
+                cause: new Error("Simulated introspection failure")
               })
             )
           : Effect.succeed({ tables: mockTables, dialect: "postgresql" })
       ),
 
-    destroy: () => Effect.promise(() => db.destroy()),
-  };
+    destroy: () => Effect.promise(() => db.destroy())
+  }
 
-  return service;
-};`)
+  return service
+}`)
   builder.addBlankLine()
 
   // Context Tag
@@ -461,18 +528,18 @@ export const makeTest${className}Service = <DB = unknown>(
  *
  * @example
  * \`\`\`typescript
- * import type { DB } from "${scope}/types-database";
+ * import type { DB } from "${scope}/types-database"
  *
- * const ${className}Tag = ${className}Service<DB>();
+ * const ${className}Tag = ${className}Service<DB>()
  *
  * const program = Effect.gen(function* () {
- *   const kysely = yield* ${className}Tag;
+ *   const kysely = yield* ${className}Tag
  *   // Use kysely service...
- * });
+ * })
  * \`\`\`
  */
 export const ${className}Service = <DB = unknown>() =>
-  Context.GenericTag<${className}ServiceInterface<DB>>("${className}Service");`)
+  Context.GenericTag<${className}ServiceInterface<DB>>("${className}Service")`)
 
   return builder.toString()
 }

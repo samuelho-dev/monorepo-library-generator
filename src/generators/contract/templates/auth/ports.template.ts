@@ -41,9 +41,10 @@ Ports:
   ])
   builder.addBlankLine()
 
-  builder.addRaw(`import type { CurrentUserData, AuthSession, ServiceIdentity } from "./schemas"
-import type { AuthError, ServiceAuthError } from "./errors"
-`)
+  builder.addImports([
+    { from: "./schemas", imports: ["AuthSession", "CurrentUserData", "ServiceIdentity"], isTypeOnly: true },
+    { from: "./errors", imports: ["AuthError", "ServiceAuthError"], isTypeOnly: true }
+  ])
   builder.addBlankLine()
 
   builder.addSectionComment("User Authentication Ports")
@@ -67,7 +68,6 @@ export interface AuthVerifierInterface {
    * @returns User data if valid, AuthError if invalid
    */
   readonly verify: (token: string) => Effect.Effect<CurrentUserData, AuthError>
-
   /**
    * Verify a token and return optional user data
    *
@@ -103,19 +103,16 @@ export interface AuthProviderInterface {
     readonly email: string
     readonly password: string
   }) => Effect.Effect<AuthSession, AuthError>
-
   /**
    * Refresh an existing session
    */
   readonly refresh: (
     refreshToken: string
   ) => Effect.Effect<AuthSession, AuthError>
-
   /**
    * Invalidate a session (logout)
    */
   readonly invalidate: (sessionId: string) => Effect.Effect<void, AuthError>
-
   /**
    * Get current session info
    */
@@ -153,7 +150,6 @@ export interface ServiceAuthVerifierInterface {
   readonly verify: (
     token: string
   ) => Effect.Effect<ServiceIdentity, ServiceAuthError>
-
   /**
    * Generate a service token for outgoing requests
    *
@@ -163,7 +159,6 @@ export interface ServiceAuthVerifierInterface {
   readonly generateToken: (
     serviceName: string
   ) => Effect.Effect<string, ServiceAuthError>
-
   /**
    * Check if a service has permission for an operation
    *

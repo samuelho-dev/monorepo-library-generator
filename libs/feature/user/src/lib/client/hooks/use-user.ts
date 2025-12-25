@@ -1,7 +1,11 @@
-import { useAtom, useAtomValue } from "@effect-atom/atom-react"
 import { Schema } from "@effect/schema"
+import { useAtom, useAtomValue } from "@effect-atom/atom-react"
+import type { CreateUserInput, UpdateUserInput, UserSelect as User } from "@samuelho-dev/contract-user"
+import { env } from "@samuelho-dev/env"
 import { Option } from "effect"
 import { useCallback, useMemo } from "react"
+import { resetUserState, updateUserEntity, updateUserList, updateUserOperation, userAtom, userDataAtom, userErrorAtom, userIsLoadingAtom, userListAtom } from "../atoms/user-atoms"
+import type { UserState } from "../atoms/user-atoms"
 
 /**
  * useUser Hook
@@ -27,7 +31,6 @@ Usage:
  * @module @samuelho-dev/feature-user/client/hooks
  */
 
-
 /**
  * Schema for RPC error responses
  *
@@ -36,40 +39,23 @@ Usage:
  */
 const RpcErrorSchema = Schema.Struct({
   _tag: Schema.String,
-  message: Schema.String,
-});
+  message: Schema.String
+})
 
 /**
  * Extract error message from RPC error response using Schema
  *
  * Uses Schema.decodeUnknownOption for type-safe parsing without coercion.
  */
-function getErrorMessage(error: unknown, fallback: string): string {
-  const result = Schema.decodeUnknownOption(RpcErrorSchema)(error);
-  return Option.isSome(result) ? result.value.message : fallback;
+function getErrorMessage(error: unknown, fallback: string) {
+  const result = Schema.decodeUnknownOption(RpcErrorSchema)(error)
+  return Option.isSome(result) ? result.value.message : fallback
 }
 
-
-import { useRpcClient } from "@samuelho-dev/infra-rpc";
-import { UserRpcs } from "@samuelho-dev/contract-user";
-import type { UserSelect as User, CreateUserInput, UpdateUserInput } from "@samuelho-dev/contract-user";
-import {
-  userAtom,
-  userIsLoadingAtom,
-  userErrorAtom,
-  userDataAtom,
-  userListAtom,
-  updateUserEntity,
-  updateUserList,
-  updateUserOperation,
-  resetUserState,
-  type UserState,
-} from "../atoms/user-atoms";
 
 // ============================================================================
 // Hook Return Type
 // ============================================================================
-
 /**
  * Return type for useUser hook
  */
@@ -99,12 +85,50 @@ export interface UseUserReturn {
 // ============================================================================
 // Hook Implementation
 // ============================================================================
+/**
+ * RPC endpoint URL - configured via env library
+ *
+ * Uses centralized environment configuration for type-safe access.
+ * Falls back to "/api/rpc" if PUBLIC_API_URL is not configured.
+ */
+const RPC_ENDPOINT = env.PUBLIC_API_URL ?? "/api/rpc"
+
+/**
+ * Make an RPC call to the server
+ *
+ * Uses typed response - caller should cast result to expected type.
+ * Server-side validation ensures type safety.
+ */
+async function rpcCall<T>(operation: string, payload: unknown): Promise<T> {
+  const response = await fetch(RPC_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ _tag: operation, payload })
+  })
+
+  const body: unknown = await response.json()
+
+  if (!response.ok) {
+    throw body
+  }
+
+  return body as T
+}
+
+/**
+ * List response type from server
+ */
+interface ListResponse<T> {
+  readonly items: ReadonlyArray<T>;
+  readonly total: number;
+  readonly hasMore: boolean;
+}
 
 /**
  * useUser - Main hook for user operations
  *
  * Provides:
- * - Type-safe RPC calls via useRpcClient
+ * - Type-safe RPC calls to server endpoints
  * - Centralized state management via atoms
  * - Loading/error state tracking
  * - CRUD operations with automatic state updates
@@ -131,119 +155,114 @@ export function useUser(): UseUserReturn {
   const data = useAtomValue(userDataAtom);
   const list = useAtomValue(userListAtom);
 
-  // RPC client
-  const rpcClient = useRpcClient(UserRpcs);
-
   // Fetch by ID
-  const fetchById = useCallback(async (id: string): Promise<User | null> => {
-    setState(updateUserEntity({ loadingState: "loading", error: null }));
+  const fetchById = useCallback(async (id: string) => {
+    setState(updateUserEntity({ loadingState: "loading", error: null }))
     try {
-      const result = await rpcClient.getUser({ id });
+      const result = await rpcCall<User>("GetUser", { id })
       setState(updateUserEntity({
         data: result,
         loadingState: "idle",
-        lastUpdated: Date.now(),
-      }));
-      return result;
+        lastUpdated: Date.now()
+      }))
+      return result
     } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to fetch");
-      setState(updateUserEntity({ loadingState: "error", error: errorMessage }));
-      return null;
+      const errorMessage = getErrorMessage(e, "Failed to fetch")
+      setState(updateUserEntity({ loadingState: "error", error: errorMessage }))
+      return null
     }
-  }, [rpcClient, setState]);
+  }, [setState])
 
   // Fetch list
-  const fetchList = useCallback(async (options?: { page?: number; pageSize?: number }): Promise<void> => {
-    const page = options?.page ?? state.list.pagination.page;
-    const pageSize = options?.pageSize ?? state.list.pagination.pageSize;
+  const fetchList = useCallback(async (options?: { page?: number; pageSize?: number }) => {
+    const page = options?.page ?? state.list.pagination.page
+    const pageSize = options?.pageSize ?? state.list.pagination.pageSize
 
-    setState(updateUserList({ loadingState: "loading", error: null }));
+    setState(updateUserList({ loadingState: "loading", error: null }))
     try {
-      const result = await rpcClient.listUsers({ page, pageSize });
-      // Use typed constant to avoid type assertion
-      const items: ReadonlyArray<User> = result.items;
+      const result = await rpcCall<ListResponse<User>>("ListUsers", { page, pageSize })
       setState(updateUserList({
-        items,
+        items: result.items,
         loadingState: "idle",
         pagination: {
           page,
           pageSize,
           totalCount: result.total,
-          hasMore: result.hasMore,
+          hasMore: result.hasMore
         },
-        lastUpdated: Date.now(),
-      }));
+        lastUpdated: Date.now()
+      }))
     } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to fetch list");
-      setState(updateUserList({ loadingState: "error", error: errorMessage }));
+      const errorMessage = getErrorMessage(e, "Failed to fetch list")
+      setState(updateUserList({ loadingState: "error", error: errorMessage }))
     }
-  }, [rpcClient, setState, state.list.pagination.page, state.list.pagination.pageSize]);
+  }, [setState, state.list.pagination.page, state.list.pagination.pageSize])
 
   // Refresh list (reload current page)
-  const refreshList = useCallback(async (): Promise<void> => {
-    setState(updateUserList({ loadingState: "refreshing" }));
-    await fetchList();
-  }, [fetchList, setState]);
+  const refreshList = useCallback(async () => {
+    setState(updateUserList({ loadingState: "refreshing" }))
+    await fetchList()
+  }, [fetchList, setState])
 
   // Create
-  const create = useCallback(async (input: CreateUserInput): Promise<User> => {
-    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "create" }));
+  const create = useCallback(async (input: CreateUserInput) => {
+    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "create" }))
     try {
-      const result = await rpcClient.createUser(input);
-      setState(updateUserOperation({ isSubmitting: false }));
+      const result = await rpcCall<User>("CreateUser", input)
+      setState(updateUserOperation({ isSubmitting: false }))
       // Refresh list after creation
-      await refreshList();
-      return result;
+      await refreshList()
+      return result
     } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to create");
-      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }));
-      throw e;
+      const errorMessage = getErrorMessage(e, "Failed to create")
+      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
+      throw e
     }
-  }, [rpcClient, setState, refreshList]);
+  }, [setState, refreshList])
 
   // Update
-  const update = useCallback(async (id: string, input: UpdateUserInput): Promise<User> => {
-    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "update" }));
+  const update = useCallback(async (id: string, input: UpdateUserInput) => {
+    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "update" }))
     try {
-      const result = await rpcClient.updateUser({ id, ...input });
-      setState(updateUserOperation({ isSubmitting: false }));
+      const result = await rpcCall<User>("UpdateUser", { id, ...input })
+      setState(updateUserOperation({ isSubmitting: false }))
       // Update entity if it's the current one
       if (state.entity.data?.id === id) {
-        setState(updateUserEntity({ data: result, lastUpdated: Date.now() }));
+        setState(updateUserEntity({ data: result, lastUpdated: Date.now() }))
       }
       // Refresh list after update
-      await refreshList();
-      return result;
+      await refreshList()
+      return result
     } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to update");
-      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }));
-      throw e;
+      const errorMessage = getErrorMessage(e, "Failed to update")
+      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
+      throw e
     }
-  }, [rpcClient, setState, refreshList, state.entity.data?.id]);
+  }, [setState, refreshList, state.entity.data?.id])
 
   // Remove
-  const remove = useCallback(async (id: string): Promise<void> => {
-    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "delete" }));
+  const remove = useCallback(async (id: string) => {
+    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "delete" }))
     try {
-      await rpcClient.deleteUser({ id });
-      setState(updateUserOperation({ isSubmitting: false }));
+      await rpcCall<{ success: boolean }>("DeleteUser", { id })
+      setState(updateUserOperation({ isSubmitting: false }))
       // Clear entity if it's the deleted one
       if (state.entity.data?.id === id) {
-        setState(updateUserEntity({ data: null }));
+        setState(updateUserEntity({ data: null }))
       }
       // Refresh list after deletion
-      await refreshList();
+      await refreshList()
     } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to delete");
-      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }));
-      throw e;
+      const errorMessage = getErrorMessage(e, "Failed to delete")
+      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
+      throw e
     }
-  }, [rpcClient, setState, refreshList, state.entity.data?.id]);
+  }, [setState, refreshList, state.entity.data?.id])
 
   // Reset state
   const reset = useCallback(() => {
-    setState(resetUserState());
-  }, [setState]);
+    setState(resetUserState())
+  }, [setState])
 
   // Clear error
   const clearError = useCallback(() => {
@@ -251,9 +270,9 @@ export function useUser(): UseUserReturn {
       ...s,
       entity: { ...s.entity, error: null },
       list: { ...s.list, error: null },
-      operation: { ...s.operation, error: null },
-    }));
-  }, [setState]);
+      operation: { ...s.operation, error: null }
+    }))
+  }, [setState])
 
   return useMemo(() => ({
     // State
@@ -275,10 +294,10 @@ export function useUser(): UseUserReturn {
 
     // State management
     reset,
-    clearError,
+    clearError
   }), [
     state, data, list, isLoading, error,
     fetchById, create, update, remove,
-    fetchList, refreshList, reset, clearError,
-  ]);
+    fetchList, refreshList, reset, clearError
+  ])
 }

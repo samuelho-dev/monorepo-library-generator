@@ -1,3 +1,6 @@
+import { describe, expect, it } from "@effect/vitest"
+import { Context, Effect, Layer } from "effect"
+
 /**
  * User Layers Tests
  *
@@ -12,9 +15,6 @@ Testing Guidelines:
  *
  * @module @samuelho-dev/data-access-user
  */
-
-import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer } from "effect"
 
 /**
  * Test service tag for layer composition tests

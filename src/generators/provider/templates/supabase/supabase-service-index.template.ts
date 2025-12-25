@@ -32,13 +32,13 @@ For granular imports, import directly from service modules.`,
 
   // Export all services
   builder.addRaw(`// Core client
-export { SupabaseClient, type SupabaseClientServiceInterface } from "./client";
+export { SupabaseClient, type SupabaseClientServiceInterface } from "./client"
 
 // Authentication
-export { SupabaseAuth, type SupabaseAuthServiceInterface } from "./auth";
+export { SupabaseAuth, type SupabaseAuthServiceInterface } from "./auth"
 
 // Storage
-export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./storage";`)
+export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./storage"`)
 
   return builder.toString()
 }

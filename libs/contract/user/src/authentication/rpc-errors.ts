@@ -7,7 +7,7 @@
  * @module @samuelho-dev/contract-user/authentication/rpc-errors
  */
 
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 // ============================================================================
 // RPC Errors (Schema.TaggedError for serialization)
@@ -20,14 +20,14 @@ export class AuthenticationNotFoundRpcError extends Schema.TaggedError<Authentic
   "AuthenticationNotFoundRpcError",
   {
     message: Schema.String,
-    authenticationId: Schema.String,
+    authenticationId: Schema.String
   }
 ) {
   static create(id: string) {
     return new AuthenticationNotFoundRpcError({
       message: `Authentication not found: ${id}`,
-      authenticationId: id,
-    });
+      authenticationId: id
+    })
   }
 }
 
@@ -39,11 +39,11 @@ export class AuthenticationValidationRpcError extends Schema.TaggedError<Authent
   {
     message: Schema.String,
     field: Schema.optional(Schema.String),
-    constraint: Schema.optional(Schema.String),
+    constraint: Schema.optional(Schema.String)
   }
 ) {
   static create(params: { message: string; field?: string; constraint?: string }) {
-    return new AuthenticationValidationRpcError(params);
+    return new AuthenticationValidationRpcError(params)
   }
 }
 
@@ -55,15 +55,15 @@ export class AuthenticationPermissionRpcError extends Schema.TaggedError<Authent
   {
     message: Schema.String,
     action: Schema.String,
-    authenticationId: Schema.optional(Schema.String),
+    authenticationId: Schema.optional(Schema.String)
   }
 ) {
   static create(action: string, authenticationId?: string) {
     return new AuthenticationPermissionRpcError({
       message: `Permission denied: ${action}`,
       action,
-      ...(authenticationId ? { authenticationId } : {}),
-    });
+      ...(authenticationId ? { authenticationId } : {})
+    })
   }
 }
 
@@ -73,7 +73,7 @@ export class AuthenticationPermissionRpcError extends Schema.TaggedError<Authent
 export type AuthenticationRpcError =
   | AuthenticationNotFoundRpcError
   | AuthenticationValidationRpcError
-  | AuthenticationPermissionRpcError;
+  | AuthenticationPermissionRpcError
 
 /**
  * Schema for the RPC error union
@@ -81,5 +81,5 @@ export type AuthenticationRpcError =
 export const AuthenticationRpcError = Schema.Union(
   AuthenticationNotFoundRpcError,
   AuthenticationValidationRpcError,
-  AuthenticationPermissionRpcError,
-);
+  AuthenticationPermissionRpcError
+)

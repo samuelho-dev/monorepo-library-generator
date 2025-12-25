@@ -37,23 +37,14 @@ ARCHITECTURE PATTERN:
   builder.addBlankLine()
 
   builder.addImports([
-    { from: "effect", imports: ["Chunk", "Context", "Effect", "Layer", "Option", "Stream"] }
-  ])
-  builder.addBlankLine()
-
-  builder.addSectionComment("Environment Configuration")
-  builder.addRaw(`import { env } from "${scope}/env";`)
-  builder.addBlankLine()
-
-  builder.addComment("Import operation implementations")
-  builder.addImports([
+    { from: "effect", imports: ["Chunk", "Context", "Effect", "Layer", "Option", "Stream"] },
+    { from: `${scope}/env`, imports: ["env"] },
+    { from: "./operations/aggregate", imports: ["aggregateOperations"] },
     { from: "./operations/create", imports: ["createOperations"] },
-    { from: "./operations/read", imports: ["readOperations"] },
-    { from: "./operations/update", imports: ["updateOperations"] },
     { from: "./operations/delete", imports: ["deleteOperations"] },
-    { from: "./operations/aggregate", imports: ["aggregateOperations"] }
+    { from: "./operations/read", imports: ["readOperations"] },
+    { from: "./operations/update", imports: ["updateOperations"] }
   ])
-  builder.addBlankLine()
 
   builder.addSectionComment("Repository Context.Tag")
   builder.addBlankLine()
@@ -72,20 +63,20 @@ const repositoryImpl = {
   ...aggregateOperations,
 
   streamAll: (options?: { batchSize?: number }) => {
-    const batchSize = options?.batchSize ?? 100;
+    const batchSize = options?.batchSize ?? 100
     return Stream.paginateChunkEffect(0, (offset) =>
       readOperations.findAll(undefined, { skip: offset, limit: batchSize }).pipe(
         Effect.map((result) => {
-          const chunk = Chunk.fromIterable(result.items);
-          const next = result.hasMore ? Option.some(offset + batchSize) : Option.none();
-          return [chunk, next] as const;
+          const chunk = Chunk.fromIterable(result.items)
+          const next = result.hasMore ? Option.some(offset + batchSize) : Option.none()
+          return [chunk, next] as const
         })
       )
-    );
-  },
-} as const;
+    )
+  }
+} as const
 
-export type ${className}RepositoryInterface = typeof repositoryImpl;
+export type ${className}RepositoryInterface = typeof repositoryImpl
 
 /**
  * ${className} Repository Tag
@@ -118,15 +109,14 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
   ${className}Repository,
   ${className}RepositoryInterface
 >() {
-${
-    generateStaticLayers({
-      className: `${className}Repository`,
-      layerType: "succeed",
-      liveImpl: "repositoryImpl",
-      testViaDependencies: true
-    })
-  }
-}`)
+${generateStaticLayers({
+    className: `${className}Repository`,
+    layerType: "succeed",
+    liveImpl: "repositoryImpl",
+    testViaDependencies: true
+  })}
+}
+`)
 
   return builder.toString()
 }

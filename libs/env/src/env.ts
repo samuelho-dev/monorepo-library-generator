@@ -21,13 +21,11 @@ Re-run generator to sync with .env changes:
  *
  * @module @workspace/env
  */
-
-import { createEnv, Config } from "./createEnv"
+import { Config, createEnv } from "./createEnv"
 
 // ============================================================================
 // Environment Definition
 // ============================================================================
-
 /**
  * Application environment variables
  *
@@ -38,28 +36,82 @@ import { createEnv, Config } from "./createEnv"
 export const env = createEnv({
   // Server-only variables (secrets, internal config)
   server: {
-    DATABASE_URL: Config.redacted("DATABASE_URL"),
+    // Database
+    DATABASE_URL: Config.redacted("DATABASE_URL").pipe(
+      Config.withDefault("postgresql://localhost:5432/dev")
+    ),
+
+    // Supabase
+    SUPABASE_URL: Config.string("SUPABASE_URL").pipe(
+      Config.withDefault("http://localhost:54321")
+    ),
+    SUPABASE_ANON_KEY: Config.redacted("SUPABASE_ANON_KEY").pipe(
+      Config.withDefault("dev-anon-key")
+    ),
+    SUPABASE_SERVICE_ROLE_KEY: Config.redacted("SUPABASE_SERVICE_ROLE_KEY").pipe(
+      Config.withDefault("dev-service-role-key")
+    ),
+
+    // Redis
+    REDIS_URL: Config.string("REDIS_URL").pipe(
+      Config.withDefault("redis://localhost:6379")
+    ),
+
+    // Service Authentication (server-only, protected by context)
+    SERVICE_AUTH_SECRET: Config.string("SERVICE_AUTH_SECRET").pipe(
+      Config.withDefault("dev-service-secret")
+    ),
+    JWT_SECRET: Config.string("JWT_SECRET").pipe(
+      Config.withDefault("dev-jwt-secret")
+    ),
+
+    // OpenTelemetry
+    OTEL_SERVICE_NAME: Config.string("OTEL_SERVICE_NAME").pipe(
+      Config.withDefault("dev-service")
+    ),
+    OTEL_SERVICE_VERSION: Config.string("OTEL_SERVICE_VERSION").pipe(
+      Config.withDefault("0.0.0")
+    ),
+    OTEL_EXPORTER_OTLP_ENDPOINT: Config.string("OTEL_EXPORTER_OTLP_ENDPOINT").pipe(
+      Config.withDefault("http://localhost:4318")
+    ),
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: Config.string("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT").pipe(
+      Config.withDefault("http://localhost:4318/v1/traces")
+    ),
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: Config.string("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT").pipe(
+      Config.withDefault("http://localhost:4318/v1/metrics")
+    ),
+    OTEL_TRACES_ENABLED: Config.string("OTEL_TRACES_ENABLED").pipe(
+      Config.withDefault("true")
+    ),
+    OTEL_METRICS_ENABLED: Config.string("OTEL_METRICS_ENABLED").pipe(
+      Config.withDefault("true")
+    ),
+    OTEL_METRICS_EXPORT_INTERVAL_MS: Config.string("OTEL_METRICS_EXPORT_INTERVAL_MS").pipe(
+      Config.withDefault("60000")
+    )
   },
 
   // Client-safe variables (must start with PUBLIC_)
   client: {
     // Add client-safe env vars here
-    // PUBLIC_API_URL: Config.string("PUBLIC_API_URL"),
+    // PUBLIC_API_URL: Config.string("PUBLIC_API_URL")
   },
 
   // Shared variables (available in both contexts)
   shared: {
-    NODE_ENV: Config.string("NODE_ENV").pipe(Config.withDefault("development")),
+    NODE_ENV: Config.string("NODE_ENV").pipe(
+      Config.withDefault("development")
+    )
   },
 
   // Required prefix for client variables
-  clientPrefix: "PUBLIC_",
+  clientPrefix: "PUBLIC_"
 })
 
 // ============================================================================
 // Type Exports
 // ============================================================================
-
 /**
  * Environment type (inferred from createEnv)
  */

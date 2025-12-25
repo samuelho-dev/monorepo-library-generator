@@ -8,30 +8,24 @@ Layers are available as static members on the service class.
  *
  * @module @samuelho-dev/infra-database
  */
-
 // ============================================================================
 // Service and Types
 // ============================================================================
-
 // Service with static layers (Memory, Test, Live)
-export {
-  DatabaseService,
-  type Database
-} from "./lib/service"
+export { DatabaseService } from "./lib/service"
+export type { Database } from "./lib/service"
 
 // ============================================================================
 // Error Types
 // ============================================================================
-
 // Error types for error handling
 export {
-  DatabaseServiceError,
   DatabaseInternalError,
   DatabaseConfigError,
   DatabaseConnectionError,
   DatabaseTimeoutError,
-  type DatabaseError
 } from "./lib/errors"
+export type { DatabaseError, DatabaseServiceError } from "./lib/errors"
 
 // ============================================================================
 // Additional Layers

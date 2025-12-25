@@ -13,45 +13,41 @@ Encapsulates common query patterns and SQL building logic.
  */
 
 
-
 // ============================================================================
 // Query Type Aliases
 // ============================================================================
 
-
-
 /**
  * User Filter options for queries
  */
-export type UserQueryFilters = Record<string, never>;
+export type UserQueryFilters = Record<string, never>
 
 /**
  * Pagination options
  */
 export interface PaginationOptions {
-  readonly skip: number;
-  readonly limit: number;
+  readonly skip: number
+  readonly limit: number
 }
 
 // ============================================================================
 // Query Builders
 // ============================================================================
 
-
 /**
  * Build find all query for User
  *
  * @example
  * ```typescript
- * const query = buildFindAllQuery(db, { status: 'active' }, { skip: 0, limit: 10 });
- * const results = await query.execute();
+ * const query = buildFindAllQuery(db, { status: 'active' }, { skip: 0, limit: 10 })
+ * const results = await query.execute()
  * ```
  */
 export function buildFindAllQuery(
-  db: Kysely<Database>,
+  db: Kysely<Database>
 ) {
-  const query = db.selectFrom("user");
-  return query;
+  const query = db.selectFrom("user")
+  return query
 }
 
 /**
@@ -59,17 +55,17 @@ export function buildFindAllQuery(
  *
  * @example
  * ```typescript
- * const query = buildFindByIdQuery(db, '123');
- * const result = await query.executeTakeFirst();
+ * const query = buildFindByIdQuery(db, '123')
+ * const result = await query.executeTakeFirst()
  * ```
  */
 export function buildFindByIdQuery(
   db: Kysely<Database>,
-  id: string,
+  id: string
 ) {
   return db
     .selectFrom("user")
-    .where("id", "=", id);
+    .where("id", "=", id)
 }
 
 /**
@@ -77,16 +73,16 @@ export function buildFindByIdQuery(
  *
  * @example
  * ```typescript
- * const query = buildCountQuery(db, { status: 'active' });
- * const { count } = await query.executeTakeFirstOrThrow();
+ * const query = buildCountQuery(db, { status: 'active' })
+ * const { count } = await query.executeTakeFirstOrThrow()
  * ```
  */
 export function buildCountQuery(
-  db: Kysely<Database>,
+  db: Kysely<Database>
 ) {
   const query = db
     .selectFrom("user")
-    .select((eb) => eb.fn.countAll().as("count"));
+    .select((eb) => eb.fn.countAll().as("count"))
 
-  return query;
+  return query
 }

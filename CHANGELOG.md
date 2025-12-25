@@ -1,5 +1,43 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.7.0
+
+### Minor Changes
+
+- Comprehensive biome lint compliance for all generator templates
+
+  ## Re-export and Barrel File Fixes (noReExportAll, noBarrelFile)
+  - Eliminated `export *` patterns across all templates - use named exports instead
+  - Removed re-export blocks from error templates (data-access, feature, infra)
+  - Eliminated sub-module index.ts barrel files from generation
+  - Removed contract re-exports from service/layer templates
+  - Fixed namespace exports in contract index templates
+
+  ## Complexity Refactoring (noExcessiveCognitiveComplexity)
+  - **storage/service.template.ts**: Extracted getFileSize, validateFileSize, validateMimeType, error mappers, buildListOptions, buildListResult
+  - **redis-service.template.ts**: Extracted buildBaseOptions, buildMainOptions, buildSubOptions, buildScanArgs, executeScan
+  - **supabase-auth.template.ts**: Extracted validateUser, handleSignInError, buildAuthResult
+  - **rpc/client.template.ts**: Extracted getAuthHeader, executeRequest, parseResponseBody, checkRpcError, validateResponse
+  - **rpc/transport.template.ts**: Extracted checkTransportError helper
+  - **jobs/jobs-queue.template.ts**: Extracted validateJobData, processCreateJob, processUpdateJob, processDeleteJob, processBulkJob
+
+  ## Other Fixes
+  - Removed unused imports and variables (noUnusedImports, noUnusedVariables)
+  - Fixed useless rename patterns like `Option as Option` (noUselessRename)
+  - Removed unused extractBearerToken function from auth middleware
+
+  All 242 generated files now pass biome lint with zero errors.
+
+## 1.6.4
+
+### Patch Changes
+
+- Fix biome lint complexity errors in generator templates
+  - Refactored storage/service.template.ts to extract helper functions (getFileSize, validateFileSize, validateMimeType, error mappers, buildListOptions, buildListResult)
+  - Refactored redis-service.template.ts to extract helper functions (buildBaseOptions, buildMainOptions, buildSubOptions, buildScanArgs, executeScan)
+  - Refactored supabase-auth.template.ts to extract helper functions (validateUser, handleSignInError, buildAuthResult)
+  - All generated files now pass biome lint with no complexity errors (max: 15)
+
 ## 1.6.0
 
 ### Minor Changes

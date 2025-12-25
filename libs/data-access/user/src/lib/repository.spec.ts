@@ -1,3 +1,6 @@
+import { describe, expect, it } from "@effect/vitest"
+import { Context, Effect, Layer, Option } from "effect"
+
 /**
  * User Repository Tests
  *
@@ -13,9 +16,6 @@ Testing Guidelines:
  *
  * @module @samuelho-dev/data-access-user
  */
-
-import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer, Option } from "effect"
 
 /**
  * Test entity type for repository tests
@@ -35,8 +35,13 @@ class UserRepository extends Context.Tag("UserRepository")<
   {
     readonly findById: (id: string) => Effect.Effect<Option.Option<UserEntity>>
     readonly findAll: () => Effect.Effect<ReadonlyArray<UserEntity>>
-    readonly create: (data: Omit<UserEntity, "id" | "createdAt" | "updatedAt">) => Effect.Effect<UserEntity>
-    readonly update: (id: string, data: Partial<Omit<UserEntity, "id" | "createdAt" | "updatedAt">>) => Effect.Effect<Option.Option<UserEntity>>
+    readonly create: (
+      data: Omit<UserEntity, "id" | "createdAt" | "updatedAt">
+    ) => Effect.Effect<UserEntity>
+    readonly update: (
+      id: string,
+      data: Partial<Omit<UserEntity, "id" | "createdAt" | "updatedAt">>
+    ) => Effect.Effect<Option.Option<UserEntity>>
     readonly delete: (id: string) => Effect.Effect<boolean>
   }
 >() {}
@@ -53,7 +58,6 @@ function createInMemoryUserRepository() {
 
     findAll: () =>
       Effect.sync(() => Array.from(store.values())),
-
     create: (data) =>
       Effect.sync(() => {
         const entity: UserEntity = {
@@ -65,7 +69,6 @@ function createInMemoryUserRepository() {
         store.set(entity.id, entity)
         return entity
       }),
-
     update: (id, data) =>
       Effect.sync(() => {
         const existing = store.get(id)
@@ -79,7 +82,6 @@ function createInMemoryUserRepository() {
         store.set(id, updated)
         return Option.some(updated)
       }),
-
     delete: (id) =>
       Effect.sync(() => store.delete(id))
   })

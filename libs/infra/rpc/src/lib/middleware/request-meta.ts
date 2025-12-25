@@ -16,32 +16,30 @@ This middleware is applied globally and is always available.
  *
  * @module @samuelho-dev/infra-rpc/middleware/request-meta
  */
-
 // ============================================================================
 // Request Metadata Types
 // ============================================================================
-
 /**
  * Request metadata provided to all handlers
  */
 export interface RequestMetadata {
   /** Unique request identifier */
-  readonly requestId: string;
+  readonly requestId: string
 
   /** Request timestamp */
-  readonly timestamp: Date;
+  readonly timestamp: Date
 
   /** Source IP or forwarded-for */
-  readonly source: string;
+  readonly source: string
 
   /** Parsed headers (lowercase keys) */
-  readonly headers: Readonly<Record<string, string>>;
+  readonly headers: Readonly<Record<string, string>>
 
   /** User agent string */
-  readonly userAgent: string | null;
+  readonly userAgent: string | null
 
   /** Correlation ID for distributed tracing */
-  readonly correlationId: string | null;
+  readonly correlationId: string | null
 }
 
 /**
@@ -66,7 +64,6 @@ export class RequestMeta extends Context.Tag("@rpc/RequestMeta")<
 // ============================================================================
 // Request Meta Middleware
 // ============================================================================
-
 /**
  * RequestMetaMiddleware using native RpcMiddleware.Tag
  *
@@ -89,13 +86,13 @@ export const RequestMetaMiddlewareLive = Layer.succeed(
   ({ headers }) =>
     Effect.sync(() => {
       // Convert Headers to plain Record
-      const headersRecord: Record<string, string> = {};
+      const headersRecord: Record<string, string> = {}
 
       // Handle both Map-like and object-like headers
       if (typeof headers === "object" && headers !== null) {
         for (const [key, value] of Object.entries(headers)) {
           if (typeof value === "string") {
-            headersRecord[key.toLowerCase()] = value;
+            headersRecord[key.toLowerCase()] = value
           }
         }
       }
@@ -104,22 +101,22 @@ export const RequestMetaMiddlewareLive = Layer.succeed(
       const requestId =
         headersRecord["x-request-id"] ??
         headersRecord["x-amzn-requestid"] ??
-        crypto.randomUUID();
+        crypto.randomUUID()
 
       // Extract correlation ID for distributed tracing
       const correlationId =
         headersRecord["x-correlation-id"] ??
         headersRecord["x-trace-id"] ??
-        null;
+        null
 
       // Extract source IP
       const source =
         headersRecord["x-forwarded-for"]?.split(",")[0]?.trim() ??
         headersRecord["x-real-ip"] ??
-        "unknown";
+        "unknown"
 
       // Extract user agent
-      const userAgent = headersRecord["user-agent"] ?? null;
+      const userAgent = headersRecord["user-agent"] ?? null
 
       return {
         requestId,
@@ -127,15 +124,13 @@ export const RequestMetaMiddlewareLive = Layer.succeed(
         source,
         headers: headersRecord,
         userAgent,
-        correlationId,
-      };
+        correlationId
+      }
     })
-);
-
+)
 // ============================================================================
 // Handler Context Helpers
 // ============================================================================
-
 /**
  * Combined handler context type
  *
@@ -143,11 +138,11 @@ export const RequestMetaMiddlewareLive = Layer.succeed(
  */
 export interface HandlerContext {
   readonly user: {
-    readonly id: string;
-    readonly email: string;
-    readonly roles: ReadonlyArray<string>;
-  };
-  readonly meta: RequestMetadata;
+    readonly id: string
+    readonly email: string
+    readonly roles: ReadonlyArray<string>
+  }
+  readonly meta: RequestMetadata
 }
 
 /**
@@ -178,18 +173,18 @@ export interface HandlerContext {
 export const getHandlerContext = Effect.all({
   user: Effect.serviceOption(
     Context.GenericTag<{
-      readonly id: string;
-      readonly email: string;
-      readonly roles: ReadonlyArray<string>;
+      readonly id: string
+      readonly email: string
+      readonly roles: ReadonlyArray<string>
     }>("@rpc/CurrentUser")
   ).pipe(Effect.map(Option.getOrNull)),
-  meta: RequestMeta,
+  meta: RequestMeta
 }).pipe(
   Effect.map(({ user, meta }) => ({
     user: user ?? { id: "", email: "", roles: [] },
-    meta,
+    meta
   }))
-);
+)
 
 /**
  * Get handler context with optional services
@@ -199,48 +194,47 @@ export const getHandlerContext = Effect.all({
 export const getHandlerContextOptional = Effect.all({
   user: Effect.serviceOption(
     Context.GenericTag<{
-      readonly id: string;
-      readonly email: string;
-      readonly roles: ReadonlyArray<string>;
+      readonly id: string
+      readonly email: string
+      readonly roles: ReadonlyArray<string>
     }>("@rpc/CurrentUser")
   ),
-  meta: Effect.serviceOption(RequestMeta),
+  meta: Effect.serviceOption(RequestMeta)
 }).pipe(
   Effect.map(({ user, meta }) => ({
     user: Option.getOrNull(user),
-    meta: Option.getOrNull(meta),
+    meta: Option.getOrNull(meta)
   }))
-);
+)
 
 // ============================================================================
 // Observability Helpers
 // ============================================================================
-
 /**
  * Log request start with metadata
  */
 export const logRequestStart = (rpcName: string) =>
   Effect.gen(function*() {
-    const meta = yield* RequestMeta;
+    const meta = yield* RequestMeta
     yield* Effect.logInfo(`[RPC] ${rpcName} started`, {
       requestId: meta.requestId,
       correlationId: meta.correlationId,
-      source: meta.source,
-    });
-  });
+      source: meta.source
+    })
+  })
 
 /**
  * Log request end with duration
  */
 export const logRequestEnd = (rpcName: string, startTime: number) =>
   Effect.gen(function*() {
-    const meta = yield* RequestMeta;
-    const duration = Date.now() - startTime;
+    const meta = yield* RequestMeta
+    const duration = Date.now() - startTime
     yield* Effect.logInfo(`[RPC] ${rpcName} completed in ${duration}ms`, {
       requestId: meta.requestId,
-      duration,
-    });
-  });
+      duration
+    })
+  })
 
 /**
  * Create span attributes from request metadata
@@ -248,11 +242,11 @@ export const logRequestEnd = (rpcName: string, startTime: number) =>
  * Use with Effect.withSpan for distributed tracing.
  */
 export const getSpanAttributes = Effect.gen(function*() {
-  const meta = yield* RequestMeta;
+  const meta = yield* RequestMeta
   return {
     "request.id": meta.requestId,
     "request.source": meta.source,
     "request.correlation_id": meta.correlationId ?? "none",
-    "request.user_agent": meta.userAgent ?? "none",
-  };
-});
+    "request.user_agent": meta.userAgent ?? "none"
+  }
+})

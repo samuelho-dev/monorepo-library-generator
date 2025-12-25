@@ -11,8 +11,6 @@ Import shared types from the parent contract when needed.
  * @module @samuelho-dev/contract-user/authentication/entities
  */
 
-
-
 /**
  * TODO: Customize for your authentication sub-module:
  * 1. Add authentication-specific entity fields
@@ -21,13 +19,9 @@ Import shared types from the parent contract when needed.
  * 4. Add Schema.annotations() for documentation
  */
 
-
-
 // ============================================================================
 // Authentication ID Type
 // ============================================================================
-
-
 /**
  * Authentication ID branded type
  */
@@ -38,33 +32,30 @@ export const AuthenticationId = Schema.String.pipe(
     title: "Authentication ID",
     description: "Unique identifier for a authentication entity"
   })
-);
+)
 
-export type AuthenticationId = Schema.Schema.Type<typeof AuthenticationId>;
-
+export type AuthenticationId = Schema.Schema.Type<typeof AuthenticationId>
 // ============================================================================
 // Authentication Entity
 // ============================================================================
-
-
 /**
  * Authentication domain entity
  *
  * Part of the user domain, handles authentication-specific data.
+ *
+ * @identifier Authentication
+ * @title Authentication Entity
+ * @description Authentication entity within the user domain
  */
 export class Authentication extends Schema.Class<Authentication>("Authentication")({
   /** Unique identifier */
   id: AuthenticationId,
-
   /** Created timestamp */
   createdAt: Schema.DateTimeUtc,
-
   /** Updated timestamp */
   updatedAt: Schema.DateTimeUtc,
-
   /** Parent user ID */
   userId: Schema.optional(Schema.UUID),
-
   /** Authentication name */
   name: Schema.String.pipe(
     Schema.minLength(1),
@@ -73,70 +64,49 @@ export class Authentication extends Schema.Class<Authentication>("Authentication
       description: "Name of this authentication"
     })
   ),
-
   /** Authentication status */
-  status: Schema.Literal("active", "inactive", "pending"),
-
+  status: Schema.Literal(
+    "active",
+    "inactive",
+    "pending"
+  )
   // TODO: Add authentication-specific fields
-}).pipe(
-  Schema.annotations({
-    identifier: "Authentication",
-    title: "Authentication Entity",
-    description: "Authentication entity within the user domain"
-  })
-) {}
-
+}) {}
 // ============================================================================
 // Authentication Item (for collections)
 // ============================================================================
-
-
 /**
  * Authentication item for list/collection operations
  *
  * Lightweight representation for authentication items
+ *
+ * @identifier AuthenticationItem
+ * @title Authentication Item
+ * @description Lightweight authentication item representation
  */
 export class AuthenticationItem extends Schema.Class<AuthenticationItem>("AuthenticationItem")({
   /** Item identifier */
   id: Schema.UUID,
-
   /** Item name or label */
-  name: Schema.String.pipe(
-    Schema.minLength(1),
-    Schema.annotations({
-      title: "Authentication Item Name",
-      description: "Display name for this authentication item"
-    })
-  ),
-
+  name: Schema.String.pipe(Schema.minLength(1)),
   /** Item quantity (if applicable) */
-  quantity: Schema.optional(Schema.Number.pipe(Schema.positive())),
-
+  quantity: Schema.optional(Schema.Number.pipe(Schema.positive()))
   // TODO: Add authentication-specific item fields
-}).pipe(
-  Schema.annotations({
-    identifier: "AuthenticationItem",
-    title: "Authentication Item",
-    description: "Lightweight authentication item representation"
-  })
-) {}
-
+}) {}
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-
 /**
  * Parse Authentication from unknown data
  */
-export const parseAuthentication = Schema.decodeUnknown(Authentication);
+export const parseAuthentication = Schema.decodeUnknown(Authentication)
 
 /**
  * Encode Authentication to plain object
  */
-export const encodeAuthentication = Schema.encode(Authentication);
+export const encodeAuthentication = Schema.encode(Authentication)
 
 /**
  * Parse AuthenticationItem from unknown data
  */
-export const parseAuthenticationItem = Schema.decodeUnknown(AuthenticationItem);
+export const parseAuthenticationItem = Schema.decodeUnknown(AuthenticationItem)

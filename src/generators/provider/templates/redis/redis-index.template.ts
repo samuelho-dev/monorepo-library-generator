@@ -59,8 +59,8 @@ Usage:
   RedisPubSubError,
   // Error mapping utility
   mapRedisError,
-} from "./lib/errors";
-export type { RedisProviderError } from "./lib/errors";`)
+} from "./lib/errors"
+export type { RedisProviderError } from "./lib/errors"`)
   builder.addBlankLine()
 
   // Type exports
@@ -77,7 +77,7 @@ export type { RedisProviderError } from "./lib/errors";`)
   RedisCacheClient,
   RedisPubSubClient,
   RedisQueueClient,
-} from "./lib/types";`)
+} from "./lib/types"`)
   builder.addBlankLine()
 
   // Service exports
@@ -102,7 +102,7 @@ export type { RedisProviderError } from "./lib/errors";`)
   Redis,
   RedisService,
   type RedisServiceInterface,
-} from "./lib/redis";`)
+} from "./lib/redis"`)
   builder.addBlankLine()
 
   // Sub-service Context.Tags
@@ -113,9 +113,9 @@ export type { RedisProviderError } from "./lib/errors";`)
   builder.addComment("Each can be used separately for fine-grained dependency injection")
   builder.addBlankLine()
 
-  builder.addRaw(`export { RedisCacheService } from "./lib/cache";
-export { RedisPubSubService } from "./lib/pubsub";
-export { RedisQueueService } from "./lib/queue";`)
+  builder.addRaw(`export { RedisCacheService } from "./lib/cache"
+export { RedisPubSubService } from "./lib/pubsub"
+export { RedisQueueService } from "./lib/queue"`)
   builder.addBlankLine()
 
   // Sub-service factory exports
@@ -126,9 +126,9 @@ export { RedisQueueService } from "./lib/queue";`)
   builder.addComment("to create sub-services with custom ioredis instances.")
   builder.addBlankLine()
 
-  builder.addRaw(`export { makeCacheClient } from "./lib/cache";
-export { makePubSubClient } from "./lib/pubsub";
-export { makeQueueClient } from "./lib/queue";`)
+  builder.addRaw(`export { makeCacheClient } from "./lib/cache"
+export { makePubSubClient } from "./lib/pubsub"
+export { makeQueueClient } from "./lib/queue"`)
   builder.addBlankLine()
 
   // Usage examples

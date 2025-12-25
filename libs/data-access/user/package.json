@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "User data access with cache integration",
+  "description": "user data access",
   "exports": {
     ".": {
       "import": "./src/index.ts",

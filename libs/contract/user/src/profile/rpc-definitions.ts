@@ -1,5 +1,9 @@
 import { Rpc, RpcGroup } from "@effect/rpc"
 import { Schema } from "effect"
+import { RouteTag } from "../lib/rpc-definitions"
+import type { RouteType } from "../lib/rpc-definitions"
+import { Profile, ProfileId } from "./entities"
+import { ProfileRpcError } from "./rpc-errors"
 
 /**
  * Profile RPC Definitions
@@ -26,26 +30,13 @@ import { Schema } from "effect"
  * @module @samuelho-dev/contract-user/profile/rpc
  */
 
-
-// ============================================================================
-// Import Route System from Parent
-// ============================================================================
-
-import { RouteTag, type RouteType } from "../lib/rpc-definitions";
-
 // ============================================================================
 // Local Imports
 // ============================================================================
-
-import { ProfileId, Profile } from "./entities";
-import { ProfileRpcError } from "./rpc-errors";
-
 // ============================================================================
 // Re-export Route System
 // ============================================================================
-
-export { RouteTag, type RouteType };
-
+export { RouteTag, type RouteType }
 // ============================================================================
 // Request/Response Schemas
 // ============================================================================
@@ -54,31 +45,27 @@ export { RouteTag, type RouteType };
  * Create input schema
  */
 export const CreateProfileInput = Schema.Struct({
-  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
+  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))
   // TODO: Add domain-specific fields for Profile
-}).pipe(
-  Schema.annotations({
-    identifier: "CreateProfileInput",
-    title: "Create Profile Input",
-  })
-);
+}).pipe(Schema.annotations({
+  identifier: "CreateProfileInput",
+  title: "Create Profile Input"
+}))
 
-export type CreateProfileInput = Schema.Schema.Type<typeof CreateProfileInput>;
+export type CreateProfileInput = Schema.Schema.Type<typeof CreateProfileInput>
 
 /**
  * Update input schema
  */
 export const UpdateProfileInput = Schema.Struct({
-  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))),
+  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
   // TODO: Add domain-specific update fields for Profile
-}).pipe(
-  Schema.annotations({
-    identifier: "UpdateProfileInput",
-    title: "Update Profile Input",
-  })
-);
+}).pipe(Schema.annotations({
+  identifier: "UpdateProfileInput",
+  title: "Update Profile Input"
+}))
 
-export type UpdateProfileInput = Schema.Schema.Type<typeof UpdateProfileInput>;
+export type UpdateProfileInput = Schema.Schema.Type<typeof UpdateProfileInput>
 
 // ============================================================================
 // RPC Definitions
@@ -91,12 +78,12 @@ export type UpdateProfileInput = Schema.Schema.Type<typeof UpdateProfileInput>;
  */
 export class ProfileGet extends Rpc.make("Profile.Get", {
   payload: Schema.Struct({
-    id: ProfileId,
+    id: ProfileId
   }),
   success: Profile,
-  error: ProfileRpcError,
+  error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public";
+  static readonly [RouteTag]: RouteType = "public"
 }
 
 /**
@@ -107,21 +94,21 @@ export class ProfileGet extends Rpc.make("Profile.Get", {
 export class ProfileList extends Rpc.make("Profile.List", {
   payload: Schema.Struct({
     page: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-      default: () => 1,
+      default: () => 1
     }),
     pageSize: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-      default: () => 20,
-    }),
+      default: () => 20
+    })
   }),
   success: Schema.Struct({
     items: Schema.Array(Profile),
     total: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
     page: Schema.Number.pipe(Schema.int(), Schema.positive()),
-    pageSize: Schema.Number.pipe(Schema.int(), Schema.positive()),
+    pageSize: Schema.Number.pipe(Schema.int(), Schema.positive())
   }),
-  error: ProfileRpcError,
+  error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public";
+  static readonly [RouteTag]: RouteType = "public"
 }
 
 /**
@@ -132,9 +119,9 @@ export class ProfileList extends Rpc.make("Profile.List", {
 export class ProfileCreate extends Rpc.make("Profile.Create", {
   payload: CreateProfileInput,
   success: Profile,
-  error: ProfileRpcError,
+  error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -145,12 +132,12 @@ export class ProfileCreate extends Rpc.make("Profile.Create", {
 export class ProfileUpdate extends Rpc.make("Profile.Update", {
   payload: Schema.Struct({
     id: ProfileId,
-    data: UpdateProfileInput,
+    data: UpdateProfileInput
   }),
   success: Profile,
-  error: ProfileRpcError,
+  error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -160,15 +147,15 @@ export class ProfileUpdate extends Rpc.make("Profile.Update", {
  */
 export class ProfileDelete extends Rpc.make("Profile.Delete", {
   payload: Schema.Struct({
-    id: ProfileId,
+    id: ProfileId
   }),
   success: Schema.Struct({
     success: Schema.Literal(true),
-    deletedAt: Schema.DateTimeUtc,
+    deletedAt: Schema.DateTimeUtc
   }),
-  error: ProfileRpcError,
+  error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 // ============================================================================
@@ -185,10 +172,10 @@ export const ProfileRpcs = RpcGroup.make(
   ProfileList,
   ProfileCreate,
   ProfileUpdate,
-  ProfileDelete,
-);
+  ProfileDelete
+)
 
-export type ProfileRpcs = typeof ProfileRpcs;
+export type ProfileRpcs = typeof ProfileRpcs
 
 /**
  * RPCs organized by route type
@@ -196,5 +183,5 @@ export type ProfileRpcs = typeof ProfileRpcs;
 export const ProfileRpcsByRoute = {
   public: [ProfileGet, ProfileList] as const,
   protected: [ProfileCreate, ProfileUpdate, ProfileDelete] as const,
-  service: [] as const,
-} as const;
+  service: [] as const
+}

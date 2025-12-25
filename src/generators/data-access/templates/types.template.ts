@@ -41,11 +41,11 @@ Re-exports entity types from contract library and provides query-specific types.
 // Note: Contract re-exports Prisma-generated types (Select, Insert, Update)
 // and defines branded ID type in rpc-definitions.ts
 export type {
-  ${className}Select as ${className},
   ${className}Id,
   ${className}Insert as ${className}CreateInput,
-  ${className}Update as ${className}UpdateInput,
-} from "${contractLibrary}";`)
+  ${className}Select as ${className},
+  ${className}Update as ${className}UpdateInput
+} from "${contractLibrary}"`)
   builder.addBlankLine()
 
   // Filter & Query Types
@@ -70,19 +70,19 @@ export type {
  * @example
  * \`\`\`typescript
  * export interface ProductFilter {
- *   readonly category?: string;
- *   readonly minPrice?: number;
- *   readonly maxPrice?: number;
- *   readonly inStock?: boolean;
- *   readonly tags?: readonly string[];
- *   readonly search?: string;
- *   readonly createdAfter?: Date;
+ *   readonly category?: string
+ *   readonly minPrice?: number
+ *   readonly maxPrice?: number
+ *   readonly inStock?: boolean
+ *   readonly tags?: readonly string[]
+ *   readonly search?: string
+ *   readonly createdAfter?: Date
  * }
  * \`\`\`
  */
 export interface ${className}Filter {
   // TODO: Add filter properties (see JSDoc examples above)
-  readonly search?: string;
+  readonly search?: string
 }`)
   builder.addBlankLine()
 
@@ -94,8 +94,8 @@ export interface ${className}Filter {
   builder.addComment("TODO: Add domain-specific sortable fields")
   builder.addComment("Examples: createdAt, updatedAt, name, price")
   builder.addRaw(`export interface ${className}Sort {
-  readonly field: string; // TODO: Use union of sortable fields
-  readonly direction: SortDirection;
+  readonly field: string // TODO: Use union of sortable fields
+  readonly direction: SortDirection
 }`)
   builder.addBlankLine()
 
@@ -115,14 +115,14 @@ export interface ${className}Filter {
  *   filter: { status: 'active' },
  *   sort: { field: 'createdAt', direction: 'desc' },
  *   pagination: { skip: 0, limit: 20 }
- * };
- * const results = yield* repository.findAll(options);
+ * }
+ * const results = yield* repository.findAll(options)
  * \`\`\`
  */
 export interface QueryOptions {
-  readonly filter?: ${className}Filter;
-  readonly sort?: ${className}Sort;
-  readonly pagination?: PaginationOptions;
+  readonly filter?: ${className}Filter
+  readonly sort?: ${className}Sort
+  readonly pagination?: PaginationOptions
 }`)
   builder.addBlankLine()
 

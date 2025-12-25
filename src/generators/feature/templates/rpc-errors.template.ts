@@ -44,80 +44,36 @@ Error Flow:
     see: ["infra-rpc for RPC error types", "shared/errors for domain errors"]
   })
 
-  // Import Effect for the boundary wrapper
+  // Import only what's used in the boundary wrapper
   builder.addImports([
-    { from: "effect", imports: ["Effect"] }
+    { from: "effect", imports: ["Effect"] },
+    {
+      from: `${scope}/infra-rpc`,
+      imports: [
+        "RpcConflictError",
+        "RpcForbiddenError",
+        "RpcInternalError",
+        "RpcNotFoundError",
+        "RpcValidationError"
+      ]
+    },
+    // Import the feature error type for use in withRpcBoundary function
+    {
+      from: `../shared/errors`,
+      imports: [`${className}FeatureError`],
+      isTypeOnly: true
+    }
   ])
-  builder.addBlankLine()
 
-  builder.addSectionComment("RPC Errors (Schema.TaggedError - Serializable)")
-  builder.addBlankLine()
+  builder.addSectionComment("Import Notes")
 
-  // Re-export RPC errors from infra-rpc
-  builder.addRaw(`/**
- * RPC errors from infra-rpc
- *
- * These are Schema.TaggedError types that can cross RPC boundaries.
- * Use these in RPC handlers after transforming domain errors.
- */
-export {
-  // RPC Error Types
-  RpcNotFoundError,
-  RpcValidationError,
-  RpcForbiddenError,
-  RpcConflictError,
-  RpcServiceError,
-  RpcInternalError,
-  RpcTimeoutError,
-  RpcRateLimitError,
-  type RpcError,
-
-  // HTTP Status Mapping (single source of truth)
-  RpcHttpStatus,
-  getHttpStatus,
-
-  // Generic Error Boundary
-  withRpcErrorBoundary,
-} from "${scope}/infra-rpc";`)
-  builder.addBlankLine()
-
-  builder.addSectionComment("Domain Errors (Data.TaggedError - Internal)")
-  builder.addBlankLine()
-
-  // Re-export domain errors from shared/errors
-  builder.addRaw(`/**
- * Domain errors for Effect.catchTag transformations
- *
- * These are Data.TaggedError types that stay within the service layer.
- * Use Effect.catchTag to transform these to RPC errors at handler boundaries.
- */
-export {
-  // Domain Errors (from contract)
-  ${className}NotFoundError,
-  ${className}ValidationError,
-  ${className}AlreadyExistsError,
-  ${className}PermissionError,
-  type ${className}DomainError,
-
-  // Repository Errors
-  ${className}NotFoundRepositoryError,
-  ${className}ValidationRepositoryError,
-  ${className}ConflictRepositoryError,
-  ${className}DatabaseRepositoryError,
-  type ${className}RepositoryError,
-
-  // Service Error
-  ${className}ServiceError,
-  type ${className}ServiceErrorCode,
-
-  // Union Types
-  type ${className}Error,
-  type ${className}FeatureError,
-} from "../shared/errors";`)
-  builder.addBlankLine()
+  builder.addRaw(`// NOTE: For RPC errors (Schema.TaggedError), import directly from ${scope}/infra-rpc:
+// import { RpcNotFoundError, RpcValidationError, ... } from "${scope}/infra-rpc"
+//
+// For domain errors (Data.TaggedError), import directly from ../shared/errors:
+// import { ${className}NotFoundError, ... } from "../shared/errors"`)
 
   builder.addSectionComment("Domain-Specific RPC Boundary")
-  builder.addBlankLine()
 
   // Generate the domain-specific RPC boundary wrapper
   builder.addRaw(`/**
@@ -192,7 +148,7 @@ export const with${className}RpcBoundary = <A, R>(
         message: "An unexpected error occurred"
       }))
     )
-  );`)
+  )`)
 
   return builder.toString()
 }

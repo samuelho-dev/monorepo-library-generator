@@ -65,33 +65,32 @@ export function generateSubModuleRpcDefinitionsFile(options: SubModuleRpcDefinit
  */`)
   builder.addBlankLine()
 
-  // Imports
+  // Imports - @effect/* packages first, then effect, then relative imports
   builder.addImports([
-    { from: "effect", imports: ["Schema"] },
-    { from: "@effect/rpc", imports: ["Rpc", "RpcGroup"] }
+    { from: "@effect/rpc", imports: ["Rpc", "RpcGroup"] },
+    { from: "effect", imports: ["Schema"] }
   ])
-  builder.addBlankLine()
 
-  builder.addSectionComment("Import Route System from Parent")
   // Note: submodule is at /src/{submodule}/, parent rpc-definitions is at /src/lib/
-  builder.addRaw(`import { RouteTag, type RouteType } from "../lib/rpc-definitions";`)
-  builder.addBlankLine()
+  builder.addImports([
+    { from: "../lib/rpc-definitions", imports: ["RouteTag"] },
+    { from: "../lib/rpc-definitions", imports: ["RouteType"], isTypeOnly: true }
+  ])
 
   builder.addSectionComment("Local Imports")
   // Note: entities.ts exports the class as ${subModuleClassName} (not ${subModuleClassName}Entity)
-  builder.addRaw(`import { ${subModuleClassName}Id, ${subModuleClassName} } from "./entities";
-import { ${subModuleClassName}RpcError } from "./rpc-errors";`)
-  builder.addBlankLine()
+  builder.addImports([
+    { from: "./entities", imports: [subModuleClassName, `${subModuleClassName}Id`] },
+    { from: "./rpc-errors", imports: [`${subModuleClassName}RpcError`] }
+  ])
 
   // Re-export RouteTag
   builder.addSectionComment("Re-export Route System")
-  builder.addRaw(`export { RouteTag, type RouteType };`)
-  builder.addBlankLine()
+  builder.addRaw(`export { RouteTag, type RouteType }`)
 
   // Generate domain-specific RPC definitions
   const rpcContent = generateSubModuleRpcs(subModuleName, subModuleClassName)
   builder.addRaw(rpcContent)
-  builder.addBlankLine()
 
   return builder.toString()
 }
@@ -139,15 +138,13 @@ function generateCartRpcs(prefix: string) {
 export const ${prefix}ItemInput = Schema.Struct({
   productId: Schema.UUID,
   quantity: Schema.Number.pipe(Schema.int(), Schema.positive()),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-}).pipe(
-  Schema.annotations({
-    identifier: "${prefix}ItemInput",
-    title: "${prefix} Item Input",
-  })
-);
+  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+}).pipe(Schema.annotations({
+  identifier: "${prefix}ItemInput",
+  title: "${prefix} Item Input"
+}))
 
-export type ${prefix}ItemInput = Schema.Schema.Type<typeof ${prefix}ItemInput>;
+export type ${prefix}ItemInput = Schema.Schema.Type<typeof ${prefix}ItemInput>
 
 // ============================================================================
 // RPC Definitions
@@ -160,12 +157,12 @@ export type ${prefix}ItemInput = Schema.Schema.Type<typeof ${prefix}ItemInput>;
  */
 export class ${prefix}Get extends Rpc.make("${prefix}.Get", {
   payload: Schema.Struct({
-    cartId: Schema.UUID,
+    cartId: Schema.UUID
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -176,12 +173,12 @@ export class ${prefix}Get extends Rpc.make("${prefix}.Get", {
 export class ${prefix}AddItem extends Rpc.make("${prefix}.AddItem", {
   payload: Schema.Struct({
     cartId: Schema.UUID,
-    item: ${prefix}ItemInput,
+    item: ${prefix}ItemInput
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -192,12 +189,12 @@ export class ${prefix}AddItem extends Rpc.make("${prefix}.AddItem", {
 export class ${prefix}RemoveItem extends Rpc.make("${prefix}.RemoveItem", {
   payload: Schema.Struct({
     cartId: Schema.UUID,
-    itemId: Schema.UUID,
+    itemId: Schema.UUID
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -209,12 +206,12 @@ export class ${prefix}UpdateQuantity extends Rpc.make("${prefix}.UpdateQuantity"
   payload: Schema.Struct({
     cartId: Schema.UUID,
     itemId: Schema.UUID,
-    quantity: Schema.Number.pipe(Schema.int(), Schema.positive()),
+    quantity: Schema.Number.pipe(Schema.int(), Schema.positive())
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -224,16 +221,16 @@ export class ${prefix}UpdateQuantity extends Rpc.make("${prefix}.UpdateQuantity"
  */
 export class ${prefix}Clear extends Rpc.make("${prefix}.Clear", {
   payload: Schema.Struct({
-    cartId: Schema.UUID,
+    cartId: Schema.UUID
   }),
   success: Schema.Struct({
     success: Schema.Literal(true),
     clearedAt: Schema.DateTimeUtc,
-    itemsRemoved: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
+    itemsRemoved: Schema.Number.pipe(Schema.int(), Schema.nonNegative())
   }),
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 // ============================================================================
@@ -250,10 +247,10 @@ export const ${prefix}Rpcs = RpcGroup.make(
   ${prefix}AddItem,
   ${prefix}RemoveItem,
   ${prefix}UpdateQuantity,
-  ${prefix}Clear,
-);
+  ${prefix}Clear
+)
 
-export type ${prefix}Rpcs = typeof ${prefix}Rpcs;
+export type ${prefix}Rpcs = typeof ${prefix}Rpcs
 
 /**
  * RPCs organized by route type
@@ -261,8 +258,8 @@ export type ${prefix}Rpcs = typeof ${prefix}Rpcs;
 export const ${prefix}RpcsByRoute = {
   public: [] as const,
   protected: [${prefix}Get, ${prefix}AddItem, ${prefix}RemoveItem, ${prefix}UpdateQuantity, ${prefix}Clear] as const,
-  service: [] as const,
-} as const;`
+  service: [] as const
+}`
 }
 
 /**
@@ -281,34 +278,26 @@ export const ShippingAddress = Schema.Struct({
   city: Schema.String.pipe(Schema.minLength(1)),
   state: Schema.String.pipe(Schema.minLength(1)),
   postalCode: Schema.String.pipe(Schema.minLength(1)),
-  country: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(2)),
-}).pipe(
-  Schema.annotations({
-    identifier: "ShippingAddress",
-    title: "Shipping Address",
-  })
-);
+  country: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(2))
+}).pipe(Schema.annotations({
+  identifier: "ShippingAddress",
+  title: "Shipping Address"
+}))
 
-export type ShippingAddress = Schema.Schema.Type<typeof ShippingAddress>;
+export type ShippingAddress = Schema.Schema.Type<typeof ShippingAddress>
 
 /**
  * Payment details schema
  */
 export const PaymentDetails = Schema.Struct({
-  method: Schema.Union(
-    Schema.Literal("card"),
-    Schema.Literal("paypal"),
-    Schema.Literal("bank_transfer"),
-  ),
-  token: Schema.optional(Schema.String),
-}).pipe(
-  Schema.annotations({
-    identifier: "PaymentDetails",
-    title: "Payment Details",
-  })
-);
+  method: Schema.Literal("card", "paypal", "bank_transfer"),
+  token: Schema.optional(Schema.String)
+}).pipe(Schema.annotations({
+  identifier: "PaymentDetails",
+  title: "Payment Details"
+}))
 
-export type PaymentDetails = Schema.Schema.Type<typeof PaymentDetails>;
+export type PaymentDetails = Schema.Schema.Type<typeof PaymentDetails>
 
 // ============================================================================
 // RPC Definitions
@@ -322,12 +311,12 @@ export type PaymentDetails = Schema.Schema.Type<typeof PaymentDetails>;
 export class ${prefix}Initiate extends Rpc.make("${prefix}.Initiate", {
   payload: Schema.Struct({
     cartId: Schema.UUID,
-    shippingAddress: Schema.optional(ShippingAddress),
+    shippingAddress: Schema.optional(ShippingAddress)
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -338,20 +327,16 @@ export class ${prefix}Initiate extends Rpc.make("${prefix}.Initiate", {
 export class ${prefix}ProcessPayment extends Rpc.make("${prefix}.ProcessPayment", {
   payload: Schema.Struct({
     checkoutId: Schema.UUID,
-    payment: PaymentDetails,
+    payment: PaymentDetails
   }),
   success: Schema.Struct({
     checkoutId: Schema.UUID,
     paymentId: Schema.String,
-    status: Schema.Union(
-      Schema.Literal("success"),
-      Schema.Literal("pending"),
-      Schema.Literal("failed"),
-    ),
+    status: Schema.Literal("success", "pending", "failed")
   }),
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -361,17 +346,17 @@ export class ${prefix}ProcessPayment extends Rpc.make("${prefix}.ProcessPayment"
  */
 export class ${prefix}Confirm extends Rpc.make("${prefix}.Confirm", {
   payload: Schema.Struct({
-    checkoutId: Schema.UUID,
+    checkoutId: Schema.UUID
   }),
   success: Schema.Struct({
     orderId: Schema.UUID,
     orderNumber: Schema.String,
     status: Schema.Literal("confirmed"),
-    confirmedAt: Schema.DateTimeUtc,
+    confirmedAt: Schema.DateTimeUtc
   }),
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -382,15 +367,15 @@ export class ${prefix}Confirm extends Rpc.make("${prefix}.Confirm", {
 export class ${prefix}Cancel extends Rpc.make("${prefix}.Cancel", {
   payload: Schema.Struct({
     checkoutId: Schema.UUID,
-    reason: Schema.optional(Schema.String),
+    reason: Schema.optional(Schema.String)
   }),
   success: Schema.Struct({
     success: Schema.Literal(true),
-    cancelledAt: Schema.DateTimeUtc,
+    cancelledAt: Schema.DateTimeUtc
   }),
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 // ============================================================================
@@ -406,10 +391,10 @@ export const ${prefix}Rpcs = RpcGroup.make(
   ${prefix}Initiate,
   ${prefix}ProcessPayment,
   ${prefix}Confirm,
-  ${prefix}Cancel,
-);
+  ${prefix}Cancel
+)
 
-export type ${prefix}Rpcs = typeof ${prefix}Rpcs;
+export type ${prefix}Rpcs = typeof ${prefix}Rpcs
 
 /**
  * RPCs organized by route type
@@ -417,8 +402,8 @@ export type ${prefix}Rpcs = typeof ${prefix}Rpcs;
 export const ${prefix}RpcsByRoute = {
   public: [] as const,
   protected: [${prefix}Initiate, ${prefix}ProcessPayment, ${prefix}Confirm, ${prefix}Cancel] as const,
-  service: [] as const,
-} as const;`
+  service: [] as const
+}`
 }
 
 /**
@@ -432,15 +417,9 @@ function generateManagementRpcs(prefix: string) {
 /**
  * Order status values
  */
-export const OrderStatus = Schema.Union(
-  Schema.Literal("pending"),
-  Schema.Literal("processing"),
-  Schema.Literal("shipped"),
-  Schema.Literal("delivered"),
-  Schema.Literal("cancelled"),
-);
+export const OrderStatus = Schema.Literal("pending", "processing", "shipped", "delivered", "cancelled")
 
-export type OrderStatus = Schema.Schema.Type<typeof OrderStatus>;
+export type OrderStatus = Schema.Schema.Type<typeof OrderStatus>
 
 // ============================================================================
 // RPC Definitions
@@ -453,12 +432,12 @@ export type OrderStatus = Schema.Schema.Type<typeof OrderStatus>;
  */
 export class ${prefix}GetOrder extends Rpc.make("${prefix}.GetOrder", {
   payload: Schema.Struct({
-    orderId: Schema.UUID,
+    orderId: Schema.UUID
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -469,22 +448,22 @@ export class ${prefix}GetOrder extends Rpc.make("${prefix}.GetOrder", {
 export class ${prefix}ListOrders extends Rpc.make("${prefix}.ListOrders", {
   payload: Schema.Struct({
     page: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-      default: () => 1,
+      default: () => 1
     }),
     pageSize: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-      default: () => 20,
+      default: () => 20
     }),
-    status: Schema.optional(OrderStatus),
+    status: Schema.optional(OrderStatus)
   }),
   success: Schema.Struct({
     items: Schema.Array(${prefix}),
     total: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
     page: Schema.Number.pipe(Schema.int(), Schema.positive()),
-    pageSize: Schema.Number.pipe(Schema.int(), Schema.positive()),
+    pageSize: Schema.Number.pipe(Schema.int(), Schema.positive())
   }),
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -496,12 +475,12 @@ export class ${prefix}UpdateStatus extends Rpc.make("${prefix}.UpdateStatus", {
   payload: Schema.Struct({
     orderId: Schema.UUID,
     status: OrderStatus,
-    reason: Schema.optional(Schema.String),
+    reason: Schema.optional(Schema.String)
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "service";
+  static readonly [RouteTag]: RouteType = "service"
 }
 
 /**
@@ -512,17 +491,17 @@ export class ${prefix}UpdateStatus extends Rpc.make("${prefix}.UpdateStatus", {
 export class ${prefix}CancelOrder extends Rpc.make("${prefix}.CancelOrder", {
   payload: Schema.Struct({
     orderId: Schema.UUID,
-    reason: Schema.String.pipe(Schema.minLength(1)),
+    reason: Schema.String.pipe(Schema.minLength(1))
   }),
   success: Schema.Struct({
     orderId: Schema.UUID,
     status: Schema.Literal("cancelled"),
     refundAmount: Schema.optional(Schema.Number.pipe(Schema.nonNegative())),
-    cancelledAt: Schema.DateTimeUtc,
+    cancelledAt: Schema.DateTimeUtc
   }),
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 // ============================================================================
@@ -538,10 +517,10 @@ export const ${prefix}Rpcs = RpcGroup.make(
   ${prefix}GetOrder,
   ${prefix}ListOrders,
   ${prefix}UpdateStatus,
-  ${prefix}CancelOrder,
-);
+  ${prefix}CancelOrder
+)
 
-export type ${prefix}Rpcs = typeof ${prefix}Rpcs;
+export type ${prefix}Rpcs = typeof ${prefix}Rpcs
 
 /**
  * RPCs organized by route type
@@ -549,8 +528,8 @@ export type ${prefix}Rpcs = typeof ${prefix}Rpcs;
 export const ${prefix}RpcsByRoute = {
   public: [] as const,
   protected: [${prefix}GetOrder, ${prefix}ListOrders, ${prefix}CancelOrder] as const,
-  service: [${prefix}UpdateStatus] as const,
-} as const;`
+  service: [${prefix}UpdateStatus] as const
+}`
 }
 
 /**
@@ -565,31 +544,27 @@ function generateGenericRpcs(prefix: string, subModuleClassName: string) {
  * Create input schema
  */
 export const Create${prefix}Input = Schema.Struct({
-  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
+  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))
   // TODO: Add domain-specific fields for ${subModuleClassName}
-}).pipe(
-  Schema.annotations({
-    identifier: "Create${prefix}Input",
-    title: "Create ${prefix} Input",
-  })
-);
+}).pipe(Schema.annotations({
+  identifier: "Create${prefix}Input",
+  title: "Create ${prefix} Input"
+}))
 
-export type Create${prefix}Input = Schema.Schema.Type<typeof Create${prefix}Input>;
+export type Create${prefix}Input = Schema.Schema.Type<typeof Create${prefix}Input>
 
 /**
  * Update input schema
  */
 export const Update${prefix}Input = Schema.Struct({
-  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))),
+  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
   // TODO: Add domain-specific update fields for ${subModuleClassName}
-}).pipe(
-  Schema.annotations({
-    identifier: "Update${prefix}Input",
-    title: "Update ${prefix} Input",
-  })
-);
+}).pipe(Schema.annotations({
+  identifier: "Update${prefix}Input",
+  title: "Update ${prefix} Input"
+}))
 
-export type Update${prefix}Input = Schema.Schema.Type<typeof Update${prefix}Input>;
+export type Update${prefix}Input = Schema.Schema.Type<typeof Update${prefix}Input>
 
 // ============================================================================
 // RPC Definitions
@@ -602,12 +577,12 @@ export type Update${prefix}Input = Schema.Schema.Type<typeof Update${prefix}Inpu
  */
 export class ${prefix}Get extends Rpc.make("${prefix}.Get", {
   payload: Schema.Struct({
-    id: ${prefix}Id,
+    id: ${prefix}Id
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public";
+  static readonly [RouteTag]: RouteType = "public"
 }
 
 /**
@@ -618,21 +593,21 @@ export class ${prefix}Get extends Rpc.make("${prefix}.Get", {
 export class ${prefix}List extends Rpc.make("${prefix}.List", {
   payload: Schema.Struct({
     page: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-      default: () => 1,
+      default: () => 1
     }),
     pageSize: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-      default: () => 20,
-    }),
+      default: () => 20
+    })
   }),
   success: Schema.Struct({
     items: Schema.Array(${prefix}),
     total: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
     page: Schema.Number.pipe(Schema.int(), Schema.positive()),
-    pageSize: Schema.Number.pipe(Schema.int(), Schema.positive()),
+    pageSize: Schema.Number.pipe(Schema.int(), Schema.positive())
   }),
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public";
+  static readonly [RouteTag]: RouteType = "public"
 }
 
 /**
@@ -643,9 +618,9 @@ export class ${prefix}List extends Rpc.make("${prefix}.List", {
 export class ${prefix}Create extends Rpc.make("${prefix}.Create", {
   payload: Create${prefix}Input,
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -656,12 +631,12 @@ export class ${prefix}Create extends Rpc.make("${prefix}.Create", {
 export class ${prefix}Update extends Rpc.make("${prefix}.Update", {
   payload: Schema.Struct({
     id: ${prefix}Id,
-    data: Update${prefix}Input,
+    data: Update${prefix}Input
   }),
   success: ${prefix},
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 /**
@@ -671,15 +646,15 @@ export class ${prefix}Update extends Rpc.make("${prefix}.Update", {
  */
 export class ${prefix}Delete extends Rpc.make("${prefix}.Delete", {
   payload: Schema.Struct({
-    id: ${prefix}Id,
+    id: ${prefix}Id
   }),
   success: Schema.Struct({
     success: Schema.Literal(true),
-    deletedAt: Schema.DateTimeUtc,
+    deletedAt: Schema.DateTimeUtc
   }),
-  error: ${prefix}RpcError,
+  error: ${prefix}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }
 
 // ============================================================================
@@ -696,10 +671,10 @@ export const ${prefix}Rpcs = RpcGroup.make(
   ${prefix}List,
   ${prefix}Create,
   ${prefix}Update,
-  ${prefix}Delete,
-);
+  ${prefix}Delete
+)
 
-export type ${prefix}Rpcs = typeof ${prefix}Rpcs;
+export type ${prefix}Rpcs = typeof ${prefix}Rpcs
 
 /**
  * RPCs organized by route type
@@ -707,8 +682,8 @@ export type ${prefix}Rpcs = typeof ${prefix}Rpcs;
 export const ${prefix}RpcsByRoute = {
   public: [${prefix}Get, ${prefix}List] as const,
   protected: [${prefix}Create, ${prefix}Update, ${prefix}Delete] as const,
-  service: [] as const,
-} as const;`
+  service: [] as const
+}`
 }
 
 /**
@@ -723,6 +698,6 @@ export {
   type ${subModuleClassName}Rpcs as ${subModuleClassName}RpcsType,
   ${subModuleClassName}RpcsByRoute,
   RouteTag,
-  type RouteType,
-} from "./rpc-definitions";`
+  type RouteType
+} from "./rpc-definitions"`
 }

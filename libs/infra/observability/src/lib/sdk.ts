@@ -26,15 +26,13 @@ Provides:
  * @module @samuelho-dev/infra-observability/sdk
  * @see https://effect.website/docs/observability/otel-tracing
  */
-
 // ============================================================================
 // Environment Variable Helpers
 // ============================================================================
-
 /**
  * Read observability config from environment variables
  */
-function getEnvConfig(): ObservabilityConfig {
+function getEnvConfig() {
   return {
     serviceName: env.OTEL_SERVICE_NAME ?? "unknown-service",
     serviceVersion: env.OTEL_SERVICE_VERSION ?? "0.0.0",
@@ -56,7 +54,6 @@ function getEnvConfig(): ObservabilityConfig {
 // ============================================================================
 // SDK Layer Factory
 // ============================================================================
-
 /**
  * Create OpenTelemetry SDK layer from configuration
  *
@@ -107,7 +104,6 @@ export function makeSdkLayer(config: ObservabilityConfig) {
 // ============================================================================
 // Static Layer Presets
 // ============================================================================
-
 /**
  * Live Layer - Production OTEL SDK from environment variables
  *
@@ -175,7 +171,6 @@ export const Auto = Layer.suspend(() => {
 // ============================================================================
 // Usage Example
 // ============================================================================
-
 /**
  * Usage Example:
  *

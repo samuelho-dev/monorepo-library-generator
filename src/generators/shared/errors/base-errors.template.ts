@@ -37,9 +37,13 @@ function schemaError(
   tagName: string,
   fields: ReadonlyArray<{ name: string; schema: string; optional?: boolean }>
 ) {
-  const fieldDefs = fields
-    .map((f) => `    ${f.name}: ${f.optional ? `Schema.optional(${f.schema})` : f.schema}`)
-    .join(",\n")
+  // Build field definitions without trailing comma on last item
+  const fieldLines = fields.map((f, i) => {
+    const fieldDef = `    ${f.name}: ${f.optional ? `Schema.optional(${f.schema})` : f.schema}`
+    // No trailing comma on last field
+    return i < fields.length - 1 ? `${fieldDef},` : fieldDef
+  })
+  const fieldDefs = fieldLines.join("\n")
 
   return `export class ${className} extends Schema.TaggedError<${className}>()(
   "${tagName}",
@@ -61,9 +65,9 @@ function dataError(
   const fieldDefs = fields
     .map((f) => {
       const docLine = f.jsdoc ? `  /** ${f.jsdoc} */\n` : ""
-      return `${docLine}  readonly ${f.name}${f.optional ? "?" : ""}: ${f.type};`
+      return `${docLine}  readonly ${f.name}${f.optional ? "?" : ""}: ${f.type}`
     })
-    .join("\n\n")
+    .join("\n")
 
   const body = staticCreate ? ` {\n${staticCreate}\n}` : " {}"
 
@@ -101,8 +105,8 @@ export function generateBaseError(builder: TypeScriptBuilder, config: ErrorGener
       ? `  static create(message: string, cause?: unknown) {
     return new ${className}Error({
       message,
-      ...(cause !== undefined ? { cause } : {}),
-    });
+      ...(cause !== undefined ? { cause } : {})
+    })
   }`
       : undefined
 
@@ -149,8 +153,8 @@ export function generateNotFoundError(
       ? `  static create(id: string) {
     return new ${className}NotFoundError({
       message: \`${className} not found: \${id}\`,
-      id,
-    });
+      id
+    })
   }`
       : undefined
 
@@ -197,8 +201,8 @@ export function generateValidationError(
       ? `  static create(errors: readonly string[]) {
     return new ${className}ValidationError({
       message: "Validation failed",
-      errors,
-    });
+      errors
+    })
   }`
       : undefined
 
@@ -247,8 +251,8 @@ export function generateConflictError(
       message: conflictingId
         ? \`Resource already exists: \${conflictingId}\`
         : "Resource already exists",
-      ...(conflictingId !== undefined ? { conflictingId } : {}),
-    });
+      ...(conflictingId !== undefined ? { conflictingId } : {})
+    })
   }`
       : undefined
 
@@ -300,8 +304,8 @@ export function generateConfigError(
       ? `  static create(property: string, reason: string) {
     return new ${className}ConfigError({
       message: \`Invalid configuration for \${property}: \${reason}\`,
-      property,
-    });
+      property
+    })
   }`
       : undefined
 
@@ -350,8 +354,8 @@ export function generateConnectionError(
     return new ${className}ConnectionError({
       message: \`Failed to connect to \${target}\`,
       target,
-      cause,
-    });
+      cause
+    })
   }`
       : undefined
 
@@ -400,8 +404,8 @@ export function generateTimeoutError(
     return new ${className}TimeoutError({
       message: \`Operation "\${operation}" timed out after \${timeoutMs}ms\`,
       timeoutMs,
-      operation,
-    });
+      operation
+    })
   }`
       : undefined
 
@@ -449,8 +453,8 @@ export function generateInternalError(
       ? `  static create(reason: string, cause: unknown) {
     return new ${className}InternalError({
       message: \`Internal error: \${reason}\`,
-      cause,
-    });
+      cause
+    })
   }`
       : undefined
 
@@ -526,8 +530,7 @@ export function generateErrorUnion(
  * Effect.catchTag("${className}TimeoutError", (err) => ...)
  * \`\`\`
  */
-export type ${className}ServiceError =
-  | ${allErrors.join("\n  | ")}`)
+export type ${className}ServiceError = ${allErrors.join(" | ")}`)
 
   builder.addBlankLine()
 }

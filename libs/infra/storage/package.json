@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Storage infrastructure for file operations (coordinates storage providers)",
+  "description": "Storage",
   "exports": {
     ".": {
       "import": "./src/index.ts",

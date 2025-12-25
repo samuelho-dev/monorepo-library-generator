@@ -1,14 +1,16 @@
-import { UserAlreadyExistsError, UserNotFoundError, UserServiceError, UserValidationError } from "../../shared/errors"
+import { CurrentUser } from "@samuelho-dev/contract-auth"
+import type { UserConflictRepositoryError, UserDatabaseRepositoryError, UserNotFoundRepositoryError, UserValidationRepositoryError } from "@samuelho-dev/contract-user"
 import { UserRepository } from "@samuelho-dev/data-access-user"
+import type { User, UserConnectionError, UserCreateInput, UserFilter, UserTimeoutError, UserTransactionError, UserUpdateInput } from "@samuelho-dev/data-access-user"
+import { env } from "@samuelho-dev/env"
 import { DatabaseService } from "@samuelho-dev/infra-database"
+import type { DatabaseConfigError, DatabaseConnectionError, DatabaseError, DatabaseInternalError, DatabaseTimeoutError } from "@samuelho-dev/infra-database"
 import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
 import { PubsubService, withEventPublishing } from "@samuelho-dev/infra-pubsub"
-import { Context, Effect, Layer, Option, Schema } from "effect"
-import type { UserFeatureError } from "../../shared/errors"
-import type { UserConflictRepositoryError, UserDatabaseRepositoryError, UserNotFoundRepositoryError, UserValidationRepositoryError } from "@samuelho-dev/contract-user"
-import type { User, UserConnectionError, UserCreateInput, UserFilter, UserTimeoutError, UserTransactionError, UserUpdateInput } from "@samuelho-dev/data-access-user"
-import type { DatabaseConfigError, DatabaseConnectionError, DatabaseError, DatabaseInternalError, DatabaseTimeoutError } from "@samuelho-dev/infra-database"
 import type { TopicHandle } from "@samuelho-dev/infra-pubsub"
+import { Context, Effect, Layer, Option, Schema } from "effect"
+import { UserAlreadyExistsError, UserNotFoundError, UserServiceError, UserValidationError } from "../../shared/errors"
+import type { UserFeatureError } from "../../shared/errors"
 
 /**
  * User Service Interface
@@ -25,50 +27,34 @@ Import only the operations you need for smallest bundle size.
  *
  * @module @samuelho-dev/feature-user/server/services
  */
-
-
-
 // ============================================================================
 // Error Imports (Contract-First)
 // ============================================================================
-
 // Domain errors pass through unchanged
-
 // Infrastructure errors are caught and mapped to ServiceError
-
-
-
-
-
 // ============================================================================
 // Repository Integration
 // ============================================================================
-
-
 // ============================================================================
 // Infrastructure Services
 // ============================================================================
-
-
+// ============================================================================
+// Authentication Context (Optional)
+// ============================================================================
+// Services can optionally access CurrentUser for auth-aware operations
+// Use CurrentUser.pipe(Effect.orElse(() => Effect.succeed(null))) for optional auth
 // ============================================================================
 // Environment Configuration
 // ============================================================================
-
-import { env } from "@samuelho-dev/env";
-
 // ============================================================================
 // Repository Type Re-exports
 // ============================================================================
 
-
-
-export type { User, UserCreateInput, UserUpdateInput, UserFilter };
+export type { User, UserCreateInput, UserUpdateInput, UserFilter }
 
 // ============================================================================
 // Event Schema
 // ============================================================================
-
-
 /**
  * User Event Schema
  *
@@ -90,15 +76,12 @@ const UserEventSchema = Schema.Union(
     id: Schema.String,
     timestamp: Schema.DateFromSelf
   })
-);
+)
 
-type UserEvent = Schema.Schema.Type<typeof UserEventSchema>;
-
+type UserEvent = Schema.Schema.Type<typeof UserEventSchema>
 // ============================================================================
 // Service Implementation
 // ============================================================================
-
-
 /**
  * Repository error type union (from data-access layer)
  *
@@ -121,7 +104,7 @@ type UserRepoError =
   | DatabaseInternalError
   | DatabaseConfigError
   | DatabaseConnectionError
-  | DatabaseTimeoutError;
+  | DatabaseTimeoutError
 
 /**
  * Map repository errors to feature errors
@@ -158,7 +141,7 @@ const mapRepoErrors = <A, R>(
           identifier: error.identifier
         })),
       "UserDatabaseRepositoryError": (error) =>
-        Effect.fail(UserServiceError.dependency(operation, error.message, error)),
+        Effect.fail(UserServiceError.dependency(operation, error.message, error))
     }),
     // Map infrastructure errors to service errors
     Effect.catchTags({
@@ -179,7 +162,7 @@ const mapRepoErrors = <A, R>(
           operation,
           `Transaction ${error.phase} failed`,
           error
-        )),
+        ))
     }),
     // Map database service errors
     Effect.catchTags({
@@ -192,16 +175,16 @@ const mapRepoErrors = <A, R>(
       "DatabaseConnectionError": (error) =>
         Effect.fail(UserServiceError.dependency(operation, "Database connection failed", error)),
       "DatabaseTimeoutError": (error) =>
-        Effect.fail(UserServiceError.dependency(operation, "Database operation timed out", error)),
+        Effect.fail(UserServiceError.dependency(operation, "Database operation timed out", error))
     }),
     // Log errors for observability
     Effect.tapError((error) =>
       Effect.logWarning(`${operation} failed`, {
         errorTag: error._tag,
-        operation,
+        operation
       })
     )
-  );
+  )
 
 /**
  * Create service implementation
@@ -217,24 +200,24 @@ const createServiceImpl = (
 ) => ({
   get: (id: string) =>
     Effect.gen(function*() {
-      const histogram = yield* metrics.histogram("user_get_duration_seconds");
+      const histogram = yield* metrics.histogram("user_get_duration_seconds")
 
       return yield* histogram.timer(
         Effect.gen(function*() {
-          yield* logger.debug("UserService.get", { id });
+          yield* logger.debug("UserService.get", { id })
 
           const result = yield* mapRepoErrors(
             repo.findById(id),
             "get"
-          );
+          )
 
           if (Option.isNone(result)) {
-            yield* logger.debug("User not found", { id });
+            yield* logger.debug("User not found", { id })
           }
 
-          return result;
+          return result
         })
-      );
+      )
     }).pipe(Effect.withSpan("UserService.get", { attributes: { id } })),
 
   findByCriteria: (
@@ -243,134 +226,191 @@ const createServiceImpl = (
     limit: number
   ) =>
     Effect.gen(function*() {
-      const histogram = yield* metrics.histogram("user_list_duration_seconds");
+      const histogram = yield* metrics.histogram("user_list_duration_seconds")
 
       return yield* histogram.timer(
         Effect.gen(function*() {
           yield* logger.debug("UserService.findByCriteria", {
             criteria,
             offset,
-            limit,
-          });
+            limit
+          })
 
           const result = yield* mapRepoErrors(
             repo.findAll(criteria, { skip: offset, limit }).pipe(
               Effect.map((result) => result.items)
             ),
             "findByCriteria"
-          );
+          )
 
           yield* logger.debug("UserService.findByCriteria completed", {
-            count: result.length,
-          });
+            count: result.length
+          })
 
-          return result;
+          return result
         })
-      );
+      )
     }).pipe(Effect.withSpan("UserService.findByCriteria")),
 
   count: (criteria: UserFilter) =>
     Effect.gen(function*() {
-      yield* logger.debug("UserService.count", { criteria });
+      yield* logger.debug("UserService.count", { criteria })
 
       return yield* mapRepoErrors(
         repo.count(criteria),
         "count"
-      );
+      )
     }).pipe(Effect.withSpan("UserService.count")),
 
   create: (input: UserCreateInput) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("user_created_total");
-      const histogram = yield* metrics.histogram("user_create_duration_seconds");
+      const counter = yield* metrics.counter("user_created_total")
+      const histogram = yield* metrics.histogram("user_create_duration_seconds")
 
       return yield* histogram.timer(
         withEventPublishing(
           Effect.gen(function*() {
-            yield* logger.info("UserService.create", { input });
+            // Optional: Get current user for audit fields (createdBy, etc.)
+            // Use Option.getOrNull to handle cases where CurrentUser is not available (e.g., system operations)
+            const currentUser = yield* CurrentUser.pipe(
+              Effect.option,
+              Effect.map(Option.getOrNull)
+            )
+
+            yield* logger.info("UserService.create", {
+              input,
+              userId: currentUser?.id
+            })
+
+            // If your schema has createdBy/updatedBy fields, you can enrich the input:
+            // const enrichedInput = currentUser
+            //   ? { ...input, createdBy: currentUser.id, updatedBy: currentUser.id }
+            //   : input
 
             const result = yield* mapRepoErrors(
-              repo.create(input),
+              repo.create(input), // Or: repo.create(enrichedInput)
               "create"
-            );
+            )
 
-            yield* counter.increment;
-            yield* logger.info("User created", { id: result.id });
+            yield* counter.increment
+            yield* logger.info("User created", {
+              id: result.id,
+              userId: currentUser?.id
+            })
 
-            return result;
+            return result
           }),
           (result) => ({ type: "UserCreated" as const, id: result.id, timestamp: new Date() }),
           eventTopic
         )
-      );
+      )
     }).pipe(Effect.withSpan("UserService.create")),
 
   update: (id: string, input: UserUpdateInput) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("user_updated_total");
-      const histogram = yield* metrics.histogram("user_update_duration_seconds");
+      const counter = yield* metrics.counter("user_updated_total")
+      const histogram = yield* metrics.histogram("user_update_duration_seconds")
 
       return yield* histogram.timer(
         withEventPublishing(
           Effect.gen(function*() {
-            yield* logger.info("UserService.update", { id, input });
+            // Optional: Get current user for audit fields (updatedBy, etc.)
+            const currentUser = yield* CurrentUser.pipe(
+              Effect.option,
+              Effect.map(Option.getOrNull)
+            )
+
+            yield* logger.info("UserService.update", {
+              id,
+              input,
+              userId: currentUser?.id
+            })
+
+            // If your schema has updatedBy field, you can enrich the input:
+            // const enrichedInput = currentUser
+            //   ? { ...input, updatedBy: currentUser.id }
+            //   : input
 
             const result = yield* mapRepoErrors(
-              repo.update(id, input).pipe(Effect.map(Option.some)),
+              repo.update(id, input).pipe(Effect.map(Option.some)), // Or: repo.update(id, enrichedInput)
               "update"
-            );
+            )
 
-            yield* counter.increment;
-            yield* logger.info("User updated", { id });
+            yield* counter.increment
+            yield* logger.info("User updated", {
+              id,
+              userId: currentUser?.id
+            })
 
-            return result;
+            return result
           }),
           () => ({ type: "UserUpdated" as const, id, timestamp: new Date() }),
           eventTopic
         )
-      );
+      )
     }).pipe(Effect.withSpan("UserService.update", { attributes: { id } })),
 
   delete: (id: string) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("user_deleted_total");
-      const histogram = yield* metrics.histogram("user_delete_duration_seconds");
+      const counter = yield* metrics.counter("user_deleted_total")
+      const histogram = yield* metrics.histogram("user_delete_duration_seconds")
 
       return yield* histogram.timer(
         withEventPublishing(
           Effect.gen(function*() {
-            yield* logger.info("UserService.delete", { id });
+            // Optional: Get current user for authorization/audit logging
+            const currentUser = yield* CurrentUser.pipe(
+              Effect.option,
+              Effect.map(Option.getOrNull)
+            )
+
+            yield* logger.info("UserService.delete", {
+              id,
+              userId: currentUser?.id
+            })
+
+            // Optional: Add authorization check
+            // if (currentUser) {
+            //   // Check if user has permission to delete this entity
+            //   const entity = yield* repo.findById(id)
+            //   if (Option.isSome(entity) && entity.value.ownerId !== currentUser.id) {
+            //     return yield* Effect.fail(new UserPermissionError({
+            //       message: "Not authorized to delete this user",
+            //       operation: "delete"
+            //     }))
+            //   }
+            // }
 
             yield* mapRepoErrors(
               repo.delete(id),
               "delete"
-            );
+            )
 
-            yield* counter.increment;
-            yield* logger.info("User deleted", { id });
+            yield* counter.increment
+            yield* logger.info("User deleted", {
+              id,
+              userId: currentUser?.id
+            })
           }),
           () => ({ type: "UserDeleted" as const, id, timestamp: new Date() }),
           eventTopic
         )
-      );
+      )
     }).pipe(Effect.withSpan("UserService.delete", { attributes: { id } })),
 
   exists: (id: string) =>
     Effect.gen(function*() {
-      yield* logger.debug("UserService.exists", { id });
+      yield* logger.debug("UserService.exists", { id })
 
       return yield* mapRepoErrors(
         repo.exists(id),
         "exists"
-      );
-    }).pipe(Effect.withSpan("UserService.exists", { attributes: { id } })),
-});
-
+      )
+    }).pipe(Effect.withSpan("UserService.exists", { attributes: { id } }))
+})
 // ============================================================================
 // Service Interface (Inferred from Implementation)
 // ============================================================================
-
-
 /**
  * User Service Interface
  *
@@ -379,12 +419,9 @@ const createServiceImpl = (
  * including proper Effect requirements and error types.
  */
 export type UserServiceInterface = ReturnType<typeof createServiceImpl>
-
 // ============================================================================
 // Context.Tag
 // ============================================================================
-
-
 /**
  * User Service Context.Tag
  *
@@ -405,7 +442,13 @@ export class UserService extends Context.Tag("UserService")<
    * - update() → UserUpdated
    * - delete() → UserDeleted
    *
+   * Authentication Context:
+   * - Service operations can optionally access CurrentUser via Effect Context
+   * - CurrentUser is provided by RPC middleware (not by this service layer)
+   * - Use CurrentUser.pipe(Effect.option) to handle cases where auth is not available
+   *
    * Requires: UserRepository, LoggingService, MetricsService, PubsubService
+   * Optional: CurrentUser (provided by RPC layer when handling authenticated requests)
    */
   static readonly Live = Layer.effect(
     this,
@@ -427,7 +470,7 @@ export class UserService extends Context.Tag("UserService")<
    * (e.g., DatabaseService.Test, LoggingService.Test) rather than
    * a separate implementation.
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 
   /**
    * Dev layer - Development with enhanced logging
@@ -435,7 +478,7 @@ export class UserService extends Context.Tag("UserService")<
    * Same as Live - enhanced logging comes from LoggingService.Dev
    * when composing layers for development environment.
    */
-  static readonly Dev = this.Live;
+  static readonly Dev = this.Live
 
   /**
    * Auto layer - Environment-aware layer selection
@@ -451,13 +494,13 @@ export class UserService extends Context.Tag("UserService")<
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "test":
-        return UserService.Test;
+        return UserService.Test
       case "development":
-        return UserService.Dev;
+        return UserService.Dev
       default:
-        return UserService.Live;
+        return UserService.Live
     }
-  });
+  })
 
   /**
    * Fully composed layer with all production dependencies
@@ -481,14 +524,3 @@ export class UserService extends Context.Tag("UserService")<
     Layer.provide(PubsubService.Test)
   )
 }
-
-// ============================================================================
-// Sub-Module Re-exports
-// ============================================================================
-
-
-// Re-export sub-module services for convenient access
-// Use these for direct sub-module access or parent service composition
-
-export { AuthenticationService, AuthenticationLive, AuthenticationTest } from "./authentication";
-export { ProfileService, ProfileLive, ProfileTest } from "./profile";

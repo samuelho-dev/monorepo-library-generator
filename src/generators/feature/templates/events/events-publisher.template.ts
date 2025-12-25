@@ -41,16 +41,20 @@ Usage:
   })
   builder.addBlankLine()
 
-  builder.addRaw(`import { Context, Effect, Layer, Schema, type ParseResult } from "effect"`)
+  builder.addImports([
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Schema"] },
+    { from: "effect", imports: ["ParseResult"], isTypeOnly: true }
+  ])
   builder.addBlankLine()
 
   builder.addSectionComment("Domain Events")
-  builder.addRaw(`import {
-  ${className}CreatedEvent,
-  ${className}UpdatedEvent,
-  ${className}DeletedEvent,
-  type ${className}DomainEvent,
-} from "${scope}/contract-${fileName}";`)
+  builder.addImports([
+    {
+      from: `${scope}/contract-${fileName}`,
+      imports: [`${className}CreatedEvent`, `${className}DeletedEvent`, `${className}UpdatedEvent`]
+    },
+    { from: `${scope}/contract-${fileName}`, imports: [`${className}DomainEvent`], isTypeOnly: true }
+  ])
   builder.addBlankLine()
 
   builder.addComment("Create Schema.Union for PubSub topic registration")
@@ -58,7 +62,8 @@ Usage:
   ${className}CreatedEvent,
   ${className}UpdatedEvent,
   ${className}DeletedEvent
-);`)
+)
+`)
   builder.addBlankLine()
 
   builder.addSectionComment("Infrastructure Services")
@@ -85,8 +90,8 @@ export const ${className}EventTopics = {
   UPDATED: "${propertyName}.events.updated",
 
   /** Topic for deleted events only */
-  DELETED: "${propertyName}.events.deleted",
-} as const;`)
+  DELETED: "${propertyName}.events.deleted"
+} as const`)
   builder.addBlankLine()
 
   builder.addSectionComment("Publisher Interface")
@@ -103,29 +108,30 @@ export interface ${className}EventPublisherInterface {
    */
   readonly publishCreated: (
     event: ${className}CreatedEvent
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 
   /**
    * Publish an updated event
    */
   readonly publishUpdated: (
     event: ${className}UpdatedEvent
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 
   /**
    * Publish a deleted event
    */
   readonly publishDeleted: (
     event: ${className}DeletedEvent
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 
   /**
    * Publish any domain event (auto-routes to correct topic)
    */
   readonly publish: (
     event: ${className}DomainEvent
-  ) => Effect.Effect<void>;
-}`)
+  ) => Effect.Effect<void>
+}
+`)
   builder.addBlankLine()
 
   builder.addSectionComment("Publisher Implementation")
@@ -141,10 +147,10 @@ export interface ${className}EventPublisherInterface {
  * - R: context requirements (never for in-memory)
  */
 interface ${className}TopicHandles {
-  readonly all: TopicHandle<${className}DomainEvent, ParseResult.ParseError, never>;
-  readonly created: TopicHandle<${className}DomainEvent, ParseResult.ParseError, never>;
-  readonly updated: TopicHandle<${className}DomainEvent, ParseResult.ParseError, never>;
-  readonly deleted: TopicHandle<${className}DomainEvent, ParseResult.ParseError, never>;
+  readonly all: TopicHandle<${className}DomainEvent, ParseResult.ParseError, never>
+  readonly created: TopicHandle<${className}DomainEvent, ParseResult.ParseError, never>
+  readonly updated: TopicHandle<${className}DomainEvent, ParseResult.ParseError, never>
+  readonly deleted: TopicHandle<${className}DomainEvent, ParseResult.ParseError, never>
 }
 
 /**
@@ -161,37 +167,37 @@ const createPublisherImpl = (
     event: ${className}DomainEvent
   ) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("${name.toLowerCase()}_events_published_total");
+      const counter = yield* metrics.counter("${name.toLowerCase()}_events_published_total")
 
       yield* logger.debug("Publishing ${name} event", {
         eventType: event.eventType,
         topic: topicName,
-        correlationId: event.correlationId,
-      });
+        correlationId: event.correlationId
+      })
 
       // Publish to specific topic
-      yield* topic.publish(event);
+      yield* topic.publish(event)
 
       // Also publish to the "all events" topic for aggregators
       if (topic !== topics.all) {
-        yield* topics.all.publish(event);
+        yield* topics.all.publish(event)
       }
 
-      yield* counter.increment;
+      yield* counter.increment
 
       yield* logger.info("${className} event published", {
         eventType: event.eventType,
         topic: topicName,
-        correlationId: event.correlationId,
-      });
+        correlationId: event.correlationId
+      })
     }).pipe(
       Effect.withSpan("${className}EventPublisher.publish", {
         attributes: {
           topic: topicName,
-          eventType: event.eventType,
-        },
+          eventType: event.eventType
+        }
       })
-    );
+    )
 
   return {
     publishCreated: (event: ${className}CreatedEvent) =>
@@ -207,18 +213,18 @@ const createPublisherImpl = (
       // Use _tag discriminated union instead of instanceof
       switch (event._tag) {
         case "${className}CreatedEvent":
-          return publishToTopic(topics.created, ${className}EventTopics.CREATED, event);
+          return publishToTopic(topics.created, ${className}EventTopics.CREATED, event)
         case "${className}UpdatedEvent":
-          return publishToTopic(topics.updated, ${className}EventTopics.UPDATED, event);
+          return publishToTopic(topics.updated, ${className}EventTopics.UPDATED, event)
         case "${className}DeletedEvent":
-          return publishToTopic(topics.deleted, ${className}EventTopics.DELETED, event);
+          return publishToTopic(topics.deleted, ${className}EventTopics.DELETED, event)
         default:
           // Fallback for any future event types
-          return publishToTopic(topics.all, ${className}EventTopics.ALL, event);
+          return publishToTopic(topics.all, ${className}EventTopics.ALL, event)
       }
-    },
-  };
-};`)
+    }
+  }
+}`)
   builder.addBlankLine()
 
   builder.addSectionComment("Context.Tag")
@@ -256,26 +262,26 @@ export class ${className}EventPublisher extends Context.Tag("${className}EventPu
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const pubsub = yield* PubsubService;
-      const logger = yield* LoggingService;
-      const metrics = yield* MetricsService;
+      const pubsub = yield* PubsubService
+      const logger = yield* LoggingService
+      const metrics = yield* MetricsService
 
       // Create topic handles during layer initialization
       const topics: ${className}TopicHandles = {
         all: yield* pubsub.topic(${className}EventTopics.ALL, ${className}DomainEventSchema),
         created: yield* pubsub.topic(${className}EventTopics.CREATED, ${className}DomainEventSchema),
         updated: yield* pubsub.topic(${className}EventTopics.UPDATED, ${className}DomainEventSchema),
-        deleted: yield* pubsub.topic(${className}EventTopics.DELETED, ${className}DomainEventSchema),
-      };
+        deleted: yield* pubsub.topic(${className}EventTopics.DELETED, ${className}DomainEventSchema)
+      }
 
-      return createPublisherImpl(topics, logger, metrics);
+      return createPublisherImpl(topics, logger, metrics)
     })
-  );
+  )
 
   /**
    * Test layer (same as Live, but uses test infrastructure)
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 }`)
   builder.addBlankLine()
 
@@ -311,8 +317,9 @@ export function create${className}EventSubscription(
   pubsub: Context.Tag.Service<typeof PubsubService>,
   topicName: string = ${className}EventTopics.ALL
 ) {
-  return pubsub.topic(topicName, ${className}DomainEventSchema);
-}`)
+  return pubsub.topic(topicName, ${className}DomainEventSchema)
+}
+`)
 
   return builder.toString()
 }

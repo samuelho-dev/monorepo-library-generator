@@ -43,44 +43,29 @@ Provides Live and Test layers with proper dependency composition.
 All infrastructure dependencies are properly wired.`,
     module: `${scope}/feature-${parentFileName}/server/services/${subModuleName}`
   })
-  builder.addBlankLine()
 
   // Fix Gap #5: Include Layer import (Effect is only used in JSDoc examples)
   builder.addImports([{ from: "effect", imports: ["Layer"] }])
-  builder.addBlankLine()
 
   builder.addSectionComment("Service Import")
   builder.addRaw(
-    `import { ${subModuleClassName}ServiceLive } from "./service";`
+    `import { ${subModuleClassName}ServiceLive } from "./service"
+`
   )
-  builder.addBlankLine()
 
   builder.addSectionComment("Data Access Import")
   builder.addRaw(
-    `import { ${subModuleClassName}RepositoryLive, ${subModuleClassName}RepositoryTest } from "${scope}/data-access-${parentFileName}/${subModuleName}";`
+    `import { ${subModuleClassName}RepositoryLive, ${subModuleClassName}RepositoryTest } from "${scope}/data-access-${parentFileName}/${subModuleName}"
+`
   )
-  builder.addBlankLine()
 
   builder.addSectionComment("Infrastructure Imports")
   builder.addImports([
     { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] },
     { from: `${scope}/infra-database`, imports: ["DatabaseService"] }
   ])
-  builder.addBlankLine()
-
-  builder.addSectionComment("Re-export Service Components")
-  builder.addBlankLine()
-
-  builder.addRaw(`export {
-  ${subModuleClassName}Service,
-  ${subModuleClassName}ServiceLive,
-  type ${subModuleClassName}ServiceInterface,
-  ${subModuleClassName}ServiceError,
-} from "./service";`)
-  builder.addBlankLine()
 
   builder.addSectionComment("Live Layer Composition")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${subModuleClassName}Live Layer
@@ -111,11 +96,9 @@ export const ${subModuleClassName}Live = ${subModuleClassName}ServiceLive.pipe(
   Layer.provide(LoggingService.Live),
   Layer.provide(MetricsService.Live),
   Layer.provide(DatabaseService.Live)
-);`)
-  builder.addBlankLine()
+)`)
 
   builder.addSectionComment("Test Layer Composition")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${subModuleClassName}Test Layer
@@ -144,11 +127,9 @@ export const ${subModuleClassName}Test = ${subModuleClassName}ServiceLive.pipe(
   Layer.provide(${subModuleClassName}RepositoryTest),
   Layer.provide(LoggingService.Test),
   Layer.provide(MetricsService.Test)
-);`)
-  builder.addBlankLine()
+)`)
 
   builder.addSectionComment("Dependencies Layer (for parent composition)")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${subModuleClassName}Dependencies Layer
@@ -160,8 +141,7 @@ export const ${subModuleClassName}Test = ${subModuleClassName}ServiceLive.pipe(
  * - Repository layer
  * - Infrastructure layers
  */
-export const ${subModuleClassName}Dependencies = ${subModuleClassName}ServiceLive;`)
-  builder.addBlankLine()
+export const ${subModuleClassName}Dependencies = ${subModuleClassName}ServiceLive`)
 
   return builder.toString()
 }

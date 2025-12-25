@@ -8,7 +8,7 @@
  * ============================
  * The contract library is the SINGLE SOURCE OF TRUTH for domain errors.
  * Feature library:
- * - Re-exports domain errors from contract
+ * - Does NOT re-export domain errors - import directly from contract
  * - Defines service-level errors using Data.TaggedError (NOT Schema.TaggedError)
  * - Schema.TaggedError is ONLY used at RPC boundaries (see rpc-errors.template.ts)
  *
@@ -18,15 +18,14 @@
 import { EffectPatterns, TypeScriptBuilder } from "../../../utils/code-builder"
 import type { FeatureTemplateOptions } from "../../../utils/types"
 import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
-import { createDataAccessContractReExports } from "../../shared/factories"
 
 /**
  * Generate shared/errors.ts file for feature library
  *
  * Contract-First Architecture:
- * - Re-exports ALL errors from contract library (single source of truth)
- * - Defines service-level errors using Data.TaggedError
- * - Provides error transformation utilities for RPC boundary
+ * - Domain errors are in contract library - import directly from there
+ * - This file only defines service-level errors using Data.TaggedError
+ * - NO re-exports to comply with biome noBarrelFile rule
  */
 export function generateErrorsFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
@@ -35,35 +34,29 @@ export function generateErrorsFile(options: FeatureTemplateOptions) {
 
   // Add file header
   builder.addFileHeader({
-    title: `${className} Feature Errors`,
-    description: `Re-exports domain errors from contract and adds service-level errors.
+    title: `${className} Feature Service Errors`,
+    description: `Service-level errors for feature layer operations.
 
 CONTRACT-FIRST ARCHITECTURE:
-This file follows the contract-first pattern where:
-- Domain errors (NotFound, Validation, etc.) are defined in @${scope}/contract-${name}
-- Feature layer re-exports these as the single source of truth
-- Service-level errors are defined here using Data.TaggedError
+Domain errors are defined in ${scope}/contract-${name} - import directly from there.
+This file only contains service-level errors specific to feature operations.
 
-ERROR TYPE SELECTION:
-- Data.TaggedError: Internal errors (domain, repository, service)
-- Schema.TaggedError: ONLY at RPC boundaries (see rpc.ts)
+For domain errors, import from contract:
+  import { ${className}NotFoundError, ${className}ValidationError } from "${scope}/contract-${name}";
 
-Error Categories:
-1. Domain Errors (from contract):
-   - ${className}NotFoundError - Entity not found
-   - ${className}ValidationError - Input validation failed
-   - ${className}AlreadyExistsError - Duplicate entity
-   - ${className}PermissionError - Operation not permitted
+For infrastructure errors, import from data-access:
+  import { ${className}TimeoutError, ${className}ConnectionError } from "${scope}/data-access-${name}";
 
-2. Service Errors (defined here):
-   - ${className}ServiceError - Orchestration/dependency failures
+Service Errors (defined here):
+  - ${className}ServiceError - Orchestration/dependency failures
 
-@see ${scope}/contract-${name}/errors for domain error definitions`,
+@see ${scope}/contract-${name} for domain error definitions
+@see ${scope}/data-access-${name} for infrastructure error definitions`,
     module: `${scope}/feature-${name}/shared/errors`
   })
   builder.addBlankLine()
 
-  // Add imports
+  // Add imports - only what we need for service errors
   builder.addImports([{ from: "effect", imports: ["Data"] }])
   // Import type for local use (verbatimModuleSyntax requires separate import for types used locally)
   builder.addImports([{
@@ -71,18 +64,12 @@ Error Categories:
     imports: [`${className}DomainError`],
     isTypeOnly: true
   }])
+  builder.addImports([{
+    from: `${scope}/data-access-${fileName ?? name}`,
+    imports: [`${className}InfrastructureError`],
+    isTypeOnly: true
+  }])
   builder.addBlankLine()
-
-  // ============================================================================
-  // Re-export Domain Errors from Contract (Single Source of Truth)
-  // ============================================================================
-
-  // Use the factory for contract re-exports (same structure as data-access)
-  createDataAccessContractReExports({
-    className,
-    scope,
-    fileName: fileName ?? name
-  })(builder)
 
   // ============================================================================
   // Service-Level Errors (Feature Specific)
@@ -117,8 +104,8 @@ Error Categories:
   message,
   code: "DEPENDENCY",
   operation,
-  ...(cause !== undefined && { cause }),
-});`
+  ...(cause !== undefined && { cause })
+})`
         },
         {
           name: "orchestration",
@@ -132,8 +119,8 @@ Error Categories:
   message,
   code: "ORCHESTRATION",
   operation,
-  ...(cause !== undefined && { cause }),
-});`
+  ...(cause !== undefined && { cause })
+})`
         },
         {
           name: "internal",
@@ -147,8 +134,8 @@ Error Categories:
   message,
   code: "INTERNAL",
   operation,
-  ...(cause !== undefined && { cause }),
-});`
+  ...(cause !== undefined && { cause })
+})`
         }
       ],
       jsdoc: `Service-level error for ${name} feature orchestration
@@ -185,38 +172,23 @@ yield* Effect.catchTag("${className}ConnectionError", (error) =>
   })
 
   // ============================================================================
-  // Infrastructure Error Re-exports
-  // ============================================================================
-
-  builder.addSectionComment("Infrastructure Error Re-exports")
-  builder.addComment("Re-export infrastructure errors from data-access for service layer error mapping")
-  builder.addBlankLine()
-
-  builder.addRaw(`// Re-export infrastructure errors from data-access
-// These are used by mapInfraErrors in the service layer
-export {
-  ${className}TimeoutError,
-  ${className}ConnectionError,
-  ${className}TransactionError,
-  type ${className}InfrastructureError,
-} from "${scope}/data-access-${fileName ?? name}";
-`)
-
-  // ============================================================================
   // Combined Feature Error Types
   // ============================================================================
 
   builder.addSectionComment("Combined Feature Error Types")
+  builder.addComment("For infrastructure errors, import directly from data-access:")
+  builder.addComment(`  import { ${className}TimeoutError } from "${scope}/data-access-${fileName ?? name}";`)
   builder.addBlankLine()
 
   builder.addTypeAlias({
     name: `${className}FeatureError`,
-    type: `${className}DomainError | ${className}ServiceError`,
+    type: `${className}DomainError | ${className}ServiceError | ${className}InfrastructureError`,
     exported: true,
     jsdoc: `All possible feature-level errors
 
-Domain errors pass through unchanged.
-Service errors wrap infrastructure/orchestration failures.`
+Domain errors - import from ${scope}/contract-${name}
+Infrastructure errors - import from ${scope}/data-access-${name}
+Service errors - defined in this file`
   })
 
   builder.addBlankLine()

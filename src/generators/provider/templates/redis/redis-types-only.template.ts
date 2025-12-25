@@ -39,20 +39,20 @@ export function generateRedisTypesOnlyFile(options: ProviderTemplateOptions) {
 // ============================================================================
 
 // Main Redis service interface and sub-service interfaces
-export type * from "./lib/redis";
+export type * from "./lib/redis"
 
 // ============================================================================
 // Configuration Types
 // ============================================================================
 
 // RedisConfig, ScanOptions, ScanResult, sub-service interfaces
-export type * from "./lib/types";
+export type * from "./lib/types"
 
 // ============================================================================
 // Error Types
 // ============================================================================
 
 // RedisError, RedisConnectionError, RedisTimeoutError, etc.
-export type * from "./lib/errors";
+export type * from "./lib/errors"
 `
 }

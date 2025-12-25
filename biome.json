@@ -84,11 +84,7 @@
       "javascript": { "globals": ["exports"] },
       "linter": {
         "rules": {
-          "complexity": {
-            "noArguments": "off",
-            "noBannedTypes": "off",
-            "noExcessiveCognitiveComplexity": "off"
-          },
+          "complexity": { "noArguments": "off", "noBannedTypes": "off" },
           "correctness": { "noInvalidUseBeforeDeclaration": "off", "noUnusedVariables": "error" },
           "style": {
             "noNamespace": "off",
@@ -119,10 +115,6 @@
           "vi"
         ]
       }
-    },
-    {
-      "includes": ["**/index.ts", "**/rpc.ts", "**/rpc-group.ts", "**/errors.ts", "**/router.ts", "**/layer.ts", "**/layers.ts", "**/service.ts", "**/types.ts", "**/core.ts", "src/utils/templates.ts"],
-      "linter": { "rules": { "performance": { "noBarrelFile": "off", "noReExportAll": "off" } } }
     }
   ]
 }

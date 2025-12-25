@@ -128,19 +128,19 @@ export interface ${className}ServiceInterface {
   /**
    * Service configuration (read-only)
    */
-  readonly config: ${className}Config;
+  readonly config: ${className}Config
 
   /**
    * Execute command with arguments
    */
   readonly execute: (
     args: readonly string[]
-  ) => Effect.Effect<CommandResult, ${className}ServiceError>;
+  ) => Effect.Effect<CommandResult, ${className}ServiceError>
 
   /**
    * Get command version
    */
-  readonly version;
+  readonly version
 }`)
   } else if (providerType === "http") {
     // HTTP Provider Interface
@@ -159,37 +159,37 @@ export interface ${className}ServiceInterface {
   /**
    * Service configuration (read-only)
    */
-  readonly config: ${className}Config;
+  readonly config: ${className}Config
 
   /**
    * Health check - verifies API connectivity
    */
-  readonly healthCheck;
+  readonly healthCheck
 
   /**
    * GET request
    */
-  readonly get: (path: string);
+  readonly get: (path: string)
 
   /**
    * POST request
    */
-  readonly post: (path: string, body: unknown);
+  readonly post: (path: string, body: unknown)
 
   /**
    * PUT request
    */
-  readonly put: (path: string, body: unknown);
+  readonly put: (path: string, body: unknown)
 
   /**
    * DELETE request
    */
-  readonly delete: (path: string);
+  readonly delete: (path: string)
 
   /**
    * List resources with pagination
    */
-  readonly list: (params?: ListParams);
+  readonly list: (params?: ListParams)
 }`)
   } else if (providerType === "graphql") {
     // GraphQL Provider Interface
@@ -207,12 +207,12 @@ export interface ${className}ServiceInterface {
   /**
    * Service configuration (read-only)
    */
-  readonly config: ${className}Config;
+  readonly config: ${className}Config
 
   /**
    * Health check - verifies GraphQL endpoint connectivity
    */
-  readonly healthCheck;
+  readonly healthCheck
 
   /**
    * Execute GraphQL query
@@ -220,7 +220,7 @@ export interface ${className}ServiceInterface {
   readonly query: <T>(
     query: string,
     variables?: Record<string, unknown>
-  );
+  )
 
   /**
    * Execute GraphQL mutation
@@ -228,7 +228,7 @@ export interface ${className}ServiceInterface {
   readonly mutation: <T>(
     mutation: string,
     variables?: Record<string, unknown>
-  );
+  )
 }`)
   } else {
     // SDK Provider Interface (original)
@@ -247,7 +247,7 @@ export interface ${className}ServiceInterface {
   /**
    * Service configuration (read-only)
    */
-  readonly config: ${className}Config;
+  readonly config: ${className}Config
 
   /**
    * Health check - verifies service connectivity
@@ -255,28 +255,28 @@ export interface ${className}ServiceInterface {
   readonly healthCheck: Effect.Effect<
     HealthCheckResult,
     ${className}ServiceError
-  >;
+  >
 
   /**
    * List resources with pagination support
    */
   readonly list: (
     params?: ListParams
-  ) => Effect.Effect<PaginatedResult<Resource>, ${className}ServiceError>;
+  ) => Effect.Effect<PaginatedResult<Resource>, ${className}ServiceError>
 
   /**
    * Get resource by ID
    */
   readonly get: (
     id: string
-  ) => Effect.Effect<Resource, ${className}ServiceError>;
+  ) => Effect.Effect<Resource, ${className}ServiceError>
 
   /**
    * Create new resource
    */
   readonly create: (
     data: Omit<Resource, "id" | "createdAt" | "updatedAt">
-  ) => Effect.Effect<Resource, ${className}ServiceError>;
+  ) => Effect.Effect<Resource, ${className}ServiceError>
 
   /**
    * Update existing resource
@@ -284,14 +284,14 @@ export interface ${className}ServiceInterface {
   readonly update: (
     id: string,
     data: Partial<Omit<Resource, "id" | "createdAt" | "updatedAt">>
-  ) => Effect.Effect<Resource, ${className}ServiceError>;
+  ) => Effect.Effect<Resource, ${className}ServiceError>
 
   /**
    * Delete resource
    */
   readonly delete: (
     id: string
-  ) => Effect.Effect<void, ${className}ServiceError>;
+  ) => Effect.Effect<void, ${className}ServiceError>
 
   // ==========================================================================
   // TODO: Stream-Based Operations for Large-Scale API Interactions
@@ -308,7 +308,7 @@ export interface ${className}ServiceInterface {
   //
   // readonly streamAll: (
   //   params?: Omit<ListParams, "page">
-  // ) => Stream.Stream<Resource, ${className}ServiceError, never>;
+  // ) => Stream.Stream<Resource, ${className}ServiceError, never>
   //
   // // Implementation:
   // streamAll: (params) =>
@@ -357,7 +357,7 @@ export interface ${className}ServiceInterface {
   //
   // readonly bulkCreate: (
   //   items: readonly Omit<Resource, "id" | "createdAt" | "updatedAt">[]
-  // ) => Stream.Stream<Resource, ${className}ServiceError, never>;
+  // ) => Stream.Stream<Resource, ${className}ServiceError, never>
   //
   // // Implementation:
   // bulkCreate: (items) =>
@@ -388,7 +388,7 @@ export interface ${className}ServiceInterface {
   //   ${className}Event,
   //   ${className}ServiceError,
   //   never
-  // >;
+  // >
   //
   // // Implementation with Queue:
   // streamEvents: () =>
@@ -404,7 +404,7 @@ export interface ${className}ServiceInterface {
   //           // Emit events as they arrive
   //           sub.on("event", (event) => {
   //             emit.single(event);
-  //           });
+  //           })
   //
   //           return sub;
   //         }),
@@ -426,7 +426,7 @@ export interface ${className}ServiceInterface {
   //
   // readonly bulkDelete: (
   //   ids: readonly string[]
-  // ) => Stream.Stream<void, ${className}ServiceError, never>;
+  // ) => Stream.Stream<void, ${className}ServiceError, never>
   //
   // // Implementation:
   // bulkDelete: (ids) =>
@@ -520,14 +520,14 @@ export class ${className} extends Context.Tag("${className}")<
    *
    * Testing is done by mocking command execution or using test fixtures.
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 
   /**
    * Dev layer - Same as Live
    *
    * Enhanced logging comes from command output capture.
    */
-  static readonly Dev = this.Live;
+  static readonly Dev = this.Live
 
   /**
    * Auto layer - Environment-aware layer selection
@@ -537,14 +537,14 @@ export class ${className} extends Context.Tag("${className}")<
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "test":
-        return ${className}.Test;
+        return ${className}.Test
       case "development":
-        return ${className}.Dev;
+        return ${className}.Dev
       case "production":
       default:
-        return ${className}.Live;
+        return ${className}.Live
     }
-  });
+  })
 }`)
   } else if (providerType === "http") {
     // HTTP Live Layer
@@ -657,14 +657,14 @@ export class ${className} extends Context.Tag("${className}")<
    *
    * Testing is done by mocking HttpClient responses.
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 
   /**
    * Dev layer - Same as Live
    *
    * Enhanced logging via HttpClient interceptors.
    */
-  static readonly Dev = this.Live;
+  static readonly Dev = this.Live
 
   /**
    * Auto layer - Environment-aware layer selection
@@ -674,14 +674,14 @@ export class ${className} extends Context.Tag("${className}")<
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "test":
-        return ${className}.Test;
+        return ${className}.Test
       case "development":
-        return ${className}.Dev;
+        return ${className}.Dev
       case "production":
       default:
-        return ${className}.Live;
+        return ${className}.Live
     }
-  });
+  })
 }`)
   } else if (providerType === "graphql") {
     // GraphQL Live Layer
@@ -763,14 +763,14 @@ export class ${className} extends Context.Tag("${className}")<
    *
    * Testing is done by mocking GraphQL responses.
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 
   /**
    * Dev layer - Same as Live
    *
    * Enhanced logging for GraphQL operations.
    */
-  static readonly Dev = this.Live;
+  static readonly Dev = this.Live
 
   /**
    * Auto layer - Environment-aware layer selection
@@ -780,14 +780,14 @@ export class ${className} extends Context.Tag("${className}")<
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "test":
-        return ${className}.Test;
+        return ${className}.Test
       case "development":
-        return ${className}.Dev;
+        return ${className}.Dev
       case "production":
       default:
-        return ${className}.Live;
+        return ${className}.Live
     }
-  });
+  })
 }`)
   } else {
     // SDK Live Layer - Uses in-memory baseline implementation
@@ -804,7 +804,7 @@ export class ${className} extends Context.Tag("${className}")<
    * static readonly Live = Layer.effect(
    *   this,
    *   Effect.gen(function* () {
-   *     const client = new ${externalService}Client(config);
+   *     const client = new ${externalService}Client(config)
    *     return {
    *       get: (id) => Effect.tryPromise({
    *         try: () => client.get(id),
@@ -821,18 +821,18 @@ export class ${className} extends Context.Tag("${className}")<
     Effect.gen(function* () {
       // Lazy import env - only loads when Live layer is built, not at module parse time
       // This allows tests to import service.ts without triggering env validation
-      const { env } = yield* Effect.promise(() => import("${scope}/env"));
+      const { env } = yield* Effect.promise(() => import("${scope}/env"))
 
       // In-memory baseline implementation
       // TODO: Replace with ${externalService} SDK integration
-      const store = new Map<string, Resource>();
-      let idCounter = 0;
+      const store = new Map<string, Resource>()
+      let idCounter = 0
 
       // Configuration from environment variables
       const config: ${className}Config = {
         apiKey: Redacted.value(env.${options.constantName}_API_KEY) ?? "fallback_api_key",
         timeout: env.${options.constantName}_TIMEOUT ?? 20000,
-      };
+      }
 
       return {
         config,
@@ -841,22 +841,22 @@ export class ${className} extends Context.Tag("${className}")<
 
         list: (params) =>
           Effect.sync(() => {
-            const page = params?.page ?? 1;
-            const limit = params?.limit ?? 10;
-            const items = Array.from(store.values());
-            const start = (page - 1) * limit;
-            const end = start + limit;
+            const page = params?.page ?? 1
+            const limit = params?.limit ?? 10
+            const items = Array.from(store.values())
+            const start = (page - 1) * limit
+            const end = start + limit
             return {
               data: items.slice(start, end),
               page,
               limit,
               total: items.length,
-            };
+            }
           }),
 
         get: (id) =>
           Effect.gen(function* () {
-            const item = store.get(id);
+            const item = store.get(id)
             if (!item) {
               return yield* Effect.fail(
                 new ${className}NotFoundError({
@@ -864,28 +864,28 @@ export class ${className} extends Context.Tag("${className}")<
                   resourceId: id,
                   resourceType: "Resource",
                 })
-              );
+              )
             }
-            return item;
+            return item
           }),
 
         create: (data) =>
           Effect.sync(() => {
-            const id = \`live-\${++idCounter}\`;
-            const now = new Date();
+            const id = \`live-\${++idCounter}\`
+            const now = new Date()
             const item: Resource = {
               id,
               ...data,
               createdAt: now,
-              updatedAt: now,
-            };
-            store.set(id, item);
-            return item;
+              updatedAt: now
+            }
+            store.set(id, item)
+            return item
           }),
 
         update: (id, data) =>
           Effect.gen(function* () {
-            const item = store.get(id);
+            const item = store.get(id)
             if (!item) {
               return yield* Effect.fail(
                 new ${className}NotFoundError({
@@ -893,22 +893,22 @@ export class ${className} extends Context.Tag("${className}")<
                   resourceId: id,
                   resourceType: "Resource",
                 })
-              );
+              )
             }
             const updated: Resource = {
               ...item,
               ...data,
               id,
               createdAt: item.createdAt,
-              updatedAt: new Date(),
-            };
-            store.set(id, updated);
-            return updated;
+              updatedAt: new Date()
+            }
+            store.set(id, updated)
+            return updated
           }),
 
         delete: (id) =>
           Effect.gen(function* () {
-            const existed = store.delete(id);
+            const existed = store.delete(id)
             if (!existed) {
               return yield* Effect.fail(
                 new ${className}NotFoundError({
@@ -916,7 +916,7 @@ export class ${className} extends Context.Tag("${className}")<
                   resourceId: id,
                   resourceType: "Resource",
                 })
-              );
+              )
             }
           }),
       };
@@ -937,8 +937,8 @@ export class ${className} extends Context.Tag("${className}")<
     ${className},
     () => {
       // In-memory store for test isolation
-      const store = new Map<string, Resource>();
-      let idCounter = 0;
+      const store = new Map<string, Resource>()
+      let idCounter = 0
 
       return {
         // Configuration with test values
@@ -950,23 +950,23 @@ export class ${className} extends Context.Tag("${className}")<
         // List with pagination
         list: (params) =>
           Effect.sync(() => {
-            const page = params?.page ?? 1;
-            const limit = params?.limit ?? 10;
-            const items = Array.from(store.values());
-            const start = (page - 1) * limit;
-            const end = start + limit;
+            const page = params?.page ?? 1
+            const limit = params?.limit ?? 10
+            const items = Array.from(store.values())
+            const start = (page - 1) * limit
+            const end = start + limit
             return {
               data: items.slice(start, end),
               page,
               limit,
               total: items.length,
-            };
+            }
           }),
 
         // Get by ID with proper error handling
         get: (id) =>
           Effect.gen(function* () {
-            const item = store.get(id);
+            const item = store.get(id)
             if (!item) {
               return yield* Effect.fail(
                 new ${className}NotFoundError({
@@ -974,30 +974,30 @@ export class ${className} extends Context.Tag("${className}")<
                   resourceId: id,
                   resourceType: "Resource",
                 })
-              );
+              )
             }
-            return item;
+            return item
           }),
 
         // Create with generated ID
         create: (data) =>
           Effect.sync(() => {
-            const id = \`test-\${++idCounter}\`;
-            const now = new Date();
+            const id = \`test-\${++idCounter}\`
+            const now = new Date()
             const item: Resource = {
               id,
               ...data,
               createdAt: now,
-              updatedAt: now,
-            };
-            store.set(id, item);
-            return item;
+              updatedAt: now
+            }
+            store.set(id, item)
+            return item
           }),
 
         // Update existing resource
         update: (id, data) =>
           Effect.gen(function* () {
-            const item = store.get(id);
+            const item = store.get(id)
             if (!item) {
               return yield* Effect.fail(
                 new ${className}NotFoundError({
@@ -1005,23 +1005,23 @@ export class ${className} extends Context.Tag("${className}")<
                   resourceId: id,
                   resourceType: "Resource",
                 })
-              );
+              )
             }
             const updated: Resource = {
               ...item,
               ...data,
               id,
               createdAt: item.createdAt,
-              updatedAt: new Date(),
-            };
-            store.set(id, updated);
-            return updated;
+              updatedAt: new Date()
+            }
+            store.set(id, updated)
+            return updated
           }),
 
         // Delete with existence check
         delete: (id) =>
           Effect.gen(function* () {
-            const existed = store.delete(id);
+            const existed = store.delete(id)
             if (!existed) {
               return yield* Effect.fail(
                 new ${className}NotFoundError({
@@ -1029,7 +1029,7 @@ export class ${className} extends Context.Tag("${className}")<
                   resourceId: id,
                   resourceType: "Resource",
                 })
-              );
+              )
             }
           }),
       };
@@ -1045,64 +1045,64 @@ export class ${className} extends Context.Tag("${className}")<
   static readonly Dev = Layer.effect(
     ${className},
     Effect.gen(function* () {
-      yield* Effect.logDebug("[${className}] [DEV] Initializing development layer");
+      yield* Effect.logDebug("[${className}] [DEV] Initializing development layer")
 
       // Get actual implementation from Live layer
       const liveService = yield* ${className}.Live.pipe(
         Layer.build,
         Effect.map((ctx) => Context.get(ctx, ${className}))
-      );
+      )
 
       // Wrap all operations with logging
       return {
         config: liveService.config,
 
         healthCheck: Effect.gen(function* () {
-          yield* Effect.logDebug("[${className}] [DEV] healthCheck called");
-          const result = yield* liveService.healthCheck;
-          yield* Effect.logDebug("[${className}] [DEV] healthCheck result", { result });
-          return result;
+          yield* Effect.logDebug("[${className}] [DEV] healthCheck called")
+          const result = yield* liveService.healthCheck
+          yield* Effect.logDebug("[${className}] [DEV] healthCheck result", { result })
+          return result
         }),
 
         list: (params) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[${className}] [DEV] list called", { params });
-            const result = yield* liveService.list(params);
-            yield* Effect.logDebug("[${className}] [DEV] list result", { count: result.data.length, total: result.total });
-            return result;
+            yield* Effect.logDebug("[${className}] [DEV] list called", { params })
+            const result = yield* liveService.list(params)
+            yield* Effect.logDebug("[${className}] [DEV] list result", { count: result.data.length, total: result.total })
+            return result
           }),
 
         get: (id) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[${className}] [DEV] get called", { id });
-            const result = yield* liveService.get(id);
-            yield* Effect.logDebug("[${className}] [DEV] get result", { result });
-            return result;
+            yield* Effect.logDebug("[${className}] [DEV] get called", { id })
+            const result = yield* liveService.get(id)
+            yield* Effect.logDebug("[${className}] [DEV] get result", { result })
+            return result
           }),
 
         create: (data) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[${className}] [DEV] create called", { data });
-            const result = yield* liveService.create(data);
-            yield* Effect.logDebug("[${className}] [DEV] create result", { result });
-            return result;
+            yield* Effect.logDebug("[${className}] [DEV] create called", { data })
+            const result = yield* liveService.create(data)
+            yield* Effect.logDebug("[${className}] [DEV] create result", { result })
+            return result
           }),
 
         update: (id, data) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[${className}] [DEV] update called", { id, data });
-            const result = yield* liveService.update(id, data);
-            yield* Effect.logDebug("[${className}] [DEV] update result", { result });
-            return result;
+            yield* Effect.logDebug("[${className}] [DEV] update called", { id, data })
+            const result = yield* liveService.update(id, data)
+            yield* Effect.logDebug("[${className}] [DEV] update result", { result })
+            return result
           }),
 
         delete: (id) =>
           Effect.gen(function* () {
-            yield* Effect.logDebug("[${className}] [DEV] delete called", { id });
-            yield* liveService.delete(id);
-            yield* Effect.logDebug("[${className}] [DEV] delete completed", { id });
+            yield* Effect.logDebug("[${className}] [DEV] delete called", { id })
+            yield* liveService.delete(id)
+            yield* Effect.logDebug("[${className}] [DEV] delete completed", { id })
           })
-      };
+      }
     })
   );
 
@@ -1120,14 +1120,14 @@ export class ${className} extends Context.Tag("${className}")<
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "test":
-        return ${className}.Test;
+        return ${className}.Test
       case "development":
-        return ${className}.Dev;
+        return ${className}.Dev
       case "production":
       default:
-        return ${className}.Live;
+        return ${className}.Live
     }
-  });
+  })
 }`)
   }
 

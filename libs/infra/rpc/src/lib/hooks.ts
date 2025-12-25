@@ -1,5 +1,6 @@
 import { Schema } from "@effect/schema"
-import { Cause, Exit, Option, Runtime } from "effect"
+import { Option, Runtime } from "effect"
+import type { Effect, Exit } from "effect"
 import { useCallback, useEffect, useState } from "react"
 
 /**
@@ -27,83 +28,71 @@ Usage:
  *
  */
 
-
 // ============================================================================
 // Types
 // ============================================================================
-
-import type { Effect } from "effect";
-
 /**
- * RPC error structure from Schema parsing
+ * Parsed RPC error for display in React components
+ *
+ * This is a simplified structure extracted from Schema.TaggedError types.
+ * Use this for displaying error messages in the UI.
  */
-export interface RpcError {
-  readonly _tag: string;
-  readonly message: string;
-  readonly code?: string;
+export interface ParsedRpcError {
+  readonly _tag: string
+  readonly message: string
+  readonly code?: string
 }
-
 // ============================================================================
 // Error Parsing (Schema-based)
 // ============================================================================
-
 /**
  * Schema for parsing RPC error responses
  *
  * RPC errors are Schema.TaggedError types serialized as JSON.
  * This schema extracts _tag and message for display.
  */
-const RpcErrorSchema = Schema.Struct({
+const ParsedRpcErrorSchema = Schema.Struct({
   _tag: Schema.String,
   message: Schema.String,
-  code: Schema.optional(Schema.String),
-});
+  code: Schema.optional(Schema.String)
+})
 
 /**
- * Parse error using Schema - returns typed RpcError or fallback
+ * Parse error using Schema - returns typed ParsedRpcError or fallback
  *
  * Uses Schema.decodeUnknownOption for type-safe parsing without coercion.
  */
-function parseRpcError(error: unknown): RpcError {
-  const result = Schema.decodeUnknownOption(RpcErrorSchema)(error);
+function parseRpcError(error: unknown): ParsedRpcError {
+  const result = Schema.decodeUnknownOption(ParsedRpcErrorSchema)(error)
   if (Option.isSome(result)) {
-    const parsed = result.value;
+    const parsed = result.value
     return {
       _tag: parsed._tag,
       message: parsed.message,
-      ...(parsed.code !== undefined ? { code: parsed.code } : {}),
-    };
+      ...(parsed.code !== undefined ? { code: parsed.code } : {})
+    }
   }
   // Fallback for non-RPC errors
-  return { _tag: "UnknownError", message: "An unexpected error occurred" };
+  return { _tag: "UnknownError", message: "An unexpected error occurred" }
 }
-
-/**
- * Extract error message from Cause using Effect patterns
- */
-function extractCauseMessage(cause: Cause.Cause<unknown>): string {
-  return Cause.pretty(cause);
-}
-
 // ============================================================================
 // RPC Runtime Context
 // ============================================================================
-
 /**
  * RPC Runtime for executing Effect programs
  *
  * This is created once and reused across all hooks.
  */
-let rpcRuntime: Runtime.Runtime<never> | null = null;
+let rpcRuntime: Runtime.Runtime<never> | null = null
 
 /**
  * Get or create the RPC runtime
  */
 export function getRpcRuntime(): Runtime.Runtime<never> {
   if (rpcRuntime === null) {
-    rpcRuntime = Runtime.defaultRuntime;
+    rpcRuntime = Runtime.defaultRuntime
   }
-  return rpcRuntime;
+  return rpcRuntime
 }
 
 /**
@@ -115,21 +104,20 @@ export function getRpcRuntime(): Runtime.Runtime<never> {
 export function runEffectExit<A, E>(
   effect: Effect.Effect<A, E, never>
 ): Promise<Exit.Exit<A, E>> {
-  const runtime = getRpcRuntime();
-  return Runtime.runPromiseExit(runtime)(effect);
+  const runtime = getRpcRuntime()
+  return Runtime.runPromiseExit(runtime)(effect)
 }
 
 // ============================================================================
 // RPC Call Function
 // ============================================================================
-
 /**
  * RPC call options
  */
 export interface RpcCallOptions<T> {
-  readonly headers?: Record<string, string>;
-  readonly timeout?: number;
-  readonly responseSchema: Schema.Schema<T, unknown>;
+  readonly headers?: Record<string, string>
+  readonly timeout?: number
+  readonly responseSchema: Schema.Schema<T, unknown>
 }
 
 /**
@@ -160,44 +148,43 @@ export async function callRpc<T>(
   payload: unknown,
   options: RpcCallOptions<T>
 ): Promise<T> {
-  const timeout = options.timeout ?? 30000;
-  const headers = options.headers ?? {};
+  const timeout = options.timeout ?? 30000
+  const headers = options.headers ?? {}
 
   const response = await fetch(baseUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...headers,
+      ...headers
     },
     body: JSON.stringify({
       _tag: operation,
-      payload,
+      payload
     }),
-    signal: AbortSignal.timeout(timeout),
-  });
+    signal: AbortSignal.timeout(timeout)
+  })
 
-  const body: unknown = await response.json().catch((): RpcError => ({
+  const body: unknown = await response.json().catch((): ParsedRpcError => ({
     _tag: "ParseError",
-    message: response.statusText,
-  }));
+    message: response.statusText
+  }))
 
   if (!response.ok) {
-    throw body;
+    throw body
   }
 
   // Validate response using Schema - throws ParseError on failure
-  const parseResult = Schema.decodeUnknownOption(options.responseSchema)(body);
+  const parseResult = Schema.decodeUnknownOption(options.responseSchema)(body)
   if (Option.isNone(parseResult)) {
-    throw { _tag: "ValidationError", message: "Response validation failed" };
+    throw { _tag: "ValidationError", message: "Response validation failed" }
   }
 
-  return parseResult.value;
+  return parseResult.value
 }
 
 // ============================================================================
 // Mutation Hook
 // ============================================================================
-
 /**
  * Hook for RPC mutations with loading/error state
  *
@@ -230,38 +217,37 @@ export async function callRpc<T>(
 export function useRpcMutation<TInput, TOutput>(
   fetcher: (input: TInput) => Promise<TOutput>
 ) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<RpcError | null>(null);
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<ParsedRpcError | null>(null)
 
   const mutate = useCallback(
     async (input: TInput): Promise<TOutput> => {
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
       try {
-        const result = await fetcher(input);
-        return result;
+        const result = await fetcher(input)
+        return result
       } catch (e: unknown) {
-        const rpcError = parseRpcError(e);
-        setError(rpcError);
-        throw e;
+        const rpcError = parseRpcError(e)
+        setError(rpcError)
+        throw e
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     },
     [fetcher]
-  );
+  )
 
   const reset = useCallback((): void => {
-    setError(null);
-  }, []);
+    setError(null)
+  }, [])
 
-  return { mutate, isLoading, error, reset } as const;
+  return { mutate, isLoading, error, reset } as const
 }
 
 // ============================================================================
 // Query Hook
 // ============================================================================
-
 /**
  * Hook for RPC queries with automatic fetching
  *
@@ -295,38 +281,37 @@ export function useRpcQuery<TInput, TOutput>(
   input: TInput,
   options?: { readonly enabled?: boolean }
 ) {
-  const [data, setData] = useState<TOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<RpcError | null>(null);
-  const enabled = options?.enabled ?? true;
+  const [data, setData] = useState<TOutput | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<ParsedRpcError | null>(null)
+  const enabled = options?.enabled ?? true
 
   const refetch = useCallback(async (): Promise<void> => {
-    if (!enabled) return;
+    if (!enabled) return
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const result = await fetcher(input);
-      setData(result);
+      const result = await fetcher(input)
+      setData(result)
     } catch (e: unknown) {
-      const rpcError = parseRpcError(e);
-      setError(rpcError);
+      const rpcError = parseRpcError(e)
+      setError(rpcError)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [fetcher, JSON.stringify(input), enabled]);
+  }, [fetcher, JSON.stringify(input), enabled])
 
   useEffect((): void => {
-    refetch();
-  }, [refetch]);
+    refetch()
+  }, [refetch])
 
-  return { data, isLoading, error, refetch } as const;
+  return { data, isLoading, error, refetch } as const
 }
 
 // ============================================================================
 // Lazy Query Hook
 // ============================================================================
-
 /**
  * Hook for RPC queries that are triggered manually
  *
@@ -361,23 +346,23 @@ export function useRpcQuery<TInput, TOutput>(
 export function useRpcLazyQuery<TInput, TOutput>(
   fetcher: (input: TInput) => Promise<TOutput>
 ) {
-  const [data, setData] = useState<TOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<RpcError | null>(null);
+  const [data, setData] = useState<TOutput | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<ParsedRpcError | null>(null)
 
   const execute = useCallback(async (input: TInput): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const result = await fetcher(input);
-      setData(result);
+      const result = await fetcher(input)
+      setData(result)
     } catch (e: unknown) {
-      const rpcError = parseRpcError(e);
-      setError(rpcError);
+      const rpcError = parseRpcError(e)
+      setError(rpcError)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [fetcher]);
+  }, [fetcher])
 
-  return { data, isLoading, error, execute } as const;
+  return { data, isLoading, error, execute } as const
 }

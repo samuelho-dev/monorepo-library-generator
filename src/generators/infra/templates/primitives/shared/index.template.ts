@@ -33,26 +33,23 @@ Layers are available as static members on the service class.`,
   builder.addSectionComment("Service and Types")
 
   // Determine what to export from service based on concern type
-  const serviceExports = getServiceExports(className, concern)
+  const typeExports = getServiceTypeExports(className, concern)
 
   builder.addRaw(`// Service with static layers (Memory, Test, Live)
-export {
-  ${className}Service,
-${serviceExports}
-} from "./lib/service"
+export { ${className}Service } from "./lib/service"
+${typeExports ? `export type { ${typeExports} } from "./lib/service"` : ""}
 `)
 
   builder.addSectionComment("Error Types")
 
   builder.addRaw(`// Error types for error handling
 export {
-  ${className}ServiceError,
   ${className}InternalError,
   ${className}ConfigError,
   ${className}ConnectionError,
   ${className}TimeoutError,
-  type ${className}Error
 } from "./lib/errors"
+export type { ${className}Error, ${className}ServiceError } from "./lib/errors"
 `)
 
   builder.addSectionComment("Additional Layers")
@@ -67,35 +64,28 @@ export {
 }
 
 /**
- * Get service-specific exports based on concern type
+ * Get service-specific type exports based on concern type
+ * Returns type names for export type { ... } syntax (verbatimModuleSyntax compatible)
  */
-function getServiceExports(className: string, concern: string) {
+function getServiceTypeExports(className: string, concern: string) {
   switch (concern) {
     case "cache":
-      return `  type CacheHandle,
-  type SimpleCacheHandle`
+      return "CacheHandle, SimpleCacheHandle"
 
     case "database":
-      return `  type Database`
+      return "Database"
 
     case "queue":
-      return `  type BoundedQueueHandle,
-  type UnboundedQueueHandle,
-  type QueueOptions`
+      return "BoundedQueueHandle, QueueOptions, UnboundedQueueHandle"
 
     case "pubsub":
-      return `  type TopicHandle,
-  type TopicOptions`
+      return "TopicHandle, TopicOptions"
 
     case "logging":
-      return `  type LogContext,
-  type ${className}Operations`
+      return `${className}Operations, LogContext`
 
     case "metrics":
-      return `  type CounterHandle,
-  type GaugeHandle,
-  type HistogramHandle,
-  type MetricOptions`
+      return "CounterHandle, GaugeHandle, HistogramHandle, MetricOptions"
 
     default:
       return ""
@@ -110,11 +100,7 @@ function getLayerExport(className: string, concern: string) {
   switch (concern) {
     case "cache":
       return `// Redis-backed distributed layer
-export {
-  ${className}RedisLayer,
-  RedisClientTag,
-  type RedisClient
-} from "./lib/layers"
+export { ${className}RedisLayer } from "./lib/layers"
 `
 
     case "queue":
@@ -122,9 +108,9 @@ export {
 export {
   ${className}RedisLayer,
   RedisQueueClientTag,
-  type RedisQueueClient,
   withJobEnqueuing
 } from "./lib/layers"
+export type { RedisQueueClient } from "./lib/layers"
 `
 
     case "pubsub":
@@ -132,9 +118,9 @@ export {
 export {
   ${className}RedisLayer,
   RedisPubSubClientTag,
-  type RedisPubSubClient,
   withEventPublishing
 } from "./lib/layers"
+export type { RedisPubSubClient } from "./lib/layers"
 `
 
     case "logging":
@@ -142,9 +128,9 @@ export {
 export {
   make${className}OtelLayer,
   withMinLogLevel,
-  LogLevelConfigs,
-  type OtelLoggingConfig
+  LogLevelConfigs
 } from "./lib/layers"
+export type { OtelLoggingConfig } from "./lib/layers"
 `
 
     case "metrics":
@@ -152,9 +138,9 @@ export {
 export {
   make${className}OtelLayer,
   HistogramBoundaries,
-  StandardMetricNames,
-  type OtelMetricsConfig
+  StandardMetricNames
 } from "./lib/layers"
+export type { OtelMetricsConfig } from "./lib/layers"
 `
 
     default:

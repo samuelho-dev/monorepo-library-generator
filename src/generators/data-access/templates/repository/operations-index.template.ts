@@ -37,25 +37,11 @@ For convenience, import from this barrel:
   builder.addSectionComment("Re-export all operations")
   builder.addBlankLine()
 
-  builder.addRaw(`// Create operations
-export type { Create${className}Operations } from "./create"
-export { createOperations } from "./create"
-
-// Read operations
-export type { Read${className}Operations } from "./read"
-export { readOperations } from "./read"
-
-// Update operations
-export type { Update${className}Operations } from "./update"
-export { updateOperations } from "./update"
-
-// Delete operations
-export type { Delete${className}Operations } from "./delete"
-export { deleteOperations } from "./delete"
-
-// Aggregate operations
-export type { Aggregate${className}Operations } from "./aggregate"
-export { aggregateOperations } from "./aggregate"`)
+  builder.addRaw(`export { aggregateOperations, type Aggregate${className}Operations } from "./aggregate"
+export { createOperations, type Create${className}Operations } from "./create"
+export { deleteOperations, type Delete${className}Operations } from "./delete"
+export { readOperations, type Read${className}Operations } from "./read"
+export { updateOperations, type Update${className}Operations } from "./update"`)
 
   return builder.toString()
 }

@@ -30,16 +30,32 @@ import {
  * @module @samuelho-dev/infra-rpc/middleware
  */
 
+// Import middleware layers for combined layer composition
+// (must be before re-exports to maintain type inference)
+import {
+  AuthMiddleware,
+  AuthMiddlewareLive,
+  AuthMiddlewareTest,
+} from "./auth"
+import {
+  ServiceMiddleware,
+  ServiceMiddlewareLive,
+  ServiceMiddlewareTest,
+} from "./service-auth"
+import {
+  RequestMetaMiddleware,
+  RequestMetaMiddlewareLive,
+} from "./request-meta"
+import type { MiddlewareSelectorConfig } from "./route-selector"
+
 // ============================================================================
 // User Authentication (Protected Routes)
 // ============================================================================
-
 // Re-export user auth middleware
 export {
   // Types
   type CurrentUserData,
   type AuthMethod,
-  type AuthenticatedUserData,
 
   // Context Tags
   CurrentUser,
@@ -51,21 +67,20 @@ export {
   // Interface (for infra-auth to implement)
   AuthVerifier,
 
-  // Middleware
-  AuthMiddleware,
-  AuthMiddlewareLive,
-  AuthMiddlewareTest,
+  // Middleware (also re-exported from imports above)
   AuthMiddlewareAdmin,
 
   // Test data
   TestUser,
   AdminTestUser,
-} from "./auth";
+} from "./auth"
+
+// Re-export imported middleware (preserves type inference)
+export { AuthMiddleware, AuthMiddlewareLive, AuthMiddlewareTest }
 
 // ============================================================================
 // Service Authentication (Service Routes)
 // ============================================================================
-
 // Re-export service auth middleware
 export {
   // Types
@@ -82,20 +97,19 @@ export {
   generateServiceToken,
   KNOWN_SERVICES,
 
-  // Middleware
-  ServiceMiddleware,
-  ServiceMiddlewareLive,
-  ServiceMiddlewareTest,
+  // Permission helper
   requireServicePermission,
 
   // Test data
   TestServiceIdentity,
-} from "./service-auth";
+} from "./service-auth"
+
+// Re-export imported middleware (preserves type inference)
+export { ServiceMiddleware, ServiceMiddlewareLive, ServiceMiddlewareTest }
 
 // ============================================================================
 // Request Metadata (All Routes)
 // ============================================================================
-
 // Re-export request meta middleware
 export {
   // Types
@@ -104,20 +118,18 @@ export {
   // Context Tags
   RequestMeta,
 
-  // Middleware
-  RequestMetaMiddleware,
-  RequestMetaMiddlewareLive,
-
   // Helpers
   getHandlerContext,
   getHandlerContextOptional,
   type HandlerContext,
-} from "./request-meta";
+} from "./request-meta"
+
+// Re-export imported middleware (preserves type inference)
+export { RequestMetaMiddleware, RequestMetaMiddlewareLive }
 
 // ============================================================================
 // Route Selection (Contract-First)
 // ============================================================================
-
 // Re-export route selector
 export {
   // Types
@@ -143,17 +155,11 @@ export {
   logRouteType,
   assertRouteType,
   validateRpcRoutes,
-} from "./route-selector";
+} from "./route-selector"
 
 // ============================================================================
 // Combined Middleware Layers
 // ============================================================================
-
-import { AuthMiddlewareLive, AuthMiddlewareTest } from "./auth";
-import { ServiceMiddlewareLive, ServiceMiddlewareTest } from "./service-auth";
-import { RequestMetaMiddlewareLive } from "./request-meta";
-import type { MiddlewareSelectorConfig } from "./route-selector";
-
 /**
  * Combined middleware layer for development/testing
  *

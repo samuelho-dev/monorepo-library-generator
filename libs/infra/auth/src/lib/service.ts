@@ -1,4 +1,11 @@
+import { Headers } from "@effect/platform"
+import { AuthError as ContractAuthError, AuthVerifier, CurrentUserDataSchema } from "@samuelho-dev/contract-auth"
+import type { CurrentUserData } from "@samuelho-dev/contract-auth"
+import { SupabaseAuth } from "@samuelho-dev/provider-supabase"
+import type { AuthUser } from "@samuelho-dev/provider-supabase"
 import { Context, Effect, Layer, Option, Schema } from "effect"
+import { AuthError, InvalidTokenError, UnauthorizedError } from "./errors"
+import type { AuthContext } from "./types"
 
 /**
  * Auth Infrastructure Service
@@ -26,29 +33,15 @@ Integration:
  * @module @samuelho-dev/infra-auth/service
  */
 
-import { Headers } from "@effect/platform"
-import { type AuthUser, SupabaseAuth } from "@samuelho-dev/provider-supabase"
 
 // ============================================================================
 // Contract-Auth Imports (Single Source of Truth)
 // ============================================================================
-
 // Import canonical types from contract-auth
-import {
-  // Errors - for RPC middleware
-  AuthError as ContractAuthError,
-  // Ports - interface to implement
-  AuthVerifier,
-  type CurrentUserData,
-  // Schemas - for validation at boundaries
-  CurrentUserDataSchema
-} from "@samuelho-dev/contract-auth"
-
-import { AuthError, InvalidTokenError, UnauthorizedError } from "./errors"
-import type { AuthContext } from "./types"
 
 // Re-export for convenience (consumers can import from infra-auth OR contract-auth)
 export { AuthVerifier, type CurrentUserData }
+
 
 // ============================================================================
 // Service Interface
@@ -67,9 +60,7 @@ export interface AuthServiceInterface {
    * Used by RPC middleware for session-based auth.
    * Delegates to SupabaseAuth.verifyToken.
    */
-  readonly verifyToken: (
-    token: string
-  ) => Effect.Effect<AuthUser, UnauthorizedError | InvalidTokenError>
+  readonly verifyToken: (token: string) => Effect.Effect<AuthUser, UnauthorizedError | InvalidTokenError>
 
   /**
    * Get the current user from session
@@ -88,9 +79,7 @@ export interface AuthServiceInterface {
    *
    * For API key auth, use ApiKeyRepository from data-access layer.
    */
-  readonly buildAuthContext: (
-    headers: Headers.Headers
-  ) => Effect.Effect<Option.Option<AuthContext>, AuthError>
+  readonly buildAuthContext: (headers: Headers.Headers) => Effect.Effect<Option.Option<AuthContext>, AuthError>
 }
 
 // ============================================================================
@@ -122,18 +111,15 @@ export class AuthService extends Context.Tag("AuthService")<
         verifyToken: (token) =>
           supabaseAuth.verifyToken(token).pipe(
             Effect.catchTag("SupabaseTokenError", (error) =>
-              Effect.fail(
-                new InvalidTokenError({
-                  message: error.message,
-                  tokenType: "access"
-                })
-              )),
+              Effect.fail(new InvalidTokenError({
+                message: error.message,
+                tokenType: "access"
+              }))
+            ),
             Effect.catchAll((error) =>
-              Effect.fail(
-                new UnauthorizedError({
-                  message: `Token verification failed: ${error.message}`
-                })
-              )
+              Effect.fail(new UnauthorizedError({
+                message: `Token verification failed: ${error.message}`
+              }))
             ),
             Effect.withSpan("AuthService.verifyToken")
           ),
@@ -150,11 +136,9 @@ export class AuthService extends Context.Tag("AuthService")<
               }))
             ),
             Effect.catchAll((error) =>
-              Effect.fail(
-                new AuthError({
-                  message: `Failed to get current user: ${error.message}`
-                })
-              )
+              Effect.fail(new AuthError({
+                message: `Failed to get current user: ${error.message}`
+              }))
             ),
             Effect.withSpan("AuthService.getCurrentUser")
           ),
@@ -315,16 +299,16 @@ export class AuthService extends Context.Tag("AuthService")<
  *
  * @example
  * ```typescript
- * import { AuthMiddlewareLive } from '@samuelho-dev/infra-rpc';
- * import { AuthVerifierLive, AuthService } from '@samuelho-dev/infra-auth';
- * import { SupabaseAuth } from '@samuelho-dev/provider-supabase';
+ * import { AuthMiddlewareLive } from '@samuelho-dev/infra-rpc'
+ * import { AuthVerifierLive, AuthService } from '@samuelho-dev/infra-auth'
+ * import { SupabaseAuth } from '@samuelho-dev/provider-supabase'
  *
  * // Compose layers for RPC middleware
  * const RpcAuthLayer = AuthMiddlewareLive.pipe(
  *   Layer.provide(AuthVerifierLive),
  *   Layer.provide(AuthService.Live),
- *   Layer.provide(SupabaseAuth.Live),
- * );
+ *   Layer.provide(SupabaseAuth.Live)
+ * )
  * ```
  */
 export const AuthVerifierLive = Layer.effect(
@@ -332,33 +316,47 @@ export const AuthVerifierLive = Layer.effect(
   Effect.gen(function*() {
     const authService = yield* AuthService
 
-    return {
-      verify: (token: string) =>
-        authService.verifyToken(token).pipe(
-          // Map provider-specific user to CurrentUserData shape
-          Effect.map((user) => ({
-            id: user.id,
-            email: user.email ?? "",
-            roles: user.role ? [user.role] : [],
-            metadata: user.user_metadata
-          })),
-          // Validate at boundary using Schema.decode
-          Effect.flatMap((data) =>
-            Schema.decode(CurrentUserDataSchema)(data).pipe(
-              Effect.mapError((parseError) =>
-                ContractAuthError.invalidToken(`Invalid user data: ${parseError.message}`)
-              )
+    const verifyToken = (token: string) =>
+      authService.verifyToken(token).pipe(
+        // Map provider-specific user to CurrentUserData shape
+        Effect.map((user) => ({
+          id: user.id,
+          email: user.email ?? "",
+          roles: user.role ? [user.role] : [],
+          metadata: user.metadata
+        })),
+        // Validate at boundary using Schema.decode
+        Effect.flatMap((data) =>
+          Schema.decode(CurrentUserDataSchema)(data).pipe(
+            Effect.mapError((parseError) =>
+              ContractAuthError.tokenInvalid(`Invalid user data: ${parseError.message}`)
             )
-          ),
-          // Map infra errors to contract errors using Effect.catchTags
-          Effect.catchTags({
-            AuthError: (error) => Effect.fail(error),
-            InvalidTokenError: (error) => Effect.fail(ContractAuthError.invalidToken(error.message)),
-            UnauthorizedError: (error) => Effect.fail(ContractAuthError.unauthorized(error.message))
-          }),
-          Effect.catchAll((error) => Effect.fail(ContractAuthError.unauthorized(error.message))),
-          Effect.withSpan("AuthVerifierLive.verify")
-        )
+          )
+        ),
+        // Map infra errors to contract errors using Effect.catchTags
+        Effect.catchTags({
+          AuthError: (error) => Effect.fail(error),
+          InvalidTokenError: (error) =>
+            Effect.fail(ContractAuthError.tokenInvalid(error.message)),
+          UnauthorizedError: (error) =>
+            Effect.fail(ContractAuthError.unauthenticated(error.message))
+        }),
+        Effect.catchAll((error) =>
+          Effect.fail(ContractAuthError.unauthenticated("message" in error ? error.message : "Authentication failed"))
+        ),
+        Effect.withSpan("AuthVerifierLive.verify")
+      )
+
+    return {
+      verify: verifyToken,
+
+      verifyOptional: (token: string | undefined) =>
+        token
+          ? verifyToken(token).pipe(
+              Effect.map(Option.some),
+              Effect.catchAll(() => Effect.succeed(Option.none()))
+            )
+          : Effect.succeed(Option.none())
     }
   })
 )
@@ -375,5 +373,14 @@ export const AuthVerifierTest = Layer.succeed(AuthVerifier, {
       id: "test-user-id",
       email: "test@example.com",
       roles: ["user"]
-    })
+    }),
+
+  verifyOptional: (token: string | undefined) =>
+    token
+      ? Effect.succeed(Option.some<CurrentUserData>({
+          id: "test-user-id",
+          email: "test@example.com",
+          roles: ["user"]
+        }))
+      : Effect.succeed(Option.none())
 })

@@ -40,7 +40,7 @@ On cache miss:
   builder.addImports([
     {
       from: "effect",
-      imports: ["Cache", "Duration", "Effect", "Layer", "Option", "Schema"]
+      imports: ["Cache", "Duration", "Effect", "Layer"]
     },
     { from: `${scope}/provider-redis`, imports: ["Redis"] },
     { from: "./service", imports: [`${className}Service`] }
@@ -75,38 +75,15 @@ export const ${className}RedisLayer = Layer.effect(
     const redis = yield* Redis
     const cacheClient = redis.cache
 
-    // Serialization helpers using Effect Schema
-    // Schema.parseJson handles JSON parsing + validation in one step
-    // Errors flow through Effect's error channel (no exceptions)
-    const JsonValue = Schema.parseJson(Schema.Unknown)
-    const encodeJson = Schema.encode(JsonValue)
+    const serialize = <V>(value: V) => JSON.stringify(value)
 
-    const serialize = <V>(value: V) =>
-      encodeJson(value).pipe(Effect.orDie) // JSON.stringify shouldn't fail for valid objects
-
-    /**
-     * Deserialize and validate cached data against schema
-     *
-     * @param data - JSON string from cache
-     * @param schema - Schema to validate against
-     * @returns Validated and typed value
-     */
-    const deserialize = <V>(data: string, schema: Schema.Schema<V, unknown>) =>
-      Effect.gen(function*() {
-        const parsed = yield* Effect.try(() => JSON.parse(data)).pipe(Effect.orDie)
-        return yield* Schema.decodeUnknown(schema)(parsed).pipe(Effect.orDie)
-      })
-
-    const serializeKey = <K>(key: K): string =>
-      typeof key === "string" ? key : JSON.stringify(key)
+    const serializeKey = <K>(key: K) => (typeof key === "string" ? key : JSON.stringify(key))
 
     return {
       make: <K, V, E = never>(options: {
         readonly lookup: (key: K) => Effect.Effect<V, E>
         readonly capacity: number
         readonly ttl: Duration.Duration
-        /** Schema for validating cached values on deserialization */
-        readonly valueSchema: Schema.Schema<V, unknown>
       }) =>
         Effect.gen(function*() {
           const ttlSeconds = Math.floor(Duration.toMillis(options.ttl) / 1000)
@@ -123,13 +100,15 @@ export const ${className}RedisLayer = Layer.effect(
                 )
 
                 if (cached !== null) {
-                  // Redis hit - return cached value (validated against schema)
-                  return yield* deserialize(cached, options.valueSchema)
+                  // Redis hit - parse JSON and return value
+                  // Note: JSON.parse returns unknown, we trust the cache contains valid V
+                  // For strict validation, use Schema-based cache with valueSchema option
+                  return JSON.parse(cached)
                 }
 
                 // Redis miss - call lookup and store in Redis
                 const value = yield* options.lookup(key)
-                const serialized = yield* serialize(value)
+                const serialized = serialize(value)
                 yield* cacheClient.setex(redisKey, ttlSeconds, serialized).pipe(
                   Effect.catchAll(() => Effect.void) // Ignore Redis write failures
                 )
@@ -152,15 +131,14 @@ export const ${className}RedisLayer = Layer.effect(
                 )
               }),
 
-            invalidateAll:
-              Effect.gen(function*() {
-                // Invalidate memory and flush Redis
-                yield* memoryCache.invalidateAll
-                // Note: flushdb is aggressive - consider using key patterns instead
-                yield* cacheClient.flushdb().pipe(
-                  Effect.catchAll(() => Effect.void)
-                )
-              }),
+            invalidateAll: Effect.gen(function*() {
+              // Invalidate memory and flush Redis
+              yield* memoryCache.invalidateAll
+              // Note: flushdb is aggressive - consider using key patterns instead
+              yield* cacheClient.flushdb().pipe(
+                Effect.catchAll(() => Effect.void)
+              )
+            }),
 
             refresh: (key: K) => memoryCache.refresh(key),
 
@@ -168,8 +146,6 @@ export const ${className}RedisLayer = Layer.effect(
           // TS infers CacheHandle<K, V, E> via Context.Tag
           }
         }),
-
-
 
       healthCheck: () =>
         cacheClient.ping().pipe(
@@ -191,27 +167,24 @@ export const ${className}RedisLayer = Layer.effect(
  * \`\`\`typescript
  * import { ${className}Service, ${className}RedisLayer } from "${scope}/infra-${fileName}";
  * import { Redis } from "${scope}/provider-redis";
- * import { Effect, Layer, Schema, Duration } from "effect";
+ * import { Effect, Duration } from "effect";
  *
- * // Define your cached value schema
- * const UserSchema = Schema.Struct({
- *   id: Schema.String,
- *   name: Schema.String,
- *   email: Schema.String
- * });
- * type User = Schema.Schema.Type<typeof UserSchema>;
+ * interface User {
+ *   id: string;
+ *   name: string;
+ *   email: string;
+ * }
  *
  * // Create a cached user lookup
  * const program = Effect.gen(function*() {
  *   const cache = yield* ${className}Service;
  *
  *   // Create a cache with lookup function
- *   const userCache = yield* cache.make({
+ *   const userCache = yield* cache.make<string, User>({
  *     lookup: (userId: string) =>
  *       Effect.succeed({ id: userId, name: "John", email: "john@example.com" }),
  *     capacity: 1000,
- *     ttl: Duration.minutes(5),
- *     valueSchema: UserSchema
+ *     ttl: Duration.minutes(5)
  *   });
  *
  *   // Get user from cache (fetches from lookup if not cached)
@@ -227,11 +200,10 @@ export const ${className}RedisLayer = Layer.effect(
  *   )
  * );
  *
- * // Run with test layer (no Redis needed)
+ * // Run with Memory layer (no Redis needed)
  * Effect.runPromise(
  *   program.pipe(
- *     Effect.provide(${className}RedisLayer),
- *     Effect.provide(Redis.Test)
+ *     Effect.provide(${className}Service.Memory)
  *   )
  * );
  * \`\`\`

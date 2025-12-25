@@ -44,9 +44,9 @@ Usage:
   DownloadFailedError,
   FileSizeExceededError,
   InvalidFileTypeError,
-} from "./lib/errors";
+} from "./lib/errors"
 
-export type { StorageInfraError } from "./lib/errors";`)
+export type { StorageInfraError } from "./lib/errors"`)
   builder.addBlankLine()
 
   // Type exports
@@ -58,12 +58,12 @@ export type { StorageInfraError } from "./lib/errors";`)
   UploadResult,
   ListFilesOptions,
   ListFilesResult,
-} from "./lib/types";
+} from "./lib/types"
 
 export {
   StorageConfigSchema,
   UploadResultSchema,
-} from "./lib/types";
+} from "./lib/types"
 
 // Re-export from provider for convenience
 export type {
@@ -72,7 +72,7 @@ export type {
   UploadOptions,
   DownloadOptions,
   SignedUrlOptions,
-} from "${scope}/provider-supabase";`)
+} from "${scope}/provider-supabase"`)
   builder.addBlankLine()
 
   // Service exports
@@ -80,7 +80,7 @@ export type {
   builder.addBlankLine()
 
   builder.addRaw(
-    `export { StorageService, type StorageServiceInterface } from "./lib/service";`
+    `export { StorageService, type StorageServiceInterface } from "./lib/service"`
   )
   builder.addBlankLine()
 

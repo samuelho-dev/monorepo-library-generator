@@ -32,8 +32,8 @@ function generateProviderErrors(
  * Pattern: Data.TaggedError with inline properties
  */
 export class ${className}Error extends Data.TaggedError("${className}Error")<{
-  readonly message: string;
-  readonly cause?: unknown;
+  readonly message: string
+  readonly cause?: unknown
 }> {}`)
   builder.addBlankLine()
 
@@ -43,10 +43,10 @@ export class ${className}Error extends Data.TaggedError("${className}Error")<{
  * Command Error - for CLI command execution failures
  */
 export class ${className}CommandError extends Data.TaggedError("${className}CommandError")<{
-  readonly message: string;
-  readonly exitCode?: number;
-  readonly stderr?: string;
-  readonly cause?: unknown;
+  readonly message: string
+  readonly exitCode?: number
+  readonly stderr?: string
+  readonly cause?: unknown
 }> {}`)
     builder.addBlankLine()
 
@@ -54,8 +54,8 @@ export class ${className}CommandError extends Data.TaggedError("${className}Comm
  * Command Not Found Error - when CLI command is not available
  */
 export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{
-  readonly message: string;
-  readonly command: string;
+  readonly message: string
+  readonly command: string
 }> {}`)
     builder.addBlankLine()
 
@@ -63,8 +63,8 @@ export class ${className}NotFoundError extends Data.TaggedError("${className}Not
  * Timeout Error - for CLI command timeouts
  */
 export class ${className}TimeoutError extends Data.TaggedError("${className}TimeoutError")<{
-  readonly message: string;
-  readonly timeout: number;
+  readonly message: string
+  readonly timeout: number
 }> {}`)
     builder.addBlankLine()
   }
@@ -75,10 +75,10 @@ export class ${className}TimeoutError extends Data.TaggedError("${className}Time
  * HTTP Error - for HTTP status code errors
  */
 export class ${className}HttpError extends Data.TaggedError("${className}HttpError")<{
-  readonly message: string;
-  readonly statusCode: number;
-  readonly method: string;
-  readonly url: string;
+  readonly message: string
+  readonly statusCode: number
+  readonly method: string
+  readonly url: string
 }> {}`)
     builder.addBlankLine()
 
@@ -86,8 +86,8 @@ export class ${className}HttpError extends Data.TaggedError("${className}HttpErr
  * Network Error - for connection/network failures
  */
 export class ${className}NetworkError extends Data.TaggedError("${className}NetworkError")<{
-  readonly message: string;
-  readonly cause?: unknown;
+  readonly message: string
+  readonly cause?: unknown
 }> {}`)
     builder.addBlankLine()
 
@@ -95,8 +95,8 @@ export class ${className}NetworkError extends Data.TaggedError("${className}Netw
  * Rate Limit Error - for API rate limiting
  */
 export class ${className}RateLimitError extends Data.TaggedError("${className}RateLimitError")<{
-  readonly message: string;
-  readonly retryAfter?: number;
+  readonly message: string
+  readonly retryAfter?: number
 }> {}`)
     builder.addBlankLine()
 
@@ -104,8 +104,8 @@ export class ${className}RateLimitError extends Data.TaggedError("${className}Ra
  * Timeout Error - for request timeouts
  */
 export class ${className}TimeoutError extends Data.TaggedError("${className}TimeoutError")<{
-  readonly message: string;
-  readonly timeout: number;
+  readonly message: string
+  readonly timeout: number
 }> {}`)
     builder.addBlankLine()
   }
@@ -116,8 +116,8 @@ export class ${className}TimeoutError extends Data.TaggedError("${className}Time
  * GraphQL Error - for GraphQL operation errors
  */
 export class ${className}GraphQLError extends Data.TaggedError("${className}GraphQLError")<{
-  readonly message: string;
-  readonly errors: readonly unknown[];
+  readonly message: string
+  readonly errors: readonly unknown[]
 }> {}`)
     builder.addBlankLine()
 
@@ -125,9 +125,9 @@ export class ${className}GraphQLError extends Data.TaggedError("${className}Grap
  * Validation Error - for input validation failures
  */
 export class ${className}ValidationError extends Data.TaggedError("${className}ValidationError")<{
-  readonly message: string;
-  readonly field?: string;
-  readonly value?: unknown;
+  readonly message: string
+  readonly field?: string
+  readonly value?: unknown
 }> {}`)
     builder.addBlankLine()
   }
@@ -193,7 +193,7 @@ export class ${className}ValidationError extends Data.TaggedError("${className}V
  * ${error.name.replace("Error", "")} Error - for ${error.description}
  */
 export class ${className}${error.name} extends Data.TaggedError("${className}${error.name}")<{
-  ${fieldList.join(";\n  ")};
+  ${fieldList.join("\n  ")}
 }> {}`)
       builder.addBlankLine()
     }
@@ -255,7 +255,7 @@ function generateErrorUnionType(
   }
 
   builder.addRaw(`export type ${className}ServiceError =
-  | ${errorTypes.join("\n  | ")};`)
+  | ${errorTypes.join("\n  | ")}`)
   builder.addBlankLine()
 }
 
@@ -275,15 +275,15 @@ const SdkErrorSchema = Schema.Struct({
   code: Schema.optional(Schema.String),
   resourceId: Schema.optional(Schema.String),
   field: Schema.optional(Schema.String),
-  retryAfter: Schema.optional(Schema.Number),
-});
+  retryAfter: Schema.optional(Schema.Number)
+})
 
 /**
  * Parse SDK error using Schema
  */
 function parseSdkError(error: unknown) {
-  const result = Schema.decodeUnknownOption(SdkErrorSchema)(error);
-  return Option.isSome(result) ? result.value : {};
+  const result = Schema.decodeUnknownOption(SdkErrorSchema)(error)
+  return Option.isSome(result) ? result.value : {}
 }`)
   builder.addBlankLine()
 
@@ -293,55 +293,55 @@ function parseSdkError(error: unknown) {
  * Uses Schema.decodeUnknownOption for type-safe parsing
  */
 export function map${className}Error(error: unknown) {
-  const parsed = parseSdkError(error);
-  const { message, statusCode, code, resourceId, field, retryAfter } = parsed;
+  const parsed = parseSdkError(error)
+  const { message, statusCode, code, resourceId, field, retryAfter } = parsed
 
   // Authentication errors
   if (statusCode === 401 || statusCode === 403) {
     return new ${className}AuthenticationError({
       message: message ?? "Authentication failed",
-      cause: error,
-    });
+      cause: error
+    })
   }
 
   // Not found errors
   if (statusCode === 404) {
     return new ${className}NotFoundError({
       message: message ?? "Resource not found",
-      ...(resourceId !== undefined ? { resourceId } : {}),
-    });
+      ...(resourceId !== undefined ? { resourceId } : {})
+    })
   }
 
   // Conflict errors
   if (statusCode === 409) {
     return new ${className}ConflictError({
       message: message ?? "Resource conflict",
-      ...(field !== undefined ? { conflictingField: field } : {}),
-    });
+      ...(field !== undefined ? { conflictingField: field } : {})
+    })
   }
 
   // Rate limit errors
   if (statusCode === 429) {
     return new ${className}RateLimitError({
       message: message ?? "Rate limit exceeded",
-      ...(retryAfter !== undefined ? { retryAfter } : {}),
-    });
+      ...(retryAfter !== undefined ? { retryAfter } : {})
+    })
   }
 
   // Timeout errors
   if (code === "ETIMEDOUT" || code === "ESOCKETTIMEDOUT") {
     return new ${className}TimeoutError({
       message: message ?? "Request timeout",
-      timeout: 20000,
-    });
+      timeout: 20000
+    })
   }
 
   // Connection errors
   if (code === "ECONNREFUSED" || code === "ENOTFOUND") {
     return new ${className}ConnectionError({
       message: message ?? "Connection failed",
-      cause: error,
-    });
+      cause: error
+    })
   }
 
   // Internal server errors (5xx)
@@ -349,8 +349,8 @@ export function map${className}Error(error: unknown) {
     return new ${className}InternalError({
       message: message ?? "Internal server error",
       statusCode,
-      cause: error,
-    });
+      cause: error
+    })
   }
 
   // API errors (other 4xx)
@@ -359,15 +359,15 @@ export function map${className}Error(error: unknown) {
       message: message ?? "API error",
       statusCode,
       ...(code !== undefined ? { errorCode: code } : {}),
-      cause: error,
-    });
+      cause: error
+    })
   }
 
   // Generic error
   return new ${className}Error({
     message: message ?? "Unknown error",
-    cause: error,
-  });
+    cause: error
+  })
 }`)
   builder.addBlankLine()
 }
@@ -423,7 +423,7 @@ export function run${className}Operation<A>(
   return Effect.tryPromise({
     try: operation,
     catch: map${className}Error,
-  });
+  })
 }`)
     builder.addBlankLine()
   }

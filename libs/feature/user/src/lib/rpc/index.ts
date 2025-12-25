@@ -13,29 +13,59 @@ Usage:
   import { UserRpcs, GetUser, CreateUser } from "@samuelho-dev/feature-user/rpc";
  *
  */
-
 // ============================================================================
 // Contract Re-exports (Single Source of Truth)
 // ============================================================================
-
 // Re-export all RPC definitions from contract
 // This includes: Rpc classes, RpcGroup, RouteTag, errors, types
-export * from "@samuelho-dev/contract-user/rpc";
+export {
+  // RPC Errors
+  UserNotFoundRpcError,
+  UserValidationRpcError,
+  UserPermissionRpcError,
+  UserRpcError,
+  // Definitions
+  UserId,
+  RouteTag,
+  type RouteType,
+  UserSchema,
+  type UserEntity,
+  PaginationParams,
+  PaginatedResponse,
+  CreateUserInput,
+  UpdateUserInput,
+  ValidateUserInput,
+  ValidationResponse,
+  BulkGetUserInput,
+  GetUser,
+  ListUsers,
+  CreateUser,
+  UpdateUser,
+  DeleteUser,
+  ValidateUser,
+  BulkGetUsers,
+  // Group
+  UserRpcs,
+  type UserRpcDefinitions,
+  getRouteType,
+  isProtectedRoute,
+  isServiceRoute,
+  isPublicRoute,
+  UserRpcsByRoute
+} from "@samuelho-dev/contract-user/rpc"
 
 // ============================================================================
 // Handler Exports
 // ============================================================================
-
 export {
   UserHandlers,
   AllUserHandlers,
-  UserHandlersLayer,
-} from "./handlers";
+  UserHandlersLayer
+} from "./handlers"
 
 // ============================================================================
 // Middleware Re-exports (from infra-rpc)
 // ============================================================================
-
 // Re-export commonly used middleware for convenience
 export {
   // User auth (protected routes)
@@ -68,23 +98,20 @@ export {
 
   // Combined layers
   AllMiddlewareTest,
-  AllMiddlewareLive,
-} from "@samuelho-dev/infra-rpc";
+  AllMiddlewareLive
+} from "@samuelho-dev/infra-rpc"
 
 // ============================================================================
 // Router Exports
 // ============================================================================
-
 export {
   // Layer compositions for @effect/rpc integration
   UserProductionLayer,
-  UserTestLayer,
-} from "./router";
+  UserTestLayer
+} from "./router"
 
 // ============================================================================
 // Sub-Module Handler Exports
 // ============================================================================
-
-export { AuthenticationHandlers } from "../server/services/authentication/handlers";
-
-export { ProfileHandlers } from "../server/services/profile/handlers";
+export { AuthenticationHandlers } from "../server/services/authentication/handlers"
+export { ProfileHandlers } from "../server/services/profile/handlers"

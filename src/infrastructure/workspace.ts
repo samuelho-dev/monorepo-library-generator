@@ -222,7 +222,7 @@ const detectPackageManager = (fs: FileSystem.FileSystem, rootPath: string) =>
  * - "@myorg/lib" -> "@myorg"
  * - "no-scope" -> "@myorg" (default)
  */
-const extractScope = (packageName?: string): string => {
+const extractScope = (packageName?: string) => {
   if (!packageName) return "@myorg"
   if (packageName.startsWith("@")) {
     return packageName.split("/")[0] || "@myorg"
@@ -402,7 +402,7 @@ export function createWorkspaceContextExplicit(
   packageManager: WorkspaceContext["packageManager"],
   interfaceType: InterfaceType,
   librariesRoot: string = "libs"
-): WorkspaceContext {
+) {
   return {
     root,
     type,

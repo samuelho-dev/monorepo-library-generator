@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema", "prismaSchemaFolder"]
+  provider = "prisma-client-js"
 }
 
 generator prisma_effect_kysely {
@@ -12,19 +11,6 @@ generator prisma_effect_kysely {
 
 datasource db {
   provider     = "postgresql"
-  url          = env("DATABASE_URL")
   relationMode = "foreignKeys"
   schemas      = ["public"]
-}
-model user {
-  /// @customType(Schema.String.pipe(Schema.brand('UserId')))
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email      String   @unique
-  name       String
-  username   String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
-
-  @@index([email])
-  @@schema("public")
 }

@@ -12,11 +12,9 @@ Schema.TaggedError is reserved for RPC boundary errors only.
  */
 
 
-
 // ============================================================================
 // Error Types
 // ============================================================================
-
 
 /**
  * Connection error - failure to connect to database
@@ -56,7 +54,6 @@ export class DatabaseTransactionError extends Data.TaggedError(
 // ============================================================================
 // Error Type Union
 // ============================================================================
-
 
 /**
  * Union of all database error types

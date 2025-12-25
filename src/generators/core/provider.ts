@@ -28,6 +28,7 @@ import {
 import {
   generateKyselyErrorsFile,
   generateKyselyIndexFile,
+  generateKyselyInterfaceFile,
   generateKyselyProviderServiceFile
 } from "../provider/templates/kysely"
 import {
@@ -621,6 +622,15 @@ The baseline implementation remains useful for unit tests and demonstrations.
         : generateErrorsFile(templateOptions)
     )
     filesGenerated.push(`${sourceLibPath}/errors.ts`)
+
+    // Kysely needs interface.ts for the service interface type
+    if (isKyselyProvider) {
+      yield* adapter.writeFile(
+        `${sourceLibPath}/interface.ts`,
+        generateKyselyInterfaceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/interface.ts`)
+    }
 
     yield* adapter.writeFile(
       `${sourceLibPath}/types.ts`,

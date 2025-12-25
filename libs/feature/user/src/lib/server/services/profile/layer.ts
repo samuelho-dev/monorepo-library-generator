@@ -12,43 +12,22 @@ All infrastructure dependencies are properly wired.
  *
  * @module @samuelho-dev/feature-user/server/services/profile
  */
-
-
-
 // ============================================================================
 // Service Import
 // ============================================================================
-
-import { ProfileServiceLive } from "./service";
+import { ProfileServiceLive } from "./service"
 
 // ============================================================================
 // Data Access Import
 // ============================================================================
-
-import { ProfileRepositoryLive, ProfileRepositoryTest } from "@samuelho-dev/data-access-user/profile";
+import { ProfileRepositoryLive, ProfileRepositoryTest } from "@samuelho-dev/data-access-user/profile"
 
 // ============================================================================
 // Infrastructure Imports
 // ============================================================================
-
-
-// ============================================================================
-// Re-export Service Components
-// ============================================================================
-
-
-export {
-  ProfileService,
-  ProfileServiceLive,
-  type ProfileServiceInterface,
-  ProfileServiceError,
-} from "./service";
-
 // ============================================================================
 // Live Layer Composition
 // ============================================================================
-
-
 /**
  * ProfileLive Layer
  *
@@ -78,13 +57,10 @@ export const ProfileLive = ProfileServiceLive.pipe(
   Layer.provide(LoggingService.Live),
   Layer.provide(MetricsService.Live),
   Layer.provide(DatabaseService.Live)
-);
-
+)
 // ============================================================================
 // Test Layer Composition
 // ============================================================================
-
-
 /**
  * ProfileTest Layer
  *
@@ -112,13 +88,10 @@ export const ProfileTest = ProfileServiceLive.pipe(
   Layer.provide(ProfileRepositoryTest),
   Layer.provide(LoggingService.Test),
   Layer.provide(MetricsService.Test)
-);
-
+)
 // ============================================================================
 // Dependencies Layer (for parent composition)
 // ============================================================================
-
-
 /**
  * ProfileDependencies Layer
  *
@@ -129,4 +102,4 @@ export const ProfileTest = ProfileServiceLive.pipe(
  * - Repository layer
  * - Infrastructure layers
  */
-export const ProfileDependencies = ProfileServiceLive;
+export const ProfileDependencies = ProfileServiceLive

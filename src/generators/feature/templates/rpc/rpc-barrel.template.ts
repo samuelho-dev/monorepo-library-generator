@@ -47,7 +47,41 @@ Usage:
 
   builder.addRaw(`// Re-export all RPC definitions from contract
 // This includes: Rpc classes, RpcGroup, RouteTag, errors, types
-export * from "${scope}/contract-${name}/rpc";
+export {
+  // RPC Errors
+  ${className}NotFoundRpcError,
+  ${className}ValidationRpcError,
+  ${className}PermissionRpcError,
+  ${className}RpcError,
+  // Definitions
+  ${className}Id,
+  RouteTag,
+  type RouteType,
+  ${className}Schema,
+  type ${className}Entity,
+  PaginationParams,
+  PaginatedResponse,
+  Create${className}Input,
+  Update${className}Input,
+  Validate${className}Input,
+  ValidationResponse,
+  BulkGet${className}Input,
+  Get${className},
+  List${className}s,
+  Create${className},
+  Update${className},
+  Delete${className},
+  Validate${className},
+  BulkGet${className}s,
+  // Group
+  ${className}Rpcs,
+  type ${className}RpcDefinitions,
+  getRouteType,
+  isProtectedRoute,
+  isServiceRoute,
+  isPublicRoute,
+  ${className}RpcsByRoute
+} from "${scope}/contract-${name}/rpc"
 `)
 
   builder.addSectionComment("Handler Exports")
@@ -56,14 +90,14 @@ export * from "${scope}/contract-${name}/rpc";
     builder.addRaw(`export {
   ${className}Handlers,
   All${className}Handlers,
-  ${className}HandlersLayer,
-} from "./handlers";
+  ${className}HandlersLayer
+} from "./handlers"
 `)
   } else {
     builder.addRaw(`export {
   ${className}Handlers,
-  ${className}HandlersLayer,
-} from "./handlers";
+  ${className}HandlersLayer
+} from "./handlers"
 `)
   }
 
@@ -101,8 +135,8 @@ export {
 
   // Combined layers
   AllMiddlewareTest,
-  AllMiddlewareLive,
-} from "${scope}/infra-rpc";
+  AllMiddlewareLive
+} from "${scope}/infra-rpc"
 `)
 
   builder.addSectionComment("Router Exports")
@@ -110,8 +144,8 @@ export {
   builder.addRaw(`export {
   // Layer compositions for @effect/rpc integration
   ${className}ProductionLayer,
-  ${className}TestLayer,
-} from "./router";
+  ${className}TestLayer
+} from "./router"
 `)
 
   if (hasSubModules) {
@@ -119,7 +153,7 @@ export {
 
     for (const subModule of subModulesList!) {
       const subClassName = subModule.charAt(0).toUpperCase() + subModule.slice(1)
-      builder.addRaw(`export { ${subClassName}Handlers } from "../server/services/${subModule}/handlers";\n`)
+      builder.addRaw(`export { ${subClassName}Handlers } from "../server/services/${subModule}/handlers"`)
     }
   }
 

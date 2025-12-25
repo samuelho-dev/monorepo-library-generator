@@ -17,12 +17,10 @@
 import { Effect } from "effect"
 import type { FileSystemAdapter } from "../../utils/filesystem"
 import { parseTags } from "../../utils/generators"
-import { createNamingVariants } from "../../utils/naming"
 // Import type-only exports template
 import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates"
 import type { DataAccessTemplateOptions } from "../../utils/types"
 import { getPackageName } from "../../utils/workspace-config"
-import { generateAggregateFile } from "../data-access/templates/aggregate.template"
 import { generateCacheFile } from "../data-access/templates/cache.template"
 import { generateErrorsFile } from "../data-access/templates/errors.template"
 import { generateIndexFile } from "../data-access/templates/index.template"
@@ -41,10 +39,6 @@ import {
   generateRepositoryUpdateOperationFile
 } from "../data-access/templates/repository"
 import { generateRepositorySpecFile } from "../data-access/templates/repository-spec.template"
-import {
-  generateSubModuleRepositoryFile,
-  generateSubModuleRepositoryIndexFile
-} from "../data-access/templates/submodule-repository.template"
 import { generateTypesFile } from "../data-access/templates/types.template"
 import { generateValidationFile } from "../data-access/templates/validation.template"
 import type { GeneratorResult } from "./contract"
@@ -73,8 +67,6 @@ export type { GeneratorResult }
  * @property description - Library description for documentation
  * @property tags - Comma-separated tags for Nx project configuration
  * @property contractLibrary - Import path to contract library
- * @property includeSubModules - Generate sub-module repositories with aggregate root
- * @property subModules - Comma-separated list of sub-module names
  */
 export interface DataAccessCoreOptions {
   readonly name: string
@@ -90,8 +82,6 @@ export interface DataAccessCoreOptions {
   readonly description?: string
   readonly tags?: string
   readonly contractLibrary?: string
-  readonly includeSubModules?: boolean
-  readonly subModules?: string
 }
 
 /**
@@ -127,11 +117,7 @@ export function generateDataAccessCore(adapter: FileSystemAdapter, options: Data
       offsetFromRoot: options.offsetFromRoot,
       description: options.description ?? `Data access library for ${options.className}`,
       tags: parsedTags,
-      contractLibrary: options.contractLibrary ?? getPackageName("contract", options.fileName),
-      includeSubModules: options.includeSubModules ?? false,
-      subModules: options.subModules
-        ? options.subModules.split(",").map((s) => s.trim()).filter(Boolean)
-        : undefined
+      contractLibrary: options.contractLibrary ?? getPackageName("contract", options.fileName)
     }
 
     // Generate all domain files
@@ -342,6 +328,7 @@ Effect.gen(function*() {
     // NOTE: Cache generation temporarily disabled due to architectural issues
     // with Effect type inference and exactOptionalPropertyTypes.
     // TODO: Redesign cache template to properly handle repository requirements
+    void generateCacheFile // Keep import to avoid unused warning
 
     // Generate server files
     yield* adapter.writeFile(`${sourceServerPath}/layers.ts`, generateLayersFile(templateOptions))
@@ -371,142 +358,6 @@ Effect.gen(function*() {
     yield* adapter.writeFile(indexPath, generateIndexFile(templateOptions))
     files.push(indexPath)
 
-    // Generate sub-module repositories with aggregate root (Hybrid DDD pattern)
-    if (templateOptions.includeSubModules && templateOptions.subModules) {
-      const subModuleFiles = yield* generateSubModuleRepositories(
-        adapter,
-        workspaceRoot,
-        sourceRoot,
-        sourceLibPath,
-        templateOptions
-      )
-      for (const file of subModuleFiles) {
-        files.push(file)
-      }
-    }
-
     return files
-  })
-}
-
-/**
- * Generate sub-module repositories with aggregate root
- *
- * Creates sub-module repository directories and an aggregate root
- * that coordinates all sub-module repositories.
- */
-function generateSubModuleRepositories(
-  adapter: FileSystemAdapter,
-  workspaceRoot: string,
-  sourceRoot: string,
-  sourceLibPath: string,
-  templateOptions: DataAccessTemplateOptions
-) {
-  return Effect.gen(function*() {
-    const files: Array<string> = []
-    const subModuleNames = templateOptions.subModules ?? []
-
-    if (subModuleNames.length === 0) {
-      return files
-    }
-
-    // Generate each sub-module repository
-    for (const subModuleName of subModuleNames) {
-      const subModuleClassName = createNamingVariants(subModuleName).className
-      const subModulePath = `${sourceLibPath}/${subModuleName}`
-
-      // Create sub-module directory
-      yield* adapter.makeDirectory(subModulePath)
-
-      const subModuleOptions = {
-        parentName: templateOptions.name,
-        parentClassName: templateOptions.className,
-        parentFileName: templateOptions.fileName,
-        subModuleName,
-        subModuleClassName
-      }
-
-      // Generate sub-module repository.ts
-      const repoPath = `${subModulePath}/repository.ts`
-      yield* adapter.writeFile(repoPath, generateSubModuleRepositoryFile(subModuleOptions))
-      files.push(repoPath)
-
-      // Generate sub-module index.ts
-      const indexPath = `${subModulePath}/index.ts`
-      yield* adapter.writeFile(indexPath, generateSubModuleRepositoryIndexFile(subModuleOptions))
-      files.push(indexPath)
-    }
-
-    // Generate aggregate root that coordinates all sub-module repositories
-    const aggregatePath = `${sourceLibPath}/aggregate.ts`
-    const aggregateContent = generateAggregateFile({
-      name: templateOptions.name,
-      className: templateOptions.className,
-      fileName: templateOptions.fileName,
-      packageName: templateOptions.packageName,
-      subModuleNames
-    })
-    yield* adapter.writeFile(aggregatePath, aggregateContent)
-    files.push(aggregatePath)
-
-    // Update main index to export sub-modules and aggregate
-    yield* updateDataAccessIndexWithSubModules(
-      adapter,
-      workspaceRoot,
-      sourceRoot,
-      templateOptions,
-      subModuleNames
-    )
-
-    return files
-  })
-}
-
-/**
- * Update main index.ts to include sub-module and aggregate exports
- */
-function updateDataAccessIndexWithSubModules(
-  adapter: FileSystemAdapter,
-  workspaceRoot: string,
-  sourceRoot: string,
-  templateOptions: DataAccessTemplateOptions,
-  subModuleNames: Array<string>
-) {
-  return Effect.gen(function*() {
-    const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
-
-    // Read existing index content
-    const existingContent = yield* adapter.readFile(indexPath)
-
-    // Add sub-module namespace exports
-    const subModuleExports = subModuleNames
-      .map((name) => {
-        const className = createNamingVariants(name).className
-        return `export * as ${className} from "./lib/${name}";`
-      })
-      .join("\n")
-
-    const newContent = `${existingContent}
-
-// ============================================================================
-// Aggregate Root Export (Hybrid DDD Pattern)
-// ============================================================================
-
-export {
-  ${templateOptions.className}Aggregate,
-  ${templateOptions.className}AggregateLive,
-  ${templateOptions.className}AggregateTestLayer,
-  ${templateOptions.className}AggregateLayer,
-  type ${templateOptions.className}AggregateInterface,
-} from "./lib/aggregate";
-
-// ============================================================================
-// Sub-Module Repository Exports
-// ============================================================================
-
-${subModuleExports}
-`
-
-    yield* adapter.writeFile(indexPath, newContent)
   })
 }

@@ -35,11 +35,9 @@ export function generateErrorsFile(options: ContractTemplateOptions) {
 
   // Add comprehensive file header with documentation
   builder.addRaw(createFileHeader(className, domainName, fileName, scope))
-  builder.addBlankLine()
 
   // Add imports
   builder.addImports([{ from: "effect", imports: ["Data"] }])
-  builder.addBlankLine()
 
   // Generate domain errors using factory
   createContractDomainErrors({ className, propertyName })(builder)
@@ -47,29 +45,27 @@ export function generateErrorsFile(options: ContractTemplateOptions) {
   // Add TODO comment for custom domain errors
   builder.addComment("TODO: Add domain-specific errors here")
   builder.addComment("Example - State transition error (if domain has status/state machine):")
-  builder.addComment("")
   builder.addComment(
     `export class ${className}InvalidStateError extends Data.TaggedError("${className}InvalidStateError")<{`
   )
-  builder.addComment("  readonly message: string;")
-  builder.addComment("  readonly currentState: string;")
-  builder.addComment("  readonly targetState: string;")
-  builder.addComment(`  readonly ${propertyName}Id: string;`)
+  builder.addComment("  readonly message: string")
+  builder.addComment("  readonly currentState: string")
+  builder.addComment("  readonly targetState: string")
+  builder.addComment(`  readonly ${propertyName}Id: string`)
   builder.addComment("}> {")
   builder.addComment(`  static create(params: {`)
-  builder.addComment("    currentState: string;")
-  builder.addComment("    targetState: string;")
-  builder.addComment(`    ${propertyName}Id: string;`)
+  builder.addComment("    currentState: string")
+  builder.addComment("    targetState: string")
+  builder.addComment(`    ${propertyName}Id: string`)
   builder.addComment("  }) {")
   builder.addComment(`    return new ${className}InvalidStateError({`)
   builder.addComment(
     `      message: \`Cannot transition ${domainName} from \${params.currentState} to \${params.targetState}\`,`
   )
-  builder.addComment("      ...params,")
-  builder.addComment("    });")
+  builder.addComment("      ...params")
+  builder.addComment("    })")
   builder.addComment("  }")
   builder.addComment("}")
-  builder.addBlankLine()
 
   // Generate repository errors using factory
   createContractRepositoryErrors({ className, propertyName })(builder)
@@ -102,8 +98,8 @@ function createFileHeader(className: string, domainName: string, fileName: strin
  *    Example:
  *    \`\`\`typescript
  *    export class ${className}NotFoundError extends Data.TaggedError("${className}NotFoundError")<{
- *      readonly message: string;
- *      readonly ${domainName}Id: string;
+ *      readonly message: string
+ *      readonly ${domainName}Id: string
  *    }> {}
  *    \`\`\`
  *

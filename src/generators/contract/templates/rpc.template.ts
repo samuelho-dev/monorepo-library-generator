@@ -27,7 +27,6 @@ export function generateRpcErrorsFile(options: ContractTemplateOptions) {
 
   // Add file header
   builder.addRaw(createRpcErrorsHeader(className, fileName, scope))
-  builder.addBlankLine()
 
   // Add imports
   builder.addImports([{ from: "effect", imports: ["Schema"] }])
@@ -89,7 +88,7 @@ export class ${className}NotFoundRpcError extends Schema.TaggedError<${className
     ${propertyName}Id: Schema.String.annotations({
       title: "${className} ID",
       description: "ID of the ${className} that was not found"
-    }),
+    })
   },
   {
     identifier: "${className}NotFoundRpcError",
@@ -100,8 +99,8 @@ export class ${className}NotFoundRpcError extends Schema.TaggedError<${className
   static create(${propertyName}Id: string) {
     return new ${className}NotFoundRpcError({
       message: \`${className} not found: \${${propertyName}Id}\`,
-      ${propertyName}Id,
-    });
+      ${propertyName}Id
+    })
   }
 }
 
@@ -122,7 +121,7 @@ export class ${className}ValidationRpcError extends Schema.TaggedError<${classNa
     constraint: Schema.optional(Schema.String).annotations({
       title: "Constraint",
       description: "Validation constraint that was violated"
-    }),
+    })
   },
   {
     identifier: "${className}ValidationRpcError",
@@ -131,7 +130,7 @@ export class ${className}ValidationRpcError extends Schema.TaggedError<${classNa
   }
 ) {
   static create(params: { message: string; field?: string; constraint?: string }) {
-    return new ${className}ValidationRpcError(params);
+    return new ${className}ValidationRpcError(params)
   }
 }
 
@@ -152,7 +151,7 @@ export class ${className}PermissionRpcError extends Schema.TaggedError<${classNa
     ${propertyName}Id: Schema.optional(Schema.String).annotations({
       title: "${className} ID",
       description: "ID of the ${className} if applicable"
-    }),
+    })
   },
   {
     identifier: "${className}PermissionRpcError",
@@ -164,8 +163,8 @@ export class ${className}PermissionRpcError extends Schema.TaggedError<${classNa
     return new ${className}PermissionRpcError({
       message: \`Permission denied: \${action}\`,
       action,
-      ...(${propertyName}Id ? { ${propertyName}Id } : {}),
-    });
+      ...(${propertyName}Id ? { ${propertyName}Id } : {})
+    })
   }
 }
 
@@ -175,7 +174,7 @@ export class ${className}PermissionRpcError extends Schema.TaggedError<${classNa
 export type ${className}RpcError =
   | ${className}NotFoundRpcError
   | ${className}ValidationRpcError
-  | ${className}PermissionRpcError;
+  | ${className}PermissionRpcError
 
 /**
  * Schema for the RPC error union (for Rpc.make error type)
@@ -183,6 +182,7 @@ export type ${className}RpcError =
 export const ${className}RpcError = Schema.Union(
   ${className}NotFoundRpcError,
   ${className}ValidationRpcError,
-  ${className}PermissionRpcError,
-);`
+  ${className}PermissionRpcError
+)
+`
 }

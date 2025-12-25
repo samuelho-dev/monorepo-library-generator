@@ -1,4 +1,7 @@
+import { Profile } from "@samuelho-dev/contract-user"
+import { RequestMeta, getHandlerContext } from "@samuelho-dev/infra-rpc"
 import { Effect } from "effect"
+import { ProfileService } from "./service"
 
 /**
  * Profile RPC Handlers
@@ -12,33 +15,18 @@ Contract-First Architecture:
   based on RouteTag defined in the contract
  *
  */
-
-
 // ============================================================================
 // Contract Imports
 // ============================================================================
-
-import { Profile } from "@samuelho-dev/contract-user";
-
 // ============================================================================
 // Infrastructure Imports
 // ============================================================================
-
-import {
-  RequestMeta,
-  getHandlerContext,
-} from "@samuelho-dev/infra-rpc";
-
 // ============================================================================
 // Service Import
 // ============================================================================
-
-import { ProfileService } from "./service";
-
 // ============================================================================
 // Handler Implementations
 // ============================================================================
-
 /**
  * Profile RPC Handler Implementations
  *
@@ -52,15 +40,15 @@ export const ProfileHandlers = Profile.ProfileRpcs.toLayer({
    */
   "Profile.Get": ({ id }) =>
     Effect.gen(function*() {
-      const meta = yield* RequestMeta;
-      const service = yield* ProfileService;
+      const meta = yield* RequestMeta
+      const service = yield* ProfileService
 
       yield* Effect.logDebug("Getting profile", {
         id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.findById(id);
+      return yield* service.findById(id)
     }),
 
   /**
@@ -69,12 +57,12 @@ export const ProfileHandlers = Profile.ProfileRpcs.toLayer({
    */
   "Profile.List": ({ page, pageSize }) =>
     Effect.gen(function*() {
-      const service = yield* ProfileService;
+      const service = yield* ProfileService
 
       return yield* service.findMany({
         page: page ?? 1,
-        pageSize: pageSize ?? 20,
-      });
+        pageSize: pageSize ?? 20
+      })
     }),
 
   /**
@@ -83,18 +71,18 @@ export const ProfileHandlers = Profile.ProfileRpcs.toLayer({
    */
   "Profile.Create": (input) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ProfileService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ProfileService
 
       yield* Effect.logInfo("Creating profile", {
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       return yield* service.create({
         ...input,
-        createdBy: user.id,
-      });
+        createdBy: user.id
+      })
     }),
 
   /**
@@ -103,19 +91,19 @@ export const ProfileHandlers = Profile.ProfileRpcs.toLayer({
    */
   "Profile.Update": ({ id, data }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ProfileService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ProfileService
 
       yield* Effect.logInfo("Updating profile", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       return yield* service.update(id, {
         ...data,
-        updatedBy: user.id,
-      });
+        updatedBy: user.id
+      })
     }),
 
   /**
@@ -124,15 +112,15 @@ export const ProfileHandlers = Profile.ProfileRpcs.toLayer({
    */
   "Profile.Delete": ({ id }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ProfileService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ProfileService
 
       yield* Effect.logInfo("Deleting profile", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.delete(id);
-    }),
-});
+      return yield* service.delete(id)
+    })
+})

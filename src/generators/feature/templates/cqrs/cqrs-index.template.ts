@@ -35,39 +35,39 @@ Structure:
   builder.addBlankLine()
 
   builder.addSectionComment("Commands")
-  builder.addRaw(`export { Command, ${className}CommandBus } from "./commands";
-export type { CommandBusInterface } from "./commands";`)
+  builder.addRaw(`export { Command, ${className}CommandBus } from "./commands"
+export type { CommandBusInterface } from "./commands"`)
   builder.addBlankLine()
 
   builder.addSectionComment("Queries")
-  builder.addRaw(`export { Query, ${className}QueryBus } from "./queries";
-export type { QueryBusInterface } from "./queries";`)
+  builder.addRaw(`export { Query, ${className}QueryBus } from "./queries"
+export type { QueryBusInterface } from "./queries"`)
   builder.addBlankLine()
 
   builder.addSectionComment("Operations")
   builder.addRaw(`export {
   ${className}OperationExecutor,
   createValidationMiddleware,
-  createRetryMiddleware,
-} from "./operations";
+  createRetryMiddleware
+} from "./operations"
 
 export type {
   OperationMetadata,
   OperationExecutorInterface,
-  Middleware,
-} from "./operations";`)
+  Middleware
+} from "./operations"`)
   builder.addBlankLine()
 
   builder.addSectionComment("Projections")
-  builder.addRaw(`export { ${className}ProjectionBuilder } from "./projections";
+  builder.addRaw(`export { ${className}ProjectionBuilder } from "./projections"
 
 export type {
   ProjectionHandler,
   ProjectionDefinition,
   ReadModelStore,
   ProjectionBuilderInterface,
-  ${className}ReadModel,
-} from "./projections";`)
+  ${className}ReadModel
+} from "./projections"`)
   builder.addBlankLine()
 
   // Add unified bus export if sub-modules are present
@@ -77,8 +77,8 @@ export type {
 export {
   ${className}CommandBus as ${className}UnifiedCommandBus,
   ${className}QueryBus as ${className}UnifiedQueryBus,
-  ${className}UnifiedBusLayer,
-} from "./bus";
+  ${className}UnifiedBusLayer
+} from "./bus"
 
 export type {
   ${className}CommandBusInterface as ${className}UnifiedCommandBusInterface,
@@ -86,8 +86,8 @@ export type {
   Command,
   Query,
   CommandHandler,
-  QueryHandler,
-} from "./bus";`)
+  QueryHandler
+} from "./bus"`)
   }
 
   return builder.toString()

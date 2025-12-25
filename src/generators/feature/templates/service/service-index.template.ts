@@ -37,27 +37,25 @@ Import options:
    import { AuthenticationService, ProfileService } from '${scope}/feature-${fileName}/server/services'`,
     module: `${scope}/feature-${fileName}/server/services`
   })
-  builder.addBlankLine()
 
   builder.addSectionComment("Main Service")
-  builder.addBlankLine()
 
-  builder.addRaw(`export { ${className}Service } from "./service";
-export type { ${className}ServiceInterface } from "./service";`)
+  builder.addRaw(`export { ${className}Service } from "./service"
+export type { ${className}ServiceInterface } from "./service"
+`)
   builder.addBlankLine()
 
   // Export sub-modules if present
   if (options.subModules && options.subModules.length > 0) {
     builder.addSectionComment("Sub-Module Services")
-    builder.addBlankLine()
 
     for (const subModule of options.subModules) {
       const subClassName = createNamingVariants(subModule).className
       builder.addRaw(
-        `export { ${subClassName}Service, ${subClassName}Live, ${subClassName}Test } from "./${subModule}";`
+        `export { ${subClassName}Service, ${subClassName}Live, ${subClassName}Test } from "./${subModule}"
+`
       )
     }
-    builder.addBlankLine()
   }
 
   return builder.toString()

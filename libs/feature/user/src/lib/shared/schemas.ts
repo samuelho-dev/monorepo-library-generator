@@ -7,11 +7,10 @@ import { Schema } from "effect"
  *
  */
 
-
 export const UserConfigSchema = Schema.Struct({
   // Add configuration schema fields
-});
+})
 
 export const UserResultSchema = Schema.Struct({
   // Add result schema fields
-});
+})

@@ -30,26 +30,26 @@ export const ErrorTraceConfig = {
   production: {
     level: "error" as const,
     includeCause: true,
-    debugSampleRate: 0.01, // Log 1% of debug-level errors
+    debugSampleRate: 0.01
   },
   development: {
     level: "debug" as const,
     includeCause: true,
-    debugSampleRate: 1.0, // Log all errors in dev
+    debugSampleRate: 1.0
   },
   test: {
     level: "silent" as const,
     includeCause: true,
-    debugSampleRate: 0, // No logging in tests
-  },
-} as const;
+    debugSampleRate: 0
+  }
+} as const
 
-export type TraceLevel = "error" | "warning" | "debug" | "silent";
+export type TraceLevel = "error" | "warning" | "debug" | "silent"
 
 export interface TraceConfig {
-  readonly level: TraceLevel;
-  readonly includeCause: boolean;
-  readonly debugSampleRate: number;
+  readonly level: TraceLevel
+  readonly includeCause: boolean
+  readonly debugSampleRate: number
 }
 
 /**
@@ -58,15 +58,15 @@ export interface TraceConfig {
 export const getTraceConfig = (): TraceConfig => {
   switch (process.env.NODE_ENV) {
     case "production":
-      return ErrorTraceConfig.production;
+      return ErrorTraceConfig.production
     case "test":
-      return ErrorTraceConfig.test;
+      return ErrorTraceConfig.test
     case "development":
     default:
-      return ErrorTraceConfig.development;
+      return ErrorTraceConfig.development
   }
-};
-`;
+}
+`
 }
 
 /**
@@ -87,7 +87,7 @@ export function generateTraceErrorUtility() {
  * \`\`\`typescript
  * yield* someOperation.pipe(
  *   traceError("UserService.create")
- * );
+ * )
  * \`\`\`
  */
 export const traceError = (operation: string) => <A, E, R>(
@@ -95,31 +95,31 @@ export const traceError = (operation: string) => <A, E, R>(
 ): Effect.Effect<A, E, R> =>
   effect.pipe(
     Effect.tapError((error) => {
-      const config = getTraceConfig();
+      const config = getTraceConfig()
 
       if (config.level === "silent") {
-        return Effect.void;
+        return Effect.void
       }
 
-      const errorInfo = extractErrorInfo(error, operation, config.includeCause);
+      const errorInfo = extractErrorInfo(error, operation, config.includeCause)
 
       // Apply sampling for non-error level logs
       if (config.level !== "error" && Math.random() > config.debugSampleRate) {
-        return Effect.void;
+        return Effect.void
       }
 
       switch (config.level) {
         case "error":
-          return Effect.logError("Operation failed", errorInfo);
+          return Effect.logError("Operation failed", errorInfo)
         case "warning":
-          return Effect.logWarning("Operation failed", errorInfo);
+          return Effect.logWarning("Operation failed", errorInfo)
         case "debug":
-          return Effect.logDebug("Operation failed", errorInfo);
+          return Effect.logDebug("Operation failed", errorInfo)
         default:
-          return Effect.void;
+          return Effect.void
       }
     })
-  );
+  )
 
 /**
  * Schema for parsing tagged errors
@@ -130,8 +130,8 @@ const TaggedErrorSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   correlationId: Schema.optional(Schema.String),
   code: Schema.optional(Schema.String),
-  cause: Schema.optional(Schema.Unknown),
-});
+  cause: Schema.optional(Schema.Unknown)
+})
 
 /**
  * Schema for parsing cause information
@@ -139,8 +139,8 @@ const TaggedErrorSchema = Schema.Struct({
 const CauseSchema = Schema.Struct({
   _tag: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
-  message: Schema.optional(Schema.String),
-});
+  message: Schema.optional(Schema.String)
+})
 
 /**
  * Extract cause information from an error using Schema
@@ -148,19 +148,19 @@ const CauseSchema = Schema.Struct({
  * Uses Schema.decodeUnknownOption for type-safe parsing without type guards.
  */
 const extractCauseInfo = (cause: unknown): { name?: string; message?: string } | string => {
-  const result = Schema.decodeUnknownOption(CauseSchema)(cause);
+  const result = Schema.decodeUnknownOption(CauseSchema)(cause)
   if (Option.isSome(result)) {
-    const parsed = result.value;
-    const name = parsed._tag ?? parsed.name;
+    const parsed = result.value
+    const name = parsed._tag ?? parsed.name
     if (name !== undefined || parsed.message !== undefined) {
       return {
         ...(name !== undefined ? { name } : {}),
-        ...(parsed.message !== undefined ? { message: parsed.message } : {}),
-      };
+        ...(parsed.message !== undefined ? { message: parsed.message } : {})
+      }
     }
   }
-  return String(cause);
-};
+  return String(cause)
+}
 
 /**
  * Extract structured error information for logging
@@ -174,35 +174,35 @@ const extractErrorInfo = (
 ): Record<string, unknown> => {
   const info: Record<string, unknown> = {
     operation,
-    timestamp: new Date().toISOString(),
-  };
-
-  const result = Schema.decodeUnknownOption(TaggedErrorSchema)(error);
-  if (Option.isSome(result)) {
-    const parsed = result.value;
-
-    if (parsed._tag !== undefined) {
-      info.errorTag = parsed._tag;
-    }
-    if (parsed.message !== undefined) {
-      info.message = parsed.message;
-    }
-    if (parsed.correlationId !== undefined) {
-      info.correlationId = parsed.correlationId;
-    }
-    if (parsed.code !== undefined) {
-      info.code = parsed.code;
-    }
-    if (includeCause && parsed.cause !== undefined) {
-      info.cause = extractCauseInfo(parsed.cause);
-    }
-  } else {
-    info.message = String(error);
+    timestamp: new Date().toISOString()
   }
 
-  return info;
-};
-`;
+  const result = Schema.decodeUnknownOption(TaggedErrorSchema)(error)
+  if (Option.isSome(result)) {
+    const parsed = result.value
+
+    if (parsed._tag !== undefined) {
+      info.errorTag = parsed._tag
+    }
+    if (parsed.message !== undefined) {
+      info.message = parsed.message
+    }
+    if (parsed.correlationId !== undefined) {
+      info.correlationId = parsed.correlationId
+    }
+    if (parsed.code !== undefined) {
+      info.code = parsed.code
+    }
+    if (includeCause && parsed.cause !== undefined) {
+      info.cause = extractCauseInfo(parsed.cause)
+    }
+  } else {
+    info.message = String(error)
+  }
+
+  return info
+}
+`
 }
 
 /**
@@ -222,8 +222,8 @@ export function generateTracingModule() {
  * @module tracing
  */
 
-import { Effect, Option } from "effect";
-import { Schema } from "@effect/schema";
+import { Effect, Option } from "effect"
+import { Schema } from "@effect/schema"
 
 ${generateTracingConfig()}
 
@@ -236,14 +236,14 @@ ${generateTraceErrorUtility()}
  *
  * @example
  * \`\`\`typescript
- * const trace = createTracer("UserService");
+ * const trace = createTracer("UserService")
  *
- * yield* someOperation.pipe(trace.error("create"));
- * yield* anotherOperation.pipe(trace.error("update"));
+ * yield* someOperation.pipe(trace.error("create"))
+ * yield* anotherOperation.pipe(trace.error("update"))
  * \`\`\`
  */
 export const createTracer = (serviceName: string) => ({
-  error: (operation: string) => traceError(\`\${serviceName}.\${operation}\`),
-});
-`;
+  error: (operation: string) => traceError(\`\${serviceName}.\${operation}\`)
+})
+`
 }

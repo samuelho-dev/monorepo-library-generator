@@ -1,4 +1,5 @@
 import { Atom } from "@effect-atom/atom"
+import type { UserSelect as User } from "@samuelho-dev/contract-user"
 
 /**
  * User Client State
@@ -23,78 +24,72 @@ Usage:
  *
  * @module @samuelho-dev/feature-user/client/atoms
  */
-
-
-import type { UserSelect as User } from "@samuelho-dev/contract-user";
-
 // ============================================================================
 // State Types
 // ============================================================================
-
 /**
  * Loading state for async operations
  */
-export type LoadingState = "idle" | "loading" | "refreshing" | "error";
+export type LoadingState = "idle" | "loading" | "refreshing" | "error"
 
 /**
  * Pagination state for list operations
  */
 export interface PaginationState {
-  readonly page: number;
-  readonly pageSize: number;
-  readonly totalCount: number;
-  readonly hasMore: boolean;
+  readonly page: number
+  readonly pageSize: number
+  readonly totalCount: number
+  readonly hasMore: boolean
 }
 
 /**
  * User entity state (single item)
  */
 export interface UserEntityState {
-  readonly data: User | null;
-  readonly loadingState: LoadingState;
-  readonly error: string | null;
-  readonly lastUpdated: number | null;
+  readonly data: User | null
+  readonly loadingState: LoadingState
+  readonly error: string | null
+  readonly lastUpdated: number | null
 }
 
 /**
  * User list state (collection)
  */
 export interface UserListState {
-  readonly items: ReadonlyArray<User>;
-  readonly loadingState: LoadingState;
-  readonly error: string | null;
-  readonly pagination: PaginationState;
-  readonly lastUpdated: number | null;
+  readonly items: ReadonlyArray<User>
+  readonly loadingState: LoadingState
+  readonly error: string | null
+  readonly pagination: PaginationState
+  readonly lastUpdated: number | null
 }
 
 /**
  * User operation state (for mutations)
  */
 export interface UserOperationState {
-  readonly isSubmitting: boolean;
-  readonly error: string | null;
-  readonly lastOperation: string | null;
+  readonly isSubmitting: boolean
+  readonly error: string | null
+  readonly lastOperation: string | null
 }
 
 /**
  * Combined User state
  */
 export interface UserState {
-  readonly entity: UserEntityState;
-  readonly list: UserListState;
-  readonly operation: UserOperationState;
+  readonly entity: UserEntityState
+  readonly list: UserListState
+  readonly operation: UserOperationState
 }
 
 // ============================================================================
 // Initial States
 // ============================================================================
-
 const initialUserEntityState: UserEntityState = {
   data: null,
   loadingState: "idle",
   error: null,
-  lastUpdated: null,
-};
+  lastUpdated: null
+}
 
 const initialUserListState: UserListState = {
   items: [],
@@ -104,89 +99,110 @@ const initialUserListState: UserListState = {
     page: 1,
     pageSize: 20,
     totalCount: 0,
-    hasMore: false,
+    hasMore: false
   },
-  lastUpdated: null,
-};
+  lastUpdated: null
+}
 
 const initialUserOperationState: UserOperationState = {
   isSubmitting: false,
   error: null,
-  lastOperation: null,
-};
+  lastOperation: null
+}
 
 const initialUserState: UserState = {
   entity: initialUserEntityState,
   list: initialUserListState,
-  operation: initialUserOperationState,
-};
+  operation: initialUserOperationState
+}
 
 // ============================================================================
 // Atoms
 // ============================================================================
-
 /**
  * Main user state atom
  *
  * Central state for the entire user feature domain.
  * Sub-modules access this atom for shared state.
  */
-export const userAtom = Atom.make<UserState>(initialUserState);
+export const userAtom = Atom.make<UserState>(initialUserState)
 
 /**
  * User entity cache (by ID)
  *
- * Atom.family for caching individual entities.
- * Automatically deduplicates fetches for the same ID.
+ * Atom.family for caching individual entities by ID.
+ * Each unique ID gets its own independent atom instance, preventing cache collisions.
+ *
+ * The `id` parameter is used as the cache key to ensure separate state
+ * for each entity. When you call userEntityFamily("user-123"), it returns
+ * the same atom instance every time for that ID.
+ *
+ * Usage Example:
+ *   // In a component
+ *   const userAtom = userEntityFamily("user-123")
+ *   const [state, setState] = useAtom(userAtom)
+ *
+ *   // Fetch and cache
+ *   setState({ data: fetchedUser, loadingState: "idle", error: null, lastUpdated: Date.now() })
+ *
+ * Benefits:
+ * - Multiple entities can be cached simultaneously
+ * - Automatic deduplication (same ID = same atom instance)
+ * - Independent loading/error states per entity
  */
-export const userEntityFamily = Atom.family((id: string) =>
-  Atom.make<UserEntityState>(initialUserEntityState)
-);
+export const userEntityFamily = Atom.family((id: string) => {
+  // The id parameter is used internally by Atom.family as the cache key
+  // Each unique id gets a separate atom instance
+  return Atom.make<UserEntityState>(initialUserEntityState)
+})
+
+/**
+ * Helper to fetch and cache a single User entity by ID
+ *
+ * This uses the entity family to create/retrieve the atom for the given ID,
+ * then can be extended to trigger RPC calls to fetch the data.
+ *
+ * @param id - The entity ID to fetch
+ * @returns The entity atom for the given ID
+ */
+export function getUserAtom(id: string) {
+  // Returns the keyed atom instance for this specific ID
+  // The entity family ensures the same ID always returns the same atom
+  return userEntityFamily(id)
+}
 
 // ============================================================================
 // Derived Atoms
 // ============================================================================
-
 /**
  * Is any operation loading?
  */
-export const userIsLoadingAtom = Atom.map(
-  userAtom,
-  (state) =>
-    state.entity.loadingState === "loading" ||
-    state.list.loadingState === "loading" ||
-    state.operation.isSubmitting
-);
+export const userIsLoadingAtom = Atom.map(userAtom, (state) =>
+  state.entity.loadingState === "loading" ||
+  state.list.loadingState === "loading" ||
+  state.operation.isSubmitting
+)
 
 /**
  * Current error (if any)
  */
-export const userErrorAtom = Atom.map(
-  userAtom,
-  (state) =>
-    state.entity.error || state.list.error || state.operation.error
-);
+export const userErrorAtom = Atom.map(userAtom, (state) =>
+  state.entity.error || state.list.error || state.operation.error
+)
 
 /**
  * Current entity data
  */
-export const userDataAtom = Atom.map(
-  userAtom,
-  (state) => state.entity.data
-);
+export const userDataAtom = Atom.map(userAtom, (state) => state.entity.data)
 
 /**
  * Current list items
  */
-export const userListAtom = Atom.map(
-  userAtom,
-  (state) => state.list.items
-);
+export const userListAtom = Atom.map(userAtom, (state) => state.list.items)
 
 // ============================================================================
 // State Updaters
 // ============================================================================
-
 /**
  * Update entity state
  */
@@ -195,8 +211,8 @@ export function updateUserEntity(
 ): (state: UserState) => UserState {
   return (state) => ({
     ...state,
-    entity: { ...state.entity, ...update },
-  });
+    entity: { ...state.entity, ...update }
+  })
 }
 
 /**
@@ -207,8 +223,8 @@ export function updateUserList(
 ): (state: UserState) => UserState {
   return (state) => ({
     ...state,
-    list: { ...state.list, ...update },
-  });
+    list: { ...state.list, ...update }
+  })
 }
 
 /**
@@ -219,13 +235,13 @@ export function updateUserOperation(
 ): (state: UserState) => UserState {
   return (state) => ({
     ...state,
-    operation: { ...state.operation, ...update },
-  });
+    operation: { ...state.operation, ...update }
+  })
 }
 
 /**
  * Reset all state to initial
  */
 export function resetUserState(): UserState {
-  return initialUserState;
+  return initialUserState
 }

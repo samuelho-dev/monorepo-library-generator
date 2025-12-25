@@ -36,12 +36,11 @@ Used by infra-pubsub's Redis layer.`,
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+    { from: "effect", imports: ["Context", "Effect", "Layer"] },
+    { from: "ioredis", imports: [{ name: "Redis", alias: "IORedis" }], isTypeOnly: true },
+    { from: "./errors", imports: ["RedisPubSubError"] },
+    { from: "./types", imports: ["RedisPubSubClient"], isTypeOnly: true }
   ])
-  builder.addRaw(`import type { Redis as IORedis } from "ioredis";`)
-  builder.addRaw(`import { RedisPubSubError } from "./errors";`)
-  builder.addRaw(`import type { RedisPubSubClient } from "./types";`)
-  builder.addBlankLine()
 
   // Factory function
   builder.addSectionComment("PubSub Sub-Service Factory")

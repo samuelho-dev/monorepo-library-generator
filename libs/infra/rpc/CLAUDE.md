@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-rpc
 
-RPC infrastructure with @effect/rpc middleware, transport, and router
+Rpc
 
 ## AI Agent Reference
 
@@ -13,7 +13,7 @@ This is an infrastructure library following Effect-based service patterns.
 - **lib/errors.ts**: Data.TaggedError-based error types
 - **lib/config.ts**: Service configuration types
 - **lib/memory.ts**: In-memory provider implementation
-- **lib/client/hooks/use-rpc.ts**: React hook
+
 
 ### Import Patterns
 
@@ -66,17 +66,6 @@ const result = program.pipe(
   // or Effect.provide(RpcService.Test)   // Testing
   // or Effect.provide(RpcService.Auto)   // NODE_ENV-based
 );
-```
-
-### Client Usage
-
-```typescript
-import { useRpc } from '@samuelho-dev/infra-rpc/client/hooks';
-
-function MyComponent() {
-  const rpc = useRpc();
-  // Use service in React component
-}
 ```
 
 ### Testing Strategy

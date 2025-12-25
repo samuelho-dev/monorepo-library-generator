@@ -38,12 +38,11 @@ Used by infra-queue's Redis layer.`,
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+    { from: "effect", imports: ["Context", "Effect", "Layer"] },
+    { from: "ioredis", imports: [{ name: "Redis", alias: "IORedis" }], isTypeOnly: true },
+    { from: "./errors", imports: ["RedisCommandError"] },
+    { from: "./types", imports: ["RedisQueueClient"], isTypeOnly: true }
   ])
-  builder.addRaw(`import type { Redis as IORedis } from "ioredis";`)
-  builder.addRaw(`import { RedisCommandError } from "./errors";`)
-  builder.addRaw(`import type { RedisQueueClient } from "./types";`)
-  builder.addBlankLine()
 
   // Factory function
   builder.addSectionComment("Queue Sub-Service Factory")

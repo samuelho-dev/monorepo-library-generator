@@ -33,7 +33,7 @@ export function generateTypesFile(options: FeatureTemplateOptions) {
  *
  * Add configuration fields as needed for your service
  */
-export type ${className}Config = Record<string, never>;`)
+export type ${className}Config = Record<string, never>`)
   builder.addBlankLine()
 
   // Note about types - no explicit Result type needed

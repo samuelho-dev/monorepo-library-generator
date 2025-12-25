@@ -50,36 +50,32 @@ Contract-First Architecture:
   const isManagement = subModuleName.toLowerCase() === "management"
 
   builder.addImports([{ from: "effect", imports: ["Effect"] }])
-  builder.addBlankLine()
 
   builder.addSectionComment("Contract Imports")
 
   // Sub-modules are exported as namespaces from the parent contract
-  builder.addRaw(`import { ${subModuleClassName} } from "${scope}/contract-${parentName}";
-`)
+  builder.addImports([
+    { from: `${scope}/contract-${parentName}`, imports: [subModuleClassName] }
+  ])
 
   builder.addSectionComment("Infrastructure Imports")
 
   // Only import what's actually used - management handlers use ServiceContext
   if (isManagement) {
-    builder.addRaw(`import {
-  ServiceContext,
-  RequestMeta,
-  getHandlerContext,
-} from "${scope}/infra-rpc";
-`)
+    builder.addImports([
+      { from: `${scope}/infra-rpc`, imports: ["getHandlerContext", "RequestMeta", "ServiceContext"] }
+    ])
   } else {
-    builder.addRaw(`import {
-  RequestMeta,
-  getHandlerContext,
-} from "${scope}/infra-rpc";
-`)
+    builder.addImports([
+      { from: `${scope}/infra-rpc`, imports: ["getHandlerContext", "RequestMeta"] }
+    ])
   }
 
   builder.addSectionComment("Service Import")
 
-  builder.addRaw(`import { ${subModuleClassName}Service } from "./service";
-`)
+  builder.addImports([
+    { from: "./service", imports: [`${subModuleClassName}Service`] }
+  ])
 
   builder.addSectionComment("Handler Implementations")
 
@@ -112,10 +108,10 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Get": () =>
     Effect.gen(function*() {
-      const { user } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
-      return yield* service.getCart(user.id);
+      return yield* service.getCart(user.id)
     }),
 
   /**
@@ -124,17 +120,17 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.AddItem": ({ itemId, quantity }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Adding item to cart", {
         userId: user.id,
         itemId,
         quantity,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.addItem(user.id, itemId, quantity);
+      return yield* service.addItem(user.id, itemId, quantity)
     }),
 
   /**
@@ -143,10 +139,10 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.RemoveItem": ({ itemId }) =>
     Effect.gen(function*() {
-      const { user } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
-      return yield* service.removeItem(user.id, itemId);
+      return yield* service.removeItem(user.id, itemId)
     }),
 
   /**
@@ -155,10 +151,10 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.UpdateQuantity": ({ itemId, quantity }) =>
     Effect.gen(function*() {
-      const { user } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
-      return yield* service.updateQuantity(user.id, itemId, quantity);
+      return yield* service.updateQuantity(user.id, itemId, quantity)
     }),
 
   /**
@@ -167,12 +163,12 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Clear": () =>
     Effect.gen(function*() {
-      const { user } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
-      return yield* service.clearCart(user.id);
-    }),
-});
+      return yield* service.clearCart(user.id)
+    })
+})
 `
 }
 
@@ -190,16 +186,16 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Start": ({ cartId }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Starting checkout", {
         userId: user.id,
         cartId,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.startCheckout(user.id, cartId);
+      return yield* service.startCheckout(user.id, cartId)
     }),
 
   /**
@@ -208,10 +204,10 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.SetShippingAddress": ({ checkoutId, address }) =>
     Effect.gen(function*() {
-      const { user } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
-      return yield* service.setShippingAddress(checkoutId, address);
+      return yield* service.setShippingAddress(checkoutId, address)
     }),
 
   /**
@@ -220,10 +216,10 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.SetPaymentMethod": ({ checkoutId, paymentMethod }) =>
     Effect.gen(function*() {
-      const { user } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
-      return yield* service.setPaymentMethod(checkoutId, paymentMethod);
+      return yield* service.setPaymentMethod(checkoutId, paymentMethod)
     }),
 
   /**
@@ -232,16 +228,16 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Complete": ({ checkoutId }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Completing checkout", {
         userId: user.id,
         checkoutId,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.completeCheckout(checkoutId);
+      return yield* service.completeCheckout(checkoutId)
     }),
 
   /**
@@ -250,12 +246,12 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Cancel": ({ checkoutId }) =>
     Effect.gen(function*() {
-      const { user } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
-      return yield* service.cancelCheckout(checkoutId);
-    }),
-});
+      return yield* service.cancelCheckout(checkoutId)
+    })
+})
 `
 }
 
@@ -280,16 +276,16 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
       if (!user.roles.includes("admin")) {
         return yield* Effect.fail({
           _tag: "Forbidden" as const,
-          message: "Admin role required",
-        });
+          message: "Admin role required"
+        })
       }
 
       yield* Effect.logInfo("Admin listing all items", {
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.listAll(filters, pagination);
+      return yield* service.listAll(filters, pagination)
     }),
 
   /**
@@ -304,18 +300,18 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
       if (!user.roles.includes("admin")) {
         return yield* Effect.fail({
           _tag: "Forbidden" as const,
-          message: "Admin role required",
-        });
+          message: "Admin role required"
+        })
       }
 
       yield* Effect.logInfo("Admin updating status", {
         id,
         status,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.updateStatus(id, status);
+      return yield* service.updateStatus(id, status)
     }),
 
   /**
@@ -330,17 +326,17 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
       if (!user.roles.includes("admin")) {
         return yield* Effect.fail({
           _tag: "Forbidden" as const,
-          message: "Admin role required",
-        });
+          message: "Admin role required"
+        })
       }
 
       yield* Effect.logInfo("Admin bulk update", {
         count: ids.length,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.bulkUpdate(ids, updates);
+      return yield* service.bulkUpdate(ids, updates)
     }),
 
   /**
@@ -355,11 +351,11 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
       if (!user.roles.includes("admin")) {
         return yield* Effect.fail({
           _tag: "Forbidden" as const,
-          message: "Admin role required",
-        });
+          message: "Admin role required"
+        })
       }
 
-      return yield* service.generateReport(type, dateRange);
+      return yield* service.generateReport(type, dateRange)
     }),
 
   /**
@@ -368,17 +364,17 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.SyncExternal": ({ source, data }) =>
     Effect.gen(function*() {
-      const serviceCtx = yield* ServiceContext;
-      const service = yield* ${className}Service;
+      const serviceCtx = yield* ServiceContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Syncing from external service", {
         source,
-        callingService: serviceCtx.serviceName,
-      });
+        callingService: serviceCtx.serviceName
+      })
 
-      return yield* service.syncExternal(source, data);
-    }),
-});
+      return yield* service.syncExternal(source, data)
+    })
+})
 `
 }
 
@@ -396,15 +392,15 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Get": ({ id }) =>
     Effect.gen(function*() {
-      const meta = yield* RequestMeta;
-      const service = yield* ${className}Service;
+      const meta = yield* RequestMeta
+      const service = yield* ${className}Service
 
       yield* Effect.logDebug("Getting ${moduleName}", {
         id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.findById(id);
+      return yield* service.findById(id)
     }),
 
   /**
@@ -413,12 +409,12 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.List": ({ page, pageSize }) =>
     Effect.gen(function*() {
-      const service = yield* ${className}Service;
+      const service = yield* ${className}Service
 
       return yield* service.findMany({
         page: page ?? 1,
-        pageSize: pageSize ?? 20,
-      });
+        pageSize: pageSize ?? 20
+      })
     }),
 
   /**
@@ -427,18 +423,18 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Create": (input) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Creating ${moduleName}", {
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       return yield* service.create({
         ...input,
-        createdBy: user.id,
-      });
+        createdBy: user.id
+      })
     }),
 
   /**
@@ -447,19 +443,19 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Update": ({ id, data }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Updating ${moduleName}", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       return yield* service.update(id, {
         ...data,
-        updatedBy: user.id,
-      });
+        updatedBy: user.id
+      })
     }),
 
   /**
@@ -468,17 +464,17 @@ export const ${className}Handlers = ${className}.${className}Rpcs.toLayer({
    */
   "${className}.Delete": ({ id }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Deleting ${moduleName}", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.delete(id);
-    }),
-});
+      return yield* service.delete(id)
+    })
+})
 `
 }

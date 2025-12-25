@@ -27,11 +27,9 @@ Usage:
  *
  */
 
-
 // ============================================================================
 // Errors
 // ============================================================================
-
 
 export {
   // RPC Errors (Schema.TaggedError for serialization)
@@ -57,15 +55,14 @@ export {
 
   // Error Boundary
   withRpcErrorBoundary,
-} from "./lib/errors";
+} from "./lib/errors"
 
 // ============================================================================
 // Core RPC Utilities
 // ============================================================================
 
-
 // Re-exports from @effect/rpc
-export { Rpc, RpcGroup } from "./lib/core";
+export { Rpc, RpcGroup } from "./lib/core"
 
 // Definition helpers
 export {
@@ -74,7 +71,7 @@ export {
   createHandlers,
   type RpcHandler,
   type HandlersFor,
-} from "./lib/core";
+} from "./lib/core"
 
 // Schema helpers
 export {
@@ -83,24 +80,22 @@ export {
   IdRequest,
   SuccessResponse,
   EmptyRequest,
-} from "./lib/core";
+} from "./lib/core"
 
 // ============================================================================
 // RPC Client
 // ============================================================================
-
 
 export {
   RpcClient,
   RpcClientConfigTag,
   createRpcClientLayer,
   type RpcClientConfig,
-} from "./lib/client";
+} from "./lib/client"
 
 // ============================================================================
 // Transport Layer
 // ============================================================================
-
 
 // Transport types
 export type {
@@ -110,10 +105,10 @@ export type {
   RpcTransportConfig,
   HttpTransportOptions,
   HttpRpcClientConfig,
-} from "./lib/transport";
+} from "./lib/transport"
 
 // HTTP transport client
-export { HttpRpcClient, RpcTransportClient, createNextHandler } from "./lib/transport";
+export { HttpRpcClient, RpcTransportClient, createNextHandler } from "./lib/transport"
 
 // Transport utilities
 export {
@@ -121,7 +116,7 @@ export {
   jsonResponse,
   errorResponse,
   type NextHandler,
-} from "./lib/transport";
+} from "./lib/transport"
 
 // Router utilities
 export {
@@ -135,19 +130,17 @@ export {
   type RpcRequiredLayers,
   type NextRpcHandlerOptions,
   type NextRpcHandler,
-} from "./lib/router";
+} from "./lib/router"
 
 // ============================================================================
 // Middleware (Contract-First Architecture)
 // ============================================================================
-
 
 // User Authentication (Protected Routes)
 export {
   // Types
   type CurrentUserData,
   type AuthMethod,
-  type AuthenticatedUserData,
 
   // Context Tags
   CurrentUser,
@@ -168,7 +161,7 @@ export {
   // Test data
   TestUser,
   AdminTestUser,
-} from "./lib/middleware";
+} from "./lib/middleware"
 
 // Service-to-Service Authentication (Service Routes)
 export {
@@ -194,7 +187,7 @@ export {
 
   // Test data
   TestServiceIdentity,
-} from "./lib/middleware";
+} from "./lib/middleware"
 
 // Request Metadata (All Routes)
 export {
@@ -212,7 +205,7 @@ export {
   getHandlerContext,
   getHandlerContextOptional,
   type HandlerContext,
-} from "./lib/middleware";
+} from "./lib/middleware"
 
 // Route Selection (Contract-First)
 export {
@@ -239,19 +232,18 @@ export {
   logRouteType,
   assertRouteType,
   validateRpcRoutes,
-} from "./lib/middleware";
+} from "./lib/middleware"
 
 // Combined Middleware Layers
 export {
   AllMiddlewareTest,
   AllMiddlewareLive,
   defaultMiddlewareConfig,
-} from "./lib/middleware";
+} from "./lib/middleware"
 
 // ============================================================================
 // Client Hooks (React)
 // ============================================================================
-
 
 export {
   // Core RPC call function (Schema-validated)
@@ -272,5 +264,5 @@ export {
 
   // Types
   type RpcCallOptions,
-  type RpcError,
-} from "./lib/hooks";
+  type ParsedRpcError,
+} from "./lib/hooks"

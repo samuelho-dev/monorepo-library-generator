@@ -47,8 +47,8 @@ export class Memory${className}Provider extends Context.Tag(
   Memory${className}Provider,
   {
     // TODO: Add provider methods
-    readonly store: Map<string, unknown>;
-    readonly reset: () => void;
+    readonly store: Map<string, unknown>
+    readonly reset: () => void
   }
 >() {}`)
   builder.addBlankLine()
@@ -59,14 +59,14 @@ export class Memory${className}Provider extends Context.Tag(
   builder.addFunction({
     name: `createMemory${className}Provider`,
     params: [],
-    body: `const store = new Map<string, unknown>();
+    body: `const store = new Map<string, unknown>()
 
 return {
   store,
   reset: () => {
-    store.clear();
-  },
-};`,
+    store.clear()
+  }
+}`,
     exported: false,
     jsdoc: `Create memory provider\n\nTODO: Implement actual memory provider logic`
   })

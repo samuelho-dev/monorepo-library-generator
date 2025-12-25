@@ -1,3 +1,6 @@
+import { describe, expect, it } from "@effect/vitest"
+import { Context, Effect, Layer } from "effect"
+
 /**
  * Kysely Service Tests
  *
@@ -13,9 +16,6 @@ Testing Guidelines:
  * @module @myorg/provider-kysely
  */
 
-
-import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer } from "effect"
 
 /**
  * Test service tag for layer composition tests

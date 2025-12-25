@@ -53,7 +53,7 @@ Provides:
   builder.addRaw(`/**
  * Read observability config from environment variables
  */
-function getEnvConfig(): ObservabilityConfig {
+function getEnvConfig() {
   return {
     serviceName: env.OTEL_SERVICE_NAME ?? "unknown-service",
     serviceVersion: env.OTEL_SERVICE_VERSION ?? "0.0.0",

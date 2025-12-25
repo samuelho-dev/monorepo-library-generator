@@ -59,18 +59,19 @@ export function generateRpcDefinitionsFile(options: ContractTemplateOptions) {
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Schema"] },
     { from: "@effect/rpc", imports: ["Rpc"] }
   ])
-  builder.addBlankLine()
+  builder.addImports([
+    { from: "effect", imports: ["Schema"] }
+  ])
 
   builder.addSectionComment("Local Imports")
-  builder.addRaw(`import { ${className}RpcError } from "./rpc-errors";`)
-  builder.addBlankLine()
+  builder.addImports([
+    { from: "./rpc-errors", imports: [`${className}RpcError`] }
+  ])
 
   // Define branded ID type (extracted from database schema)
   builder.addSectionComment("Branded ID Type")
-  builder.addBlankLine()
   builder.addRaw(`/**
  * ${className} ID Schema
  *
@@ -93,16 +94,15 @@ export const ${className}Id = Schema.String.pipe(
   Schema.annotations({
     identifier: "${className}Id",
     title: "${className} ID",
-    description: "Unique identifier for ${className} entity",
+    description: "Unique identifier for ${className} entity"
   })
-);
-export type ${className}Id = Schema.Schema.Type<typeof ${className}Id>;`)
+)
+
+export type ${className}Id = Schema.Schema.Type<typeof ${className}Id>`)
   builder.addBlankLine()
 
   // RouteTag system
   builder.addSectionComment("Route Tag System")
-  builder.addBlankLine()
-
   builder.addRaw(`/**
  * Route types for middleware selection
  *
@@ -110,23 +110,21 @@ export type ${className}Id = Schema.Schema.Type<typeof ${className}Id>;`)
  * - "protected": User authentication via Bearer token, CurrentUser provided
  * - "service": Service-to-service authentication, ServiceContext provided
  */
-export type RouteType = "public" | "protected" | "service";
+export type RouteType = "public" | "protected" | "service"
 
 /**
  * Symbol for accessing route type on RPC definitions
  *
  * @example
  * \`\`\`typescript
- * const routeType = Get${className}[RouteTag]; // "public"
+ * const routeType = Get${className}[RouteTag] // "public"
  * \`\`\`
  */
-export const RouteTag = Symbol.for("@contract/RouteTag");`)
+export const RouteTag = Symbol.for("@contract/RouteTag")`)
   builder.addBlankLine()
 
   // Entity Schema (from imported type)
   builder.addSectionComment("Entity Schema")
-  builder.addBlankLine()
-
   builder.addRaw(`/**
  * ${className} Entity Schema
  *
@@ -138,34 +136,32 @@ export const ${className}Schema = Schema.Struct({
   email: Schema.String,
   name: Schema.NullOr(Schema.String),
   createdAt: Schema.DateFromSelf,
-  updatedAt: Schema.DateFromSelf,
+  updatedAt: Schema.DateFromSelf
 }).pipe(
   Schema.annotations({
     identifier: "${className}",
     title: "${className} Entity",
-    description: "A ${className} entity from the database",
+    description: "A ${className} entity from the database"
   })
-);
+)
 
-export type ${className}Entity = Schema.Schema.Type<typeof ${className}Schema>;`)
+export type ${className}Entity = Schema.Schema.Type<typeof ${className}Schema>`)
   builder.addBlankLine()
 
   // Request/Response schemas for reuse
   builder.addSectionComment("Request/Response Schemas")
-  builder.addBlankLine()
-
   builder.addRaw(`/**
  * Pagination parameters for list operations
  */
 export const PaginationParams = Schema.Struct({
   page: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
-    default: () => 1,
+    default: () => 1
   }),
   pageSize: Schema.optionalWith(
     Schema.Number.pipe(Schema.int(), Schema.positive(), Schema.lessThanOrEqualTo(100)),
     { default: () => 20 }
-  ),
-});
+  )
+})
 
 /**
  * Paginated response wrapper
@@ -176,56 +172,56 @@ export const PaginatedResponse = <T extends Schema.Schema.Any>(itemSchema: T) =>
     total: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
     page: Schema.Number.pipe(Schema.int(), Schema.positive()),
     pageSize: Schema.Number.pipe(Schema.int(), Schema.positive()),
-    hasMore: Schema.Boolean,
-  });
+    hasMore: Schema.Boolean
+  })
 
 /**
  * Create ${className} input schema
  */
 export const Create${className}Input = Schema.Struct({
-  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)),
+  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))
   // TODO: Add domain-specific creation fields
 }).pipe(
   Schema.annotations({
     identifier: "Create${className}Input",
     title: "Create ${className} Input",
-    description: "Input data for creating a new ${className}",
+    description: "Input data for creating a new ${className}"
   })
-);
+)
 
-export type Create${className}Input = Schema.Schema.Type<typeof Create${className}Input>;
+export type Create${className}Input = Schema.Schema.Type<typeof Create${className}Input>
 
 /**
  * Update ${className} input schema
  */
 export const Update${className}Input = Schema.Struct({
-  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))),
+  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
   // TODO: Add domain-specific update fields
 }).pipe(
   Schema.annotations({
     identifier: "Update${className}Input",
     title: "Update ${className} Input",
-    description: "Input data for updating an existing ${className}",
+    description: "Input data for updating an existing ${className}"
   })
-);
+)
 
-export type Update${className}Input = Schema.Schema.Type<typeof Update${className}Input>;
+export type Update${className}Input = Schema.Schema.Type<typeof Update${className}Input>
 
 /**
  * Validation request schema (for service-to-service)
  */
 export const Validate${className}Input = Schema.Struct({
   ${propertyName}Id: ${className}Id,
-  validationType: Schema.optional(Schema.String),
+  validationType: Schema.optional(Schema.String)
 }).pipe(
   Schema.annotations({
     identifier: "Validate${className}Input",
     title: "Validate ${className} Input",
-    description: "Input for validating a ${className} entity",
+    description: "Input for validating a ${className} entity"
   })
-);
+)
 
-export type Validate${className}Input = Schema.Schema.Type<typeof Validate${className}Input>;
+export type Validate${className}Input = Schema.Schema.Type<typeof Validate${className}Input>
 
 /**
  * Validation response schema
@@ -234,36 +230,35 @@ export const ValidationResponse = Schema.Struct({
   valid: Schema.Boolean,
   ${propertyName}Id: ${className}Id,
   validatedAt: Schema.DateTimeUtc,
-  errors: Schema.optional(Schema.Array(Schema.String)),
+  errors: Schema.optional(Schema.Array(Schema.String))
 }).pipe(
   Schema.annotations({
     identifier: "ValidationResponse",
     title: "Validation Response",
-    description: "Result of ${className} validation",
+    description: "Result of ${className} validation"
   })
-);
+)
 
-export type ValidationResponse = Schema.Schema.Type<typeof ValidationResponse>;
+export type ValidationResponse = Schema.Schema.Type<typeof ValidationResponse>
 
 /**
  * Bulk get request schema (for service-to-service)
  */
 export const BulkGet${className}Input = Schema.Struct({
-  ids: Schema.Array(${className}Id).pipe(Schema.minItems(1), Schema.maxItems(100)),
+  ids: Schema.Array(${className}Id).pipe(Schema.minItems(1), Schema.maxItems(100))
 }).pipe(
   Schema.annotations({
     identifier: "BulkGet${className}Input",
     title: "Bulk Get ${className} Input",
-    description: "Input for fetching multiple ${className}s by ID",
+    description: "Input for fetching multiple ${className}s by ID"
   })
-);
+)
 
-export type BulkGet${className}Input = Schema.Schema.Type<typeof BulkGet${className}Input>;`)
+export type BulkGet${className}Input = Schema.Schema.Type<typeof BulkGet${className}Input>`)
   builder.addBlankLine()
 
   // RPC Definitions
   builder.addSectionComment("RPC Definitions (Contract-First)")
-  builder.addBlankLine()
 
   // Get RPC (public)
   builder.addRaw(`/**
@@ -273,12 +268,12 @@ export type BulkGet${className}Input = Schema.Schema.Type<typeof BulkGet${classN
  */
 export class Get${className} extends Rpc.make("Get${className}", {
   payload: Schema.Struct({
-    id: ${className}Id,
+    id: ${className}Id
   }),
   success: ${className}Schema,
-  error: ${className}RpcError,
+  error: ${className}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public";
+  static readonly [RouteTag]: RouteType = "public"
 }`)
   builder.addBlankLine()
 
@@ -291,9 +286,9 @@ export class Get${className} extends Rpc.make("Get${className}", {
 export class List${className}s extends Rpc.make("List${className}s", {
   payload: PaginationParams,
   success: PaginatedResponse(${className}Schema),
-  error: ${className}RpcError,
+  error: ${className}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public";
+  static readonly [RouteTag]: RouteType = "public"
 }`)
   builder.addBlankLine()
 
@@ -306,9 +301,9 @@ export class List${className}s extends Rpc.make("List${className}s", {
 export class Create${className} extends Rpc.make("Create${className}", {
   payload: Create${className}Input,
   success: ${className}Schema,
-  error: ${className}RpcError,
+  error: ${className}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }`)
   builder.addBlankLine()
 
@@ -321,12 +316,12 @@ export class Create${className} extends Rpc.make("Create${className}", {
 export class Update${className} extends Rpc.make("Update${className}", {
   payload: Schema.Struct({
     id: ${className}Id,
-    data: Update${className}Input,
+    data: Update${className}Input
   }),
   success: ${className}Schema,
-  error: ${className}RpcError,
+  error: ${className}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }`)
   builder.addBlankLine()
 
@@ -338,21 +333,20 @@ export class Update${className} extends Rpc.make("Update${className}", {
  */
 export class Delete${className} extends Rpc.make("Delete${className}", {
   payload: Schema.Struct({
-    id: ${className}Id,
+    id: ${className}Id
   }),
   success: Schema.Struct({
     success: Schema.Literal(true),
-    deletedAt: Schema.DateTimeUtc,
+    deletedAt: Schema.DateTimeUtc
   }),
-  error: ${className}RpcError,
+  error: ${className}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected";
+  static readonly [RouteTag]: RouteType = "protected"
 }`)
   builder.addBlankLine()
 
   // Service-to-service RPCs
   builder.addSectionComment("Service-to-Service RPC Definitions")
-  builder.addBlankLine()
 
   // Validate RPC (service)
   builder.addRaw(`/**
@@ -363,9 +357,9 @@ export class Delete${className} extends Rpc.make("Delete${className}", {
 export class Validate${className} extends Rpc.make("Validate${className}", {
   payload: Validate${className}Input,
   success: ValidationResponse,
-  error: ${className}RpcError,
+  error: ${className}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "service";
+  static readonly [RouteTag]: RouteType = "service"
 }`)
   builder.addBlankLine()
 
@@ -379,30 +373,12 @@ export class BulkGet${className}s extends Rpc.make("BulkGet${className}s", {
   payload: BulkGet${className}Input,
   success: Schema.Struct({
     items: Schema.Array(${className}Schema),
-    notFound: Schema.Array(${className}Id),
+    notFound: Schema.Array(${className}Id)
   }),
-  error: ${className}RpcError,
+  error: ${className}RpcError
 }) {
-  static readonly [RouteTag]: RouteType = "service";
+  static readonly [RouteTag]: RouteType = "service"
 }`)
-  builder.addBlankLine()
-
-  // Type exports
-  builder.addSectionComment("RPC Type Exports")
-  builder.addBlankLine()
-
-  builder.addRaw(`/**
- * All ${className} RPC definitions
- *
- * Use these types for handler implementation type-safety.
- */
-export type Get${className}Rpc = typeof Get${className};
-export type List${className}sRpc = typeof List${className}s;
-export type Create${className}Rpc = typeof Create${className};
-export type Update${className}Rpc = typeof Update${className};
-export type Delete${className}Rpc = typeof Delete${className};
-export type Validate${className}Rpc = typeof Validate${className};
-export type BulkGet${className}sRpc = typeof BulkGet${className}s;`)
   builder.addBlankLine()
 
   return builder.toString()

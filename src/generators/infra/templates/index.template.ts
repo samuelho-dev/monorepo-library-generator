@@ -31,9 +31,9 @@ export function generateIndexFile(options: InfraTemplateOptions) {
     builder.addSectionComment("Server-Only Mode: Export Everything from Root")
 
     builder.addRaw(`// Service interface and layers
-export { ${className}Service } from "./lib/service";
-export type { ${className}Config } from "./lib/config";
-export { default${className}Config, get${className}ConfigForEnvironment } from "./lib/config";
+export { ${className}Service } from "./lib/service"
+export type { ${className}Config } from "./lib/config"
+export { default${className}Config, get${className}ConfigForEnvironment } from "./lib/config"
 ${
       isDatabaseInfra
         ? `
@@ -47,7 +47,7 @@ export type {
   DeleteQueryBuilder,
   TransactionBuilder,
   ExpressionBuilder,
-} from "./lib/service";
+} from "./lib/service"
 `
         : ""
     }
@@ -55,7 +55,7 @@ export type {
 // - ${className}Service.Live (production)
 // - ${className}Service.Test (testing)
 // Additional layers:
-export { ${className}ServiceDev } from "./lib/layers";
+export { ${className}ServiceDev } from "./lib/layers"
 
 // Error types
 export {
@@ -67,18 +67,18 @@ export {
   ${className}ConnectionError,
   ${className}TimeoutError,
   ${className}InternalError,
-} from "./lib/errors";
-export type { ${className}ServiceError } from "./lib/errors";`)
+} from "./lib/errors"
+export type { ${className}ServiceError } from "./lib/errors"`)
   } else {
     // Universal mode
     builder.addSectionComment("Universal Mode: Export Only Types and Interfaces from Root")
 
     builder.addRaw(`// Service interface (universal)
-export { ${className}Service } from "./lib/service";
-export type { ${className}Config } from "./lib/config";
+export { ${className}Service } from "./lib/service"
+export type { ${className}Config } from "./lib/config"
 
 // Configuration (universal)
-export { default${className}Config, get${className}ConfigForEnvironment } from "./lib/config";
+export { default${className}Config, get${className}ConfigForEnvironment } from "./lib/config"
 ${
       isDatabaseInfra
         ? `
@@ -92,7 +92,7 @@ export type {
   DeleteQueryBuilder,
   TransactionBuilder,
   ExpressionBuilder,
-} from "./lib/service";
+} from "./lib/service"
 `
         : ""
     }
@@ -106,8 +106,8 @@ export {
   ${className}ConnectionError,
   ${className}TimeoutError,
   ${className}InternalError,
-} from "./lib/errors";
-export type { ${className}ServiceError } from "./lib/errors";
+} from "./lib/errors"
+export type { ${className}ServiceError } from "./lib/errors"
 
 // NOTE: Layers are exported from client.ts and server.ts separately`)
   }

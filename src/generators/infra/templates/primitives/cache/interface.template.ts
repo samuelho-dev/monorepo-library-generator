@@ -40,7 +40,12 @@ Effect.Cache Features:
   builder.addImports([
     {
       from: "effect",
-      imports: ["Cache", "Context", "Duration", "Effect", "Layer", "Option"]
+      imports: ["Cache", "Context", "Duration", "Effect", "Layer"]
+    },
+    {
+      from: "effect",
+      imports: ["Option"],
+      isTypeOnly: true
     },
     { from: `${scope}/env`, imports: ["env"] }
   ])
@@ -211,8 +216,6 @@ export class ${className}Service extends Context.Tag(
           size: cache.size
         }
       }),
-
-  
 
     healthCheck: () => Effect.succeed(true)
   }))

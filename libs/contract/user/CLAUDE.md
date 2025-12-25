@@ -1,6 +1,6 @@
 # @samuelho-dev/contract-user
 
-User domain contract with auth integration
+user domain contracts
 
 ## AI Agent Reference
 

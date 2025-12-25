@@ -35,8 +35,6 @@ Repository implements contract from ${scope}/contract-${fileName}`,
 
   // Error Types section
   builder.addSectionComment("Error Types (from shared/)")
-  builder.addBlankLine()
-
   builder.addRaw(
     generateStandardErrorExports({
       className,
@@ -48,56 +46,56 @@ Repository implements contract from ${scope}/contract-${fileName}`,
 
   // Domain Types section
   builder.addSectionComment("Domain Types (from shared/)")
-  builder.addBlankLine()
-
   builder.addRaw(`export type {
   ${className},
   ${className}CreateInput,
-  ${className}UpdateInput,
   ${className}Filter,
-  SortDirection,
   ${className}Sort,
+  ${className}UpdateInput
+} from "./lib/shared/types"`)
+  builder.addBlankLine()
+
+  builder.addRaw(`export type {
+  PaginatedResponse,
   PaginationOptions,
   QueryOptions,
-  PaginatedResponse,
-} from "./lib/shared/types";`)
+  SortDirection
+} from "./lib/shared/types"`)
   builder.addBlankLine()
 
   // Validation Functions section
   builder.addSectionComment("Validation Functions (from shared/)")
-  builder.addBlankLine()
-
   builder.addRaw(`export {
-  validate${className}CreateInput,
-  validate${className}UpdateInput,
-  validate${className}Filter,
-  validate${className}Id,
-  validatePagination,
   is${className},
   isValid${className}CreateInput,
   isValid${className}UpdateInput,
-} from "./lib/shared/validation";`)
+  validate${className}CreateInput,
+  validate${className}Filter,
+  validate${className}Id,
+  validate${className}UpdateInput,
+  validatePagination
+} from "./lib/shared/validation"`)
   builder.addBlankLine()
 
   // Query Builders section
   builder.addSectionComment("Query Builders (from queries.ts)")
+  builder.addRaw(`export {
+  buildCountQuery,
+  buildFindAllQuery,
+  buildFindByIdQuery
+} from "./lib/queries"`)
   builder.addBlankLine()
 
-  builder.addRaw(`export {
-  buildFindAllQuery,
-  buildFindByIdQuery,
-  buildCountQuery,
-} from "./lib/queries";`)
+  builder.addRaw(`export type { ${className}QueryFilters } from "./lib/queries"`)
   builder.addBlankLine()
 
   builder.addRaw(
-    `export type { ${className}QueryFilters, PaginationOptions as QueryPaginationOptions } from "./lib/queries";`
+    `export type { PaginationOptions as QueryPaginationOptions } from "./lib/queries"`
   )
   builder.addBlankLine()
 
   // Repository section with Effect 3.0+ pattern documentation
   builder.addComment(`Repository (Effect 3.0+ Pattern: Static Members)`)
-  builder.addBlankLine()
   builder.addComment(`Export the ${className}Repository Context.Tag class.`)
   builder.addComment(`Layers are accessed via static members:`)
   builder.addComment(`  - ${className}Repository.Live  (production)`)
@@ -113,8 +111,7 @@ Repository implements contract from ${scope}/contract-${fileName}`,
   builder.addComment(`     const layer = ${className}Repository.Live;`)
   builder.addBlankLine()
 
-  builder.addRaw(`export { ${className}Repository } from "./lib/repository";
-`)
+  builder.addRaw(`export { ${className}Repository } from "./lib/repository"`)
 
   return builder.toString()
 }

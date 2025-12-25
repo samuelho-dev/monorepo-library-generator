@@ -1,5 +1,6 @@
-import { UserNotFoundRepositoryError, UserTimeoutError } from "../../shared/errors"
+import { DatabaseService } from "@samuelho-dev/infra-database"
 import { Duration, Effect } from "effect"
+import { UserNotFoundRepositoryError, UserTimeoutError } from "../../shared/errors"
 import type { UserUpdateInput } from "../../shared/types"
 
 /**
@@ -13,17 +14,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * @module @samuelho-dev/data-access-user/repository/operations
  */
 
-
-
-
-// Infrastructure services - Database for persistence
-
-import { DatabaseService } from "@samuelho-dev/infra-database";
-
 // ============================================================================
 // Update Operations
 // ============================================================================
-
 
 /**
  * Update operations for User repository
@@ -33,7 +26,7 @@ import { DatabaseService } from "@samuelho-dev/infra-database";
  *
  * @example
  * ```typescript
- * const updated = yield* updateOperations.update("id-123", { name: "new name" });
+ * const updated = yield* updateOperations.update("id-123", { name: "new name" })
  * ```
  */
 export const updateOperations = {
@@ -42,40 +35,40 @@ export const updateOperations = {
    */
   update: (id: string, input: UserUpdateInput) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(`Updating User with id: ${id}`);
+      yield* Effect.logDebug(`Updating User with id: ${id}`)
 
       const updated = yield* database.query((db) =>
         db
           .updateTable("user")
           .set({
             ...input,
-            updatedAt: new Date(),
+            updatedAt: new Date()
           })
           .where("id", "=", id)
           .returningAll()
           .executeTakeFirst()
-      );
+      )
 
       if (!updated) {
-        yield* Effect.logWarning(`User not found: ${id}`);
-        return yield* Effect.fail(UserNotFoundRepositoryError.create(id));
+        yield* Effect.logWarning(`User not found: ${id}`)
+        return yield* Effect.fail(UserNotFoundRepositoryError.create(id))
       }
 
-      yield* Effect.logDebug(`User updated successfully (id: ${id})`);
+      yield* Effect.logDebug(`User updated successfully (id: ${id})`)
 
-      return updated;
+      return updated
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => UserTimeoutError.create("update", 30000)
       }),
       Effect.withSpan("UserRepository.update")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the update operations object
  */
-export type UpdateUserOperations = typeof updateOperations;
+export type UpdateUserOperations = typeof updateOperations

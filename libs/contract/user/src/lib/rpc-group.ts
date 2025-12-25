@@ -1,4 +1,6 @@
 import { RpcGroup } from "@effect/rpc"
+import { BulkGetUsers, CreateUser, DeleteUser, GetUser, ListUsers, RouteTag, UpdateUser, ValidateUser } from "./rpc-definitions"
+import type { RouteType } from "./rpc-definitions"
 
 /**
  * User RPC Group
@@ -25,35 +27,17 @@ import { RpcGroup } from "@effect/rpc"
  * @module @samuelho-dev/contract-user/rpc-group
  */
 
-
 // ============================================================================
 // RPC Definition Imports
 // ============================================================================
-
-import {
-  GetUser,
-  ListUsers,
-  CreateUser,
-  UpdateUser,
-  DeleteUser,
-  ValidateUser,
-  BulkGetUsers,
-  RouteTag,
-  type RouteType,
-} from "./rpc-definitions";
-
 // ============================================================================
 // Re-export Route System
 // ============================================================================
-
-
-export { RouteTag, type RouteType } from "./rpc-definitions";
-
+// biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system
+export { RouteTag, type RouteType } from "./rpc-definitions"
 // ============================================================================
 // RPC Group Composition
 // ============================================================================
-
-
 /**
  * User RPC Group
  *
@@ -73,44 +57,30 @@ export { RouteTag, type RouteType } from "./rpc-definitions";
  * const app = RouterBuilder.make(UserRpcs).handle(handlers);
  * ```
  */
-export const UserRpcs = RpcGroup.make(
-  GetUser,
-  ListUsers,
-  CreateUser,
-  UpdateUser,
-  DeleteUser,
-  ValidateUser,
-  BulkGetUsers,
-);
-
+export const UserRpcs = RpcGroup.make(BulkGetUsers, CreateUser, DeleteUser, GetUser, ListUsers, UpdateUser, ValidateUser)
 // ============================================================================
 // Type Exports
 // ============================================================================
-
-
 /**
  * Type of the User RPC group
  */
-export type UserRpcs = typeof UserRpcs;
+export type UserRpcs = typeof UserRpcs
 
 /**
  * All User RPC definition types (for handler typing)
  */
 export type UserRpcDefinitions = {
-  GetUser: typeof GetUser;
-  ListUsers: typeof ListUsers;
-  CreateUser: typeof CreateUser;
-  UpdateUser: typeof UpdateUser;
-  DeleteUser: typeof DeleteUser;
-  ValidateUser: typeof ValidateUser;
-  BulkGetUsers: typeof BulkGetUsers;
-};
-
+  GetUser: typeof GetUser
+  ListUsers: typeof ListUsers
+  CreateUser: typeof CreateUser
+  UpdateUser: typeof UpdateUser
+  DeleteUser: typeof DeleteUser
+  ValidateUser: typeof ValidateUser
+  BulkGetUsers: typeof BulkGetUsers
+}
 // ============================================================================
 // Re-export Individual RPCs
 // ============================================================================
-
-
 export {
   GetUser,
   ListUsers,
@@ -118,45 +88,42 @@ export {
   UpdateUser,
   DeleteUser,
   ValidateUser,
-  BulkGetUsers,
-} from "./rpc-definitions";
-
+  BulkGetUsers
+} from "./rpc-definitions"
 // ============================================================================
 // Route Helpers
 // ============================================================================
-
-
 /**
  * Get route type for an RPC definition
  *
  * @example
  * ```typescript
- * const routeType = getRouteType(GetUser); // "public"
+ * const routeType = getRouteType(GetUser) // "public"
  * ```
  */
-export function getRouteType<T extends { [RouteTag]: RouteType }>(rpc: T){
-  return rpc[RouteTag];
+export function getRouteType<T extends { [RouteTag]: RouteType }>(rpc: T) {
+  return rpc[RouteTag]
 }
 
 /**
  * Check if an RPC requires user authentication
  */
-export function isProtectedRoute<T extends { [RouteTag]: RouteType }>(rpc: T): boolean {
-  return rpc[RouteTag] === "protected";
+export function isProtectedRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
+  return rpc[RouteTag] === "protected"
 }
 
 /**
  * Check if an RPC is for service-to-service communication
  */
-export function isServiceRoute<T extends { [RouteTag]: RouteType }>(rpc: T): boolean {
-  return rpc[RouteTag] === "service";
+export function isServiceRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
+  return rpc[RouteTag] === "service"
 }
 
 /**
  * Check if an RPC is public (no auth required)
  */
-export function isPublicRoute<T extends { [RouteTag]: RouteType }>(rpc: T): boolean {
-  return rpc[RouteTag] === "public";
+export function isPublicRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
+  return rpc[RouteTag] === "public"
 }
 
 /**
@@ -167,5 +134,5 @@ export function isPublicRoute<T extends { [RouteTag]: RouteType }>(rpc: T): bool
 export const UserRpcsByRoute = {
   public: [GetUser, ListUsers] as const,
   protected: [CreateUser, UpdateUser, DeleteUser] as const,
-  service: [ValidateUser, BulkGetUsers] as const,
-} as const;
+  service: [ValidateUser, BulkGetUsers] as const
+} as const

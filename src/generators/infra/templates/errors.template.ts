@@ -69,14 +69,14 @@ TODO: Customize this file for your service:
 // export class ${className}BusinessRuleError extends Data.TaggedError(
 //   "${className}BusinessRuleError"
 // )<{
-//   readonly message: string;
-//   readonly rule: string;
+//   readonly message: string
+//   readonly rule: string
 // }> {
 //   static create(rule: string): ${className}BusinessRuleError {
 //     return new ${className}BusinessRuleError({
 //       message: \`Business rule violated: \${rule}\`,
-//       rule,
-//     });
+//       rule
+//     })
 //   }
 // }`)
 

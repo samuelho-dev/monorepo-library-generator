@@ -11,42 +11,106 @@ This library defines the contract between layers:
 - RPC: Request/Response schemas for network boundaries
  *
  */
-
 // ============================================================================
 // Core Exports
 // ============================================================================
 
-
 // Errors
-
-export * from "./lib/errors";
+export {
+  UserNotFoundError,
+  UserValidationError,
+  UserAlreadyExistsError,
+  UserPermissionError,
+  UserNotFoundRepositoryError,
+  UserValidationRepositoryError,
+  UserConflictRepositoryError,
+  UserDatabaseRepositoryError,
+  type UserDomainError,
+  type UserRepositoryError,
+  type UserError
+} from "./lib/errors"
 
 // Entity types re-exported from @samuelho-dev/types-database
-
-export * from "@samuelho-dev/types-database";
+export type {
+  UserTable,
+  User,
+  UserSelect,
+  UserInsert,
+  UserUpdate,
+  DB,
+  Json
+} from "@samuelho-dev/types-database"
 
 // Ports (Repository and Service interfaces)
-
-export * from "./lib/ports";
+export {
+  UserRepository,
+  UserService,
+  type UserFilters,
+  type OffsetPaginationParams,
+  type SortOptions,
+  type PaginatedResult
+} from "./lib/ports"
 
 // Events
-
-export * from "./lib/events";
-
+export {
+  EventMetadata,
+  AggregateMetadata,
+  UserCreatedEvent,
+  UserUpdatedEvent,
+  UserDeletedEvent,
+  type UserDomainEvent
+} from "./lib/events"
 
 // ============================================================================
 // RPC Exports (Contract-First - Always Prewired)
 // ============================================================================
 
+// RPC Errors (Schema.TaggedError for network serialization)
+export {
+  UserNotFoundRpcError,
+  UserValidationRpcError,
+  UserPermissionRpcError,
+  UserRpcError
+} from "./lib/rpc-errors"
 
-// RPC definitions, errors, and group (single source of truth)
+// RPC Definitions (Rpc.make with RouteTag)
+export {
+  UserId,
+  RouteTag,
+  type RouteType,
+  UserSchema,
+  type UserEntity,
+  PaginationParams,
+  PaginatedResponse,
+  CreateUserInput,
+  UpdateUserInput,
+  ValidateUserInput,
+  ValidationResponse,
+  BulkGetUserInput,
+  GetUser,
+  ListUsers,
+  CreateUser,
+  UpdateUser,
+  DeleteUser,
+  ValidateUser,
+  BulkGetUsers
+} from "./lib/rpc-definitions"
 
-export * from "./lib/rpc";
-
+// RPC Group (RpcGroup.make composition)
+export {
+  UserRpcs,
+  type UserRpcDefinitions,
+  getRouteType,
+  isProtectedRoute,
+  isServiceRoute,
+  isPublicRoute,
+  UserRpcsByRoute
+} from "./lib/rpc-group"
 
 // ============================================================================
 // Sub-Module Namespace Exports (Hybrid DDD Pattern)
 // ============================================================================
 
-export * as Authentication from "./authentication";
-export * as Profile from "./profile";
+// Sub-modules are imported as namespaces to preserve module boundaries
+// Import specific items: import { Authentication } from "@scope/contract-name"
+// Then use: Authentication.AuthenticationNotFoundError

@@ -28,22 +28,11 @@ Bundle optimization: Import this file directly for smallest bundle size:
   })
   builder.addBlankLine()
 
-  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
-  builder.addBlankLine()
-
   builder.addImports([
-    {
-      from: "../../shared/errors",
-      imports: [`${className}TimeoutError`, `${className}NotFoundRepositoryError`],
-      isTypeOnly: false
-    }
+    { from: "effect", imports: ["Duration", "Effect"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
+    { from: "../../shared/errors", imports: [`${className}NotFoundRepositoryError`, `${className}TimeoutError`] }
   ])
-  builder.addBlankLine()
-
-  // Import infrastructure services
-  builder.addComment("Infrastructure services - Database for persistence")
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
-  builder.addBlankLine()
 
   builder.addSectionComment("Delete Operations")
   builder.addBlankLine()
@@ -56,7 +45,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
  *
  * @example
  * \`\`\`typescript
- * yield* deleteOperations.delete("id-123");
+ * yield* deleteOperations.delete("id-123")
  * \`\`\`
  */
 export const deleteOperations = {
@@ -65,25 +54,25 @@ export const deleteOperations = {
    */
   delete: (id: string) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Deleting ${className} with id: \${id}\`);
+      yield* Effect.logDebug(\`Deleting ${className} with id: \${id}\`)
 
       const result = yield* database.query((db) =>
         db
           .deleteFrom("${fileName}")
           .where("id", "=", id)
           .executeTakeFirst()
-      );
+      )
 
-      const deletedCount = Number(result.numDeletedRows);
+      const deletedCount = Number(result.numDeletedRows)
       if (deletedCount === 0) {
         // Throw NotFoundRepositoryError when record doesn't exist
         // This ensures callers can distinguish "deleted" from "nothing to delete"
-        return yield* Effect.fail(${className}NotFoundRepositoryError.create(id));
+        return yield* Effect.fail(${className}NotFoundRepositoryError.create(id))
       }
 
-      yield* Effect.logDebug(\`${className} deleted successfully (id: \${id})\`);
+      yield* Effect.logDebug(\`${className} deleted successfully (id: \${id})\`)
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -103,38 +92,39 @@ export const deleteOperations = {
    */
   deleteMany: (ids: ReadonlyArray<string>) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
       if (ids.length === 0) {
-        return 0;
+        return 0
       }
 
-      yield* Effect.logDebug(\`Deleting \${ids.length} ${className} entities\`);
+      yield* Effect.logDebug(\`Deleting \${ids.length} ${className} entities\`)
 
       const result = yield* database.query((db) =>
         db
           .deleteFrom("${fileName}")
           .where("id", "in", ids)
           .executeTakeFirst()
-      );
+      )
 
-      const deletedCount = Number(result.numDeletedRows);
-      yield* Effect.logDebug(\`Deleted \${deletedCount}/\${ids.length} ${className} entities\`);
+      const deletedCount = Number(result.numDeletedRows)
+      yield* Effect.logDebug(\`Deleted \${deletedCount}/\${ids.length} ${className} entities\`)
 
-      return deletedCount;
+      return deletedCount
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => ${className}TimeoutError.create("deleteMany", 30000)
       }),
       Effect.withSpan("${className}Repository.deleteMany")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the delete operations object
  */
-export type Delete${className}Operations = typeof deleteOperations;`)
+export type Delete${className}Operations = typeof deleteOperations
+`)
 
   return builder.toString()
 }

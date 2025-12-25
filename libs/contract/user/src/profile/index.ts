@@ -25,30 +25,62 @@ import {
  * @module @samuelho-dev/contract-user/profile
  */
 
-
 // ============================================================================
 // Error Exports (Contract-First)
 // ============================================================================
-
 // Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these
-
-export * from "./errors";
+export {
+  ProfileNotFoundError,
+  ProfileValidationError,
+  ProfileOperationError,
+  type ProfileDomainError,
+  type ProfileRepositoryError,
+  type ProfileError
+} from "./errors"
 
 // ============================================================================
 // Entity Exports
 // ============================================================================
-
-export * from "./entities";
+export {
+  ProfileId,
+  Profile,
+  ProfileItem,
+  parseProfile,
+  encodeProfile,
+  parseProfileItem
+} from "./entities"
 
 // ============================================================================
 // Event Exports
 // ============================================================================
-
-export * from "./events";
+export {
+  ProfileCreated,
+  ProfileUpdated,
+  ProfileDeleted,
+  ProfileEvents,
+  type ProfileEvent
+} from "./events"
 
 // ============================================================================
 // RPC Exports
 // ============================================================================
+export {
+  RouteTag,
+  type RouteType,
+  CreateProfileInput,
+  UpdateProfileInput,
+  ProfileGet,
+  ProfileList,
+  ProfileCreate,
+  ProfileUpdate,
+  ProfileDelete,
+  ProfileRpcs,
+  ProfileRpcsByRoute
+} from "./rpc-definitions"
 
-export * from "./rpc-definitions";
-export * from "./rpc-errors";
+export {
+  ProfileNotFoundRpcError,
+  ProfileValidationRpcError,
+  ProfilePermissionRpcError,
+  ProfileRpcError
+} from "./rpc-errors"

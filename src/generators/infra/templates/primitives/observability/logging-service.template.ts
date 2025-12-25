@@ -153,7 +153,7 @@ export class LoggingService extends Context.Tag(
   /**
    * Create logger instance with optional base context
    */
-  static makeLogger(baseContext: LogContext): LoggingOperations {
+  static makeLogger(baseContext: LogContext) {
     const log = (level: "trace" | "debug" | "info" | "warn" | "error" | "fatal") =>
       (message: string, context?: LogContext) => {
         const mergedContext = { ...baseContext, ...context }
@@ -262,12 +262,12 @@ export class LoggingService extends Context.Tag(
    * logs cluttering test output.
    */
   static readonly Test = Layer.succeed(LoggingService, {
-    trace: (_message: string, _context?: LogContext) => Effect.void,
-    debug: (_message: string, _context?: LogContext) => Effect.void,
-    info: (_message: string, _context?: LogContext) => Effect.void,
-    warn: (_message: string, _context?: LogContext) => Effect.void,
-    error: (_message: string, _context?: LogContext) => Effect.void,
-    fatal: (_message: string, _context?: LogContext) => Effect.void,
+    trace: () => Effect.void,
+    debug: () => Effect.void,
+    info: () => Effect.void,
+    warn: () => Effect.void,
+    error: () => Effect.void,
+    fatal: () => Effect.void,
     child: (context: LogContext) =>
       Effect.succeed(LoggingService.makeLogger(context)),
     withSpan: <A, E, R>(

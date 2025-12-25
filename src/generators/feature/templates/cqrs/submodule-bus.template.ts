@@ -68,7 +68,7 @@ This bus provides a single entry point while maintaining separation of concerns.
   // Generate imports for each sub-module's service
   for (const subModule of subModules) {
     builder.addRaw(
-      `import { ${subModule.className}Service } from "../services/${subModule.name}";`
+      `import { ${subModule.className}Service } from "../services/${subModule.name}"`
     )
   }
   builder.addBlankLine()
@@ -80,16 +80,16 @@ This bus provides a single entry point while maintaining separation of concerns.
  * Base command interface
  */
 export interface Command<TPayload, TResult> {
-  readonly _tag: string;
-  readonly payload: TPayload;
+  readonly _tag: string
+  readonly payload: TPayload
 }
 
 /**
  * Base query interface
  */
 export interface Query<TPayload, TResult> {
-  readonly _tag: string;
-  readonly payload: TPayload;
+  readonly _tag: string
+  readonly payload: TPayload
 }
 
 /**
@@ -97,14 +97,14 @@ export interface Query<TPayload, TResult> {
  */
 export type CommandHandler<TPayload, TResult, E, R> = (
   payload: TPayload
-) => Effect.Effect<TResult, E, R>;
+) => Effect.Effect<TResult, E, R>
 
 /**
  * Query handler type
  */
 export type QueryHandler<TPayload, TResult, E, R> = (
   payload: TPayload
-) => Effect.Effect<TResult, E, R>;`)
+) => Effect.Effect<TResult, E, R>`)
   builder.addBlankLine()
 
   builder.addSectionComment("Unified Command Bus")
@@ -125,7 +125,7 @@ export interface ${className}CommandBusInterface {
   readonly dispatch: <TPayload, TResult>(
     tag: string,
     payload: TPayload
-  ) => Effect.Effect<TResult, Error, never>;
+  ) => Effect.Effect<TResult, Error, never>
 }
 
 /**
@@ -141,32 +141,32 @@ export class ${className}CommandBus extends Context.Tag("${className}CommandBus"
     this,
     Effect.gen(function*() {
       const logger = yield* LoggingService;
-${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield* ${s.className}Service;`).join("\n")}
+${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield* ${s.className}Service`).join("\n")}
 
       yield* logger.debug("${className}CommandBus initialized", {
-        subModules: [${subModules.map((s) => `"${s.name}"`).join(", ")}],
-      });
+        subModules: [${subModules.map((s) => `"${s.name}"`).join(", ")}]
+      })
 
       return {
         dispatch: (tag, payload) =>
           Effect.gen(function*() {
-            yield* logger.debug("${className}CommandBus.dispatch", { tag });
+            yield* logger.debug("${className}CommandBus.dispatch", { tag })
 
             // Extract sub-module prefix
-            const prefix = tag.split(".")[0];
+            const prefix = tag.split(".")[0]
 
             // Route to appropriate sub-module
             // TODO: Implement actual routing based on prefix
             // This is a placeholder that should be customized per domain
-            yield* logger.info(\`Routing command to \${prefix} sub-module\`, { tag, payload });
+            yield* logger.info(\`Routing command to \${prefix} sub-module\`, { tag, payload })
 
-            return {} as never;
-          }).pipe(Effect.withSpan("${className}CommandBus.dispatch", { attributes: { tag } })),
-      };
+            return {} as never
+          }).pipe(Effect.withSpan("${className}CommandBus.dispatch", { attributes: { tag } }))
+      }
     })
-  );
+  )
 
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 }`)
   builder.addBlankLine()
 
@@ -188,7 +188,7 @@ export interface ${className}QueryBusInterface {
   readonly execute: <TPayload, TResult>(
     tag: string,
     payload: TPayload
-  ) => Effect.Effect<TResult, Error, never>;
+  ) => Effect.Effect<TResult, Error, never>
 }
 
 /**
@@ -204,32 +204,32 @@ export class ${className}QueryBus extends Context.Tag("${className}QueryBus")<
     this,
     Effect.gen(function*() {
       const logger = yield* LoggingService;
-${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield* ${s.className}Service;`).join("\n")}
+${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield* ${s.className}Service`).join("\n")}
 
       yield* logger.debug("${className}QueryBus initialized", {
-        subModules: [${subModules.map((s) => `"${s.name}"`).join(", ")}],
-      });
+        subModules: [${subModules.map((s) => `"${s.name}"`).join(", ")}]
+      })
 
       return {
         execute: (tag, payload) =>
           Effect.gen(function*() {
-            yield* logger.debug("${className}QueryBus.execute", { tag });
+            yield* logger.debug("${className}QueryBus.execute", { tag })
 
             // Extract sub-module prefix
-            const prefix = tag.split(".")[0];
+            const prefix = tag.split(".")[0]
 
             // Route to appropriate sub-module
             // TODO: Implement actual routing based on prefix
             // This is a placeholder that should be customized per domain
-            yield* logger.info(\`Routing query to \${prefix} sub-module\`, { tag, payload });
+            yield* logger.info(\`Routing query to \${prefix} sub-module\`, { tag, payload })
 
-            return {} as never;
-          }).pipe(Effect.withSpan("${className}QueryBus.execute", { attributes: { tag } })),
-      };
+            return {} as never
+          }).pipe(Effect.withSpan("${className}QueryBus.execute", { attributes: { tag } }))
+      }
     })
-  );
+  )
 
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 }`)
   builder.addBlankLine()
 
@@ -254,7 +254,7 @@ ${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield*
 export const ${className}UnifiedBusLayer = Layer.mergeAll(
   ${className}CommandBus.Live,
   ${className}QueryBus.Live
-);`)
+)`)
   builder.addBlankLine()
 
   return builder.toString()

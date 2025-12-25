@@ -1,4 +1,7 @@
+import { Authentication } from "@samuelho-dev/contract-user"
+import { RequestMeta, getHandlerContext } from "@samuelho-dev/infra-rpc"
 import { Effect } from "effect"
+import { AuthenticationService } from "./service"
 
 /**
  * Authentication RPC Handlers
@@ -12,33 +15,18 @@ Contract-First Architecture:
   based on RouteTag defined in the contract
  *
  */
-
-
 // ============================================================================
 // Contract Imports
 // ============================================================================
-
-import { Authentication } from "@samuelho-dev/contract-user";
-
 // ============================================================================
 // Infrastructure Imports
 // ============================================================================
-
-import {
-  RequestMeta,
-  getHandlerContext,
-} from "@samuelho-dev/infra-rpc";
-
 // ============================================================================
 // Service Import
 // ============================================================================
-
-import { AuthenticationService } from "./service";
-
 // ============================================================================
 // Handler Implementations
 // ============================================================================
-
 /**
  * Authentication RPC Handler Implementations
  *
@@ -52,15 +40,15 @@ export const AuthenticationHandlers = Authentication.AuthenticationRpcs.toLayer(
    */
   "Authentication.Get": ({ id }) =>
     Effect.gen(function*() {
-      const meta = yield* RequestMeta;
-      const service = yield* AuthenticationService;
+      const meta = yield* RequestMeta
+      const service = yield* AuthenticationService
 
       yield* Effect.logDebug("Getting authentication", {
         id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.findById(id);
+      return yield* service.findById(id)
     }),
 
   /**
@@ -69,12 +57,12 @@ export const AuthenticationHandlers = Authentication.AuthenticationRpcs.toLayer(
    */
   "Authentication.List": ({ page, pageSize }) =>
     Effect.gen(function*() {
-      const service = yield* AuthenticationService;
+      const service = yield* AuthenticationService
 
       return yield* service.findMany({
         page: page ?? 1,
-        pageSize: pageSize ?? 20,
-      });
+        pageSize: pageSize ?? 20
+      })
     }),
 
   /**
@@ -83,18 +71,18 @@ export const AuthenticationHandlers = Authentication.AuthenticationRpcs.toLayer(
    */
   "Authentication.Create": (input) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* AuthenticationService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* AuthenticationService
 
       yield* Effect.logInfo("Creating authentication", {
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       return yield* service.create({
         ...input,
-        createdBy: user.id,
-      });
+        createdBy: user.id
+      })
     }),
 
   /**
@@ -103,19 +91,19 @@ export const AuthenticationHandlers = Authentication.AuthenticationRpcs.toLayer(
    */
   "Authentication.Update": ({ id, data }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* AuthenticationService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* AuthenticationService
 
       yield* Effect.logInfo("Updating authentication", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       return yield* service.update(id, {
         ...data,
-        updatedBy: user.id,
-      });
+        updatedBy: user.id
+      })
     }),
 
   /**
@@ -124,15 +112,15 @@ export const AuthenticationHandlers = Authentication.AuthenticationRpcs.toLayer(
    */
   "Authentication.Delete": ({ id }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* AuthenticationService;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* AuthenticationService
 
       yield* Effect.logInfo("Deleting authentication", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
-      return yield* service.delete(id);
-    }),
-});
+      return yield* service.delete(id)
+    })
+})

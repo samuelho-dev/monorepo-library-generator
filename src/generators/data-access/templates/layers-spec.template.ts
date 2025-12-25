@@ -37,9 +37,12 @@ Testing Guidelines:
     module: `${scope}/data-access-${fileName}`
   })
 
-  builder.addRaw(`import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer } from "effect"
+  builder.addImports([
+    { from: "@effect/vitest", imports: ["describe", "expect", "it"] },
+    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+  ])
 
+  builder.addRaw(`
 /**
  * Test service tag for layer composition tests
  */

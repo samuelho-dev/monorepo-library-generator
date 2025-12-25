@@ -67,7 +67,7 @@ function formatFilesList(files: ReadonlyArray<string>) {
  *
  * Generates actionable next steps based on what was generated
  */
-function createNextSteps(result: GeneratorResult): Array<string> {
+function createNextSteps(result: GeneratorResult) {
   const steps: Array<string> = []
 
   // Determine library type from project name
@@ -134,7 +134,7 @@ function formatNextSteps(steps: ReadonlyArray<string>) {
  *
  * Creates structured response for MCP clients
  */
-function formatMcpResponse(result: GeneratorResult): McpResponse {
+function formatMcpResponse(result: GeneratorResult) {
   const summary = createSummary(result)
   const nextSteps = createNextSteps(result)
 
@@ -170,7 +170,7 @@ ${nextSteps}
  *
  * Creates callback function that Nx executes after generation
  */
-function formatNxCallback(): NxGeneratorCallback {
+function formatNxCallback() {
   return () => {
     // Callback for Nx post-generation
   }
@@ -210,7 +210,7 @@ function formatNxCallback(): NxGeneratorCallback {
 export function formatOutput(
   result: GeneratorResult,
   interfaceType: InterfaceType
-): McpResponse | string | NxGeneratorCallback {
+) {
   switch (interfaceType) {
     case "mcp":
       return formatMcpResponse(result)
@@ -234,7 +234,7 @@ export function formatOutput(
  *
  * Creates MCP error response from Error object
  */
-export function formatErrorResponse(error: Error): McpResponse {
+export function formatErrorResponse(error: Error) {
   return {
     success: false,
     message: `❌ Generation failed: ${error.message}`,

@@ -13,11 +13,11 @@ import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 /**
  * Generate client/atoms/index.ts file for feature library
  *
- * Creates barrel export for client atoms.
+ * Creates named exports for client atoms to comply with biome rules.
  */
 export function generateAtomsIndexFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { fileName } = options
+  const { className, fileName } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header
@@ -27,8 +27,30 @@ export function generateAtomsIndexFile(options: FeatureTemplateOptions) {
     module: `${scope}/feature-${fileName}/client/atoms`
   })
 
-  // Add export
-  builder.addRaw(`export * from "./${fileName}-atoms";`)
+  // Add named exports
+  builder.addRaw(`export {
+  // State Types
+  type LoadingState,
+  type PaginationState,
+  type ${className}EntityState,
+  type ${className}ListState,
+  type ${className}OperationState,
+  type ${className}State,
+  // Atoms
+  ${fileName}Atom,
+  ${fileName}EntityFamily,
+  get${className}Atom,
+  // Derived Atoms
+  ${fileName}IsLoadingAtom,
+  ${fileName}ErrorAtom,
+  ${fileName}DataAtom,
+  ${fileName}ListAtom,
+  // State Updaters
+  update${className}Entity,
+  update${className}List,
+  update${className}Operation,
+  reset${className}State
+} from "./${fileName}-atoms"`)
   builder.addBlankLine()
 
   return builder.toString()

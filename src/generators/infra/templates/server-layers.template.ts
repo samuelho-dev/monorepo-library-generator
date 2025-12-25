@@ -76,28 +76,28 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
  * \`\`\`typescript
  * // Usage in development:
  * const program = Effect.gen(function*() {
- *   const service = yield* ${className}Service;
- *   return yield* service.get("id");
+ *   const service = yield* ${className}Service
+ *   return yield* service.get("id")
  * }).pipe(
  *   Effect.provide(${className}ServiceDev)
- * );
+ * )
  * \`\`\`
  */
 export const ${className}ServiceDev = Layer.effect(
   ${className}Service,
   Effect.gen(function*() {
     // TODO: Inject dependencies
-    // const config = yield* ${className}Config;
-    // const logger = yield* LoggingService;
+    // const config = yield* ${className}Config
+    // const logger = yield* LoggingService
 
     // TODO: Add development-specific setup (verbose logging, etc.)
-    yield* Effect.logInfo("[${className}] Development layer initialized");
+    yield* Effect.logInfo("[${className}] Development layer initialized")
 
     return {
       get: (id: string) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] DEV GET id=\${id}\`);
-          return Option.none();
+          yield* Effect.logDebug(\`[${className}] DEV GET id=\${id}\`)
+          return Option.none()
         }),
       findByCriteria: (
         criteria: Record<string, unknown>,
@@ -108,31 +108,31 @@ export const ${className}ServiceDev = Layer.effect(
           yield* Effect.logDebug(
             "[${className}] DEV findByCriteria",
             { criteria, skip, limit }
-          );
-          return [];
+          )
+          return []
         }),
       create: (input: Record<string, unknown>) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug("[${className}] DEV create", input);
-          return { id: "dev-id", ...input };
+          yield* Effect.logDebug("[${className}] DEV create", input)
+          return { id: "dev-id", ...input }
         }),
       update: (id: string, input: Record<string, unknown>) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] DEV update id=\${id}\`, input);
-          return { id, ...input };
+          yield* Effect.logDebug(\`[${className}] DEV update id=\${id}\`, input)
+          return { id, ...input }
         }),
       delete: (id: string) =>
         Effect.gen(function*() {
-          yield* Effect.logDebug(\`[${className}] DEV delete id=\${id}\`);
+          yield* Effect.logDebug(\`[${className}] DEV delete id=\${id}\`)
         }),
       healthCheck: () =>
         Effect.gen(function*() {
-          yield* Effect.logDebug("[${className}] DEV healthCheck");
-          return true;
-        }),
-    };
-  }),
-);`)
+          yield* Effect.logDebug("[${className}] DEV healthCheck")
+          return true
+        })
+    }
+  })
+)`)
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -195,23 +195,23 @@ export const ${className}ServiceDev = Layer.effect(
  * \`\`\`typescript
  * // Usage in application:
  * const program = Effect.gen(function*() {
- *   const service = yield* ${className}Service;
- *   return yield* service.get("id");
+ *   const service = yield* ${className}Service
+ *   return yield* service.get("id")
  * }).pipe(
  *   Effect.provide(${className}ServiceAuto)  // Automatically selects based on NODE_ENV
- * );
+ * )
  * \`\`\`
  */
 export const ${className}ServiceAuto = Layer.suspend(() => {
   switch (env.NODE_ENV) {
     case "production":
-      return ${className}Service.Live;
+      return ${className}Service.Live
     case "test":
-      return ${className}Service.Test;
+      return ${className}Service.Test
     default:
-      return ${className}ServiceDev;
+      return ${className}ServiceDev
   }
-});`)
+})`)
   builder.addBlankLine()
 
   // Section: Advanced Pattern Examples
@@ -226,8 +226,8 @@ export const ${className}ServiceAuto = Layer.suspend(() => {
  * DELETE THIS if you don't need configuration variants.
  */
 export const ${className}ServiceCustom = (customConfig: {
-  timeout?: number;
-  retries?: number;
+  timeout?: number
+  retries?: number
 }) =>
   Layer.scoped(
     ${className}Service,
@@ -236,17 +236,17 @@ export const ${className}ServiceCustom = (customConfig: {
       const defaults = {
         timeout: 5000,
         retries: 3,
-        ...customConfig,
-      };
+        ...customConfig
+      }
 
-      yield* Effect.logInfo("[${className}] Custom layer initialized with", defaults);
+      yield* Effect.logInfo("[${className}] Custom layer initialized with", defaults)
 
       return {
         get: (id: string) =>
           Effect.gen(function*() {
             // Use custom config in implementation
-            yield* Effect.logDebug(\`[${className}] GET id=\${id} with \${defaults.timeout}ms timeout\`);
-            return Option.none();
+            yield* Effect.logDebug(\`[${className}] GET id=\${id} with \${defaults.timeout}ms timeout\`)
+            return Option.none()
           }),
         findByCriteria: (
           criteria: Record<string, unknown>,
@@ -254,27 +254,27 @@ export const ${className}ServiceCustom = (customConfig: {
           limit?: number
         ) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug("[${className}] findByCriteria", { criteria, skip, limit });
-            return [];
+            yield* Effect.logDebug("[${className}] findByCriteria", { criteria, skip, limit })
+            return []
           }),
         create: (input: Record<string, unknown>) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug("[${className}] create", input);
-            return { id: "custom-id", ...input };
+            yield* Effect.logDebug("[${className}] create", input)
+            return { id: "custom-id", ...input }
           }),
         update: (id: string, input: Record<string, unknown>) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug(\`[${className}] update id=\${id}\`, input);
-            return { id, ...input };
+            yield* Effect.logDebug(\`[${className}] update id=\${id}\`, input)
+            return { id, ...input }
           }),
         delete: (id: string) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug(\`[${className}] delete id=\${id}\`);
+            yield* Effect.logDebug(\`[${className}] delete id=\${id}\`)
           }),
-        healthCheck: () => Effect.succeed(true),
-      };
-    }),
-  );`)
+        healthCheck: () => Effect.succeed(true)
+      }
+    })
+  )`)
   builder.addBlankLine()
 
   builder.addRaw(`/**

@@ -51,10 +51,8 @@ Validates data before repository operations to ensure domain constraints.
  * @returns Validated input data
  * @throws ValidationError if input doesn't meet schema requirements
  */
-export function validate${className}CreateInput(
-  input: unknown,
-) {
-  if (typeof input !== 'object' || input === null) {
+export function validate${className}CreateInput(input: unknown) {
+  if (typeof input !== "object" || input === null) {
     throw new Error("Invalid ${className} create input: must be an object")
   }
   // TODO: Implement full schema validation (e.g., with Zod or Effect Schema)
@@ -70,10 +68,8 @@ export function validate${className}CreateInput(
  * @returns Validated update data
  * @throws ValidationError if input doesn't meet schema requirements
  */
-export function validate${className}UpdateInput(
-  input: unknown,
-) {
-  if (typeof input !== 'object' || input === null) {
+export function validate${className}UpdateInput(input: unknown) {
+  if (typeof input !== "object" || input === null) {
     throw new Error("Invalid ${className} update input: must be an object")
   }
   // TODO: Implement full schema validation (e.g., with Zod or Effect Schema)
@@ -89,10 +85,8 @@ export function validate${className}UpdateInput(
  * @returns Validated filter data
  * @throws ValidationError if filters don't meet requirements
  */
-export function validate${className}Filter(
-  input: unknown,
-) {
-  if (typeof input !== 'object' || input === null) {
+export function validate${className}Filter(input: unknown) {
+  if (typeof input !== "object" || input === null) {
     throw new Error("Invalid ${className} filter: must be an object")
   }
   // TODO: Implement full schema validation (e.g., with Zod or Effect Schema)
@@ -109,10 +103,10 @@ export function validate${className}Filter(
  * @throws ValidationError if ID format is invalid
  */
 export function validate${className}Id(id: unknown) {
-  if (typeof id !== 'string' || id.length === 0) {
-    throw new Error('Invalid ${className} ID: must be non-empty string');
+  if (typeof id !== "string" || id.length === 0) {
+    throw new Error("Invalid ${className} ID: must be non-empty string")
   }
-  return id;
+  return id
 }`)
   builder.addBlankLine()
 
@@ -127,18 +121,15 @@ export function validate${className}Id(id: unknown) {
  * @returns Validated skip/limit values
  * @throws ValidationError if parameters are invalid
  */
-export function validatePagination(
-  skip: unknown,
-  limit: unknown,
-) {
-  const skipNum = typeof skip === 'number' ? skip : 0;
-  const limitNum = typeof limit === 'number' ? limit : 20;
+export function validatePagination(skip: unknown, limit: unknown) {
+  const skipNum = typeof skip === "number" ? skip : 0
+  const limitNum = typeof limit === "number" ? limit : 20
 
-  if (skipNum < 0) throw new Error('skip must be >= 0');
-  if (limitNum < 1) throw new Error('limit must be >= 1');
-  if (limitNum > 1000) throw new Error('limit must be <= 1000');
+  if (skipNum < 0) throw new Error("skip must be >= 0")
+  if (limitNum < 1) throw new Error("limit must be >= 1")
+  if (limitNum > 1000) throw new Error("limit must be <= 1000")
 
-  return { skip: skipNum, limit: limitNum };
+  return { skip: skipNum, limit: limitNum }
 }`)
   builder.addBlankLine()
 
@@ -155,12 +146,12 @@ export function validatePagination(
  */
 export function is${className}(obj: unknown) {
   return (
-    typeof obj === 'object' &&
+    typeof obj === "object" &&
     obj !== null &&
-    'id' in obj &&
-    'createdAt' in obj &&
-    'updatedAt' in obj
-  );
+    "id" in obj &&
+    "createdAt" in obj &&
+    "updatedAt" in obj
+  )
 }`)
   builder.addBlankLine()
 
@@ -172,7 +163,7 @@ export function is${className}(obj: unknown) {
  * @returns true if object can be used for creation
  */
 export function isValid${className}CreateInput(obj: unknown) {
-  return typeof obj === 'object' && obj !== null;
+  return typeof obj === "object" && obj !== null
 }`)
   builder.addBlankLine()
 
@@ -184,7 +175,7 @@ export function isValid${className}CreateInput(obj: unknown) {
  * @returns true if object can be used for updates
  */
 export function isValid${className}UpdateInput(obj: unknown) {
-  return typeof obj === 'object' && (obj === null || Object.keys(obj).length > 0);
+  return typeof obj === "object" && (obj === null || Object.keys(obj).length > 0)
 }
 `)
 

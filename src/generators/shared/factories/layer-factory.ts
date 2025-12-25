@@ -131,8 +131,9 @@ export function createInfrastructureLayers(config: InfrastructureLayerConfig) {
     builder.addSectionComment("Infrastructure Layer Compositions")
     builder.addBlankLine()
 
-    // Generate Live layer
-    const liveServices = services.map((s) => `${s}.Live`).join(",\n  ")
+    // Generate Live layer (no trailing comma on last service)
+    const liveServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Live,` : `${s}.Live`)
+    const liveServices = liveServicesList.join("\n  ")
     builder.addRaw(`/**
  * Live Infrastructure Layer
  *
@@ -140,11 +141,12 @@ export function createInfrastructureLayers(config: InfrastructureLayerConfig) {
  */
 export const InfrastructureLive = Layer.mergeAll(
   ${liveServices}
-);`)
+)`)
     builder.addBlankLine()
 
-    // Generate Test layer
-    const testServices = services.map((s) => `${s}.Test`).join(",\n  ")
+    // Generate Test layer (no trailing comma on last service)
+    const testServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Test,` : `${s}.Test`)
+    const testServices = testServicesList.join("\n  ")
     builder.addRaw(`/**
  * Test Infrastructure Layer
  *
@@ -152,12 +154,13 @@ export const InfrastructureLive = Layer.mergeAll(
  */
 export const InfrastructureTest = Layer.mergeAll(
   ${testServices}
-);`)
+)`)
     builder.addBlankLine()
 
-    // Generate Dev layer if requested
+    // Generate Dev layer if requested (no trailing comma on last service)
     if (includeDev) {
-      const devServices = services.map((s) => `${s}.Dev`).join(",\n  ")
+      const devServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Dev,` : `${s}.Dev`)
+      const devServices = devServicesList.join("\n  ")
       builder.addRaw(`/**
  * Dev Infrastructure Layer
  *
@@ -165,7 +168,7 @@ export const InfrastructureTest = Layer.mergeAll(
  */
 export const InfrastructureDev = Layer.mergeAll(
   ${devServices}
-);`)
+)`)
       builder.addBlankLine()
     }
   }
@@ -221,23 +224,23 @@ export function createDomainLayers(config: DomainLayerConfig) {
     builder.addSectionComment(`${libraryType === "data-access" ? "Data Access" : "Full Feature"} Layer Compositions`)
     builder.addBlankLine()
 
-    // Build domain service list for Live
+    // Build domain service list for Live (no trailing comma on last service)
     const liveServices = domainServices.map((s) => `${s}.Live`)
     if (subModuleLayers?.live) {
       for (const layer of subModuleLayers.live) {
         liveServices.push(layer)
       }
     }
-    const liveServiceList = liveServices.join(",\n  ")
+    const liveServiceList = liveServices.map((s, i) => i < liveServices.length - 1 ? `${s},` : s).join("\n  ")
 
-    // Build domain service list for Test
+    // Build domain service list for Test (no trailing comma on last service)
     const testServices = domainServices.map((s) => `${s}.Live`) // Note: Usually use .Live for test too
     if (subModuleLayers?.test) {
       for (const layer of subModuleLayers.test) {
         testServices.push(layer)
       }
     }
-    const testServiceList = testServices.join(",\n  ")
+    const testServiceList = testServices.map((s, i) => i < testServices.length - 1 ? `${s},` : s).join("\n  ")
 
     // Generate Live layer
     builder.addRaw(`/**
@@ -249,16 +252,16 @@ export function createDomainLayers(config: DomainLayerConfig) {
  * @example
  * \`\`\`typescript
  * const program = Effect.gen(function* () {
- *   const repo = yield* ${domainServices[0] || `${className}Repository`};
- *   const entity = yield* repo.findById("id-123");
- * });
+ *   const repo = yield* ${domainServices[0] || `${className}Repository`}
+ *   const entity = yield* repo.findById("id-123")
+ * })
  *
- * program.pipe(Effect.provide(${className}${layerPrefix}Live));
+ * program.pipe(Effect.provide(${className}${layerPrefix}Live))
  * \`\`\`
  */
 export const ${className}${layerPrefix}Live = Layer.mergeAll(
   ${liveServiceList}
-).pipe(Layer.provide(InfrastructureLive));`)
+).pipe(Layer.provide(InfrastructureLive))`)
     builder.addBlankLine()
 
     // Generate Test layer
@@ -272,21 +275,22 @@ export const ${className}${layerPrefix}Live = Layer.mergeAll(
  * describe("${className}Repository", () => {
  *   it("should create entity", () =>
  *     Effect.gen(function* () {
- *       const repo = yield* ${domainServices[0] || `${className}Repository`};
- *       const result = yield* repo.create({ name: "test" });
- *       expect(result).toBeDefined();
+ *       const repo = yield* ${domainServices[0] || `${className}Repository`}
+ *       const result = yield* repo.create({ name: "test" })
+ *       expect(result).toBeDefined()
  *     }).pipe(Effect.provide(${className}${layerPrefix}Test))
- *   );
- * });
+ *   )
+ * })
  * \`\`\`
  */
 export const ${className}${layerPrefix}Test = Layer.mergeAll(
   ${testServiceList}
-).pipe(Layer.provide(InfrastructureTest));`)
+).pipe(Layer.provide(InfrastructureTest))`)
     builder.addBlankLine()
 
-    // Generate Dev layer if requested
+    // Generate Dev layer if requested (reuse liveServices array)
     if (includeDev) {
+      const devServiceList = liveServices.map((s, i) => i < liveServices.length - 1 ? `${s},` : s).join("\n  ")
       builder.addRaw(`/**
  * ${className} ${layerPrefix} Dev Layer
  *
@@ -294,8 +298,8 @@ export const ${className}${layerPrefix}Test = Layer.mergeAll(
  * Verbose logging and debugging enabled.
  */
 export const ${className}${layerPrefix}Dev = Layer.mergeAll(
-  ${liveServiceList}
-).pipe(Layer.provide(InfrastructureDev));`)
+  ${devServiceList}
+).pipe(Layer.provide(InfrastructureDev))`)
       builder.addBlankLine()
     }
   }
@@ -343,7 +347,7 @@ export function createAutoLayer(config: AutoLayerConfig) {
 
     const devCase = includeDev
       ? `case "development":
-      return ${baseName}Dev;`
+      return ${baseName}Dev`
       : ""
 
     builder.addRaw(`/**
@@ -355,12 +359,12 @@ export function createAutoLayer(config: AutoLayerConfig) {
 export const ${baseName}Auto = Layer.suspend(() => {
   switch (env.NODE_ENV) {
     case "test":
-      return ${baseName}Test;
+      return ${baseName}Test
     ${devCase}
     default:
-      return ${baseName}Live;
+      return ${baseName}Live
   }
-});`)
+})`)
   }
 }
 
@@ -405,16 +409,20 @@ export function createLayerImports(config: LayerImportsConfig) {
     // Local imports (repository, service)
     if (libraryType === "data-access") {
       builder.addSectionComment("Repository")
-      builder.addRaw(`import { ${className}Repository } from "../repository";`)
+      builder.addImports([
+        { from: "../repository", imports: [`${className}Repository`] }
+      ])
     } else {
       builder.addSectionComment("Service Layer")
-      builder.addRaw(`import { ${className}Service } from "./service";`)
+      builder.addImports([
+        { from: "./service", imports: [`${className}Service`] }
+      ])
       builder.addBlankLine()
 
       builder.addSectionComment("Data Access Layer")
-      builder.addRaw(
-        `import { ${className}Repository } from "${scope}/data-access-${fileName}";`
-      )
+      builder.addImports([
+        { from: `${scope}/data-access-${fileName}`, imports: [`${className}Repository`] }
+      ])
     }
     builder.addBlankLine()
 
@@ -427,22 +435,25 @@ export function createLayerImports(config: LayerImportsConfig) {
       existing.push(service)
       packageToServices.set(packageName, existing)
     }
-    const infraImportLines = Array.from(packageToServices.entries())
-      .map(([packageName, services]) => {
-        return `import { ${services.join(", ")} } from "${scope}/infra-${packageName}";`
-      })
-      .join("\n")
-    builder.addRaw(infraImportLines)
+    for (const [packageName, services] of packageToServices.entries()) {
+      builder.addImports([
+        { from: `${scope}/infra-${packageName}`, imports: services.sort() }
+      ])
+    }
     builder.addBlankLine()
 
     // Environment config import
     builder.addSectionComment("Environment Configuration")
-    builder.addRaw(`import { env } from "${scope}/env";`)
+    builder.addImports([
+      { from: `${scope}/env`, imports: ["env"] }
+    ])
     builder.addBlankLine()
 
     // Additional local imports
     for (const localImport of localImports) {
-      builder.addRaw(`import { ${localImport.imports.join(", ")} } from "${localImport.path}";`)
+      builder.addImports([
+        { from: localImport.path, imports: [...localImport.imports] }
+      ])
     }
     if (localImports.length > 0) {
       builder.addBlankLine()

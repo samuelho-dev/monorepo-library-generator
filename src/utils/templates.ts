@@ -266,7 +266,7 @@ export function createTaggedErrorClass(config: ErrorClassConfig) {
     .map((f) => {
       const readonly = f.readonly !== false ? "readonly " : ""
       const optional = f.optional ? "?" : ""
-      return `  ${readonly}${f.name}${optional}: ${f.type};`
+      return `  ${readonly}${f.name}${optional}: ${f.type}`
     })
     .join("\n")
 
@@ -385,11 +385,9 @@ export function createErrorUnionType(config: ErrorUnionTypeConfig) {
   const exportKeyword = exported ? "export " : ""
   const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
 
-  const errorUnion = errorTypes.map((e) => `  | ${e}`).join("\n")
+  const allErrors = [baseError, ...errorTypes]
 
-  return `${jsdocComment}${exportKeyword}type ${typeName} =
-  | ${baseError}
-${errorUnion};`
+  return `${jsdocComment}${exportKeyword}type ${typeName} = ${allErrors.join(" | ")}`
 }
 
 /**
@@ -410,8 +408,8 @@ export function createNotFoundError(className: string) {
         returnType: `${className}NotFoundError`,
         body: `return new ${className}NotFoundError({
   message: \`${className} not found: \${id}\`,
-  id,
-});`
+  id
+})`
       }
     ],
     jsdoc: `Error thrown when a ${className} entity is not found`
@@ -438,10 +436,10 @@ export function createValidationError(className: string) {
           {
             name: "params",
             type: `{
-    message: string;
-    field?: string;
-    constraint?: string;
-    value?: unknown;
+    message: string
+    field?: string
+    constraint?: string
+    value?: unknown
   }`
           }
         ],
@@ -450,8 +448,8 @@ export function createValidationError(className: string) {
   message: params.message,
   ...(params.field !== undefined && { field: params.field }),
   ...(params.constraint !== undefined && { constraint: params.constraint }),
-  ...(params.value !== undefined && { value: params.value }),
-});`
+  ...(params.value !== undefined && { value: params.value })
+})`
       }
     ],
     jsdoc: `Error thrown when ${className} validation fails`
@@ -478,8 +476,8 @@ export function createConflictError(className: string) {
   message: conflictingId
     ? \`Resource already exists: \${conflictingId}\`
     : "Resource already exists",
-  ...(conflictingId !== undefined && { conflictingId }),
-});`
+  ...(conflictingId !== undefined && { conflictingId })
+})`
       }
     ],
     jsdoc: `Error thrown when a ${className} resource already exists`
@@ -509,8 +507,8 @@ export function createConnectionError(className: string) {
         body: `return new ${className}ConnectionError({
   message: \`Failed to connect to \${target}\`,
   target,
-  cause,
-});`
+  cause
+})`
       }
     ],
     jsdoc: `Error thrown when connection to external service fails`
@@ -540,8 +538,8 @@ export function createTimeoutError(className: string) {
         body: `return new ${className}TimeoutError({
   message: \`Operation "\${operation}" timed out after \${timeoutMs}ms\`,
   operation,
-  timeoutMs,
-});`
+  timeoutMs
+})`
       }
     ],
     jsdoc: `Error thrown when an operation times out`
@@ -569,8 +567,8 @@ export function createConfigError(className: string) {
         returnType: `${className}ConfigError`,
         body: `return new ${className}ConfigError({
   message,
-  ...(configKey !== undefined && { configKey }),
-});`
+  ...(configKey !== undefined && { configKey })
+})`
       }
     ],
     jsdoc: `Error thrown when configuration is invalid or missing`
@@ -598,8 +596,8 @@ export function createInternalError(className: string) {
         returnType: `${className}InternalError`,
         body: `return new ${className}InternalError({
   message,
-  ...(cause !== undefined && { cause }),
-});`
+  ...(cause !== undefined && { cause })
+})`
       }
     ],
     jsdoc: `Error thrown when an unexpected internal error occurs`
@@ -767,7 +765,10 @@ export function addPaginatedResponse(
 
   builder.addJSDoc("Paginated response wrapper")
   builder.addRaw(`export interface PaginatedResponse<T> {`)
-  for (const prop of properties) {
+  for (let i = 0; i < properties.length; i++) {
+    const prop = properties[i]
+    if (!prop) continue
+
     if (prop.jsdoc) {
       builder.addRaw(`  /**`)
       builder.addRaw(`   * ${prop.jsdoc}`)
@@ -775,7 +776,9 @@ export function addPaginatedResponse(
     }
     const readonlyModifier = prop.readonly ? "readonly " : ""
     const optionalModifier = prop.optional ? "?" : ""
-    builder.addRaw(`  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type};`)
+
+    // No semicolon at end of interface properties (dprint/ESLint requirement)
+    builder.addRaw(`  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type}`)
   }
   builder.addRaw(`}`)
 }
@@ -796,7 +799,7 @@ export function addPaginationTypes(
  * Adds SortDirection type alias
  */
 export function addSortDirection(builder: TypeScriptBuilder) {
-  builder.addRaw(`export type SortDirection = 'asc' | 'desc';`)
+  builder.addRaw(`export type SortDirection = "asc" | "desc"`)
 }
 
 /**
@@ -866,8 +869,8 @@ export function addFilterInterface(builder: TypeScriptBuilder, config: FilterInt
  * ${jsdoc}
  */
 export interface ${className}Filter {
-${properties.map((f) => `  readonly ${f.name}?: ${f.type};`).join("\n")}
-  readonly [key: string]: unknown;
+${properties.map((f) => `  readonly ${f.name}?: ${f.type}`).join("\n")}
+  readonly [key: string]: unknown
 }`)
   } else {
     builder.addInterface({ name: `${className}Filter`, exported: true, properties, jsdoc })
@@ -898,8 +901,8 @@ export function addQueryOptionsType(builder: TypeScriptBuilder, config: QueryOpt
   if (includePagination) fields.push({ name: "pagination", type: "PaginationOptions" })
 
   builder.addRaw(`export type ${className}QueryOptions = {
-${fields.map((f) => `  readonly ${f.name}?: ${f.type};`).join("\n")}
-};`)
+${fields.map((f) => `  readonly ${f.name}?: ${f.type}`).join("\n")}
+}`)
 }
 
 /**
@@ -941,28 +944,23 @@ export interface StandardErrorExportConfig {
 export function generateStandardErrorExports(config: StandardErrorExportConfig) {
   const { className, importPath, unionTypeSuffix = "RepositoryError" } = config
 
-  // Domain errors (re-exported from contract layer)
-  const domainErrors = [
-    `${className}NotFoundError`,
-    `${className}ValidationError`,
+  // All errors merged and sorted alphabetically (dprint requirement)
+  // Domain errors (re-exported from contract): AlreadyExists, NotFound, Permission, Validation
+  // Infrastructure errors (data-access layer): Connection, Timeout, Transaction
+  const allErrors = [
     `${className}AlreadyExistsError`,
-    `${className}PermissionError`
-  ]
-
-  // Infrastructure errors (defined in data-access layer)
-  const infraErrors = [
     `${className}ConnectionError`,
+    `${className}NotFoundError`,
+    `${className}PermissionError`,
     `${className}TimeoutError`,
-    `${className}TransactionError`
+    `${className}TransactionError`,
+    `${className}ValidationError`
   ]
 
-  let output = `export {\n`
-  output += `  // Domain errors (from contract)\n`
-  output += domainErrors.map((e) => `  ${e},`).join("\n")
-  output += `\n  // Infrastructure errors\n`
-  output += infraErrors.map((e) => `  ${e},`).join("\n")
-  output += `\n} from "${importPath}";\n`
-  output += `export type { ${className}${unionTypeSuffix}, ${className}DataAccessError, ${className}InfrastructureError } from "${importPath}";`
+  let output = `export { ${allErrors.join(", ")} } from "${importPath}"\n`
+  // Type exports must be alphabetically sorted
+  output +=
+    `export type { ${className}DataAccessError, ${className}InfrastructureError, ${className}${unionTypeSuffix} } from "${importPath}"`
 
   return output
 }
@@ -997,10 +995,17 @@ export function generateExportSections(
     builder.addSectionComment(section.title)
     builder.addBlankLine()
 
-    for (const item of section.items) {
+    for (let j = 0; j < section.items.length; j++) {
+      const item = section.items[j]
+      if (!item) continue
+
       if (item.comment) builder.addComment(item.comment)
       builder.addRaw(item.exports)
-      builder.addBlankLine()
+
+      // Only add blank line if not the last item in the section
+      if (j < section.items.length - 1) {
+        builder.addBlankLine()
+      }
     }
 
     if (i < sections.length - 1) builder.addBlankLine()
@@ -1109,25 +1114,25 @@ export function generateDataAccessTypesOnly(options: TypesOnlyExportOptions) {
 // Repository Types
 // ============================================================================
 
-export type * from "./lib/repository";
+export type * from "./lib/repository"
 
 // ============================================================================
 // Shared Types
 // ============================================================================
 
-export type * from "./lib/shared/types";
+export type * from "./lib/shared/types"
 
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type * from "./lib/shared/errors";
+export type * from "./lib/shared/errors"
 
 // ============================================================================
 // Validation Types
 // ============================================================================
 
-export type * from "./lib/shared/validation";
+export type * from "./lib/shared/validation"
 `
 }
 
@@ -1158,13 +1163,13 @@ export function generateFeatureTypesOnly(options: TypesOnlyExportOptions) {
 // Shared Types
 // ============================================================================
 
-export type * from "./lib/shared/types";
+export type * from "./lib/shared/types"
 
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type * from "./lib/shared/errors";
+export type * from "./lib/shared/errors"
 ${
     hasServer
       ? `
@@ -1173,7 +1178,7 @@ ${
 // ============================================================================
 
 // Service interface types
-export type * from "./lib/server/services/service";
+export type * from "./lib/server/services/service"
 `
       : ""
   }
@@ -1181,8 +1186,8 @@ export type * from "./lib/server/services/service";
 // RPC Types (Always Prewired)
 // ============================================================================
 
-export type * from "./lib/rpc";
-export type * from "./lib/rpc/errors";
+export type * from "./lib/rpc"
+export type * from "./lib/rpc/errors"
 ${
     hasClient
       ? `
@@ -1191,10 +1196,10 @@ ${
 // ============================================================================
 
 // Hook types (return values, parameters)
-export type * from "./lib/client/hooks/index";
+export type * from "./lib/client/hooks/index"
 
 // Atom types (state shapes)
-export type * from "./lib/client/atoms/index";
+export type * from "./lib/client/atoms/index"
 `
       : ""
   }
@@ -1204,8 +1209,11 @@ export type * from "./lib/client/atoms/index";
 /**
  * Generate types.ts file for provider libraries
  *
- * Note: Types and errors are now located in lib/service/ subdirectory.
- * The main service.ts is at lib/ level, with supporting files in lib/service/.
+ * Note: Provider libraries use flat lib/ structure:
+ * - lib/service.ts: Service implementation with Context.Tag
+ * - lib/types.ts: Type definitions
+ * - lib/errors.ts: Error types
+ * - lib/interface.ts: Service interface (for Kysely)
  */
 export function generateProviderTypesOnly(options: TypesOnlyExportOptions) {
   const { packageName } = options
@@ -1217,25 +1225,29 @@ export function generateProviderTypesOnly(options: TypesOnlyExportOptions) {
  * Use these imports when you only need types for TypeScript checking:
  *
  * @example
- * import type { CacheItem, CacheServiceInterface } from '${packageName}/types';
+ * import type { ServiceConfig } from '${packageName}/types';
  *
  * These imports are completely erased at compile time and add
  * zero bytes to your JavaScript bundle.
  */
 
 // ============================================================================
-// Service Internals (types, errors, validation)
+// Service Internals (types, errors)
 // ============================================================================
 
-// Types and errors are in lib/service/ subdirectory
-export type * from "./lib/service/index";
-export type * from "./lib/service/types";
-export type * from "./lib/service/errors";
+// Types and errors are in lib/ directory (flat structure)
+export type * from "./lib/types"
+export type * from "./lib/errors"
 `
 }
 
 /**
  * Generate types.ts file for infra libraries
+ *
+ * Note: Infra libraries use flat lib/ structure:
+ * - lib/service.ts: Service implementation with Context.Tag
+ * - lib/config.ts: Configuration types (optional)
+ * - lib/errors.ts: Error types
  */
 export function generateInfraTypesOnly(options: TypesOnlyExportOptions) {
   const { packageName } = options
@@ -1247,29 +1259,17 @@ export function generateInfraTypesOnly(options: TypesOnlyExportOptions) {
  * Use these imports when you only need types for TypeScript checking:
  *
  * @example
- * import type { DatabaseConfig, DatabaseServiceInterface } from '${packageName}/types';
+ * import type { ServiceConfig } from '${packageName}/types';
  *
  * These imports are completely erased at compile time and add
  * zero bytes to your JavaScript bundle.
  */
 
 // ============================================================================
-// Service Types
-// ============================================================================
-
-export type * from "./lib/service/service";
-
-// ============================================================================
-// Configuration Types
-// ============================================================================
-
-export type * from "./lib/service/config";
-
-// ============================================================================
 // Error Types
 // ============================================================================
 
-export type * from "./lib/service/errors";
+export type * from "./lib/errors"
 `
 }
 

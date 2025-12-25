@@ -31,13 +31,13 @@ export function generateSchemasFile(options: FeatureTemplateOptions) {
   // Add Config schema
   builder.addRaw(`export const ${className}ConfigSchema = Schema.Struct({
   // Add configuration schema fields
-});`)
+})`)
   builder.addBlankLine()
 
   // Add Result schema
   builder.addRaw(`export const ${className}ResultSchema = Schema.Struct({
   // Add result schema fields
-});`)
+})`)
   builder.addBlankLine()
 
   return builder.toString()

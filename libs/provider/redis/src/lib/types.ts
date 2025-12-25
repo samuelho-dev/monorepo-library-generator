@@ -1,4 +1,5 @@
 import type { Effect } from "effect"
+import type { RedisCommandError, RedisPubSubError } from "./errors"
 
 /**
  * Redis Provider - Types
@@ -12,8 +13,6 @@ Includes:
  *
  * @module @samuelho-dev/provider-redis/service/types
  */
-
-import type { RedisCommandError, RedisPubSubError } from "./errors"
 
 // ============================================================================
 // Configuration

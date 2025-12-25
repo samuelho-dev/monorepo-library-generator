@@ -6,26 +6,23 @@ Re-exports entity types from contract library and provides query-specific types.
  *
  * @module @samuelho-dev/data-access-user/server
  */
-
 // ============================================================================
 // Entity Types (from Contract Library)
 // ============================================================================
-
 
 // Re-export entity types from contract library
 // Note: Contract re-exports Prisma-generated types (Select, Insert, Update)
 // and defines branded ID type in rpc-definitions.ts
 export type {
-  UserSelect as User,
   UserId,
   UserInsert as UserCreateInput,
-  UserUpdate as UserUpdateInput,
-} from "@samuelho-dev/contract-user";
+  UserSelect as User,
+  UserUpdate as UserUpdateInput
+} from "@samuelho-dev/contract-user"
 
 // ============================================================================
 // Filter & Query Types
 // ============================================================================
-
 
 /**
  * User Filter Options
@@ -45,38 +42,33 @@ export type {
  * @example
  * ```typescript
  * export interface ProductFilter {
- *   readonly category?: string;
- *   readonly minPrice?: number;
- *   readonly maxPrice?: number;
- *   readonly inStock?: boolean;
- *   readonly tags?: readonly string[];
- *   readonly search?: string;
- *   readonly createdAfter?: Date;
+ *   readonly category?: string
+ *   readonly minPrice?: number
+ *   readonly maxPrice?: number
+ *   readonly inStock?: boolean
+ *   readonly tags?: readonly string[]
+ *   readonly search?: string
+ *   readonly createdAfter?: Date
  * }
  * ```
  */
 export interface UserFilter {
   // TODO: Add filter properties (see JSDoc examples above)
-  readonly search?: string;
+  readonly search?: string
 }
 
-export type SortDirection = 'asc' | 'desc';
+export type SortDirection = "asc" | "desc"
 
 // User Sort Options
-
 // TODO: Add domain-specific sortable fields
-
 // Examples: createdAt, updatedAt, name, price
-
 export interface UserSort {
-  readonly field: string; // TODO: Use union of sortable fields
-  readonly direction: SortDirection;
+  readonly field: string // TODO: Use union of sortable fields
+  readonly direction: SortDirection
 }
 
 // Pagination Options
-
 // Standard pagination parameters for list queries.
-
 /**
  * Pagination options for queries
  */
@@ -91,7 +83,6 @@ export interface PaginationOptions {
   readonly limit: number
 }
 
-
 /**
  * Query Options
  *
@@ -103,25 +94,22 @@ export interface PaginationOptions {
  *   filter: { status: 'active' },
  *   sort: { field: 'createdAt', direction: 'desc' },
  *   pagination: { skip: 0, limit: 20 }
- * };
- * const results = yield* repository.findAll(options);
+ * }
+ * const results = yield* repository.findAll(options)
  * ```
  */
 export interface QueryOptions {
-  readonly filter?: UserFilter;
-  readonly sort?: UserSort;
-  readonly pagination?: PaginationOptions;
+  readonly filter?: UserFilter
+  readonly sort?: UserSort
+  readonly pagination?: PaginationOptions
 }
 
 // ============================================================================
 // Response Types
 // ============================================================================
 
-
 // Paginated List Response
-
 // Standard paginated response format for list queries.
-
 /**
  * Paginated response wrapper
  */
@@ -129,13 +117,13 @@ export interface PaginatedResponse<T> {
   /**
    * Array of items/records
    */
-  readonly items: ReadonlyArray<T>;
+  readonly items: ReadonlyArray<T>
   /**
    * Total number of records available
    */
-  readonly total: number;
+  readonly total: number
   /**
    * Whether more records are available
    */
-  readonly hasMore: boolean;
+  readonly hasMore: boolean
 }

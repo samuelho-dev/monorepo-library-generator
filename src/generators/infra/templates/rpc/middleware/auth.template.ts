@@ -84,8 +84,8 @@ export {
   AuthError,
   AuthVerifier,
   CurrentUser,
-  AuthMethodContext,
-};
+  AuthMethodContext
+}
 `)
 
   builder.addSectionComment("Token Extraction Helpers")
@@ -97,27 +97,19 @@ export {
  */
 const extractAuth = (headers: Headers.Headers): Option.Option<{ type: AuthMethod; token: string }> => {
   // Priority 1: API Key (x-api-key header)
-  const apiKey = Headers.get(headers, "x-api-key");
+  const apiKey = Headers.get(headers, "x-api-key")
   if (Option.isSome(apiKey)) {
-    return Option.some({ type: "api-key" as const, token: apiKey.value });
+    return Option.some({ type: "api-key" as const, token: apiKey.value })
   }
 
-  // Priority 2: Bearer Token
-  const auth = Headers.get(headers, "authorization");
+  // Priority 2: Bearer Token (JWT)
+  const auth = Headers.get(headers, "authorization")
   if (Option.isSome(auth) && auth.value.startsWith("Bearer ")) {
-    return Option.some({ type: "bearer" as const, token: auth.value.slice(7) });
+    return Option.some({ type: "jwt" as const, token: auth.value.slice(7) })
   }
 
-  return Option.none();
-};
-
-/**
- * Extract bearer token from headers
- */
-const extractBearerToken = (headers: Headers.Headers): Option.Option<string> => {
-  const auth = extractAuth(headers);
-  return Option.map(auth, (a) => a.token);
-};
+  return Option.none()
+}
 `)
 
   builder.addSectionComment("Auth Middleware")
@@ -157,25 +149,56 @@ export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()(
  *
  * Uses AuthVerifier interface from contract-auth.
  * AuthVerifier is implemented by infra-auth and provided at application composition time.
+ *
+ * The middleware inspects:
+ * - Authorization header for Bearer tokens (JWT)
+ * - x-api-key header for API key authentication
+ * - Request headers for audit logging
  */
 export const AuthMiddlewareLive = Layer.effect(
   AuthMiddleware,
   Effect.gen(function*() {
-    const verifier = yield* AuthVerifier;
+    const verifier = yield* AuthVerifier
 
-    return ({ headers }) =>
+    return (request) =>
       Effect.gen(function*() {
-        const token = extractBearerToken(headers);
+        const { headers } = request
 
-        if (Option.isNone(token)) {
-          return yield* Effect.fail(AuthError.missingToken());
+        // Extract authentication method and token
+        const auth = extractAuth(headers)
+
+        if (Option.isNone(auth)) {
+          // Log authentication failure for security auditing
+          yield* Effect.logWarning("Authentication failed: No credentials provided")
+          return yield* Effect.fail(AuthError.tokenMissing())
         }
 
+        const { type: authMethod, token } = auth.value
+
+        // Store auth method in context for downstream handlers
+        yield* AuthMethodContext.set(authMethod)
+
+        // Log authentication attempt (without exposing token)
+        yield* Effect.logDebug(\`Authentication attempt using \${authMethod}\`)
+
         // Delegate to AuthVerifier (implemented by infra-auth)
-        return yield* verifier.verify(token.value);
-      });
+        const user = yield* verifier.verify(token).pipe(
+          Effect.catchAll((error) =>
+            Effect.gen(function*() {
+              // Log failed verification attempts
+              yield* Effect.logWarning(\`Authentication verification failed for \${authMethod}: \${error.message}\`)
+              return yield* Effect.fail(error)
+            })
+          )
+        )
+
+        // Log successful authentication
+        yield* Effect.logDebug(\`User authenticated: \${user.id} via \${authMethod}\`)
+
+        return user
+      })
   })
-);
+)
 `)
 
   builder.addSectionComment("Test Utilities")
@@ -186,8 +209,8 @@ export const AuthMiddlewareLive = Layer.effect(
 export const TestUser: CurrentUserData = {
   id: "test-user-id",
   email: "test@example.com",
-  roles: ["user"],
-};
+  roles: ["user"]
+}
 
 /**
  * Admin test user for testing admin routes
@@ -195,8 +218,8 @@ export const TestUser: CurrentUserData = {
 export const AdminTestUser: CurrentUserData = {
   id: "admin-user-id",
   email: "admin@example.com",
-  roles: ["user", "admin"],
-};
+  roles: ["user", "admin"]
+}
 
 /**
  * Test AuthMiddleware - always provides TestUser
@@ -205,16 +228,16 @@ export const AdminTestUser: CurrentUserData = {
  */
 export const AuthMiddlewareTest = Layer.succeed(
   AuthMiddleware,
-  (_) => Effect.succeed(TestUser)
-);
+  () => Effect.succeed(TestUser)
+)
 
 /**
  * Admin AuthMiddleware - provides admin user for testing admin routes
  */
 export const AuthMiddlewareAdmin = Layer.succeed(
   AuthMiddleware,
-  (_) => Effect.succeed(AdminTestUser)
-);
+  () => Effect.succeed(AdminTestUser)
+)
 `)
 
   return builder.toString()

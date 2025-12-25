@@ -8,44 +8,44 @@
  * Kysely Configuration
  */
 export interface KyselyConfig {
-  readonly apiKey: string;
-  readonly timeout?: number;
+  readonly apiKey: string
+  readonly timeout?: number
 }
 
 /**
  * Resource - customize based on your service
  */
 export interface Resource {
-  readonly id: string;
-  readonly name: string;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
+  readonly id: string
+  readonly name: string
+  readonly createdAt: Date
+  readonly updatedAt: Date
 }
 
 /**
  * List Parameters
  */
 export interface ListParams {
-  readonly page?: number;
-  readonly limit?: number;
+  readonly page?: number
+  readonly limit?: number
 }
 
 /**
  * Paginated Result
  */
 export interface PaginatedResult<T> {
-  readonly data: ReadonlyArray<T>;
-  readonly page: number;
-  readonly limit: number;
-  readonly total: number;
+  readonly data: ReadonlyArray<T>
+  readonly page: number
+  readonly limit: number
+  readonly total: number
 }
 
 /**
  * Health Check Result
  */
 export interface HealthCheckResult {
-  readonly status: "healthy" | "unhealthy";
-  readonly timestamp?: Date;
+  readonly status: "healthy" | "unhealthy"
+  readonly timestamp?: Date
 }
 
 /**
@@ -65,7 +65,6 @@ export interface ServiceMetadata {
    */
   readonly environment: "production" | "development" | "test"
 }
-
 /**
  * Pagination Options
  */
@@ -83,7 +82,6 @@ export interface PaginationOptions {
    */
   readonly cursor?: string
 }
-
 /**
  * Paginated Response
  */
@@ -105,7 +103,6 @@ export interface PaginatedResponse<T> {
    */
   readonly nextCursor?: string
 }
-
 /**
  * Sort Options
  */
@@ -119,7 +116,6 @@ export interface SortOptions {
    */
   readonly direction: "asc" | "desc"
 }
-
 /**
  * Filter Options
  */
@@ -129,7 +125,6 @@ export interface FilterOptions {
    */
   [key: string]: unknown
 }
-
 /**
  * Query Options
  */

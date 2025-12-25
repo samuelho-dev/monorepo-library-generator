@@ -31,27 +31,12 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Effect", "Option", "Duration"] }])
-  builder.addBlankLine()
-
   builder.addImports([
-    {
-      from: "../../shared/types",
-      imports: [`${className}Filter`, `PaginationOptions`],
-      isTypeOnly: true
-    },
-    {
-      from: "../../shared/errors",
-      imports: [`${className}TimeoutError`],
-      isTypeOnly: false
-    }
+    { from: "effect", imports: ["Duration", "Effect", "Option"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
+    { from: "../../shared/errors", imports: [`${className}TimeoutError`] },
+    { from: "../../shared/types", imports: [`${className}Filter`, "PaginationOptions"], isTypeOnly: true }
   ])
-  builder.addBlankLine()
-
-  // Import infrastructure services
-  builder.addComment("Infrastructure services - Database for persistence")
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
-  builder.addBlankLine()
 
   // Live implementation
   builder.addSectionComment("Read Operations")
@@ -63,10 +48,9 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * Uses DatabaseService for persistence with type-safe database queries.
  * Return types are inferred to preserve Effect's dependency and error tracking.
  *
- *
  * @example
  * \`\`\`typescript
- * const maybeEntity = yield* readOperations.findById("id-123");
+ * const maybeEntity = yield* readOperations.findById("id-123")
  * \`\`\`
  */
 export const readOperations = {
@@ -75,9 +59,9 @@ export const readOperations = {
    */
   findById: (id: string) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Finding ${className} by ID: \${id}\`);
+      yield* Effect.logDebug(\`Finding ${className} by ID: \${id}\`)
 
       const entity = yield* database.query((db) =>
         db
@@ -85,15 +69,15 @@ export const readOperations = {
           .selectAll()
           .where("id", "=", id)
           .executeTakeFirst()
-      );
+      )
 
       if (entity) {
-        yield* Effect.logDebug(\`Found ${className}: \${id}\`);
-        return Option.some(entity);
+        yield* Effect.logDebug(\`Found ${className}: \${id}\`)
+        return Option.some(entity)
       }
 
-      yield* Effect.logDebug(\`${className} not found: \${id}\`);
-      return Option.none();
+      yield* Effect.logDebug(\`${className} not found: \${id}\`)
+      return Option.none()
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -107,16 +91,16 @@ export const readOperations = {
    */
   findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Finding all ${className} entities (filter: \${JSON.stringify(filter)})\`);
+      yield* Effect.logDebug(\`Finding all ${className} entities (filter: \${JSON.stringify(filter)})\`)
 
-      const limit = pagination?.limit ?? 50;
-      const skip = pagination?.skip ?? 0;
+      const limit = pagination?.limit ?? 50
+      const skip = pagination?.skip ?? 0
 
       // Build query with filtering
       const items = yield* database.query((db) => {
-        let query = db.selectFrom("${fileName}").selectAll();
+        let query = db.selectFrom("${fileName}").selectAll()
 
         // Apply filters (basic search implementation)
         // TODO: Implement proper full-text search or specific field filtering
@@ -124,36 +108,36 @@ export const readOperations = {
           query = query.where((eb) =>
             eb.or([
               // Add searchable fields here based on your schema
-              eb("name", "ilike", \`%\${filter.search}%\`),
+              eb("name", "ilike", \`%\${filter.search}%\`)
             ])
-          );
+          )
         }
 
-        return query.limit(limit).offset(skip).execute();
-      });
+        return query.limit(limit).offset(skip).execute()
+      })
 
       // Get total count (without pagination)
       const total = yield* database.query((db) => {
-        let query = db.selectFrom("${fileName}").select((eb) => eb.fn.countAll().as("count"));
+        let query = db.selectFrom("${fileName}").select((eb) => eb.fn.countAll().as("count"))
 
         if (filter?.search) {
           query = query.where((eb) =>
             eb.or([
-              eb("name", "ilike", \`%\${filter.search}%\`),
+              eb("name", "ilike", \`%\${filter.search}%\`)
             ])
-          );
+          )
         }
 
-        return query.executeTakeFirstOrThrow().then((result) => Number(result.count));
-      });
+        return query.executeTakeFirstOrThrow().then((result) => Number(result.count))
+      })
 
-      yield* Effect.logDebug(\`Found \${items.length} ${className} entities (total: \${total})\`);
+      yield* Effect.logDebug(\`Found \${items.length} ${className} entities (total: \${total})\`)
 
       return {
         items,
         total,
-        hasMore: skip + items.length < total,
-      };
+        hasMore: skip + items.length < total
+      }
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -167,46 +151,47 @@ export const readOperations = {
    */
   findOne: (filter: ${className}Filter) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Finding one ${className} entity (filter: \${JSON.stringify(filter)})\`);
+      yield* Effect.logDebug(\`Finding one ${className} entity (filter: \${JSON.stringify(filter)})\`)
 
       // Build query with filtering
       const entity = yield* database.query((db) => {
-        let query = db.selectFrom("${fileName}").selectAll();
+        let query = db.selectFrom("${fileName}").selectAll()
 
         // Apply filters
         if (filter.search) {
           query = query.where((eb) =>
             eb.or([
-              eb("name", "ilike", \`%\${filter.search}%\`),
+              eb("name", "ilike", \`%\${filter.search}%\`)
             ])
-          );
+          )
         }
 
-        return query.limit(1).executeTakeFirst();
-      });
+        return query.limit(1).executeTakeFirst()
+      })
 
       if (entity) {
-        yield* Effect.logDebug("Found ${className} matching filter");
-        return Option.some(entity);
+        yield* Effect.logDebug("Found ${className} matching filter")
+        return Option.some(entity)
       }
 
-      yield* Effect.logDebug("No ${className} found matching filter");
-      return Option.none();
+      yield* Effect.logDebug("No ${className} found matching filter")
+      return Option.none()
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => ${className}TimeoutError.create("findOne", 30000)
       }),
       Effect.withSpan("${className}Repository.findOne")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the read operations object
  */
-export type Read${className}Operations = typeof readOperations;`)
+export type Read${className}Operations = typeof readOperations
+`)
 
   return builder.toString()
 }

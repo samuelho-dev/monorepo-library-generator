@@ -19,99 +19,79 @@ rather than defining their own.
  *
  * @module @samuelho-dev/contract-user/authentication/errors
  */
-
-
-
 // ============================================================================
 // Domain Errors (Data.TaggedError)
 // ============================================================================
-
-
 /**
  * Error thrown when authentication entity is not found
  */
 export class AuthenticationNotFoundError extends Data.TaggedError("AuthenticationNotFoundError")<{
-    readonly message: string;
-    readonly id: string;
-  }> {
+  readonly message: string
+  readonly id: string
+}> {
   static create(id: string) {
     return new AuthenticationNotFoundError({
       message: `Authentication not found: ${id}`,
-      id,
-    });
+      id
+    })
   }
-
 }
-
 /**
  * Error thrown when authentication validation fails
  */
 export class AuthenticationValidationError extends Data.TaggedError("AuthenticationValidationError")<{
-    readonly message: string;
-    readonly field: string;
-    readonly value?: unknown;
-  }> {
+  readonly message: string
+  readonly field: string
+  readonly value?: unknown
+}> {
   static create(field: string, message: string, value?: unknown) {
     return new AuthenticationValidationError({
       message,
       field,
-      ...(value !== undefined && { value }),
-    });
+      ...(value !== undefined && { value })
+    })
   }
-
   static required(field: string) {
     return new AuthenticationValidationError({
       message: `${field} is required`,
-      field,
-    });
+      field
+    })
   }
-
 }
-
 /**
  * Error thrown when authentication operation fails (e.g., database, network)
  */
 export class AuthenticationOperationError extends Data.TaggedError("AuthenticationOperationError")<{
-    readonly message: string;
-    readonly operation: string;
-    readonly cause?: unknown;
-  }> {
+  readonly message: string
+  readonly operation: string
+  readonly cause?: unknown
+}> {
   static create(operation: string, message: string, cause?: unknown) {
     return new AuthenticationOperationError({
       message,
       operation,
-      ...(cause !== undefined && { cause }),
-    });
+      ...(cause !== undefined && { cause })
+    })
   }
-
 }
-
-
 // ============================================================================
 // Error Union Types
 // ============================================================================
-
-
 /**
  * Union of authentication domain errors (business logic)
  */
 export type AuthenticationDomainError = 
   | AuthenticationNotFoundError
   | AuthenticationValidationError
-
 /**
  * Union of authentication repository/infrastructure errors
  */
-export type AuthenticationRepositoryError = 
-  | AuthenticationOperationError
-
+export type AuthenticationRepositoryError = AuthenticationOperationError
 /**
  * All possible authentication errors
  */
-export type AuthenticationError = AuthenticationDomainError | AuthenticationRepositoryError
-
-
+export type AuthenticationError = 
+  | AuthenticationDomainError
+  | AuthenticationRepositoryError
 // TODO: Add domain-specific errors here
-
 // Example: AuthenticationInsufficientFundsError, AuthenticationExpiredError, etc.
-

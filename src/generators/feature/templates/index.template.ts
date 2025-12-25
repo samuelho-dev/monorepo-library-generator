@@ -60,7 +60,7 @@ and avoid bundling server code in client bundles.`
       items: [
         {
           comment: "Domain types (universal)",
-          exports: "export type * from \"./lib/shared/types\";"
+          exports: "export type * from \"./lib/shared/types\""
         }
       ]
     },
@@ -69,7 +69,7 @@ and avoid bundling server code in client bundles.`
       items: [
         {
           comment: "Error definitions (universal)",
-          exports: "export type * from \"./lib/shared/errors\";"
+          exports: "export type * from \"./lib/shared/errors\""
         }
       ]
     }
@@ -82,7 +82,7 @@ and avoid bundling server code in client bundles.`
   builder.addSectionComment("RPC Definitions (Universal)")
   builder.addBlankLine()
   builder.addComment("RPC schemas are universal and can be used on any platform")
-  builder.addRaw("export type * from \"./lib/rpc\";\n")
+  builder.addRaw("export type * from \"./lib/rpc\"")
 
   // Platform export guidance
   builder.addBlankLine()

@@ -16,20 +16,16 @@ Import options:
  *
  * @module @samuelho-dev/feature-user/server/services
  */
-
-
 // ============================================================================
 // Main Service
 // ============================================================================
+export { UserService } from "./service"
+export type { UserServiceInterface } from "./service"
 
-
-export { UserService } from "./service";
-export type { UserServiceInterface } from "./service";
 
 // ============================================================================
 // Sub-Module Services
 // ============================================================================
+export { AuthenticationService, AuthenticationLive, AuthenticationTest } from "./authentication"
 
-
-export { AuthenticationService, AuthenticationLive, AuthenticationTest } from "./authentication";
-export { ProfileService, ProfileLive, ProfileTest } from "./profile";
+export { ProfileService, ProfileLive, ProfileTest } from "./profile"

@@ -12,43 +12,22 @@ All infrastructure dependencies are properly wired.
  *
  * @module @samuelho-dev/feature-user/server/services/authentication
  */
-
-
-
 // ============================================================================
 // Service Import
 // ============================================================================
-
-import { AuthenticationServiceLive } from "./service";
+import { AuthenticationServiceLive } from "./service"
 
 // ============================================================================
 // Data Access Import
 // ============================================================================
-
-import { AuthenticationRepositoryLive, AuthenticationRepositoryTest } from "@samuelho-dev/data-access-user/authentication";
+import { AuthenticationRepositoryLive, AuthenticationRepositoryTest } from "@samuelho-dev/data-access-user/authentication"
 
 // ============================================================================
 // Infrastructure Imports
 // ============================================================================
-
-
-// ============================================================================
-// Re-export Service Components
-// ============================================================================
-
-
-export {
-  AuthenticationService,
-  AuthenticationServiceLive,
-  type AuthenticationServiceInterface,
-  AuthenticationServiceError,
-} from "./service";
-
 // ============================================================================
 // Live Layer Composition
 // ============================================================================
-
-
 /**
  * AuthenticationLive Layer
  *
@@ -78,13 +57,10 @@ export const AuthenticationLive = AuthenticationServiceLive.pipe(
   Layer.provide(LoggingService.Live),
   Layer.provide(MetricsService.Live),
   Layer.provide(DatabaseService.Live)
-);
-
+)
 // ============================================================================
 // Test Layer Composition
 // ============================================================================
-
-
 /**
  * AuthenticationTest Layer
  *
@@ -112,13 +88,10 @@ export const AuthenticationTest = AuthenticationServiceLive.pipe(
   Layer.provide(AuthenticationRepositoryTest),
   Layer.provide(LoggingService.Test),
   Layer.provide(MetricsService.Test)
-);
-
+)
 // ============================================================================
 // Dependencies Layer (for parent composition)
 // ============================================================================
-
-
 /**
  * AuthenticationDependencies Layer
  *
@@ -129,4 +102,4 @@ export const AuthenticationTest = AuthenticationServiceLive.pipe(
  * - Repository layer
  * - Infrastructure layers
  */
-export const AuthenticationDependencies = AuthenticationServiceLive;
+export const AuthenticationDependencies = AuthenticationServiceLive

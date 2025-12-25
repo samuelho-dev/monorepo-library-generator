@@ -31,13 +31,13 @@ export function generateTypesOnlyFile(options: TypesOnlyOptions) {
     ? `Entity types from ${typesDatabasePackage} (prisma-effect-kysely generated)`
     : "Entity types from database schema"
 
-  // Export Prisma-generated types: Select, Insert, Update variants
-  const selectTypes = entities.map((e) => `${e}Select`).join(", ")
+  // Export Prisma-generated types: Insert, Select, Update variants (alphabetical)
   const insertTypes = entities.map((e) => `${e}Insert`).join(", ")
+  const selectTypes = entities.map((e) => `${e}Select`).join(", ")
   const updateTypes = entities.map((e) => `${e}Update`).join(", ")
 
   const entityExports = `// ${entitySourceComment}
-export type { ${selectTypes}, ${insertTypes}, ${updateTypes} } from "${entityTypeSource}";
+export type { ${insertTypes}, ${selectTypes}, ${updateTypes} } from "${entityTypeSource}"
 
 // ID types are defined in rpc-definitions.ts (branded Schema types)
 // They are re-exported via ./lib/rpc below`
@@ -65,35 +65,35 @@ ${entityExports}
 // Error Types
 // ============================================================================
 
-export type * from "./lib/errors";
+export type * from "./lib/errors"
 
 // ============================================================================
 // Port Types
 // ============================================================================
 
-export type * from "./lib/ports";
+export type * from "./lib/ports"
 
 // ============================================================================
 // Event Types
 // ============================================================================
 
-export type * from "./lib/events";
+export type * from "./lib/events"
+
 // ============================================================================
 // RPC Types
 // ============================================================================
 
-export type * from "./lib/rpc";
-${
+export type * from "./lib/rpc"${
     includeCQRS
       ? `
+
 // ============================================================================
 // CQRS Types
 // ============================================================================
 
-export type * from "./lib/commands";
-export type * from "./lib/queries";
-export type * from "./lib/projections";
-`
+export type * from "./lib/commands"
+export type * from "./lib/queries"
+export type * from "./lib/projections"`
       : ""
   }
 `

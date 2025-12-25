@@ -7595,7 +7595,7 @@ export class EventStore extends Context.Tag("EventStore")<
               timestamp: row.timestamp,
               version: row.version,
               data: JSON.parse(row.eventData),
-            })) as UserEvent[];
+            }));
           }),
 
         loadEventsSince: (timestamp) =>
@@ -7616,7 +7616,7 @@ export class EventStore extends Context.Tag("EventStore")<
               timestamp: row.timestamp,
               version: row.version,
               data: JSON.parse(row.eventData),
-            })) as UserEvent[];
+            }));
           }),
       };
     })
@@ -7677,7 +7677,7 @@ export class UserProjectionService extends Context.Tag("UserProjectionService")<
                 default:
                   return state;
               }
-            }, {} as UserProjection)
+            }, {})
           ),
 
         rebuild: (userId) =>

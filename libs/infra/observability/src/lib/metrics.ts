@@ -1,6 +1,6 @@
-import { OtelProvider } from "./provider"
 import { env } from "@samuelho-dev/env"
 import { Context, Effect, Layer, Metric, MetricBoundaries } from "effect"
+import { OtelProvider } from "./provider"
 
 /**
  * Observability Metrics Service
@@ -30,11 +30,9 @@ Effect.Metric Features:
  * @module @samuelho-dev/infra-observability/metrics
  * @see https://effect.website/docs/observability/metrics
  */
-
 // ============================================================================
 // Metrics Service Interface
 // ============================================================================
-
 /**
  * Counter handle for incrementing metrics
  */
@@ -210,7 +208,7 @@ export class MetricsService extends Context.Tag(
   /**
    * Create metrics implementation using Effect.Metric
    */
-  static makeMetrics(): MetricsOperations {
+  static makeMetrics() {
     return {
       counter: (name: string, options?: MetricOptions) =>
         Effect.sync(() => {
@@ -282,7 +280,7 @@ export class MetricsService extends Context.Tag(
   /**
    * Create in-memory metrics implementation for testing
    */
-  static makeInMemory(): MetricsOperations {
+  static makeInMemory() {
     // Store metrics by name for test assertions
     const counters = new Map<string, { count: number }>()
     const gauges = new Map<string, { value: number }>()

@@ -59,16 +59,16 @@ Usage:
  */
 export interface OperationMetadata {
   /** Unique operation name */
-  readonly name: string;
+  readonly name: string
 
   /** Operation type (command or query) */
-  readonly type: "command" | "query";
+  readonly type: "command" | "query"
 
   /** Optional correlation ID */
-  readonly correlationId?: string;
+  readonly correlationId?: string
 
   /** Optional user/service context */
-  readonly actor?: string;
+  readonly actor?: string
 }`)
   builder.addBlankLine()
 
@@ -81,7 +81,7 @@ export interface OperationMetadata {
  */
 export type Middleware<A, E, R> = (
   next: Effect.Effect<A, E, R>
-) => Effect.Effect<A, E, R>;`)
+) => Effect.Effect<A, E, R>`)
   builder.addBlankLine()
 
   builder.addSectionComment("Operation Executor Interface")
@@ -104,7 +104,7 @@ export interface OperationExecutorInterface {
     metadata: OperationMetadata,
     operation: Effect.Effect<A, E, R>,
     middlewares?: ReadonlyArray<Middleware<A, E, R>>
-  ) => Effect.Effect<A, E, R | LoggingService | MetricsService>;
+  ) => Effect.Effect<A, E, R | LoggingService | MetricsService>
 }`)
   builder.addBlankLine()
 
@@ -123,53 +123,53 @@ const createExecutorImpl = (
     const pipeline = middlewares.reduce(
       (acc, middleware) => middleware(acc),
       operation
-    );
+    )
 
     return Effect.gen(function*() {
-      const startTime = Date.now();
-      const histogram = yield* metrics.histogram("${name.toLowerCase()}_operation_duration_seconds");
-      const counter = yield* metrics.counter("${name.toLowerCase()}_operations_total");
+      const startTime = Date.now()
+      const histogram = yield* metrics.histogram("${name.toLowerCase()}_operation_duration_seconds")
+      const counter = yield* metrics.counter("${name.toLowerCase()}_operations_total")
 
       yield* logger.debug(\`Starting \${metadata.type}: \${metadata.name}\`, {
         type: metadata.type,
         correlationId: metadata.correlationId,
-        actor: metadata.actor,
-      });
+        actor: metadata.actor
+      })
 
       const result = yield* pipeline.pipe(
         Effect.tapError((error) =>
           Effect.gen(function*() {
-            yield* counter.increment;
+            yield* counter.increment
             yield* logger.error(\`\${metadata.type} failed: \${metadata.name}\`, {
               error: String(error),
-              correlationId: metadata.correlationId,
-            });
+              correlationId: metadata.correlationId
+            })
           })
         )
-      );
+      )
 
-      const duration = (Date.now() - startTime) / 1000;
-      yield* histogram.record(duration);
-      yield* counter.increment;
+      const duration = (Date.now() - startTime) / 1000
+      yield* histogram.record(duration)
+      yield* counter.increment
 
       yield* logger.info(\`Completed \${metadata.type}: \${metadata.name}\`, {
         durationMs: Date.now() - startTime,
-        correlationId: metadata.correlationId,
-      });
+        correlationId: metadata.correlationId
+      })
 
-      return result;
+      return result
     }).pipe(
       Effect.withSpan(\`${className}Operation.\${metadata.name}\`, {
         attributes: {
           "operation.type": metadata.type,
           "operation.name": metadata.name,
           ...(metadata.correlationId && { "correlation.id": metadata.correlationId }),
-          ...(metadata.actor && { actor: metadata.actor }),
-        },
+          ...(metadata.actor && { actor: metadata.actor })
+        }
       })
-    );
-  },
-});`)
+    )
+  }
+})`)
   builder.addBlankLine()
 
   builder.addSectionComment("Operation Executor Context.Tag")
@@ -209,17 +209,17 @@ export class ${className}OperationExecutor extends Context.Tag("${className}Oper
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const logger = yield* LoggingService;
-      const metrics = yield* MetricsService;
+      const logger = yield* LoggingService
+      const metrics = yield* MetricsService
 
-      return createExecutorImpl(logger, metrics);
+      return createExecutorImpl(logger, metrics)
     })
-  );
+  )
 
   /**
    * Test layer - same as Live
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 }`)
   builder.addBlankLine()
 
@@ -243,8 +243,8 @@ export function createValidationMiddleware<A, E, R>(
   return (next) =>
     Effect.gen(function*() {
       // Validation would happen before dispatch
-      return yield* next;
-    });
+      return yield* next
+    })
 }
 
 /**
@@ -256,12 +256,12 @@ export function createValidationMiddleware<A, E, R>(
  * \`\`\`
  */
 export function createRetryMiddleware<A, E, R>(options: {
-  readonly times: number;
+  readonly times: number
 }): Middleware<A, E, R> {
   return (next) =>
     next.pipe(
       Effect.retry({ times: options.times })
-    );
+    )
 }`)
 
   return builder.toString()
@@ -284,14 +284,14 @@ export function generateOperationsIndexFile(options: FeatureTemplateOptions) {
   builder.addRaw(`export {
   ${className}OperationExecutor,
   createValidationMiddleware,
-  createRetryMiddleware,
-} from "./executor";
+  createRetryMiddleware
+} from "./executor"
 
 export type {
   OperationMetadata,
   OperationExecutorInterface,
-  Middleware,
-} from "./executor";`)
+  Middleware
+} from "./executor"`)
 
   return builder.toString()
 }

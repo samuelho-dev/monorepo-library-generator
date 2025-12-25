@@ -31,27 +31,12 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
-  builder.addBlankLine()
-
   builder.addImports([
-    {
-      from: "../../shared/types",
-      imports: [`${className}CreateInput`],
-      isTypeOnly: true
-    },
-    {
-      from: "../../shared/errors",
-      imports: [`${className}TimeoutError`],
-      isTypeOnly: false
-    }
+    { from: "effect", imports: ["Duration", "Effect"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
+    { from: "../../shared/errors", imports: [`${className}TimeoutError`] },
+    { from: "../../shared/types", imports: [`${className}CreateInput`], isTypeOnly: true }
   ])
-  builder.addBlankLine()
-
-  // Import infrastructure services
-  builder.addComment("Infrastructure services - Database for persistence")
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
-  builder.addBlankLine()
 
   // Live implementation
   builder.addSectionComment("Create Operations")
@@ -65,7 +50,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
  *
  * @example
  * \`\`\`typescript
- * const entity = yield* createOperations.create({ name: "example" });
+ * const entity = yield* createOperations.create({ name: "example" })
  * \`\`\`
  */
 export const createOperations = {
@@ -74,9 +59,9 @@ export const createOperations = {
    */
   create: (input: ${className}CreateInput) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Creating ${className}: \${JSON.stringify(input)}\`);
+      yield* Effect.logDebug(\`Creating ${className}: \${JSON.stringify(input)}\`)
 
       const entity = yield* database.query((db) =>
         db
@@ -84,15 +69,15 @@ export const createOperations = {
           .values({
             ...input,
             createdAt: new Date(),
-            updatedAt: new Date(),
+            updatedAt: new Date()
           })
           .returningAll()
           .executeTakeFirstOrThrow()
-      );
+      )
 
-      yield* Effect.logDebug("${className} created successfully");
+      yield* Effect.logDebug("${className} created successfully")
 
-      return entity;
+      return entity
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -106,9 +91,9 @@ export const createOperations = {
    */
   createMany: (inputs: ReadonlyArray<${className}CreateInput>) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Creating \${inputs.length} ${className} entities\`);
+      yield* Effect.logDebug(\`Creating \${inputs.length} ${className} entities\`)
 
       const entities = yield* database.query((db) =>
         db
@@ -117,29 +102,30 @@ export const createOperations = {
             inputs.map((input) => ({
               ...input,
               createdAt: new Date(),
-              updatedAt: new Date(),
+              updatedAt: new Date()
             }))
           )
           .returningAll()
           .execute()
-      );
+      )
 
-      yield* Effect.logDebug(\`Created \${entities.length} ${className} entities successfully\`);
+      yield* Effect.logDebug(\`Created \${entities.length} ${className} entities successfully\`)
 
-      return entities;
+      return entities
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => ${className}TimeoutError.create("createMany", 30000)
       }),
       Effect.withSpan("${className}Repository.createMany")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the create operations object
  */
-export type Create${className}Operations = typeof createOperations;`)
+export type Create${className}Operations = typeof createOperations
+`)
 
   return builder.toString()
 }

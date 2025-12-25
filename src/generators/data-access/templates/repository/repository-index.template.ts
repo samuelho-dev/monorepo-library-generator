@@ -44,8 +44,7 @@ Import options (from most optimal to most convenient):
   builder.addSectionComment("Re-export repository interface and tag")
   builder.addBlankLine()
 
-  builder.addRaw(`export { ${className}Repository } from "./repository"
-export type { ${className}RepositoryInterface } from "./repository"`)
+  builder.addRaw(`export { ${className}Repository, type ${className}RepositoryInterface } from "./repository"`)
   builder.addBlankLine()
 
   builder.addSectionComment("Re-export all operations")

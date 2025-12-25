@@ -35,15 +35,19 @@ This service is consumed by infra-storage for file operations.`,
   // Imports - use native types from @supabase/storage-js
   builder.addImports([
     {
-      from: "./errors",
-      imports: ["SupabaseStorageError", "SupabaseFileNotFoundError", "SupabaseBucketNotFoundError"]
+      from: "@supabase/storage-js",
+      imports: ["Bucket", "FileObject", "FileOptions", "SearchOptions", "TransformOptions"],
+      isTypeOnly: true
     },
-    { from: "effect", imports: ["Context", "Effect", "Layer", "Option"] }
+    {
+      from: "@supabase/supabase-js",
+      imports: [{ name: "SupabaseClient", alias: "SupabaseSDKClient" }],
+      isTypeOnly: true
+    },
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Option"] },
+    { from: "./client", imports: ["SupabaseClient"] },
+    { from: "./errors", imports: ["SupabaseBucketNotFoundError", "SupabaseFileNotFoundError", "SupabaseStorageError"] }
   ])
-  builder.addRaw(`import type { SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js";
-import type { FileOptions, FileObject, Bucket, SearchOptions, TransformOptions } from "@supabase/storage-js";
-import { SupabaseClient } from "./client";`)
-  builder.addBlankLine()
 
   // Service interface
   builder.addSectionComment("Service Interface")
@@ -168,7 +172,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "upload",
                 bucket,
                 path,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -178,7 +182,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 new SupabaseBucketNotFoundError({
                   message: \`Bucket not found: \${bucket}\`,
                   bucket,
-                  cause: error,
+                  cause: error
                 })
               );
             }
@@ -188,7 +192,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "upload",
                 bucket,
                 path,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -204,7 +208,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
 
           if (listError || !fileData?.[0]) {
             // Return minimal FileObject if list fails
-            return { name: data.path, bucket_id: bucket } as FileObject;
+            return { name: data.path, bucket_id: bucket };
           }
           return fileData[0];
         }).pipe(Effect.withSpan("SupabaseStorage.upload")),
@@ -219,7 +223,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "download",
                 bucket,
                 path,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -230,7 +234,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                   message: \`File not found: \${path}\`,
                   bucket,
                   path,
-                  cause: error,
+                  cause: error
                 })
               );
             }
@@ -240,7 +244,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "download",
                 bucket,
                 path,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -257,7 +261,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: "Delete failed",
                 operation: "delete",
                 bucket,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -267,7 +271,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: error.message || "Delete failed",
                 operation: "delete",
                 bucket,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -283,7 +287,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "list",
                 bucket,
                 ...(path && { path }),
-                cause: error,
+                cause: error
               }),
           });
 
@@ -293,7 +297,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 new SupabaseBucketNotFoundError({
                   message: \`Bucket not found: \${bucket}\`,
                   bucket,
-                  cause: error,
+                  cause: error
                 })
               );
             }
@@ -303,7 +307,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "list",
                 bucket,
                 ...(path && { path }),
-                cause: error,
+                cause: error
               })
             );
           }
@@ -321,7 +325,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "move",
                 bucket,
                 path: fromPath,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -332,7 +336,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                   message: \`File not found: \${fromPath}\`,
                   bucket,
                   path: fromPath,
-                  cause: error,
+                  cause: error
                 })
               );
             }
@@ -342,7 +346,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "move",
                 bucket,
                 path: fromPath,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -358,7 +362,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "copy",
                 bucket,
                 path: fromPath,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -369,7 +373,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                   message: \`File not found: \${fromPath}\`,
                   bucket,
                   path: fromPath,
-                  cause: error,
+                  cause: error
                 })
               );
             }
@@ -379,7 +383,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "copy",
                 bucket,
                 path: fromPath,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -395,7 +399,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "createSignedUrl",
                 bucket,
                 path,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -406,7 +410,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                   message: \`File not found: \${path}\`,
                   bucket,
                   path,
-                  cause: error,
+                  cause: error
                 })
               );
             }
@@ -416,7 +420,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 operation: "createSignedUrl",
                 bucket,
                 path,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -438,7 +442,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
               new SupabaseStorageError({
                 message: "List buckets failed",
                 operation: "list",
-                cause: error,
+                cause: error
               }),
           });
 
@@ -447,7 +451,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
               new SupabaseStorageError({
                 message: error.message || "List buckets failed",
                 operation: "list",
-                cause: error,
+                cause: error
               })
             );
           }
@@ -464,7 +468,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: "Get bucket failed",
                 operation: "getBucket",
                 bucket: name,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -478,7 +482,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: error.message || "Get bucket failed",
                 operation: "getBucket",
                 bucket: name,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -501,7 +505,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: "Create bucket failed",
                 operation: "createBucket",
                 bucket: name,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -511,7 +515,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: error.message || "Create bucket failed",
                 operation: "createBucket",
                 bucket: name,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -538,7 +542,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: "Delete bucket failed",
                 operation: "deleteBucket",
                 bucket: name,
-                cause: error,
+                cause: error
               }),
           });
 
@@ -548,7 +552,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 new SupabaseBucketNotFoundError({
                   message: \`Bucket not found: \${name}\`,
                   bucket: name,
-                  cause: error,
+                  cause: error
                 })
               );
             }
@@ -557,7 +561,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: error.message || "Delete bucket failed",
                 operation: "deleteBucket",
                 bucket: name,
-                cause: error,
+                cause: error
               })
             );
           }
@@ -593,7 +597,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
             return yield* Effect.fail(
               new SupabaseBucketNotFoundError({
                 message: \`Bucket not found: \${bucket}\`,
-                bucket,
+                bucket
               })
             );
           }
@@ -612,7 +616,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: \`Bucket not found: \${bucket}\`,
                 operation: "download",
                 bucket,
-                path,
+                path
               })
             );
           }
@@ -622,7 +626,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
               new SupabaseFileNotFoundError({
                 message: \`File not found: \${path}\`,
                 bucket,
-                path,
+                path
               })
             );
           }
@@ -646,7 +650,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
             return yield* Effect.fail(
               new SupabaseBucketNotFoundError({
                 message: \`Bucket not found: \${bucket}\`,
-                bucket,
+                bucket
               })
             );
           }
@@ -663,7 +667,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: \`Bucket not found: \${bucket}\`,
                 operation: "move",
                 bucket,
-                path: fromPath,
+                path: fromPath
               })
             );
           }
@@ -673,7 +677,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
               new SupabaseFileNotFoundError({
                 message: \`File not found: \${fromPath}\`,
                 bucket,
-                path: fromPath,
+                path: fromPath
               })
             );
           }
@@ -690,7 +694,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 message: \`Bucket not found: \${bucket}\`,
                 operation: "copy",
                 bucket,
-                path: fromPath,
+                path: fromPath
               })
             );
           }
@@ -700,7 +704,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
               new SupabaseFileNotFoundError({
                 message: \`File not found: \${fromPath}\`,
                 bucket,
-                path: fromPath,
+                path: fromPath
               })
             );
           }
@@ -732,7 +736,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
                 name,
                 public: buckets.get(name)?.public ?? false,
                 created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
               })
             : Option.none()
         ),
@@ -755,7 +759,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
             return yield* Effect.fail(
               new SupabaseBucketNotFoundError({
                 message: \`Bucket not found: \${name}\`,
-                bucket: name,
+                bucket: name
               })
             );
           }

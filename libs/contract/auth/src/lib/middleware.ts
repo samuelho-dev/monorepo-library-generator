@@ -1,4 +1,5 @@
 import { Context } from "effect"
+import type { AuthMethod, CurrentUserData, ServiceIdentity } from "./schemas"
 
 /**
  * Auth Contract Middleware
@@ -17,8 +18,6 @@ Route Types:
  *
  * @module @samuelho-dev/contract-auth/middleware
  */
-
-import type { CurrentUserData, ServiceIdentity } from "./schemas"
 
 // ============================================================================
 // Route Types (Contract-First)
@@ -78,6 +77,25 @@ export class CurrentUser extends Context.Tag("CurrentUser")<
   CurrentUserData
 >() {}
 
+/**
+ * Auth Method Context Tag
+ *
+ * Provides access to the authentication method used.
+ * Available on "protected" routes alongside CurrentUser.
+ *
+ * @example
+ * ```typescript
+ * const handler = Effect.gen(function*() {
+ *   const authMethod = yield* AuthMethodContext
+ *   console.log(authMethod.type, authMethod.token)
+ * })
+ * ```
+ */
+export class AuthMethodContext extends Context.Tag("AuthMethodContext")<
+  AuthMethodContext,
+  { readonly type: AuthMethod; readonly token: string }
+>() {}
+
 // ============================================================================
 // Service Authentication Context
 // ============================================================================
@@ -111,19 +129,14 @@ export class ServiceContext extends Context.Tag("ServiceContext")<
 export interface RequestMetadata {
   /** Unique request ID for tracing */
   readonly requestId: string
-
   /** Request timestamp */
   readonly timestamp: Date
-
   /** Client IP address */
   readonly ipAddress?: string
-
   /** User agent string */
   readonly userAgent?: string
-
   /** Request path */
   readonly path?: string
-
   /** HTTP method */
   readonly method?: string
 }

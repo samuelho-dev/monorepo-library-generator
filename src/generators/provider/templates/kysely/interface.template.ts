@@ -29,15 +29,15 @@ All method parameter types are inferred from the interface.`,
   builder.addBlankLine()
 
   // Imports
-  builder.addRaw(`import type { Effect } from "effect";
-import type { Kysely, Transaction, CompiledQuery } from "kysely";
-import type {
-  DatabaseConnectionError,
-  DatabaseQueryError,
-  DatabaseTransactionError,
-} from "./errors";
-`)
-  builder.addBlankLine()
+  builder.addImports([
+    { from: "effect", imports: ["Effect"], isTypeOnly: true },
+    { from: "kysely", imports: ["CompiledQuery", "Kysely", "RawBuilder", "Transaction"], isTypeOnly: true },
+    {
+      from: "./errors",
+      imports: ["DatabaseConnectionError", "DatabaseQueryError", "DatabaseTransactionError"],
+      isTypeOnly: true
+    }
+  ])
 
   // Interface
   builder.addSectionComment("Service Interface")
@@ -66,7 +66,7 @@ export interface ${className}ServiceInterface<DB> {
    *
    * Use for advanced operations not covered by other methods.
    */
-  readonly getDb: () => Kysely<DB>;
+  readonly getDb: () => Kysely<DB>
 
   /**
    * Execute a database query
@@ -78,12 +78,12 @@ export interface ${className}ServiceInterface<DB> {
    * \`\`\`typescript
    * const users = yield* kysely.query((db) =>
    *   db.selectFrom("users").selectAll().execute()
-   * );
+   * )
    * \`\`\`
    */
   readonly query: <T>(
     fn: (db: Kysely<DB>) => Promise<T>
-  ) => Effect.Effect<T, DatabaseQueryError>;
+  ) => Effect.Effect<T, DatabaseQueryError>
 
   /**
    * Execute a compiled query
@@ -93,7 +93,7 @@ export interface ${className}ServiceInterface<DB> {
    */
   readonly execute: (
     query: CompiledQuery
-  ) => Effect.Effect<readonly unknown[], DatabaseQueryError>;
+  ) => Effect.Effect<ReadonlyArray<unknown>, DatabaseQueryError>
 
   /**
    * Execute queries within a transaction
@@ -107,34 +107,34 @@ export interface ${className}ServiceInterface<DB> {
    *   Effect.gen(function* () {
    *     yield* kysely.query(() =>
    *       tx.insertInto("users").values({ name: "John" }).execute()
-   *     );
+   *     )
    *     yield* kysely.query(() =>
    *       tx.insertInto("audit").values({ action: "created" }).execute()
-   *     );
+   *     )
    *   })
-   * );
+   * )
    * \`\`\`
    */
   readonly transaction: <A, E>(
     fn: (tx: Transaction<DB>) => Effect.Effect<A, E>
-  ) => Effect.Effect<A, DatabaseTransactionError | E>;
+  ) => Effect.Effect<A, DatabaseTransactionError | E>
 
   /**
    * Execute raw SQL query
    *
-   * @param query - SQL template literal result
+   * @param query - SQL template literal result from kysely.sql
    * @returns Effect that succeeds with rows as unknown[]
    */
   readonly sql: (
-    query: ReturnType<typeof import("kysely").sql>
-  ) => Effect.Effect<readonly unknown[], DatabaseQueryError>;
+    query: RawBuilder<unknown>
+  ) => Effect.Effect<ReadonlyArray<unknown>, DatabaseQueryError>
 
   /**
    * Ping database to check connectivity
    *
    * @returns Effect that succeeds with void if connected
    */
-  readonly ping: () => Effect.Effect<void, DatabaseConnectionError>;
+  readonly ping: () => Effect.Effect<void, DatabaseConnectionError>
 
   /**
    * Get database introspection info
@@ -142,16 +142,16 @@ export interface ${className}ServiceInterface<DB> {
    * @returns Effect with tables and dialect info
    */
   readonly introspection: () => Effect.Effect<
-    { tables: Array<string>; dialect: string },
+    { tables: Array<string>, dialect: string },
     DatabaseQueryError
-  >;
+  >
 
   /**
    * Destroy database connection
    *
    * @returns Effect that succeeds when connection is closed
    */
-  readonly destroy: () => Effect.Effect<void>;
+  readonly destroy: () => Effect.Effect<void>
 }`)
 
   return builder.toString()

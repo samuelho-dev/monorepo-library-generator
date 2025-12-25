@@ -35,12 +35,10 @@ Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.`,
     module: `${scope}/feature-${fileName}/server/services`
   })
-  builder.addBlankLine()
 
   builder.addImports([
     { from: "effect", imports: ["Effect", "Layer", "Context", "Option", "Schema"] }
   ])
-  builder.addBlankLine()
 
   builder.addSectionComment("Error Imports (Contract-First)")
   builder.addComment("Domain errors pass through unchanged")
@@ -64,7 +62,6 @@ Import only the operations you need for smallest bundle size.`,
       isTypeOnly: true
     }
   ])
-  builder.addBlankLine()
 
   // Repository errors from contract (need to be mapped to domain errors)
   // Note: Import individual error types, NOT the union type (UserRepositoryError)
@@ -81,7 +78,6 @@ Import only the operations you need for smallest bundle size.`,
       isTypeOnly: true
     }
   ])
-  builder.addBlankLine()
 
   // Infrastructure errors from data-access
   builder.addImports([
@@ -95,7 +91,6 @@ Import only the operations you need for smallest bundle size.`,
       isTypeOnly: true
     }
   ])
-  builder.addBlankLine()
 
   // Database service errors from infra-database
   builder.addImports([
@@ -111,14 +106,12 @@ Import only the operations you need for smallest bundle size.`,
       isTypeOnly: true
     }
   ])
-  builder.addBlankLine()
 
   builder.addSectionComment("Repository Integration")
   builder.addImports([
     { from: `${scope}/data-access-${fileName}`, imports: [`${className}Repository`] },
     { from: `${scope}/infra-database`, imports: ["DatabaseService"] }
   ])
-  builder.addBlankLine()
 
   builder.addSectionComment("Infrastructure Services")
   builder.addImports([
@@ -126,14 +119,20 @@ Import only the operations you need for smallest bundle size.`,
     { from: `${scope}/infra-pubsub`, imports: ["PubsubService", "withEventPublishing"] },
     { from: `${scope}/infra-pubsub`, imports: ["TopicHandle"], isTypeOnly: true }
   ])
-  builder.addBlankLine()
+
+  builder.addSectionComment("Authentication Context (Optional)")
+  builder.addComment("Services can optionally access CurrentUser for auth-aware operations")
+  builder.addComment("Use CurrentUser.pipe(Effect.orElse(() => Effect.succeed(null))) for optional auth")
+  builder.addImports([
+    { from: `${scope}/contract-auth`, imports: ["CurrentUser"], isTypeOnly: false }
+  ])
 
   builder.addSectionComment("Environment Configuration")
-  builder.addRaw(`import { env } from "${scope}/env";`)
-  builder.addBlankLine()
+  builder.addImports([
+    { from: `${scope}/env`, imports: ["env"] }
+  ])
 
   builder.addSectionComment("Repository Type Re-exports")
-  builder.addBlankLine()
 
   builder.addImports([
     {
@@ -148,11 +147,10 @@ Import only the operations you need for smallest bundle size.`,
     }
   ])
   builder.addRaw(`
-export type { ${className}, ${className}CreateInput, ${className}UpdateInput, ${className}Filter };`)
-  builder.addBlankLine()
+export type { ${className}, ${className}CreateInput, ${className}UpdateInput, ${className}Filter }
+`)
 
   builder.addSectionComment("Event Schema")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${className} Event Schema
@@ -175,13 +173,11 @@ const ${className}EventSchema = Schema.Union(
     id: Schema.String,
     timestamp: Schema.DateFromSelf
   })
-);
+)
 
-type ${className}Event = Schema.Schema.Type<typeof ${className}EventSchema>;`)
-  builder.addBlankLine()
+type ${className}Event = Schema.Schema.Type<typeof ${className}EventSchema>`)
 
   builder.addSectionComment("Service Implementation")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Repository error type union (from data-access layer)
@@ -205,7 +201,7 @@ type ${className}RepoError =
   | DatabaseInternalError
   | DatabaseConfigError
   | DatabaseConnectionError
-  | DatabaseTimeoutError;
+  | DatabaseTimeoutError
 
 /**
  * Map repository errors to feature errors
@@ -242,7 +238,7 @@ const mapRepoErrors = <A, R>(
           identifier: error.identifier
         })),
       "${className}DatabaseRepositoryError": (error) =>
-        Effect.fail(${className}ServiceError.dependency(operation, error.message, error)),
+        Effect.fail(${className}ServiceError.dependency(operation, error.message, error))
     }),
     // Map infrastructure errors to service errors
     Effect.catchTags({
@@ -263,7 +259,7 @@ const mapRepoErrors = <A, R>(
           operation,
           \`Transaction \${error.phase} failed\`,
           error
-        )),
+        ))
     }),
     // Map database service errors
     Effect.catchTags({
@@ -276,16 +272,16 @@ const mapRepoErrors = <A, R>(
       "DatabaseConnectionError": (error) =>
         Effect.fail(${className}ServiceError.dependency(operation, "Database connection failed", error)),
       "DatabaseTimeoutError": (error) =>
-        Effect.fail(${className}ServiceError.dependency(operation, "Database operation timed out", error)),
+        Effect.fail(${className}ServiceError.dependency(operation, "Database operation timed out", error))
     }),
     // Log errors for observability
     Effect.tapError((error) =>
       Effect.logWarning(\`\${operation} failed\`, {
         errorTag: error._tag,
-        operation,
+        operation
       })
     )
-  );
+  )
 
 /**
  * Create service implementation
@@ -301,24 +297,24 @@ const createServiceImpl = (
 ) => ({
   get: (id: string) =>
     Effect.gen(function*() {
-      const histogram = yield* metrics.histogram("${name.toLowerCase()}_get_duration_seconds");
+      const histogram = yield* metrics.histogram("${name.toLowerCase()}_get_duration_seconds")
 
       return yield* histogram.timer(
         Effect.gen(function*() {
-          yield* logger.debug("${className}Service.get", { id });
+          yield* logger.debug("${className}Service.get", { id })
 
           const result = yield* mapRepoErrors(
             repo.findById(id),
             "get"
-          );
+          )
 
           if (Option.isNone(result)) {
-            yield* logger.debug("${className} not found", { id });
+            yield* logger.debug("${className} not found", { id })
           }
 
-          return result;
+          return result
         })
-      );
+      )
     }).pipe(Effect.withSpan("${className}Service.get", { attributes: { id } })),
 
   findByCriteria: (
@@ -327,132 +323,190 @@ const createServiceImpl = (
     limit: number
   ) =>
     Effect.gen(function*() {
-      const histogram = yield* metrics.histogram("${name.toLowerCase()}_list_duration_seconds");
+      const histogram = yield* metrics.histogram("${name.toLowerCase()}_list_duration_seconds")
 
       return yield* histogram.timer(
         Effect.gen(function*() {
           yield* logger.debug("${className}Service.findByCriteria", {
             criteria,
             offset,
-            limit,
-          });
+            limit
+          })
 
           const result = yield* mapRepoErrors(
             repo.findAll(criteria, { skip: offset, limit }).pipe(
               Effect.map((result) => result.items)
             ),
             "findByCriteria"
-          );
+          )
 
           yield* logger.debug("${className}Service.findByCriteria completed", {
-            count: result.length,
-          });
+            count: result.length
+          })
 
-          return result;
+          return result
         })
-      );
+      )
     }).pipe(Effect.withSpan("${className}Service.findByCriteria")),
 
   count: (criteria: ${className}Filter) =>
     Effect.gen(function*() {
-      yield* logger.debug("${className}Service.count", { criteria });
+      yield* logger.debug("${className}Service.count", { criteria })
 
       return yield* mapRepoErrors(
         repo.count(criteria),
         "count"
-      );
+      )
     }).pipe(Effect.withSpan("${className}Service.count")),
 
   create: (input: ${className}CreateInput) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("${name.toLowerCase()}_created_total");
-      const histogram = yield* metrics.histogram("${name.toLowerCase()}_create_duration_seconds");
+      const counter = yield* metrics.counter("${name.toLowerCase()}_created_total")
+      const histogram = yield* metrics.histogram("${name.toLowerCase()}_create_duration_seconds")
 
       return yield* histogram.timer(
         withEventPublishing(
           Effect.gen(function*() {
-            yield* logger.info("${className}Service.create", { input });
+            // Optional: Get current user for audit fields (createdBy, etc.)
+            // Use Option.getOrNull to handle cases where CurrentUser is not available (e.g., system operations)
+            const currentUser = yield* CurrentUser.pipe(
+              Effect.option,
+              Effect.map(Option.getOrNull)
+            )
+
+            yield* logger.info("${className}Service.create", {
+              input,
+              userId: currentUser?.id
+            })
+
+            // If your schema has createdBy/updatedBy fields, you can enrich the input:
+            // const enrichedInput = currentUser
+            //   ? { ...input, createdBy: currentUser.id, updatedBy: currentUser.id }
+            //   : input
 
             const result = yield* mapRepoErrors(
-              repo.create(input),
+              repo.create(input), // Or: repo.create(enrichedInput)
               "create"
-            );
+            )
 
-            yield* counter.increment;
-            yield* logger.info("${className} created", { id: result.id });
+            yield* counter.increment
+            yield* logger.info("${className} created", {
+              id: result.id,
+              userId: currentUser?.id
+            })
 
-            return result;
+            return result
           }),
           (result) => ({ type: "${className}Created" as const, id: result.id, timestamp: new Date() }),
           eventTopic
         )
-      );
+      )
     }).pipe(Effect.withSpan("${className}Service.create")),
 
   update: (id: string, input: ${className}UpdateInput) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("${name.toLowerCase()}_updated_total");
-      const histogram = yield* metrics.histogram("${name.toLowerCase()}_update_duration_seconds");
+      const counter = yield* metrics.counter("${name.toLowerCase()}_updated_total")
+      const histogram = yield* metrics.histogram("${name.toLowerCase()}_update_duration_seconds")
 
       return yield* histogram.timer(
         withEventPublishing(
           Effect.gen(function*() {
-            yield* logger.info("${className}Service.update", { id, input });
+            // Optional: Get current user for audit fields (updatedBy, etc.)
+            const currentUser = yield* CurrentUser.pipe(
+              Effect.option,
+              Effect.map(Option.getOrNull)
+            )
+
+            yield* logger.info("${className}Service.update", {
+              id,
+              input,
+              userId: currentUser?.id
+            })
+
+            // If your schema has updatedBy field, you can enrich the input:
+            // const enrichedInput = currentUser
+            //   ? { ...input, updatedBy: currentUser.id }
+            //   : input
 
             const result = yield* mapRepoErrors(
-              repo.update(id, input).pipe(Effect.map(Option.some)),
+              repo.update(id, input).pipe(Effect.map(Option.some)), // Or: repo.update(id, enrichedInput)
               "update"
-            );
+            )
 
-            yield* counter.increment;
-            yield* logger.info("${className} updated", { id });
+            yield* counter.increment
+            yield* logger.info("${className} updated", {
+              id,
+              userId: currentUser?.id
+            })
 
-            return result;
+            return result
           }),
           () => ({ type: "${className}Updated" as const, id, timestamp: new Date() }),
           eventTopic
         )
-      );
+      )
     }).pipe(Effect.withSpan("${className}Service.update", { attributes: { id } })),
 
   delete: (id: string) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("${name.toLowerCase()}_deleted_total");
-      const histogram = yield* metrics.histogram("${name.toLowerCase()}_delete_duration_seconds");
+      const counter = yield* metrics.counter("${name.toLowerCase()}_deleted_total")
+      const histogram = yield* metrics.histogram("${name.toLowerCase()}_delete_duration_seconds")
 
       return yield* histogram.timer(
         withEventPublishing(
           Effect.gen(function*() {
-            yield* logger.info("${className}Service.delete", { id });
+            // Optional: Get current user for authorization/audit logging
+            const currentUser = yield* CurrentUser.pipe(
+              Effect.option,
+              Effect.map(Option.getOrNull)
+            )
+
+            yield* logger.info("${className}Service.delete", {
+              id,
+              userId: currentUser?.id
+            })
+
+            // Optional: Add authorization check
+            // if (currentUser) {
+            //   // Check if user has permission to delete this entity
+            //   const entity = yield* repo.findById(id)
+            //   if (Option.isSome(entity) && entity.value.ownerId !== currentUser.id) {
+            //     return yield* Effect.fail(new ${className}PermissionError({
+            //       message: "Not authorized to delete this ${name}",
+            //       operation: "delete"
+            //     }))
+            //   }
+            // }
 
             yield* mapRepoErrors(
               repo.delete(id),
               "delete"
-            );
+            )
 
-            yield* counter.increment;
-            yield* logger.info("${className} deleted", { id });
+            yield* counter.increment
+            yield* logger.info("${className} deleted", {
+              id,
+              userId: currentUser?.id
+            })
           }),
           () => ({ type: "${className}Deleted" as const, id, timestamp: new Date() }),
           eventTopic
         )
-      );
+      )
     }).pipe(Effect.withSpan("${className}Service.delete", { attributes: { id } })),
 
   exists: (id: string) =>
     Effect.gen(function*() {
-      yield* logger.debug("${className}Service.exists", { id });
+      yield* logger.debug("${className}Service.exists", { id })
 
       return yield* mapRepoErrors(
         repo.exists(id),
         "exists"
-      );
-    }).pipe(Effect.withSpan("${className}Service.exists", { attributes: { id } })),
-});`)
-  builder.addBlankLine()
+      )
+    }).pipe(Effect.withSpan("${className}Service.exists", { attributes: { id } }))
+})`)
 
   builder.addSectionComment("Service Interface (Inferred from Implementation)")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${className} Service Interface
@@ -462,10 +516,8 @@ const createServiceImpl = (
  * including proper Effect requirements and error types.
  */
 export type ${className}ServiceInterface = ReturnType<typeof createServiceImpl>`)
-  builder.addBlankLine()
 
   builder.addSectionComment("Context.Tag")
-  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${className} Service Context.Tag
@@ -487,7 +539,13 @@ export class ${className}Service extends Context.Tag("${className}Service")<
    * - update() → ${className}Updated
    * - delete() → ${className}Deleted
    *
+   * Authentication Context:
+   * - Service operations can optionally access CurrentUser via Effect Context
+   * - CurrentUser is provided by RPC middleware (not by this service layer)
+   * - Use CurrentUser.pipe(Effect.option) to handle cases where auth is not available
+   *
    * Requires: ${className}Repository, LoggingService, MetricsService, PubsubService
+   * Optional: CurrentUser (provided by RPC layer when handling authenticated requests)
    */
   static readonly Live = Layer.effect(
     this,
@@ -509,7 +567,7 @@ export class ${className}Service extends Context.Tag("${className}Service")<
    * (e.g., DatabaseService.Test, LoggingService.Test) rather than
    * a separate implementation.
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 
   /**
    * Dev layer - Development with enhanced logging
@@ -517,7 +575,7 @@ export class ${className}Service extends Context.Tag("${className}Service")<
    * Same as Live - enhanced logging comes from LoggingService.Dev
    * when composing layers for development environment.
    */
-  static readonly Dev = this.Live;
+  static readonly Dev = this.Live
 
   /**
    * Auto layer - Environment-aware layer selection
@@ -533,13 +591,13 @@ export class ${className}Service extends Context.Tag("${className}Service")<
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "test":
-        return ${className}Service.Test;
+        return ${className}Service.Test
       case "development":
-        return ${className}Service.Dev;
+        return ${className}Service.Dev
       default:
-        return ${className}Service.Live;
+        return ${className}Service.Live
     }
-  });
+  })
 
   /**
    * Fully composed layer with all production dependencies
@@ -563,26 +621,11 @@ export class ${className}Service extends Context.Tag("${className}Service")<
     Layer.provide(PubsubService.Test)
   )
 }`)
-  builder.addBlankLine()
 
-  // Generate sub-module re-exports if subModules are provided
-  if (options.subModules && options.subModules.length > 0) {
-    builder.addSectionComment("Sub-Module Re-exports")
-    builder.addBlankLine()
-
-    builder.addRaw(`// Re-export sub-module services for convenient access
-// Use these for direct sub-module access or parent service composition`)
-    builder.addBlankLine()
-
-    for (const subModule of options.subModules) {
-      const subClassName = createNamingVariants(subModule).className
-      // Sub-modules are in sibling directories: ./authentication/, ./profile/, etc.
-      builder.addRaw(
-        `export { ${subClassName}Service, ${subClassName}Live, ${subClassName}Test } from "./${subModule}";`
-      )
-    }
-    builder.addBlankLine()
-  }
+  // NOTE: Sub-module re-exports removed - biome noBarrelFile compliance
+  // Consumers should import directly from sub-module directories:
+  // import { AuthenticationService } from "./authentication/service"
+  // import { ProfileService } from "./profile/service"
 
   return builder.toString()
 }

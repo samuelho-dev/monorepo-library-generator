@@ -1,3 +1,6 @@
+import { Effect, Exit, FiberId, Layer, Supervisor } from "effect"
+import type { Fiber, Option } from "effect"
+
 /**
  * Observability Fiber Tracking
  *
@@ -15,12 +18,9 @@ create excessive trace data. Use judiciously in production.
  * @module @samuelho-dev/infra-observability/supervisor
  * @see Effect Supervisor documentation
  */
-
-import { Effect, Exit, type Fiber, FiberId, Layer, type Option, Supervisor } from "effect"
 // ============================================================================
 // Supervisor Configuration
 // ============================================================================
-
 /**
  * Configuration for fiber tracking
  */
@@ -60,7 +60,6 @@ export interface SupervisorConfig {
 // ============================================================================
 // Supervisor Factory
 // ============================================================================
-
 /**
  * Create a Supervisor that logs fiber lifecycle events
  *
@@ -83,7 +82,7 @@ export interface SupervisorConfig {
  */
 export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
   Effect.sync(() => {
-    const shouldTrack = (fiberId: FiberId.FiberId): boolean => {
+    const shouldTrack = (fiberId: FiberId.FiberId) => {
       if (!config.filterPattern) return true
       const name = FiberId.threadName(fiberId)
       return config.filterPattern.test(name)
@@ -107,12 +106,12 @@ export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
     }
 
     return Supervisor.fromEffect(
-      Effect.gen(function*() {
+      Effect.gen(function*(_) {
         return {
           onStart: <A, E, R>(_context: unknown, _effect: Effect.Effect<A, E, R>, _parent: Option.Option<Fiber.RuntimeFiber<unknown, unknown>>, fiber: Fiber.RuntimeFiber<A, E>) => {
             if (config.trackStart !== false && shouldTrack(fiber.id())) {
               return logEvent("Fiber started", {
-                fiberId: FiberId.threadName(fiber.id()),
+                fiberId: FiberId.threadName(fiber.id())
               })
             }
             return Effect.void
@@ -124,14 +123,14 @@ export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
             if (config.trackFailure !== false && Exit.isFailure(exit) && shouldTrack(fiber.id())) {
               return logEvent("Fiber failed", {
                 fiberId,
-                failure: Exit.isFailure(exit) ? String(exit.cause) : undefined,
+                failure: Exit.isFailure(exit) ? String(exit.cause) : undefined
               })
             }
 
             // Track normal ends only if explicitly configured
             if (config.trackEnd === true && Exit.isSuccess(exit) && shouldTrack(fiber.id())) {
               return logEvent("Fiber completed", {
-                fiberId,
+                fiberId
               })
             }
 
@@ -148,7 +147,6 @@ export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}) =>
 // ============================================================================
 // Layer Factory
 // ============================================================================
-
 /**
  * Create a layer that adds fiber tracking to the application
  *
@@ -176,7 +174,6 @@ export const withFiberTracking = (config?: SupervisorConfig) =>
 // ============================================================================
 // Pre-configured Layers
 // ============================================================================
-
 /**
  * Minimal fiber tracking - only track failures
  *

@@ -90,6 +90,11 @@ export interface InfrastructureOptions {
    * Entity names for contract libraries (enables granular entity exports)
    */
   readonly entities?: ReadonlyArray<string>
+
+  /**
+   * Sub-module names for contract libraries (enables subpath exports)
+   */
+  readonly subModules?: ReadonlyArray<string>
 }
 
 /**
@@ -236,6 +241,10 @@ function generatePackageJsonFile(
       ...(options.entities &&
         options.entities.length > 0 && {
         entityNames: Array.from(options.entities)
+      }),
+      ...(options.subModules &&
+        options.subModules.length > 0 && {
+        subModuleNames: Array.from(options.subModules)
       })
     }
 
@@ -273,9 +282,9 @@ function generatePackageJsonFile(
     const peerDependencies = (() => {
       const base = { effect: "*" }
 
-      // Kysely provider needs kysely for the query builder
+      // Kysely provider needs kysely for query builder and pg for PostgreSQL driver
       if (options.libraryType === "provider" && options.projectName.includes("kysely")) {
-        return { ...base, kysely: "*" }
+        return { ...base, kysely: "*", pg: "*" }
       }
 
       // Supabase provider needs @supabase/supabase-js for the SDK

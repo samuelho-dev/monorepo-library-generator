@@ -1,3 +1,6 @@
+import { describe, expect, it } from "@effect/vitest"
+import { Context, Effect, Layer } from "effect"
+
 /**
  * Storage Service Tests
  *
@@ -13,8 +16,6 @@ Testing Guidelines:
  * @module @samuelho-dev/infra-storage
  */
 
-import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer } from "effect"
 
 /**
  * Test service tag for layer composition tests

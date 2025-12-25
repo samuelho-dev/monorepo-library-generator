@@ -207,7 +207,7 @@ export class ${className}ConnectionError extends Data.TaggedError(
 }> {}
 `)
 
-  builder.addImports([{ from: "effect", imports: ["Effect", "Match"] }])
+  builder.addImports([{ from: "effect", imports: ["Effect"] }])
 
   builder.addSectionComment("HTTP Status Mapping")
 
@@ -279,7 +279,7 @@ export const getHttpStatus = (error: RpcError): number =>
  */
 export const withRpcErrorBoundary = <A, E, R>(
   effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, RpcInternalError, R> =>
+) =>
   effect.pipe(
     Effect.catchAll(() =>
       Effect.fail(new RpcInternalError({ message: "An unexpected error occurred" }))

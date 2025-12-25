@@ -46,46 +46,29 @@ Usage:
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Array as EffectArray", "DateTime", "Effect", "Layer", "Option"] }
+    { from: "effect", imports: [{ name: "Array", alias: "EffectArray" }, "DateTime", "Effect", "Layer", "Option"] },
+    {
+      from: `${scope}/contract-${name}`,
+      imports: [
+        `${className}NotFoundRpcError`,
+        `${className}PermissionRpcError`,
+        `${className}Rpcs`,
+        `${className}ValidationRpcError`
+      ]
+    },
+    { from: `${scope}/infra-rpc`, imports: ["getHandlerContext", "RequestMeta", "ServiceContext"] },
+    { from: "../server/services", imports: [`${className}Service`] }
   ])
-  builder.addBlankLine()
-
-  builder.addSectionComment("Contract Imports (Single Source of Truth)")
-
-  builder.addRaw(`import {
-  ${className}Rpcs,
-  ${className}NotFoundRpcError,
-  ${className}ValidationRpcError,
-  ${className}PermissionRpcError,
-} from "${scope}/contract-${name}";
-`)
-
-
-  builder.addSectionComment("Infrastructure Imports")
-
-  builder.addRaw(`import {
-  // Middleware context (automatically provided based on RouteTag)
-  ServiceContext,
-  RequestMeta,
-  getHandlerContext,
-} from "${scope}/infra-rpc";
-`)
-
-  builder.addSectionComment("Service Layer Import")
-
-  builder.addRaw(`import { ${className}Service } from "../server/services";
-`)
-
 
   if (hasSubModules) {
     builder.addSectionComment("Sub-Module Handler Imports")
     for (const subModule of subModulesList!) {
       const subClassName = subModule.charAt(0).toUpperCase() + subModule.slice(1)
       builder.addRaw(
-        `import { ${subClassName}Handlers } from "../server/services/${subModule}/handlers";\n`
+        `import { ${subClassName}Handlers } from "../server/services/${subModule}/handlers"
+`
       )
     }
-    builder.addBlankLine()
   }
 
   // Helper to generate catchTags error mapping
@@ -114,7 +97,7 @@ Usage:
           Effect.fail(new ${className}ValidationRpcError({
             message: \`Service error: \${e.message}\`,
             field: "service"
-          })),
+          }))
       })`
 
   builder.addSectionComment("Handler Implementations")
@@ -153,8 +136,8 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
 
       yield* Effect.logDebug("Getting ${name}", {
         id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       const result = yield* service.get(id).pipe(
         ${errorCatchTags}
@@ -162,10 +145,10 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
 
       // Handle Option.none case - return typed RPC error
       if (Option.isNone(result)) {
-        return yield* Effect.fail(${className}NotFoundRpcError.create(id));
+        return yield* Effect.fail(${className}NotFoundRpcError.create(id))
       }
 
-      return result.value;
+      return result.value
     }),
 
   /**
@@ -175,11 +158,11 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
    */
   List${className}s: ({ page, pageSize }) =>
     Effect.gen(function*() {
-      const service = yield* ${className}Service;
+      const service = yield* ${className}Service
 
-      const currentPage = page ?? 1;
-      const currentPageSize = pageSize ?? 20;
-      const offset = (currentPage - 1) * currentPageSize;
+      const currentPage = page ?? 1
+      const currentPageSize = pageSize ?? 20
+      const offset = (currentPage - 1) * currentPageSize
 
       const [items, total] = yield* Effect.all([
         service.findByCriteria({}, offset, currentPageSize).pipe(
@@ -187,16 +170,16 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         ),
         service.count({}).pipe(
           ${errorCatchTags}
-        ),
-      ]);
+        )
+      ])
 
       return {
         page: currentPage,
         pageSize: currentPageSize,
         items,
         total,
-        hasMore: offset + items.length < total,
-      };
+        hasMore: offset + items.length < total
+      }
     }),
 
   /**
@@ -206,19 +189,19 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
    */
   Create${className}: (input) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Creating ${name}", {
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       // RPC input type should match service create input type
       // If types differ, use Schema.decode for transformation at this boundary
       return yield* service.create(input).pipe(
         ${errorCatchTags}
-      );
+      )
     }),
 
   /**
@@ -228,30 +211,30 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
    */
   Update${className}: ({ id, data }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Updating ${name}", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       // RPC data type should match service update input type
       // If types differ, use Schema.decode for transformation at this boundary
       const result = yield* service.update(id, data).pipe(
         ${errorCatchTags}
-      );
+      )
 
       // Handle Option.none case - return typed RPC error
       if (Option.isNone(result)) {
         return yield* Effect.fail(new ${className}NotFoundRpcError({
           message: \`${className} not found: \${id}\`,
           ${name}Id: id
-        }));
+        }))
       }
 
-      return result.value;
+      return result.value
     }),
 
   /**
@@ -261,22 +244,22 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
    */
   Delete${className}: ({ id }) =>
     Effect.gen(function*() {
-      const { user, meta } = yield* getHandlerContext;
-      const service = yield* ${className}Service;
+      const { user, meta } = yield* getHandlerContext
+      const service = yield* ${className}Service
 
       yield* Effect.logInfo("Deleting ${name}", {
         id,
         userId: user.id,
-        requestId: meta.requestId,
-      });
+        requestId: meta.requestId
+      })
 
       yield* service.delete(id).pipe(
         ${errorCatchTags}
-      );
+      )
       return {
         success: true as const,
-        deletedAt: DateTime.unsafeNow(),
-      };
+        deletedAt: DateTime.unsafeNow()
+      }
     }),
 
   /**
@@ -286,32 +269,32 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
    */
   Validate${className}: ({ userId, validationType }) =>
     Effect.gen(function*() {
-      const serviceCtx = yield* ServiceContext;
-      const service = yield* ${className}Service;
+      const serviceCtx = yield* ServiceContext
+      const service = yield* ${className}Service
 
       yield* Effect.logDebug("Validating ${name} for service", {
         userId,
         validationType,
-        callingService: serviceCtx.serviceName,
-      });
+        callingService: serviceCtx.serviceName
+      })
 
       const exists = yield* service.exists(userId).pipe(
         ${errorCatchTags}
-      );
+      )
 
       // Build response with proper handling for exactOptionalPropertyTypes
       const baseResponse = {
         valid: exists,
         userId,
-        validatedAt: DateTime.unsafeNow(),
-      };
+        validatedAt: DateTime.unsafeNow()
+      }
 
       // Use typed constant to avoid type assertion
-      const notFoundErrors: ReadonlyArray<string> = ["${className} not found"];
+      const notFoundErrors: ReadonlyArray<string> = ["${className} not found"]
 
       return exists
         ? baseResponse
-        : { ...baseResponse, errors: notFoundErrors };
+        : { ...baseResponse, errors: notFoundErrors }
     }),
 
   /**
@@ -321,7 +304,7 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
    */
   BulkGet${className}s: ({ ids }) =>
     Effect.gen(function*() {
-      const service = yield* ${className}Service;
+      const service = yield* ${className}Service
 
       // Fetch all entities in parallel using individual gets
       const results = yield* Effect.all(
@@ -329,19 +312,19 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
           ${errorCatchTags}
         )),
         { concurrency: "unbounded" }
-      );
+      )
 
       // Extract found items (filter out None results)
-      const items = EffectArray.getSomes(results);
-      const foundIds = new Set(items.map((item) => item.id));
-      const notFound = ids.filter((id) => !foundIds.has(id));
+      const items = EffectArray.getSomes(results)
+      const foundIds = new Set(items.map((item) => item.id))
+      const notFound = ids.filter((id) => !foundIds.has(id))
 
       return {
         items,
-        notFound,
-      };
-    }),
-});
+        notFound
+      }
+    })
+})
 `)
 
   if (hasSubModules) {
@@ -357,10 +340,10 @@ export const All${className}Handlers = {
 ${
       subModulesList.map((sub: string) => {
         const subClassName = sub.charAt(0).toUpperCase() + sub.slice(1)
-        return `  ...${subClassName}Handlers,`
-      }).join("\n")
+        return `  ...${subClassName}Handlers`
+      }).join(",\n")
     }
-};
+}
 `)
   }
 
@@ -375,7 +358,7 @@ ${
 export const ${className}HandlersLayer = Layer.mergeAll(
   ${className}Service.Live
   // Add other service layers as needed
-);
+)
 `)
 
   return builder.toString()

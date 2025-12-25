@@ -52,9 +52,13 @@ function generateSchemaError(
   tagName: string,
   fields: ReadonlyArray<SchemaFieldDef>
 ) {
-  const fieldDefs = fields
-    .map((f) => `    ${f.name}: ${f.optional ? `Schema.optional(${f.schema})` : f.schema}`)
-    .join(",\n")
+  // Build field definitions without trailing comma on last item
+  const fieldLines = fields.map((f, i) => {
+    const fieldDef = `    ${f.name}: ${f.optional ? `Schema.optional(${f.schema})` : f.schema}`
+    // No trailing comma on last field
+    return i < fields.length - 1 ? `${fieldDef},` : fieldDef
+  })
+  const fieldDefs = fieldLines.join("\n")
 
   return `export class ${className} extends Schema.TaggedError<${className}>()(
   "${tagName}",
@@ -72,17 +76,22 @@ function generateDataError(
   tagName: string,
   fields: ReadonlyArray<DataFieldDef>,
   staticCreate?: string,
-  additionalMethods?: ReadonlyArray<{ name: string; params: ReadonlyArray<{ name: string; type: string; optional?: boolean }>; body: string }>
+  additionalMethods?: ReadonlyArray<
+    { name: string; params: ReadonlyArray<{ name: string; type: string; optional?: boolean }>; body: string }
+  >
 ) {
-  const fieldDefs = fields
-    .map((f) => {
-      const docLine = f.jsdoc ? `  /** ${f.jsdoc} */\n` : ""
-      return `${docLine}  readonly ${f.name}${f.optional ? "?" : ""}: ${f.type};`
-    })
-    .join("\n\n")
+  // Map fields to their string representations (without extra blank lines)
+  const fieldLines: Array<string> = []
+  for (const f of fields) {
+    if (f.jsdoc) {
+      fieldLines.push(`  /** ${f.jsdoc} */`)
+    }
+    fieldLines.push(`  readonly ${f.name}${f.optional ? "?" : ""}: ${f.type}`)
+  }
+  const fieldDefs = fieldLines.join("\n")
 
   // Build static methods
-  const staticMethods: string[] = []
+  const staticMethods: Array<string> = []
   if (staticCreate) {
     staticMethods.push(staticCreate)
   }
@@ -199,6 +208,11 @@ export function createErrorFactory(config: ErrorFactoryConfig) {
       const errorNames = errors.map((e) => `${className}${e.name}`)
       const typeName = unionTypeName ?? `${className}Error`
 
+      // Format union type based on number of members
+      const unionType = errorNames.length >= 3
+        ? `\n  | ${errorNames.join("\n  | ")}`
+        : errorNames.join(" | ")
+
       builder.addRaw(`/**
  * Union of all ${className} error types
  *
@@ -208,8 +222,7 @@ export function createErrorFactory(config: ErrorFactoryConfig) {
  * Effect.catchTag("${errorNames[0]}", (err) => ...)
  * \`\`\`
  */
-export type ${typeName} =
-  | ${errorNames.join("\n  | ")};`)
+export type ${typeName} =${unionType}`)
 
       builder.addBlankLine()
     }
@@ -263,13 +276,13 @@ export function createContractReExports(config: ContractReExportConfig) {
     const exportList = errorsToExport.join(",\n  ")
 
     builder.addRaw(`${exportKeyword} {
-  ${exportList},
-} from "${importPath}";`)
+  ${exportList}
+} from "${importPath}"`)
 
     builder.addBlankLine()
 
     // Also export the union type
-    builder.addRaw(`export type { ${className}DomainError } from "${importPath}";`)
+    builder.addRaw(`export type { ${className}DomainError } from "${importPath}"`)
     builder.addBlankLine()
   }
 }
@@ -335,8 +348,8 @@ export {
   type ${className}RepositoryError,
 
   // Combined Error Type
-  type ${className}Error,
-} from "${importPath}";`)
+  type ${className}Error
+} from "${importPath}"`)
     builder.addBlankLine()
   }
 }
@@ -463,16 +476,16 @@ export class ${className}NotFoundError extends Data.TaggedError(
   "${className}NotFoundError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Identifier that was not found */
-  readonly ${propertyName}Id: string;
+  readonly ${propertyName}Id: string
 }> {
   static create(${propertyName}Id: string) {
     return new ${className}NotFoundError({
       message: \`${className} not found: \${${propertyName}Id}\`,
-      ${propertyName}Id,
-    });
+      ${propertyName}Id
+    })
   }
 }`)
     builder.addBlankLine()
@@ -485,37 +498,37 @@ export class ${className}ValidationError extends Data.TaggedError(
   "${className}ValidationError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Field that failed validation */
-  readonly field?: string;
+  readonly field?: string
 
   /** Constraint that was violated */
-  readonly constraint?: string;
+  readonly constraint?: string
 
   /** Invalid value */
-  readonly value?: unknown;
+  readonly value?: unknown
 }> {
   static create(params: {
-    message: string;
-    field?: string;
-    constraint?: string;
-    value?: unknown;
+    message: string
+    field?: string
+    constraint?: string
+    value?: unknown
   }) {
     return new ${className}ValidationError({
       message: params.message,
       ...(params.field !== undefined && { field: params.field }),
       ...(params.constraint !== undefined && { constraint: params.constraint }),
-      ...(params.value !== undefined && { value: params.value }),
-    });
+      ...(params.value !== undefined && { value: params.value })
+    })
   }
 
   static fieldRequired(field: string) {
     return new ${className}ValidationError({
       message: \`\${field} is required\`,
       field,
-      constraint: "required",
-    });
+      constraint: "required"
+    })
   }
 
   static fieldInvalid(field: string, constraint: string, value?: unknown) {
@@ -523,8 +536,8 @@ export class ${className}ValidationError extends Data.TaggedError(
       message: \`\${field} is invalid: \${constraint}\`,
       field,
       constraint,
-      ...(value !== undefined && { value }),
-    });
+      ...(value !== undefined && { value })
+    })
   }
 }`)
     builder.addBlankLine()
@@ -537,27 +550,27 @@ export class ${className}AlreadyExistsError extends Data.TaggedError(
   "${className}AlreadyExistsError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Identifier of existing resource */
-  readonly identifier?: string;
+  readonly identifier?: string
 }> {
   static create(identifier?: string) {
     return new ${className}AlreadyExistsError({
       message: identifier
         ? \`${className} already exists: \${identifier}\`
         : "${className} already exists",
-      ...(identifier !== undefined && { identifier }),
-    });
+      ...(identifier !== undefined && { identifier })
+    })
   }
 }`)
     builder.addBlankLine()
 
     // PermissionError (with conditional userId field based on entity type)
     const hasUserId = propertyName !== "user"
-    const userIdField = hasUserId ? `\n\n  /** User who attempted the operation */\n  readonly userId?: string;` : ""
-    const userIdParam = hasUserId ? `\n    userId?: string;` : ""
-    const userIdSpread = hasUserId ? `\n    ...(params.userId !== undefined && { userId: params.userId }),` : ""
+    const userIdField = hasUserId ? `\n\n  /** User who attempted the operation */\n  readonly userId?: string` : ""
+    const userIdParam = hasUserId ? `\n    userId?: string` : ""
+    const userIdSpread = hasUserId ? `,\n    ...(params.userId !== undefined && { userId: params.userId })` : ""
 
     builder.addRaw(`/**
  * Error thrown when ${propertyName} operation is not permitted
@@ -566,23 +579,23 @@ export class ${className}PermissionError extends Data.TaggedError(
   "${className}PermissionError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Operation that was denied */
-  readonly operation: string;
+  readonly operation: string
 
   /** Resource identifier */
-  readonly ${propertyName}Id: string;${userIdField}
+  readonly ${propertyName}Id: string${userIdField}
 }> {
   static create(params: {
-    operation: string;
-    ${propertyName}Id: string;${userIdParam}
+    operation: string
+    ${propertyName}Id: string${userIdParam}
   }) {
     return new ${className}PermissionError({
       message: \`Operation '\${params.operation}' not permitted on ${propertyName} \${params.${propertyName}Id}\`,
       operation: params.operation,
-      ${propertyName}Id: params.${propertyName}Id,${userIdSpread}
-    });
+      ${propertyName}Id: params.${propertyName}Id${userIdSpread}
+    })
   }
 }`)
     builder.addBlankLine()
@@ -595,7 +608,7 @@ export type ${className}DomainError =
   | ${className}NotFoundError
   | ${className}ValidationError
   | ${className}AlreadyExistsError
-  | ${className}PermissionError;`)
+  | ${className}PermissionError`)
     builder.addBlankLine()
   }
 }
@@ -627,16 +640,16 @@ export class ${className}NotFoundRepositoryError extends Data.TaggedError(
   "${className}NotFoundRepositoryError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Identifier that was not found */
-  readonly ${propertyName}Id: string;
+  readonly ${propertyName}Id: string
 }> {
   static create(${propertyName}Id: string) {
     return new ${className}NotFoundRepositoryError({
       message: \`${className} not found: \${${propertyName}Id}\`,
-      ${propertyName}Id,
-    });
+      ${propertyName}Id
+    })
   }
 }`)
     builder.addBlankLine()
@@ -649,24 +662,24 @@ export class ${className}ValidationRepositoryError extends Data.TaggedError(
   "${className}ValidationRepositoryError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Field that failed validation */
-  readonly field?: string;
+  readonly field?: string
 
   /** Constraint that was violated */
-  readonly constraint?: string;
+  readonly constraint?: string
 }> {
   static create(params: {
-    message: string;
-    field?: string;
-    constraint?: string;
+    message: string
+    field?: string
+    constraint?: string
   }) {
     return new ${className}ValidationRepositoryError({
       message: params.message,
       ...(params.field !== undefined && { field: params.field }),
-      ...(params.constraint !== undefined && { constraint: params.constraint }),
-    });
+      ...(params.constraint !== undefined && { constraint: params.constraint })
+    })
   }
 }`)
     builder.addBlankLine()
@@ -679,18 +692,18 @@ export class ${className}ConflictRepositoryError extends Data.TaggedError(
   "${className}ConflictRepositoryError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Identifier of conflicting resource */
-  readonly identifier?: string;
+  readonly identifier?: string
 }> {
   static create(identifier?: string) {
     return new ${className}ConflictRepositoryError({
       message: identifier
         ? \`${className} already exists: \${identifier}\`
         : "${className} already exists",
-      ...(identifier !== undefined && { identifier }),
-    });
+      ...(identifier !== undefined && { identifier })
+    })
   }
 }`)
     builder.addBlankLine()
@@ -703,24 +716,24 @@ export class ${className}DatabaseRepositoryError extends Data.TaggedError(
   "${className}DatabaseRepositoryError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Database operation that failed */
-  readonly operation: string;
+  readonly operation: string
 
   /** Underlying database error */
-  readonly cause?: string;
+  readonly cause?: string
 }> {
   static create(params: {
-    message: string;
-    operation: string;
-    cause?: string;
+    message: string
+    operation: string
+    cause?: string
   }) {
     return new ${className}DatabaseRepositoryError({
       message: params.message,
       operation: params.operation,
-      ...(params.cause !== undefined && { cause: params.cause }),
-    });
+      ...(params.cause !== undefined && { cause: params.cause })
+    })
   }
 }`)
     builder.addBlankLine()
@@ -733,7 +746,7 @@ export type ${className}RepositoryError =
   | ${className}NotFoundRepositoryError
   | ${className}ValidationRepositoryError
   | ${className}ConflictRepositoryError
-  | ${className}DatabaseRepositoryError;`)
+  | ${className}DatabaseRepositoryError`)
     builder.addBlankLine()
   }
 }
@@ -754,7 +767,7 @@ export function createContractCombinedErrorType(className: string) {
     builder.addRaw(`/**
  * All possible ${className.toLowerCase()} errors
  */
-export type ${className}Error = ${className}DomainError | ${className}RepositoryError;`)
+export type ${className}Error = ${className}DomainError | ${className}RepositoryError`)
     builder.addBlankLine()
   }
 }

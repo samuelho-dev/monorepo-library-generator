@@ -321,11 +321,9 @@ Effect.gen(function*() {
     yield* adapter.writeFile(rpcGroupPath, rpcGroupContent)
     files.push(rpcGroupPath)
 
-    // Generate main rpc.ts barrel that re-exports everything
-    const rpcBarrelPath = `${sourceLibPath}/rpc.ts`
-    const rpcBarrelContent = generateRpcBarrel(templateOptions)
-    yield* adapter.writeFile(rpcBarrelPath, rpcBarrelContent)
-    files.push(rpcBarrelPath)
+    // NOTE: rpc.ts barrel file eliminated - biome noBarrelFile compliance
+    // Consumers should import directly from rpc-errors.ts, rpc-definitions.ts, or rpc-group.ts
+    // Main index.ts provides unified imports for convenience
 
     // Generate index file (barrel exports)
     const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
@@ -449,28 +447,68 @@ function generateSubModules(
 
 /**
  * Generate RPC barrel file that re-exports all RPC modules
+ *
+ * Uses named exports instead of `export *` to comply with biome rules.
  */
 function generateRpcBarrel(options: ContractTemplateOptions) {
   const { className, fileName } = options
   const scope = options.packageName.split("/")[0]
 
+  // This file is intentionally a barrel - it aggregates RPC exports for Contract-First Architecture
   return `/**
  * ${className} RPC
  *
  * Barrel export for all RPC-related types and definitions.
  * This is the main entry point for RPC consumers.
  *
+ * NOTE: This file is intentionally a barrel file for Contract-First Architecture.
+ * It provides a unified import point for all RPC-related exports.
+ *
  * @module ${scope}/contract-${fileName}/rpc
  */
 
+// biome-ignore lint/performance/noBarrelFile: Intentional barrel for Contract-First Architecture RPC aggregation
 // RPC Errors (Schema.TaggedError for network serialization)
-export * from "./rpc-errors";
+export {
+  ${className}NotFoundRpcError,
+  ${className}ValidationRpcError,
+  ${className}PermissionRpcError,
+  ${className}RpcError
+} from "./rpc-errors"
 
 // RPC Definitions (Rpc.make with RouteTag)
-export * from "./rpc-definitions";
+export {
+  ${className}Id,
+  RouteTag,
+  type RouteType,
+  ${className}Schema,
+  type ${className}Entity,
+  PaginationParams,
+  PaginatedResponse,
+  Create${className}Input,
+  Update${className}Input,
+  Validate${className}Input,
+  ValidationResponse,
+  BulkGet${className}Input,
+  Get${className},
+  List${className}s,
+  Create${className},
+  Update${className},
+  Delete${className},
+  Validate${className},
+  BulkGet${className}s
+} from "./rpc-definitions"
 
 // RPC Group (RpcGroup.make composition)
-export * from "./rpc-group";
+export {
+  ${className}Rpcs,
+  type ${className}RpcDefinitions,
+  getRouteType,
+  isProtectedRoute,
+  isServiceRoute,
+  isPublicRoute,
+  ${className}RpcsByRoute
+} from "./rpc-group"
 `
 }
 
@@ -496,7 +534,7 @@ function generateSubModuleRpcErrorsFile(options: {
  * @module ${scope}/contract-${parentName}/${options.subModuleName}/rpc-errors
  */
 
-import { Schema } from "effect";
+import { Schema } from "effect"
 
 // ============================================================================
 // RPC Errors (Schema.TaggedError for serialization)
@@ -509,14 +547,14 @@ export class ${subModuleClassName}NotFoundRpcError extends Schema.TaggedError<${
   "${subModuleClassName}NotFoundRpcError",
   {
     message: Schema.String,
-    ${subModulePropertyName}Id: Schema.String,
+    ${subModulePropertyName}Id: Schema.String
   }
 ) {
   static create(id: string) {
     return new ${subModuleClassName}NotFoundRpcError({
       message: \`${subModuleClassName} not found: \${id}\`,
-      ${subModulePropertyName}Id: id,
-    });
+      ${subModulePropertyName}Id: id
+    })
   }
 }
 
@@ -528,11 +566,11 @@ export class ${subModuleClassName}ValidationRpcError extends Schema.TaggedError<
   {
     message: Schema.String,
     field: Schema.optional(Schema.String),
-    constraint: Schema.optional(Schema.String),
+    constraint: Schema.optional(Schema.String)
   }
 ) {
   static create(params: { message: string; field?: string; constraint?: string }) {
-    return new ${subModuleClassName}ValidationRpcError(params);
+    return new ${subModuleClassName}ValidationRpcError(params)
   }
 }
 
@@ -544,15 +582,15 @@ export class ${subModuleClassName}PermissionRpcError extends Schema.TaggedError<
   {
     message: Schema.String,
     action: Schema.String,
-    ${subModulePropertyName}Id: Schema.optional(Schema.String),
+    ${subModulePropertyName}Id: Schema.optional(Schema.String)
   }
 ) {
   static create(action: string, ${subModulePropertyName}Id?: string) {
     return new ${subModuleClassName}PermissionRpcError({
       message: \`Permission denied: \${action}\`,
       action,
-      ...(${subModulePropertyName}Id ? { ${subModulePropertyName}Id } : {}),
-    });
+      ...(${subModulePropertyName}Id ? { ${subModulePropertyName}Id } : {})
+    })
   }
 }
 
@@ -562,7 +600,7 @@ export class ${subModuleClassName}PermissionRpcError extends Schema.TaggedError<
 export type ${subModuleClassName}RpcError =
   | ${subModuleClassName}NotFoundRpcError
   | ${subModuleClassName}ValidationRpcError
-  | ${subModuleClassName}PermissionRpcError;
+  | ${subModuleClassName}PermissionRpcError
 
 /**
  * Schema for the RPC error union
@@ -570,13 +608,15 @@ export type ${subModuleClassName}RpcError =
 export const ${subModuleClassName}RpcError = Schema.Union(
   ${subModuleClassName}NotFoundRpcError,
   ${subModuleClassName}ValidationRpcError,
-  ${subModuleClassName}PermissionRpcError,
-);
+  ${subModuleClassName}PermissionRpcError
+)
 `
 }
 
 /**
  * Update main index.ts to include sub-module exports
+ *
+ * Uses import * as + re-export pattern instead of export * as to satisfy biome noReExportAll rule.
  */
 function updateMainIndexWithSubModules(
   adapter: FileSystemAdapter,
@@ -591,11 +631,19 @@ function updateMainIndexWithSubModules(
     // Read existing index content
     const existingContent = yield* adapter.readFile(indexPath)
 
-    // Add sub-module namespace exports
+    // Generate imports for each sub-module
+    const subModuleImports = subModuleNames
+      .map((name) => {
+        const className = createNamingVariants(name).className
+        return `import * as ${className}Module from "./${name}"`
+      })
+      .join("\n")
+
+    // Generate named exports that re-export the imported namespaces
     const subModuleExports = subModuleNames
       .map((name) => {
         const className = createNamingVariants(name).className
-        return `export * as ${className} from "./${name}";`
+        return `export { ${className}Module as ${className} }`
       })
       .join("\n")
 
@@ -604,6 +652,8 @@ function updateMainIndexWithSubModules(
 // ============================================================================
 // Sub-Module Namespace Exports (Hybrid DDD Pattern)
 // ============================================================================
+
+${subModuleImports}
 
 ${subModuleExports}
 `

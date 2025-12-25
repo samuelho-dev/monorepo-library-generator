@@ -53,8 +53,9 @@ Integration with infra-rpc:
   ForbiddenError,
   InvalidTokenError,
   SessionExpiredError,
-  type AuthInfraError,
-} from "./lib/errors";`)
+  InvalidApiKeyError,
+  type AuthServiceError
+} from "./lib/errors"`)
   builder.addBlankLine()
 
   // Type exports
@@ -62,30 +63,30 @@ Integration with infra-rpc:
   builder.addBlankLine()
 
   builder.addRaw(`export type {
-  AuthContext,
-} from "./lib/types";
+  AuthContext
+} from "./lib/types"
 
 export {
-  AuthContextSchema,
-} from "./lib/types";
+  AuthContextSchema
+} from "./lib/types"
 
 // Re-export from provider for convenience
-export type { AuthUser, AuthMethod } from "${scope}/provider-supabase";
-export { AuthUserSchema } from "${scope}/provider-supabase";`)
+export type { AuthUser, AuthMethod } from "${scope}/provider-supabase"
+export { AuthUserSchema } from "${scope}/provider-supabase"`)
   builder.addBlankLine()
 
   // Service exports
   builder.addSectionComment("Service")
   builder.addBlankLine()
 
-  builder.addRaw(`export { AuthService, type AuthServiceInterface } from "./lib/service";`)
+  builder.addRaw(`export { AuthService, type AuthServiceInterface } from "./lib/service"`)
   builder.addBlankLine()
 
   // AuthVerifier implementation for infra-rpc
   builder.addSectionComment("AuthVerifier Implementation (for infra-rpc)")
   builder.addBlankLine()
 
-  builder.addRaw(`export { AuthVerifierLive } from "./lib/service";`)
+  builder.addRaw(`export { AuthVerifierLive } from "./lib/service"`)
   builder.addBlankLine()
 
   // Usage example

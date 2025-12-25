@@ -58,32 +58,27 @@ Event publishing is done IN the service implementation using helpers:
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: "effect", imports: ["Layer"] }])
-  builder.addBlankLine()
-
-  builder.addSectionComment("Service Layer")
-  builder.addRaw(`import { ${className}Service } from "./service";`)
-  builder.addBlankLine()
+  builder.addImports([
+    { from: "effect", imports: ["Layer"] },
+    { from: "./service", imports: [`${className}Service`] }
+  ])
 
   // Add sub-module service imports if subModules are provided
-  // Sub-modules are in sibling directories: ./authentication/, ./profile/, etc.
   if (options.subModules && options.subModules.length > 0) {
-    builder.addSectionComment("Sub-Module Service Layers")
     for (const subModule of options.subModules) {
       const subClassName = createNamingVariants(subModule).className
-      builder.addRaw(
-        `import { ${subClassName}Live, ${subClassName}Test } from "./${subModule}";`
-      )
+      builder.addImports([
+        { from: `./${subModule}`, imports: [`${subClassName}Live`, `${subClassName}Test`] }
+      ])
     }
-    builder.addBlankLine()
   }
 
-  builder.addSectionComment("Data Access Layer")
-  builder.addRaw(`import { ${className}Repository } from "${scope}/data-access-${fileName}";`)
-  builder.addBlankLine()
+  // Data access import
+  builder.addImports([
+    { from: `${scope}/data-access-${fileName}`, imports: [`${className}Repository`] }
+  ])
 
   // Infrastructure imports (grouped by package to avoid duplicate imports)
-  builder.addSectionComment("Infrastructure Layers")
   const packageToServices = new Map<string, Array<string>>()
   for (const service of INFRASTRUCTURE_SERVICES.feature) {
     const packageName = getInfraPackageName(service)
@@ -91,18 +86,16 @@ Event publishing is done IN the service implementation using helpers:
     existing.push(service)
     packageToServices.set(packageName, existing)
   }
-  const infraImports = Array.from(packageToServices.entries())
-    .map(([packageName, services]) => {
-      return `import { ${services.join(", ")} } from "${scope}/infra-${packageName}";`
-    })
-    .join("\n")
-  builder.addRaw(infraImports)
-  builder.addBlankLine()
+  for (const [packageName, services] of packageToServices.entries()) {
+    builder.addImports([
+      { from: `${scope}/infra-${packageName}`, imports: services.sort() }
+    ])
+  }
 
   // Environment config import
-  builder.addSectionComment("Environment Configuration")
-  builder.addRaw(`import { env } from "${scope}/env";`)
-  builder.addBlankLine()
+  builder.addImports([
+    { from: `${scope}/env`, imports: ["env"] }
+  ])
 
   // Service layer notes
   builder.addSectionComment("Service Layer Notes")
@@ -164,7 +157,7 @@ Event publishing is done IN the service implementation using helpers:
  */
 export const ${className}FeatureLive = Layer.mergeAll(
   ${liveServices.join(",\n  ")}
-).pipe(Layer.provide(InfrastructureLive));`)
+).pipe(Layer.provide(InfrastructureLive))`)
   builder.addBlankLine()
 
   // Test layer
@@ -196,7 +189,7 @@ export const ${className}FeatureLive = Layer.mergeAll(
  */
 export const ${className}FeatureTest = Layer.mergeAll(
   ${testServices.join(",\n  ")}
-).pipe(Layer.provide(InfrastructureTest));`)
+).pipe(Layer.provide(InfrastructureTest))`)
   builder.addBlankLine()
 
   // Dev layer
@@ -207,7 +200,7 @@ export const ${className}FeatureTest = Layer.mergeAll(
  */
 export const ${className}FeatureDev = Layer.mergeAll(
   ${liveServices.join(",\n  ")}
-).pipe(Layer.provide(InfrastructureDev));`)
+).pipe(Layer.provide(InfrastructureDev))`)
   builder.addBlankLine()
 
   // Auto layer using factory

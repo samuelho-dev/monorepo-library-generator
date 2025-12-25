@@ -1,6 +1,6 @@
 {
   "name": "@samuelho-dev/monorepo-library-generator",
-  "version": "1.6.3",
+  "version": "1.7.0",
   "description": "Effect-based CLI for generating libraries in Effect-native monorepos",
   "type": "module",
   "bin": {
@@ -30,8 +30,8 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsc -p tsconfig.src.json && node scripts/bundle-cli.mjs",
-    "build:watch": "tsc -p tsconfig.src.json --watch",
+    "build": "bun scripts/build.ts",
+    "build:types": "tsc -p tsconfig.src.json --emitDeclarationOnly",
     "test": "vitest run",
     "test:ci": "vitest run --config vitest.config.ci.ts",
     "test:watch": "vitest --watch",
@@ -52,7 +52,7 @@
     "@effect/opentelemetry": "^0.60.0",
     "@effect/platform": "^0.94.0",
     "@effect/platform-node": "^0.104.0",
-    "@effect/schema": "^0.75.5",
+    "@effect/vitest": "^0.27.0",
     "@nx/devkit": "^22.3.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.208.0",
@@ -70,6 +70,7 @@
     "ink-text-input": "^6.0.0",
     "ioredis": "catalog:",
     "nx": "^22.3.1",
+    "pg": "^8.12.0",
     "react": "^18.3.1"
   },
   "devDependencies": {
@@ -79,11 +80,11 @@
     "@eslint/js": "^9.39.2",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.8",
     "@types/react": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
     "@vitest/ui": "^4.0.15",
-    "esbuild": "^0.24.2",
     "eslint": "^9.17.0",
     "eslint-plugin-codegen": "^0.34.1",
     "eslint-plugin-import": "^2.32.0",

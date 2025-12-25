@@ -1,4 +1,4 @@
-import { Data, Effect, Match, Schema } from "effect"
+import { Data, Effect, Schema } from "effect"
 
 /**
  * Rpc Errors
@@ -17,11 +17,9 @@ Note: AuthError is defined in middleware.ts for co-location with AuthMiddleware.
  * @module @samuelho-dev/infra-rpc/errors
  * @see EFFECT_PATTERNS.md for error patterns
  */
-
 // ============================================================================
 // RPC Infrastructure Errors (Schema.TaggedError)
 // ============================================================================
-
 /**
  * Base RPC infrastructure error
  *
@@ -149,7 +147,6 @@ export type RpcError =
 // ============================================================================
 // Domain-Level Errors (Data.TaggedError)
 // ============================================================================
-
 /**
  * Internal infrastructure error (domain-level, non-serializable)
  *
@@ -188,7 +185,6 @@ export class RpcConnectionError extends Data.TaggedError(
 // ============================================================================
 // HTTP Status Mapping
 // ============================================================================
-
 /**
  * HTTP status codes mapped to RPC error tags
  *
@@ -219,7 +215,6 @@ export const getHttpStatus = (error: RpcError): number =>
 // ============================================================================
 // Error Boundary (Effect-native)
 // ============================================================================
-
 /**
  * Wrap effect with RPC error boundary using Effect.catchTag
  *
@@ -258,7 +253,7 @@ export const getHttpStatus = (error: RpcError): number =>
  */
 export const withRpcErrorBoundary = <A, E, R>(
   effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, RpcInternalError, R> =>
+) =>
   effect.pipe(
     Effect.catchAll(() =>
       Effect.fail(new RpcInternalError({ message: "An unexpected error occurred" }))

@@ -28,28 +28,12 @@ Bundle optimization: Import this file directly for smallest bundle size:
   })
   builder.addBlankLine()
 
-  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
-  builder.addBlankLine()
-
   builder.addImports([
-    {
-      from: "../../shared/types",
-      imports: [`${className}UpdateInput`],
-      isTypeOnly: true
-    },
-    {
-      from: "../../shared/errors",
-      // Use REPOSITORY errors, not domain errors
-      // Repository → Service layer maps these to domain errors
-      imports: [`${className}NotFoundRepositoryError`, `${className}TimeoutError`]
-    }
+    { from: "effect", imports: ["Duration", "Effect"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
+    { from: "../../shared/errors", imports: [`${className}NotFoundRepositoryError`, `${className}TimeoutError`] },
+    { from: "../../shared/types", imports: [`${className}UpdateInput`], isTypeOnly: true }
   ])
-  builder.addBlankLine()
-
-  // Import infrastructure services
-  builder.addComment("Infrastructure services - Database for persistence")
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
-  builder.addBlankLine()
 
   builder.addSectionComment("Update Operations")
   builder.addBlankLine()
@@ -62,7 +46,7 @@ Bundle optimization: Import this file directly for smallest bundle size:
  *
  * @example
  * \`\`\`typescript
- * const updated = yield* updateOperations.update("id-123", { name: "new name" });
+ * const updated = yield* updateOperations.update("id-123", { name: "new name" })
  * \`\`\`
  */
 export const updateOperations = {
@@ -71,43 +55,44 @@ export const updateOperations = {
    */
   update: (id: string, input: ${className}UpdateInput) =>
     Effect.gen(function*() {
-      const database = yield* DatabaseService;
+      const database = yield* DatabaseService
 
-      yield* Effect.logDebug(\`Updating ${className} with id: \${id}\`);
+      yield* Effect.logDebug(\`Updating ${className} with id: \${id}\`)
 
       const updated = yield* database.query((db) =>
         db
           .updateTable("${fileName}")
           .set({
             ...input,
-            updatedAt: new Date(),
+            updatedAt: new Date()
           })
           .where("id", "=", id)
           .returningAll()
           .executeTakeFirst()
-      );
+      )
 
       if (!updated) {
-        yield* Effect.logWarning(\`${className} not found: \${id}\`);
-        return yield* Effect.fail(${className}NotFoundRepositoryError.create(id));
+        yield* Effect.logWarning(\`${className} not found: \${id}\`)
+        return yield* Effect.fail(${className}NotFoundRepositoryError.create(id))
       }
 
-      yield* Effect.logDebug(\`${className} updated successfully (id: \${id})\`);
+      yield* Effect.logDebug(\`${className} updated successfully (id: \${id})\`)
 
-      return updated;
+      return updated
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
         onTimeout: () => ${className}TimeoutError.create("update", 30000)
       }),
       Effect.withSpan("${className}Repository.update")
-    ),
-} as const;
+    )
+} as const
 
 /**
  * Type alias for the update operations object
  */
-export type Update${className}Operations = typeof updateOperations;`)
+export type Update${className}Operations = typeof updateOperations
+`)
 
   return builder.toString()
 }

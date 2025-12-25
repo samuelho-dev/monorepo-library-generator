@@ -46,17 +46,38 @@ Import patterns:
   builder.addSectionComment("Re-export service internals")
   builder.addBlankLine()
 
-  builder.addRaw(`// Error types
-export * from "./errors";
+  builder.addComment("Error types")
+  builder.addRaw(`export {
+  ${className}ConfigError,
+  ${className}ConnectionError,
+  ${className}InternalError,
+  ${className}TimeoutError,
+  type ${className}Error
+} from "./errors"`)
+  builder.addBlankLine()
 
-// Service types
-export * from "./types";
+  builder.addComment("Service types")
+  builder.addRaw(`export type {
+  ${className}Config,
+  ${className}Options,
+  ${className}Result
+} from "./types"`)
+  builder.addBlankLine()
 
-// Validation helpers
-export * from "./validation";
+  builder.addComment("Validation helpers")
+  builder.addRaw(`export {
+  validate${className}Config,
+  validate${className}Input
+} from "./validation"`)
+  builder.addBlankLine()
 
-// Layer compositions
-export * from "./layers";`)
+  builder.addComment("Layer compositions")
+  builder.addRaw(`export {
+  ${className}LiveLayer,
+  ${className}TestLayer,
+  ${className}DevLayer,
+  make${className}Layer
+} from "./layers"`)
 
   return builder.toString()
 }

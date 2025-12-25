@@ -25,23 +25,28 @@ Integration with infra-rpc:
 
 export {
   AuthError,
-  type AuthInfraError,
+  UnauthorizedError,
   ForbiddenError,
   InvalidTokenError,
   SessionExpiredError,
-  UnauthorizedError
+  InvalidApiKeyError,
+  type AuthServiceError
 } from "./lib/errors"
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type { AuthContext } from "./lib/types"
+export type {
+  AuthContext
+} from "./lib/types"
 
-export { AuthContextSchema } from "./lib/types"
+export {
+  AuthContextSchema
+} from "./lib/types"
 
 // Re-export from provider for convenience
-export type { AuthMethod, AuthUser } from "@samuelho-dev/provider-supabase"
+export type { AuthUser, AuthMethod } from "@samuelho-dev/provider-supabase"
 export { AuthUserSchema } from "@samuelho-dev/provider-supabase"
 
 // ============================================================================
@@ -57,43 +62,23 @@ export { AuthService, type AuthServiceInterface } from "./lib/service"
 export { AuthVerifierLive } from "./lib/service"
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 // Integration Example
-
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-//
-
+// 
 // import { Layer } from 'effect';
-
 // import { AuthMiddlewareLive, AllMiddlewareLive } from '@samuelho-dev/infra-rpc';
-
 // import { AuthVerifierLive, AuthService } from '@samuelho-dev/infra-auth';
-
 // import { SupabaseAuth } from '@samuelho-dev/provider-supabase';
-
-//
-
+// 
 // // Compose auth layers for RPC middleware
-
 // const RpcAuthLayer = AuthMiddlewareLive.pipe(
-
 //   Layer.provide(AuthVerifierLive),
-
 //   Layer.provide(AuthService.Live),
-
 //   Layer.provide(SupabaseAuth.Live),
-
 // );
-
-//
-
+// 
 // // Use with RPC router
-
 // const router = MyRpcGroup.toRouter(handlers).pipe(
-
 //   Effect.provide(RpcAuthLayer),
-
 // );
-
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

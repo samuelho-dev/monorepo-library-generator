@@ -45,8 +45,9 @@ Route Types:
   ])
   builder.addBlankLine()
 
-  builder.addRaw(`import type { CurrentUserData, ServiceIdentity } from "./schemas"
-`)
+  builder.addImports([
+    { from: "./schemas", imports: ["AuthMethod", "CurrentUserData", "ServiceIdentity"], isTypeOnly: true }
+  ])
   builder.addBlankLine()
 
   builder.addSectionComment("Route Types (Contract-First)")
@@ -106,6 +107,25 @@ export class CurrentUser extends Context.Tag("CurrentUser")<
   CurrentUser,
   CurrentUserData
 >() {}
+
+/**
+ * Auth Method Context Tag
+ *
+ * Provides access to the authentication method used.
+ * Available on "protected" routes alongside CurrentUser.
+ *
+ * @example
+ * \`\`\`typescript
+ * const handler = Effect.gen(function*() {
+ *   const authMethod = yield* AuthMethodContext
+ *   console.log(authMethod.type, authMethod.token)
+ * })
+ * \`\`\`
+ */
+export class AuthMethodContext extends Context.Tag("AuthMethodContext")<
+  AuthMethodContext,
+  { readonly type: AuthMethod; readonly token: string }
+>() {}
 `)
   builder.addBlankLine()
 
@@ -142,19 +162,14 @@ export class ServiceContext extends Context.Tag("ServiceContext")<
 export interface RequestMetadata {
   /** Unique request ID for tracing */
   readonly requestId: string
-
   /** Request timestamp */
   readonly timestamp: Date
-
   /** Client IP address */
   readonly ipAddress?: string
-
   /** User agent string */
   readonly userAgent?: string
-
   /** Request path */
   readonly path?: string
-
   /** HTTP method */
   readonly method?: string
 }

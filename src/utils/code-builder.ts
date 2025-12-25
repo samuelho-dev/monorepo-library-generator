@@ -20,7 +20,7 @@
 
 export interface ImportSpec {
   from: string
-  imports: Array<string>
+  imports: Array<string | { name: string; alias: string }>
   isTypeOnly?: boolean
 }
 
@@ -217,13 +217,13 @@ export class TypeScriptBuilder {
     }
 
     this.lines.push(" */")
-    this.lines.push("")
 
     return this
   }
 
   /**
    * Add import statements
+   * Supports both simple imports ("Name") and aliased imports ({ name: "Name", alias: "Alias" })
    */
   addImports(imports: Array<ImportSpec>) {
     for (const { from, imports: names, isTypeOnly } of imports) {
@@ -233,12 +233,18 @@ export class TypeScriptBuilder {
         targetMap.set(from, new Set())
       }
 
-      for (const name of names) {
+      for (const nameSpec of names) {
         const importSet = targetMap.get(from)
         if (!importSet) {
           throw new Error(`Import set not found for ${from}`)
         }
-        importSet.add(name)
+        // Handle both string and { name, alias } formats
+        if (typeof nameSpec === "string") {
+          importSet.add(nameSpec)
+        } else {
+          // Aliased import: store as "Name as Alias" for proper sorting by original name
+          importSet.add(`${nameSpec.name} as ${nameSpec.alias}`)
+        }
       }
     }
 
@@ -248,7 +254,7 @@ export class TypeScriptBuilder {
   /**
    * Add a single import
    */
-  addImport(from: string, name: string, isTypeOnly = false) {
+  addImport(from: string, name: string | { name: string; alias: string }, isTypeOnly = false) {
     return this.addImports([{ from, imports: [name], isTypeOnly }])
   }
 
@@ -276,7 +282,6 @@ export class TypeScriptBuilder {
       this.lines.push(`// ${text}`)
     }
 
-    this.lines.push("")
     return this
   }
 
@@ -323,7 +328,6 @@ export class TypeScriptBuilder {
         }
         const readonlyModifier = prop.readonly ? "readonly " : ""
         this.lines.push(`  static ${readonlyModifier}${prop.name}: ${prop.type} = ${prop.value}`)
-        this.lines.push("")
       }
     }
 
@@ -340,7 +344,6 @@ export class TypeScriptBuilder {
           `  ${visibility} ${readonlyModifier}${field.name}${optionalModifier}: ${field.type}`
         )
       }
-      this.lines.push("")
     }
 
     // Add static methods
@@ -358,7 +361,6 @@ export class TypeScriptBuilder {
     }
 
     this.lines.push("}")
-    this.lines.push("")
 
     return this
   }
@@ -401,7 +403,6 @@ export class TypeScriptBuilder {
     }
 
     this.lines.push("  }")
-    this.lines.push("")
   }
 
   /**
@@ -417,7 +418,10 @@ export class TypeScriptBuilder {
 
     this.lines.push(`${exported}interface ${config.name}${extendsClause} {`)
 
-    for (const prop of config.properties) {
+    for (let i = 0; i < config.properties.length; i++) {
+      const prop = config.properties[i]
+      if (!prop) continue
+
       if (prop.jsdoc) {
         this.lines.push("  /**")
         this.lines.push(`   * ${prop.jsdoc}`)
@@ -425,11 +429,12 @@ export class TypeScriptBuilder {
       }
       const readonlyModifier = prop.readonly ? "readonly " : ""
       const optionalModifier = prop.optional ? "?" : ""
+
+      // No semicolon at end of interface properties (dprint/ESLint requirement)
       this.lines.push(`  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type}`)
     }
 
     this.lines.push("}")
-    this.lines.push("")
 
     return this
   }
@@ -446,7 +451,6 @@ export class TypeScriptBuilder {
     const typeParams = config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(", ")}>` : ""
 
     this.lines.push(`${exported}type ${config.name}${typeParams} = ${config.type}`)
-    this.lines.push("")
 
     return this
   }
@@ -488,7 +492,6 @@ export class TypeScriptBuilder {
     }
 
     this.lines.push("}")
-    this.lines.push("")
 
     return this
   }
@@ -505,7 +508,6 @@ export class TypeScriptBuilder {
     const typeAnnotation = type ? `: ${type}` : ""
 
     this.lines.push(`${exportKeyword}const ${name}${typeAnnotation} = ${value}`)
-    this.lines.push("")
 
     return this
   }
@@ -524,18 +526,58 @@ export class TypeScriptBuilder {
   toString() {
     const importLines: Array<string> = []
 
-    // Generate regular imports (sorted by module name)
-    const sortedImports = Array.from(this.imports.entries()).sort((a, b) => a[0].localeCompare(b[0]))
-    for (const [from, names] of sortedImports) {
-      const sortedNames = Array.from(names).sort()
-      importLines.push(`import { ${sortedNames.join(", ")} } from "${from}"`)
+    // Import order priority for dprint/Effect compatibility:
+    // 1. "@effect/*" packages (alphabetically)
+    // 2. Other scoped packages "@scope/*" (alphabetically) - before effect
+    // 3. "effect" package
+    // 4. Other external packages (alphabetically)
+    // 5. Relative imports "./" or "../" (last)
+    const getImportPriority = (modulePath: string) => {
+      if (modulePath.startsWith("./") || modulePath.startsWith("../")) return 5
+      if (modulePath.startsWith("@effect/")) return 1
+      if (modulePath.startsWith("@")) return 2
+      if (modulePath === "effect") return 3
+      return 4
     }
 
-    // Generate type-only imports (sorted by module name)
-    const sortedTypeImports = Array.from(this.typeImports.entries()).sort((a, b) => a[0].localeCompare(b[0]))
-    for (const [from, names] of sortedTypeImports) {
+    const sortImports = (a: [string, Set<string>], b: [string, Set<string>]) => {
+      const priorityA = getImportPriority(a[0])
+      const priorityB = getImportPriority(b[0])
+      if (priorityA !== priorityB) return priorityA - priorityB
+      return a[0].localeCompare(b[0])
+    }
+
+    // Merge regular and type imports, then sort by module path
+    // dprint/Effect requires imports sorted by path, not separated by type
+    interface ImportEntry {
+      from: string
+      names: Set<string>
+      isTypeOnly: boolean
+    }
+
+    const allImports: Array<ImportEntry> = []
+
+    for (const [from, names] of this.imports.entries()) {
+      allImports.push({ from, names, isTypeOnly: false })
+    }
+
+    for (const [from, names] of this.typeImports.entries()) {
+      allImports.push({ from, names, isTypeOnly: true })
+    }
+
+    // Sort by module path priority, then alphabetically
+    allImports.sort((a, b) => {
+      const priorityA = getImportPriority(a.from)
+      const priorityB = getImportPriority(b.from)
+      if (priorityA !== priorityB) return priorityA - priorityB
+      return a.from.localeCompare(b.from)
+    })
+
+    // Generate import lines (no trailing semicolons - ASI style)
+    for (const { from, names, isTypeOnly } of allImports) {
       const sortedNames = Array.from(names).sort()
-      importLines.push(`import type { ${sortedNames.join(", ")} } from "${from}"`)
+      const typeKeyword = isTypeOnly ? "type " : ""
+      importLines.push(`import ${typeKeyword}{ ${sortedNames.join(", ")} } from "${from}"`)
     }
 
     // Combine imports and content with blank line separator
@@ -586,13 +628,13 @@ export class EffectPatterns {
       .map((field) => {
         const readonlyModifier = field.readonly !== false ? "readonly " : ""
         const optionalModifier = field.optional ? "?" : ""
-        return `    ${readonlyModifier}${field.name}${optionalModifier}: ${field.type};`
+        return `  ${readonlyModifier}${field.name}${optionalModifier}: ${field.type}`
       })
       .join("\n")
 
     return {
       className: config.className,
-      extends: `Data.TaggedError("${config.tagName}")<{\n${fieldTypes}\n  }>`,
+      extends: `Data.TaggedError("${config.tagName}")<{\n${fieldTypes}\n}>`,
       exported: true,
       ...(config.jsdoc !== undefined && { jsdoc: config.jsdoc }),
       staticMethods: config.staticMethods || []
@@ -607,8 +649,8 @@ export class EffectPatterns {
    * export class FooService extends Context.Tag("FooService")<
    *   FooService,
    *   {
-   *     readonly create: (data: CreateFooData) => Effect.Effect<Foo, FooError>;
-   *     readonly findById: (id: string) => Effect.Effect<Option.Option<Foo>>;
+   *     readonly create: (data: CreateFooData) => Effect.Effect<Foo, FooError>
+   *     readonly findById: (id: string) => Effect.Effect<Option.Option<Foo>>
    *   }
    * >() {}
    * ```
@@ -623,7 +665,7 @@ export class EffectPatterns {
           })
           .join(", ")
 
-        return `    readonly ${method.name}: (${params}) => ${method.returnType};`
+        return `    readonly ${method.name}: (${params}) => ${method.returnType}`
       })
       .join("\n")
 

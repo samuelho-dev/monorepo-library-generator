@@ -18,8 +18,8 @@ import { Data } from "effect"
  *    Example:
  *    ```typescript
  *    export class UserNotFoundError extends Data.TaggedError("UserNotFoundError")<{
- *      readonly message: string;
- *      readonly userId: string;
+ *      readonly message: string
+ *      readonly userId: string
  *    }> {}
  *    ```
  *
@@ -56,16 +56,11 @@ import { Data } from "effect"
  * @see libs/contract/user/src/lib/rpc.ts for RPC-serializable errors
  * @module @samuelho-dev/contract-user/errors
  */
-
-
 // ============================================================================
 // Domain Errors (Data.TaggedError)
 // ============================================================================
-
 // Use Data.TaggedError for domain-level errors that occur in business logic.
-
 // These errors are NOT serializable over RPC by default.
-
 
 /**
  * Error thrown when user is not found
@@ -74,16 +69,16 @@ export class UserNotFoundError extends Data.TaggedError(
   "UserNotFoundError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Identifier that was not found */
-  readonly userId: string;
+  readonly userId: string
 }> {
   static create(userId: string) {
     return new UserNotFoundError({
       message: `User not found: ${userId}`,
-      userId,
-    });
+      userId
+    })
   }
 }
 
@@ -94,37 +89,37 @@ export class UserValidationError extends Data.TaggedError(
   "UserValidationError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Field that failed validation */
-  readonly field?: string;
+  readonly field?: string
 
   /** Constraint that was violated */
-  readonly constraint?: string;
+  readonly constraint?: string
 
   /** Invalid value */
-  readonly value?: unknown;
+  readonly value?: unknown
 }> {
   static create(params: {
-    message: string;
-    field?: string;
-    constraint?: string;
-    value?: unknown;
+    message: string
+    field?: string
+    constraint?: string
+    value?: unknown
   }) {
     return new UserValidationError({
       message: params.message,
       ...(params.field !== undefined && { field: params.field }),
       ...(params.constraint !== undefined && { constraint: params.constraint }),
-      ...(params.value !== undefined && { value: params.value }),
-    });
+      ...(params.value !== undefined && { value: params.value })
+    })
   }
 
   static fieldRequired(field: string) {
     return new UserValidationError({
       message: `${field} is required`,
       field,
-      constraint: "required",
-    });
+      constraint: "required"
+    })
   }
 
   static fieldInvalid(field: string, constraint: string, value?: unknown) {
@@ -132,8 +127,8 @@ export class UserValidationError extends Data.TaggedError(
       message: `${field} is invalid: ${constraint}`,
       field,
       constraint,
-      ...(value !== undefined && { value }),
-    });
+      ...(value !== undefined && { value })
+    })
   }
 }
 
@@ -144,18 +139,18 @@ export class UserAlreadyExistsError extends Data.TaggedError(
   "UserAlreadyExistsError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Identifier of existing resource */
-  readonly identifier?: string;
+  readonly identifier?: string
 }> {
   static create(identifier?: string) {
     return new UserAlreadyExistsError({
       message: identifier
         ? `User already exists: ${identifier}`
         : "User already exists",
-      ...(identifier !== undefined && { identifier }),
-    });
+      ...(identifier !== undefined && { identifier })
+    })
   }
 }
 
@@ -166,23 +161,23 @@ export class UserPermissionError extends Data.TaggedError(
   "UserPermissionError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Operation that was denied */
-  readonly operation: string;
+  readonly operation: string
 
   /** Resource identifier */
-  readonly userId: string;
+  readonly userId: string
 }> {
   static create(params: {
-    operation: string;
-    userId: string;
+    operation: string
+    userId: string
   }) {
     return new UserPermissionError({
       message: `Operation '${params.operation}' not permitted on user ${params.userId}`,
       operation: params.operation,
-      userId: params.userId,
-    });
+      userId: params.userId
+    })
   }
 }
 
@@ -193,57 +188,32 @@ export type UserDomainError =
   | UserNotFoundError
   | UserValidationError
   | UserAlreadyExistsError
-  | UserPermissionError;
+  | UserPermissionError
 
 // TODO: Add domain-specific errors here
-
 // Example - State transition error (if domain has status/state machine):
-
-// 
-
 // export class UserInvalidStateError extends Data.TaggedError("UserInvalidStateError")<{
-
-//   readonly message: string;
-
-//   readonly currentState: string;
-
-//   readonly targetState: string;
-
-//   readonly userId: string;
-
+//   readonly message: string
+//   readonly currentState: string
+//   readonly targetState: string
+//   readonly userId: string
 // }> {
-
 //   static create(params: {
-
-//     currentState: string;
-
-//     targetState: string;
-
-//     userId: string;
-
+//     currentState: string
+//     targetState: string
+//     userId: string
 //   }) {
-
 //     return new UserInvalidStateError({
-
 //       message: `Cannot transition user from ${params.currentState} to ${params.targetState}`,
-
-//       ...params,
-
-//     });
-
+//       ...params
+//     })
 //   }
-
 // }
-
-
 // ============================================================================
 // Repository Errors (Data.TaggedError)
 // ============================================================================
-
 // Repository errors use Data.TaggedError for domain-level operations.
-
 // These errors do NOT cross RPC boundaries - use rpc.ts for network errors.
-
 
 /**
  * Repository error for user not found
@@ -252,16 +222,16 @@ export class UserNotFoundRepositoryError extends Data.TaggedError(
   "UserNotFoundRepositoryError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Identifier that was not found */
-  readonly userId: string;
+  readonly userId: string
 }> {
   static create(userId: string) {
     return new UserNotFoundRepositoryError({
       message: `User not found: ${userId}`,
-      userId,
-    });
+      userId
+    })
   }
 }
 
@@ -272,24 +242,24 @@ export class UserValidationRepositoryError extends Data.TaggedError(
   "UserValidationRepositoryError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Field that failed validation */
-  readonly field?: string;
+  readonly field?: string
 
   /** Constraint that was violated */
-  readonly constraint?: string;
+  readonly constraint?: string
 }> {
   static create(params: {
-    message: string;
-    field?: string;
-    constraint?: string;
+    message: string
+    field?: string
+    constraint?: string
   }) {
     return new UserValidationRepositoryError({
       message: params.message,
       ...(params.field !== undefined && { field: params.field }),
-      ...(params.constraint !== undefined && { constraint: params.constraint }),
-    });
+      ...(params.constraint !== undefined && { constraint: params.constraint })
+    })
   }
 }
 
@@ -300,18 +270,18 @@ export class UserConflictRepositoryError extends Data.TaggedError(
   "UserConflictRepositoryError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Identifier of conflicting resource */
-  readonly identifier?: string;
+  readonly identifier?: string
 }> {
   static create(identifier?: string) {
     return new UserConflictRepositoryError({
       message: identifier
         ? `User already exists: ${identifier}`
         : "User already exists",
-      ...(identifier !== undefined && { identifier }),
-    });
+      ...(identifier !== undefined && { identifier })
+    })
   }
 }
 
@@ -322,24 +292,24 @@ export class UserDatabaseRepositoryError extends Data.TaggedError(
   "UserDatabaseRepositoryError"
 )<{
   /** Human-readable error message */
-  readonly message: string;
+  readonly message: string
 
   /** Database operation that failed */
-  readonly operation: string;
+  readonly operation: string
 
   /** Underlying database error */
-  readonly cause?: string;
+  readonly cause?: string
 }> {
   static create(params: {
-    message: string;
-    operation: string;
-    cause?: string;
+    message: string
+    operation: string
+    cause?: string
   }) {
     return new UserDatabaseRepositoryError({
       message: params.message,
       operation: params.operation,
-      ...(params.cause !== undefined && { cause: params.cause }),
-    });
+      ...(params.cause !== undefined && { cause: params.cause })
+    })
   }
 }
 
@@ -350,14 +320,13 @@ export type UserRepositoryError =
   | UserNotFoundRepositoryError
   | UserValidationRepositoryError
   | UserConflictRepositoryError
-  | UserDatabaseRepositoryError;
+  | UserDatabaseRepositoryError
 
 // ============================================================================
 // Error Union Types
 // ============================================================================
 
-
 /**
  * All possible user errors
  */
-export type UserError = UserDomainError | UserRepositoryError;
+export type UserError = UserDomainError | UserRepositoryError

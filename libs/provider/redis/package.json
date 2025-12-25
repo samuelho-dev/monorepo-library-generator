@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Redis provider for cache, queue, and pubsub backing with ioredis",
+  "description": "Redis",
   "exports": {
     ".": {
       "import": "./src/index.ts",

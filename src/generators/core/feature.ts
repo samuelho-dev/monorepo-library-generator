@@ -353,9 +353,8 @@ const server = ${templateOptions.fileName}Handlers.pipe(
         subModules: subModulesList
       })
 
-      // Track generated sub-module files (4 files per module)
+      // Track generated sub-module files (3 files per module - no index.ts barrel)
       for (const moduleName of subModulesList) {
-        filesGenerated.push(`${servicesPath}/${moduleName}/index.ts`)
         filesGenerated.push(`${servicesPath}/${moduleName}/service.ts`)
         filesGenerated.push(`${servicesPath}/${moduleName}/layer.ts`)
         filesGenerated.push(`${servicesPath}/${moduleName}/handlers.ts`)
@@ -501,9 +500,9 @@ export {
   ${templateOptions.className}EventPublisher,
   ${templateOptions.className}EventTopics,
   create${templateOptions.className}EventSubscription,
-} from "./publisher";
+} from "./publisher"
 
-export type { ${templateOptions.className}EventPublisherInterface } from "./publisher";
+export type { ${templateOptions.className}EventPublisherInterface } from "./publisher"
 `
     )
     filesGenerated.push(`${eventsPath}/index.ts`)

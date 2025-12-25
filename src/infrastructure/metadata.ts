@@ -196,7 +196,7 @@ function buildTags(
  * }, context)
  * ```
  */
-export function computeMetadata(input: MetadataInput, context: WorkspaceContext): LibraryMetadata {
+export function computeMetadata(input: MetadataInput, context: WorkspaceContext) {
   // Get all naming variants using Nx utility
   const nameVariants = createNamingVariants(input.name)
   const fileName = nameVariants.fileName // kebab-case
@@ -261,7 +261,7 @@ export function computeSimpleMetadata(
   libraryType: LibraryType,
   context: WorkspaceContext,
   description?: string
-): LibraryMetadata {
+) {
   const input = {
     name,
     libraryType,

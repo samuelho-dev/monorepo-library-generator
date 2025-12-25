@@ -41,7 +41,7 @@ Effect.PubSub Features:
   builder.addImports([
     {
       from: "effect",
-      imports: ["Effect", "Layer", "Context", "PubSub", "Schema"]
+      imports: ["Effect", "Layer", "Context", "PubSub", "Schema", "Metric"]
     },
     {
       from: "effect",
@@ -55,6 +55,24 @@ Effect.PubSub Features:
     },
     { from: `${scope}/env`, imports: ["env"] }
   ])
+
+  builder.addSectionComment("Metrics Definitions")
+
+  builder.addRaw(`/**
+ * Metrics for tracking PubSub operations
+ */
+const pubsubPublishCounter = Metric.counter("pubsub.publish.count", {
+  description: "Number of messages published to topics",
+})
+
+const pubsubPublishErrorCounter = Metric.counter("pubsub.publish.errors", {
+  description: "Number of validation errors during publish",
+})
+
+const pubsubSubscriberGauge = Metric.gauge("pubsub.subscribers", {
+  description: "Current number of subscribers per topic",
+})
+`)
 
   builder.addSectionComment("PubSub Service Interface (Effect.PubSub Wrapper)")
 
@@ -196,23 +214,101 @@ export class ${className}Service extends Context.Tag(
    */
   static readonly Memory = Layer.scoped(
     this,
-    Effect.gen(function*() {
+    Effect.gen(function*(_) {
       const makeTopicHandle = <A, E>(
         pubsub: PubSub.PubSub<A>,
         validate: (message: A) => Effect.Effect<A, E>,
         topicName: string
       ) => ({
         publish: (message: A) =>
-          validate(message).pipe(
-            Effect.flatMap((validated) => PubSub.publish(pubsub, validated)),
-            Effect.withSpan("PubSub.publish", { attributes: { topic: topicName } })
+          Effect.gen(function*() {
+            // Validate message
+            const validated = yield* validate(message).pipe(
+              Effect.tapError((error) =>
+                Effect.gen(function*() {
+                  yield* pubsubPublishErrorCounter.pipe(
+                    Metric.increment,
+                    Metric.tagged("topic", topicName),
+                    Metric.tagged("error", String(error))
+                  )
+                  yield* Effect.logWarning("[PubSub] Validation error", {
+                    topic: topicName,
+                    error: String(error)
+                  })
+                })
+              )
+            )
+
+            // Publish to subscribers
+            const published = yield* PubSub.publish(pubsub, validated)
+
+            // Track metrics
+            yield* pubsubPublishCounter.pipe(
+              Metric.increment,
+              Metric.tagged("topic", topicName)
+            )
+
+            return published
+          }).pipe(
+            Effect.withSpan("PubSub.publish", {
+              attributes: {
+                topic: topicName,
+                messageType: typeof message
+              }
+            })
           ),
+
         publishAll: (messages: Iterable<A>) =>
-          Effect.forEach([...messages], validate).pipe(
-            Effect.flatMap((validated) => PubSub.publishAll(pubsub, validated)),
-            Effect.withSpan("PubSub.publishAll", { attributes: { topic: topicName } })
+          Effect.gen(function*() {
+            const messageArray = [...messages]
+
+            // Validate all messages
+            const validated = yield* Effect.forEach(messageArray, (msg) =>
+              validate(msg).pipe(
+                Effect.tapError((error) =>
+                  Effect.gen(function*() {
+                    yield* pubsubPublishErrorCounter.pipe(
+                      Metric.increment,
+                      Metric.tagged("topic", topicName),
+                      Metric.tagged("error", String(error))
+                    )
+                    yield* Effect.logWarning("[PubSub] Validation error", {
+                      topic: topicName,
+                      error: String(error)
+                    })
+                  })
+                )
+              )
+            )
+
+            // Publish all validated messages
+            const published = yield* PubSub.publishAll(pubsub, validated)
+
+            // Track metrics (batch count)
+            yield* pubsubPublishCounter.pipe(
+              Metric.incrementBy(messageArray.length),
+              Metric.tagged("topic", topicName)
+            )
+
+            return published
+          }).pipe(
+            Effect.withSpan("PubSub.publishAll", {
+              attributes: {
+                topic: topicName,
+                messageCount: [...messages].length
+              }
+            })
           ),
-        subscribe: PubSub.subscribe(pubsub),
+
+        subscribe: PubSub.subscribe(pubsub).pipe(
+          Effect.tap(() =>
+            pubsubSubscriberGauge.pipe(
+              Metric.increment,
+              Metric.tagged("topic", topicName)
+            )
+          )
+        ),
+
         subscriberCount: Effect.sync(() => 0) // PubSub doesn't expose this directly
       })
 
@@ -284,20 +380,119 @@ export class ${className}Service extends Context.Tag(
       ) => ({
         publish: (message: A) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug("[${className}Service] [DEV] publish", { topic: topicName })
-            const validated = yield* validate(message)
-            return yield* PubSub.publish(pubsub, validated)
-          }),
+            yield* Effect.logDebug("[${className}Service] [DEV] publish", {
+              topic: topicName,
+              messagePreview: JSON.stringify(message).substring(0, 100)
+            })
+
+            // Validate with error tracking
+            const validated = yield* validate(message).pipe(
+              Effect.tapError((error) =>
+                Effect.gen(function*() {
+                  yield* pubsubPublishErrorCounter.pipe(
+                    Metric.increment,
+                    Metric.tagged("topic", topicName),
+                    Metric.tagged("error", String(error))
+                  )
+                  yield* Effect.logError("[${className}Service] [DEV] Validation error", {
+                    topic: topicName,
+                    error: String(error),
+                    message: JSON.stringify(message)
+                  })
+                })
+              )
+            )
+
+            const published = yield* PubSub.publish(pubsub, validated)
+
+            // Track metrics
+            yield* pubsubPublishCounter.pipe(
+              Metric.increment,
+              Metric.tagged("topic", topicName)
+            )
+
+            yield* Effect.logDebug("[${className}Service] [DEV] Message published", {
+              topic: topicName,
+              published
+            })
+
+            return published
+          }).pipe(
+            Effect.withSpan("PubSub.publish", {
+              attributes: { topic: topicName }
+            })
+          ),
+
         publishAll: (messages: Iterable<A>) =>
           Effect.gen(function*() {
-            yield* Effect.logDebug("[${className}Service] [DEV] publishAll", { topic: topicName })
-            const validated = yield* Effect.forEach([...messages], validate)
-            return yield* PubSub.publishAll(pubsub, validated)
-          }),
+            const messageArray = [...messages]
+
+            yield* Effect.logDebug("[${className}Service] [DEV] publishAll", {
+              topic: topicName,
+              count: messageArray.length
+            })
+
+            // Validate with error tracking
+            const validated = yield* Effect.forEach(messageArray, (msg) =>
+              validate(msg).pipe(
+                Effect.tapError((error) =>
+                  Effect.gen(function*() {
+                    yield* pubsubPublishErrorCounter.pipe(
+                      Metric.increment,
+                      Metric.tagged("topic", topicName),
+                      Metric.tagged("error", String(error))
+                    )
+                    yield* Effect.logError("[${className}Service] [DEV] Validation error", {
+                      topic: topicName,
+                      error: String(error),
+                      message: JSON.stringify(msg)
+                    })
+                  })
+                )
+              )
+            )
+
+            const published = yield* PubSub.publishAll(pubsub, validated)
+
+            // Track metrics
+            yield* pubsubPublishCounter.pipe(
+              Metric.incrementBy(messageArray.length),
+              Metric.tagged("topic", topicName)
+            )
+
+            yield* Effect.logDebug("[${className}Service] [DEV] Batch published", {
+              topic: topicName,
+              count: messageArray.length,
+              published
+            })
+
+            return published
+          }).pipe(
+            Effect.withSpan("PubSub.publishAll", {
+              attributes: {
+                topic: topicName,
+                messageCount: [...messages].length
+              }
+            })
+          ),
+
         subscribe: Effect.gen(function*() {
           yield* Effect.logDebug("[${className}Service] [DEV] subscribe", { topic: topicName })
-          return yield* PubSub.subscribe(pubsub)
+
+          const subscription = yield* PubSub.subscribe(pubsub)
+
+          yield* pubsubSubscriberGauge.pipe(
+            Metric.increment,
+            Metric.tagged("topic", topicName)
+          )
+
+          yield* Effect.logInfo("[${className}Service] [DEV] Subscribed to topic", {
+            topic: topicName
+          })
+
+          return subscription
         }),
+
         subscriberCount: Effect.sync(() => 0)
       })
 
@@ -356,6 +551,40 @@ export class ${className}Service extends Context.Tag(
     }
   })
 }
+`)
+
+  builder.addSectionComment("Observability Features")
+
+  builder.addRaw(`/**
+ * OBSERVABILITY INTEGRATION
+ *
+ * This service automatically collects metrics and traces for all pub/sub operations:
+ *
+ * **Metrics Collected:**
+ * - \`pubsub.publish.count\` - Number of messages published (tagged by topic)
+ * - \`pubsub.publish.errors\` - Number of validation errors (tagged by topic and error)
+ * - \`pubsub.subscribers\` - Current subscriber count (tagged by topic)
+ *
+ * **Tracing:**
+ * - All publish operations create spans with topic and message metadata
+ * - Validation errors are logged with full message context in Dev mode
+ * - Subscribe operations track subscriber lifecycle
+ *
+ * **Context Propagation:**
+ * - Message validation includes error context for debugging
+ * - All operations are traced with Effect.withSpan for distributed tracing
+ * - Metrics are tagged with topic names for granular monitoring
+ *
+ * To export metrics to OTEL:
+ * \`\`\`typescript
+ * import * as Observability from "${scope}/infra-observability";
+ *
+ * const AppLayer = Layer.mergeAll(
+ *   Observability.Auto,  // OTEL SDK for metrics export
+ *   ${className}Service.Live,
+ * );
+ * \`\`\`
+ */
 `)
 
   builder.addSectionComment("Common PubSub Patterns")

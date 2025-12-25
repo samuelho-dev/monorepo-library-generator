@@ -45,10 +45,8 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
   {
     /** Error message */
     message: Schema.String,
-
     /** Error code for programmatic handling */
     code: AuthErrorCodeSchema,
-
     /** HTTP status code hint */
     statusCode: Schema.optionalWith(Schema.Number, { default: () => 401 })
   }
@@ -121,13 +119,10 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()(
   {
     /** Error message */
     message: Schema.String,
-
     /** Error code for programmatic handling */
     code: ServiceAuthErrorCodeSchema,
-
     /** Service that attempted authentication */
     serviceName: Schema.optional(Schema.String),
-
     /** HTTP status code hint */
     statusCode: Schema.optionalWith(Schema.Number, { default: () => 401 })
   }

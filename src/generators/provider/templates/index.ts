@@ -15,10 +15,7 @@ export { generateTypesFile } from "./types.template"
 export { generateValidationFile } from "./validation.template"
 
 // Service templates
-export {
-  generateProviderServiceFile,
-  generateProviderServiceIndexFile
-} from "./service/index"
+export { generateProviderServiceFile, generateProviderServiceIndexFile } from "./service/index"
 
 // Kysely provider templates
 export {

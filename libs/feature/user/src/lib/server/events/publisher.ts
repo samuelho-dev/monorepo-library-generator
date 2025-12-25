@@ -1,5 +1,9 @@
+import { UserCreatedEvent, UserDeletedEvent, UserUpdatedEvent } from "@samuelho-dev/contract-user"
+import type { UserDomainEvent } from "@samuelho-dev/contract-user"
 import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
 import { PubsubService, type TopicHandle } from "@samuelho-dev/infra-pubsub"
+import { Context, Effect, Layer, Schema } from "effect"
+import type { ParseResult } from "effect"
 
 /**
  * User Event Publisher
@@ -20,36 +24,25 @@ Usage:
  */
 
 
-import { Context, Effect, Layer, Schema, type ParseResult } from "effect"
-
 // ============================================================================
 // Domain Events
 // ============================================================================
 
-import {
-  UserCreatedEvent,
-  UserUpdatedEvent,
-  UserDeletedEvent,
-  type UserDomainEvent,
-} from "@samuelho-dev/contract-user";
-
 // Create Schema.Union for PubSub topic registration
-
 const UserDomainEventSchema = Schema.Union(
   UserCreatedEvent,
   UserUpdatedEvent,
   UserDeletedEvent
-);
+)
+
 
 // ============================================================================
 // Infrastructure Services
 // ============================================================================
 
-
 // ============================================================================
 // Publisher Configuration
 // ============================================================================
-
 
 /**
  * Topic configuration for user events
@@ -65,13 +58,12 @@ export const UserEventTopics = {
   UPDATED: "user.events.updated",
 
   /** Topic for deleted events only */
-  DELETED: "user.events.deleted",
-} as const;
+  DELETED: "user.events.deleted"
+} as const
 
 // ============================================================================
 // Publisher Interface
 // ============================================================================
-
 
 /**
  * User Event Publisher Interface
@@ -84,34 +76,34 @@ export interface UserEventPublisherInterface {
    */
   readonly publishCreated: (
     event: UserCreatedEvent
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 
   /**
    * Publish an updated event
    */
   readonly publishUpdated: (
     event: UserUpdatedEvent
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 
   /**
    * Publish a deleted event
    */
   readonly publishDeleted: (
     event: UserDeletedEvent
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 
   /**
    * Publish any domain event (auto-routes to correct topic)
    */
   readonly publish: (
     event: UserDomainEvent
-  ) => Effect.Effect<void>;
+  ) => Effect.Effect<void>
 }
+
 
 // ============================================================================
 // Publisher Implementation
 // ============================================================================
-
 
 /**
  * Topic handles for user events
@@ -123,10 +115,10 @@ export interface UserEventPublisherInterface {
  * - R: context requirements (never for in-memory)
  */
 interface UserTopicHandles {
-  readonly all: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>;
-  readonly created: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>;
-  readonly updated: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>;
-  readonly deleted: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>;
+  readonly all: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>
+  readonly created: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>
+  readonly updated: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>
+  readonly deleted: TopicHandle<UserDomainEvent, ParseResult.ParseError, never>
 }
 
 /**
@@ -143,37 +135,37 @@ const createPublisherImpl = (
     event: UserDomainEvent
   ) =>
     Effect.gen(function*() {
-      const counter = yield* metrics.counter("user_events_published_total");
+      const counter = yield* metrics.counter("user_events_published_total")
 
       yield* logger.debug("Publishing user event", {
         eventType: event.eventType,
         topic: topicName,
-        correlationId: event.correlationId,
-      });
+        correlationId: event.correlationId
+      })
 
       // Publish to specific topic
-      yield* topic.publish(event);
+      yield* topic.publish(event)
 
       // Also publish to the "all events" topic for aggregators
       if (topic !== topics.all) {
-        yield* topics.all.publish(event);
+        yield* topics.all.publish(event)
       }
 
-      yield* counter.increment;
+      yield* counter.increment
 
       yield* logger.info("User event published", {
         eventType: event.eventType,
         topic: topicName,
-        correlationId: event.correlationId,
-      });
+        correlationId: event.correlationId
+      })
     }).pipe(
       Effect.withSpan("UserEventPublisher.publish", {
         attributes: {
           topic: topicName,
-          eventType: event.eventType,
-        },
+          eventType: event.eventType
+        }
       })
-    );
+    )
 
   return {
     publishCreated: (event: UserCreatedEvent) =>
@@ -189,23 +181,22 @@ const createPublisherImpl = (
       // Use _tag discriminated union instead of instanceof
       switch (event._tag) {
         case "UserCreatedEvent":
-          return publishToTopic(topics.created, UserEventTopics.CREATED, event);
+          return publishToTopic(topics.created, UserEventTopics.CREATED, event)
         case "UserUpdatedEvent":
-          return publishToTopic(topics.updated, UserEventTopics.UPDATED, event);
+          return publishToTopic(topics.updated, UserEventTopics.UPDATED, event)
         case "UserDeletedEvent":
-          return publishToTopic(topics.deleted, UserEventTopics.DELETED, event);
+          return publishToTopic(topics.deleted, UserEventTopics.DELETED, event)
         default:
           // Fallback for any future event types
-          return publishToTopic(topics.all, UserEventTopics.ALL, event);
+          return publishToTopic(topics.all, UserEventTopics.ALL, event)
       }
-    },
-  };
-};
+    }
+  }
+}
 
 // ============================================================================
 // Context.Tag
 // ============================================================================
-
 
 /**
  * User Event Publisher Context Tag
@@ -239,32 +230,31 @@ export class UserEventPublisher extends Context.Tag("UserEventPublisher")<
   static readonly Live = Layer.effect(
     this,
     Effect.gen(function*() {
-      const pubsub = yield* PubsubService;
-      const logger = yield* LoggingService;
-      const metrics = yield* MetricsService;
+      const pubsub = yield* PubsubService
+      const logger = yield* LoggingService
+      const metrics = yield* MetricsService
 
       // Create topic handles during layer initialization
       const topics: UserTopicHandles = {
         all: yield* pubsub.topic(UserEventTopics.ALL, UserDomainEventSchema),
         created: yield* pubsub.topic(UserEventTopics.CREATED, UserDomainEventSchema),
         updated: yield* pubsub.topic(UserEventTopics.UPDATED, UserDomainEventSchema),
-        deleted: yield* pubsub.topic(UserEventTopics.DELETED, UserDomainEventSchema),
-      };
+        deleted: yield* pubsub.topic(UserEventTopics.DELETED, UserDomainEventSchema)
+      }
 
-      return createPublisherImpl(topics, logger, metrics);
+      return createPublisherImpl(topics, logger, metrics)
     })
-  );
+  )
 
   /**
    * Test layer (same as Live, but uses test infrastructure)
    */
-  static readonly Test = this.Live;
+  static readonly Test = this.Live
 }
 
 // ============================================================================
 // Event Subscriber Helpers
 // ============================================================================
-
 
 /**
  * Create a subscription to user events
@@ -295,5 +285,5 @@ export function createUserEventSubscription(
   pubsub: Context.Tag.Service<typeof PubsubService>,
   topicName: string = UserEventTopics.ALL
 ) {
-  return pubsub.topic(topicName, UserDomainEventSchema);
+  return pubsub.topic(topicName, UserDomainEventSchema)
 }

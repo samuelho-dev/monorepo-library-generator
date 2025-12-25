@@ -20,11 +20,9 @@ See middleware.ts for AuthMiddleware usage.
  * @see @effect/rpc documentation
  * @see middleware.ts for auth patterns
  */
-
 // ============================================================================
 // Router Composition
 // ============================================================================
-
 /**
  * Compose multiple RpcGroups into a single router
  *
@@ -81,7 +79,6 @@ export const defaultRouterConfig: Required<RouterConfig> = {
 // ============================================================================
 // HTTP Integration
 // ============================================================================
-
 /**
  * Create HTTP routes from an RPC router
  *
@@ -117,15 +114,22 @@ export const defaultRouterConfig: Required<RouterConfig> = {
  * Layers required for RPC execution
  *
  * This type helps ensure all required layers are provided.
+ * Extracts the dependency requirements from a Layer.
  */
-export type RpcRequiredLayers<R> = R extends Layer.Layer<infer _A, infer _E, infer Deps>
+export type RpcRequiredLayers<R> = R extends Layer.Layer<infer A, infer E, infer Deps>
+  ? { readonly out: A; readonly error: E; readonly deps: Deps }
+  : never
+
+/**
+ * Extract only the dependencies from a Layer (simplified version)
+ */
+export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps>
   ? Deps
   : never
 
 // ============================================================================
 // App Router Integration (Next.js)
 // ============================================================================
-
 /**
  * Create a Next.js App Router handler
  *
@@ -301,7 +305,7 @@ export const createNextRpcHandler = <R, E>(
         { _tag: "RpcInfraError", message: Cause.pretty(exit.cause), code: "INTERNAL_ERROR" },
         { status: 500 }
       )
-    } catch (error) {
+    } catch {
       // Only for non-Effect errors (e.g., JSON parsing)
       return Response.json(
         { _tag: "RpcInfraError", message: "Request processing failed", code: "INTERNAL_ERROR" },
@@ -329,7 +333,6 @@ export const createNextRpcHandler = <R, E>(
 // ============================================================================
 // Server Actions Integration
 // ============================================================================
-
 /**
  * Create a Server Action from an Effect handler
  *
@@ -409,7 +412,6 @@ export const createServerActionSafe = <Payload, Success, Failure, R>(
 // ============================================================================
 // Health Check
 // ============================================================================
-
 /**
  * Standard health check response
  */

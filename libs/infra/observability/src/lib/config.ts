@@ -21,11 +21,9 @@ Standard OTEL environment variables:
  *
  * @module @samuelho-dev/infra-observability/config
  */
-
 // ============================================================================
 // Traces Configuration
 // ============================================================================
-
 /**
  * Tracing configuration schema
  */
@@ -41,7 +39,7 @@ export const TracesConfigSchema = Schema.Struct({
    * @default "http://localhost:4318/v1/traces"
    */
   endpoint: Schema.optionalWith(Schema.String, {
-    default: () => "http://localhost:4318/v1/traces",
+    default: () => "http://localhost:4318/v1/traces"
   }),
 
   /**
@@ -53,11 +51,11 @@ export const TracesConfigSchema = Schema.Struct({
   samplingRatio: Schema.optionalWith(
     Schema.Number.pipe(
       Schema.filter((n) => n >= 0 && n <= 1, {
-        message: () => "Sampling ratio must be between 0.0 and 1.0",
+        message: () => "Sampling ratio must be between 0.0 and 1.0"
       })
     ),
     { default: () => 1.0 }
-  ),
+  )
 })
 
 export type TracesConfig = typeof TracesConfigSchema.Type
@@ -65,7 +63,6 @@ export type TracesConfig = typeof TracesConfigSchema.Type
 // ============================================================================
 // Metrics Configuration
 // ============================================================================
-
 /**
  * Metrics configuration schema
  */
@@ -81,7 +78,7 @@ export const MetricsConfigSchema = Schema.Struct({
    * @default "http://localhost:4318/v1/metrics"
    */
   endpoint: Schema.optionalWith(Schema.String, {
-    default: () => "http://localhost:4318/v1/metrics",
+    default: () => "http://localhost:4318/v1/metrics"
   }),
 
   /**
@@ -91,11 +88,11 @@ export const MetricsConfigSchema = Schema.Struct({
   exportIntervalMs: Schema.optionalWith(
     Schema.Number.pipe(
       Schema.filter((n) => n >= 1000, {
-        message: () => "Export interval must be at least 1000ms",
+        message: () => "Export interval must be at least 1000ms"
       })
     ),
     { default: () => 60000 }
-  ),
+  )
 })
 
 export type MetricsConfig = typeof MetricsConfigSchema.Type
@@ -103,7 +100,6 @@ export type MetricsConfig = typeof MetricsConfigSchema.Type
 // ============================================================================
 // Logs Configuration
 // ============================================================================
-
 /**
  * Logs configuration schema
  */
@@ -119,7 +115,7 @@ export const LogsConfigSchema = Schema.Struct({
    * @default "http://localhost:4318/v1/logs"
    */
   endpoint: Schema.optionalWith(Schema.String, {
-    default: () => "http://localhost:4318/v1/logs",
+    default: () => "http://localhost:4318/v1/logs"
   }),
 
   /**
@@ -129,7 +125,7 @@ export const LogsConfigSchema = Schema.Struct({
   minLevel: Schema.optionalWith(
     Schema.Literal("trace", "debug", "info", "warning", "error", "fatal"),
     { default: () => "info" as const }
-  ),
+  )
 })
 
 export type LogsConfig = typeof LogsConfigSchema.Type
@@ -137,7 +133,6 @@ export type LogsConfig = typeof LogsConfigSchema.Type
 // ============================================================================
 // Full Observability Configuration
 // ============================================================================
-
 /**
  * Complete observability configuration schema
  *
@@ -167,7 +162,7 @@ export const ObservabilityConfigSchema = Schema.Struct({
    * @default "0.0.0"
    */
   serviceVersion: Schema.optionalWith(Schema.String, {
-    default: () => "0.0.0",
+    default: () => "0.0.0"
   }),
 
   /**
@@ -183,21 +178,21 @@ export const ObservabilityConfigSchema = Schema.Struct({
    * Tracing configuration
    */
   traces: Schema.optionalWith(TracesConfigSchema, {
-    default: () => ({}) as TracesConfig,
+    default: () => ({})
   }),
 
   /**
    * Metrics configuration
    */
   metrics: Schema.optionalWith(MetricsConfigSchema, {
-    default: () => ({}) as MetricsConfig,
+    default: () => ({})
   }),
 
   /**
    * Logs configuration
    */
   logs: Schema.optionalWith(LogsConfigSchema, {
-    default: () => ({}) as LogsConfig,
+    default: () => ({})
   }),
 
   /**
@@ -207,7 +202,7 @@ export const ObservabilityConfigSchema = Schema.Struct({
   resourceAttributes: Schema.optionalWith(
     Schema.Record({ key: Schema.String, value: Schema.String }),
     { default: () => ({}) }
-  ),
+  )
 })
 
 /**
@@ -218,7 +213,6 @@ export type ObservabilityConfig = typeof ObservabilityConfigSchema.Type
 // ============================================================================
 // Default Configurations
 // ============================================================================
-
 /**
  * Minimal production configuration
  *
