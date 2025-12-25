@@ -13,37 +13,44 @@
  * @module monorepo-library-generator/generators/core/provider-generator-core
  */
 
-import { Effect } from 'effect';
-import type { PlatformType } from '../../utils/build';
-import { type FileSystemAdapter, injectEnvVars } from '../../utils/filesystem';
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates';
-import type { Platform, ProviderTemplateOptions } from '../../utils/types';
+import { Effect } from "effect"
+import type { PlatformType } from "../../utils/build"
+import { type FileSystemAdapter, injectEnvVars } from "../../utils/filesystem"
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates"
+import type { Platform, ProviderTemplateOptions } from "../../utils/types"
 import {
   generateErrorsFile,
   generateIndexFile,
-  generateLayersFile,
   generateServiceSpecFile,
   generateTypesFile,
-  generateValidationFile,
-} from '../provider/templates/index';
-import { generateKyselyErrorsFile } from '../provider/templates/kysely-errors.template';
-import { generateKyselyIndexFile } from '../provider/templates/kysely-index.template';
+  generateValidationFile
+} from "../provider/templates/index"
 import {
-  generateProviderServiceFile,
-  generateProviderServiceIndexFile,
-} from '../provider/templates/service/index';
-import { generateKyselyProviderServiceFile } from '../provider/templates/service/kysely-service.template';
-import { generateKyselyProviderServiceIndexFile } from '../provider/templates/service/kysely-service-index.template';
+  generateKyselyErrorsFile,
+  generateKyselyIndexFile,
+  generateKyselyProviderServiceFile
+} from "../provider/templates/kysely"
+import {
+  generateRedisCacheServiceFile,
+  generateRedisErrorsFile,
+  generateRedisIndexFile,
+  generateRedisPubSubServiceFile,
+  generateRedisQueueServiceFile,
+  generateRedisServiceFile,
+  generateRedisSpecFile,
+  generateRedisTypesFile,
+  generateRedisTypesOnlyFile
+} from "../provider/templates/redis/index"
+import { generateProviderServiceFile } from "../provider/templates/service/index"
 import {
   generateSupabaseAuthServiceFile,
   generateSupabaseClientServiceFile,
   generateSupabaseErrorsFile,
   generateSupabaseIndexFile,
-  generateSupabaseServiceIndexFile,
   generateSupabaseSpecFile,
   generateSupabaseStorageServiceFile,
-  generateSupabaseTypesFile,
-} from '../provider/templates/supabase/index';
+  generateSupabaseTypesFile
+} from "../provider/templates/supabase/index"
 
 /**
  * Provider Generator Core Options
@@ -58,25 +65,25 @@ import {
  * @property platform - Target platform (node, browser, edge, universal)
  */
 export interface ProviderCoreOptions {
-  readonly name: string;
-  readonly className: string;
-  readonly propertyName: string;
-  readonly fileName: string;
-  readonly constantName: string;
-  readonly projectName: string;
-  readonly projectRoot: string;
-  readonly sourceRoot: string;
-  readonly packageName: string;
-  readonly description: string;
-  readonly tags: string;
-  readonly offsetFromRoot: string;
-  readonly workspaceRoot?: string;
-  readonly externalService: string;
-  readonly platform: PlatformType;
-  readonly providerType?: 'sdk' | 'cli' | 'http' | 'graphql';
-  readonly cliCommand?: string;
-  readonly baseUrl?: string;
-  readonly authType?: 'bearer' | 'apikey' | 'oauth' | 'basic' | 'none';
+  readonly name: string
+  readonly className: string
+  readonly propertyName: string
+  readonly fileName: string
+  readonly constantName: string
+  readonly projectName: string
+  readonly projectRoot: string
+  readonly sourceRoot: string
+  readonly packageName: string
+  readonly description: string
+  readonly tags: string
+  readonly offsetFromRoot: string
+  readonly workspaceRoot?: string
+  readonly externalService: string
+  readonly platform: PlatformType
+  readonly providerType?: "sdk" | "cli" | "http" | "graphql"
+  readonly cliCommand?: string
+  readonly baseUrl?: string
+  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
 }
 
 /**
@@ -85,11 +92,11 @@ export interface ProviderCoreOptions {
  * Metadata returned after successful generation.
  */
 export interface GeneratorResult {
-  readonly projectName: string;
-  readonly projectRoot: string;
-  readonly sourceRoot: string;
-  readonly packageName: string;
-  readonly filesGenerated: Array<string>;
+  readonly projectName: string
+  readonly projectRoot: string
+  readonly sourceRoot: string
+  readonly packageName: string
+  readonly filesGenerated: Array<string>
 }
 
 /**
@@ -106,14 +113,14 @@ export interface GeneratorResult {
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
 export function generateProviderCore(adapter: FileSystemAdapter, options: ProviderCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Map PlatformType to Platform for template options (internal mapping)
     const platformMapping: Record<PlatformType, Platform> = {
-      node: 'server',
-      browser: 'client',
-      edge: 'edge',
-      universal: 'universal',
-    };
+      node: "server",
+      browser: "client",
+      edge: "edge",
+      universal: "universal"
+    }
 
     // Assemble template options from pre-computed metadata
     const templateOptions: ProviderTemplateOptions = {
@@ -122,30 +129,30 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: 'provider',
+      libraryType: "provider",
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       offsetFromRoot: options.offsetFromRoot,
       description: options.description,
-      tags: options.tags.split(','),
+      tags: options.tags.split(","),
       externalService: options.externalService,
       platforms: [platformMapping[options.platform]],
-      providerType: options.providerType || 'sdk',
+      providerType: options.providerType || "sdk",
       ...(options.cliCommand && { cliCommand: options.cliCommand }),
       ...(options.baseUrl && { baseUrl: options.baseUrl }),
-      ...(options.authType && { authType: options.authType }),
-    };
+      ...(options.authType && { authType: options.authType })
+    }
 
     // Generate all domain files
-    const filesGenerated: Array<string> = [];
-    const sourceLibPath = `${options.sourceRoot}/lib`;
+    const filesGenerated: Array<string> = []
+    const sourceLibPath = `${options.sourceRoot}/lib`
 
     // Detect if this is a special provider with dedicated templates
-    const isKyselyProvider = options.name === 'kysely' || options.externalService === 'Kysely';
-    const isSupabaseProvider =
-      options.name === 'supabase' || options.externalService === 'Supabase';
+    const isKyselyProvider = options.name === "kysely" || options.externalService === "Kysely"
+    const isSupabaseProvider = options.name === "supabase" || options.externalService === "Supabase"
+    const isRedisProvider = options.name === "redis" || options.externalService === "Redis"
 
     // Generate barrel exports - special providers use specialized templates
     yield* adapter.writeFile(
@@ -153,36 +160,43 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
       isKyselyProvider
         ? generateKyselyIndexFile(templateOptions)
         : isSupabaseProvider
-          ? generateSupabaseIndexFile(templateOptions)
-          : generateIndexFile(templateOptions),
-    );
-    filesGenerated.push(`${options.sourceRoot}/index.ts`);
+        ? generateSupabaseIndexFile(templateOptions)
+        : isRedisProvider
+        ? generateRedisIndexFile(templateOptions)
+        : generateIndexFile(templateOptions)
+    )
+    filesGenerated.push(`${options.sourceRoot}/index.ts`)
 
     // Generate types.ts for type-only exports (zero runtime overhead)
-    const typesOnlyOptions: TypesOnlyExportOptions = {
-      libraryType: 'provider',
-      className: options.className,
-      fileName: options.fileName,
-      packageName: options.packageName,
-      platform:
-        options.platform === 'node'
-          ? 'server'
-          : options.platform === 'browser'
-            ? 'client'
-            : 'universal',
-    };
-    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions);
-    const workspaceRoot = adapter.getWorkspaceRoot();
-    yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, typesOnlyContent);
-    filesGenerated.push(`${options.sourceRoot}/types.ts`);
+    // Redis uses flat lib/ structure, so it needs a specialized template
+    const workspaceRoot = adapter.getWorkspaceRoot()
+    if (isRedisProvider) {
+      const redisTypesOnlyContent = generateRedisTypesOnlyFile(templateOptions)
+      yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, redisTypesOnlyContent)
+    } else {
+      const typesOnlyOptions: TypesOnlyExportOptions = {
+        libraryType: "provider",
+        className: options.className,
+        fileName: options.fileName,
+        packageName: options.packageName,
+        platform: options.platform === "node"
+          ? "server"
+          : options.platform === "browser"
+          ? "client"
+          : "universal"
+      }
+      const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
+      yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, typesOnlyContent)
+    }
+    filesGenerated.push(`${options.sourceRoot}/types.ts`)
 
     // Generate CLAUDE.md with bundle optimization guidance
-    const providerType = options.providerType || 'sdk';
+    const providerType = options.providerType || "sdk"
 
     // Generate provider-type-specific documentation
-    let claudeDoc = '';
+    let claudeDoc = ""
 
-    if (providerType === 'cli') {
+    if (providerType === "cli") {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -193,18 +207,17 @@ This is an AI-optimized reference for ${templateOptions.externalService}, a CLI 
 
 ## Provider Type: CLI Wrapper
 
-This provider wraps the \`${options.cliCommand || 'cli-command'}\` command-line tool using Effect's Command API.
+This provider wraps the \`${options.cliCommand || "cli-command"}\` command-line tool using Effect's Command API.
 
 ## Architecture
 
-### Structure
+### Structure (Flat lib/ Directory)
 
 - **types.ts**: Type-only exports (zero runtime overhead)
-- **lib/service/interface.ts**: CLI wrapper service with Command API
+- **lib/service.ts**: Context.Tag with static layers (Live, Test, Dev, Auto)
 - **lib/errors.ts**: Data.TaggedError-based error types (CommandError, NotFoundError)
 - **lib/types.ts**: CLI-specific types (CommandResult, Config)
 - **lib/validation.ts**: Input validation helpers
-- **lib/layers.ts**: Layer compositions (Live, Test, Dev)
 
 ## Import Patterns
 
@@ -215,7 +228,7 @@ import type { CommandResult, ${templateOptions.className}Config } from '${templa
 // Service import
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
 
-Effect.gen(function* () {
+Effect.gen(function*() {
   const service = yield* ${templateOptions.className};
   const result = yield* service.execute(["--help"]);
   const version = yield* service.version;
@@ -224,7 +237,7 @@ Effect.gen(function* () {
 
 ### Customization Guide
 
-1. **Configure CLI Command** (\`lib/service/interface.ts\`):
+1. **Configure CLI Command** (\`lib/service.ts\`):
    - Command path is configurable via ${templateOptions.className}Config
    - Add custom command methods beyond execute() and version()
    - Configure timeout and environment variables
@@ -234,11 +247,12 @@ Effect.gen(function* () {
    - NotFoundError: CLI tool not installed
    - Add domain-specific error types as needed
 
-3. **Testing** (\`lib/layers.ts\`):
-   - Test layer uses Layer.succeed with mock implementations
+3. **Testing** (\`lib/service.ts\`):
+   - Static Test layer uses Layer.succeed with mock implementations
+   - Static Auto layer auto-selects Test/Dev/Live based on NODE_ENV
    - No actual CLI execution in tests
-`;
-    } else if (providerType === 'http') {
+`
+    } else if (providerType === "http") {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -253,14 +267,13 @@ This provider integrates with ${templateOptions.externalService} HTTP API using 
 
 ## Architecture
 
-### Structure
+### Structure (Flat lib/ Directory)
 
 - **types.ts**: Type-only exports (zero runtime overhead)
-- **lib/service/interface.ts**: HTTP service with CRUD operations
+- **lib/service.ts**: Context.Tag with static layers (Live, Test, Dev, Auto) and CRUD operations
 - **lib/errors.ts**: Data.TaggedError-based error types (HttpError, NetworkError, RateLimitError)
 - **lib/types.ts**: HTTP-specific types (ResourceSchema, Config with baseUrl)
 - **lib/validation.ts**: Input validation with Effect Schema
-- **lib/layers.ts**: Layer compositions (Live, Test, Dev)
 
 ## Import Patterns
 
@@ -271,7 +284,7 @@ import type { Resource, ${templateOptions.className}Config } from '${templateOpt
 // Service import
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
 
-Effect.gen(function* () {
+Effect.gen(function*() {
   const service = yield* ${templateOptions.className};
   const resources = yield* service.list({ page: 1, limit: 10 });
   const resource = yield* service.get("resource-id");
@@ -280,16 +293,16 @@ Effect.gen(function* () {
 
 ### Customization Guide
 
-1. **Configure HTTP Client** (\`lib/service/interface.ts\`):
+1. **Configure HTTP Client** (\`lib/service.ts\`):
    - Base URL configured via ${templateOptions.className}Config
-   - Authentication via ${options.authType || 'bearer'} token
+   - Authentication via ${options.authType || "bearer"} token
    - Retry policies and timeouts configurable
 
 2. **Define Resource Schema** (\`lib/types.ts\`):
    - Update ResourceSchema to match your API response
    - Use Effect Schema for validation and type safety
 
-3. **API Methods** (\`lib/service/interface.ts\`):
+3. **API Methods** (\`lib/service.ts\`):
    - Implement: get(), post(), put(), delete(), list()
    - Add custom endpoints as needed
    - Health check endpoint for monitoring
@@ -298,8 +311,8 @@ Effect.gen(function* () {
    - HttpError: HTTP status code errors (4xx, 5xx)
    - NetworkError: Connection failures
    - RateLimitError: Rate limiting with retry-after
-`;
-    } else if (providerType === 'graphql') {
+`
+    } else if (providerType === "graphql") {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -314,14 +327,13 @@ This provider integrates with ${templateOptions.externalService} GraphQL API usi
 
 ## Architecture
 
-### Structure
+### Structure (Flat lib/ Directory)
 
 - **types.ts**: Type-only exports (zero runtime overhead)
-- **lib/service/interface.ts**: GraphQL service with query/mutation operations
+- **lib/service.ts**: Context.Tag with static layers (Live, Test, Dev, Auto) and query/mutation operations
 - **lib/errors.ts**: Data.TaggedError-based error types (GraphQLError, HttpError)
 - **lib/types.ts**: GraphQL-specific types (ResourceSchema, Config with baseUrl)
 - **lib/validation.ts**: Input validation with Effect Schema
-- **lib/layers.ts**: Layer compositions (Live, Test, Dev)
 
 ## Import Patterns
 
@@ -332,7 +344,7 @@ import type { Resource, ${templateOptions.className}Config } from '${templateOpt
 // Service import
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
 
-Effect.gen(function* () {
+Effect.gen(function*() {
   const service = yield* ${templateOptions.className};
 
   // GraphQL query
@@ -353,16 +365,16 @@ Effect.gen(function* () {
 
 ### Customization Guide
 
-1. **Configure GraphQL Client** (\`lib/service/interface.ts\`):
+1. **Configure GraphQL Client** (\`lib/service.ts\`):
    - GraphQL endpoint configured via ${templateOptions.className}Config
-   - Authentication via ${options.authType || 'bearer'} token
+   - Authentication via ${options.authType || "bearer"} token
    - Retry policies and timeouts configurable
 
 2. **Define Schema Types** (\`lib/types.ts\`):
    - Update ResourceSchema to match your GraphQL schema
    - Use Effect Schema for response validation
 
-3. **GraphQL Operations** (\`lib/service/interface.ts\`):
+3. **GraphQL Operations** (\`lib/service.ts\`):
    - query(): Execute GraphQL queries
    - mutation(): Execute GraphQL mutations
    - Add typed helper methods for common operations
@@ -371,7 +383,7 @@ Effect.gen(function* () {
    - GraphQLError: GraphQL operation errors with error array
    - HttpError: HTTP-level errors (network, status codes)
    - ValidationError: Schema validation failures
-`;
+`
     } else {
       // SDK provider (default)
       claudeDoc = `# ${templateOptions.packageName}
@@ -380,96 +392,74 @@ ${templateOptions.description}
 
 ## Quick Reference
 
-This is an AI-optimized reference for ${templateOptions.externalService}, a provider library following Effect-based service patterns with granular bundle optimization.
+This is an AI-optimized reference for ${templateOptions.externalService}, a provider library following Effect-based service patterns.
 
 ## Architecture
 
-### Structure (Optimized for Tree-Shaking)
+### Structure (Flat lib/ Directory)
 
 - **types.ts**: Type-only exports (zero runtime overhead)
-- **lib/service/**: Granular service implementation
-  - \`interface.ts\`: Context.Tag with static layers
-  - \`operations/create.ts\`: Create operations (~3-4 KB)
-  - \`operations/query.ts\`: Query operations (~4-5 KB)
-  - \`operations/update.ts\`: Update operations (~3 KB)
-  - \`operations/delete.ts\`: Delete operations (~2-3 KB)
-  - \`index.ts\`: Service barrel export
-
+- **lib/service.ts**: Context.Tag with static layers (Live, Test, Dev, Auto)
 - **lib/errors.ts**: Data.TaggedError-based error types
 - **lib/types.ts**: Service types and configurations
 - **lib/validation.ts**: Input validation helpers
-- **lib/layers.ts**: Layer compositions (Live, Test, Dev)
 
-## Import Patterns (Most to Least Optimized)
+## Import Patterns
 
 \`\`\`typescript
-// 1. Granular operation import (smallest bundle ~3-5 KB)
-import { createOperations } from '${templateOptions.packageName}/service/operations/create';
-
-// 2. Type-only import (zero runtime ~0.3 KB)
+// Type-only import (zero runtime)
 import type { Resource, ${templateOptions.className}Config } from '${templateOptions.packageName}/types';
 
-// 3. Operation category (~8-10 KB)
-import { createOperations, queryOperations } from '${templateOptions.packageName}/service/operations';
-
-// 4. Full service (~12-15 KB)
-import { ${templateOptions.className} } from '${templateOptions.packageName}/service';
-
-// 5. Package barrel (largest ~18-20 KB)
-import { ${templateOptions.className} } from '${templateOptions.packageName}';
-\`\`\`
-
-### Customization Guide
-
-1. **Configure External Service** (\`lib/service/interface.ts\`):
-   - Initialize ${templateOptions.externalService} SDK client in Live layer
-   - Configure authentication and connection settings
-   - Add health check implementation
-
-2. **Implement Operations**:
-   - \`lib/service/operations/create.ts\`: Implement create with SDK
-   - \`lib/service/operations/query.ts\`: Implement list/get with SDK
-   - \`lib/service/operations/update.ts\`: Implement update with SDK
-   - \`lib/service/operations/delete.ts\`: Implement delete with SDK
-   - Each operation can be implemented independently
-
-3. **Configure Layers** (\`lib/layers.ts\`):
-   - Wire up SDK client dependencies
-   - Configure retry policies and timeouts
-   - Customize Test layer for testing
-
-### Usage Example
-
-\`\`\`typescript
-// Granular import for optimal bundle size
-import { createOperations } from '${templateOptions.packageName}/service/operations/create';
-import type { Resource } from '${templateOptions.packageName}/types';
-
-// Use directly without full service
-const program = Effect.gen(function* () {
-  const created = yield* createOperations.create({
-    // ...resource data
-  });
-  return created;
-});
-
-// Traditional approach (still works)
+// Service import
 import { ${templateOptions.className} } from '${templateOptions.packageName}';
 
-Effect.gen(function* () {
+Effect.gen(function*() {
   const service = yield* ${templateOptions.className};
   const result = yield* service.list({ page: 1, limit: 10 });
   // ...
 });
 \`\`\`
 
-### Bundle Optimization Notes
+### Customization Guide
 
-- **Always use granular imports** for production builds
-- **Use type-only imports** when you only need types
-- Operations are lazy-loaded via dynamic imports
-- Each operation can be imported independently for optimal tree-shaking
-- Service interface uses minimal overhead (~2 KB vs ~18 KB for full barrel)
+1. **Configure External Service** (\`lib/service.ts\`):
+   - Initialize ${templateOptions.externalService} SDK client in Live layer
+   - Configure authentication and connection settings
+   - Add health check implementation
+
+2. **Implement Operations** (\`lib/service.ts\`):
+   - list(): Query multiple resources
+   - get(): Query single resource by ID
+   - create(): Create new resource
+   - update(): Update existing resource
+   - delete(): Remove resource
+
+3. **Configure Layers** (\`lib/service.ts\` static members):
+   - Live: Production layer with real SDK
+   - Test: Mock layer for unit tests
+   - Dev: Debug logging layer
+   - Auto: Environment-aware layer selection (NODE_ENV)
+
+### Usage Example
+
+\`\`\`typescript
+import { ${templateOptions.className} } from '${templateOptions.packageName}';
+import type { Resource } from '${templateOptions.packageName}/types';
+
+// Standard usage
+const program = Effect.gen(function*() {
+  const service = yield* ${templateOptions.className};
+  const items = yield* service.list({ page: 1, limit: 10 });
+  return items;
+});
+
+// With layers
+const result = program.pipe(
+  Effect.provide(${templateOptions.className}.Live)  // Production
+  // or Effect.provide(${templateOptions.className}.Test)   // Testing
+  // or Effect.provide(${templateOptions.className}.Auto)   // NODE_ENV-based
+);
+\`\`\`
 
 ## SDK Integration Guide
 
@@ -492,14 +482,14 @@ pnpm add ${templateOptions.externalService.toLowerCase()}-sdk
 # Or the actual package name for ${templateOptions.externalService}
 \`\`\`
 
-#### 2. Update Live Layer (\`lib/layers.ts\`)
+#### 2. Update Live Layer (\`lib/service.ts\`)
 
-Replace the in-memory store with SDK initialization:
+Replace the in-memory store with SDK initialization in the static Live layer:
 
 \`\`\`typescript
-export const ${templateOptions.className}Live = Layer.effect(
+static readonly Live = Layer.effect(
   ${templateOptions.className},
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config: ${templateOptions.className}Config = {
       apiKey: env.${templateOptions.constantName}_API_KEY,
       timeout: env.${templateOptions.constantName}_TIMEOUT || 20000,
@@ -548,9 +538,9 @@ export const ${templateOptions.className}Live = Layer.effect(
 If your SDK requires cleanup (connections, pools, etc.), switch to \`Layer.scoped\`:
 
 \`\`\`typescript
-export const ${templateOptions.className}Live = Layer.scoped(
+static readonly Live = Layer.scoped(
   ${templateOptions.className},
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config: ${templateOptions.className}Config = {
       apiKey: env.${templateOptions.constantName}_API_KEY,
       timeout: env.${templateOptions.constantName}_TIMEOUT || 20000,
@@ -560,11 +550,6 @@ export const ${templateOptions.className}Live = Layer.scoped(
     const client = yield* Effect.acquireRelease(
       Effect.tryPromise(() => ${templateOptions.externalService}SDK.connect(config)),
       (client) => Effect.sync(() => client.close())
-    );
-
-    // Or use Effect.addFinalizer for simpler cleanup
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => client.close())
     );
 
     return {
@@ -593,29 +578,6 @@ list: (params) =>
   ),
 \`\`\`
 
-#### 5. Update Custom Layer Factory
-
-Replace in-memory store in \`make${templateOptions.className}Layer\`:
-
-\`\`\`typescript
-export function make${templateOptions.className}Layer(config: ${templateOptions.className}Config) {
-  return Layer.scoped(
-    ${templateOptions.className},
-    Effect.gen(function* () {
-      const client = new ${templateOptions.externalService}SDK(config);
-
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => client.close())
-      );
-
-      return {
-        // ... SDK-based implementation
-      };
-    }),
-  );
-}
-\`\`\`
-
 ### Integration Checklist
 
 - [ ] Install SDK package
@@ -634,77 +596,105 @@ export function make${templateOptions.className}Layer(config: ${templateOptions.
 1. **Keep Test layer unchanged** - it should remain a pure mock
 2. **Use Dev layer for local testing** with real SDK
 3. **Use Live layer in production**
+4. **Use Auto layer for environment-aware selection** (NODE_ENV)
 
 The baseline implementation remains useful for unit tests and demonstrations.
-`;
+`
     }
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
-      claudeDoc,
-    );
-    filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`);
+      claudeDoc
+    )
+    filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`)
 
-    // Generate all provider-specific files
+    // Generate service support files directly in lib/ directory (flat structure)
+    // This follows the standardized structure: lib/{service.ts, errors.ts, types.ts, etc}
     yield* adapter.writeFile(
       `${sourceLibPath}/errors.ts`,
       isKyselyProvider
         ? generateKyselyErrorsFile(templateOptions)
         : isSupabaseProvider
-          ? generateSupabaseErrorsFile(templateOptions)
-          : generateErrorsFile(templateOptions),
-    );
-    filesGenerated.push(`${sourceLibPath}/errors.ts`);
+        ? generateSupabaseErrorsFile(templateOptions)
+        : isRedisProvider
+        ? generateRedisErrorsFile(templateOptions)
+        : generateErrorsFile(templateOptions)
+    )
+    filesGenerated.push(`${sourceLibPath}/errors.ts`)
 
     yield* adapter.writeFile(
       `${sourceLibPath}/types.ts`,
       isSupabaseProvider
         ? generateSupabaseTypesFile(templateOptions)
-        : generateTypesFile(templateOptions),
-    );
-    filesGenerated.push(`${sourceLibPath}/types.ts`);
+        : isRedisProvider
+        ? generateRedisTypesFile(templateOptions)
+        : generateTypesFile(templateOptions)
+    )
+    filesGenerated.push(`${sourceLibPath}/types.ts`)
 
-    // Supabase doesn't need validation.ts (uses Effect Schema in types.ts)
-    if (!isSupabaseProvider) {
+    // Supabase and Redis don't need validation.ts (use Effect Schema in types.ts)
+    if (!(isSupabaseProvider || isRedisProvider)) {
       yield* adapter.writeFile(
         `${sourceLibPath}/validation.ts`,
-        generateValidationFile(templateOptions),
-      );
-      filesGenerated.push(`${sourceLibPath}/validation.ts`);
+        generateValidationFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/validation.ts`)
     }
-
-    // Generate service directory structure for granular imports
-    const servicePath = `${sourceLibPath}/service`;
-    yield* adapter.makeDirectory(servicePath);
 
     // Supabase has multiple service files (client, auth, storage)
     if (isSupabaseProvider) {
       yield* adapter.writeFile(
-        `${servicePath}/client.ts`,
-        generateSupabaseClientServiceFile(templateOptions),
-      );
-      filesGenerated.push(`${servicePath}/client.ts`);
+        `${sourceLibPath}/client.ts`,
+        generateSupabaseClientServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/client.ts`)
 
       yield* adapter.writeFile(
-        `${servicePath}/auth.ts`,
-        generateSupabaseAuthServiceFile(templateOptions),
-      );
-      filesGenerated.push(`${servicePath}/auth.ts`);
+        `${sourceLibPath}/auth.ts`,
+        generateSupabaseAuthServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/auth.ts`)
 
       yield* adapter.writeFile(
-        `${servicePath}/storage.ts`,
-        generateSupabaseStorageServiceFile(templateOptions),
-      );
-      filesGenerated.push(`${servicePath}/storage.ts`);
+        `${sourceLibPath}/storage.ts`,
+        generateSupabaseStorageServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/storage.ts`)
+    } else if (isRedisProvider) {
+      // Redis has multiple service files (service, cache, pubsub, queue)
+      yield* adapter.writeFile(
+        `${sourceLibPath}/redis.ts`,
+        generateRedisServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/redis.ts`)
+
+      yield* adapter.writeFile(
+        `${sourceLibPath}/cache.ts`,
+        generateRedisCacheServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/cache.ts`)
+
+      yield* adapter.writeFile(
+        `${sourceLibPath}/pubsub.ts`,
+        generateRedisPubSubServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/pubsub.ts`)
+
+      yield* adapter.writeFile(
+        `${sourceLibPath}/queue.ts`,
+        generateRedisQueueServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/queue.ts`)
     } else {
-      // Generate service definition (lightweight Context.Tag with static layers)
+      // Generate service definition at lib/service.ts (Context.Tag with static layers)
+      // Import resolves: "./lib/service" → lib/service.ts (file takes precedence over directory)
       yield* adapter.writeFile(
-        `${servicePath}/service.ts`,
+        `${sourceLibPath}/service.ts`,
         isKyselyProvider
           ? generateKyselyProviderServiceFile(templateOptions)
-          : generateProviderServiceFile(templateOptions),
-      );
-      filesGenerated.push(`${servicePath}/service.ts`);
+          : generateProviderServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/service.ts`)
     }
 
     // Note: SDK operation templates (CRUD) were removed in favor of
@@ -712,51 +702,34 @@ The baseline implementation remains useful for unit tests and demonstrations.
     // The service.ts file now contains the full service interface.
     // For SDK providers, operations are defined directly in the service template.
 
-    // Generate service barrel export - special providers use specialized templates
-    yield* adapter.writeFile(
-      `${servicePath}/index.ts`,
-      isKyselyProvider
-        ? generateKyselyProviderServiceIndexFile(templateOptions)
-        : isSupabaseProvider
-          ? generateSupabaseServiceIndexFile(templateOptions)
-          : generateProviderServiceIndexFile(templateOptions),
-    );
-    filesGenerated.push(`${servicePath}/index.ts`);
-
-    // Kysely and Supabase providers have layers defined as static members on service classes
-    // Other providers use a separate layers.ts file
-    if (!(isKyselyProvider || isSupabaseProvider)) {
-      yield* adapter.writeFile(`${sourceLibPath}/layers.ts`, generateLayersFile(templateOptions));
-      filesGenerated.push(`${sourceLibPath}/layers.ts`);
-    }
+    // All providers now use static layers defined on the service class
+    // No separate layers.ts file is generated - layers are accessed via:
+    //   - ${className}.Live
+    //   - ${className}.Test
+    //   - ${className}.Dev
+    //   - ${className}.Auto
 
     yield* adapter.writeFile(
       `${sourceLibPath}/service.spec.ts`,
       isSupabaseProvider
         ? generateSupabaseSpecFile(templateOptions)
-        : generateServiceSpecFile(templateOptions),
-    );
-    filesGenerated.push(`${sourceLibPath}/service.spec.ts`);
+        : isRedisProvider
+        ? generateRedisSpecFile()
+        : generateServiceSpecFile(templateOptions)
+    )
+    filesGenerated.push(`${sourceLibPath}/service.spec.ts`)
 
     // Platform-specific export files removed - rely on automatic tree-shaking
     // All exports are now handled through the main index.ts
 
     // Inject environment variables for this provider (except for built-in providers)
-    // Built-in providers (kysely, supabase, effect-cache, etc.) are handled by init command
-    const builtInProviders = [
-      'kysely',
-      'supabase',
-      'effect-cache',
-      'effect-logger',
-      'effect-metrics',
-      'effect-queue',
-      'effect-pubsub',
-    ];
+    // Built-in providers (kysely, supabase, redis) are handled by init command
+    const builtInProviders = ["kysely", "supabase", "redis"]
     if (!builtInProviders.includes(options.name)) {
       yield* injectEnvVars(adapter, [
-        { name: `${options.constantName}_API_KEY`, type: 'redacted', context: 'server' },
-        { name: `${options.constantName}_TIMEOUT`, type: 'number', context: 'server' },
-      ]);
+        { name: `${options.constantName}_API_KEY`, type: "redacted", context: "server" },
+        { name: `${options.constantName}_TIMEOUT`, type: "number", context: "server" }
+      ])
     }
 
     return {
@@ -764,7 +737,7 @@ The baseline implementation remains useful for unit tests and demonstrations.
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       packageName: options.packageName,
-      filesGenerated,
-    };
-  });
+      filesGenerated
+    }
+  })
 }

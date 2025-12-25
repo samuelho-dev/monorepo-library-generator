@@ -49,13 +49,13 @@ export class PaymentService extends Context.Tag('PaymentService')<
   // Static Live property for layer composition
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService;
       const database = yield* DatabaseService;
 
       return {
         processPayment: (amount) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const result = yield* Effect.tryPromise({
               try: () =>
                 stripe.paymentIntents.create({ amount, currency: 'usd' }),
@@ -127,7 +127,7 @@ export class LoggingService extends Context.Tag('LoggingService')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* Config;
       // Complex initialization
       return createStructuredLogger(config);
@@ -155,7 +155,7 @@ export const KyselyService = <DB>() =>
 export const KyselyServiceLive = <DB>() =>
   Layer.scoped(
     KyselyService<DB>(),
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const pool = yield* Effect.acquireRelease(
         Effect.sync(() => createPool(config)),
         (pool) => Effect.sync(() => pool.end())
@@ -194,7 +194,7 @@ class Logger extends Effect.Service<Logger>()('Logger', {
 }) {}
 
 // Usage
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   yield* Logger.info('Hello'); // Direct accessor (if accessors: true)
 });
 
@@ -231,13 +231,13 @@ export class UserRepository extends Context.Tag('UserRepository')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
       const cache = yield* CacheService;
 
       return {
         findById: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Check cache first - use type-safe cache.get with schema
             const cached = yield* cache.get<User>(`user:${id}`, UserSchema);
             if (Option.isSome(cached)) return cached;
@@ -269,7 +269,7 @@ export class UserRepository extends Context.Tag('UserRepository')<
           ),
 
         update: (id, input) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const updated = yield* database.query((db) =>
               db
                 .updateTable('users')
@@ -284,7 +284,7 @@ export class UserRepository extends Context.Tag('UserRepository')<
           }),
 
         delete: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* database.query((db) =>
               db.deleteFrom('users').where('id', '=', id).execute(),
             );
@@ -322,7 +322,7 @@ import { Effect } from "effect";
 
 // User profile lookup with caching
 const getUserProfile = (userId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* UserRepository;
     const user = yield* repo.findById(userId);
 
@@ -361,7 +361,7 @@ export class UserService extends Context.Tag("UserService")<
   static readonly Live = Layer.sync(this, () => {
     // Create cached operation once
     const cachedGetProfile = (userId: string) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const repo = yield* UserRepository;
         const user = yield* repo.findById(userId);
         // ...
@@ -391,7 +391,7 @@ import { Effect } from "effect";
 
 // Exchange rate caching with 5-minute TTL
 const getExchangeRate = (currency: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const api = yield* ExchangeRateAPI;
     yield* Effect.log(`Fetching exchange rate for ${currency}`);
 
@@ -421,7 +421,7 @@ const rate3 = yield* getExchangeRate("USD"); // Fetches again
 
 ```typescript
 // OAuth token with auto-refresh
-const getAccessToken = Effect.gen(function* () {
+const getAccessToken = Effect.gen(function*() {
   const oauth = yield* OAuthService;
   yield* Effect.log("Refreshing access token");
 
@@ -433,7 +433,7 @@ const getAccessToken = Effect.gen(function* () {
 
 // Use in API calls
 const makeAuthenticatedRequest = (endpoint: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const token = yield* getAccessToken; // Cached or refreshed
     const api = yield* APIClient;
 
@@ -453,7 +453,7 @@ const makeAuthenticatedRequest = (endpoint: string) =>
 import { Effect } from "effect";
 
 // Initialize Stripe SDK exactly once
-const initializeStripe = Effect.gen(function* () {
+const initializeStripe = Effect.gen(function*() {
   yield* Effect.log("Initializing Stripe SDK");
   const config = yield* ConfigService;
 
@@ -484,7 +484,7 @@ yield* program;
 **Database Migration Example:**
 
 ```typescript
-const runMigrations = Effect.gen(function* () {
+const runMigrations = Effect.gen(function*() {
   const database = yield* DatabaseService;
   yield* Effect.log("Running database migrations");
 
@@ -502,7 +502,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Ensure migrations before repository starts
       yield* runMigrations; // Safe: runs once globally
 
@@ -526,7 +526,7 @@ import { Effect } from "effect";
 // Expensive shipping cost calculation
 const calculateShippingCost = cachedFunction(
   (weight: number, distance: number) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       yield* Effect.log(`Computing shipping for ${weight}kg, ${distance}km`);
 
       // Expensive calculation
@@ -566,7 +566,7 @@ interface ProductQuery {
 // Cache by object equality
 const searchProducts = cachedFunction(
   (query: ProductQuery) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const db = yield* DatabaseService;
       yield* Effect.log(`Searching products`, query);
 
@@ -607,7 +607,7 @@ import { Effect, Option } from "effect";
 
 // Two-tier caching: In-memory (L1) + Redis (L2)
 const getProductDetails = (productId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const cache = yield* CacheService; // L2: Redis
     const db = yield* DatabaseService;
 
@@ -700,7 +700,7 @@ const getProductDetails = (productId: string) =>
 // ❌ WRONG: Creating new cached Effect each time
 const getBadProfile = (userId: string) => {
   // Creates NEW cache on every call
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // ...
   }).pipe(Effect.cached);
 };
@@ -710,7 +710,7 @@ yield* getBadProfile("user-123"); // Cache 1
 yield* getBadProfile("user-123"); // Cache 2 (different instance!)
 
 // ✅ CORRECT: Create cached Effect once, reuse
-const cachedGetProfile = Effect.gen(function* () {
+const cachedGetProfile = Effect.gen(function*() {
   // ...
 }).pipe(Effect.cached);
 
@@ -722,7 +722,7 @@ yield* cachedGetProfile; // Hit same cache
 const sharedData = Effect.succeed(data).pipe(Effect.cached);
 
 // ✅ CORRECT: Use CacheService for cross-process
-const sharedData = Effect.gen(function* () {
+const sharedData = Effect.gen(function*() {
   const cache = yield* CacheService;
   return yield* cache.get("shared-key");
 });
@@ -772,12 +772,12 @@ import { Effect } from "effect";
 const processOrder = (isPriority: boolean) =>
   Effect.if(isPriority, {
     onTrue: () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const expressService = yield* ExpressShippingService;
         return yield* expressService.ship();
       }),
     onFalse: () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const standardService = yield* StandardShippingService;
         return yield* standardService.ship();
       })
@@ -785,7 +785,7 @@ const processOrder = (isPriority: boolean) =>
 
 // ⚠️ ACCEPTABLE: Effect.gen with plain if/else
 const processOrderAlternative = (isPriority: boolean) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     if (isPriority) {
       const expressService = yield* ExpressShippingService;
       return yield* expressService.ship();
@@ -831,7 +831,7 @@ import { Effect, Option } from "effect";
 // ✅ GOOD: Guard clause with Effect.when
 const sendNotification = (shouldNotify: boolean, userId: string) =>
   Effect.when(shouldNotify, () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const userRepo = yield* UserRepository;
       const user = yield* userRepo.findById(userId);
 
@@ -851,7 +851,7 @@ const sendNotification = (shouldNotify: boolean, userId: string) =>
 // ✅ GOOD: Optional cache warming
 const warmCacheIfEnabled = (config: Config) =>
   Effect.when(config.enableCaching, () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const cache = yield* CacheService;
       yield* cache.warmup();
       yield* Effect.log("Cache warmed successfully");
@@ -902,13 +902,13 @@ const validateUser = (user: User) =>
 
 // ✅ GOOD: Skip expensive operation if already cached
 const loadUserProfile = (userId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const cache = yield* CacheService;
     const cached = yield* cache.get<UserProfile>(`user:${userId}`);
 
     // Only fetch if NOT cached
     yield* Effect.unless(Option.isSome(cached), () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const api = yield* UserAPI;
         const profile = yield* api.fetchProfile(userId);
         yield* cache.set(`user:${userId}`, profile);
@@ -997,7 +997,7 @@ const getTotalPrice = (productId: string, quantity: number) =>
 
 // Equivalent to:
 const getTotalPriceAlternative = (productId: string, quantity: number) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const [product, discount] = yield* Effect.all([
       ProductRepository.findById(productId),
       DiscountService.getDiscount(productId)
@@ -1030,7 +1030,7 @@ const badBranching = (status: string, user: User) =>
 
 // ✅ CORRECT: Use Effect.gen for complex logic
 const goodBranching = (status: string, user: User) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     if (status === "active") {
       return user.isPremium
         ? yield* premiumActive()
@@ -1064,7 +1064,7 @@ const badSequence = (userId: string) =>
 
 // ✅ CORRECT: Sequential with Effect.gen
 const goodSequence = (userId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const user = yield* createUser(userId);
     const order = yield* createOrder(user.id); // Use created user
     return { user, order };
@@ -1187,7 +1187,7 @@ static readonly Live = Layer.sync(this, () => new Stripe(apiKey))
 
 ```typescript
 // ✅ Needs DatabaseService, but no cleanup
-static readonly Live = Layer.effect(this, Effect.gen(function* () {
+static readonly Live = Layer.effect(this, Effect.gen(function*() {
   const db = yield* DatabaseService
   return { /* methods using db */ }
 }))
@@ -1197,7 +1197,7 @@ static readonly Live = Layer.effect(this, Effect.gen(function* () {
 
 ```typescript
 // ✅ Needs pool creation AND cleanup
-static readonly Live = Layer.scoped(this, Effect.gen(function* () {
+static readonly Live = Layer.scoped(this, Effect.gen(function*() {
   const pool = yield* Effect.acquireRelease(
     Effect.sync(() => new Pool(config)),
     (pool) => Effect.sync(() => pool.end())
@@ -1251,7 +1251,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService
       const database = yield* DatabaseService
 
@@ -1280,7 +1280,7 @@ export const ConfiguredServiceLive = Layer.effect(
 // ✅ For resources needing cleanup
 export const DatabaseServiceLive = Layer.scoped(
   DatabaseService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Acquire resource with automatic cleanup
     const pool = yield* Effect.acquireRelease(
       Effect.sync(() => createPool(config)),
@@ -1303,7 +1303,7 @@ export const DatabaseServiceLive = Layer.scoped(
 // Alternative: Using addFinalizer
 export const WebSocketServiceLive = Layer.scoped(
   WebSocketService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const ws = new WebSocket(url);
 
     // Register cleanup
@@ -1334,7 +1334,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService
       return {
         processPayment: (amount) => /* implementation */,
@@ -1501,7 +1501,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
   // Production implementation
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService
       return {
         processPayment: (amount) => /* production logic */
@@ -1648,11 +1648,11 @@ export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
   // Dev layer with logging and delays
   static readonly Dev = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const logger = yield* LoggingService;
       return {
         processPayment: (amount) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.info(`[DEV] Processing payment: ${amount}`);
             yield* Effect.sleep('100 millis');
             return mockResult;
@@ -1673,7 +1673,7 @@ export class PaymentService extends Context.Tag('PaymentService')</*...*/> {
 
   // Auto-select based on NODE_ENV
   static readonly Auto = Layer.unwrapEffect(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const env = yield* Config.string('NODE_ENV');
       switch (env) {
         case 'test':
@@ -1782,7 +1782,7 @@ export type PaymentErrors = PaymentError | InsufficientFundsError;
 
 // Usage in service
 const processPayment = (amount: number) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const balance = yield* getBalance();
 
     if (balance < amount) {
@@ -2138,7 +2138,7 @@ interface ImportResult {
 const importUsers = (emails: readonly string[]): Effect.Effect<ImportResult> =>
   Effect.allSuccesses(
     emails.map(email =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Validate email
         const validated = yield* validateEmail(email);
 
@@ -2198,7 +2198,7 @@ const enrichUsers = (userIds: readonly string[]) =>
   Effect.forEach(
     userIds,
     (id) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const user = yield* UserRepository.findById(id);
         const orders = yield* OrderRepository.countByUserId(id);
         const lastLogin = yield* ActivityRepository.getLastLogin(id);
@@ -2216,7 +2216,7 @@ const enrichUsers = (userIds: readonly string[]) =>
 const enrichUsersAlternative = (userIds: readonly string[]) =>
   Effect.all(
     userIds.map(id =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // same implementation
       })
     ),
@@ -2257,7 +2257,7 @@ const createUserAndOrder = (userId: string) =>
 
 // ✅ CORRECT: Sequential with Effect.gen
 const createUserAndOrderCorrect = (userId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const user = yield* createUser(userId);
     const order = yield* createOrder(user.id); // Use created user's ID
     return { user, order };
@@ -2423,7 +2423,7 @@ const resilientGet = (id: string) =>
       times: 3
     }),
     Effect.catchTag("TimeoutException", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const cached = yield* cache.get<Resource>(`resource:${id}`);
         return yield* Option.match(cached, {
           onSome: Effect.succeed,
@@ -2484,7 +2484,7 @@ const withTransaction = <A, E>(
   operation: (conn: Connection) => Effect.Effect<A, E>
 ) =>
   Effect.acquireRelease(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const connection = yield* Effect.tryPromise({
         try: () => pool.connect(),
         catch: (error) => new DatabaseConnectionError({ cause: error })
@@ -2495,14 +2495,14 @@ const withTransaction = <A, E>(
       yield* Scope.addFinalizer((exit) =>
         Exit.match(exit, {
           onFailure: () =>
-            Effect.gen(function* () {
+            Effect.gen(function*() {
               yield* Effect.tryPromise(() => connection.rollback()).pipe(
                 Effect.catchAll(() => Effect.void)
               );
               yield* Effect.sync(() => connection.release());
             }),
           onSuccess: () =>
-            Effect.gen(function* () {
+            Effect.gen(function*() {
               yield* Effect.tryPromise(() => connection.commit()).pipe(
                 Effect.tapError(() =>
                   Effect.tryPromise(() => connection.rollback()).pipe(
@@ -2738,7 +2738,7 @@ Resilience:
 ```typescript
 // ✅ Good use of Effect.gen
 const processOrder = (orderId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const order = yield* getOrder(orderId);
     const user = yield* getUser(order.userId);
 
@@ -2906,7 +2906,7 @@ export class PasswordInput extends Schema.Class<PasswordInput>("PasswordInput")(
 export const UniqueEmail = Schema.String.pipe(
   Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
   Schema.filterEffect((email) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const userRepo = yield* UserRepository;
       const exists = yield* userRepo.existsByEmail(email);
 
@@ -2982,7 +2982,7 @@ export const ValidatedUserId = Schema.String.pipe(
     Schema.String,
     {
       decode: (id) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const userApi = yield* UserAPI;
           const exists = yield* userApi.checkExists(id);
 
@@ -3288,7 +3288,7 @@ const emptyStream = Stream.empty;
 
 // From Effect
 const effectStream = Stream.fromEffect(
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const data = yield* fetchData();
     return data;
   })
@@ -3335,7 +3335,7 @@ const paginatedStream = <T>(
   fetchPage: (cursor: string | null) => Effect.Effect<PaginatedResponse<T>, Error>
 ) =>
   Stream.unfoldEffect(null , (cursor) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const response = yield* fetchPage(cursor);
 
       if (response.items.length === 0) {
@@ -3438,7 +3438,7 @@ const processDataPipeline = (inputStream: Stream.Stream<RawData, Error>) =>
 
     // Transform with Effect (async validation)
     Stream.mapEffect((data) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const validated = yield* validateData(data);
         return validated;
       })
@@ -3477,14 +3477,14 @@ import { Stream, Effect } from "effect";
 const queryStream = <T>(query: string): Stream.Stream<T, Error> =>
   Stream.acquireRelease(
     // Acquire: Open database connection
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const connection = yield* database.connect();
       yield* Effect.log("Database connection opened");
       return connection;
     }),
     // Release: Close connection (called even on error/interruption)
     (connection) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         yield* connection.close();
         yield* Effect.log("Database connection closed");
       })
@@ -3552,7 +3552,7 @@ const streamWithCleanup = Stream.range(1, 100).pipe(
 
 ```typescript
 const streamWithFinalizer = Stream.fromEffect(
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     yield* Stream.finalizer(
       Effect.log("Finalizer running")
     );
@@ -3594,7 +3594,7 @@ const zipped = Stream.zip(numbersStream, lettersStream);
 // Rate limiting with delays
 const rateLimited = Stream.fromIterable(requests).pipe(
   Stream.mapEffect((req) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       yield* Effect.sleep("100 millis"); // 100ms between requests
       return yield* processRequest(req);
     })
@@ -3714,7 +3714,7 @@ const resilientStream = Stream.fromIterable(items).pipe(
   Stream.mapEffect((item) =>
     processItem(item).pipe(
       Effect.catchAll((error) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* Effect.log("Processing failed, using default", error);
           return defaultValue;
         })
@@ -3733,7 +3733,7 @@ const processStreamWithErrorHandling = <T, E, R>(
   stream: Stream.Stream<T, E, R>,
   processor: (item: T) => Effect.Effect<void, Error>
 ): Effect.Effect<{ processed: number; failed: number }, never, R> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let processed = 0;
     let failed = 0;
 
@@ -3908,7 +3908,7 @@ const exportUsersToCSV = (
   users: Stream.Stream<User, Error>,
   filePath: string
 ): Effect.Effect<void, Error> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Create write stream
     const writeStream = yield* Effect.tryPromise({
       try: () => Promise.resolve(fs.createWriteStream(filePath)),
@@ -3966,7 +3966,7 @@ yield* exportUsersToCSV(userStream, "users.csv");
 import { Stream, Sink, Effect } from "effect";
 
 // Full data processing pipeline
-const dataProcessingPipeline = Effect.gen(function* () {
+const dataProcessingPipeline = Effect.gen(function*() {
   const database = yield* DatabaseService;
   const logger = yield* LoggingService;
 
@@ -3974,7 +3974,7 @@ const dataProcessingPipeline = Effect.gen(function* () {
 
   // Step 1: Stream from database
   const rawDataStream = Stream.acquireRelease(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const connection = yield* database.connect();
       return connection;
     }),
@@ -3998,7 +3998,7 @@ const dataProcessingPipeline = Effect.gen(function* () {
     // Enrich with async data
     Stream.mapEffect(
       (record) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const customer = yield* fetchCustomer(record.customerId);
           return { ...record, customerName: customer.name };
         }),
@@ -4141,7 +4141,7 @@ const AppLayer = Layer.mergeAll(
 );
 
 // Use in application
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const payment = yield* PaymentService;
   return yield* payment.processPayment(100);
 }).pipe(Effect.provide(AppLayer), Effect.runPromise);
@@ -4278,7 +4278,7 @@ const DevLayer = Layer.mergeAll(
 // ❌ WRONG - Don't provide dependencies within a layer
 export const PaymentServiceLive = Layer.effect(
   PaymentService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const stripe = yield* StripeService
     // ...
   })
@@ -4289,7 +4289,7 @@ export const PaymentServiceLive = Layer.effect(
 // ✅ CORRECT - Let app compose dependencies
 export const PaymentServiceLive = Layer.effect(
   PaymentService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const stripe = yield* StripeService  // Needed by consumer to provide
     // ...
   })
@@ -4298,7 +4298,7 @@ export const PaymentServiceLive = Layer.effect(
 // ❌ WRONG - Don't nest Effect.gen in layers
 const AppLayer = Layer.effect(
   ???,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     return Layer.mergeAll(...)  // ❌ Can't return Layer from Effect
   })
 )
@@ -4326,7 +4326,7 @@ export class CacheService extends Context.Tag('CacheService')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const counter = yield* Ref.make(0);
 
       return {
@@ -4338,7 +4338,7 @@ export class CacheService extends Context.Tag('CacheService')<
 }
 
 // Usage - thread-safe concurrent updates
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const cache = yield* CacheService;
 
   // 100 concurrent increments - all will be applied correctly
@@ -4391,7 +4391,7 @@ yield *
 // ✅ CORRECT with SynchronizedRef - Effects ARE allowed in updateEffect
 yield *
   SynchronizedRef.updateEffect(state, (current) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const data = yield* fetchData(); // ✅ This works with SynchronizedRef!
       return { ...current, data };
     }),
@@ -4413,13 +4413,13 @@ export class DataCache extends Context.Tag('DataCache')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const cache = yield* SynchronizedRef.make<Map<string, Data>>(new Map());
 
       return {
         refresh: (id) =>
           SynchronizedRef.updateEffect(cache, (current) =>
-            Effect.gen(function* () {
+            Effect.gen(function*() {
               const data = yield* fetchFromDatabase(id); // ✅ Effects allowed!
               const updated = new Map(current);
               updated.set(id, data);
@@ -4469,13 +4469,13 @@ export class CartService extends Context.Tag('CartService')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Create reactive atom for cart state
       const cartAtom = yield* Atom.make<{ items: CartItem[] }>({ items: [] });
 
       return {
         getItems: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const state = yield* Atom.get(cartAtom);
             return state.items;
           }),
@@ -4494,7 +4494,7 @@ export class CartService extends Context.Tag('CartService')<
           })),
 
         getTotalPrice: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const state = yield* Atom.get(cartAtom);
             return state.items.reduce(
               (sum, item) => sum + item.price * item.quantity,
@@ -4753,7 +4753,7 @@ import { Effect, Layer } from "effect";
 
 // ✅ CORRECT: Application entry point (apps/api/src/main.ts)
 async function main() {
-  const program = Effect.gen(function* () {
+  const program = Effect.gen(function*() {
     const server = yield* HttpServer;
     yield* server.start();
     yield* Effect.log("Server started successfully");
@@ -4789,7 +4789,7 @@ export async function saveUser(user: User) {
 
 // ✅ CORRECT: Return Effect, let consumer run it
 export const saveUser = (user: User): Effect.Effect<void, RepositoryError, UserRepository> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* UserRepository;
     yield* repo.save(user);
   });
@@ -4811,7 +4811,7 @@ const config = Effect.runSync(
 
 // ❌ WRONG: Running async effect
 const userData = Effect.runSync(
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* DatabaseService; // RUNTIME ERROR! Async operation
     return yield* db.query(...);
   })
@@ -4846,14 +4846,14 @@ const userData = Effect.runSync(
 import { Effect, Runtime } from "effect";
 
 // ✅ CORRECT: Background task with runtime preservation
-const scheduleCleanup = Effect.gen(function* () {
+const scheduleCleanup = Effect.gen(function*() {
   const runtime = yield* Effect.runtime();
   const runFork = Runtime.runFork(runtime);
 
   // Schedule cleanup every hour
   setInterval(() => {
     runFork(
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const cache = yield* CacheService;
         yield* cache.cleanup();
         yield* Effect.log("Cache cleaned");
@@ -4863,7 +4863,7 @@ const scheduleCleanup = Effect.gen(function* () {
 });
 
 // ✅ CORRECT: WebSocket with preserved runtime
-const setupWebSocket = Effect.gen(function* () {
+const setupWebSocket = Effect.gen(function*() {
   const runtime = yield* Effect.runtime();
   const runFork = Runtime.runFork(runtime);
 
@@ -4898,7 +4898,7 @@ import { NodeRuntime } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 
 // ✅ CORRECT: CLI application (apps/cli/src/main.ts)
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const cli = yield* CliService;
   const args = yield* cli.parseArgs(process.argv);
   yield* cli.execute(args);
@@ -4933,7 +4933,7 @@ import { Effect, Layer } from 'effect';
 import { expect, it } from '@effect/vitest';
 
 it.scoped('should process payment', () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const result = yield* processPayment(100);
     expect(result.status).toBe('success');
   }).pipe(Effect.provide(Layer.fresh(TestLayer))),
@@ -4960,7 +4960,7 @@ await Effect.runPromise(program.pipe(Effect.provide(AppLayer)));
 ```typescript
 // Tests - @effect/vitest handles running, NEVER manual runPromise
 it.scoped("test", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Test code here - framework runs it
   }).pipe(Effect.provide(Layer.fresh(TestLayer)))
 );
@@ -4981,7 +4981,7 @@ websocket.on("message", (data) => {
 ```typescript
 // Libraries - NEVER run effects, always return Effect
 export const operation = (): Effect.Effect<A, E, R> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Implementation - returns Effect, doesn't run it
   });
 ```
@@ -4996,7 +4996,7 @@ export class UserRepository {
   async findById(id: string): Promise<User> {
     // NEVER do this in libraries!
     return await Effect.runPromise(
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const db = yield* DatabaseService;
         return yield* db.query(...);
       })
@@ -5007,7 +5007,7 @@ export class UserRepository {
 // ✅ CORRECT: Return Effect, let consumer run it
 export class UserRepository {
   findById(id: string): Effect.Effect<User, Error, DatabaseService> {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const db = yield* DatabaseService;
       return yield* db.query(...);
     });
@@ -5024,7 +5024,7 @@ it("should find user", async () => {
 
 // ✅ CORRECT: Use it.scoped (see TESTING_PATTERNS.md)
 it.scoped("should find user", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* UserRepository;
     const result = yield* repo.findById("123");
     expect(result).toBeDefined();
@@ -5033,7 +5033,7 @@ it.scoped("should find user", () =>
 
 // ❌ WRONG: runSync with async operations
 const user = Effect.runSync(
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* UserRepository; // THROWS! Async operation
     return yield* repo.findById("123");
   })
@@ -5041,7 +5041,7 @@ const user = Effect.runSync(
 
 // ✅ CORRECT: Use runPromise for async
 const user = await Effect.runPromise(
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* UserRepository;
     return yield* repo.findById("123");
   }).pipe(Effect.provide(AppLayer))
@@ -5092,7 +5092,7 @@ websocket.on('message', (data) => {
 });
 
 // ✅ CORRECT - Preserve runtime with Effect.runtime
-const setupWebSocket = Effect.gen(function* () {
+const setupWebSocket = Effect.gen(function*() {
   const runtime = yield* Effect.runtime();
   const runFork = Runtime.runFork(runtime);
 
@@ -5113,7 +5113,7 @@ Use when you need explicit control over forked fibers:
 
 ```typescript
 // ✅ Alternative: Use FiberHandle for managed callbacks
-const setupWebSocket = Effect.gen(function* () {
+const setupWebSocket = Effect.gen(function*() {
   const handle = yield* FiberHandle.make();
 
   websocket.on('message', (data) => {
@@ -5143,7 +5143,7 @@ export const UserRepository = class extends Context.Tag('UserRepository')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       return {
@@ -5171,7 +5171,7 @@ export const UserRepository = class extends Context.Tag('UserRepository')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
       const runtime = yield* Effect.runtime();
 
@@ -5181,7 +5181,7 @@ export const UserRepository = class extends Context.Tag('UserRepository')<
             db.transaction().execute(async (trx) => {
               // ✅ CORRECT: Preserve runtime for Effect execution within transaction
               return await Runtime.runPromise(runtime)(
-                Effect.gen(function* () {
+                Effect.gen(function*() {
                   const user = yield* createUser(trx, data);
                   const profile = yield* createProfile(trx, user.id);
                   return { ...user, profile };
@@ -5211,20 +5211,20 @@ export class StripeWebhookService extends Context.Tag('StripeWebhookService')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService;
       const logger = yield* LoggingService;
       const runtime = yield* Effect.runtime();
 
       return {
         setupWebhookListener: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const runFork = Runtime.runFork(runtime);
 
             // SDK provides callbacks, we need to preserve runtime
             stripe.webhooks.onEvent('payment_intent.succeeded', (event) => {
               runFork(
-                Effect.gen(function* () {
+                Effect.gen(function*() {
                   yield* logger.info(`Webhook received: ${event.id}`);
                   yield* handlePaymentSuccess(event);
                 }),
@@ -5293,13 +5293,13 @@ import { Effect, Layer, Runtime } from 'effect';
 
 describe('RuntimePreservation', () => {
   it.scoped('should preserve runtime in callbacks', () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const runtime = yield* Effect.runtime();
       const runFork = Runtime.runFork(runtime);
 
       let called = false;
       runFork(
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           called = true;
         }),
       );
@@ -5335,7 +5335,7 @@ describe('RuntimePreservation', () => {
 import { Effect, Fiber } from 'effect';
 
 // Fork background work
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const fiber = yield* Effect.fork(expensiveTask);
 
   // Do other work while fiber runs
@@ -5361,7 +5361,7 @@ export class JobProcessor extends Context.Tag('JobProcessor')<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const fiberSet = yield* FiberSet.make();
 
       return {
@@ -5388,12 +5388,12 @@ export class CacheRefresh extends Context.Tag('CacheRefresh')<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const fiberMap = yield* FiberMap.make<string>();
 
       return {
         refresh: (key) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Check if already refreshing
             const existing = yield* FiberMap.get(fiberMap, key);
             if (Option.isSome(existing)) {
@@ -5442,14 +5442,14 @@ export class JobQueueService extends Context.Tag("JobQueueService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Bounded queue with backpressure (max 1000 pending jobs)
       const jobQueue = yield* Queue.bounded<Job<unknown>>(1000);
 
       return {
         enqueue: (job) => Queue.offer(jobQueue, job),
 
-        start: Effect.gen(function* () {
+        start: Effect.gen(function*() {
           // Background processor (runs until scope closes)
           while (true) {
             // Take batch of jobs
@@ -5476,7 +5476,7 @@ export class EmailService extends Context.Tag("EmailService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const jobQueue = yield* JobQueueService;
 
       return {
@@ -5532,7 +5532,7 @@ export class StripeService extends Context.Tag("StripeService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = new Stripe(config.apiKey);
 
       // Limit to 5 concurrent API calls
@@ -5560,7 +5560,7 @@ export class DatabaseService extends Context.Tag("DatabaseService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const pool = yield* createDatabasePool();
 
       // Protect pool with semaphore (max 20 connections)
@@ -5625,7 +5625,7 @@ export class EventBusService extends Context.Tag("EventBusService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Sliding strategy handles slow consumers
       const eventBus = yield* PubSub.bounded<DomainEvent>(1000);
 
@@ -5646,7 +5646,7 @@ export class NotificationService extends Context.Tag("NotificationService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const eventBus = yield* EventBusService;
 
       return {
@@ -5662,7 +5662,7 @@ export class NotificationService extends Context.Tag("NotificationService")<
 }
 
 // ✅ Subscribe and process events
-const processEvents = Effect.gen(function* () {
+const processEvents = Effect.gen(function*() {
   const eventBus = yield* EventBusService;
   const subscription = yield* eventBus.subscribe;
 
@@ -5684,7 +5684,7 @@ export class WebSocketServer extends Context.Tag("WebSocketServer")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const messageBus = yield* PubSub.unbounded<Message>();
 
       return {
@@ -5692,7 +5692,7 @@ export class WebSocketServer extends Context.Tag("WebSocketServer")<
           PubSub.publish(messageBus, message).pipe(Effect.asVoid),
 
         registerClient: (ws) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const subscription = yield* PubSub.subscribe(messageBus);
 
             // Forward messages to this client
@@ -5747,13 +5747,13 @@ export class DatabaseService extends Context.Tag("DatabaseService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const db = yield* initializeDatabase();
       const migrationLatch = yield* Effect.makeLatch(false); // Closed
 
       // Run migrations in background, open when done
       yield* Effect.forkScoped(
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* runMigrations(db);
           yield* migrationLatch.open();
         })
@@ -5775,7 +5775,7 @@ export class DatabaseService extends Context.Tag("DatabaseService")<
 }
 
 // ✅ Application startup coordination
-const app = Effect.gen(function* () {
+const app = Effect.gen(function*() {
   const db = yield* DatabaseService;
 
   // Block until migrations complete
@@ -5794,13 +5794,13 @@ export class CacheService extends Context.Tag("CacheService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const cache = new Map<string, unknown>();
       const warmupLatch = yield* Effect.makeLatch(false);
 
       // Background warmup
       yield* Effect.forkScoped(
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* loadCriticalData(cache);
           yield* warmupLatch.open();
         })
@@ -5847,11 +5847,11 @@ export class ResourceService extends Context.Tag("ResourceService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const handleDeferred = yield* Deferred.make<ResourceHandle, InitError>();
 
       // Initialize on first access
-      const initOnce = Effect.gen(function* () {
+      const initOnce = Effect.gen(function*() {
         // Check if already initialized
         const result = yield* Deferred.poll(handleDeferred);
 
@@ -5863,7 +5863,7 @@ export class ResourceService extends Context.Tag("ResourceService")<
       });
 
       return {
-        getHandle: Effect.gen(function* () {
+        getHandle: Effect.gen(function*() {
           yield* initOnce;
           return yield* Deferred.await(handleDeferred);
         })
@@ -5882,12 +5882,12 @@ export class CacheService extends Context.Tag("CacheService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const cacheDeferred = yield* Deferred.make<Map<string, unknown>, CacheError>();
 
       // Background warmup
       yield* Effect.forkScoped(
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const cache = new Map<string, unknown>();
           yield* loadUserCache(cache);
           yield* loadProductCache(cache);
@@ -5903,7 +5903,7 @@ export class CacheService extends Context.Tag("CacheService")<
         warmup: Deferred.await(cacheDeferred),
 
         get: (key) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const cache = yield* Deferred.await(cacheDeferred);
             return Option.fromNullable(cache.get(key));
           })
@@ -5913,12 +5913,12 @@ export class CacheService extends Context.Tag("CacheService")<
 }
 
 // ✅ Work handoff between fibers
-const coordinatedWork = Effect.gen(function* () {
+const coordinatedWork = Effect.gen(function*() {
   const resultDeferred = yield* Deferred.make<Result, WorkError>();
 
   // Producer fiber
   yield* Effect.forkScoped(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const result = yield* doExpensiveWork();
       yield* Deferred.succeed(resultDeferred, result);
     })
@@ -5926,7 +5926,7 @@ const coordinatedWork = Effect.gen(function* () {
 
   // Consumer fiber (waits for result)
   yield* Effect.forkScoped(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const result = yield* Deferred.await(resultDeferred);
       yield* processResult(result);
     })
@@ -6010,7 +6010,7 @@ Use for **heterogeneous data** with semantic meaning:
 ```typescript
 // ✅ Object syntax: Heterogeneous data with semantic names
 const getProductPage = (productId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const {
       product, // Product entity
       reviews, // Review list
@@ -6020,7 +6020,7 @@ const getProductPage = (productId: string) =>
       {
         product: productRepo.findById(productId),
         reviews: reviewRepo.findByProduct(productId),
-        seller: Effect.gen(function* () {
+        seller: Effect.gen(function*() {
           const prod = yield* productRepo.findById(productId);
           return yield* sellerRepo.findById(prod.sellerId);
         }),
@@ -6172,14 +6172,14 @@ export class PaymentService extends Context.Tag('PaymentService')<
   // Production layer with real dependencies
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService;
       const db = yield* DatabaseService;
       const logger = yield* LoggingService;
 
       return {
         processPayment: (amount) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.info(`Processing payment: ${amount}`);
             const result = yield* Effect.tryPromise({
               try: () =>
@@ -6213,12 +6213,12 @@ export class PaymentService extends Context.Tag('PaymentService')<
   // Dev layer with logging and delays for local development
   static readonly Dev = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const logger = yield* LoggingService;
 
       return {
         processPayment: (amount) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.info(`[DEV] Processing payment: ${amount}`);
             yield* Effect.sleep('100 millis'); // Simulate network delay
             return {
@@ -6229,7 +6229,7 @@ export class PaymentService extends Context.Tag('PaymentService')<
             };
           }),
         refundPayment: (id) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.info(`[DEV] Refunding payment: ${id}`);
             yield* Effect.sleep('50 millis');
           }),
@@ -6254,7 +6254,7 @@ export class PaymentService extends Context.Tag('PaymentService')<
 
   // Auto layer - selects appropriate layer based on environment
   static readonly Auto = Layer.unwrapEffect(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const env = yield* Config.string('NODE_ENV').pipe(
         Effect.orElse(() => Effect.succeed('production')),
       );
@@ -6286,7 +6286,7 @@ describe('PaymentService', () => {
       }),
     );
 
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const result = yield* processPayment(100).pipe(Effect.either);
       expect(Either.isLeft(result)).toBe(true);
     }).pipe(Effect.provide(Layer.fresh(TestLayer))); // ✅ Always Layer.fresh
@@ -6299,7 +6299,7 @@ describe('PaymentService', () => {
       PaymentService.Test,
     );
 
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const result = yield* processPayment(100);
       expect(result.status).toBe('success');
       expect(result.amount).toBe(100);
@@ -6319,7 +6319,7 @@ Effect layers are memoized by default for performance. In tests, use `Layer.fres
 ```typescript
 // ❌ PROBLEM: Shared memoized layer
 it.scoped("test 1 adds item to cache", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const cache = yield* CacheService;
     yield* cache.set("key", "value1");
     // Cache now has: { key: "value1" }
@@ -6327,7 +6327,7 @@ it.scoped("test 1 adds item to cache", () =>
 );
 
 it.scoped("test 2 expects empty cache", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const cache = yield* CacheService;
     const result = yield* cache.get("key");
     // ❌ FLAKY: key="value1" still exists from test 1!
@@ -6341,7 +6341,7 @@ it.scoped("test 2 expects empty cache", () =>
 ```typescript
 // ✅ CORRECT: Fresh layer instance per test
 it.scoped("test 1 adds item to cache", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const cache = yield* CacheService;
     yield* cache.set("key", "value1");
     // Cache has: { key: "value1" }
@@ -6349,7 +6349,7 @@ it.scoped("test 1 adds item to cache", () =>
 );
 
 it.scoped("test 2 expects empty cache", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const cache = yield* CacheService;
     const result = yield* cache.get("key");
     // ✅ PASSES: Fresh cache instance, no key
@@ -6389,7 +6389,7 @@ const MockDatabase = Layer.succeed(DatabaseService, {
 });
 
 it.scoped("repository test with mock", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* UserRepository;
     const users = yield* repo.findAll();
     expect(users.length).toBe(1);
@@ -6407,7 +6407,7 @@ Wrap each test layer individually when using multiple services:
 
 ```typescript
 it.scoped("orchestration test", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const payment = yield* PaymentService;
     const email = yield* EmailService;
     const logger = yield* LoggerService;
@@ -6593,7 +6593,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService
       const database = yield* DatabaseService
 
@@ -6657,11 +6657,11 @@ const processPayment = () => paymentEffect;
 
 ```typescript
 // ❌ WRONG - Nested generators are unnecessary
-const processOrder = Effect.gen(function* () {
+const processOrder = Effect.gen(function*() {
   const order = yield* getOrder();
 
   // ❌ Nested gen is unnecessary
-  const payment = yield* Effect.gen(function* () {
+  const payment = yield* Effect.gen(function*() {
     const amount = order.total;
     return yield* processPayment(amount);
   });
@@ -6670,7 +6670,7 @@ const processOrder = Effect.gen(function* () {
 });
 
 // ✅ CORRECT - Flat structure
-const processOrder = Effect.gen(function* () {
+const processOrder = Effect.gen(function*() {
   const order = yield* getOrder();
   const payment = yield* processPayment(order.total);
   return payment;
@@ -6701,14 +6701,14 @@ await Effect.runPromise(
 const getUser = (
   id: string,
 ): Effect.Effect<User, DatabaseError, DatabaseService> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* DatabaseService;
     return yield* db.query(/* ... */);
   });
 
 // ✅ CORRECT - Let TypeScript infer
 const getUser = (id: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* DatabaseService;
     return yield* db.query(/* ... */);
   });
@@ -6725,14 +6725,14 @@ const getUser = (id: string) =>
 const processPayment = (
   amount: number,
 ): Effect.Effect<Payment, PaymentError, PaymentService> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* PaymentService;
     return yield* service.process(amount);
   });
 
 // ✅ Let inference work
 const processPayment = (amount: number) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* PaymentService;
     return yield* service.process(amount);
   });
@@ -6746,7 +6746,7 @@ const processPayment = (amount: number) =>
 ```typescript
 // Service automatically infers it needs PaymentService
 const handler = (amount: number) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* PaymentService;
     const result = yield* service.process(amount);
     return result;
@@ -6779,7 +6779,7 @@ export class ServiceError extends Data.TaggedError('ServiceError')<{
 
 // Effect automatically infers error union
 const getProduct = (id: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const product = yield* findProduct(id); // Effect<Product, ProductNotFoundError>
     return yield* enrichProduct(product); // Effect<EnrichedProduct, ServiceError>
   });
@@ -6808,7 +6808,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
 // TypeScript enforces ALL methods are present
 export const UserRepositoryLive = Layer.effect(
   UserRepository,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const database = yield* DatabaseService
 
     return {
@@ -6861,7 +6861,7 @@ export const KyselyService = <DB>() =>
 const db = KyselyService<Database>();
 
 const query = (sql: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* db;
     return yield* service.execute(sql); // SQL type-checked for Database
   });
@@ -6910,7 +6910,7 @@ const parseUser = (data: unknown): Effect.Effect<User, ValidationError> =>
 | Layer.succeed       | Test mocks                 | `Layer.succeed(this, mockImplementation)`                           |
 | Data.TaggedError    | Runtime errors             | `class Error extends Data.TaggedError()`                            |
 | Schema.TaggedError  | RPC/serializable errors    | `class Error extends Schema.TaggedError()()`                        |
-| Effect.gen          | Sequential/complex         | `Effect.gen(function* () {})`                                       |
+| Effect.gen          | Sequential/complex         | `Effect.gen(function*() {})`                                       |
 | Combinators         | Simple/parallel            | `Effect.map`, `Effect.all`, etc.                                    |
 | Effect.runtime      | Preserve context           | `const runtime = yield* Effect.runtime()`                           |
 | Effect.all          | Parallel execution         | `Effect.all([...], { concurrency: "unbounded" })`                   |
@@ -6959,7 +6959,7 @@ export class PaymentService extends Context.Tag('PaymentService')<
   ): PaymentServiceInterface {
     return PaymentService.of({
       processPayment: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           // implementation
         }),
     });
@@ -6968,7 +6968,7 @@ export class PaymentService extends Context.Tag('PaymentService')<
 
 export const PaymentServiceLive = Layer.effect(
   PaymentService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const stripe = yield* StripeService;
     const database = yield* DatabaseService;
     return PaymentService.make(stripe, database);
@@ -6986,7 +6986,7 @@ export class PaymentService extends Context.Tag('PaymentService')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService;
       const database = yield* DatabaseService;
 
@@ -7027,7 +7027,7 @@ import { MyService } from './my-service';
 
 describe('MyService', () => {
   it.scoped('should perform operation', () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* MyService;
       const result = yield* service.operation();
 
@@ -7058,7 +7058,7 @@ describe('ServiceWithDependencies', () => {
   );
 
   it.scoped('should use injected dependencies', () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* MyService;
       const db = yield* DatabaseService;
       const cache = yield* CacheService;
@@ -7080,7 +7080,7 @@ import { Effect, TestClock } from 'effect';
 
 describe('TimeBasedOperations', () => {
   it.scoped('should handle time-based operations', () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Start async operation
       const fiber = yield* Effect.fork(delayedOperation());
 
@@ -7105,7 +7105,7 @@ import { Effect, Scope } from 'effect';
 
 describe('ResourceManagement', () => {
   it.scoped('should manage resources', () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const resource = yield* acquireResource();
       // Resource is automatically cleaned up
       const result = yield* useResource(resource);
@@ -7125,7 +7125,7 @@ import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer } from 'effect';
 
 it.live('should use real environment', () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Uses real time, real services, etc.
     const result = yield* realServiceCall();
 
@@ -7144,7 +7144,7 @@ import { Effect, Exit, Layer } from 'effect';
 
 describe('ErrorHandling', () => {
   it.scoped('should handle errors correctly', () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const exit = yield* Effect.exit(failingOperation());
 
       expect(Exit.isFailure(exit)).toBe(true);
@@ -7167,21 +7167,21 @@ import { Effect, Layer } from 'effect';
 
 // Run only this test (skip all others)
 it.scoped.only('focused test', () => // ✅ Use it.scoped.only
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     /* ... */
   }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
 );
 
 // Skip this test temporarily
 it.scoped.skip('skipped test', () => // ✅ Use it.scoped.skip
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     /* ... */
   }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
 );
 
 // Mark test as expected to fail
 it.scoped.fails('known issue', () => // ✅ Use it.scoped.fails
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     /* ... */
   }).pipe(Effect.provide(Layer.fresh(MyService.Test))),
 );
@@ -7202,7 +7202,7 @@ export class MyService extends Context.Tag('MyService')<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const db = yield* DatabaseService;
       return {
         operation: () => db.query(/* ... */),
@@ -7230,7 +7230,7 @@ const TestLayer = Layer.mergeAll(
 
 describe('MyService', () => {
   it.scoped('should work with test layer', () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* MyService;
       const result = yield* service.operation();
       expect(result).toBeDefined();
@@ -7265,7 +7265,7 @@ import { expect, it } from '@effect/vitest'; // ✅ All from @effect/vitest
 import { Effect, Layer } from 'effect';
 
 it.scoped('should call dependencies', () => // ✅ Always it.scoped
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
     yield* service.operation();
 
@@ -7278,7 +7278,7 @@ it.scoped('should call dependencies', () => // ✅ Always it.scoped
 
 ```typescript
 it.scoped('should recover from errors', () => // ✅ Always it.scoped
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const result = yield* riskyOperation().pipe(
       Effect.catchAll(() => Effect.succeed(fallbackValue)),
     );
@@ -7291,7 +7291,7 @@ it.scoped('should recover from errors', () => // ✅ Always it.scoped
 
 ```typescript
 it.scoped('should handle concurrent operations', () => // ✅ Always it.scoped
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const results = yield* Effect.all(
       [operation1(), operation2(), operation3()],
       { concurrency: 'unbounded' },
@@ -7384,7 +7384,7 @@ Follow these patterns to minimize migration effort when Effect 4.0 arrives:
 
 ```typescript
 // ✅ Use Effect.gen instead of pipe chains (more stable)
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const user = yield* UserService;
   const result = yield* user.findById("123");
   return result;
@@ -7530,14 +7530,14 @@ export class EventStore extends Context.Tag("EventStore")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* KyselyService;
 
       return {
         append: (aggregateId, events, expectedVersion) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* database.transaction((trx) =>
-              Effect.gen(function* () {
+              Effect.gen(function*() {
                 // Optimistic concurrency check
                 const currentVersion = yield* database.query((db) =>
                   db
@@ -7578,7 +7578,7 @@ export class EventStore extends Context.Tag("EventStore")<
           }),
 
         loadEvents: (aggregateId) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const rows = yield* database.query((db) =>
               db
                 .selectFrom("events")
@@ -7599,7 +7599,7 @@ export class EventStore extends Context.Tag("EventStore")<
           }),
 
         loadEventsSince: (timestamp) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const rows = yield* database.query((db) =>
               db
                 .selectFrom("events")
@@ -7647,7 +7647,7 @@ export class UserProjectionService extends Context.Tag("UserProjectionService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const eventStore = yield* EventStore;
       const database = yield* KyselyService;
 
@@ -7681,7 +7681,7 @@ export class UserProjectionService extends Context.Tag("UserProjectionService")<
           ),
 
         rebuild: (userId) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const events = yield* eventStore.loadEvents(userId);
             const projection = yield* this.project(events);
 
@@ -7717,7 +7717,7 @@ export class UserQueryService extends Context.Tag("UserQueryService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* KyselyService;
 
       return {
@@ -7907,7 +7907,7 @@ import { HttpRpcResolver } from "@effect/rpc-http";
 export const UserRpcRouter = RpcRouter.make(
   // Handler for GetUserRequest
   Rpc.effect(GetUserRequest, (request) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const userService = yield* UserService;
       const user = yield* userService.findById(request.userId);
 
@@ -7929,7 +7929,7 @@ export const UserRpcRouter = RpcRouter.make(
 
   // Handler for GetUsersRequest
   Rpc.effect(GetUsersRequest, (request) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const userService = yield* UserService;
       const users = yield* userService.findByIds(
         request.userIds,
@@ -7947,7 +7947,7 @@ export const UserRpcRouter = RpcRouter.make(
 
   // Handler for CreateUserRequest
   Rpc.effect(CreateUserRequest, (request) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const userService = yield* UserService;
 
       // Check if email exists
@@ -7977,7 +7977,7 @@ export const UserRpcRouter = RpcRouter.make(
 // RPC Server Layer
 export const UserRpcServerLive = Layer.effect(
   Rpc.Server,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     return Rpc.server(UserRpcRouter);
   })
 ).pipe(
@@ -7999,7 +7999,7 @@ export const UserRpcClientLive = HttpRpcResolver.make<typeof UserRpcRouter>({
 }).pipe(Layer.effect(Rpc.Resolver));
 
 // Usage in application
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const resolver = yield* Rpc.Resolver;
 
   // Type-safe request - compiler ensures correct payload
@@ -8115,7 +8115,7 @@ export class EdgeCacheService extends Context.Tag("EdgeCacheService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Use platform-provided KV storage
       const kv = yield* Effect.sync(() => globalThis.KV_NAMESPACE);
 
@@ -8185,7 +8185,7 @@ export type * from "./lib/types";
 // lib/layers-client.ts
 export const UserServiceClient = Layer.effect(
   UserService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Client uses RPC to call server
     const rpcClient = yield* RpcClient;
 
@@ -8241,7 +8241,7 @@ export class AppConfigService extends Context.Tag("AppConfigService")<
   // Load from environment variables
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* Config.all({
         port: Config.number("PORT").pipe(Config.withDefault(3000)),
         logLevel: Config.literal("debug", "info", "warn", "error")("LOG_LEVEL")
@@ -8273,7 +8273,7 @@ export class AppConfigService extends Context.Tag("AppConfigService")<
 // Development overrides
 export const AppConfigDev = Layer.effect(
   AppConfigService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const base = yield* AppConfigService.Live.pipe(
       Layer.build,
       Effect.map((ctx) => Context.get(ctx, AppConfigService))
@@ -8290,7 +8290,7 @@ export const AppConfigDev = Layer.effect(
 // Production hardening
 export const AppConfigProd = Layer.effect(
   AppConfigService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const base = yield* AppConfigService.Live.pipe(
       Layer.build,
       Effect.map((ctx) => Context.get(ctx, AppConfigService))
@@ -8323,7 +8323,7 @@ export class DatabaseConfigService extends Context.Tag("DatabaseConfigService")<
   // Derive from app config
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const appConfig = yield* AppConfigService;
 
       return {
@@ -8367,7 +8367,7 @@ export interface PaginatedResult<T> {
 
 // Repository operation
 findAll: (params: PaginationParams) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const database = yield* KyselyService;
     const offset = (params.page - 1) * params.limit;
 
@@ -8418,7 +8418,7 @@ export interface CursorResult<T> {
 
 // Repository operation with cursor
 findAllCursor: (params: CursorParams) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const database = yield* KyselyService;
 
     const data = yield* database.query((db) => {
@@ -8469,7 +8469,7 @@ import { Effect, Layer } from "effect";
 describe("UserService", () => {
   // ✅ CORRECT - Each test gets fresh layer
   it.effect("creates user", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* UserService;
       const user = yield* service.create({ email: "test@example.com" });
       expect(user.id).toBeDefined();
@@ -8478,7 +8478,7 @@ describe("UserService", () => {
 
   // ✅ CORRECT - Tests are isolated
   it.effect("finds user by ID", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* UserService;
       const created = yield* service.create({ email: "test@example.com" });
       const found = yield* service.findById(created.id);
@@ -8499,7 +8499,7 @@ const TestLayers = Layer.mergeAll(
 );
 
 it.effect("registers user and sends email", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const userService = yield* UserService;
     const emailService = yield* EmailService;
 
@@ -8532,7 +8532,7 @@ describe("UserRepository Integration", () => {
   });
 
   it.effect("persists user to database", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const repo = yield* UserRepository;
       const user = yield* repo.create({ email: "test@example.com" });
 
@@ -8562,7 +8562,7 @@ Different operation types require specific error handling strategies.
 ```typescript
 // Create - Handle conflicts
 create: (input) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const database = yield* KyselyService;
 
     return yield* database.query((db) =>
@@ -8588,7 +8588,7 @@ findById: (id) =>
 
 // Update - Handle not found + conflicts
 update: (id, input) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const existing = yield* findById(id);
     if (Option.isNone(existing)) {
       return yield* Effect.fail(new UserNotFoundError({ id }));
@@ -8617,7 +8617,7 @@ const UserSchema = Schema.Struct({
 });
 
 create: (input) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Validate input
     const validated = yield* Schema.decode(UserSchema)(input).pipe(
       Effect.mapError((error) =>

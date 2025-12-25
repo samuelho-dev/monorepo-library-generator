@@ -7,20 +7,20 @@
  * @module monorepo-library-generator/provider/templates/supabase/client
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { ProviderTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate SupabaseClient service file
  */
 export function generateSupabaseClientServiceFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { packageName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { packageName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'SupabaseClient Service',
+    title: "SupabaseClient Service",
     description: `Core Supabase client provider with Effect integration.
 
 Wraps the @supabase/supabase-js SDK in Effect types.
@@ -31,25 +31,25 @@ Architecture:
   infra-auth → uses SupabaseAuth for authentication
   infra-storage → uses SupabaseStorage for file storage`,
     module: `${packageName}/service/client`,
-    see: ['https://supabase.com/docs for Supabase documentation'],
-  });
-  builder.addBlankLine();
+    see: ["https://supabase.com/docs for Supabase documentation"]
+  })
+  builder.addBlankLine()
 
   // Imports
   builder.addImports([
-    { from: '../errors', imports: ['SupabaseError', 'SupabaseConnectionError'] },
-    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Redacted'] },
-    { from: `${scope}/env`, imports: ['env'] },
-  ]);
+    { from: "./errors", imports: ["SupabaseError", "SupabaseConnectionError"] },
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Redacted"] },
+    { from: `${scope}/env`, imports: ["env"] }
+  ])
   builder.addRaw(
-    `import type { SupabaseConfig } from "../types";
-import { createClient, type SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js";`,
-  );
-  builder.addBlankLine();
+    `import type { SupabaseConfig } from "./types";
+import { createClient, type SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js";`
+  )
+  builder.addBlankLine()
 
   // Service interface
-  builder.addSectionComment('Service Interface');
-  builder.addBlankLine();
+  builder.addSectionComment("Service Interface")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * SupabaseClient Service Interface
@@ -75,12 +75,12 @@ export interface SupabaseClientServiceInterface {
    * Health check - verifies Supabase connectivity
    */
   readonly healthCheck: () => Effect.Effect<boolean, SupabaseConnectionError>;
-}`);
-  builder.addBlankLine();
+}`)
+  builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment('Context.Tag');
-  builder.addBlankLine();
+  builder.addSectionComment("Context.Tag")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * SupabaseClient Service Tag
@@ -196,10 +196,15 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
   /**
    * Test layer with mock client
    *
-   * Returns a stub client that doesn't connect to any service.
-   * All operations succeed with empty/mock data.
+   * Provides a stub client for unit testing without Supabase connection.
+   * Uses Layer.sync for test isolation (fresh instance per test run).
+   *
+   * For integration tests requiring real Supabase operations, use:
+   * \`\`\`typescript
+   * SupabaseClient.make({ url: "...", anonKey: "..." })
+   * \`\`\`
    */
-  static readonly Test = Layer.succeed(SupabaseClient, {
+  static readonly Test = Layer.sync(SupabaseClient, () => ({
     config: {
       url: "https://test.supabase.co",
       anonKey: "test-anon-key",
@@ -213,7 +218,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
       ),
 
     healthCheck: () => Effect.succeed(true),
-  });
+  }));
 
   /**
    * Dev layer with debug logging
@@ -252,7 +257,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
       };
     })
   );
-}`);
+}`)
 
-  return builder.toString();
+  return builder.toString()
 }

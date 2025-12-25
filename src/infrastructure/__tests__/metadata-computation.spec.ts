@@ -4,152 +4,152 @@
  * Tests for unified metadata computation
  */
 
-import { describe, expect, it } from 'vitest';
-import { computeMetadata, computeSimpleMetadata } from '../metadata/computation';
-import type { WorkspaceContext } from '../workspace/types';
+import { describe, expect, it } from "vitest"
+import { computeMetadata, computeSimpleMetadata } from "../metadata"
+import type { WorkspaceContext } from "../workspace"
 
-describe('Metadata Computation', () => {
+describe("Metadata Computation", () => {
   const mockContext: WorkspaceContext = {
-    root: '/test/workspace',
-    type: 'nx',
-    scope: '@test-scope',
-    packageManager: 'pnpm',
-    interfaceType: 'cli',
-    librariesRoot: 'libs',
-  };
+    root: "/test/workspace",
+    type: "nx",
+    scope: "@test-scope",
+    packageManager: "pnpm",
+    interfaceType: "cli",
+    librariesRoot: "libs"
+  }
 
-  describe('computeMetadata', () => {
-    it('should compute basic metadata for contract library', () => {
+  describe("computeMetadata", () => {
+    it("should compute basic metadata for contract library", () => {
       const metadata = computeMetadata(
         {
-          name: 'user',
-          libraryType: 'contract',
+          name: "user",
+          libraryType: "contract"
         },
-        mockContext,
-      );
+        mockContext
+      )
 
-      expect(metadata.name).toBe('user');
-      expect(metadata.libraryType).toBe('contract');
-      expect(metadata.projectName).toBe('contract-user');
-      expect(metadata.projectRoot).toBe('libs/contract/user');
-      expect(metadata.sourceRoot).toBe('libs/contract/user/src');
-      expect(metadata.packageName).toBe('@test-scope/contract-user');
-      expect(metadata.fileName).toBe('user');
-      expect(metadata.className).toBe('User');
-    });
+      expect(metadata.name).toBe("user")
+      expect(metadata.libraryType).toBe("contract")
+      expect(metadata.projectName).toBe("contract-user")
+      expect(metadata.projectRoot).toBe("libs/contract/user")
+      expect(metadata.sourceRoot).toBe("libs/contract/user/src")
+      expect(metadata.packageName).toBe("@test-scope/contract-user")
+      expect(metadata.fileName).toBe("user")
+      expect(metadata.className).toBe("User")
+    })
 
-    it('should compute metadata for kebab-case names', () => {
+    it("should compute metadata for kebab-case names", () => {
       const metadata = computeMetadata(
         {
-          name: 'user-profile',
-          libraryType: 'data-access',
+          name: "user-profile",
+          libraryType: "data-access"
         },
-        mockContext,
-      );
+        mockContext
+      )
 
-      expect(metadata.fileName).toBe('user-profile');
-      expect(metadata.className).toBe('UserProfile');
-      expect(metadata.propertyName).toBe('userProfile');
-      expect(metadata.constantName).toBe('USER_PROFILE');
-      expect(metadata.projectName).toBe('data-access-user-profile');
-    });
+      expect(metadata.fileName).toBe("user-profile")
+      expect(metadata.className).toBe("UserProfile")
+      expect(metadata.propertyName).toBe("userProfile")
+      expect(metadata.constantName).toBe("USER_PROFILE")
+      expect(metadata.projectName).toBe("data-access-user-profile")
+    })
 
-    it('should use custom directory when provided', () => {
+    it("should use custom directory when provided", () => {
       const metadata = computeMetadata(
         {
-          name: 'user',
-          libraryType: 'contract',
-          directory: 'custom/path',
+          name: "user",
+          libraryType: "contract",
+          directory: "custom/path"
         },
-        mockContext,
-      );
+        mockContext
+      )
 
-      expect(metadata.projectRoot).toBe('custom/path/user');
-      expect(metadata.sourceRoot).toBe('custom/path/user/src');
-    });
+      expect(metadata.projectRoot).toBe("custom/path/user")
+      expect(metadata.sourceRoot).toBe("custom/path/user/src")
+    })
 
-    it('should use description when provided', () => {
+    it("should use description when provided", () => {
       const metadata = computeMetadata(
         {
-          name: 'user',
-          libraryType: 'contract',
-          description: 'Custom user description',
+          name: "user",
+          libraryType: "contract",
+          description: "Custom user description"
         },
-        mockContext,
-      );
+        mockContext
+      )
 
-      expect(metadata.description).toBe('Custom user description');
-    });
+      expect(metadata.description).toBe("Custom user description")
+    })
 
-    it('should generate domain name from fileName when no description', () => {
+    it("should generate domain name from fileName when no description", () => {
       const metadata = computeMetadata(
         {
-          name: 'user-profile',
-          libraryType: 'contract',
+          name: "user-profile",
+          libraryType: "contract"
         },
-        mockContext,
-      );
+        mockContext
+      )
 
-      expect(metadata.description).toBe('User Profile');
-      expect(metadata.domainName).toBe('User Profile');
-    });
+      expect(metadata.description).toBe("User Profile")
+      expect(metadata.domainName).toBe("User Profile")
+    })
 
-    it('should include additional tags', () => {
+    it("should include additional tags", () => {
       const metadata = computeMetadata(
         {
-          name: 'user',
-          libraryType: 'contract',
-          additionalTags: ['platform:universal', 'scope:shared'],
+          name: "user",
+          libraryType: "contract",
+          additionalTags: ["platform:universal", "scope:shared"]
         },
-        mockContext,
-      );
+        mockContext
+      )
 
-      expect(metadata.tags).toContain('type:contract');
-      expect(metadata.tags).toContain('platform:universal');
+      expect(metadata.tags).toContain("type:contract")
+      expect(metadata.tags).toContain("platform:universal")
       // When scope:shared is provided in additionalTags, it replaces the default scope:user
-      expect(metadata.tags).toContain('scope:shared');
-      expect(metadata.tags).not.toContain('scope:user');
-    });
+      expect(metadata.tags).toContain("scope:shared")
+      expect(metadata.tags).not.toContain("scope:user")
+    })
 
-    it('should compute correct paths for all library types', () => {
-      const types: ReadonlyArray<'contract' | 'data-access' | 'feature' | 'provider' | 'infra'> = [
-        'contract',
-        'data-access',
-        'feature',
-        'provider',
-        'infra',
-      ];
+    it("should compute correct paths for all library types", () => {
+      const types: ReadonlyArray<"contract" | "data-access" | "feature" | "provider" | "infra"> = [
+        "contract",
+        "data-access",
+        "feature",
+        "provider",
+        "infra"
+      ]
 
       for (const libraryType of types) {
         const metadata = computeMetadata(
           {
-            name: 'test',
-            libraryType,
+            name: "test",
+            libraryType
           },
-          mockContext,
-        );
+          mockContext
+        )
 
-        expect(metadata.projectRoot).toBe(`libs/${libraryType}/test`);
-        expect(metadata.sourceRoot).toBe(`libs/${libraryType}/test/src`);
-        expect(metadata.projectName).toBe(`${libraryType}-test`);
+        expect(metadata.projectRoot).toBe(`libs/${libraryType}/test`)
+        expect(metadata.sourceRoot).toBe(`libs/${libraryType}/test/src`)
+        expect(metadata.projectName).toBe(`${libraryType}-test`)
       }
-    });
-  });
+    })
+  })
 
-  describe('computeSimpleMetadata', () => {
-    it('should be a convenience wrapper for computeMetadata', () => {
-      const simple = computeSimpleMetadata('user', 'contract', mockContext, 'User domain');
+  describe("computeSimpleMetadata", () => {
+    it("should be a convenience wrapper for computeMetadata", () => {
+      const simple = computeSimpleMetadata("user", "contract", mockContext, "User domain")
 
       const full = computeMetadata(
         {
-          name: 'user',
-          libraryType: 'contract',
-          description: 'User domain',
+          name: "user",
+          libraryType: "contract",
+          description: "User domain"
         },
-        mockContext,
-      );
+        mockContext
+      )
 
-      expect(simple).toEqual(full);
-    });
-  });
-});
+      expect(simple).toEqual(full)
+    })
+  })
+})

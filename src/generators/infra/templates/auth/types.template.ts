@@ -6,35 +6,35 @@
  * @module monorepo-library-generator/infra-templates/auth/types
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate auth types.ts file
  */
 export function generateAuthTypesFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { packageName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { packageName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'Auth Infrastructure Types',
+    title: "Auth Infrastructure Types",
     description: `Type definitions for auth infrastructure.
 
 Re-exports types from provider-supabase and adds auth-specific types
 for middleware and RPC integration.`,
-    module: `${packageName}/types`,
-  });
-  builder.addBlankLine();
+    module: `${packageName}/types`
+  })
+  builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addBlankLine()
 
   // Re-export from provider-supabase
-  builder.addSectionComment('Re-exports from Provider');
-  builder.addBlankLine();
+  builder.addSectionComment("Re-exports from Provider")
+  builder.addBlankLine()
 
   builder.addRaw(`// Re-export user and session types from provider-supabase
 export type {
@@ -49,12 +49,12 @@ export {
 } from "${scope}/provider-supabase";
 
 // Import for local use
-import { AuthUserSchema as ProviderAuthUserSchema } from "${scope}/provider-supabase";`);
-  builder.addBlankLine();
+import { AuthUserSchema as ProviderAuthUserSchema } from "${scope}/provider-supabase";`)
+  builder.addBlankLine()
 
   // Auth context types for RPC
-  builder.addSectionComment('RPC Auth Context Types');
-  builder.addBlankLine();
+  builder.addSectionComment("RPC Auth Context Types")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Authentication context for RPC handlers
@@ -92,44 +92,24 @@ export const AuthContextSchema = Schema.Struct({
   authMethod: Schema.Literal("session", "api-key", "service-role"),
   sessionToken: Schema.optional(Schema.String),
   apiKeyId: Schema.optional(Schema.String),
-});`);
-  builder.addBlankLine();
+});`)
+  builder.addBlankLine()
 
   // HTTP Headers - re-export from @effect/platform
-  builder.addSectionComment('HTTP Headers');
-  builder.addBlankLine();
+  builder.addSectionComment("HTTP Headers")
+  builder.addBlankLine()
 
   builder.addRaw(`// Re-export Headers from @effect/platform for type-safe header access
 export { Headers } from "@effect/platform";
-export type { Headers as RequestHeaders } from "@effect/platform";`);
-  builder.addBlankLine();
+export type { Headers as RequestHeaders } from "@effect/platform";`)
+  builder.addBlankLine()
 
-  // Request metadata
-  builder.addSectionComment('Request Metadata');
-  builder.addBlankLine();
+  // Re-export RequestMeta from infra-rpc
+  builder.addSectionComment("Request Metadata (from infra-rpc)")
+  builder.addBlankLine()
 
-  builder.addRaw(`/**
- * Request metadata extracted from HTTP headers
- *
- * Available in RPC context for logging and auditing.
- * All fields are guaranteed to have values (with defaults where needed).
- */
-export interface RequestMeta {
-  readonly requestId: string;
-  readonly userAgent: string;
-  readonly clientIp: string;
-  readonly origin: string;
-}
+  builder.addRaw(`// Re-export request metadata from infra-rpc (single source of truth)
+export type { RequestMetadata as RequestMeta } from "${scope}/infra-rpc";`)
 
-/**
- * Request metadata schema
- */
-export const RequestMetaSchema = Schema.Struct({
-  requestId: Schema.String,
-  userAgent: Schema.String,
-  clientIp: Schema.String,
-  origin: Schema.String,
-});`);
-
-  return builder.toString();
+  return builder.toString()
 }

@@ -19,98 +19,98 @@
 // ============================================================================
 
 export interface ImportSpec {
-  from: string;
-  imports: Array<string>;
-  isTypeOnly?: boolean;
+  from: string
+  imports: Array<string>
+  isTypeOnly?: boolean
 }
 
 export interface FileHeaderOptions {
-  title: string;
-  description: string;
-  module?: string;
-  since?: string;
-  see?: Array<string>;
+  title: string
+  description: string
+  module?: string
+  since?: string
+  see?: Array<string>
 }
 
 export interface ClassConfig {
-  className: string;
-  extends?: string;
-  implements?: Array<string>;
-  exported?: boolean;
-  jsdoc?: string;
-  fields?: Array<FieldConfig>;
-  methods?: Array<MethodConfig>;
-  staticMethods?: Array<MethodConfig>;
-  staticProperties?: Array<PropertyConfig>;
+  className: string
+  extends?: string
+  implements?: Array<string>
+  exported?: boolean
+  jsdoc?: string
+  fields?: Array<FieldConfig>
+  methods?: Array<MethodConfig>
+  staticMethods?: Array<MethodConfig>
+  staticProperties?: Array<PropertyConfig>
 }
 
 export interface FieldConfig {
-  name: string;
-  type: string;
-  readonly?: boolean;
-  optional?: boolean;
-  visibility?: 'public' | 'private' | 'protected';
-  jsdoc?: string;
+  name: string
+  type: string
+  readonly?: boolean
+  optional?: boolean
+  visibility?: "public" | "private" | "protected"
+  jsdoc?: string
 }
 
 export interface MethodConfig {
-  name: string;
-  params: Array<ParameterConfig>;
-  returnType?: string;
-  body: string;
-  isAsync?: boolean;
-  visibility?: 'public' | 'private' | 'protected';
-  jsdoc?: string;
+  name: string
+  params: Array<ParameterConfig>
+  returnType?: string
+  body: string
+  isAsync?: boolean
+  visibility?: "public" | "private" | "protected"
+  jsdoc?: string
 }
 
 export interface ParameterConfig {
-  name: string;
-  type: string;
-  optional?: boolean;
-  defaultValue?: string;
+  name: string
+  type: string
+  optional?: boolean
+  defaultValue?: string
 }
 
 export interface PropertyConfig {
-  name: string;
-  type: string;
-  value: string;
-  readonly?: boolean;
-  jsdoc?: string;
+  name: string
+  type: string
+  value: string
+  readonly?: boolean
+  jsdoc?: string
 }
 
 export interface InterfaceConfig {
-  name: string;
-  extends?: Array<string>;
-  exported?: boolean;
-  jsdoc?: string;
-  properties: Array<PropertySignature>;
+  name: string
+  extends?: Array<string>
+  exported?: boolean
+  jsdoc?: string
+  properties: Array<PropertySignature>
 }
 
 export interface PropertySignature {
-  name: string;
-  type: string;
-  readonly?: boolean;
-  optional?: boolean;
-  jsdoc?: string;
+  name: string
+  type: string
+  readonly?: boolean
+  optional?: boolean
+  jsdoc?: string
 }
 
 export interface TypeAliasConfig {
-  name: string;
-  type: string;
-  exported?: boolean;
-  jsdoc?: string;
-  typeParams?: Array<string>;
+  name: string
+  type: string
+  exported?: boolean
+  jsdoc?: string
+  typeParams?: Array<string>
 }
 
 export interface FunctionConfig {
-  name: string;
-  params: Array<ParameterConfig>;
-  returnType?: string;
-  body: string;
-  exported?: boolean;
-  isAsync?: boolean;
-  jsdoc?: string;
-  typeParams?: Array<string>;
+  name: string
+  params: Array<ParameterConfig>
+  returnType?: string
+  body: string
+  exported?: boolean
+  isAsync?: boolean
+  jsdoc?: string
+  typeParams?: Array<string>
 }
 
 // ============================================================================
@@ -118,66 +118,66 @@ export interface FunctionConfig {
 // ============================================================================
 
 export interface TaggedErrorField {
-  name: string;
-  type: string;
-  readonly?: boolean;
-  optional?: boolean;
+  name: string
+  type: string
+  readonly?: boolean
+  optional?: boolean
 }
 
 export interface TaggedErrorConfig {
-  className: string;
-  tagName: string;
-  fields: Array<TaggedErrorField>;
-  staticMethods?: Array<MethodConfig>;
-  jsdoc?: string;
+  className: string
+  tagName: string
+  fields: Array<TaggedErrorField>
+  staticMethods?: Array<MethodConfig>
+  jsdoc?: string
 }
 
 export interface ContextTagConfig {
-  tagName: string;
-  serviceName: string;
-  serviceInterface: ServiceInterfaceConfig;
-  jsdoc?: string;
+  tagName: string
+  serviceName: string
+  serviceInterface: ServiceInterfaceConfig
+  jsdoc?: string
 }
 
 export interface ServiceInterfaceConfig {
-  methods: Array<ServiceMethod>;
+  methods: Array<ServiceMethod>
 }
 
 export interface ServiceMethod {
-  name: string;
-  params: Array<ParameterConfig>;
-  returnType: string;
-  jsdoc?: string;
+  name: string
+  params: Array<ParameterConfig>
+  returnType: string
+  jsdoc?: string
 }
 
 export interface LayerConfig {
-  serviceName: string;
-  layerName?: string;
-  implementation: string;
-  dependencies?: Array<string>;
-  layerType: 'sync' | 'effect' | 'scoped';
-  jsdoc?: string;
+  serviceName: string
+  layerName?: string
+  implementation: string
+  dependencies?: Array<string>
+  layerType: "sync" | "effect" | "scoped"
+  jsdoc?: string
 }
 
 export interface SchemaStructConfig {
-  name: string;
-  fields: Array<SchemaField>;
-  exported?: boolean;
-  jsdoc?: string;
+  name: string
+  fields: Array<SchemaField>
+  exported?: boolean
+  jsdoc?: string
 }
 
 export interface SchemaField {
-  name: string;
-  schema: string;
-  optional?: boolean;
-  jsdoc?: string;
+  name: string
+  schema: string
+  optional?: boolean
+  jsdoc?: string
 }
 
 export interface RpcEndpoint {
-  name: string;
-  inputSchema: string;
-  outputSchema: string;
-  errorType: string;
+  name: string
+  inputSchema: string
+  outputSchema: string
+  errorType: string
 }
 
 // ============================================================================
@@ -188,38 +188,38 @@ export interface RpcEndpoint {
  * Type-safe builder for generating TypeScript code
  */
 export class TypeScriptBuilder {
-  private lines: Array<string> = [];
-  private imports: Map<string, Set<string>> = new Map();
-  private typeImports: Map<string, Set<string>> = new Map();
+  private lines: Array<string> = []
+  private imports: Map<string, Set<string>> = new Map()
+  private typeImports: Map<string, Set<string>> = new Map()
 
   /**
    * Add a file header with JSDoc documentation
    */
   addFileHeader(options: FileHeaderOptions) {
-    this.lines.push('/**');
-    this.lines.push(` * ${options.title}`);
-    this.lines.push(' *');
-    this.lines.push(` * ${options.description}`);
-    this.lines.push(' *');
+    this.lines.push("/**")
+    this.lines.push(` * ${options.title}`)
+    this.lines.push(" *")
+    this.lines.push(` * ${options.description}`)
+    this.lines.push(" *")
 
     if (options.module) {
-      this.lines.push(` * @module ${options.module}`);
+      this.lines.push(` * @module ${options.module}`)
     }
 
     if (options.since) {
-      this.lines.push(` * @since ${options.since}`);
+      this.lines.push(` * @since ${options.since}`)
     }
 
     if (options.see && options.see.length > 0) {
       for (const see of options.see) {
-        this.lines.push(` * @see ${see}`);
+        this.lines.push(` * @see ${see}`)
       }
     }
 
-    this.lines.push(' */');
-    this.lines.push('');
+    this.lines.push(" */")
+    this.lines.push("")
 
-    return this;
+    return this
   }
 
   /**
@@ -227,76 +227,76 @@ export class TypeScriptBuilder {
    */
   addImports(imports: Array<ImportSpec>) {
     for (const { from, imports: names, isTypeOnly } of imports) {
-      const targetMap = isTypeOnly ? this.typeImports : this.imports;
+      const targetMap = isTypeOnly ? this.typeImports : this.imports
 
       if (!targetMap.has(from)) {
-        targetMap.set(from, new Set());
+        targetMap.set(from, new Set())
       }
 
       for (const name of names) {
-        const importSet = targetMap.get(from);
+        const importSet = targetMap.get(from)
         if (!importSet) {
-          throw new Error(`Import set not found for ${from}`);
+          throw new Error(`Import set not found for ${from}`)
         }
-        importSet.add(name);
+        importSet.add(name)
       }
     }
 
-    return this;
+    return this
   }
 
   /**
    * Add a single import
    */
   addImport(from: string, name: string, isTypeOnly = false) {
-    return this.addImports([{ from, imports: [name], isTypeOnly }]);
+    return this.addImports([{ from, imports: [name], isTypeOnly }])
   }
 
   /**
    * Add a blank line
    */
   addBlankLine() {
-    this.lines.push('');
-    return this;
+    this.lines.push("")
+    return this
   }
 
   /**
    * Add a single-line or multi-line comment
    */
-  addComment(text: string, style: 'line' | 'section' | 'block' = 'line') {
-    if (style === 'section') {
-      this.lines.push(`// ${'='.repeat(76)}`);
-      this.lines.push(`// ${text}`);
-      this.lines.push(`// ${'='.repeat(76)}`);
-    } else if (style === 'block') {
-      this.lines.push('/**');
-      this.lines.push(` * ${text}`);
-      this.lines.push(' */');
+  addComment(text: string, style: "line" | "section" | "block" = "line") {
+    if (style === "section") {
+      this.lines.push(`// ${"=".repeat(76)}`)
+      this.lines.push(`// ${text}`)
+      this.lines.push(`// ${"=".repeat(76)}`)
+    } else if (style === "block") {
+      this.lines.push("/**")
+      this.lines.push(` * ${text}`)
+      this.lines.push(" */")
     } else {
-      this.lines.push(`// ${text}`);
+      this.lines.push(`// ${text}`)
     }
 
-    this.lines.push('');
-    return this;
+    this.lines.push("")
+    return this
   }
 
   /**
    * Add a section comment (prominent separator)
    */
   addSectionComment(text: string) {
-    return this.addComment(text, 'section');
+    return this.addComment(text, "section")
   }
 
   /**
    * Add JSDoc comment
    */
   public addJSDoc(jsdoc: string) {
-    this.lines.push('/**');
-    const docLines = jsdoc.split('\n');
+    this.lines.push("/**")
+    const docLines = jsdoc.split("\n")
     for (const line of docLines) {
-      this.lines.push(` * ${line}`.trimEnd());
+      this.lines.push(` * ${line}`.trimEnd())
     }
-    this.lines.push(' */');
+    this.lines.push(" */")
   }
 
   /**
@@ -304,27 +304,26 @@ export class TypeScriptBuilder {
    */
   addClass(config: ClassConfig) {
     if (config.jsdoc) {
-      this.addJSDoc(config.jsdoc);
+      this.addJSDoc(config.jsdoc)
     }
 
-    const exported = config.exported !== false ? 'export ' : '';
-    const extendsClause = config.extends ? ` extends ${config.extends}` : '';
-    const implementsClause =
-      config.implements && config.implements.length > 0
-        ? ` implements ${config.implements.join(', ')}`
-        : '';
+    const exported = config.exported !== false ? "export " : ""
+    const extendsClause = config.extends ? ` extends ${config.extends}` : ""
+    const implementsClause = config.implements && config.implements.length > 0
+      ? ` implements ${config.implements.join(", ")}`
+      : ""
 
-    this.lines.push(`${exported}class ${config.className}${extendsClause}${implementsClause} {`);
+    this.lines.push(`${exported}class ${config.className}${extendsClause}${implementsClause} {`)
 
     // Add static properties
     if (config.staticProperties && config.staticProperties.length > 0) {
       for (const prop of config.staticProperties) {
         if (prop.jsdoc) {
-          this.addJSDoc(prop.jsdoc);
+          this.addJSDoc(prop.jsdoc)
         }
-        const readonlyModifier = prop.readonly ? 'readonly ' : '';
-        this.lines.push(`  static ${readonlyModifier}${prop.name}: ${prop.type} = ${prop.value}`);
-        this.lines.push('');
+        const readonlyModifier = prop.readonly ? "readonly " : ""
+        this.lines.push(`  static ${readonlyModifier}${prop.name}: ${prop.type} = ${prop.value}`)
+        this.lines.push("")
       }
     }
 
@@ -332,36 +331,36 @@ export class TypeScriptBuilder {
     if (config.fields && config.fields.length > 0) {
       for (const field of config.fields) {
         if (field.jsdoc) {
-          this.addJSDoc(field.jsdoc);
+          this.addJSDoc(field.jsdoc)
         }
-        const visibility = field.visibility || 'public';
-        const readonlyModifier = field.readonly ? 'readonly ' : '';
-        const optionalModifier = field.optional ? '?' : '';
+        const visibility = field.visibility || "public"
+        const readonlyModifier = field.readonly ? "readonly " : ""
+        const optionalModifier = field.optional ? "?" : ""
         this.lines.push(
-          `  ${visibility} ${readonlyModifier}${field.name}${optionalModifier}: ${field.type}`,
-        );
+          `  ${visibility} ${readonlyModifier}${field.name}${optionalModifier}: ${field.type}`
+        )
       }
-      this.lines.push('');
+      this.lines.push("")
     }
 
     // Add static methods
     if (config.staticMethods && config.staticMethods.length > 0) {
       for (const method of config.staticMethods) {
-        this.addMethodToClass(method, true);
+        this.addMethodToClass(method, true)
       }
     }
 
     // Add methods
     if (config.methods && config.methods.length > 0) {
       for (const method of config.methods) {
-        this.addMethodToClass(method, false);
+        this.addMethodToClass(method, false)
       }
     }
 
-    this.lines.push('}');
-    this.lines.push('');
+    this.lines.push("}")
+    this.lines.push("")
 
-    return this;
+    return this
   }
 
   /**
@@ -369,40 +368,40 @@ export class TypeScriptBuilder {
    */
   private addMethodToClass(method: MethodConfig, isStatic: boolean) {
     if (method.jsdoc) {
-      this.addJSDoc(method.jsdoc);
+      this.addJSDoc(method.jsdoc)
     }
 
-    const staticModifier = isStatic ? 'static ' : '';
-    const asyncModifier = method.isAsync ? 'async ' : '';
-    const visibility = method.visibility || 'public';
-    const visibilityPrefix = visibility === 'public' ? '' : `${visibility} `;
+    const staticModifier = isStatic ? "static " : ""
+    const asyncModifier = method.isAsync ? "async " : ""
+    const visibility = method.visibility || "public"
+    const visibilityPrefix = visibility === "public" ? "" : `${visibility} `
 
     const params = method.params
       .map((p) => {
-        const optional = p.optional ? '?' : '';
-        const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : '';
-        return `${p.name}${optional}: ${p.type}${defaultVal}`;
+        const optional = p.optional ? "?" : ""
+        const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : ""
+        return `${p.name}${optional}: ${p.type}${defaultVal}`
       })
-      .join(', ');
+      .join(", ")
 
     // Don't add explicit return type - let TypeScript infer it (linter requirement)
 
     this.lines.push(
-      `  ${visibilityPrefix}${staticModifier}${asyncModifier}${method.name}(${params}) {`,
-    );
+      `  ${visibilityPrefix}${staticModifier}${asyncModifier}${method.name}(${params}) {`
+    )
 
     // Add method body (preserve indentation)
-    const bodyLines = method.body.trim().split('\n');
+    const bodyLines = method.body.trim().split("\n")
     for (const line of bodyLines) {
       if (line.trim()) {
-        this.lines.push(`    ${line}`);
+        this.lines.push(`    ${line}`)
       } else {
-        this.lines.push('');
+        this.lines.push("")
       }
     }
 
-    this.lines.push('  }');
-    this.lines.push('');
+    this.lines.push("  }")
+    this.lines.push("")
   }
 
   /**
@@ -410,30 +409,29 @@ export class TypeScriptBuilder {
    */
   addInterface(config: InterfaceConfig) {
     if (config.jsdoc) {
-      this.addJSDoc(config.jsdoc);
+      this.addJSDoc(config.jsdoc)
     }
 
-    const exported = config.exported !== false ? 'export ' : '';
-    const extendsClause =
-      config.extends && config.extends.length > 0 ? ` extends ${config.extends.join(', ')}` : '';
+    const exported = config.exported !== false ? "export " : ""
+    const extendsClause = config.extends && config.extends.length > 0 ? ` extends ${config.extends.join(", ")}` : ""
 
-    this.lines.push(`${exported}interface ${config.name}${extendsClause} {`);
+    this.lines.push(`${exported}interface ${config.name}${extendsClause} {`)
 
     for (const prop of config.properties) {
       if (prop.jsdoc) {
-        this.lines.push('  /**');
-        this.lines.push(`   * ${prop.jsdoc}`);
-        this.lines.push('   */');
+        this.lines.push("  /**")
+        this.lines.push(`   * ${prop.jsdoc}`)
+        this.lines.push("   */")
       }
-      const readonlyModifier = prop.readonly ? 'readonly ' : '';
-      const optionalModifier = prop.optional ? '?' : '';
-      this.lines.push(`  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type}`);
+      const readonlyModifier = prop.readonly ? "readonly " : ""
+      const optionalModifier = prop.optional ? "?" : ""
+      this.lines.push(`  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type}`)
     }
 
-    this.lines.push('}');
-    this.lines.push('');
+    this.lines.push("}")
+    this.lines.push("")
 
-    return this;
+    return this
   }
 
   /**
@@ -441,17 +439,16 @@ export class TypeScriptBuilder {
    */
   addTypeAlias(config: TypeAliasConfig) {
     if (config.jsdoc) {
-      this.addJSDoc(config.jsdoc);
+      this.addJSDoc(config.jsdoc)
     }
 
-    const exported = config.exported !== false ? 'export ' : '';
-    const typeParams =
-      config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(', ')}>` : '';
+    const exported = config.exported !== false ? "export " : ""
+    const typeParams = config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(", ")}>` : ""
 
-    this.lines.push(`${exported}type ${config.name}${typeParams} = ${config.type}`);
-    this.lines.push('');
+    this.lines.push(`${exported}type ${config.name}${typeParams} = ${config.type}`)
+    this.lines.push("")
 
-    return this;
+    return this
   }
 
   /**
@@ -459,42 +456,41 @@ export class TypeScriptBuilder {
    */
   addFunction(config: FunctionConfig) {
     if (config.jsdoc) {
-      this.addJSDoc(config.jsdoc);
+      this.addJSDoc(config.jsdoc)
     }
 
-    const exported = config.exported !== false ? 'export ' : '';
-    const asyncModifier = config.isAsync ? 'async ' : '';
-    const typeParams =
-      config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(', ')}>` : '';
+    const exported = config.exported !== false ? "export " : ""
+    const asyncModifier = config.isAsync ? "async " : ""
+    const typeParams = config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(", ")}>` : ""
 
     const params = config.params
       .map((p) => {
-        const optional = p.optional ? '?' : '';
-        const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : '';
-        return `${p.name}${optional}: ${p.type}${defaultVal}`;
+        const optional = p.optional ? "?" : ""
+        const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : ""
+        return `${p.name}${optional}: ${p.type}${defaultVal}`
       })
-      .join(', ');
+      .join(", ")
 
-    const returnType = config.returnType ? `: ${config.returnType}` : '';
+    const returnType = config.returnType ? `: ${config.returnType}` : ""
 
     this.lines.push(
-      `${exported}${asyncModifier}function ${config.name}${typeParams}(${params})${returnType} {`,
-    );
+      `${exported}${asyncModifier}function ${config.name}${typeParams}(${params})${returnType} {`
+    )
 
     // Add function body
-    const bodyLines = config.body.trim().split('\n');
+    const bodyLines = config.body.trim().split("\n")
     for (const line of bodyLines) {
       if (line.trim()) {
-        this.lines.push(`  ${line}`);
+        this.lines.push(`  ${line}`)
       } else {
-        this.lines.push('');
+        this.lines.push("")
       }
     }
 
-    this.lines.push('}');
-    this.lines.push('');
+    this.lines.push("}")
+    this.lines.push("")
 
-    return this;
+    return this
   }
 
   /**
@@ -502,66 +498,62 @@ export class TypeScriptBuilder {
    */
   addConst(name: string, value: string, type?: string, exported = true, jsdoc?: string) {
     if (jsdoc) {
-      this.addJSDoc(jsdoc);
+      this.addJSDoc(jsdoc)
     }
 
-    const exportKeyword = exported ? 'export ' : '';
-    const typeAnnotation = type ? `: ${type}` : '';
+    const exportKeyword = exported ? "export " : ""
+    const typeAnnotation = type ? `: ${type}` : ""
 
-    this.lines.push(`${exportKeyword}const ${name}${typeAnnotation} = ${value}`);
-    this.lines.push('');
+    this.lines.push(`${exportKeyword}const ${name}${typeAnnotation} = ${value}`)
+    this.lines.push("")
 
-    return this;
+    return this
   }
 
   /**
    * Add raw TypeScript code
    */
   addRaw(code: string) {
-    this.lines.push(code);
-    return this;
+    this.lines.push(code)
+    return this
   }
 
   /**
    * Generate the final TypeScript code
    */
   toString() {
-    const importLines: Array<string> = [];
+    const importLines: Array<string> = []
 
     // Generate regular imports (sorted by module name)
-    const sortedImports = Array.from(this.imports.entries()).sort((a, b) =>
-      a[0].localeCompare(b[0]),
-    );
+    const sortedImports = Array.from(this.imports.entries()).sort((a, b) => a[0].localeCompare(b[0]))
     for (const [from, names] of sortedImports) {
-      const sortedNames = Array.from(names).sort();
-      importLines.push(`import { ${sortedNames.join(', ')} } from "${from}"`);
+      const sortedNames = Array.from(names).sort()
+      importLines.push(`import { ${sortedNames.join(", ")} } from "${from}"`)
     }
 
     // Generate type-only imports (sorted by module name)
-    const sortedTypeImports = Array.from(this.typeImports.entries()).sort((a, b) =>
-      a[0].localeCompare(b[0]),
-    );
+    const sortedTypeImports = Array.from(this.typeImports.entries()).sort((a, b) => a[0].localeCompare(b[0]))
     for (const [from, names] of sortedTypeImports) {
-      const sortedNames = Array.from(names).sort();
-      importLines.push(`import type { ${sortedNames.join(', ')} } from "${from}"`);
+      const sortedNames = Array.from(names).sort()
+      importLines.push(`import type { ${sortedNames.join(", ")} } from "${from}"`)
     }
 
     // Combine imports and content with blank line separator
     if (importLines.length > 0) {
-      return [...importLines, '', ...this.lines].join('\n');
+      return [...importLines, "", ...this.lines].join("\n")
     }
 
-    return this.lines.join('\n');
+    return this.lines.join("\n")
   }
 
   /**
    * Clear all content and start fresh
    */
   clear() {
-    this.lines = [];
-    this.imports.clear();
-    this.typeImports.clear();
-    return this;
+    this.lines = []
+    this.imports.clear()
+    this.typeImports.clear()
+    return this
   }
 }
 
@@ -592,19 +584,19 @@ export class EffectPatterns {
     // Build the type literal for the error fields
     const fieldTypes = config.fields
       .map((field) => {
-        const readonlyModifier = field.readonly !== false ? 'readonly ' : '';
-        const optionalModifier = field.optional ? '?' : '';
-        return `    ${readonlyModifier}${field.name}${optionalModifier}: ${field.type};`;
+        const readonlyModifier = field.readonly !== false ? "readonly " : ""
+        const optionalModifier = field.optional ? "?" : ""
+        return `    ${readonlyModifier}${field.name}${optionalModifier}: ${field.type};`
       })
-      .join('\n');
+      .join("\n")
 
     return {
       className: config.className,
       extends: `Data.TaggedError("${config.tagName}")<{\n${fieldTypes}\n  }>`,
       exported: true,
       ...(config.jsdoc !== undefined && { jsdoc: config.jsdoc }),
-      staticMethods: config.staticMethods || [],
-    };
+      staticMethods: config.staticMethods || []
+    }
   }
 
   /**
@@ -626,23 +618,23 @@ export class EffectPatterns {
       .map((method) => {
         const params = method.params
           .map((p) => {
-            const optional = p.optional ? '?' : '';
-            return `${p.name}${optional}: ${p.type}`;
+            const optional = p.optional ? "?" : ""
+            return `${p.name}${optional}: ${p.type}`
           })
-          .join(', ');
+          .join(", ")
 
-        return `    readonly ${method.name}: (${params}) => ${method.returnType};`;
+        return `    readonly ${method.name}: (${params}) => ${method.returnType};`
       })
-      .join('\n');
+      .join("\n")
 
-    const jsdocComment = config.jsdoc ? `/**\n * ${config.jsdoc}\n */\n` : '';
+    const jsdocComment = config.jsdoc ? `/**\n * ${config.jsdoc}\n */\n` : ""
 
     return `${jsdocComment}export class ${config.serviceName} extends Context.Tag("${config.tagName}")<
   ${config.serviceName},
   {
 ${methods}
   }
->() {}`;
+>() {}`
   }
 
   /**
@@ -669,32 +661,35 @@ ${methods}
    * ```
    */
   static createLiveLayer(config: LayerConfig) {
-    const layerName = config.layerName || 'Live';
-    const layerMethod = `Layer.${config.layerType}`;
+    const layerName = config.layerName || "Live"
+    const layerMethod = `Layer.${config.layerType}`
 
-    const jsdocComment = config.jsdoc ? `  /**\n   * ${config.jsdoc}\n   */\n` : '';
+    const jsdocComment = config.jsdoc ? `  /**\n   * ${config.jsdoc}\n   */\n` : ""
 
     // Generate dependency yields if specified
-    const dependencyYields =
-      config.dependencies && config.dependencies.length > 0
-        ? `${config.dependencies
-            .map(
-              (dep) => `    const ${dep.charAt(0).toLowerCase() + dep.slice(1)} = yield* ${dep};`,
-            )
-            .join('\n')}\n\n`
-        : '';
+    const dependencyYields = config.dependencies && config.dependencies.length > 0
+      ? `${
+        config.dependencies
+          .map(
+            (dep) => `    const ${dep.charAt(0).toLowerCase() + dep.slice(1)} = yield* ${dep};`
+          )
+          .join("\n")
+      }\n\n`
+      : ""
 
-    const implementation = config.implementation.trim();
+    const implementation = config.implementation.trim()
 
     return `${jsdocComment}  static readonly ${layerName} = ${layerMethod}(
     ${config.serviceName},
     Effect.gen(function* () {
-${dependencyYields}${implementation
-  .split('\n')
-  .map((line) => `      ${line}`)
-  .join('\n')}
+${dependencyYields}${
+      implementation
+        .split("\n")
+        .map((line) => `      ${line}`)
+        .join("\n")
+    }
     })
-  );`;
+  );`
   }
 
   /**
@@ -709,7 +704,7 @@ ${dependencyYields}${implementation
    * ```
    */
   static createTestLayer(serviceName: string, mockImplementation: string) {
-    return `  static readonly Test = Layer.succeed(${serviceName}, ${mockImplementation});`;
+    return `  static readonly Test = Layer.succeed(${serviceName}, ${mockImplementation});`
   }
 
   /**
@@ -726,21 +721,21 @@ ${dependencyYields}${implementation
    * ```
    */
   static createSchemaStruct(config: SchemaStructConfig) {
-    const exported = config.exported !== false ? 'export ' : '';
+    const exported = config.exported !== false ? "export " : ""
 
     const fields = config.fields
       .map((field) => {
-        const schema = field.optional ? `Schema.optional(${field.schema})` : field.schema;
-        const jsdoc = field.jsdoc ? `  /** ${field.jsdoc} */\n` : '';
-        return `${jsdoc}  ${field.name}: ${schema}`;
+        const schema = field.optional ? `Schema.optional(${field.schema})` : field.schema
+        const jsdoc = field.jsdoc ? `  /** ${field.jsdoc} */\n` : ""
+        return `${jsdoc}  ${field.name}: ${schema}`
       })
-      .join(',\n');
+      .join(",\n")
 
-    const jsdocComment = config.jsdoc ? `/**\n * ${config.jsdoc}\n */\n` : '';
+    const jsdocComment = config.jsdoc ? `/**\n * ${config.jsdoc}\n */\n` : ""
 
     return `${jsdocComment}${exported}const ${config.name} = Schema.Struct({
 ${fields}
-});`;
+});`
   }
 
   /**
@@ -751,8 +746,8 @@ ${fields}
    * ```
    */
   static createSchemaType(typeName: string, schemaName: string, exported = true) {
-    const exportKeyword = exported ? 'export ' : '';
-    return `${exportKeyword}type ${typeName} = Schema.Schema.Type<typeof ${schemaName}>;`;
+    const exportKeyword = exported ? "export " : ""
+    return `${exportKeyword}type ${typeName} = Schema.Schema.Type<typeof ${schemaName}>;`
   }
 
   /**
@@ -763,8 +758,8 @@ ${fields}
    * ```
    */
   static createSchemaEncodedType(typeName: string, schemaName: string, exported = true) {
-    const exportKeyword = exported ? 'export ' : '';
-    return `${exportKeyword}type ${typeName} = Schema.Schema.Encoded<typeof ${schemaName}>;`;
+    const exportKeyword = exported ? "export " : ""
+    return `${exportKeyword}type ${typeName} = Schema.Schema.Encoded<typeof ${schemaName}>;`
   }
 
   /**
@@ -773,18 +768,18 @@ ${fields}
   static createServiceImplementation(methods: Array<ServiceMethod>) {
     const implementations = methods
       .map((method) => {
-        const params = method.params.map((p) => p.name).join(', ');
+        const params = method.params.map((p) => p.name).join(", ")
         return `      ${method.name}: (${params}) => Effect.gen(function* () {
         // TODO: Implement ${method.name}
         yield* Effect.logDebug(\`${method.name} called with: \${JSON.stringify({ ${params} })}\`);
         return yield* Effect.fail(new Error("Not implemented"));
-      })`;
+      })`
       })
-      .join(',\n');
+      .join(",\n")
 
     return `return {
 ${implementations}
-    };`;
+    };`
   }
 
   /**
@@ -799,35 +794,35 @@ ${implementations}
    * ```
    */
   static createCommand(commandName: string, dataSchema: string, jsdoc?: string) {
-    const tag = commandName.replace('Command', '');
+    const tag = commandName.replace("Command", "")
 
-    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : '';
+    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
 
     return `${jsdocComment}export const ${commandName}Schema = Schema.Struct({
   _tag: Schema.Literal("${tag}"),
   data: ${dataSchema}
 });
 
-export type ${commandName} = Schema.Schema.Type<typeof ${commandName}Schema>;`;
+export type ${commandName} = Schema.Schema.Type<typeof ${commandName}Schema>;`
   }
 
   /**
    * Create CQRS query pattern
    */
   static createQuery(queryName: string, paramsSchema?: string, jsdoc?: string) {
-    const tag = queryName.replace('Query', '');
+    const tag = queryName.replace("Query", "")
 
-    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : '';
+    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
 
     const fields = paramsSchema
       ? `_tag: Schema.Literal("${tag}"),\n  params: ${paramsSchema}`
-      : `_tag: Schema.Literal("${tag}")`;
+      : `_tag: Schema.Literal("${tag}")`
 
     return `${jsdocComment}export const ${queryName}Schema = Schema.Struct({
   ${fields}
 });
 
-export type ${queryName} = Schema.Schema.Type<typeof ${queryName}Schema>;`;
+export type ${queryName} = Schema.Schema.Type<typeof ${queryName}Schema>;`
   }
 
   /**
@@ -850,14 +845,14 @@ export type ${queryName} = Schema.Schema.Type<typeof ${queryName}Schema>;`;
     input: ${endpoint.inputSchema},
     output: ${endpoint.outputSchema},
     error: ${endpoint.errorType}
-  }`;
+  }`
       })
-      .join(',\n');
+      .join(",\n")
 
-    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : '';
+    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
 
     return `${jsdocComment}export const ${rpcName} = RpcSchema.make({
 ${endpointDefs}
-});`;
+});`
   }
 }

@@ -1,0 +1,36 @@
+{
+  "name": "@samuelho-dev/provider-redis",
+  "version": "0.0.1",
+  "type": "module",
+  "sideEffects": false,
+  "description": "Redis provider for cache, queue, and pubsub backing with ioredis",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./types": {
+      "import": "./src/types.ts",
+      "types": "./src/types.ts"
+    },
+    "./service": {
+      "import": "./src/lib/service/index.ts",
+      "types": "./src/lib/service/index.ts"
+    },
+    "./service/*": {
+      "import": "./src/lib/service/operations/*.ts",
+      "types": "./src/lib/service/operations/*.ts"
+    },
+    "./errors": {
+      "import": "./src/lib/errors.ts",
+      "types": "./src/lib/errors.ts"
+    },
+    "./validation": {
+      "import": "./src/lib/validation.ts",
+      "types": "./src/lib/validation.ts"
+    }
+  },
+  "peerDependencies": {
+    "effect": "*"
+  }
+}

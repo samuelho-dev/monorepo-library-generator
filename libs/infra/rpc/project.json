@@ -1,0 +1,48 @@
+{
+  "name": "infra-rpc",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/infra/rpc/src",
+  "tags": [
+    "type:infra",
+    "scope:rpc",
+    "infra",
+    "orchestration",
+    "builtin"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/infra/rpc",
+        "tsConfig": "libs/infra/rpc/tsconfig.lib.json",
+        "main": "libs/infra/rpc/src/index.ts",
+        "batch": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "libs/infra/rpc/src/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/libs/infra/rpc",
+        "config": "libs/infra/rpc/vitest.config.ts"
+      }
+    }
+  }
+}

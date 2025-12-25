@@ -10,9 +10,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate RPC errors file
@@ -20,9 +20,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * Creates infrastructure-level errors for RPC operations.
  */
 export function generateRpcErrorsFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Errors`,
@@ -37,12 +37,12 @@ Error Boundaries:
 
 Note: AuthError is defined in middleware.ts for co-location with AuthMiddleware.`,
     module: `${scope}/infra-${fileName}/errors`,
-    see: ['EFFECT_PATTERNS.md for error patterns'],
-  });
+    see: ["EFFECT_PATTERNS.md for error patterns"]
+  })
 
-  builder.addImports([{ from: 'effect', imports: ['Schema', 'Data'] }]);
+  builder.addImports([{ from: "effect", imports: ["Schema", "Data"] }])
 
-  builder.addSectionComment('RPC Infrastructure Errors (Schema.TaggedError)');
+  builder.addSectionComment("RPC Infrastructure Errors (Schema.TaggedError)")
 
   builder.addRaw(`/**
  * Base RPC infrastructure error
@@ -112,6 +112,49 @@ export class RpcTimeoutError extends Schema.TaggedError<RpcTimeoutError>()(
 ) {}
 
 /**
+ * Forbidden/Permission error
+ */
+export class RpcForbiddenError extends Schema.TaggedError<RpcForbiddenError>()(
+  "RpcForbiddenError",
+  {
+    message: Schema.String,
+    operation: Schema.optional(Schema.String)
+  }
+) {}
+
+/**
+ * Conflict error (resource already exists)
+ */
+export class RpcConflictError extends Schema.TaggedError<RpcConflictError>()(
+  "RpcConflictError",
+  {
+    message: Schema.String,
+    conflictingId: Schema.optional(Schema.String)
+  }
+) {}
+
+/**
+ * Service error (internal service failures)
+ */
+export class RpcServiceError extends Schema.TaggedError<RpcServiceError>()(
+  "RpcServiceError",
+  {
+    message: Schema.String,
+    code: Schema.Literal("INTERNAL_ERROR", "SERVICE_UNAVAILABLE", "ORCHESTRATION_FAILED")
+  }
+) {}
+
+/**
+ * Internal error (catch-all for unexpected errors)
+ */
+export class RpcInternalError extends Schema.TaggedError<RpcInternalError>()(
+  "RpcInternalError",
+  {
+    message: Schema.String
+  }
+) {}
+
+/**
  * Union of all RPC infrastructure errors (excluding AuthError which is in middleware.ts)
  */
 export type RpcError =
@@ -120,18 +163,23 @@ export type RpcError =
   | RpcValidationError
   | RpcNotFoundError
   | RpcTimeoutError
-`);
+  | RpcForbiddenError
+  | RpcConflictError
+  | RpcServiceError
+  | RpcInternalError
+`)
 
-  builder.addSectionComment('Domain-Level Errors (Data.TaggedError)');
+  builder.addSectionComment("Domain-Level Errors (Data.TaggedError)")
 
   builder.addRaw(`/**
- * Internal infrastructure error
+ * Internal infrastructure error (domain-level, non-serializable)
  *
  * Use for errors that stay within the service layer.
  * These are NOT serializable and should not cross RPC boundaries.
+ * For RPC boundary errors, use RpcInternalError (Schema.TaggedError) above.
  */
-export class ${className}InternalError extends Data.TaggedError(
-  "${className}InternalError"
+export class ${className}InternalDomainError extends Data.TaggedError(
+  "${className}InternalDomainError"
 )<{
   readonly message: string
   readonly cause?: unknown
@@ -157,107 +205,87 @@ export class ${className}ConnectionError extends Data.TaggedError(
   readonly endpoint?: string
   readonly cause?: unknown
 }> {}
-`);
+`)
 
-  builder.addSectionComment('Error Mapping Utilities');
+  builder.addImports([{ from: "effect", imports: ["Effect", "Match"] }])
+
+  builder.addSectionComment("HTTP Status Mapping")
 
   builder.addRaw(`/**
- * Map domain error to RPC error for crossing boundaries
+ * HTTP status codes mapped to RPC error tags
  *
- * @example
- * \`\`\`typescript
- * const handler = Effect.gen(function* () {
- *   yield* doSomething().pipe(
- *     Effect.catchTag("UserNotFoundError", (e) =>
- *       Effect.fail(mapToRpcError(e))
- *     )
- *   );
- * });
- * \`\`\`
+ * Each Schema.TaggedError has an associated HTTP status.
+ * This is the single source of truth for error → HTTP status mapping.
  */
-export const mapToRpcError = (error: unknown) => {
-  if (error instanceof ${className}InternalError) {
-    return new RpcInfraError({
-      message: error.message,
-      code: "INTERNAL_ERROR"
-    })
-  }
-
-  if (error instanceof ${className}ConfigError) {
-    return new RpcInfraError({
-      message: "Configuration error",
-      code: "CONFIG_ERROR"
-    })
-  }
-
-  if (error instanceof ${className}ConnectionError) {
-    return new RpcInfraError({
-      message: "Service unavailable",
-      code: "SERVICE_UNAVAILABLE"
-    })
-  }
-
-  // Unknown error
-  return new RpcInfraError({
-    message: error instanceof Error ? error.message : "Unknown error",
-    code: "UNKNOWN_ERROR"
-  })
-}
-
-/**
- * Error codes for HTTP status mapping
- */
-export const RpcErrorCodes = {
-  // 4xx Client Errors
-  BAD_REQUEST: "BAD_REQUEST",
-  UNAUTHORIZED: "UNAUTHORIZED",
-  FORBIDDEN: "FORBIDDEN",
-  NOT_FOUND: "NOT_FOUND",
-  VALIDATION_ERROR: "VALIDATION_ERROR",
-  RATE_LIMITED: "RATE_LIMITED",
-
-  // 5xx Server Errors
-  INTERNAL_ERROR: "INTERNAL_ERROR",
-  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
-  TIMEOUT: "TIMEOUT",
-  NETWORK_ERROR: "NETWORK_ERROR",
-
-  // RPC-specific
-  GROUP_NOT_FOUND: "GROUP_NOT_FOUND",
-  OPERATION_NOT_FOUND: "OPERATION_NOT_FOUND",
-  PARSE_ERROR: "PARSE_ERROR"
+export const RpcHttpStatus = {
+  RpcNotFoundError: 404,
+  RpcValidationError: 400,
+  RpcForbiddenError: 403,
+  RpcTimeoutError: 504,
+  RpcConflictError: 409,
+  RpcRateLimitError: 429,
+  RpcServiceError: 503,
+  RpcInfraError: 500,
+  RpcInternalError: 500,
 } as const
 
 /**
- * Map error code to HTTP status
+ * Get HTTP status from RPC error
+ *
+ * Uses the error's _tag to determine HTTP status code.
+ * All RPC errors extend Schema.TaggedError so _tag is always present.
  */
-export const errorCodeToHttpStatus = (code: string): number => {
-  switch (code) {
-    case RpcErrorCodes.BAD_REQUEST:
-    case RpcErrorCodes.VALIDATION_ERROR:
-    case RpcErrorCodes.PARSE_ERROR:
-      return 400
-    case RpcErrorCodes.UNAUTHORIZED:
-      return 401
-    case RpcErrorCodes.FORBIDDEN:
-      return 403
-    case RpcErrorCodes.NOT_FOUND:
-    case RpcErrorCodes.GROUP_NOT_FOUND:
-    case RpcErrorCodes.OPERATION_NOT_FOUND:
-      return 404
-    case RpcErrorCodes.RATE_LIMITED:
-      return 429
-    case RpcErrorCodes.TIMEOUT:
-      return 504
-    case RpcErrorCodes.SERVICE_UNAVAILABLE:
-    case RpcErrorCodes.NETWORK_ERROR:
-      return 503
-    default:
-      // INTERNAL_ERROR and any unknown codes return 500
-      return 500
-  }
-}
-`);
+export const getHttpStatus = (error: RpcError): number =>
+  RpcHttpStatus[error._tag] ?? 500
+`)
 
-  return builder.toString();
+  builder.addSectionComment("Error Boundary (Effect-native)")
+
+  builder.addRaw(`/**
+ * Wrap effect with RPC error boundary using Effect.catchTag
+ *
+ * Uses Effect-native error handling to transform domain errors
+ * to RPC-serializable errors at handler boundaries.
+ *
+ * For custom error transformations, use Effect.catchTag directly:
+ * @example
+ * \`\`\`typescript
+ * const handler = userService.get(id).pipe(
+ *   Effect.catchTag("UserNotFoundError", (e) =>
+ *     Effect.fail(new RpcNotFoundError({
+ *       message: e.message,
+ *       resource: "User",
+ *       id: e.userId
+ *     }))
+ *   ),
+ *   Effect.catchTag("ValidationError", (e) =>
+ *     Effect.fail(new RpcValidationError({
+ *       message: e.message,
+ *       issues: e.issues
+ *     }))
+ *   )
+ * );
+ * \`\`\`
+ *
+ * For catch-all transformation to RpcInternalError:
+ * @example
+ * \`\`\`typescript
+ * const handler = userService.get(id).pipe(
+ *   Effect.catchAll(() =>
+ *     Effect.fail(new RpcInternalError({ message: "An error occurred" }))
+ *   )
+ * );
+ * \`\`\`
+ */
+export const withRpcErrorBoundary = <A, E, R>(
+  effect: Effect.Effect<A, E, R>
+): Effect.Effect<A, RpcInternalError, R> =>
+  effect.pipe(
+    Effect.catchAll(() =>
+      Effect.fail(new RpcInternalError({ message: "An unexpected error occurred" }))
+    )
+  )
+`)
+
+  return builder.toString()
 }

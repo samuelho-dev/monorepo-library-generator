@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository/read-operation-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { DataAccessTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/read.ts file
@@ -16,9 +16,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * Creates implementation for entity read/query operations
  */
 export function generateRepositoryReadOperationFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Read Operations`,
@@ -26,36 +26,36 @@ export function generateRepositoryReadOperationFile(options: DataAccessTemplateO
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { readOperations } from '@scope/data-access-${fileName}/repository/operations/read'`,
-    module: `${scope}/data-access-${fileName}/repository/operations`,
-  });
-  builder.addBlankLine();
+    module: `${scope}/data-access-${fileName}/repository/operations`
+  })
+  builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Effect', 'Option', 'Duration'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Effect", "Option", "Duration"] }])
+  builder.addBlankLine()
 
   builder.addImports([
     {
-      from: '../../shared/types',
+      from: "../../shared/types",
       imports: [`${className}Filter`, `PaginationOptions`],
-      isTypeOnly: true,
+      isTypeOnly: true
     },
     {
-      from: '../../shared/errors',
+      from: "../../shared/errors",
       imports: [`${className}TimeoutError`],
-      isTypeOnly: false,
-    },
-  ]);
-  builder.addBlankLine();
+      isTypeOnly: false
+    }
+  ])
+  builder.addBlankLine()
 
   // Import infrastructure services
-  builder.addComment('Infrastructure services - Database for persistence');
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
-  builder.addBlankLine();
+  builder.addComment("Infrastructure services - Database for persistence")
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
+  builder.addBlankLine()
 
   // Live implementation
-  builder.addSectionComment('Read Operations');
-  builder.addBlankLine();
+  builder.addSectionComment("Read Operations")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Read operations for ${className} repository
@@ -63,8 +63,6 @@ Bundle optimization: Import this file directly for smallest bundle size:
  * Uses DatabaseService for persistence with type-safe database queries.
  * Return types are inferred to preserve Effect's dependency and error tracking.
  *
- * NOTE: For caching, use CacheService.makeSimple() to create a cache handle
- * and implement cache-aside pattern in your service layer.
  *
  * @example
  * \`\`\`typescript
@@ -76,14 +74,14 @@ export const readOperations = {
    * Find ${className} entity by ID
    */
   findById: (id: string) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Finding ${className} by ID: \${id}\`);
 
       const entity = yield* database.query((db) =>
         db
-          .selectFrom("${fileName}s")
+          .selectFrom("${fileName}")
           .selectAll()
           .where("id", "=", id)
           .executeTakeFirst()
@@ -108,7 +106,7 @@ export const readOperations = {
    * Find all ${className} entities matching filters
    */
   findAll: (filter?: ${className}Filter, pagination?: PaginationOptions) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Finding all ${className} entities (filter: \${JSON.stringify(filter)})\`);
@@ -118,7 +116,7 @@ export const readOperations = {
 
       // Build query with filtering
       const items = yield* database.query((db) => {
-        let query = db.selectFrom("${fileName}s").selectAll();
+        let query = db.selectFrom("${fileName}").selectAll();
 
         // Apply filters (basic search implementation)
         // TODO: Implement proper full-text search or specific field filtering
@@ -136,7 +134,7 @@ export const readOperations = {
 
       // Get total count (without pagination)
       const total = yield* database.query((db) => {
-        let query = db.selectFrom("${fileName}s").select((eb) => eb.fn.countAll().as("count"));
+        let query = db.selectFrom("${fileName}").select((eb) => eb.fn.countAll().as("count"));
 
         if (filter?.search) {
           query = query.where((eb) =>
@@ -168,14 +166,14 @@ export const readOperations = {
    * Find one ${className} entity matching filter
    */
   findOne: (filter: ${className}Filter) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Finding one ${className} entity (filter: \${JSON.stringify(filter)})\`);
 
       // Build query with filtering
       const entity = yield* database.query((db) => {
-        let query = db.selectFrom("${fileName}s").selectAll();
+        let query = db.selectFrom("${fileName}").selectAll();
 
         // Apply filters
         if (filter.search) {
@@ -208,7 +206,7 @@ export const readOperations = {
 /**
  * Type alias for the read operations object
  */
-export type Read${className}Operations = typeof readOperations;`);
+export type Read${className}Operations = typeof readOperations;`)
 
-  return builder.toString();
+  return builder.toString()
 }

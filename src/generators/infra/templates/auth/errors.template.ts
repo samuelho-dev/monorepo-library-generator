@@ -6,33 +6,33 @@
  * @module monorepo-library-generator/infra-templates/auth/errors
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate auth errors.ts file
  */
 export function generateAuthErrorsFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { packageName } = options;
+  const builder = new TypeScriptBuilder()
+  const { packageName } = options
 
   builder.addFileHeader({
-    title: 'Auth Infrastructure Errors',
+    title: "Auth Infrastructure Errors",
     description: `Schema.TaggedError-based error types for auth operations.
 
 These errors use Schema.TaggedError because they need to cross RPC boundaries
 and be serializable. The AuthError is used in Schema.Union with feature RPC errors.`,
-    module: `${packageName}/errors`,
-  });
-  builder.addBlankLine();
+    module: `${packageName}/errors`
+  })
+  builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addBlankLine()
 
   // Error types
-  builder.addSectionComment('Error Types (Schema.TaggedError for RPC Serialization)');
-  builder.addBlankLine();
+  builder.addSectionComment("Error Types (Schema.TaggedError for RPC Serialization)")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Base auth error - used in RPC error unions
@@ -99,23 +99,23 @@ export class InvalidApiKeyError extends Schema.TaggedError<InvalidApiKeyError>()
   {
     message: Schema.String,
   }
-) {}`);
-  builder.addBlankLine();
+) {}`)
+  builder.addBlankLine()
 
   // Union type
-  builder.addSectionComment('Error Union Type');
-  builder.addBlankLine();
+  builder.addSectionComment("Error Union Type")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Union of all auth errors
  */
-export type AuthInfraError =
+export type AuthServiceError =
   | AuthError
   | UnauthorizedError
   | ForbiddenError
   | InvalidTokenError
   | SessionExpiredError
-  | InvalidApiKeyError;`);
+  | InvalidApiKeyError;`)
 
-  return builder.toString();
+  return builder.toString()
 }

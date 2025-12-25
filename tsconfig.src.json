@@ -9,6 +9,8 @@
     "rootDir": "src",
     "declaration": true,
     "declarationMap": true,
-    "exactOptionalPropertyTypes": false
+    "exactOptionalPropertyTypes": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   }
 }

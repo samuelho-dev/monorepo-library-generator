@@ -6,32 +6,32 @@
  * @module monorepo-library-generator/infra-templates/storage/errors
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate storage errors.ts file
  */
 export function generateStorageErrorsFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { packageName } = options;
+  const builder = new TypeScriptBuilder()
+  const { packageName } = options
 
   builder.addFileHeader({
-    title: 'Storage Infrastructure Errors',
+    title: "Storage Infrastructure Errors",
     description: `Data.TaggedError-based error types for storage operations.
 
 All errors extend Data.TaggedError for structural equality and pattern matching.`,
-    module: `${packageName}/errors`,
-  });
-  builder.addBlankLine();
+    module: `${packageName}/errors`
+  })
+  builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Data'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Data"] }])
+  builder.addBlankLine()
 
   // Error types
-  builder.addSectionComment('Error Types');
-  builder.addBlankLine();
+  builder.addSectionComment("Error Types")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Base storage error
@@ -95,27 +95,27 @@ export class FileSizeExceededError extends Data.TaggedError("FileSizeExceededErr
  */
 export class InvalidFileTypeError extends Data.TaggedError("InvalidFileTypeError")<{
   readonly message: string;
-  readonly allowedTypes: readonly string[];
+  readonly allowedTypes: ReadonlyArray<string>;
   readonly actualType: string;
   readonly cause?: unknown;
-}> {}`);
-  builder.addBlankLine();
+}> {}`)
+  builder.addBlankLine()
 
   // Union type
-  builder.addSectionComment('Error Union Type');
-  builder.addBlankLine();
+  builder.addSectionComment("Error Union Type")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Union of all storage errors
  */
-export type StorageInfraError =
+export type StorageServiceError =
   | StorageError
   | FileNotFoundError
   | BucketNotFoundError
   | UploadFailedError
   | DownloadFailedError
   | FileSizeExceededError
-  | InvalidFileTypeError;`);
+  | InvalidFileTypeError;`)
 
-  return builder.toString();
+  return builder.toString()
 }

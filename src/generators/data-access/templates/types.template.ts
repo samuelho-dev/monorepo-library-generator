@@ -6,14 +6,10 @@
  * @module monorepo-library-generator/data-access/types-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import {
-  addPaginatedResponse,
-  addPaginationOptions,
-  addSortDirection,
-} from '../../../utils/templates';
-import type { DataAccessTemplateOptions } from '../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { addPaginatedResponse, addPaginationOptions, addSortDirection } from "../../../utils/templates"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate types.ts file for data-access library
@@ -25,34 +21,36 @@ import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
  * - Helper type utilities
  */
 export function generateTypesFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, contractLibrary, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, contractLibrary, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header
   builder.addFileHeader({
     title: `${className} Shared Type Definitions`,
     description: `Common types used across the data-access layer for ${className} operations.
 Re-exports entity types from contract library and provides query-specific types.`,
-    module: `${scope}/data-access-${fileName}/server`,
-  });
+    module: `${scope}/data-access-${fileName}/server`
+  })
 
   // Re-export from contract library
-  builder.addSectionComment('Entity Types (from Contract Library)');
-  builder.addBlankLine();
+  builder.addSectionComment("Entity Types (from Contract Library)")
+  builder.addBlankLine()
 
   builder.addRaw(`// Re-export entity types from contract library
+// Note: Contract re-exports Prisma-generated types (Select, Insert, Update)
+// and defines branded ID type in rpc-definitions.ts
 export type {
-  ${className},
+  ${className}Select as ${className},
   ${className}Id,
   ${className}Insert as ${className}CreateInput,
   ${className}Update as ${className}UpdateInput,
-} from "${contractLibrary}";`);
-  builder.addBlankLine();
+} from "${contractLibrary}";`)
+  builder.addBlankLine()
 
   // Filter & Query Types
-  builder.addSectionComment('Filter & Query Types');
-  builder.addBlankLine();
+  builder.addSectionComment("Filter & Query Types")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${className} Filter Options
@@ -85,26 +83,26 @@ export type {
 export interface ${className}Filter {
   // TODO: Add filter properties (see JSDoc examples above)
   readonly search?: string;
-}`);
-  builder.addBlankLine();
+}`)
+  builder.addBlankLine()
 
   // Add query types using utility (SortDirection, Sort, Pagination)
-  addSortDirection(builder);
-  builder.addBlankLine();
+  addSortDirection(builder)
+  builder.addBlankLine()
 
-  builder.addComment(`${className} Sort Options`);
-  builder.addComment('TODO: Add domain-specific sortable fields');
-  builder.addComment('Examples: createdAt, updatedAt, name, price');
+  builder.addComment(`${className} Sort Options`)
+  builder.addComment("TODO: Add domain-specific sortable fields")
+  builder.addComment("Examples: createdAt, updatedAt, name, price")
   builder.addRaw(`export interface ${className}Sort {
   readonly field: string; // TODO: Use union of sortable fields
   readonly direction: SortDirection;
-}`);
-  builder.addBlankLine();
+}`)
+  builder.addBlankLine()
 
-  builder.addComment('Pagination Options');
-  builder.addComment('Standard pagination parameters for list queries.');
-  addPaginationOptions(builder);
-  builder.addBlankLine();
+  builder.addComment("Pagination Options")
+  builder.addComment("Standard pagination parameters for list queries.")
+  addPaginationOptions(builder)
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Query Options
@@ -125,41 +123,20 @@ export interface QueryOptions {
   readonly filter?: ${className}Filter;
   readonly sort?: ${className}Sort;
   readonly pagination?: PaginationOptions;
-}`);
-  builder.addBlankLine();
+}`)
+  builder.addBlankLine()
 
   // Response Types
-  builder.addSectionComment('Response Types');
-  builder.addBlankLine();
+  builder.addSectionComment("Response Types")
+  builder.addBlankLine()
 
-  builder.addComment('Paginated List Response');
-  builder.addComment('Standard paginated response format for list queries.');
-  addPaginatedResponse(builder);
-  builder.addBlankLine();
+  builder.addComment("Paginated List Response")
+  builder.addComment("Standard paginated response format for list queries.")
+  addPaginatedResponse(builder)
+  builder.addBlankLine()
 
-  // Helper Type Utilities
-  builder.addSectionComment('Helper Type Utilities');
-  builder.addBlankLine();
+  // Note: TypeScript built-in Required<T> and Readonly<T> are available globally
+  // For deep readonly, import from 'type-fest' if needed: import type { ReadonlyDeep } from 'type-fest'
 
-  builder.addRaw(`/**
- * Make all properties of T required
- *
- * Useful for ensuring complete entity data
- */
-export type Required<T> = {
-  [K in keyof T]-?: T[K];
-};`);
-  builder.addBlankLine();
-
-  builder.addRaw(`/**
- * Make all properties of T readonly
- *
- * Useful for ensuring immutability
- */
-export type ReadonlyDeep<T> = {
-  readonly [K in keyof T]: ReadonlyDeep<T[K]>;
-};
-`);
-
-  return builder.toString();
+  return builder.toString()
 }

@@ -5,12 +5,12 @@
  * These imports are completely erased at compile time.
  */
 
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 export interface TypesOnlyOptions {
-  readonly entities: ReadonlyArray<string>;
-  readonly includeCQRS?: boolean;
-  readonly includeRPC?: boolean;
+  readonly entities: ReadonlyArray<string>
+  readonly includeCQRS?: boolean
+  readonly typesDatabasePackage?: string
 }
 
 /**
@@ -20,14 +20,27 @@ export interface TypesOnlyOptions {
  * This enables zero-bundle-impact imports for type checking.
  */
 export function generateTypesOnlyFile(options: TypesOnlyOptions) {
-  const { entities, includeCQRS, includeRPC } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const { entities, includeCQRS, typesDatabasePackage } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
-  // All entity types come from the database types file
-  const entityExports = `// Entity types from database schema
-export type { ${entities.join(', ')}, ${entities.map((e) => `${e}Id`).join(', ')}, ${entities
-    .map((e) => `${e}Insert`)
-    .join(', ')}, ${entities.map((e) => `${e}Update`).join(', ')} } from "./lib/types/database";`;
+  // Entity types come from external package (prisma-effect-kysely) or local types file
+  // Prisma generates: ${Entity}Select, ${Entity}Insert, ${Entity}Update
+  // ${Entity}Id is defined in rpc-definitions.ts and exported via ./lib/rpc
+  const entityTypeSource = typesDatabasePackage || "./lib/types/database"
+  const entitySourceComment = typesDatabasePackage
+    ? `Entity types from ${typesDatabasePackage} (prisma-effect-kysely generated)`
+    : "Entity types from database schema"
+
+  // Export Prisma-generated types: Select, Insert, Update variants
+  const selectTypes = entities.map((e) => `${e}Select`).join(", ")
+  const insertTypes = entities.map((e) => `${e}Insert`).join(", ")
+  const updateTypes = entities.map((e) => `${e}Update`).join(", ")
+
+  const entityExports = `// ${entitySourceComment}
+export type { ${selectTypes}, ${insertTypes}, ${updateTypes} } from "${entityTypeSource}";
+
+// ID types are defined in rpc-definitions.ts (branded Schema types)
+// They are re-exported via ./lib/rpc below`
 
   return `/**
  * Type-Only Exports
@@ -65,9 +78,14 @@ export type * from "./lib/ports";
 // ============================================================================
 
 export type * from "./lib/events";
+// ============================================================================
+// RPC Types
+// ============================================================================
+
+export type * from "./lib/rpc";
 ${
-  includeCQRS
-    ? `
+    includeCQRS
+      ? `
 // ============================================================================
 // CQRS Types
 // ============================================================================
@@ -76,17 +94,7 @@ export type * from "./lib/commands";
 export type * from "./lib/queries";
 export type * from "./lib/projections";
 `
-    : ''
-}${
-  includeRPC
-    ? `
-// ============================================================================
-// RPC Types
-// ============================================================================
-
-export type * from "./lib/rpc";
+      : ""
+  }
 `
-    : ''
-}
-`;
 }

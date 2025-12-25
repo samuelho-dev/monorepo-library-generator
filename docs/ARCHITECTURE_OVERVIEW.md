@@ -122,7 +122,7 @@ This document provides a high-level overview of the library architecture, depend
 - `infra-database` - Database service with Kysely
 - `infra-cache` - Caching with Redis
 - `infra-storage` - File storage with Supabase
-- `infra-logging` - Structured logging
+- `infra-observability` - Structured logging
 - `infra-error-tracking` - Error tracking with Sentry
 - `infra-webhooks` - Webhook handling
 
@@ -169,7 +169,7 @@ This document provides a high-level overview of the library architecture, depend
 
 **Dependencies**:
 
-- `infra-logging` (for adapter logging)
+- `infra-observability` (for adapter logging)
 - External SDKs (stripe, @supabase/supabase-js, etc.)
 - `util-*` (utility functions)
 
@@ -256,7 +256,7 @@ export class PurchaseOrderService extends Context.Tag("PurchaseOrderService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Depend on repositories from data-access
       const productRepo = yield* ProductRepository;
       const orderRepo = yield* OrderRepository;
@@ -269,7 +269,7 @@ export class PurchaseOrderService extends Context.Tag("PurchaseOrderService")<
 
       return {
         createOrder: (params) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Business logic orchestration
             const product = yield* productRepo.findById(params.productId);
             const payment = yield* stripe.paymentIntents.create({...});
@@ -289,14 +289,14 @@ export class PurchaseOrderService extends Context.Tag("PurchaseOrderService")<
 // Data-Access: Product Repository
 export const ProductRepositoryLive = Layer.effect(
   ProductRepository, // Interface from contract-product
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Depend on infrastructure
     const database = yield* DatabaseService;
     const cache = yield* CacheService;
 
     return {
       findById: (id) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           // Check cache first
           const cached = yield* cache.get<Product>(`product:${id}`);
           if (Option.isSome(cached)) return cached;
@@ -341,14 +341,14 @@ export class CacheService extends Context.Tag('CacheService')<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Depend on provider
       const redis = yield* RedisService;
       const logger = yield* LoggingService;
 
       // Register cleanup
       yield* Effect.addFinalizer(() =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* logger.info('Closing cache connections');
           yield* redis.quit();
         }),
@@ -356,12 +356,12 @@ export class CacheService extends Context.Tag('CacheService')<
 
       return {
         get: (key) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const value = yield* redis.get(key);
             return value ? Option.some(JSON.parse(value)) : Option.none();
           }),
         set: (key, value, ttl) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const serialized = JSON.stringify(value);
             yield* redis.set(key, serialized, ttl);
           }),
@@ -387,7 +387,7 @@ export class StripeService extends Context.Tag('StripeService')<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* StripeConfig;
       const logger = yield* LoggingService;
 
@@ -398,7 +398,7 @@ export class StripeService extends Context.Tag('StripeService')<
 
       // Register cleanup function for resource management
       yield* Effect.addFinalizer(() =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* logger.info('Cleaning up Stripe client resources');
           // Add any SDK-specific cleanup here if available
         }),
@@ -407,7 +407,7 @@ export class StripeService extends Context.Tag('StripeService')<
       return {
         paymentIntents: {
           create: (params) =>
-            Effect.gen(function* () {
+            Effect.gen(function*() {
               yield* logger.debug('Creating payment intent', { params });
 
               // Transform SDK errors to Effect errors
@@ -443,17 +443,17 @@ export class OrderProcessingService extends Context.Tag('OrderProcessingService'
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       return {
         processAllOrders: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const repo = yield* OrderRepository;
 
             // Stream all orders with constant memory usage
             const summary = yield* repo.streamAll({ batchSize: 100 }).pipe(
               // Process each order
               Stream.mapEffect((order) =>
-                Effect.gen(function* () {
+                Effect.gen(function*() {
                   yield* validateOrder(order);
                   yield* enrichOrder(order);
                   return order;
@@ -521,7 +521,7 @@ const AppLayer = Layer.mergeAll(
 );
 
 // Provide to your application
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const productService = yield* ProductService;
   // ... use services
 });
@@ -732,7 +732,7 @@ const MockDatabaseLayer = Layer.succeed(DatabaseService, {
 });
 
 it.scoped('findById returns product', () => // ✅ Always it.scoped
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* ProductRepository;
     const result = yield* repo.findById('test');
 
@@ -759,7 +759,7 @@ const MockProductRepository = Layer.succeed(ProductRepository, {
 });
 
 it.scoped('createOrder validates product', () => // ✅ Always it.scoped
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* ProductService;
     const result = yield* service.createOrder({ productId: 'test' });
 
@@ -861,7 +861,7 @@ All libraries use TypeScript composite projects for incremental compilation:
 - `infra-cache` - Caching with Redis
 - `infra-database` - Database service with Kysely
 - `infra-error-tracking` - Error tracking with Sentry
-- `infra-logging` - Structured logging
+- `infra-observability` - Structured logging
 - `infra-messaging` - Message queue
 - `infra-rpc` - RPC framework
 - `infra-storage` - File storage with Supabase
@@ -916,7 +916,7 @@ All libraries use TypeScript composite projects for incremental compilation:
 **Auto-wired dependencies**:
 
 - `data-access-{relevant-domains}` (repositories)
-- `infra-logging` (logging service)
+- `infra-observability` (logging service)
 - `infra-rpc` (RPC framework)
 
 **Auto-generated files**:
@@ -931,7 +931,7 @@ All libraries use TypeScript composite projects for incremental compilation:
 **Auto-wired dependencies**:
 
 - `util-common` (utility functions)
-- `infra-logging` (for service logging)
+- `infra-observability` (for service logging)
 
 **Auto-generated files**:
 
@@ -944,7 +944,7 @@ All libraries use TypeScript composite projects for incremental compilation:
 
 **Auto-wired dependencies**:
 
-- `infra-logging` (for adapter logging)
+- `infra-observability` (for adapter logging)
 - External SDK package (Stripe, AWS, etc.)
 
 **Auto-generated files**:

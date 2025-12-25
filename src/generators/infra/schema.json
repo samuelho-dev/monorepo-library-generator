@@ -29,12 +29,6 @@
       "default": false,
       "x-prompt": "Does this service need React hooks or browser-specific code?"
     },
-    "includeEdge": {
-      "type": "boolean",
-      "description": "Include edge runtime support (middleware, edge functions)",
-      "default": false,
-      "x-prompt": "Does this service need edge runtime support?"
-    },
     "skipTests": {
       "type": "boolean",
       "description": "Skip generating test files",

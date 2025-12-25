@@ -6,17 +6,17 @@
  * @module monorepo-library-generator/data-access/repository/aggregate-operation-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { DataAccessTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/aggregate.ts file
  */
 export function generateRepositoryAggregateOperationFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Aggregate Operations`,
@@ -24,34 +24,34 @@ export function generateRepositoryAggregateOperationFile(options: DataAccessTemp
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { aggregateOperations } from '@scope/data-access-${fileName}/repository/operations/aggregate'`,
-    module: `${scope}/data-access-${fileName}/repository/operations`,
-  });
-  builder.addBlankLine();
+    module: `${scope}/data-access-${fileName}/repository/operations`
+  })
+  builder.addBlankLine()
 
-  builder.addImports([{ from: 'effect', imports: ['Effect', 'Duration'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
+  builder.addBlankLine()
 
   builder.addImports([
     {
-      from: '../../shared/types',
+      from: "../../shared/types",
       imports: [`${className}Filter`],
-      isTypeOnly: true,
+      isTypeOnly: true
     },
     {
-      from: '../../shared/errors',
+      from: "../../shared/errors",
       imports: [`${className}TimeoutError`],
-      isTypeOnly: false,
-    },
-  ]);
-  builder.addBlankLine();
+      isTypeOnly: false
+    }
+  ])
+  builder.addBlankLine()
 
   // Import infrastructure services
-  builder.addComment('Infrastructure services - Database for persistence');
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
-  builder.addBlankLine();
+  builder.addComment("Infrastructure services - Database for persistence")
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
+  builder.addBlankLine()
 
-  builder.addSectionComment('Aggregate Operations');
-  builder.addBlankLine();
+  builder.addSectionComment("Aggregate Operations")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Aggregate operations for ${className} repository
@@ -69,13 +69,13 @@ export const aggregateOperations = {
    * Count ${className} entities matching filter
    */
   count: (filter?: ${className}Filter) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Counting ${className} entities (filter: \${JSON.stringify(filter)})\`);
 
       const count = yield* database.query((db) => {
-        let query = db.selectFrom("${fileName}s").select((eb) => eb.fn.countAll().as("count"));
+        let query = db.selectFrom("${fileName}").select((eb) => eb.fn.countAll().as("count"));
 
         // Apply filters if provided
         if (filter?.search) {
@@ -104,14 +104,14 @@ export const aggregateOperations = {
    * Check if ${className} entity exists by ID
    */
   exists: (id: string) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Checking if ${className} exists: \${id}\`);
 
       const result = yield* database.query((db) =>
         db
-          .selectFrom("${fileName}s")
+          .selectFrom("${fileName}")
           .select((eb) => eb.fn.countAll().as("count"))
           .where("id", "=", id)
           .executeTakeFirstOrThrow()
@@ -133,7 +133,7 @@ export const aggregateOperations = {
 /**
  * Type alias for the aggregate operations object
  */
-export type Aggregate${className}Operations = typeof aggregateOperations;`);
+export type Aggregate${className}Operations = typeof aggregateOperations;`)
 
-  return builder.toString();
+  return builder.toString()
 }

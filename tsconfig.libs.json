@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["node"],
+    "paths": {
+      "@samuelho-dev/types-database": ["libs/types/database/src/index.ts"],
+      "@samuelho-dev/types-database/*": ["libs/types/database/src/*"],
+      "@samuelho-dev/contract-auth": ["libs/contract/auth/src/index.ts"],
+      "@samuelho-dev/contract-auth/*": ["libs/contract/auth/src/*"],
+      "@samuelho-dev/contract-user": ["libs/contract/user/src/index.ts"],
+      "@samuelho-dev/contract-user/*": ["libs/contract/user/src/*"],
+      "@samuelho-dev/data-access-user": ["libs/data-access/user/src/index.ts"],
+      "@samuelho-dev/data-access-user/*": ["libs/data-access/user/src/*"],
+      "@samuelho-dev/feature-user": ["libs/feature/user/src/index.ts"],
+      "@samuelho-dev/feature-user/*": ["libs/feature/user/src/*"],
+      "@samuelho-dev/env": ["libs/env/src/index.ts"],
+      "@samuelho-dev/env/*": ["libs/env/src/*"],
+      "@samuelho-dev/infra-cache": ["libs/infra/cache/src/index.ts"],
+      "@samuelho-dev/infra-cache/*": ["libs/infra/cache/src/*"],
+      "@samuelho-dev/infra-database": ["libs/infra/database/src/index.ts"],
+      "@samuelho-dev/infra-database/*": ["libs/infra/database/src/*"],
+      "@samuelho-dev/infra-observability": ["libs/infra/observability/src/index.ts"],
+      "@samuelho-dev/infra-observability/*": ["libs/infra/observability/src/*"],
+      "@samuelho-dev/infra-queue": ["libs/infra/queue/src/index.ts"],
+      "@samuelho-dev/infra-queue/*": ["libs/infra/queue/src/*"],
+      "@samuelho-dev/infra-pubsub": ["libs/infra/pubsub/src/index.ts"],
+      "@samuelho-dev/infra-pubsub/*": ["libs/infra/pubsub/src/*"],
+      "@samuelho-dev/infra-auth": ["libs/infra/auth/src/index.ts"],
+      "@samuelho-dev/infra-auth/*": ["libs/infra/auth/src/*"],
+      "@samuelho-dev/infra-storage": ["libs/infra/storage/src/index.ts"],
+      "@samuelho-dev/infra-storage/*": ["libs/infra/storage/src/*"],
+      "@samuelho-dev/infra-rpc": ["libs/infra/rpc/src/index.ts"],
+      "@samuelho-dev/infra-rpc/*": ["libs/infra/rpc/src/*"],
+      "@samuelho-dev/provider-kysely": ["libs/provider/kysely/src/index.ts"],
+      "@samuelho-dev/provider-kysely/*": ["libs/provider/kysely/src/*"],
+      "@samuelho-dev/provider-supabase": ["libs/provider/supabase/src/index.ts"],
+      "@samuelho-dev/provider-supabase/*": ["libs/provider/supabase/src/*"],
+      "@samuelho-dev/provider-redis": ["libs/provider/redis/src/index.ts"],
+      "@samuelho-dev/provider-redis/*": ["libs/provider/redis/src/*"]
+    }
+  },
+  "include": [
+    "libs/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "libs/**/*.spec.ts",
+    "libs/**/node_modules"
+  ]
+}

@@ -6,9 +6,10 @@
  * @module monorepo-library-generator/data-access/repository/repository-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { DataAccessTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { generateStaticLayers } from "../../../shared/layers"
 
 /**
  * Generate repository/repository.ts file
@@ -16,9 +17,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * Creates the Context.Tag interface with Live layer
  */
 export function generateRepositoryFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Repository`,
@@ -31,29 +32,31 @@ ARCHITECTURE PATTERN:
 - Tests provide DatabaseService.Test, not a separate Repository.Test
 
 @see repository/operations/* for implementation details`,
-    module: `${scope}/data-access-${fileName}/repository`,
-  });
-  builder.addBlankLine();
+    module: `${scope}/data-access-${fileName}/repository`
+  })
+  builder.addBlankLine()
 
   builder.addImports([
-    { from: 'effect', imports: ['Chunk', 'Context', 'Effect', 'Layer', 'Option', 'Stream'] },
-  ]);
-  builder.addBlankLine();
+    { from: "effect", imports: ["Chunk", "Context", "Effect", "Layer", "Option", "Stream"] }
+  ])
+  builder.addBlankLine()
 
-  builder.addBlankLine();
+  builder.addSectionComment("Environment Configuration")
+  builder.addRaw(`import { env } from "${scope}/env";`)
+  builder.addBlankLine()
 
-  builder.addComment('Import operation implementations');
+  builder.addComment("Import operation implementations")
   builder.addImports([
-    { from: './operations/create', imports: ['createOperations'] },
-    { from: './operations/read', imports: ['readOperations'] },
-    { from: './operations/update', imports: ['updateOperations'] },
-    { from: './operations/delete', imports: ['deleteOperations'] },
-    { from: './operations/aggregate', imports: ['aggregateOperations'] },
-  ]);
-  builder.addBlankLine();
+    { from: "./operations/create", imports: ["createOperations"] },
+    { from: "./operations/read", imports: ["readOperations"] },
+    { from: "./operations/update", imports: ["updateOperations"] },
+    { from: "./operations/delete", imports: ["deleteOperations"] },
+    { from: "./operations/aggregate", imports: ["aggregateOperations"] }
+  ])
+  builder.addBlankLine()
 
-  builder.addSectionComment('Repository Context.Tag');
-  builder.addBlankLine();
+  builder.addSectionComment("Repository Context.Tag")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${className} Repository implementation
@@ -89,25 +92,41 @@ export type ${className}RepositoryInterface = typeof repositoryImpl;
  *
  * Access via: yield* ${className}Repository
  *
+ * Static layers:
+ * - ${className}Repository.Live - Production layer (requires DatabaseService.Live)
+ * - ${className}Repository.Test - Test layer (alias to Live, compose with DatabaseService.Test)
+ * - ${className}Repository.Dev - Development layer with enhanced logging
+ * - ${className}Repository.Auto - Environment-aware layer selection
+ *
  * @example
  * \`\`\`typescript
- * // Production
+ * // Production usage
  * Effect.provide(${className}Repository.Live.pipe(
  *   Layer.provide(DatabaseService.Live)
  * ))
  *
- * // Testing - provide test infrastructure
- * Effect.provide(${className}Repository.Live.pipe(
+ * // Testing - compose with test database
+ * Effect.provide(${className}Repository.Test.pipe(
  *   Layer.provide(DatabaseService.Test)
  * ))
+ *
+ * // Auto-select based on NODE_ENV
+ * Effect.provide(${className}Repository.Auto)
  * \`\`\`
  */
 export class ${className}Repository extends Context.Tag("${className}Repository")<
   ${className}Repository,
   ${className}RepositoryInterface
 >() {
-  static readonly Live = Layer.succeed(this, repositoryImpl);
-}`);
+${
+    generateStaticLayers({
+      className: `${className}Repository`,
+      layerType: "succeed",
+      liveImpl: "repositoryImpl",
+      testViaDependencies: true
+    })
+  }
+}`)
 
-  return builder.toString();
+  return builder.toString()
 }

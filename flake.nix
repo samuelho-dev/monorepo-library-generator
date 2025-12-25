@@ -1,35 +1,45 @@
 {
+  description = "Project with dev-config integration";
+
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    dev-config.url = "github:samuelho-dev/dev-config";
   };
+
   outputs = {
     nixpkgs,
-    self,
+    dev-config,
     ...
   }: let
-    forAllSystems = function:
-      nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed
-      (system: function nixpkgs.legacyPackages.${system});
+    # Supported systems
+    systems = ["aarch64-darwin" "x86_64-darwin" "x86_64-linux" "aarch64-linux"];
+
+    # Helper to generate attrs for all systems
+    forAllSystems = fn:
+      nixpkgs.lib.genAttrs systems (system:
+        fn {
+          pkgs = nixpkgs.legacyPackages.${system};
+          inherit system;
+        });
   in {
-    formatter = forAllSystems (pkgs: pkgs.alejandra);
-
-    packages = forAllSystems (pkgs: {
-      mlg = pkgs.writeShellScriptBin "mlg" ''
-        exec ${pkgs.bun}/bin/bunx --bun @samuelho-dev/monorepo-library-generator "$@"
-      '';
-      default = self.packages.${pkgs.system}.mlg;
-    });
-
-    devShells = forAllSystems (pkgs: {
+    devShells = forAllSystems ({pkgs, ...}: {
       default = pkgs.mkShell {
-        packages = with pkgs; [
-          bun
-          corepack
-          nodejs_22
-          # For systems that do not ship with Python by default (required by `node-gyp`)
-          python3
+        packages = [
+          # Add your project dependencies here
+          # pkgs.nodejs_20
+          # pkgs.bun
         ];
+
+        shellHook = ''
+          ${dev-config.lib.devShellHook}
+
+          # Add project-specific shell setup here
+          echo "🚀 Development environment ready"
+        '';
       };
     });
+
+    # Optional: Add formatter
+    formatter = forAllSystems ({pkgs, ...}: pkgs.alejandra);
   };
 }

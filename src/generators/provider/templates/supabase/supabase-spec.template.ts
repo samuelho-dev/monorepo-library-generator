@@ -7,18 +7,18 @@
  * @module monorepo-library-generator/provider/templates/supabase/spec
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { ProviderTemplateOptions } from '../../../../utils/types';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate Supabase provider service.spec.ts file
  */
 export function generateSupabaseSpecFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { packageName } = options;
+  const builder = new TypeScriptBuilder()
+  const { packageName } = options
 
   builder.addFileHeader({
-    title: 'Supabase Provider Tests',
+    title: "Supabase Provider Tests",
     description: `Comprehensive tests for Supabase provider services.
 
 Tests all three services:
@@ -27,24 +27,24 @@ Tests all three services:
 - SupabaseStorage (8 tests)
 
 Total: 24 tests covering Effect layer patterns.`,
-    module: `${packageName}/tests`,
-  });
-  builder.addBlankLine();
+    module: `${packageName}/tests`
+  })
+  builder.addBlankLine()
 
   // Imports
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Option'] },
-    { from: 'vitest', imports: ['describe', 'it', 'expect'] },
-  ]);
-  builder.addRaw(`import { SupabaseClient } from "./service/client";
-import { SupabaseAuth } from "./service/auth";
-import { SupabaseStorage } from "./service/storage";
-import { SupabaseError } from "./errors";`);
-  builder.addBlankLine();
+    { from: "effect", imports: ["Effect", "Layer", "Option"] },
+    { from: "vitest", imports: ["describe", "it", "expect"] }
+  ])
+  builder.addRaw(`import { SupabaseClient } from "./client";
+import { SupabaseAuth } from "./auth";
+import { SupabaseStorage } from "./storage";
+import { SupabaseError } from "./errors";`)
+  builder.addBlankLine()
 
   // SupabaseClient tests
-  builder.addSectionComment('SupabaseClient Tests');
-  builder.addBlankLine();
+  builder.addSectionComment("SupabaseClient Tests")
+  builder.addBlankLine()
 
   builder.addRaw(`describe("SupabaseClient", () => {
   // Test 1: Service Interface
@@ -220,12 +220,12 @@ import { SupabaseError } from "./errors";`);
       expect(result.anonKey).toBe(customConfig.anonKey);
     });
   });
-});`);
-  builder.addBlankLine();
+});`)
+  builder.addBlankLine()
 
   // SupabaseAuth tests
-  builder.addSectionComment('SupabaseAuth Tests');
-  builder.addBlankLine();
+  builder.addSectionComment("SupabaseAuth Tests")
+  builder.addBlankLine()
 
   builder.addRaw(`describe("SupabaseAuth", () => {
   // Test 1: Service Interface
@@ -367,12 +367,12 @@ import { SupabaseError } from "./errors";`);
       expect(result.role).toBe("authenticated");
     });
   });
-});`);
-  builder.addBlankLine();
+});`)
+  builder.addBlankLine()
 
   // SupabaseStorage tests
-  builder.addSectionComment('SupabaseStorage Tests');
-  builder.addBlankLine();
+  builder.addSectionComment("SupabaseStorage Tests")
+  builder.addBlankLine()
 
   builder.addRaw(`describe("SupabaseStorage", () => {
   // Test 1: Service Interface
@@ -523,7 +523,7 @@ import { SupabaseError } from "./errors";`);
       expect(result).toBe(true);
     });
   });
-});`);
+});`)
 
-  return builder.toString();
+  return builder.toString()
 }

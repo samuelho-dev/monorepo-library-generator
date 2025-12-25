@@ -324,13 +324,13 @@
         "hash": "sha512-tuKn4leCPItox1O4uunHcQF0QllDCvPWklnNQIh2PiWWVtRAGltJJnM4Cwj5AciplosD1Hiz7vAY3ew3crLb3A=="
       }
     },
-    "npm:@effect/cli@0.72.1": {
+    "npm:@effect/cli@0.73.0": {
       "type": "npm",
-      "name": "npm:@effect/cli@0.72.1",
+      "name": "npm:@effect/cli@0.73.0",
       "data": {
-        "version": "0.72.1",
+        "version": "0.73.0",
         "packageName": "@effect/cli",
-        "hash": "sha512-HGDMGD23TxFW9tCSX6g+M2u0robikMA0mP0SqeJMj7FWXTdcQ+cQsJE99bxi9iu+5YID7MIrVJMs8TUwXUV2sg=="
+        "hash": "sha512-KkRtFjfyG52kQ6Z3ZEjwytfKZQACsLzn/RI2jKKxMJDebY9BQganOiE3VGCT4slU3Zisur6SP//ghM0vCLQs4g=="
       }
     },
     "npm:@effect/cluster@0.52.11": {
@@ -360,31 +360,31 @@
         "hash": "sha512-M5uug3Drs/gyTHLfA+XzcIZQGUEV/Jn5yi1POki4oZswhpzNmsVTHl4THpxAordRKwa5lFvTSlsRP684YH7pSw=="
       }
     },
-    "npm:@effect/platform@0.93.8": {
+    "npm:@effect/platform@0.94.0": {
       "type": "npm",
-      "name": "npm:@effect/platform@0.93.8",
+      "name": "npm:@effect/platform@0.94.0",
       "data": {
-        "version": "0.93.8",
+        "version": "0.94.0",
         "packageName": "@effect/platform",
-        "hash": "sha512-xTEy6fyTy4ijmFC3afKgtvYtn/JyPoIov4ZSUWJZUv3VeOcUPNGrrqG6IJlWkXs3NhvSywKv7wc1kw3epCQVZw=="
+        "hash": "sha512-oIATd3M+RUe2q+bu0Qpgt4/qSbXBM9OEGBrRW7SvtwXGOWkCYkN+LfOPnmPrbMB7jYjpIb7808T1bONM1Nwgfg=="
       }
     },
-    "npm:@effect/platform-node@0.100.0": {
+    "npm:@effect/platform-node@0.104.0": {
       "type": "npm",
-      "name": "npm:@effect/platform-node@0.100.0",
+      "name": "npm:@effect/platform-node@0.104.0",
       "data": {
-        "version": "0.100.0",
+        "version": "0.104.0",
         "packageName": "@effect/platform-node",
-        "hash": "sha512-awfeW8zy5hgyRy+ml4bHK27DukTrTV5xvDhZioRF7USjJRwlZ+irdWhR6ExY+UOnAsmq0h8m/1s0l9pUcBi0bw=="
+        "hash": "sha512-2ZkUDDTxLD95ARdYIKBx4tdIIgqA3cwb3jlnVVBxmHUf0Pg5N2HdMuD0Q+CXQ7Q94FDwnLW3ZvaSfxDh6FvrNw=="
       }
     },
-    "npm:@effect/platform-node-shared@0.53.0": {
+    "npm:@effect/platform-node-shared@0.57.0": {
       "type": "npm",
-      "name": "npm:@effect/platform-node-shared@0.53.0",
+      "name": "npm:@effect/platform-node-shared@0.57.0",
       "data": {
-        "version": "0.53.0",
+        "version": "0.57.0",
         "packageName": "@effect/platform-node-shared",
-        "hash": "sha512-xqhYyUYotVUJi7Tqd/iM+tqEoNm6fVowcPm9naxKZCa6WPD6TnRfaogxjkB3yNBnPY63Ya/sIkfkeZXA3MwF3w=="
+        "hash": "sha512-QXuvmLNlABCQLcTl+lN1YPhKosR6KqArPYjC2reU0fb5lroCo3YRb/aGpXIgLthHzQL8cLU5XMGA3Cu5hKY2Tw=="
       }
     },
     "npm:@effect/printer@0.47.0": {
@@ -7492,9 +7492,9 @@
       "type": "npm",
       "name": "npm:@effect/cli",
       "data": {
-        "version": "0.72.1",
+        "version": "0.73.0",
         "packageName": "@effect/cli",
-        "hash": "sha512-HGDMGD23TxFW9tCSX6g+M2u0robikMA0mP0SqeJMj7FWXTdcQ+cQsJE99bxi9iu+5YID7MIrVJMs8TUwXUV2sg=="
+        "hash": "sha512-KkRtFjfyG52kQ6Z3ZEjwytfKZQACsLzn/RI2jKKxMJDebY9BQganOiE3VGCT4slU3Zisur6SP//ghM0vCLQs4g=="
       }
     },
     "npm:@effect/cluster": {
@@ -7528,27 +7528,27 @@
       "type": "npm",
       "name": "npm:@effect/platform",
       "data": {
-        "version": "0.93.8",
+        "version": "0.94.0",
         "packageName": "@effect/platform",
-        "hash": "sha512-xTEy6fyTy4ijmFC3afKgtvYtn/JyPoIov4ZSUWJZUv3VeOcUPNGrrqG6IJlWkXs3NhvSywKv7wc1kw3epCQVZw=="
+        "hash": "sha512-oIATd3M+RUe2q+bu0Qpgt4/qSbXBM9OEGBrRW7SvtwXGOWkCYkN+LfOPnmPrbMB7jYjpIb7808T1bONM1Nwgfg=="
       }
     },
     "npm:@effect/platform-node": {
       "type": "npm",
       "name": "npm:@effect/platform-node",
       "data": {
-        "version": "0.100.0",
+        "version": "0.104.0",
         "packageName": "@effect/platform-node",
-        "hash": "sha512-awfeW8zy5hgyRy+ml4bHK27DukTrTV5xvDhZioRF7USjJRwlZ+irdWhR6ExY+UOnAsmq0h8m/1s0l9pUcBi0bw=="
+        "hash": "sha512-2ZkUDDTxLD95ARdYIKBx4tdIIgqA3cwb3jlnVVBxmHUf0Pg5N2HdMuD0Q+CXQ7Q94FDwnLW3ZvaSfxDh6FvrNw=="
       }
     },
     "npm:@effect/platform-node-shared": {
       "type": "npm",
       "name": "npm:@effect/platform-node-shared",
       "data": {
-        "version": "0.53.0",
+        "version": "0.57.0",
         "packageName": "@effect/platform-node-shared",
-        "hash": "sha512-xqhYyUYotVUJi7Tqd/iM+tqEoNm6fVowcPm9naxKZCa6WPD6TnRfaogxjkB3yNBnPY63Ya/sIkfkeZXA3MwF3w=="
+        "hash": "sha512-QXuvmLNlABCQLcTl+lN1YPhKosR6KqArPYjC2reU0fb5lroCo3YRb/aGpXIgLthHzQL8cLU5XMGA3Cu5hKY2Tw=="
       }
     },
     "npm:@effect/printer": {

@@ -1,0 +1,49 @@
+{
+  "name": "feature-user",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/feature/user/src",
+  "tags": [
+    "type:feature",
+    "scope:user",
+    "feature",
+    "domain",
+    "user",
+    "builtin"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/feature/user",
+        "tsConfig": "libs/feature/user/tsconfig.lib.json",
+        "main": "libs/feature/user/src/index.ts",
+        "batch": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "libs/feature/user/src/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/libs/feature/user",
+        "config": "libs/feature/user/vitest.config.ts"
+      }
+    }
+  }
+}

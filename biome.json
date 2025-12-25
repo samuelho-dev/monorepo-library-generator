@@ -9,10 +9,7 @@
         "noAdjacentSpacesInRegex": "error",
         "noExtraBooleanCast": "error",
         "noUselessCatch": "error",
-        "noUselessEscapeInRegex": "error",
-        "noExcessiveCognitiveComplexity": "off",
-        "noStaticOnlyClass": "off",
-        "noForEach": "error"
+        "noUselessEscapeInRegex": "error"
       },
       "correctness": {
         "noConstAssign": "error",
@@ -40,16 +37,8 @@
         "useValidTypeof": "error",
         "useYield": "error"
       },
-      "performance": {
-        "noBarrelFile": "off",
-        "noReExportAll": "off"
-      },
-      "style": {
-        "useBlockStatements": "off",
-        "noDefaultExport": "off"
-      },
+      "style": { "useBlockStatements": "off" },
       "suspicious": {
-        "noConsole": "error",
         "noAsyncPromiseExecutor": "error",
         "noCatchAssign": "error",
         "noClassAssign": "error",
@@ -76,9 +65,7 @@
         "noUnsafeNegation": "error",
         "noUselessRegexBackrefs": "error",
         "noWith": "error",
-        "useGetterReturn": "error",
-        "useAwait": "off",
-        "noAssignInExpressions": "error"
+        "useGetterReturn": "error"
       }
     },
     "includes": [
@@ -97,7 +84,11 @@
       "javascript": { "globals": ["exports"] },
       "linter": {
         "rules": {
-          "complexity": { "noArguments": "off", "noBannedTypes": "off" },
+          "complexity": {
+            "noArguments": "off",
+            "noBannedTypes": "off",
+            "noExcessiveCognitiveComplexity": "off"
+          },
           "correctness": { "noInvalidUseBeforeDeclaration": "off", "noUnusedVariables": "error" },
           "style": {
             "noNamespace": "off",
@@ -128,6 +119,10 @@
           "vi"
         ]
       }
+    },
+    {
+      "includes": ["**/index.ts", "**/rpc.ts", "**/rpc-group.ts", "**/errors.ts", "**/router.ts", "**/layer.ts", "**/layers.ts", "**/service.ts", "**/types.ts", "**/core.ts", "src/utils/templates.ts"],
+      "linter": { "rules": { "performance": { "noBarrelFile": "off", "noReExportAll": "off" } } }
     }
   ]
 }

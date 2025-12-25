@@ -1,0 +1,48 @@
+{
+  "name": "infra-auth",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/infra/auth/src",
+  "tags": [
+    "type:infra",
+    "scope:auth",
+    "infra",
+    "orchestration",
+    "builtin"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/infra/auth",
+        "tsConfig": "libs/infra/auth/tsconfig.lib.json",
+        "main": "libs/infra/auth/src/index.ts",
+        "batch": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "libs/infra/auth/src/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/libs/infra/auth",
+        "config": "libs/infra/auth/vitest.config.ts"
+      }
+    }
+  }
+}

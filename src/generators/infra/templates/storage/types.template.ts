@@ -6,34 +6,34 @@
  * @module monorepo-library-generator/infra-templates/storage/types
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate storage types.ts file
  */
 export function generateStorageTypesFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { packageName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { packageName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'Storage Infrastructure Types',
+    title: "Storage Infrastructure Types",
     description: `Type definitions for storage infrastructure.
 
 Re-exports types from provider-supabase and adds storage-specific types.`,
-    module: `${packageName}/types`,
-  });
-  builder.addBlankLine();
+    module: `${packageName}/types`
+  })
+  builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addBlankLine()
 
   // Re-export from provider-supabase
-  builder.addSectionComment('Re-exports from Provider');
-  builder.addBlankLine();
+  builder.addSectionComment("Re-exports from Provider")
+  builder.addBlankLine()
 
   builder.addRaw(`// Re-export storage types from provider-supabase
 export type {
@@ -47,12 +47,12 @@ export type {
 export {
   StorageBucketSchema,
   StorageFileSchema,
-} from "${scope}/provider-supabase";`);
-  builder.addBlankLine();
+} from "${scope}/provider-supabase";`)
+  builder.addBlankLine()
 
   // Storage config types
-  builder.addSectionComment('Storage Configuration');
-  builder.addBlankLine();
+  builder.addSectionComment("Storage Configuration")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Storage service configuration
@@ -71,7 +71,7 @@ export interface StorageConfig {
   /**
    * Allowed MIME types
    */
-  readonly allowedMimeTypes?: readonly string[];
+  readonly allowedMimeTypes?: ReadonlyArray<string>;
 
   /**
    * Default signed URL expiration in seconds
@@ -87,12 +87,12 @@ export const StorageConfigSchema = Schema.Struct({
   maxFileSize: Schema.optional(Schema.Number),
   allowedMimeTypes: Schema.optional(Schema.Array(Schema.String)),
   signedUrlExpiresIn: Schema.optional(Schema.Number),
-});`);
-  builder.addBlankLine();
+});`)
+  builder.addBlankLine()
 
   // Upload result types
-  builder.addSectionComment('Operation Types');
-  builder.addBlankLine();
+  builder.addSectionComment("Operation Types")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Upload result
@@ -141,10 +141,10 @@ export interface StorageFileInfo {
  * List files result
  */
 export interface ListFilesResult {
-  readonly files: readonly StorageFileInfo[];
+  readonly files: ReadonlyArray<StorageFileInfo>;
   readonly hasMore: boolean;
   readonly nextOffset?: number;
-}`);
+}`)
 
-  return builder.toString();
+  return builder.toString()
 }

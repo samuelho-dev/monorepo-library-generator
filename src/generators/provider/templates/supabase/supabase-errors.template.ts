@@ -10,34 +10,34 @@
  * @module monorepo-library-generator/provider/templates/supabase/errors
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { ProviderTemplateOptions } from '../../../../utils/types';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate Supabase provider errors.ts file
  */
 export function generateSupabaseErrorsFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder();
+  const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: 'Supabase Provider Errors',
+    title: "Supabase Provider Errors",
     description: `Data.TaggedError-based error types for Supabase operations.
 
 All errors extend Data.TaggedError for:
 - Structural equality
 - Serialization support
 - Pattern matching with Effect.catchTag`,
-    module: `${options.packageName}/errors`,
-  });
-  builder.addBlankLine();
+    module: `${options.packageName}/errors`
+  })
+  builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Data'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Data"] }])
+  builder.addBlankLine()
 
   // Base error type
-  builder.addSectionComment('Base Error Type');
-  builder.addBlankLine();
+  builder.addSectionComment("Base Error Type")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Base Supabase error
@@ -48,12 +48,12 @@ All errors extend Data.TaggedError for:
 export class SupabaseError extends Data.TaggedError("SupabaseError")<{
   readonly message: string;
   readonly cause?: unknown;
-}> {}`);
-  builder.addBlankLine();
+}> {}`)
+  builder.addBlankLine()
 
   // Connection error
-  builder.addSectionComment('Connection Errors');
-  builder.addBlankLine();
+  builder.addSectionComment("Connection Errors")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Supabase connection/initialization error
@@ -63,12 +63,12 @@ export class SupabaseError extends Data.TaggedError("SupabaseError")<{
 export class SupabaseConnectionError extends Data.TaggedError("SupabaseConnectionError")<{
   readonly message: string;
   readonly cause?: unknown;
-}> {}`);
-  builder.addBlankLine();
+}> {}`)
+  builder.addBlankLine()
 
   // Auth errors
-  builder.addSectionComment('Authentication Errors');
-  builder.addBlankLine();
+  builder.addSectionComment("Authentication Errors")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Supabase authentication error
@@ -110,12 +110,12 @@ export class SupabaseTokenError extends Data.TaggedError("SupabaseTokenError")<{
   readonly message: string;
   readonly tokenType: "access" | "refresh";
   readonly cause?: unknown;
-}> {}`);
-  builder.addBlankLine();
+}> {}`)
+  builder.addBlankLine()
 
   // Storage errors
-  builder.addSectionComment('Storage Errors');
-  builder.addBlankLine();
+  builder.addSectionComment("Storage Errors")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Supabase storage error
@@ -151,12 +151,12 @@ export class SupabaseBucketNotFoundError extends Data.TaggedError("SupabaseBucke
   readonly message: string;
   readonly bucket: string;
   readonly cause?: unknown;
-}> {}`);
-  builder.addBlankLine();
+}> {}`)
+  builder.addBlankLine()
 
   // Union type
-  builder.addSectionComment('Error Union Type');
-  builder.addBlankLine();
+  builder.addSectionComment("Error Union Type")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Union of all Supabase provider errors
@@ -172,7 +172,7 @@ export type SupabaseProviderError =
   | SupabaseTokenError
   | SupabaseStorageError
   | SupabaseFileNotFoundError
-  | SupabaseBucketNotFoundError;`);
+  | SupabaseBucketNotFoundError;`)
 
-  return builder.toString();
+  return builder.toString()
 }

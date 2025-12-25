@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra/service-spec-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate service.spec.ts file for infra library
@@ -20,9 +20,9 @@ import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
  * - Configuration tests
  */
 export function generateInfraServiceSpecFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName, name } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName, name } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Service Tests`,
@@ -34,8 +34,8 @@ Testing Guidelines:
 - Test layer composition (do layers provide the service correctly?)
 - Use it.scoped for layer tests (they need Scope)
 - Focus on service mechanics, not implementation details`,
-    module: `${scope}/infra-${fileName}`,
-  });
+    module: `${scope}/infra-${fileName}`
+  })
 
   builder.addRaw(`import { describe, expect, it } from "@effect/vitest"
 import { Context, Effect, Layer } from "effect"
@@ -191,7 +191,7 @@ describe("${className} Service", () => {
     })
   })
 })
-`);
+`)
 
-  return builder.toString();
+  return builder.toString()
 }

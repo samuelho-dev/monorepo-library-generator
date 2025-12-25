@@ -32,7 +32,7 @@ async function getUserOrders(userId: string) {
 }
 
 // ✅ GOOD: Repository abstraction
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const userRepo = yield* UserRepository
   const orderRepo = yield* OrderRepository
 
@@ -88,7 +88,7 @@ const results = await db.query(query)
 Effect approach (composable query builders):
 ```typescript
 // ✅ Safe: Type-checked, composable, SQL injection-proof
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const db = yield* KyselyService
 
   const user = yield* db
@@ -281,7 +281,7 @@ export const findUserById = (db: Kysely<Database>, id: string) =>
 export const findUsersByRole = (
   db: Kysely<Database>,
   role: string,
-  limit: number = 20
+  limit = 20
 ) =>
   Effect.tryPromise({
     try: () => baseUserQuery(db)
@@ -322,12 +322,12 @@ import { findUserById } from "./queries.js"
  */
 export const UserRepositoryLive = Layer.effect(
   UserRepository,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* KyselyService
 
     return UserRepository.of({
       findById: (id: string) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const row = yield* findUserById(db, id)
 
           if (!row) {
@@ -341,7 +341,7 @@ export const UserRepositoryLive = Layer.effect(
         }),
 
       create: (data: CreateUserData) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const row = yield* Effect.tryPromise({
             try: () => db
               .insertInto("users")
@@ -371,7 +371,7 @@ export const UserRepositoryLive = Layer.effect(
         }),
 
       update: (id: string, updates: Partial<User>) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const row = yield* Effect.tryPromise({
             try: () => db
               .updateTable("users")
@@ -393,7 +393,7 @@ export const UserRepositoryLive = Layer.effect(
         }),
 
       delete: (id: string) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const result = yield* Effect.tryPromise({
             try: () => db
               .deleteFrom("users")
@@ -482,7 +482,7 @@ import { UserRepositoryMemory } from "./server/layers.js"
 
 describe("UserRepository", () => {
   it("finds user by ID", async () => {
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const repo = yield* UserRepository
       const user = yield* repo.findById("user-123")
       return user
@@ -493,7 +493,7 @@ describe("UserRepository", () => {
   })
 
   it("fails when user not found", async () => {
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const repo = yield* UserRepository
       return yield* repo.findById("nonexistent")
     }).pipe(Effect.provide(UserRepositoryMemory))
@@ -515,7 +515,7 @@ import { UserRepositoryPostgres } from "./server/layers.js"
 
 describe("UserRepository Layers", () => {
   it("composes with database layer", async () => {
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const repo = yield* UserRepository
       return yield* repo.findById("user-123")
     })
@@ -557,7 +557,7 @@ describe("UserRepository Layers", () => {
    ```typescript
    export const UserRepositoryLive = Layer.effect(
      UserRepository,
-     Effect.gen(function* () {
+     Effect.gen(function*() {
        const db = yield* KyselyService
        return UserRepository.of({
          findById: (id) => /* implementation */
@@ -568,7 +568,7 @@ describe("UserRepository Layers", () => {
 
 5. **Use in feature**:
    ```typescript
-   const program = Effect.gen(function* () {
+   const program = Effect.gen(function*() {
      const userRepo = yield* UserRepository
      return yield* userRepo.findById("user-123")
    }).pipe(Effect.provide(UserRepositoryPostgres))
@@ -595,7 +595,7 @@ Swap implementation for tests:
 
 ```typescript
 // Production code
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const userRepo = yield* UserRepository
   const orderRepo = yield* OrderRepository
 
@@ -634,7 +634,7 @@ export const UserRepositoryLive = Layer.succeed(
 // ✅ GOOD: Database connection is properly async
 export const UserRepositoryLive = Layer.effect(
   UserRepository,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* KyselyService  // Async dependency injection
     return UserRepository.of({ /* implementation */ })
   })
@@ -701,7 +701,7 @@ const testLayer = UserRepositoryLive.pipe(
   Layer.provide(MockKyselyService)
 )
 
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const repo = yield* UserRepository
   return yield* repo.findById("user-123")
 }).pipe(Effect.provide(testLayer))
@@ -725,7 +725,7 @@ afterAll(async () => {
 })
 
 it("creates user in database", async () => {
-  const program = Effect.gen(function* () {
+  const program = Effect.gen(function*() {
     const repo = yield* UserRepository
     return yield* repo.create({
       email: "test@example.com",
@@ -749,7 +749,7 @@ import { fc } from "@fast-check/vitest"
 fc.test.prop([fc.uuid()])(
   "findById returns same user when called twice",
   async (userId) => {
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const repo = yield* UserRepository
       const user1 = yield* repo.findById(userId)
       const user2 = yield* repo.findById(userId)
@@ -780,12 +780,12 @@ class UserRepository {
 // After (Effect-based)
 export const UserRepositoryLive = Layer.effect(
   UserRepository,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* KyselyService
 
     return UserRepository.of({
       findById: (id) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const row = yield* Effect.tryPromise({
             try: () => db
               .selectFrom("users")

@@ -1,48 +1,64 @@
 /**
  * Feature Service Index Template
  *
- * Generates server/service/index.ts barrel file
+ * Generates server/services/index.ts barrel file
  *
  * @module monorepo-library-generator/feature/service/service-index-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { FeatureTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import { createNamingVariants } from "../../../../utils/naming"
+import type { FeatureTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
- * Generate server/service/index.ts file
+ * Generate server/services/index.ts file
  *
- * Creates barrel export for service interface
+ * Creates barrel export for main service and sub-modules
  */
 export function generateFeatureServiceIndexFile(options: FeatureTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: `${className} Service`,
-    description: `Service barrel exports with granular operation support.
+    title: `${className} Services`,
+    description: `Services barrel exports for ${className} domain.
 
-Import options (from most optimal to most convenient):
+Import options:
 
-1. Full service:
-   import { ${className}Service } from '${scope}/feature-${fileName}/server/service'
+1. Main service:
+   import { ${className}Service } from '${scope}/feature-${fileName}/server/services'
 
 2. Type-only:
-   import type { ${className}ServiceInterface } from '${scope}/feature-${fileName}/server/service'
+   import type { ${className}ServiceInterface } from '${scope}/feature-${fileName}/server/services'
 
-3. Package barrel (largest):
-   import { ${className}Service } from '${scope}/feature-${fileName}/server'`,
-    module: `${scope}/feature-${fileName}/server/service`,
-  });
-  builder.addBlankLine();
+3. Sub-modules:
+   import { AuthenticationService, ProfileService } from '${scope}/feature-${fileName}/server/services'`,
+    module: `${scope}/feature-${fileName}/server/services`
+  })
+  builder.addBlankLine()
 
-  builder.addSectionComment('Re-export service interface and tag');
-  builder.addBlankLine();
+  builder.addSectionComment("Main Service")
+  builder.addBlankLine()
 
   builder.addRaw(`export { ${className}Service } from "./service";
-export type { ${className}ServiceInterface } from "./service";`);
+export type { ${className}ServiceInterface } from "./service";`)
+  builder.addBlankLine()
 
-  return builder.toString();
+  // Export sub-modules if present
+  if (options.subModules && options.subModules.length > 0) {
+    builder.addSectionComment("Sub-Module Services")
+    builder.addBlankLine()
+
+    for (const subModule of options.subModules) {
+      const subClassName = createNamingVariants(subModule).className
+      builder.addRaw(
+        `export { ${subClassName}Service, ${subClassName}Live, ${subClassName}Test } from "./${subModule}";`
+      )
+    }
+    builder.addBlankLine()
+  }
+
+  return builder.toString()
 }

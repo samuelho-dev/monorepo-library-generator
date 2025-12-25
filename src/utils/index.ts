@@ -8,27 +8,29 @@
  */
 
 // Build - Build configuration, platforms, tsconfig, exports
-export * from './build';
+export * from "./build"
 // Code Builder - TypeScriptBuilder and EffectPatterns
-export * from './code-builder';
-// Dotfiles - Dotfile management and file splitter utilities
-export * from './dotfiles';
-// Filesystem - All filesystem adapters (Effect, Tree, dotfile generation)
-export * from './filesystem';
+export * from "./code-builder"
+// Filesystem - All filesystem adapters (Effect, Tree)
+export * from "./filesystem"
 // Generators - Generator utilities
-export * from './generators';
+export * from "./generators"
 // Infra-Provider Mapping - Maps infra concerns to providers
-export * from './infra-provider-mapping';
+export * from "./infra-provider-mapping"
 // Infrastructure - Library infrastructure generation
-export * from './infrastructure';
+export * from "./infrastructure"
 // Library Metadata - Library metadata computation
-export * from './library-metadata';
+export * from "./library-metadata"
 // Naming - Naming convention utilities
-export * from './naming';
+export * from "./naming"
 // Templates - Template utilities, error templates, type templates, barrel exports
-export * from './templates';
+export * from "./templates"
 // Types - All type definitions
-export * from './types';
+export * from "./types"
 // Workspace - Workspace detection and configuration
-export * from './workspace-config';
-export * from './workspace-detection';
+export * from "./workspace-config"
+export * from "./workspace-detection"
+// Sub-modules - Sub-module parsing utilities
+export * from "./sub-modules"
+// File Batch - Batch file operations
+export * from "./file-batch"

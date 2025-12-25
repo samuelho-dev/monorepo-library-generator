@@ -7,17 +7,37 @@
  *
  * @module monorepo-library-generator/integration/compiler
  */
-import type { Tree } from '@nx/devkit';
-import * as ts from 'typescript';
+import type { Tree } from "@nx/devkit"
+import * as ts from "typescript"
+
+/**
+ * Safely extract parse diagnostics from a TypeScript source file.
+ *
+ * `parseDiagnostics` is an internal TypeScript API property that contains
+ * syntax errors found during parsing. This function provides type-safe
+ * access to this internal property.
+ */
+function getParseDiagnostics(sourceFile: ts.SourceFile) {
+  // TypeScript internal API: parseDiagnostics contains syntax errors from parsing
+  // We need to access this internal property via type guard since it's not in the public API
+  const sf: unknown = sourceFile
+  if (sf && typeof sf === "object" && "parseDiagnostics" in sf) {
+    type SourceFileWithDiagnostics = { parseDiagnostics?: unknown }
+    const sfWithDiags: SourceFileWithDiagnostics = sf
+    const diags = sfWithDiags.parseDiagnostics
+    return Array.isArray(diags) ? diags : []
+  }
+  return []
+}
 
 export interface CompilationResult {
-  readonly success: boolean;
+  readonly success: boolean
   readonly errors: ReadonlyArray<{
-    readonly file: string;
-    readonly line: number;
-    readonly message: string;
-  }>;
-  readonly fileCount: number;
+    readonly file: string
+    readonly line: number
+    readonly message: string
+  }>
+  readonly fileCount: number
 }
 
 /**
@@ -28,73 +48,69 @@ export interface CompilationResult {
  * trees is complex and would require mocking the entire project.
  */
 export function compileTreeFiles(tree: Tree, projectRoot: string) {
-  const files = collectTypeScriptFiles(tree, projectRoot);
+  const files = collectTypeScriptFiles(tree, projectRoot)
   if (files.length === 0) {
     return {
       success: true,
       errors: [],
-      fileCount: 0,
-    };
+      fileCount: 0
+    }
   }
 
-  const errors: Array<{ file: string; line: number; message: string }> = [];
+  const errors: Array<{ file: string; line: number; message: string }> = []
 
   // Parse each file to check for syntax errors
   for (const filePath of files) {
-    const content = tree.read(filePath, 'utf-8');
-    if (content === null) continue;
+    const content = tree.read(filePath, "utf-8")
+    if (content === null) continue
 
     const sourceFile = ts.createSourceFile(
       filePath,
       content,
       ts.ScriptTarget.ES2022,
       true,
-      ts.ScriptKind.TS,
-    );
+      ts.ScriptKind.TS
+    )
 
     // Get syntax diagnostics (parse errors)
-    // parseDiagnostics is an internal property, use type assertion
-
-    const syntaxDiags =
-      (sourceFile as unknown as { parseDiagnostics?: Array<ts.Diagnostic> }).parseDiagnostics || [];
+    const syntaxDiags = getParseDiagnostics(sourceFile)
     for (const diag of syntaxDiags) {
-      const pos =
-        diag.start !== undefined
-          ? ts.getLineAndCharacterOfPosition(sourceFile, diag.start)
-          : { line: 0, character: 0 };
+      const pos = diag.start !== undefined
+        ? ts.getLineAndCharacterOfPosition(sourceFile, diag.start)
+        : { line: 0, character: 0 }
       errors.push({
         file: filePath,
         line: pos.line + 1,
-        message: ts.flattenDiagnosticMessageText(diag.messageText, '\n'),
-      });
+        message: ts.flattenDiagnosticMessageText(diag.messageText, "\n")
+      })
     }
   }
 
   return {
     success: errors.length === 0,
     errors,
-    fileCount: files.length,
-  };
+    fileCount: files.length
+  }
 }
 
 function collectTypeScriptFiles(tree: Tree, projectRoot: string) {
-  const files: Array<string> = [];
+  const files: Array<string> = []
 
   const visit = (path: string) => {
     if (tree.isFile(path)) {
-      if (path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts')) {
-        files.push(path);
+      if (path.endsWith(".ts") && !path.endsWith(".spec.ts") && !path.endsWith(".test.ts")) {
+        files.push(path)
       }
     } else {
       for (const child of tree.children(path)) {
-        visit(`${path}/${child}`);
+        visit(`${path}/${child}`)
       }
     }
-  };
-
-  if (tree.exists(projectRoot)) {
-    visit(projectRoot);
   }
 
-  return files;
+  if (tree.exists(projectRoot)) {
+    visit(projectRoot)
+  }
+
+  return files
 }

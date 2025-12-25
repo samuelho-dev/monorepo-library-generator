@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/ports-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import type { ContractTemplateOptions } from '../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { ContractTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate ports.ts file for contract library
@@ -20,42 +20,48 @@ import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
  * - Service port (Context.Tag with inline interface)
  */
 export function generatePortsFile(options: ContractTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName, includeCQRS, propertyName } = options;
-  const domainName = propertyName;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName, includeCQRS, propertyName } = options
+  const domainName = propertyName
+  const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header
-  builder.addRaw(createFileHeader(className, domainName, fileName, scope));
-  builder.addBlankLine();
+  builder.addRaw(createFileHeader(className, domainName, fileName, scope))
+  builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Context', 'Effect', 'Option'] }]);
+  // Context is a runtime value (used in extends Context.Tag()), but Effect and Option are type-only
+  builder.addRaw(`import { Context, type Effect, type Option } from "effect"`)
+
+  // Import entity type from external package if specified, otherwise from local types
+  // Note: prisma-effect-kysely generates UserSelect as the type (User is the schema object)
+  const entityTypeSource = options.typesDatabasePackage
+    ? options.typesDatabasePackage
+    : "./types/database"
+  builder.addImports([
+    {
+      from: entityTypeSource,
+      imports: [`${className}Select as ${className}`],
+      isTypeOnly: true
+    }
+  ])
 
   builder.addImports([
     {
-      from: './types/database',
-      imports: [`${className}`],
-      isTypeOnly: true,
-    },
-  ]);
-
-  builder.addImports([
-    {
-      from: './errors',
+      from: "./errors",
       imports: [`${className}RepositoryError`],
-      isTypeOnly: true,
-    },
-  ]);
+      isTypeOnly: true
+    }
+  ])
 
-  builder.addBlankLine();
+  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 1: Supporting Types
   // ============================================================================
 
-  builder.addSectionComment('Supporting Types');
-  builder.addBlankLine();
+  builder.addSectionComment("Supporting Types")
+  builder.addBlankLine()
 
   // Filters interface
   builder.addInterface({
@@ -64,47 +70,48 @@ export function generatePortsFile(options: ContractTemplateOptions) {
     jsdoc: `Filter options for querying ${domainName}s`,
     properties: [
       {
-        name: 'createdAfter',
-        type: 'Date',
+        name: "createdAfter",
+        type: "Date",
         optional: true,
         readonly: true,
-        jsdoc: 'Filter by creation date range',
+        jsdoc: "Filter by creation date range"
       },
-      { name: 'createdBefore', type: 'Date', optional: true, readonly: true },
+      { name: "createdBefore", type: "Date", optional: true, readonly: true },
       {
-        name: 'updatedAfter',
-        type: 'Date',
+        name: "updatedAfter",
+        type: "Date",
         optional: true,
         readonly: true,
-        jsdoc: 'Filter by update date range',
+        jsdoc: "Filter by update date range"
       },
-      { name: 'updatedBefore', type: 'Date', optional: true, readonly: true },
-    ],
-  });
+      { name: "updatedBefore", type: "Date", optional: true, readonly: true }
+    ]
+  })
 
-  builder.addBlankLine();
+  builder.addBlankLine()
 
-  // PaginationParams interface
+  // OffsetPaginationParams interface (for repository-level pagination)
+  // Note: RPC uses page-based PaginationParams, repository uses offset-based
   builder.addInterface({
-    name: 'PaginationParams',
+    name: "OffsetPaginationParams",
     exported: true,
-    jsdoc: 'Pagination parameters',
+    jsdoc: "Offset-based pagination parameters (for repository layer)",
     properties: [
-      { name: 'limit', type: 'number', readonly: true },
-      { name: 'offset', type: 'number', readonly: true },
-    ],
-  });
+      { name: "limit", type: "number", readonly: true },
+      { name: "offset", type: "number", readonly: true }
+    ]
+  })
 
   // SortOptions interface
   builder.addInterface({
-    name: 'SortOptions',
+    name: "SortOptions",
     exported: true,
-    jsdoc: 'Sort options',
+    jsdoc: "Sort options",
     properties: [
-      { name: 'field', type: 'string', readonly: true },
-      { name: 'direction', type: '"asc" | "desc"', readonly: true },
-    ],
-  });
+      { name: "field", type: "string", readonly: true },
+      { name: "direction", type: "\"asc\" | \"desc\"", readonly: true }
+    ]
+  })
 
   // PaginatedResult interface (generic)
   builder.addRaw(`
@@ -112,52 +119,52 @@ export function generatePortsFile(options: ContractTemplateOptions) {
  * Paginated result with generic item type
  */
 export interface PaginatedResult<T> {
-  readonly items: readonly T[];
+  readonly items: ReadonlyArray<T>;
   readonly total: number;
   readonly limit: number;
   readonly offset: number;
   readonly hasMore: boolean;
 }
-`);
+`)
 
   // ============================================================================
   // SECTION 2: Repository Port
   // ============================================================================
 
-  builder.addSectionComment('Repository Port');
-  builder.addBlankLine();
+  builder.addSectionComment("Repository Port")
+  builder.addBlankLine()
 
   // Create repository Context.Tag with inline interface
-  const repositoryTag = createRepositoryTag(className, domainName, fileName, scope);
-  builder.addRaw(repositoryTag);
-  builder.addBlankLine();
+  const repositoryTag = createRepositoryTag(className, domainName, fileName, scope)
+  builder.addRaw(repositoryTag)
+  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 3: Service Port
   // ============================================================================
 
-  builder.addSectionComment('Service Port');
-  builder.addBlankLine();
+  builder.addSectionComment("Service Port")
+  builder.addBlankLine()
 
   // Create service Context.Tag with inline interface
-  const serviceTag = createServiceTag(className, domainName, fileName, scope);
-  builder.addRaw(serviceTag);
-  builder.addBlankLine();
+  const serviceTag = createServiceTag(className, domainName, fileName, scope)
+  builder.addRaw(serviceTag)
+  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 4: Projection Repository Port (CQRS only)
   // ============================================================================
 
   if (includeCQRS) {
-    builder.addSectionComment('Projection Repository Port (CQRS)');
-    builder.addBlankLine();
+    builder.addSectionComment("Projection Repository Port (CQRS)")
+    builder.addBlankLine()
 
-    const projectionRepositoryTag = createProjectionRepositoryTag(className, fileName, scope);
-    builder.addRaw(projectionRepositoryTag);
-    builder.addBlankLine();
+    const projectionRepositoryTag = createProjectionRepositoryTag(className, fileName, scope)
+    builder.addRaw(projectionRepositoryTag)
+    builder.addBlankLine()
   }
 
-  return builder.toString();
+  return builder.toString()
 }
 
 /**
@@ -172,7 +179,7 @@ function createFileHeader(className: string, domainName: string, fileName: strin
  *
  * @see https://effect.website/docs/guides/context-management for dependency injection
  * @module ${scope}/contract-${fileName}/ports
- */`;
+ */`
 }
 
 /**
@@ -182,7 +189,7 @@ function createRepositoryTag(
   className: string,
   domainName: string,
   fileName: string,
-  scope: string,
+  scope: string
 ) {
   return `/**
  * ${className}Repository Context Tag for dependency injection
@@ -199,7 +206,7 @@ function createRepositoryTag(
  * @example
  * \`\`\`typescript
  * // In service implementation:
- * const service = Effect.gen(function* () {
+ * const service = Effect.gen(function*() {
  *   const repo = yield* ${className}Repository;
  *   const entity = yield* repo.findById("id");
  *   return entity;
@@ -231,7 +238,7 @@ export class ${className}Repository extends Context.Tag(
      */
     readonly findAll: (
       filters?: ${className}Filters,
-      pagination?: PaginationParams,
+      pagination?: OffsetPaginationParams,
       sort?: SortOptions
     ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError>;
 
@@ -271,7 +278,7 @@ export class ${className}Repository extends Context.Tag(
       id: string
     ) => Effect.Effect<boolean, ${className}RepositoryError, never>;
   }
->() {}`;
+>() {}`
 }
 
 /**
@@ -287,7 +294,7 @@ function createServiceTag(className: string, domainName: string, fileName: strin
  * @example
  * \`\`\`typescript
  * // In tRPC router or API handler:
- * const handler = Effect.gen(function* () {
+ * const handler = Effect.gen(function*() {
  *   const service = yield* ${className}Service;
  *   const entity = yield* service.get("id");
  *   return entity;
@@ -311,7 +318,7 @@ export class ${className}Service extends Context.Tag(
      */
     readonly list: (
       filters?: ${className}Filters,
-      pagination?: PaginationParams,
+      pagination?: OffsetPaginationParams,
       sort?: SortOptions
     ) => Effect.Effect<PaginatedResult<${className}>, ${className}RepositoryError, never>;
 
@@ -337,7 +344,7 @@ export class ${className}Service extends Context.Tag(
       id: string
     ) => Effect.Effect<void, ${className}RepositoryError, never>;
   }
->() {}`;
+>() {}`
 }
 
 /**
@@ -352,7 +359,7 @@ function createProjectionRepositoryTag(className: string, fileName: string, scop
  *
  * @example
  * \`\`\`typescript
- * const projection = Effect.gen(function* () {
+ * const projection = Effect.gen(function*() {
  *   const repo = yield* ${className}ProjectionRepository;
  *   const view = yield* repo.findProjection("id");
  *   return view;
@@ -394,5 +401,5 @@ export class ${className}ProjectionRepository extends Context.Tag(
       id: string
     ) => Effect.Effect<void, ${className}RepositoryError, never>;
   }
->() {}`;
+>() {}`
 }

@@ -273,7 +273,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
 **Dependency Injection Pattern**:
 ```typescript
 // Consumer code (in feature or data-access library)
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const userRepo = yield* UserRepository  // Dependency injection via yield*
   const user = yield* userRepo.findById("user-123")
   return user
@@ -557,7 +557,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
 >() {}
 
 // Automatic dependency injection
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const repo = yield* UserRepository  // Inject automatically
   return yield* repo.findById("user-123")
 })

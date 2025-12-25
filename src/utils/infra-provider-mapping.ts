@@ -15,14 +15,19 @@
  */
 
 /**
+ * Valid infrastructure names that have provider mappings
+ */
+export type InfraWithProvider = "database"
+
+/**
  * Maps infrastructure library names to their provider dependencies
  *
  * Database uses Kysely provider for the query builder SDK.
  * Other infra libraries use Effect primitives directly.
  */
-export const INFRA_PROVIDER_MAP: Record<string, string> = {
-  database: 'kysely',
-};
+export const INFRA_PROVIDER_MAP: Record<InfraWithProvider, string> = {
+  database: "kysely"
+}
 
 /**
  * Infrastructure concern types for specialized template generation
@@ -30,58 +35,68 @@ export const INFRA_PROVIDER_MAP: Record<string, string> = {
  * Each concern type maps to a specific set of Effect primitives:
  * - cache: Effect.Cache with optional Redis L2
  * - database: Kysely ORM with Effect wrapper
- * - logging: Effect Logger with OpenTelemetry export
- * - metrics: Effect.Metric with OpenTelemetry export
  * - queue: Effect.Queue with optional Redis backing
  * - pubsub: Effect.PubSub with optional Redis backing
  * - rpc: @effect/rpc with middleware and transport
+ * - observability: Unified OTEL SDK + LoggingService + MetricsService
  * - generic: Standard CRUD service pattern
+ *
+ * NOTE: logging and metrics are now part of observability.
+ * Use infra-observability for unified tracing, logging, and metrics.
  */
 export type InfraConcernType =
-  | 'cache'
-  | 'database'
-  | 'logging'
-  | 'metrics'
-  | 'queue'
-  | 'pubsub'
-  | 'rpc'
-  | 'auth'
-  | 'storage'
-  | 'generic';
+  | "cache"
+  | "database"
+  | "queue"
+  | "pubsub"
+  | "rpc"
+  | "auth"
+  | "storage"
+  | "observability"
+  | "generic"
 
 /**
  * Keywords used to detect infrastructure concern type from library name
+ *
+ * NOTE: logging, metrics, and telemetry keywords now map to observability.
+ * The observability concern provides unified OTEL SDK + LoggingService + MetricsService.
  */
 const CONCERN_KEYWORDS: Record<string, InfraConcernType> = {
-  cache: 'cache',
-  caching: 'cache',
-  database: 'database',
-  db: 'database',
-  logging: 'logging',
-  log: 'logging',
-  logger: 'logging',
-  metrics: 'metrics',
-  metric: 'metrics',
-  telemetry: 'metrics',
-  queue: 'queue',
-  job: 'queue',
-  worker: 'queue',
-  task: 'queue',
-  pubsub: 'pubsub',
-  event: 'pubsub',
-  messaging: 'pubsub',
-  broadcast: 'pubsub',
-  rpc: 'rpc',
-  api: 'rpc',
-  remote: 'rpc',
-  auth: 'auth',
-  authentication: 'auth',
-  authorization: 'auth',
-  storage: 'storage',
-  file: 'storage',
-  blob: 'storage',
-  upload: 'storage',
-};
+  cache: "cache",
+  caching: "cache",
+  database: "database",
+  db: "database",
+  queue: "queue",
+  job: "queue",
+  worker: "queue",
+  task: "queue",
+  pubsub: "pubsub",
+  event: "pubsub",
+  messaging: "pubsub",
+  broadcast: "pubsub",
+  rpc: "rpc",
+  api: "rpc",
+  remote: "rpc",
+  auth: "auth",
+  authentication: "auth",
+  authorization: "auth",
+  storage: "storage",
+  file: "storage",
+  blob: "storage",
+  upload: "storage",
+  // Observability: unified tracing, logging, and metrics
+  observability: "observability",
+  otel: "observability",
+  opentelemetry: "observability",
+  tracing: "observability",
+  trace: "observability",
+  logging: "observability",
+  log: "observability",
+  logger: "observability",
+  metrics: "observability",
+  metric: "observability",
+  telemetry: "observability"
+}
 
 /**
  * Detect infrastructure concern type from library name
@@ -90,27 +105,22 @@ const CONCERN_KEYWORDS: Record<string, InfraConcernType> = {
  * @returns Detected concern type or "generic" if no match
  */
 export function detectInfraConcern(name: string) {
-  const lowerName = name.toLowerCase();
+  const lowerName = name.toLowerCase()
 
   for (const [keyword, concern] of Object.entries(CONCERN_KEYWORDS)) {
     if (lowerName.includes(keyword)) {
-      return concern;
+      return concern
     }
   }
 
-  return 'generic';
+  return "generic"
 }
 
 /**
- * Type-safe keys for infrastructure libraries with provider mappings
+ * Type guard to check if a string is a valid InfraWithProvider
  */
-export type InfraName = string;
-
-/**
- * Type guard to check if a string is a valid InfraName
- */
-function isInfraName(name: string): name is InfraName {
-  return Object.keys(INFRA_PROVIDER_MAP).includes(name);
+function isInfraWithProvider(name: string): name is InfraWithProvider {
+  return Object.keys(INFRA_PROVIDER_MAP).includes(name)
 }
 
 /**
@@ -120,10 +130,10 @@ function isInfraName(name: string): name is InfraName {
  * @returns Provider library name (e.g., "kysely") or undefined if no mapping
  */
 export function getProviderForInfra(infraName: string) {
-  if (isInfraName(infraName)) {
-    return INFRA_PROVIDER_MAP[infraName];
+  if (isInfraWithProvider(infraName)) {
+    return INFRA_PROVIDER_MAP[infraName]
   }
-  return undefined;
+  return undefined
 }
 
 /**
@@ -134,8 +144,8 @@ export function getProviderForInfra(infraName: string) {
  * @returns Full provider package name (e.g., "@custom-repo/provider-kysely")
  */
 export function getProviderPackageName(infraName: string, scope: string) {
-  const provider = getProviderForInfra(infraName);
-  return provider ? `${scope}/provider-${provider}` : undefined;
+  const provider = getProviderForInfra(infraName)
+  return provider ? `${scope}/provider-${provider}` : undefined
 }
 
 /**
@@ -145,15 +155,15 @@ export function getProviderPackageName(infraName: string, scope: string) {
  * @returns Provider class name (e.g., "Kysely")
  */
 export function getProviderClassName(infraName: string) {
-  const provider = getProviderForInfra(infraName);
-  if (!provider) return undefined;
+  const provider = getProviderForInfra(infraName)
+  if (!provider) return undefined
 
   // Convert kebab-case to PascalCase
   // "kysely" -> "Kysely"
   return provider
-    .split('-')
+    .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join('');
+    .join("")
 }
 
 /**
@@ -163,7 +173,7 @@ export function getProviderClassName(infraName: string) {
  * @returns true if mapping exists
  */
 export function hasProviderMapping(infraName: string) {
-  return infraName in INFRA_PROVIDER_MAP;
+  return infraName in INFRA_PROVIDER_MAP
 }
 
 /**
@@ -174,26 +184,24 @@ export function hasProviderMapping(infraName: string) {
  *
  * Includes:
  * - cache: Effect.Cache
- * - logging: Effect Logger
- * - metrics: Effect.Metric
  * - queue: Effect.Queue
  * - pubsub: Effect.PubSub
  * - rpc: @effect/rpc
+ * - observability: OTEL SDK + Effect Logger + Effect.Metric
  *
  * NOT included (uses provider):
  * - database: Uses provider-kysely
  */
 export function usesEffectPrimitives(infraName: string) {
-  const concern = detectInfraConcern(infraName);
+  const concern = detectInfraConcern(infraName)
   return [
-    'cache',
-    'database',
-    'logging',
-    'metrics',
-    'queue',
-    'pubsub',
-    'rpc',
-    'auth',
-    'storage',
-  ].includes(concern);
+    "cache",
+    "database",
+    "queue",
+    "pubsub",
+    "rpc",
+    "auth",
+    "storage",
+    "observability"
+  ].includes(concern)
 }

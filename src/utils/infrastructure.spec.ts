@@ -5,546 +5,546 @@
  * Tests mode-aware generation, complete file generation, and consistency across library types.
  */
 
-import type { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Effect } from 'effect';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { createTreeAdapter } from './filesystem';
-import { generateLibraryInfrastructure } from './infrastructure';
+import type { Tree } from "@nx/devkit"
+import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing"
+import { Effect } from "effect"
+import { beforeEach, describe, expect, it } from "vitest"
+import { createTreeAdapter } from "./filesystem"
+import { generateLibraryInfrastructure } from "./infrastructure"
 
-describe('infrastructure', () => {
-  let tree: Tree;
+describe("infrastructure", () => {
+  let tree: Tree
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace()
     // Add tsconfig.base.json for extends validation
     tree.write(
-      'tsconfig.base.json',
+      "tsconfig.base.json",
       JSON.stringify({
         compilerOptions: {
-          target: 'ES2022',
-          module: 'ESNext',
-        },
-      }),
-    );
-  });
+          target: "ES2022",
+          module: "ESNext"
+        }
+      })
+    )
+  })
 
-  describe('Mode Detection', () => {
-    it('should detect Nx mode from TreeAdapter', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("Mode Detection", () => {
+    it("should detect Nx mode from TreeAdapter", async () => {
+      const adapter = createTreeAdapter(tree)
 
       const result = await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test contract library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract', 'platform:universal'],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test contract library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract", "platform:universal"]
+        })
+      )
 
-      expect(result.requiresNxRegistration).toBe(true);
-      expect(result.projectConfig).toBeDefined();
-    });
-  });
+      expect(result.requiresNxRegistration).toBe(true)
+      expect(result.projectConfig).toBeDefined()
+    })
+  })
 
-  describe('Complete Infrastructure Generation', () => {
-    it('should generate correct infrastructure files for contract library (types-only)', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("Complete Infrastructure Generation", () => {
+    it("should generate correct infrastructure files for contract library (types-only)", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-product',
-          projectRoot: 'libs/contract/product',
-          sourceRoot: 'libs/contract/product/src',
-          packageName: '@test/contract-product',
-          description: 'Product contracts',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract', 'platform:universal'],
-        }),
-      );
+          projectName: "contract-product",
+          projectRoot: "libs/contract/product",
+          sourceRoot: "libs/contract/product/src",
+          packageName: "@test/contract-product",
+          description: "Product contracts",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract", "platform:universal"]
+        })
+      )
 
       // Contract libraries are types-only, so no test configuration is needed
       // Verify 4 infrastructure files exist (no vitest.config.ts or tsconfig.spec.json)
-      expect(tree.exists('libs/contract/product/package.json')).toBe(true);
-      expect(tree.exists('libs/contract/product/tsconfig.json')).toBe(true);
-      expect(tree.exists('libs/contract/product/tsconfig.lib.json')).toBe(true);
-      expect(tree.exists('libs/contract/product/README.md')).toBe(true);
+      expect(tree.exists("libs/contract/product/package.json")).toBe(true)
+      expect(tree.exists("libs/contract/product/tsconfig.json")).toBe(true)
+      expect(tree.exists("libs/contract/product/tsconfig.lib.json")).toBe(true)
+      expect(tree.exists("libs/contract/product/README.md")).toBe(true)
       // Contract libraries skip test configuration
-      expect(tree.exists('libs/contract/product/tsconfig.spec.json')).toBe(false);
-      expect(tree.exists('libs/contract/product/vitest.config.ts')).toBe(false);
-    });
+      expect(tree.exists("libs/contract/product/tsconfig.spec.json")).toBe(false)
+      expect(tree.exists("libs/contract/product/vitest.config.ts")).toBe(false)
+    })
 
-    it('should generate all 6 infrastructure files for data-access library', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should generate all 6 infrastructure files for data-access library", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'data-access-user',
-          projectRoot: 'libs/data-access/user',
-          sourceRoot: 'libs/data-access/user/src',
-          packageName: '@test/data-access-user',
-          description: 'User data access',
-          libraryType: 'data-access',
-          platform: 'node',
-          offsetFromRoot: '../../../',
-          tags: ['type:data-access', 'platform:node'],
-        }),
-      );
+          projectName: "data-access-user",
+          projectRoot: "libs/data-access/user",
+          sourceRoot: "libs/data-access/user/src",
+          packageName: "@test/data-access-user",
+          description: "User data access",
+          libraryType: "data-access",
+          platform: "node",
+          offsetFromRoot: "../../../",
+          tags: ["type:data-access", "platform:node"]
+        })
+      )
 
       // Verify all 6 infrastructure files exist (CLAUDE.md is generated by core generators)
-      expect(tree.exists('libs/data-access/user/package.json')).toBe(true);
-      expect(tree.exists('libs/data-access/user/tsconfig.json')).toBe(true);
-      expect(tree.exists('libs/data-access/user/tsconfig.lib.json')).toBe(true);
-      expect(tree.exists('libs/data-access/user/tsconfig.spec.json')).toBe(true);
-      expect(tree.exists('libs/data-access/user/vitest.config.ts')).toBe(true);
-      expect(tree.exists('libs/data-access/user/README.md')).toBe(true);
-    });
+      expect(tree.exists("libs/data-access/user/package.json")).toBe(true)
+      expect(tree.exists("libs/data-access/user/tsconfig.json")).toBe(true)
+      expect(tree.exists("libs/data-access/user/tsconfig.lib.json")).toBe(true)
+      expect(tree.exists("libs/data-access/user/tsconfig.spec.json")).toBe(true)
+      expect(tree.exists("libs/data-access/user/vitest.config.ts")).toBe(true)
+      expect(tree.exists("libs/data-access/user/README.md")).toBe(true)
+    })
 
-    it('should generate all 6 infrastructure files for feature library', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should generate all 6 infrastructure files for feature library", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'feature-auth',
-          projectRoot: 'libs/feature/auth',
-          sourceRoot: 'libs/feature/auth/src',
-          packageName: '@test/feature-auth',
-          description: 'Auth feature',
-          libraryType: 'feature',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:feature', 'platform:universal'],
-          includeClientServer: true,
-        }),
-      );
+          projectName: "feature-auth",
+          projectRoot: "libs/feature/auth",
+          sourceRoot: "libs/feature/auth/src",
+          packageName: "@test/feature-auth",
+          description: "Auth feature",
+          libraryType: "feature",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:feature", "platform:universal"],
+          includeClientServer: true
+        })
+      )
 
       // Verify all 6 infrastructure files exist (CLAUDE.md is generated by core generators)
-      expect(tree.exists('libs/feature/auth/package.json')).toBe(true);
-      expect(tree.exists('libs/feature/auth/tsconfig.json')).toBe(true);
-      expect(tree.exists('libs/feature/auth/tsconfig.lib.json')).toBe(true);
-      expect(tree.exists('libs/feature/auth/tsconfig.spec.json')).toBe(true);
-      expect(tree.exists('libs/feature/auth/vitest.config.ts')).toBe(true);
-      expect(tree.exists('libs/feature/auth/README.md')).toBe(true);
-    });
-  });
+      expect(tree.exists("libs/feature/auth/package.json")).toBe(true)
+      expect(tree.exists("libs/feature/auth/tsconfig.json")).toBe(true)
+      expect(tree.exists("libs/feature/auth/tsconfig.lib.json")).toBe(true)
+      expect(tree.exists("libs/feature/auth/tsconfig.spec.json")).toBe(true)
+      expect(tree.exists("libs/feature/auth/vitest.config.ts")).toBe(true)
+      expect(tree.exists("libs/feature/auth/README.md")).toBe(true)
+    })
+  })
 
-  describe('TypeScript Configuration', () => {
-    it('should generate correct tsconfig.json extends path', async () => {
-      const adapter = createTreeAdapter(tree);
-
-      await Effect.runPromise(
-        generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-        }),
-      );
-
-      const tsconfig = JSON.parse(tree.read('libs/contract/test/tsconfig.json', 'utf-8') || '{}');
-      expect(tsconfig.extends).toBe('../../../tsconfig.base.json');
-      expect(tsconfig.extends).not.toContain('//'); // No double-slash bug
-    });
-
-    it('should generate tsconfig.lib.json with correct configuration', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("TypeScript Configuration", () => {
+    it("should generate correct tsconfig.json extends path", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"]
+        })
+      )
+
+      const tsconfig = JSON.parse(tree.read("libs/contract/test/tsconfig.json", "utf-8") || "{}")
+      expect(tsconfig.extends).toBe("../../../tsconfig.base.json")
+      expect(tsconfig.extends).not.toContain("//") // No double-slash bug
+    })
+
+    it("should generate tsconfig.lib.json with correct configuration", async () => {
+      const adapter = createTreeAdapter(tree)
+
+      await Effect.runPromise(
+        generateLibraryInfrastructure(adapter, {
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"]
+        })
+      )
 
       const tsconfigLib = JSON.parse(
-        tree.read('libs/contract/test/tsconfig.lib.json', 'utf-8') || '{}',
-      );
-      expect(tsconfigLib.extends).toBe('./tsconfig.json');
-      expect(tsconfigLib.compilerOptions.outDir).toContain('dist/libs/contract/test');
-      expect(tsconfigLib.compilerOptions.declaration).toBe(true);
-      expect(tsconfigLib.exclude).toContain('**/*.spec.ts');
-    });
+        tree.read("libs/contract/test/tsconfig.lib.json", "utf-8") || "{}"
+      )
+      expect(tsconfigLib.extends).toBe("./tsconfig.json")
+      expect(tsconfigLib.compilerOptions.outDir).toContain("dist/libs/contract/test")
+      expect(tsconfigLib.compilerOptions.declaration).toBe(true)
+      expect(tsconfigLib.exclude).toContain("**/*.spec.ts")
+    })
 
-    it('should generate tsconfig.spec.json with vitest globals', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should generate tsconfig.spec.json with vitest globals", async () => {
+      const adapter = createTreeAdapter(tree)
 
       // Use 'feature' library type since contract libraries skip tsconfig.spec.json
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'feature-test',
-          projectRoot: 'libs/feature/test',
-          sourceRoot: 'libs/feature/test/src',
-          packageName: '@test/feature-test',
-          description: 'Test library',
-          libraryType: 'feature',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:feature'],
-        }),
-      );
+          projectName: "feature-test",
+          projectRoot: "libs/feature/test",
+          sourceRoot: "libs/feature/test/src",
+          packageName: "@test/feature-test",
+          description: "Test library",
+          libraryType: "feature",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:feature"]
+        })
+      )
 
       const tsconfigSpec = JSON.parse(
-        tree.read('libs/feature/test/tsconfig.spec.json', 'utf-8') || '{}',
-      );
-      expect(tsconfigSpec.extends).toBe('./tsconfig.json');
-      expect(tsconfigSpec.compilerOptions.types).toContain('vitest/globals');
-      expect(tsconfigSpec.include).toContain('src/**/*.spec.ts');
-    });
+        tree.read("libs/feature/test/tsconfig.spec.json", "utf-8") || "{}"
+      )
+      expect(tsconfigSpec.extends).toBe("./tsconfig.json")
+      expect(tsconfigSpec.compilerOptions.types).toContain("vitest/globals")
+      expect(tsconfigSpec.include).toContain("src/**/*.spec.ts")
+    })
 
-    it('should skip tsconfig.spec.json for contract libraries (types-only)', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should skip tsconfig.spec.json for contract libraries (types-only)", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"]
+        })
+      )
 
       // Contract libraries should NOT have tsconfig.spec.json (types-only, no tests)
-      expect(tree.exists('libs/contract/test/tsconfig.spec.json')).toBe(false);
-    });
-  });
+      expect(tree.exists("libs/contract/test/tsconfig.spec.json")).toBe(false)
+    })
+  })
 
-  describe('Package.json Generation', () => {
-    it('should generate package.json with granular exports for contract', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("Package.json Generation", () => {
+    it("should generate package.json with granular exports for contract", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-product',
-          projectRoot: 'libs/contract/product',
-          sourceRoot: 'libs/contract/product/src',
-          packageName: '@test/contract-product',
-          description: 'Product contracts',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-          entities: ['Product', 'Order'], // Enables entity exports
-        }),
-      );
+          projectName: "contract-product",
+          projectRoot: "libs/contract/product",
+          sourceRoot: "libs/contract/product/src",
+          packageName: "@test/contract-product",
+          description: "Product contracts",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"],
+          entities: ["Product", "Order"] // Enables entity exports
+        })
+      )
 
       const packageJson = JSON.parse(
-        tree.read('libs/contract/product/package.json', 'utf-8') || '{}',
-      );
+        tree.read("libs/contract/product/package.json", "utf-8") || "{}"
+      )
 
       // Check basic fields
-      expect(packageJson.name).toBe('@test/contract-product');
-      expect(packageJson.type).toBe('module');
-      expect(packageJson.sideEffects).toBe(false);
+      expect(packageJson.name).toBe("@test/contract-product")
+      expect(packageJson.type).toBe("module")
+      expect(packageJson.sideEffects).toBe(false)
 
       // Check granular exports
-      expect(packageJson.exports['.']).toBeDefined();
-      expect(packageJson.exports['./types']).toBeDefined();
-      expect(packageJson.exports['./entities']).toBeDefined();
-      expect(packageJson.exports['./errors']).toBeDefined();
-      expect(packageJson.exports['./ports']).toBeDefined();
-    });
+      expect(packageJson.exports["."]).toBeDefined()
+      expect(packageJson.exports["./types"]).toBeDefined()
+      expect(packageJson.exports["./entities"]).toBeDefined()
+      expect(packageJson.exports["./errors"]).toBeDefined()
+      expect(packageJson.exports["./ports"]).toBeDefined()
+    })
 
-    it('should generate package.json with client/server exports for feature', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should generate package.json with client/server exports for feature", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'feature-auth',
-          projectRoot: 'libs/feature/auth',
-          sourceRoot: 'libs/feature/auth/src',
-          packageName: '@test/feature-auth',
-          description: 'Auth feature',
-          libraryType: 'feature',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:feature'],
-          includeClientServer: true,
-        }),
-      );
+          projectName: "feature-auth",
+          projectRoot: "libs/feature/auth",
+          sourceRoot: "libs/feature/auth/src",
+          packageName: "@test/feature-auth",
+          description: "Auth feature",
+          libraryType: "feature",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:feature"],
+          includeClientServer: true
+        })
+      )
 
-      const packageJson = JSON.parse(tree.read('libs/feature/auth/package.json', 'utf-8') || '{}');
+      const packageJson = JSON.parse(tree.read("libs/feature/auth/package.json", "utf-8") || "{}")
 
       // Platform-specific exports removed - only functional exports
-      expect(packageJson.exports['.']).toBeDefined();
-      expect(packageJson.exports['./types']).toBeDefined();
-    });
-  });
+      expect(packageJson.exports["."]).toBeDefined()
+      expect(packageJson.exports["./types"]).toBeDefined()
+    })
+  })
 
-  describe('Vitest Configuration', () => {
-    it('should generate vitest.config.ts with correct settings', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("Vitest Configuration", () => {
+    it("should generate vitest.config.ts with correct settings", async () => {
+      const adapter = createTreeAdapter(tree)
 
       // Use 'feature' library type since contract libraries skip vitest (types-only)
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'feature-test',
-          projectRoot: 'libs/feature/test',
-          sourceRoot: 'libs/feature/test/src',
-          packageName: '@test/feature-test',
-          description: 'Test library',
-          libraryType: 'feature',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:feature'],
-        }),
-      );
+          projectName: "feature-test",
+          projectRoot: "libs/feature/test",
+          sourceRoot: "libs/feature/test/src",
+          packageName: "@test/feature-test",
+          description: "Test library",
+          libraryType: "feature",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:feature"]
+        })
+      )
 
-      const vitestConfig = tree.read('libs/feature/test/vitest.config.ts', 'utf-8');
+      const vitestConfig = tree.read("libs/feature/test/vitest.config.ts", "utf-8")
 
-      expect(vitestConfig).toContain('defineConfig');
-      expect(vitestConfig).toContain('globals: true');
-      expect(vitestConfig).toContain('environment: "node"');
-      expect(vitestConfig).toContain('src/**/*.{test,spec}.ts');
-    });
+      expect(vitestConfig).toContain("defineConfig")
+      expect(vitestConfig).toContain("globals: true")
+      expect(vitestConfig).toContain("environment: \"node\"")
+      expect(vitestConfig).toContain("src/**/*.{test,spec}.ts")
+    })
 
-    it('should skip vitest.config.ts for contract libraries (types-only)', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should skip vitest.config.ts for contract libraries (types-only)", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"]
+        })
+      )
 
       // Contract libraries should NOT have vitest config (types-only, no tests)
-      expect(tree.exists('libs/contract/test/vitest.config.ts')).toBe(false);
-    });
-  });
+      expect(tree.exists("libs/contract/test/vitest.config.ts")).toBe(false)
+    })
+  })
 
-  describe('Documentation Generation', () => {
-    it('should generate library-specific README for contract', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("Documentation Generation", () => {
+    it("should generate library-specific README for contract", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-product',
-          projectRoot: 'libs/contract/product',
-          sourceRoot: 'libs/contract/product/src',
-          packageName: '@test/contract-product',
-          description: 'Product contracts',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-        }),
-      );
+          projectName: "contract-product",
+          projectRoot: "libs/contract/product",
+          sourceRoot: "libs/contract/product/src",
+          packageName: "@test/contract-product",
+          description: "Product contracts",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"]
+        })
+      )
 
-      const readme = tree.read('libs/contract/product/README.md', 'utf-8');
+      const readme = tree.read("libs/contract/product/README.md", "utf-8")
 
-      expect(readme).toContain('@test/contract-product');
-      expect(readme).toContain('Product contracts');
-      expect(readme).toContain('contract library');
-      expect(readme).toContain('Entities');
-      expect(readme).toContain('Events');
-      expect(readme).toContain('Ports');
-    });
-  });
+      expect(readme).toContain("@test/contract-product")
+      expect(readme).toContain("Product contracts")
+      expect(readme).toContain("contract library")
+      expect(readme).toContain("Entities")
+      expect(readme).toContain("Events")
+      expect(readme).toContain("Ports")
+    })
+  })
 
-  describe('Nx Project Configuration', () => {
-    it('should return project configuration for Nx registration', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("Nx Project Configuration", () => {
+    it("should return project configuration for Nx registration", async () => {
+      const adapter = createTreeAdapter(tree)
 
       const result = await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract', 'platform:universal'],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract", "platform:universal"]
+        })
+      )
 
-      expect(result.requiresNxRegistration).toBe(true);
-      expect(result.projectConfig).toBeDefined();
-      expect(result.projectConfig?.name).toBe('contract-test');
-      expect(result.projectConfig?.root).toBe('libs/contract/test');
-      expect(result.projectConfig?.sourceRoot).toBe('libs/contract/test/src');
-      expect(result.projectConfig?.tags).toEqual(['type:contract', 'platform:universal']);
-    });
+      expect(result.requiresNxRegistration).toBe(true)
+      expect(result.projectConfig).toBeDefined()
+      expect(result.projectConfig?.name).toBe("contract-test")
+      expect(result.projectConfig?.root).toBe("libs/contract/test")
+      expect(result.projectConfig?.sourceRoot).toBe("libs/contract/test/src")
+      expect(result.projectConfig?.tags).toEqual(["type:contract", "platform:universal"])
+    })
 
-    it('should include build and test targets in project configuration', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should include build and test targets in project configuration", async () => {
+      const adapter = createTreeAdapter(tree)
 
       // Use 'feature' library type since contract libraries don't have test target
       const result = await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'feature-test',
-          projectRoot: 'libs/feature/test',
-          sourceRoot: 'libs/feature/test/src',
-          packageName: '@test/feature-test',
-          description: 'Test library',
-          libraryType: 'feature',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:feature'],
-        }),
-      );
+          projectName: "feature-test",
+          projectRoot: "libs/feature/test",
+          sourceRoot: "libs/feature/test/src",
+          packageName: "@test/feature-test",
+          description: "Test library",
+          libraryType: "feature",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:feature"]
+        })
+      )
 
-      const targets = result.projectConfig?.targets;
-      expect(targets).toBeDefined();
-      expect(targets?.build).toBeDefined();
-      expect(targets?.test).toBeDefined();
-      expect(targets?.lint).toBeDefined();
-    });
+      const targets = result.projectConfig?.targets
+      expect(targets).toBeDefined()
+      expect(targets?.build).toBeDefined()
+      expect(targets?.test).toBeDefined()
+      expect(targets?.lint).toBeDefined()
+    })
 
-    it('should exclude test target for contract libraries (types-only)', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should exclude test target for contract libraries (types-only)", async () => {
+      const adapter = createTreeAdapter(tree)
 
       const result = await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"]
+        })
+      )
 
-      const targets = result.projectConfig?.targets;
-      expect(targets).toBeDefined();
-      expect(targets?.build).toBeDefined();
-      expect(targets?.test).toBeUndefined(); // Contract libraries don't have test target
-      expect(targets?.lint).toBeDefined();
-    });
-  });
+      const targets = result.projectConfig?.targets
+      expect(targets).toBeDefined()
+      expect(targets?.build).toBeDefined()
+      expect(targets?.test).toBeUndefined() // Contract libraries don't have test target
+      expect(targets?.lint).toBeDefined()
+    })
+  })
 
-  describe('Regression Tests', () => {
-    it('should handle offsetFromRoot with trailing slash correctly', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("Regression Tests", () => {
+    it("should handle offsetFromRoot with trailing slash correctly", async () => {
+      const adapter = createTreeAdapter(tree)
 
       await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../..//', // With trailing slash
-          tags: ['type:contract'],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../..//", // With trailing slash
+          tags: ["type:contract"]
+        })
+      )
 
-      const tsconfig = JSON.parse(tree.read('libs/contract/test/tsconfig.json', 'utf-8') || '{}');
+      const tsconfig = JSON.parse(tree.read("libs/contract/test/tsconfig.json", "utf-8") || "{}")
       // Should normalize to remove double slash
-      expect(tsconfig.extends).toBe('../../../tsconfig.base.json');
-      expect(tsconfig.extends).not.toContain('////');
-    });
+      expect(tsconfig.extends).toBe("../../../tsconfig.base.json")
+      expect(tsconfig.extends).not.toContain("////")
+    })
 
-    it('should handle empty entities array for contract', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should handle empty entities array for contract", async () => {
+      const adapter = createTreeAdapter(tree)
 
       const result = await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-          entities: [],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"],
+          entities: []
+        })
+      )
 
-      expect(result.filesGenerated).toBeDefined();
-      expect(result.filesGenerated.length).toBeGreaterThan(0);
-    });
-  });
+      expect(result.filesGenerated).toBeDefined()
+      expect(result.filesGenerated.length).toBeGreaterThan(0)
+    })
+  })
 
-  describe('File Generation Count', () => {
-    it('should report correct number of files generated for feature libraries', async () => {
-      const adapter = createTreeAdapter(tree);
+  describe("File Generation Count", () => {
+    it("should report correct number of files generated for feature libraries", async () => {
+      const adapter = createTreeAdapter(tree)
 
       // Use 'feature' library type to include vitest.config.ts
       const result = await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'feature-test',
-          projectRoot: 'libs/feature/test',
-          sourceRoot: 'libs/feature/test/src',
-          packageName: '@test/feature-test',
-          description: 'Test library',
-          libraryType: 'feature',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:feature'],
-        }),
-      );
+          projectName: "feature-test",
+          projectRoot: "libs/feature/test",
+          sourceRoot: "libs/feature/test/src",
+          packageName: "@test/feature-test",
+          description: "Test library",
+          libraryType: "feature",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:feature"]
+        })
+      )
 
       // Feature libraries generate: package.json, tsconfig.json, tsconfig.lib.json,
       // tsconfig.spec.json, vitest.config.ts, README.md = 6 files
-      expect(result.filesGenerated.length).toBeGreaterThanOrEqual(6);
-      expect(result.filesGenerated).toContain('libs/feature/test/package.json');
-      expect(result.filesGenerated).toContain('libs/feature/test/tsconfig.json');
-      expect(result.filesGenerated).toContain('libs/feature/test/vitest.config.ts');
-    });
+      expect(result.filesGenerated.length).toBeGreaterThanOrEqual(6)
+      expect(result.filesGenerated).toContain("libs/feature/test/package.json")
+      expect(result.filesGenerated).toContain("libs/feature/test/tsconfig.json")
+      expect(result.filesGenerated).toContain("libs/feature/test/vitest.config.ts")
+    })
 
-    it('should report correct number of files generated for contract libraries', async () => {
-      const adapter = createTreeAdapter(tree);
+    it("should report correct number of files generated for contract libraries", async () => {
+      const adapter = createTreeAdapter(tree)
 
       const result = await Effect.runPromise(
         generateLibraryInfrastructure(adapter, {
-          projectName: 'contract-test',
-          projectRoot: 'libs/contract/test',
-          sourceRoot: 'libs/contract/test/src',
-          packageName: '@test/contract-test',
-          description: 'Test library',
-          libraryType: 'contract',
-          platform: 'universal',
-          offsetFromRoot: '../../../',
-          tags: ['type:contract'],
-        }),
-      );
+          projectName: "contract-test",
+          projectRoot: "libs/contract/test",
+          sourceRoot: "libs/contract/test/src",
+          packageName: "@test/contract-test",
+          description: "Test library",
+          libraryType: "contract",
+          platform: "universal",
+          offsetFromRoot: "../../../",
+          tags: ["type:contract"]
+        })
+      )
 
       // Contract libraries generate: package.json, tsconfig.json, tsconfig.lib.json, README.md = 4 files
       // No vitest.config.ts or tsconfig.spec.json (types-only libraries don't have tests)
-      expect(result.filesGenerated.length).toBeGreaterThanOrEqual(4);
-      expect(result.filesGenerated).toContain('libs/contract/test/package.json');
-      expect(result.filesGenerated).toContain('libs/contract/test/tsconfig.json');
-      expect(result.filesGenerated).not.toContain('libs/contract/test/vitest.config.ts');
-    });
-  });
-});
+      expect(result.filesGenerated.length).toBeGreaterThanOrEqual(4)
+      expect(result.filesGenerated).toContain("libs/contract/test/package.json")
+      expect(result.filesGenerated).toContain("libs/contract/test/tsconfig.json")
+      expect(result.filesGenerated).not.toContain("libs/contract/test/vitest.config.ts")
+    })
+  })
+})

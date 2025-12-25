@@ -2,92 +2,84 @@
  * Data Access Layers Template
  *
  * Generates server/layers.ts file for data-access libraries with Effect layer compositions.
+ * Uses the layer factory pattern for consistent, maintainable layer generation.
  *
  * @module monorepo-library-generator/data-access/layers-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import type { DataAccessTemplateOptions } from '../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import {
+  createAutoLayer,
+  createDomainLayers,
+  createInfrastructureLayers,
+  createLayerImports,
+  INFRASTRUCTURE_SERVICES
+} from "../../shared/factories"
 
 /**
  * Generate server/layers.ts file for data-access library
  *
- * Creates Effect layer compositions with infrastructure dependencies
+ * Creates Effect layer compositions with infrastructure dependencies.
+ * Provides Live, Dev, Test, and Auto layers for all environments.
  */
 export function generateLayersFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName, propertyName } = options;
-  const domainName = propertyName;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName, propertyName } = options
+  const domainName = propertyName
+  const scope = WORKSPACE_CONFIG.getScope()
 
+  // File header
   builder.addFileHeader({
     title: `${className} Data Access Layers`,
-    description: `Effect layer compositions for dependency injection of ${domainName} repositories.
+    description: `Effect layer compositions for ${domainName} data access.
 
-@see https://effect.website/docs/guides/context-management for layer composition`,
-    module: `${scope}/data-access-${fileName}/server`,
-  });
-  builder.addBlankLine();
+Provides different layer implementations for different environments:
+- Live: Production with all infrastructure
+- Dev: Development with local infrastructure
+- Test: Testing with in-memory/mock infrastructure
+- Auto: Automatically selects based on NODE_ENV
 
-  builder.addImports([
-    { from: 'effect', imports: ['Layer'] },
-    { from: '../repository', imports: [`${className}Repository`] },
-    { from: `${scope}/infra-database`, imports: ['DatabaseService'] },
-  ]);
-  builder.addBlankLine();
+Infrastructure included:
+- DatabaseService: Data persistence
+- LoggingService: Structured logging
+- MetricsService: Observability
+- CacheService: Read-through caching`,
+    module: `${scope}/data-access-${fileName}/server`
+  })
+  builder.addBlankLine()
 
-  builder.addSectionComment('Layer Compositions');
-  builder.addBlankLine();
+  // Generate imports using factory
+  createLayerImports({
+    scope,
+    infrastructureServices: [...INFRASTRUCTURE_SERVICES.dataAccess],
+    className,
+    fileName,
+    libraryType: "data-access"
+  })(builder)
 
-  builder.addRaw(`/**
- * ${className} Repository Live Layer
- *
- * Production layer with DatabaseService dependency.
- * Compose with DatabaseService.Live for production use.
- *
- * @example
- * \`\`\`typescript
- * const RepositoryLayer = ${className}RepositoryLive.pipe(
- *   Layer.provide(DatabaseService.Live)
- * );
- * \`\`\`
- */
-export const ${className}RepositoryLive = ${className}Repository.Live;
+  // Generate infrastructure layers using factory
+  createInfrastructureLayers({
+    services: [...INFRASTRUCTURE_SERVICES.dataAccess],
+    scope,
+    includeDev: true
+  })(builder)
 
-/**
- * ${className} Repository with Database Layer
- *
- * Fully composed layer for production use.
- * Includes DatabaseService.Live dependency.
- */
-export const ${className}RepositoryLayer = ${className}Repository.Live.pipe(
-  Layer.provide(DatabaseService.Live)
-);
+  // Generate domain layers using factory
+  createDomainLayers({
+    className,
+    domainServices: [`${className}Repository`],
+    libraryType: "data-access",
+    includeDev: true
+  })(builder)
 
-/**
- * ${className} Repository Test Layer
- *
- * For testing, compose with DatabaseService.Test:
- *
- * @example
- * \`\`\`typescript
- * const TestLayer = ${className}Repository.Live.pipe(
- *   Layer.provide(DatabaseService.Test)
- * );
- *
- * it.scoped("should work", () =>
- *   Effect.gen(function* () {
- *     const repo = yield* ${className}Repository;
- *     // test operations
- *   }).pipe(Effect.provide(TestLayer))
- * );
- * \`\`\`
- */
-export const ${className}RepositoryTestLayer = ${className}Repository.Live.pipe(
-  Layer.provide(DatabaseService.Test)
-);`);
-  builder.addBlankLine();
+  // Generate auto layer using factory
+  createAutoLayer({
+    className,
+    layerPrefix: "DataAccess",
+    includeDev: true
+  })(builder)
 
-  return builder.toString();
+  return builder.toString()
 }

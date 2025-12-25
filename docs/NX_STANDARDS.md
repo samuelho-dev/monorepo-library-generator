@@ -51,7 +51,7 @@ The standard pattern places the library **type** before the **domain**.
 | **Contracts**      | `contract-`    | Domain interfaces and ports | Repository Pattern (interfaces)     | `contract-product`    |
 | **Data Access**    | `data-access-` | Repository implementations  | Repository Pattern (implementation) | `data-access-product` |
 | **Feature**        | `feature-`     | Business logic and services | Service Pattern                     | `feature-payment`     |
-| **Infrastructure** | `infra-`       | Cross-cutting concerns      | Service Pattern                     | `infra-logging`       |
+| **Infrastructure** | `infra-`       | Cross-cutting concerns      | Service Pattern                     | `infra-observability`       |
 | **Provider**       | `provider-`    | External service adapters   | Adapter Pattern                     | `provider-stripe`     |
 | **UI**             | `ui-`          | React components            | Component Pattern                   | `ui-components`       |
 | **Utility**        | `util-`        | Pure utility functions      | Function Pattern                    | `util-format`         |
@@ -262,7 +262,7 @@ Use the `workspace:*` protocol for internal dependencies. This ensures proper de
   "dependencies": {
     "effect": "^3.17.13", // External npm package
     "@samuelho-dev/types-database": "workspace:*", // Workspace package
-    "@samuelho-dev/infra-logging": "workspace:*" // Workspace package
+    "@samuelho-dev/infra-observability": "workspace:*" // Workspace package
   }
 }
 ```
@@ -731,7 +731,7 @@ describe('ServiceName', () => {
   );
 
   test('should perform operation', () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* Service;
       const result = yield* service.operation();
 
@@ -779,13 +779,13 @@ Services are implemented using static `Live` layers:
 export class PaymentServiceImpl extends PaymentService {
   static readonly Live = Layer.effect(
     PaymentService,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService;
       const logger = yield* LoggingService;
 
       return {
         processPayment: (amount) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.info(`Processing payment: ${amount}`);
             return yield* stripe.paymentIntents.create({ amount });
           }),

@@ -1,0 +1,48 @@
+{
+  "name": "infra-database",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/infra/database/src",
+  "tags": [
+    "type:infra",
+    "scope:database",
+    "infra",
+    "orchestration",
+    "builtin"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/infra/database",
+        "tsConfig": "libs/infra/database/tsconfig.lib.json",
+        "main": "libs/infra/database/src/index.ts",
+        "batch": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "libs/infra/database/src/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/libs/infra/database",
+        "config": "libs/infra/database/vitest.config.ts"
+      }
+    }
+  }
+}

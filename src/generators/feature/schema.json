@@ -62,23 +62,11 @@
       "default": false,
       "x-prompt": "Does this feature need React hooks or browser-specific code?"
     },
-    "includeRPC": {
-      "type": "boolean",
-      "description": "Generate RPC router with handlers (@effect/rpc)",
-      "default": false,
-      "x-prompt": "Does this feature need RPC endpoints?"
-    },
     "includeCQRS": {
       "type": "boolean",
       "description": "Generate CQRS structure (commands/queries/projections)",
       "default": false,
       "x-prompt": "Does this feature use CQRS patterns?"
-    },
-    "includeEdge": {
-      "type": "boolean",
-      "description": "Include edge runtime support (middleware, edge functions)",
-      "default": false,
-      "x-prompt": "Does this feature need edge runtime support?"
     },
     "testRunner": {
       "type": "string",
@@ -91,16 +79,16 @@
       "description": "Additional tags for module boundary rules (comma-separated)",
       "x-prompt": "Any additional tags? (comma-separated, optional)"
     },
-    "includeSubServices": {
+    "includeSubModules": {
       "type": "boolean",
       "description": "Generate services/ subdirectory for modular feature organization",
       "default": false,
-      "x-prompt": "Does this feature need sub-service organization?"
+      "x-prompt": "Does this feature need sub-module organization?"
     },
-    "subServices": {
+    "subModules": {
       "type": "string",
-      "description": "Comma-separated list of sub-services to generate (e.g., backup,checkpoint,config)",
-      "x-prompt": "Which sub-services should be generated? (comma-separated, leave empty to skip)"
+      "description": "Comma-separated list of sub-modules to generate (e.g., cart,checkout,management)",
+      "x-prompt": "Which sub-modules should be generated? (comma-separated, leave empty to skip)"
     }
   },
   "required": ["name"]

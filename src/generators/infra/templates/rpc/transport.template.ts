@@ -9,9 +9,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate RPC transport file
@@ -20,9 +20,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * - HTTP for external clients and cross-process calls
  */
 export function generateRpcTransportFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Transport`,
@@ -33,22 +33,23 @@ Architecture:
 
 All transports share the same handler definitions - only the transport layer differs.`,
     module: `${scope}/infra-${fileName}/transport`,
-    see: ['@effect/rpc documentation for transport details'],
-  });
+    see: ["@effect/rpc documentation for transport details"]
+  })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Effect', 'Layer', 'Context'],
+      from: "effect",
+      imports: ["Effect", "Layer", "Context", "Option", "Cause", "Exit"]
     },
     {
-      from: '@effect/platform',
-      imports: ['HttpClient', 'HttpClientRequest'],
+      from: "@effect/platform",
+      imports: ["HttpClient", "HttpClientRequest"]
     },
-    { from: './errors', imports: ['RpcInfraError'] },
-  ]);
+    { from: "@effect/schema", imports: ["Schema"] },
+    { from: "./errors", imports: ["RpcInfraError"] }
+  ])
 
-  builder.addSectionComment('Transport Types');
+  builder.addSectionComment("Transport Types")
 
   builder.addRaw(`/**
  * Transport mode determines how RPC calls are executed
@@ -81,9 +82,9 @@ export interface HttpTransportConfig extends TransportConfig {
  * Combined transport config union
  */
 export type RpcTransportConfig = HttpTransportConfig
-`);
+`)
 
-  builder.addSectionComment('HTTP Transport');
+  builder.addSectionComment("HTTP Transport")
 
   builder.addRaw(`/**
  * HTTP transport options
@@ -127,7 +128,7 @@ export interface HttpRpcClientConfig {
 /**
  * HTTP RPC Client
  *
- * Makes RPC calls via HTTP transport.
+ * Makes RPC calls via HTTP transport with Schema validation.
  * Use for calling external services or cross-process communication.
  *
  * @example
@@ -138,10 +139,12 @@ export interface HttpRpcClientConfig {
  *   headers: { "x-api-key": env.API_KEY }
  * });
  *
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ *
  * // Use in Effect
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const client = yield* HttpRpcClient;
- *   const user = yield* client.call("getUser", { id: "123" });
+ *   const user = yield* client.call("getUser", { id: "123" }, UserSchema);
  *   return user;
  * }).pipe(Effect.provide(HttpClientLive));
  * \`\`\`
@@ -150,13 +153,14 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
   HttpRpcClient,
   {
     /**
-     * Execute an RPC call via HTTP transport
+     * Execute an RPC call via HTTP transport with Schema validation
      */
-    readonly call: <R>(
+    readonly call: <A, I, Deps>(
       operation: string,
       payload: unknown,
+      responseSchema: Schema.Schema<A, I, Deps>,
       options?: { headers?: Record<string, string> }
-    ) => Effect.Effect<R, RpcInfraError, HttpClient.HttpClient>
+    ) => Effect.Effect<A, RpcInfraError, HttpClient.HttpClient | Deps>
   }
 >() {
   /**
@@ -164,12 +168,13 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
    */
   static layer(config: HttpRpcClientConfig): Layer.Layer<HttpRpcClient> {
     return Layer.succeed(HttpRpcClient, {
-      call: <R>(
+      call: <A, I, Deps>(
         operation: string,
         payload: unknown,
+        responseSchema: Schema.Schema<A, I, Deps>,
         options?: { headers?: Record<string, string> }
       ) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const httpClient = yield* HttpClient.HttpClient
 
           // Build request
@@ -191,10 +196,10 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
             (req) => httpClient.execute(req)
           ).pipe(
             Effect.timeout(config.timeout ?? 30000),
-            Effect.catchAll((error) =>
+            Effect.catchAllCause((cause) =>
               Effect.fail(
                 new RpcInfraError({
-                  message: \`RPC call failed: \${String(error)}\`,
+                  message: \`RPC call failed: \${Cause.pretty(cause)}\`,
                   code: "NETWORK_ERROR"
                 })
               )
@@ -222,9 +227,18 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
             )
           )
 
-          // Check for RPC-level error
+          // Schema for RPC error response validation
+          const RpcErrorResponseSchema = Schema.Struct({
+            error: Schema.optional(Schema.Struct({
+              message: Schema.optional(Schema.String),
+              code: Schema.optional(Schema.String)
+            }))
+          })
+
+          // Check for RPC-level error using Schema validation
           if (body && typeof body === "object" && "error" in body) {
-            const errorBody = body as { error?: { message?: string; code?: string } }
+            const errorResult = Schema.decodeUnknownOption(RpcErrorResponseSchema)(body)
+            const errorBody = Option.isSome(errorResult) ? errorResult.value : { error: undefined }
             return yield* Effect.fail(
               new RpcInfraError({
                 message: errorBody.error?.message ?? "Unknown RPC error",
@@ -233,23 +247,60 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
             )
           }
 
-          return body as R
+          // Validate response against provided schema
+          const decoded = yield* Schema.decodeUnknown(responseSchema)(body).pipe(
+            Effect.mapError((parseError) =>
+              new RpcInfraError({
+                message: \`Response validation failed: \${parseError.message}\`,
+                code: "VALIDATION_ERROR"
+              })
+            )
+          )
+
+          return decoded
         }).pipe(
           Effect.withSpan(\`HttpRpc.\${operation}\`)
-        ) as Effect.Effect<R, RpcInfraError, HttpClient.HttpClient>
+        )
     })
   }
 
   /**
-   * Test layer - returns mock responses
+   * Test layer - returns mock responses validated against schema
+   *
+   * @param mockResponses - Map of operation names to mock response data
    */
-  static readonly Test = Layer.succeed(HttpRpcClient, {
-    call: <R>() => Effect.succeed({} as R)
-  })
+  static Test(mockResponses: Record<string, unknown> = {}) {
+    return Layer.succeed(HttpRpcClient, {
+      call: <A, I, Deps>(
+        operation: string,
+        _payload: unknown,
+        responseSchema: Schema.Schema<A, I, Deps>,
+        _options?: { headers?: Record<string, string> }
+      ) => {
+        const response = mockResponses[operation]
+        if (response !== undefined) {
+          return Schema.decodeUnknown(responseSchema)(response).pipe(
+            Effect.mapError((parseError) =>
+              new RpcInfraError({
+                message: \`Mock validation failed: \${parseError.message}\`,
+                code: "VALIDATION_ERROR"
+              })
+            )
+          )
+        }
+        return Effect.fail(
+          new RpcInfraError({
+            message: \`No mock for \${operation}\`,
+            code: "NO_MOCK"
+          })
+        )
+      }
+    })
+  }
 }
-`);
+`)
 
-  builder.addSectionComment('Next.js Handler Factory');
+  builder.addSectionComment("Next.js Handler Factory")
 
   builder.addRaw(`/**
  * Next.js App Router handler factory
@@ -275,54 +326,122 @@ export interface NextHandler {
   readonly POST: (request: Request) => Promise<Response>
 }
 
-export const createNextHandler = <R>(options: {
-  handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>
-  layers?: Layer.Layer<R, never, never>
-}) => {
+// Schema for RPC request body validation
+const RpcRequestBodySchema = Schema.Struct({
+  operation: Schema.String,
+  payload: Schema.optional(Schema.Unknown)
+})
+
+/**
+ * Options for handlers without requirements (R = never)
+ * Uses discriminated union with _tag for type-safe narrowing
+ */
+interface NextHandlerOptionsNoRequirements {
+  readonly _tag: "no-requirements"
+  readonly handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, never>>
+}
+
+/**
+ * Options for handlers with requirements - layers are required
+ * Uses discriminated union with _tag for type-safe narrowing
+ */
+interface NextHandlerOptionsWithRequirements<R> {
+  readonly _tag: "with-requirements"
+  readonly handlers: Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>
+  readonly layers: Layer.Layer<R, never, never>
+}
+
+/**
+ * Union type for handler options
+ */
+type NextHandlerOptions<R> = NextHandlerOptionsNoRequirements | NextHandlerOptionsWithRequirements<R>
+
+/**
+ * Overload: Handlers without requirements - no layers needed
+ */
+export function createNextHandler(
+  options: NextHandlerOptionsNoRequirements
+): NextHandler
+
+/**
+ * Overload: Handlers with requirements - layers required
+ */
+export function createNextHandler<R>(
+  options: NextHandlerOptionsWithRequirements<R>
+): NextHandler
+
+/**
+ * Implementation using Effect idiomatic pattern with function overloads.
+ * Uses discriminated union _tag field for type-safe narrowing without type predicates.
+ */
+export function createNextHandler<R>(
+  options: NextHandlerOptions<R>
+) {
   return {
     GET: () => new Response("RPC endpoint - use POST", { status: 405 }),
     POST: async (request: Request) => {
       try {
-        const body = await request.json() as { operation?: string; payload?: unknown }
-        const { operation, payload } = body
+        const rawBody: unknown = await request.json()
 
-        if (!operation || typeof operation !== "string") {
+        // Validate request body with Schema
+        const parseResult = Schema.decodeUnknownOption(RpcRequestBodySchema)(rawBody)
+        if (Option.isNone(parseResult)) {
           return new Response(
-            JSON.stringify({ error: { message: "Missing operation", code: "BAD_REQUEST" } }),
+            JSON.stringify({ error: { message: "Invalid request body: expected { operation: string, payload?: unknown }", code: "BAD_REQUEST" } }),
             { status: 400, headers: { "Content-Type": "application/json" } }
           )
         }
 
-        const handler = options.handlers[operation]
-        if (!handler) {
-          return new Response(
-            JSON.stringify({ error: { message: \`Unknown operation: \${operation}\`, code: "NOT_FOUND" } }),
-            { status: 404, headers: { "Content-Type": "application/json" } }
-          )
+        const body = parseResult.value
+        const { operation, payload } = body
+
+        // Run effect - discriminated union narrowing via _tag
+        // Handler lookup happens within each branch for proper type narrowing
+        let exit: Exit.Exit<unknown, unknown>
+        if (options._tag === "with-requirements") {
+          const handler = options.handlers[operation]
+          if (!handler) {
+            return new Response(
+              JSON.stringify({ error: { message: \`Unknown operation: \${operation}\`, code: "NOT_FOUND" } }),
+              { status: 404, headers: { "Content-Type": "application/json" } }
+            )
+          }
+          exit = await Effect.runPromiseExit(Effect.provide(handler(payload), options.layers))
+        } else {
+          const handler = options.handlers[operation]
+          if (!handler) {
+            return new Response(
+              JSON.stringify({ error: { message: \`Unknown operation: \${operation}\`, code: "NOT_FOUND" } }),
+              { status: 404, headers: { "Content-Type": "application/json" } }
+            )
+          }
+          exit = await Effect.runPromiseExit(handler(payload))
         }
 
-        const effect = handler(payload).pipe(
-          options.layers ? Effect.provide(options.layers) : (e) => e as Effect.Effect<unknown, unknown, never>
-        )
+        if (Exit.isSuccess(exit)) {
+          return new Response(JSON.stringify(exit.value), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        }
 
-        const result = await Effect.runPromise(effect as Effect.Effect<unknown, never, never>)
-        return new Response(JSON.stringify(result), {
-          status: 200,
-          headers: { "Content-Type": "application/json" }
-        })
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Internal server error"
         return new Response(
-          JSON.stringify({ error: { message, code: "INTERNAL_ERROR" } }),
+          JSON.stringify({ error: { message: Cause.pretty(exit.cause), code: "INTERNAL_ERROR" } }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        )
+      } catch (error) {
+        // Only for non-Effect errors (e.g., JSON parsing)
+        return new Response(
+          JSON.stringify({ error: { message: "Request processing failed", code: "INTERNAL_ERROR" } }),
           { status: 500, headers: { "Content-Type": "application/json" } }
         )
       }
     }
   }
 }
-`);
+`)
 
-  builder.addSectionComment('Transport Utilities');
+  builder.addSectionComment("Transport Utilities")
 
   builder.addRaw(`/**
  * Extract headers from HTTP request for middleware context
@@ -338,7 +457,7 @@ export const extractHeaders = (request: Request) => {
 /**
  * Create standard JSON response
  */
-export const jsonResponse = <T>(data: T, status = 200) =>
+export const jsonResponse = <T>(data: T, status = 200): Response =>
   new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" }
@@ -347,7 +466,7 @@ export const jsonResponse = <T>(data: T, status = 200) =>
 /**
  * Create error response
  */
-export const errorResponse = (error: RpcInfraError) =>
+export const errorResponse = (error: RpcInfraError): Response =>
   jsonResponse(
     {
       error: {
@@ -361,14 +480,14 @@ export const errorResponse = (error: RpcInfraError) =>
     error.code === "RATE_LIMITED" ? 429 :
     500
   )
-`);
+`)
 
-  builder.addSectionComment('Unified RPC Client');
+  builder.addSectionComment("Unified RPC Client")
 
   builder.addRaw(`/**
  * RPC Client
  *
- * Unified RPC client that uses HTTP transport.
+ * Unified RPC client that uses HTTP transport with Schema validation.
  *
  * @example
  * \`\`\`typescript
@@ -378,19 +497,22 @@ export const errorResponse = (error: RpcInfraError) =>
  *   baseUrl: "https://api.example.com/rpc"
  * });
  *
- * const program = Effect.gen(function* () {
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ *
+ * const program = Effect.gen(function*() {
  *   const client = yield* RpcTransportClient;
- *   return yield* client.call("getUser", { id: "123" });
+ *   return yield* client.call("getUser", { id: "123" }, UserSchema);
  * });
  * \`\`\`
  */
 export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
   RpcTransportClient,
   {
-    readonly call: <R>(
+    readonly call: <A, I, Deps>(
       operation: string,
-      payload: unknown
-    ) => Effect.Effect<R, RpcInfraError>
+      payload: unknown,
+      responseSchema: Schema.Schema<A, I, Deps>
+    ) => Effect.Effect<A, RpcInfraError, Deps>
   }
 >() {
   /**
@@ -399,14 +521,15 @@ export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
   static layer(config: RpcTransportConfig): Layer.Layer<RpcTransportClient, never, HttpClient.HttpClient> {
     return Layer.effect(
       RpcTransportClient,
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const httpClient = yield* HttpClient.HttpClient
         return {
-          call: <R>(
+          call: <A, I, Deps>(
             operation: string,
-            payload: unknown
+            payload: unknown,
+            responseSchema: Schema.Schema<A, I, Deps>
           ) =>
-            Effect.gen(function* () {
+            Effect.gen(function*() {
               // Build request
               const request = HttpClientRequest.post(config.baseUrl).pipe(
                 HttpClientRequest.setHeaders({
@@ -424,10 +547,10 @@ export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
                 request,
                 (req) => httpClient.execute(req)
               ).pipe(
-                Effect.catchAll((error) =>
+                Effect.catchAllCause((cause) =>
                   Effect.fail(
                     new RpcInfraError({
-                      message: \`RPC call failed: \${String(error)}\`,
+                      message: \`RPC call failed: \${Cause.pretty(cause)}\`,
                       code: "NETWORK_ERROR"
                     })
                   )
@@ -455,9 +578,18 @@ export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
                 )
               )
 
-              // Check for RPC-level error
+              // Schema for RPC error response validation
+              const RpcErrorResponseSchema = Schema.Struct({
+                error: Schema.optional(Schema.Struct({
+                  message: Schema.optional(Schema.String),
+                  code: Schema.optional(Schema.String)
+                }))
+              })
+
+              // Check for RPC-level error using Schema validation
               if (body && typeof body === "object" && "error" in body) {
-                const errorBody = body as { error?: { message?: string; code?: string } }
+                const errorResult = Schema.decodeUnknownOption(RpcErrorResponseSchema)(body)
+                const errorBody = Option.isSome(errorResult) ? errorResult.value : { error: undefined }
                 return yield* Effect.fail(
                   new RpcInfraError({
                     message: errorBody.error?.message ?? "Unknown RPC error",
@@ -466,16 +598,26 @@ export class RpcTransportClient extends Context.Tag("RpcTransportClient")<
                 )
               }
 
-              return body as R
+              // Validate response against provided schema
+              const decoded = yield* Schema.decodeUnknown(responseSchema)(body).pipe(
+                Effect.mapError((parseError) =>
+                  new RpcInfraError({
+                    message: \`Response validation failed: \${parseError.message}\`,
+                    code: "VALIDATION_ERROR"
+                  })
+                )
+              )
+
+              return decoded
             }).pipe(
               Effect.withSpan(\`RpcTransportClient.\${operation}\`)
-            ) as Effect.Effect<R, RpcInfraError>
+            )
         }
       })
     )
   }
 }
-`);
+`)
 
-  return builder.toString();
+  return builder.toString()
 }

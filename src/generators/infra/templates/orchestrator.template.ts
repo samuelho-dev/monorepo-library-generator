@@ -1,16 +1,18 @@
+import { createNamingVariants } from "../../../utils/naming"
+
 export const generateOrchestratorTemplate = (options: {
-  providers: Array<string>;
-  packageName: string;
+  providers: Array<string>
+  packageName: string
 }) => {
-  const workspaceName = options.packageName.split('/')[0];
+  const workspaceName = options.packageName.split("/")[0]
   const providerImports = options.providers
     .map((p) => {
-      const className = toClassName(p);
-      return `import { ${className} } from "${workspaceName}/provider-${p}"`;
+      const className = createNamingVariants(p).className
+      return `import { ${className} } from "${workspaceName}/provider-${p}"`
     })
-    .join('\n');
+    .join("\n")
 
-  const providerDeps = options.providers.map((p) => toClassName(p)).join(' | ');
+  const providerDeps = options.providers.map((p) => createNamingVariants(p).className).join(" | ")
 
   return `/**
  * Cluster Orchestrator
@@ -50,22 +52,22 @@ export class ClusterOrchestrator extends Context.Tag("@infra/ClusterOrchestrator
    */
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
-${options.providers.map((p) => `      const ${p} = yield* ${toClassName(p)}`).join('\n')}
+    Effect.gen(function*() {
+${options.providers.map((p) => `      const ${p} = yield* ${createNamingVariants(p).className}`).join("\n")}
 
       return {
-        bootstrap: Effect.gen(function* () {
+        bootstrap: Effect.gen(function*() {
           // TODO: Implement multi-provider bootstrap coordination
           yield* Effect.logInfo("Coordinating cluster bootstrap")
         }).pipe(Effect.withSpan("ClusterOrchestrator.bootstrap")),
 
-        healthCheck: Effect.gen(function* () {
+        healthCheck: Effect.gen(function*() {
           // TODO: Implement multi-provider health check
           yield* Effect.logInfo("Coordinating cluster health check")
           return true
         }).pipe(Effect.withSpan("ClusterOrchestrator.healthCheck")),
 
-        teardown: Effect.gen(function* () {
+        teardown: Effect.gen(function*() {
           // TODO: Implement multi-provider teardown coordination
           yield* Effect.logInfo("Coordinating cluster teardown")
         }).pipe(Effect.withSpan("ClusterOrchestrator.teardown"))
@@ -73,12 +75,5 @@ ${options.providers.map((p) => `      const ${p} = yield* ${toClassName(p)}`).jo
     })
   )
 }
-`;
-};
-
-const toClassName = (name: string) => {
-  return name
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join('');
-};
+`
+}

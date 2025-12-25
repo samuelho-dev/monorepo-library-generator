@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate RPC client file
@@ -16,9 +16,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * Creates type-safe RPC client for browser and Node.js.
  */
 export function generateRpcClientFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Client`,
@@ -31,16 +31,17 @@ Provides:
 
 Works in browser and Node.js environments.`,
     module: `${scope}/infra-${fileName}/client`,
-    see: ['EFFECT_PATTERNS.md for client patterns'],
-  });
+    see: ["EFFECT_PATTERNS.md for client patterns"]
+  })
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Duration', 'Option'] },
-    { from: '@effect/platform', imports: ['HttpClient', 'HttpClientRequest'] },
-    { from: './errors', imports: ['RpcInfraError'] },
-  ]);
+    { from: "effect", imports: ["Effect", "Layer", "Context", "Duration", "Option"] },
+    { from: "@effect/platform", imports: ["HttpClient", "HttpClientRequest"] },
+    { from: "@effect/schema", imports: ["Schema"] },
+    { from: "./errors", imports: ["RpcInfraError"] }
+  ])
 
-  builder.addSectionComment('Client Configuration');
+  builder.addSectionComment("Client Configuration")
 
   builder.addRaw(`/**
  * RPC client configuration
@@ -105,24 +106,32 @@ export class RpcClientConfigTag extends Context.Tag("RpcClientConfig")<
   RpcClientConfigTag,
   RpcClientConfig
 >() {}
-`);
+`)
 
-  builder.addSectionComment('RPC Client Service');
+  builder.addSectionComment("RPC Client Service")
 
   builder.addRaw(`/**
  * ${className} Client Service
  *
  * Type-safe RPC client for calling remote services.
+ * All calls require a Schema for response validation.
  *
  * @example
  * \`\`\`typescript
  * import { ${className}Client } from "${scope}/infra-${fileName}/client";
+ * import { Schema } from "@effect/schema";
  *
- * const program = Effect.gen(function* () {
+ * // Define response schema
+ * const UserSchema = Schema.Struct({
+ *   id: Schema.String,
+ *   name: Schema.String
+ * });
+ *
+ * const program = Effect.gen(function*() {
  *   const client = yield* ${className}Client;
  *
- *   // Call an RPC operation
- *   const user = yield* client.call("getUser", { id: "123" });
+ *   // Call with schema validation
+ *   const user = yield* client.call("getUser", { id: "123" }, UserSchema);
  * });
  * \`\`\`
  */
@@ -170,7 +179,7 @@ export class ${className}Client extends Context.Tag(
    */
   static readonly Http = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* RpcClientConfigTag
       const httpClient = yield* HttpClient.HttpClient
 
@@ -183,12 +192,13 @@ export class ${className}Client extends Context.Tag(
       // Retry configuration
       const maxRetries = config.retry?.maxAttempts ?? 0
 
-      const makeRequest = <R>(
+      const makeRequest = <A, I, Deps>(
         operation: string,
         payload: unknown,
+        responseSchema: Schema.Schema<A, I, Deps>,
         customHeaders?: Record<string, string>
-      ): Effect.Effect<R, RpcInfraError> =>
-        Effect.gen(function* () {
+      ) =>
+        Effect.gen(function*() {
           // Get auth token if provider exists
           const authHeader: { Authorization?: string } = {}
           if (config.getAuthToken) {
@@ -224,15 +234,14 @@ export class ${className}Client extends Context.Tag(
               })
             }),
             maxRetries > 0 ? Effect.retry({ times: maxRetries }) : (e) => e,
+            Effect.catchTag("RpcInfraError", (error) => Effect.fail(error)),
             Effect.catchAll((error) =>
-              error instanceof RpcInfraError
-                ? Effect.fail(error)
-                : Effect.fail(
-                    new RpcInfraError({
-                      message: \`RPC call failed: \${error}\`,
-                      code: "NETWORK_ERROR"
-                    })
-                  )
+              Effect.fail(
+                new RpcInfraError({
+                  message: \`RPC call failed: \${error.message}\`,
+                  code: "NETWORK_ERROR"
+                })
+              )
             )
           )
 
@@ -257,9 +266,18 @@ export class ${className}Client extends Context.Tag(
             )
           )
 
-          // Check for RPC-level error
+          // Schema for RPC error response validation
+          const RpcErrorResponseSchema = Schema.Struct({
+            error: Schema.optional(Schema.Struct({
+              message: Schema.optional(Schema.String),
+              code: Schema.optional(Schema.String)
+            }))
+          })
+
+          // Check for RPC-level error using Schema validation
           if (body && typeof body === "object" && "error" in body) {
-            const errorBody = body as { error?: { message?: string; code?: string } }
+            const errorResult = Schema.decodeUnknownOption(RpcErrorResponseSchema)(body)
+            const errorBody = Option.isSome(errorResult) ? errorResult.value : { error: undefined }
             return yield* Effect.fail(
               new RpcInfraError({
                 message: errorBody.error?.message ?? "Unknown RPC error",
@@ -268,23 +286,42 @@ export class ${className}Client extends Context.Tag(
             )
           }
 
-          return body as R
+          // Validate response against provided schema
+          const decoded = yield* Schema.decodeUnknown(responseSchema)(body).pipe(
+            Effect.mapError((parseError) =>
+              new RpcInfraError({
+                message: \`Response validation failed: \${parseError.message}\`,
+                code: "VALIDATION_ERROR"
+              })
+            )
+          )
+
+          return decoded
         })
 
-      return {
-        call: <R>(operation: string, payload: unknown) =>
-          makeRequest<R>(operation, payload),
+      // Health check response schema
+      const HealthCheckSchema = Schema.Struct({
+        status: Schema.String
+      })
 
-        callWithOptions: <R>(
+      return {
+        call: <A, I, Deps>(
           operation: string,
           payload: unknown,
+          responseSchema: Schema.Schema<A, I, Deps>
+        ) => makeRequest(operation, payload, responseSchema),
+
+        callWithOptions: <A, I, Deps>(
+          operation: string,
+          payload: unknown,
+          responseSchema: Schema.Schema<A, I, Deps>,
           options?: {
             timeout?: Duration.DurationInput
             skipRetry?: boolean
             headers?: Record<string, string>
           }
         ) => {
-          const effect = makeRequest<R>(operation, payload, options?.headers)
+          const effect = makeRequest(operation, payload, responseSchema, options?.headers)
           if (options?.timeout) {
             return effect.pipe(
               Effect.timeoutFail({
@@ -300,7 +337,7 @@ export class ${className}Client extends Context.Tag(
         },
 
         healthCheck: () =>
-          makeRequest<{ status: string }>("_health", {}).pipe(
+          makeRequest("_health", {}, HealthCheckSchema).pipe(
             Effect.map((r) => r.status === "ok"),
             Effect.catchAll(() => Effect.succeed(false))
           )
@@ -314,15 +351,29 @@ export class ${className}Client extends Context.Tag(
 
   /**
    * Test Layer - Mock client for testing
+   *
+   * Mock responses are validated against the provided schema to ensure
+   * type safety in tests.
    */
   static readonly Test = (
     mockResponses: Record<string, unknown> = {}
   ) =>
     Layer.succeed(${className}Client, {
-      call: <R>(operation: string, _payload: unknown) => {
+      call: <A, I, Deps>(
+        operation: string,
+        _payload: unknown,
+        responseSchema: Schema.Schema<A, I, Deps>
+      ) => {
         const response = mockResponses[operation]
         if (response !== undefined) {
-          return Effect.succeed(response as R)
+          return Schema.decodeUnknown(responseSchema)(response).pipe(
+            Effect.mapError((parseError) =>
+              new RpcInfraError({
+                message: \`Mock validation failed: \${parseError.message}\`,
+                code: "VALIDATION_ERROR"
+              })
+            )
+          )
         }
         return Effect.fail(
           new RpcInfraError({
@@ -332,10 +383,26 @@ export class ${className}Client extends Context.Tag(
         )
       },
 
-      callWithOptions: <R>(operation: string, _payload: unknown) => {
+      callWithOptions: <A, I, Deps>(
+        operation: string,
+        _payload: unknown,
+        responseSchema: Schema.Schema<A, I, Deps>,
+        _options?: {
+          timeout?: Duration.DurationInput
+          skipRetry?: boolean
+          headers?: Record<string, string>
+        }
+      ) => {
         const response = mockResponses[operation]
         if (response !== undefined) {
-          return Effect.succeed(response as R)
+          return Schema.decodeUnknown(responseSchema)(response).pipe(
+            Effect.mapError((parseError) =>
+              new RpcInfraError({
+                message: \`Mock validation failed: \${parseError.message}\`,
+                code: "VALIDATION_ERROR"
+              })
+            )
+          )
         }
         return Effect.fail(
           new RpcInfraError({
@@ -348,9 +415,9 @@ export class ${className}Client extends Context.Tag(
       healthCheck: () => Effect.succeed(true)
     })
 }
-`);
+`)
 
-  builder.addSectionComment('Client Factory');
+  builder.addSectionComment("Client Factory")
 
   builder.addRaw(`/**
  * Create RPC client layer with configuration
@@ -361,15 +428,17 @@ export class ${className}Client extends Context.Tag(
  *   baseUrl: "https://api.example.com/rpc",
  *   timeout: "30 seconds",
  *   getAuthToken: () =>
- *     Effect.gen(function* () {
+ *     Effect.gen(function*() {
  *       const token = yield* getStoredToken();
  *       return Option.fromNullable(token);
  *     })
  * });
  *
- * const program = Effect.gen(function* () {
+ * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String });
+ *
+ * const program = Effect.gen(function*() {
  *   const client = yield* ${className}Client;
- *   return yield* client.call("getUser", { id: "123" });
+ *   return yield* client.call("getUser", { id: "123" }, UserSchema);
  * }).pipe(Effect.provide(clientLayer));
  * \`\`\`
  */
@@ -378,7 +447,7 @@ export const createRpcClientLayer = (config: RpcClientConfig) =>
     ${className}Client.Http,
     Layer.succeed(RpcClientConfigTag, config)
   )
-`);
+`)
 
-  return builder.toString();
+  return builder.toString()
 }

@@ -6,15 +6,15 @@
  * @module monorepo-library-generator/feature/service-spec-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import type { FeatureTemplateOptions } from '../../../utils/types';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../utils/types"
 
 /**
  * Generate server/service.spec.ts file for feature library
  */
 export function generateServiceSpecFile(options: FeatureTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, propertyName } = options;
+  const builder = new TypeScriptBuilder()
+  const { className, propertyName } = options
 
   builder.addFileHeader({
     title: `${className}Service Tests`,
@@ -23,31 +23,40 @@ export function generateServiceSpecFile(options: FeatureTemplateOptions) {
 Uses ${className}Service.TestLayer which composes:
 - ${className}Service.Live
 - ${className}Repository.Live
-- DatabaseService.Test (in-memory)`,
-  });
+- DatabaseService.Test (in-memory)`
+  })
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Option'] },
-    { from: '@effect/vitest', imports: ['describe', 'expect', 'it'] },
-    { from: './service', imports: [`${className}Service`] },
-  ]);
-  builder.addBlankLine();
+    { from: "effect", imports: ["Effect", "Layer", "Option"] },
+    { from: "@effect/vitest", imports: ["describe", "expect", "it"] },
+    { from: "./service", imports: [`${className}Service`] }
+  ])
+  builder.addBlankLine()
 
-  builder.addRaw(`describe("${className}Service", () => {
+  builder.addRaw(`/**
+ * Test entity interface for ${className}
+ * Matches the structure returned by service.create()
+ */
+interface ${className}TestEntity {
+  readonly id: string;
+  readonly name: string;
+}
+
+describe("${className}Service", () => {
   it.scoped("should create and retrieve ${propertyName}", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* ${className}Service;
 
-      const created = yield* service.create({ name: "Test ${className}" });
+      const created: ${className}TestEntity = yield* service.create({ name: "Test ${className}" });
       expect(created).toBeDefined();
 
-      const result = yield* service.get((created as { id: string }).id);
+      const result = yield* service.get(created.id);
       expect(Option.isSome(result)).toBe(true);
     }).pipe(Effect.provide(Layer.fresh(${className}Service.TestLayer)))
   );
 
   it.scoped("should list ${propertyName}s with pagination", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* ${className}Service;
 
       yield* service.create({ name: "First ${className}" });
@@ -62,33 +71,31 @@ Uses ${className}Service.TestLayer which composes:
   );
 
   it.scoped("should update ${propertyName}", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* ${className}Service;
 
-      const created = yield* service.create({ name: "Original" });
-      const id = (created as { id: string }).id;
+      const created: ${className}TestEntity = yield* service.create({ name: "Original" });
 
-      const updated = yield* service.update(id, { name: "Updated" });
+      const updated = yield* service.update(created.id, { name: "Updated" });
       expect(Option.isSome(updated)).toBe(true);
     }).pipe(Effect.provide(Layer.fresh(${className}Service.TestLayer)))
   );
 
   it.scoped("should delete ${propertyName}", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* ${className}Service;
 
-      const created = yield* service.create({ name: "ToDelete" });
-      const id = (created as { id: string }).id;
+      const created: ${className}TestEntity = yield* service.create({ name: "ToDelete" });
 
-      yield* service.delete(id);
+      yield* service.delete(created.id);
 
-      const exists = yield* service.exists(id);
+      const exists = yield* service.exists(created.id);
       expect(exists).toBe(false);
     }).pipe(Effect.provide(Layer.fresh(${className}Service.TestLayer)))
   );
 
   it.scoped("service methods should be defined", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* ${className}Service;
 
       expect(service.get).toBeDefined();
@@ -100,8 +107,8 @@ Uses ${className}Service.TestLayer which composes:
       expect(service.exists).toBeDefined();
     }).pipe(Effect.provide(Layer.fresh(${className}Service.TestLayer)))
   );
-});`);
-  builder.addBlankLine();
+});`)
+  builder.addBlankLine()
 
-  return builder.toString();
+  return builder.toString()
 }

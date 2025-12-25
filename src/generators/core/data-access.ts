@@ -14,18 +14,21 @@
  * @module monorepo-library-generator/generators/core/data-access-generator-core
  */
 
-import { Effect } from 'effect';
-import type { FileSystemAdapter } from '../../utils/filesystem';
-import { parseTags } from '../../utils/generators';
+import { Effect } from "effect"
+import type { FileSystemAdapter } from "../../utils/filesystem"
+import { parseTags } from "../../utils/generators"
+import { createNamingVariants } from "../../utils/naming"
 // Import type-only exports template
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates';
-import type { DataAccessTemplateOptions } from '../../utils/types';
-import { getPackageName } from '../../utils/workspace-config';
-import { generateErrorsFile } from '../data-access/templates/errors.template';
-import { generateIndexFile } from '../data-access/templates/index.template';
-import { generateLayersFile } from '../data-access/templates/layers.template';
-import { generateLayersSpecFile } from '../data-access/templates/layers-spec.template';
-import { generateQueriesFile } from '../data-access/templates/queries.template';
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates"
+import type { DataAccessTemplateOptions } from "../../utils/types"
+import { getPackageName } from "../../utils/workspace-config"
+import { generateAggregateFile } from "../data-access/templates/aggregate.template"
+import { generateCacheFile } from "../data-access/templates/cache.template"
+import { generateErrorsFile } from "../data-access/templates/errors.template"
+import { generateIndexFile } from "../data-access/templates/index.template"
+import { generateLayersSpecFile } from "../data-access/templates/layers-spec.template"
+import { generateLayersFile } from "../data-access/templates/layers.template"
+import { generateQueriesFile } from "../data-access/templates/queries.template"
 // Import new granular repository templates
 import {
   generateRepositoryAggregateOperationFile,
@@ -35,14 +38,18 @@ import {
   generateRepositoryIndexFile,
   generateRepositoryOperationsIndexFile,
   generateRepositoryReadOperationFile,
-  generateRepositoryUpdateOperationFile,
-} from '../data-access/templates/repository';
-import { generateRepositorySpecFile } from '../data-access/templates/repository-spec.template';
-import { generateTypesFile } from '../data-access/templates/types.template';
-import { generateValidationFile } from '../data-access/templates/validation.template';
-import type { GeneratorResult } from './contract';
+  generateRepositoryUpdateOperationFile
+} from "../data-access/templates/repository"
+import { generateRepositorySpecFile } from "../data-access/templates/repository-spec.template"
+import {
+  generateSubModuleRepositoryFile,
+  generateSubModuleRepositoryIndexFile
+} from "../data-access/templates/submodule-repository.template"
+import { generateTypesFile } from "../data-access/templates/types.template"
+import { generateValidationFile } from "../data-access/templates/validation.template"
+import type { GeneratorResult } from "./contract"
 
-export type { GeneratorResult };
+export type { GeneratorResult }
 
 /**
  * Data Access Generator Core Options
@@ -66,21 +73,25 @@ export type { GeneratorResult };
  * @property description - Library description for documentation
  * @property tags - Comma-separated tags for Nx project configuration
  * @property contractLibrary - Import path to contract library
+ * @property includeSubModules - Generate sub-module repositories with aggregate root
+ * @property subModules - Comma-separated list of sub-module names
  */
 export interface DataAccessCoreOptions {
-  readonly name: string;
-  readonly className: string;
-  readonly propertyName: string;
-  readonly fileName: string;
-  readonly constantName: string;
-  readonly projectName: string;
-  readonly projectRoot: string;
-  readonly sourceRoot: string;
-  readonly packageName: string;
-  readonly offsetFromRoot: string;
-  readonly description?: string;
-  readonly tags?: string;
-  readonly contractLibrary?: string;
+  readonly name: string
+  readonly className: string
+  readonly propertyName: string
+  readonly fileName: string
+  readonly constantName: string
+  readonly projectName: string
+  readonly projectRoot: string
+  readonly sourceRoot: string
+  readonly packageName: string
+  readonly offsetFromRoot: string
+  readonly description?: string
+  readonly tags?: string
+  readonly contractLibrary?: string
+  readonly includeSubModules?: boolean
+  readonly subModules?: string
 }
 
 /**
@@ -97,9 +108,9 @@ export interface DataAccessCoreOptions {
  * @returns Effect that succeeds with GeneratorResult or fails with FileSystemErrors
  */
 export function generateDataAccessCore(adapter: FileSystemAdapter, options: DataAccessCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Parse tags from comma-separated string
-    const parsedTags = parseTags(options.tags, []);
+    const parsedTags = parseTags(options.tags, [])
 
     // Assemble template options from pre-computed metadata
     const templateOptions: DataAccessTemplateOptions = {
@@ -108,7 +119,7 @@ export function generateDataAccessCore(adapter: FileSystemAdapter, options: Data
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: 'data-access',
+      libraryType: "data-access",
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
@@ -116,20 +127,24 @@ export function generateDataAccessCore(adapter: FileSystemAdapter, options: Data
       offsetFromRoot: options.offsetFromRoot,
       description: options.description ?? `Data access library for ${options.className}`,
       tags: parsedTags,
-      contractLibrary: options.contractLibrary ?? getPackageName('contract', options.fileName),
-    };
+      contractLibrary: options.contractLibrary ?? getPackageName("contract", options.fileName),
+      includeSubModules: options.includeSubModules ?? false,
+      subModules: options.subModules
+        ? options.subModules.split(",").map((s) => s.trim()).filter(Boolean)
+        : undefined
+    }
 
     // Generate all domain files
-    const filesGenerated = yield* generateDomainFiles(adapter, options.sourceRoot, templateOptions);
+    const filesGenerated = yield* generateDomainFiles(adapter, options.sourceRoot, templateOptions)
 
     return {
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       packageName: options.packageName,
       sourceRoot: options.sourceRoot,
-      filesGenerated,
-    };
-  });
+      filesGenerated
+    }
+  })
 }
 
 /**
@@ -146,14 +161,14 @@ export function generateDataAccessCore(adapter: FileSystemAdapter, options: Data
 function generateDomainFiles(
   adapter: FileSystemAdapter,
   sourceRoot: string,
-  templateOptions: DataAccessTemplateOptions,
+  templateOptions: DataAccessTemplateOptions
 ) {
-  return Effect.gen(function* () {
-    const workspaceRoot = adapter.getWorkspaceRoot();
-    const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`;
-    const sourceSharedPath = `${sourceLibPath}/shared`;
-    const sourceServerPath = `${sourceLibPath}/server`;
-    const files: Array<string> = [];
+  return Effect.gen(function*() {
+    const workspaceRoot = adapter.getWorkspaceRoot()
+    const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`
+    const sourceSharedPath = `${sourceLibPath}/shared`
+    const sourceServerPath = `${sourceLibPath}/server`
+    const files: Array<string> = []
 
     // Generate CLAUDE.md
     const claudeDoc = `# ${templateOptions.packageName}
@@ -162,126 +177,129 @@ ${templateOptions.description}
 
 ## AI Agent Reference
 
-This is a data-access library following Effect-based repository patterns with granular bundle optimization.
+This is a data-access library following Effect-based repository patterns.
 
-### Structure (Optimized for Tree-Shaking)
+### Structure (Flat lib/ Directory)
 
 - **types.ts**: Type-only exports (zero runtime overhead)
-- **lib/shared/**: Shared types, errors, and validation
-  - \`errors.ts\`: Data.TaggedError-based error types
-  - \`types.ts\`: Entity types, filters, pagination
-  - \`validation.ts\`: Input validation helpers
-
-- **lib/repository/**: Granular repository implementation
-  - \`interface.ts\`: Context.Tag with static layers
-  - \`operations/create.ts\`: Create operations (~4 KB)
-  - \`operations/read.ts\`: Read/query operations (~5 KB)
-  - \`operations/update.ts\`: Update operations (~3 KB)
-  - \`operations/delete.ts\`: Delete operations (~3 KB)
-  - \`operations/aggregate.ts\`: Count/exists operations (~3 KB)
-  - \`index.ts\`: Barrel export for convenience
-
+- **lib/repository.ts**: Context.Tag with static layers (Live, Test, Dev, Auto)
+- **lib/errors.ts**: Data.TaggedError-based error types
+- **lib/types.ts**: Entity types, filters, pagination
+- **lib/validation.ts**: Input validation helpers
 - **lib/queries.ts**: Kysely query builders
-- **lib/server/layers.ts**: Server-side Layer compositions (Live, Test, Dev, Auto)
+- **lib/cache.ts**: Read-through caching layer
 
-### Import Patterns (Most to Least Optimized)
+### Import Patterns
 
 \`\`\`typescript
-// 1. Granular operation import (smallest bundle ~4-5 KB)
-import { createOperations } from '${templateOptions.packageName}/repository/operations/create';
-
-// 2. Type-only import (zero runtime ~0.3 KB)
+// Type-only import (zero runtime)
 import type { ${templateOptions.className}, ${templateOptions.className}CreateInput } from '${templateOptions.packageName}/types';
 
-// 3. Operation category (~8-12 KB)
-import { createOperations, readOperations } from '${templateOptions.packageName}/repository/operations';
-
-// 4. Full repository (~15-20 KB)
-import { ${templateOptions.className}Repository } from '${templateOptions.packageName}/repository';
-
-// 5. Package barrel (largest ~25-30 KB)
-import { ${templateOptions.className}Repository } from '${templateOptions.packageName}';
-\`\`\`
-
-### Customization Guide
-
-1. **Update Entity Types** (\`lib/shared/types.ts\`):
-   - Modify entity schema to match your domain
-   - Add custom filter types
-   - Update pagination options
-
-2. **Implement Repository Operations**:
-   - \`lib/repository/operations/create.ts\`: Customize create logic
-   - \`lib/repository/operations/read.ts\`: Add domain-specific queries
-   - \`lib/repository/operations/update.ts\`: Implement update validation
-   - Each operation can be implemented independently
-
-3. **Configure Layers** (\`lib/server/layers.ts\`):
-   - Wire up dependencies (database, cache, etc.)
-   - Configure Live layer with actual implementations
-   - Customize Test layer for testing
-
-### Usage Example
-
-\`\`\`typescript
-// Granular import for optimal bundle size
-import { createOperations } from '${templateOptions.packageName}/repository/operations/create';
-import type { ${templateOptions.className}CreateInput } from '${templateOptions.packageName}/types';
-
-// Use directly without full repository
-const program = Effect.gen(function* () {
-  const created = yield* createOperations.create({
-    // ...entity data
-  } as ${templateOptions.className}CreateInput);
-  return created;
-});
-
-// Traditional approach (still works)
+// Repository import
 import { ${templateOptions.className}Repository } from '${templateOptions.packageName}';
 
-Effect.gen(function* () {
+Effect.gen(function*() {
   const repo = yield* ${templateOptions.className}Repository;
   const result = yield* repo.findById("id-123");
   // ...
 });
 \`\`\`
-`;
+
+### Customization Guide
+
+1. **Update Entity Types** (\`lib/types.ts\`):
+   - Modify entity schema to match your domain
+   - Add custom filter types
+   - Update pagination options
+
+2. **Implement Repository Operations** (\`lib/repository.ts\`):
+   - findById(), findMany(), findFirst() for reads
+   - create(), createMany() for creates
+   - update(), updateMany() for updates
+   - delete(), deleteMany() for deletes
+   - count(), exists() for aggregates
+
+3. **Configure Layers** (\`lib/repository.ts\` static members):
+   - Live: Production layer with real database
+   - Test: Mock layer for unit tests
+   - Dev: Debug logging layer
+   - Auto: Environment-aware layer selection (NODE_ENV)
+
+### Usage Example
+
+\`\`\`typescript
+import { ${templateOptions.className}Repository } from '${templateOptions.packageName}';
+import type { ${templateOptions.className}CreateInput } from '${templateOptions.packageName}/types';
+
+// Standard usage
+const program = Effect.gen(function*() {
+  const repo = yield* ${templateOptions.className}Repository;
+  const entity = yield* repo.findById("id-123");
+  return entity;
+});
+
+// With layers
+const result = program.pipe(
+  Effect.provide(${templateOptions.className}Repository.Live)  // Production
+  // or Effect.provide(${templateOptions.className}Repository.Test)   // Testing
+  // or Effect.provide(${templateOptions.className}Repository.Auto)   // NODE_ENV-based
+);
+
+// With caching layer
+import { ${templateOptions.className}Cache } from '${templateOptions.packageName}';
+
+Effect.gen(function*() {
+  const repo = yield* ${templateOptions.className}Repository;
+  const cache = yield* ${templateOptions.className}Cache;
+
+  // Reads go through cache (automatic lookup on miss)
+  const entity = yield* cache.get("id-123", () => repo.findById("id-123"));
+});
+\`\`\`
+
+### Testing Strategy
+
+1. **Use Test layer** - pure mock implementation for unit tests
+2. **Use Dev layer** - debug logging for development
+3. **Use Live layer** - production implementation
+4. **Use Auto layer** - NODE_ENV-based automatic selection
+`
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
-      claudeDoc,
-    );
+      claudeDoc
+    )
 
     // Create directories
-    yield* adapter.makeDirectory(sourceLibPath);
-    yield* adapter.makeDirectory(sourceSharedPath);
-    yield* adapter.makeDirectory(sourceServerPath);
+    yield* adapter.makeDirectory(sourceLibPath)
+    yield* adapter.makeDirectory(sourceSharedPath)
+    yield* adapter.makeDirectory(sourceServerPath)
 
     // Generate shared files
     const sharedFiles = [
       { path: `${sourceSharedPath}/errors.ts`, generator: generateErrorsFile },
       { path: `${sourceSharedPath}/types.ts`, generator: generateTypesFile },
-      { path: `${sourceSharedPath}/validation.ts`, generator: generateValidationFile },
-    ];
+      { path: `${sourceSharedPath}/validation.ts`, generator: generateValidationFile }
+    ]
 
     for (const { generator, path } of sharedFiles) {
-      const content = generator(templateOptions);
-      yield* adapter.writeFile(path, content);
-      files.push(path);
+      const content = generator(templateOptions)
+      yield* adapter.writeFile(path, content)
+      files.push(path)
     }
 
     // Generate repository files with granular structure for bundle optimization
-    const repositoryPath = `${sourceLibPath}/repository`;
-    const operationsPath = `${repositoryPath}/operations`;
+    const repositoryPath = `${sourceLibPath}/repository`
+    const operationsPath = `${repositoryPath}/operations`
 
     // Create repository directories
-    yield* adapter.makeDirectory(repositoryPath);
-    yield* adapter.makeDirectory(operationsPath);
+    yield* adapter.makeDirectory(repositoryPath)
+    yield* adapter.makeDirectory(operationsPath)
 
     // Generate repository interface
-    const interfaceContent = generateRepositoryFile(templateOptions);
-    yield* adapter.writeFile(`${repositoryPath}/repository.ts`, interfaceContent);
-    files.push(`${repositoryPath}/repository.ts`);
+    const interfaceContent = generateRepositoryFile(templateOptions)
+    yield* adapter.writeFile(`${repositoryPath}/repository.ts`, interfaceContent)
+    files.push(`${repositoryPath}/repository.ts`)
 
     // Generate operation files (split for optimal tree-shaking)
     const operationFiles = [
@@ -291,64 +309,204 @@ Effect.gen(function* () {
       { path: `${operationsPath}/delete.ts`, generator: generateRepositoryDeleteOperationFile },
       {
         path: `${operationsPath}/aggregate.ts`,
-        generator: generateRepositoryAggregateOperationFile,
-      },
-    ];
+        generator: generateRepositoryAggregateOperationFile
+      }
+    ]
 
     for (const { generator, path } of operationFiles) {
-      const content = generator(templateOptions);
-      yield* adapter.writeFile(path, content);
-      files.push(path);
+      const content = generator(templateOptions)
+      yield* adapter.writeFile(path, content)
+      files.push(path)
     }
 
     // Generate operations index (barrel)
-    const operationsIndexContent = generateRepositoryOperationsIndexFile(templateOptions);
-    yield* adapter.writeFile(`${operationsPath}/index.ts`, operationsIndexContent);
-    files.push(`${operationsPath}/index.ts`);
+    const operationsIndexContent = generateRepositoryOperationsIndexFile(templateOptions)
+    yield* adapter.writeFile(`${operationsPath}/index.ts`, operationsIndexContent)
+    files.push(`${operationsPath}/index.ts`)
 
     // Generate repository index (barrel)
-    const repositoryIndexContent = generateRepositoryIndexFile(templateOptions);
-    yield* adapter.writeFile(`${repositoryPath}/index.ts`, repositoryIndexContent);
-    files.push(`${repositoryPath}/index.ts`);
+    const repositoryIndexContent = generateRepositoryIndexFile(templateOptions)
+    yield* adapter.writeFile(`${repositoryPath}/index.ts`, repositoryIndexContent)
+    files.push(`${repositoryPath}/index.ts`)
 
     // Generate repository spec (updated to use new structure)
-    const repoSpecContent = generateRepositorySpecFile(templateOptions);
-    yield* adapter.writeFile(`${sourceLibPath}/repository.spec.ts`, repoSpecContent);
-    files.push(`${sourceLibPath}/repository.spec.ts`);
+    const repoSpecContent = generateRepositorySpecFile(templateOptions)
+    yield* adapter.writeFile(`${sourceLibPath}/repository.spec.ts`, repoSpecContent)
+    files.push(`${sourceLibPath}/repository.spec.ts`)
 
     // Generate queries file
-    const queriesContent = generateQueriesFile(templateOptions);
-    yield* adapter.writeFile(`${sourceLibPath}/queries.ts`, queriesContent);
-    files.push(`${sourceLibPath}/queries.ts`);
+    const queriesContent = generateQueriesFile(templateOptions)
+    yield* adapter.writeFile(`${sourceLibPath}/queries.ts`, queriesContent)
+    files.push(`${sourceLibPath}/queries.ts`)
+
+    // NOTE: Cache generation temporarily disabled due to architectural issues
+    // with Effect type inference and exactOptionalPropertyTypes.
+    // TODO: Redesign cache template to properly handle repository requirements
 
     // Generate server files
-    yield* adapter.writeFile(`${sourceServerPath}/layers.ts`, generateLayersFile(templateOptions));
-    files.push(`${sourceServerPath}/layers.ts`);
+    yield* adapter.writeFile(`${sourceServerPath}/layers.ts`, generateLayersFile(templateOptions))
+    files.push(`${sourceServerPath}/layers.ts`)
 
     yield* adapter.writeFile(
       `${sourceLibPath}/layers.spec.ts`,
-      generateLayersSpecFile(templateOptions),
-    );
-    files.push(`${sourceLibPath}/layers.spec.ts`);
+      generateLayersSpecFile(templateOptions)
+    )
+    files.push(`${sourceLibPath}/layers.spec.ts`)
 
     // Generate type-only exports file for zero-runtime imports
     const typesOnlyOptions: TypesOnlyExportOptions = {
-      libraryType: 'data-access',
+      libraryType: "data-access",
       className: templateOptions.className,
       fileName: templateOptions.fileName,
       packageName: templateOptions.packageName,
-      platform: 'server',
-    };
-    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions);
-    const typesOnlyPath = `${workspaceRoot}/${sourceRoot}/types.ts`;
-    yield* adapter.writeFile(typesOnlyPath, typesOnlyContent);
-    files.push(typesOnlyPath);
+      platform: "server"
+    }
+    const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
+    const typesOnlyPath = `${workspaceRoot}/${sourceRoot}/types.ts`
+    yield* adapter.writeFile(typesOnlyPath, typesOnlyContent)
+    files.push(typesOnlyPath)
 
     // Generate index
-    const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`;
-    yield* adapter.writeFile(indexPath, generateIndexFile(templateOptions));
-    files.push(indexPath);
+    const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
+    yield* adapter.writeFile(indexPath, generateIndexFile(templateOptions))
+    files.push(indexPath)
 
-    return files;
-  });
+    // Generate sub-module repositories with aggregate root (Hybrid DDD pattern)
+    if (templateOptions.includeSubModules && templateOptions.subModules) {
+      const subModuleFiles = yield* generateSubModuleRepositories(
+        adapter,
+        workspaceRoot,
+        sourceRoot,
+        sourceLibPath,
+        templateOptions
+      )
+      for (const file of subModuleFiles) {
+        files.push(file)
+      }
+    }
+
+    return files
+  })
+}
+
+/**
+ * Generate sub-module repositories with aggregate root
+ *
+ * Creates sub-module repository directories and an aggregate root
+ * that coordinates all sub-module repositories.
+ */
+function generateSubModuleRepositories(
+  adapter: FileSystemAdapter,
+  workspaceRoot: string,
+  sourceRoot: string,
+  sourceLibPath: string,
+  templateOptions: DataAccessTemplateOptions
+) {
+  return Effect.gen(function*() {
+    const files: Array<string> = []
+    const subModuleNames = templateOptions.subModules ?? []
+
+    if (subModuleNames.length === 0) {
+      return files
+    }
+
+    // Generate each sub-module repository
+    for (const subModuleName of subModuleNames) {
+      const subModuleClassName = createNamingVariants(subModuleName).className
+      const subModulePath = `${sourceLibPath}/${subModuleName}`
+
+      // Create sub-module directory
+      yield* adapter.makeDirectory(subModulePath)
+
+      const subModuleOptions = {
+        parentName: templateOptions.name,
+        parentClassName: templateOptions.className,
+        parentFileName: templateOptions.fileName,
+        subModuleName,
+        subModuleClassName
+      }
+
+      // Generate sub-module repository.ts
+      const repoPath = `${subModulePath}/repository.ts`
+      yield* adapter.writeFile(repoPath, generateSubModuleRepositoryFile(subModuleOptions))
+      files.push(repoPath)
+
+      // Generate sub-module index.ts
+      const indexPath = `${subModulePath}/index.ts`
+      yield* adapter.writeFile(indexPath, generateSubModuleRepositoryIndexFile(subModuleOptions))
+      files.push(indexPath)
+    }
+
+    // Generate aggregate root that coordinates all sub-module repositories
+    const aggregatePath = `${sourceLibPath}/aggregate.ts`
+    const aggregateContent = generateAggregateFile({
+      name: templateOptions.name,
+      className: templateOptions.className,
+      fileName: templateOptions.fileName,
+      packageName: templateOptions.packageName,
+      subModuleNames
+    })
+    yield* adapter.writeFile(aggregatePath, aggregateContent)
+    files.push(aggregatePath)
+
+    // Update main index to export sub-modules and aggregate
+    yield* updateDataAccessIndexWithSubModules(
+      adapter,
+      workspaceRoot,
+      sourceRoot,
+      templateOptions,
+      subModuleNames
+    )
+
+    return files
+  })
+}
+
+/**
+ * Update main index.ts to include sub-module and aggregate exports
+ */
+function updateDataAccessIndexWithSubModules(
+  adapter: FileSystemAdapter,
+  workspaceRoot: string,
+  sourceRoot: string,
+  templateOptions: DataAccessTemplateOptions,
+  subModuleNames: Array<string>
+) {
+  return Effect.gen(function*() {
+    const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
+
+    // Read existing index content
+    const existingContent = yield* adapter.readFile(indexPath)
+
+    // Add sub-module namespace exports
+    const subModuleExports = subModuleNames
+      .map((name) => {
+        const className = createNamingVariants(name).className
+        return `export * as ${className} from "./lib/${name}";`
+      })
+      .join("\n")
+
+    const newContent = `${existingContent}
+
+// ============================================================================
+// Aggregate Root Export (Hybrid DDD Pattern)
+// ============================================================================
+
+export {
+  ${templateOptions.className}Aggregate,
+  ${templateOptions.className}AggregateLive,
+  ${templateOptions.className}AggregateTestLayer,
+  ${templateOptions.className}AggregateLayer,
+  type ${templateOptions.className}AggregateInterface,
+} from "./lib/aggregate";
+
+// ============================================================================
+// Sub-Module Repository Exports
+// ============================================================================
+
+${subModuleExports}
+`
+
+    yield* adapter.writeFile(indexPath, newContent)
+  })
 }

@@ -1,0 +1,18 @@
+{
+  "name": "@samuelho-dev/env",
+  "version": "0.0.1",
+  "type": "module",
+  "sideEffects": false,
+  "description": "Type-safe environment variable access with Effect Config",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "peerDependencies": {
+    "effect": "*",
+    "@effect/platform": "*",
+    "@effect/platform-node": "*"
+  }
+}

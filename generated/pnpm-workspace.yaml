@@ -1,9 +1,0 @@
-# pnpm workspace configuration
-# See: https://pnpm.io/workspaces
-
-packages:
-  # All libraries
-  - 'libs/**'
-
-  # Example apps (if you create any)
-  - 'apps/**'

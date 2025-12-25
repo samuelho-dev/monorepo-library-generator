@@ -43,12 +43,6 @@
       "description": "Include CQRS pattern files (commands, queries, projections)",
       "default": false,
       "x-prompt": "Include CQRS pattern files (commands, queries, projections)?"
-    },
-    "includeRPC": {
-      "type": "boolean",
-      "description": "Include RPC schemas for request/response types",
-      "default": false,
-      "x-prompt": "Include RPC schemas for network boundaries?"
     }
   },
   "required": ["name"]

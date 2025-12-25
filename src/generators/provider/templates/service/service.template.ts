@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/provider/service/service-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { ProviderTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate service/service.ts file
@@ -16,9 +16,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * Creates Context.Tag interface with static layers using dynamic imports
  */
 export function generateProviderServiceFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, cliCommand, externalService, fileName, providerType = 'sdk' } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, cliCommand, externalService, fileName, providerType = "sdk" } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Service Interface`,
@@ -27,92 +27,93 @@ export function generateProviderServiceFile(options: ProviderTemplateOptions) {
 External Service: ${externalService}
 
 ${
-  providerType === 'sdk'
-    ? `Operations are split into separate files for optimal tree-shaking.
+      providerType === "sdk"
+        ? `Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.
 
 Bundle optimization:
   - Granular import: import { createOperations } from './operations/create'
   - Full service: import { ${className} } from './service'`
-    : `Provider Type: ${providerType}`
-}`,
-    module: `${scope}/provider-${fileName}/service`,
-  });
-  builder.addBlankLine();
+        : `Provider Type: ${providerType}`
+    }`,
+    module: `${scope}/provider-${fileName}/service`
+  })
+  builder.addBlankLine()
 
   // Add imports based on provider type
-  const effectImports = ['Context', 'Effect', 'Layer'];
-  if (providerType === 'cli') {
-    effectImports.push('Command');
+  const effectImports = ["Context", "Effect", "Layer"]
+  if (providerType === "cli") {
+    effectImports.push("Command")
   }
 
-  builder.addImports([{ from: 'effect', imports: [...effectImports, 'Redacted'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: [...effectImports, "Redacted"] }])
+  builder.addBlankLine()
 
   // Add platform imports for HTTP/GraphQL
-  if (providerType === 'http' || providerType === 'graphql') {
+  if (providerType === "http" || providerType === "graphql") {
     builder.addImports([
       {
-        from: '@effect/platform',
-        imports: ['HttpClient', 'HttpClientRequest', 'HttpClientResponse'],
-      },
-    ]);
-    if (providerType === 'http') {
-      builder.addImports([{ from: '@effect/platform', imports: ['HttpBody'] }]);
+        from: "@effect/platform",
+        imports: ["HttpClient", "HttpClientRequest", "HttpClientResponse"]
+      }
+    ])
+    if (providerType === "http") {
+      builder.addImports([{ from: "@effect/platform", imports: ["HttpBody"] }])
     }
-    builder.addImports([{ from: 'effect', imports: ['Schedule'] }]);
-    builder.addBlankLine();
+    builder.addImports([{ from: "effect", imports: ["Schedule"] }])
+    builder.addBlankLine()
   }
 
   // Import shared types and errors - conditional based on provider type
-  const typeImports = [`${className}Config`];
-  if (providerType === 'cli') {
-    typeImports.push('CommandResult');
+  const typeImports = [`${className}Config`]
+  if (providerType === "cli") {
+    typeImports.push("CommandResult")
   } else {
-    typeImports.push('Resource', 'ListParams', 'PaginatedResult', 'HealthCheckResult');
+    typeImports.push("Resource", "ListParams", "PaginatedResult", "HealthCheckResult")
   }
 
+  // Import from lib/ (flat structure - all files at same level as service.ts)
   builder.addImports([
     {
-      from: '../types',
+      from: "./types",
       imports: typeImports,
-      isTypeOnly: true,
+      isTypeOnly: true
     },
     {
-      from: '../errors',
+      from: "./errors",
       imports: [`${className}ServiceError`],
-      isTypeOnly: true,
-    },
-  ]);
+      isTypeOnly: true
+    }
+  ])
 
   // Import NotFoundError as value for Test layer usage
   builder.addImports([
     {
-      from: '../errors',
-      imports: [`${className}NotFoundError`],
-    },
-  ]);
+      from: "./errors",
+      imports: [`${className}NotFoundError`]
+    }
+  ])
 
-  // Note: env is imported in layers.ts, not here - keeps service interface pure
-  // This allows tests to import service.ts without triggering env runSync
+  // Environment configuration
+  builder.addImports([{ from: `${scope}/env`, imports: ["env"] }])
 
   // HTTP/GraphQL providers need ResourceSchema as a value import (not type-only)
   // for HttpClientResponse.schemaBodyJson() validation
-  if (providerType === 'http' || providerType === 'graphql') {
+  if (providerType === "http" || providerType === "graphql") {
     builder.addImports([
       {
-        from: '../types',
-        imports: ['ResourceSchema'],
-      },
-    ]);
+        from: "./types",
+        imports: ["ResourceSchema"]
+      }
+    ])
   }
-  builder.addBlankLine();
+  builder.addBlankLine()
 
   // Service interface - conditional based on provider type
-  builder.addSectionComment('Service Interface');
-  builder.addBlankLine();
+  builder.addSectionComment("Service Interface")
+  builder.addBlankLine()
 
-  if (providerType === 'cli') {
+  if (providerType === "cli") {
     // CLI Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -140,8 +141,8 @@ export interface ${className}ServiceInterface {
    * Get command version
    */
   readonly version;
-}`);
-  } else if (providerType === 'http') {
+}`)
+  } else if (providerType === "http") {
     // HTTP Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -189,8 +190,8 @@ export interface ${className}ServiceInterface {
    * List resources with pagination
    */
   readonly list: (params?: ListParams);
-}`);
-  } else if (providerType === 'graphql') {
+}`)
+  } else if (providerType === "graphql") {
     // GraphQL Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -228,7 +229,7 @@ export interface ${className}ServiceInterface {
     mutation: string,
     variables?: Record<string, unknown>
   );
-}`);
+}`)
   } else {
     // SDK Provider Interface (original)
     builder.addRaw(`/**
@@ -455,13 +456,13 @@ export interface ${className}ServiceInterface {
   //
   // See EFFECT_PATTERNS.md "Streaming & Queuing Patterns" for comprehensive examples.
   // See PROVIDER.md for provider-specific Stream integration patterns.
-}`);
+}`)
   }
-  builder.addBlankLine();
+  builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment('Context.Tag');
-  builder.addBlankLine();
+  builder.addSectionComment("Context.Tag")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * ${className} Service Tag
@@ -480,10 +481,10 @@ export interface ${className}ServiceInterface {
 export class ${className} extends Context.Tag("${className}")<
   ${className},
   ${className}ServiceInterface
->() {`);
+>() {`)
 
   // Add conditional Live layer implementation
-  if (providerType === 'cli') {
+  if (providerType === "cli") {
     // CLI Live Layer
     builder.addRaw(`  /**
    * Live Layer - CLI command execution
@@ -512,8 +513,40 @@ export class ${className} extends Context.Tag("${className}")<
 
       return { config, execute, version }
     })
-  )`);
-  } else if (providerType === 'http') {
+  )
+
+  /**
+   * Test layer - Same as Live
+   *
+   * Testing is done by mocking command execution or using test fixtures.
+   */
+  static readonly Test = this.Live;
+
+  /**
+   * Dev layer - Same as Live
+   *
+   * Enhanced logging comes from command output capture.
+   */
+  static readonly Dev = this.Live;
+
+  /**
+   * Auto layer - Environment-aware layer selection
+   *
+   * Uses type-safe env library for environment access.
+   */
+  static readonly Auto = Layer.suspend(() => {
+    switch (env.NODE_ENV) {
+      case "test":
+        return ${className}.Test;
+      case "development":
+        return ${className}.Dev;
+      case "production":
+      default:
+        return ${className}.Live;
+    }
+  });
+}`)
+  } else if (providerType === "http") {
     // HTTP Live Layer
     builder.addRaw(`  /**
    * Live Layer - HTTP REST API client
@@ -617,8 +650,40 @@ export class ${className} extends Context.Tag("${className}")<
 
       return { config, healthCheck, get, post, put, delete: del, list }
     })
-  )`);
-  } else if (providerType === 'graphql') {
+  )
+
+  /**
+   * Test layer - Same as Live
+   *
+   * Testing is done by mocking HttpClient responses.
+   */
+  static readonly Test = this.Live;
+
+  /**
+   * Dev layer - Same as Live
+   *
+   * Enhanced logging via HttpClient interceptors.
+   */
+  static readonly Dev = this.Live;
+
+  /**
+   * Auto layer - Environment-aware layer selection
+   *
+   * Uses type-safe env library for environment access.
+   */
+  static readonly Auto = Layer.suspend(() => {
+    switch (env.NODE_ENV) {
+      case "test":
+        return ${className}.Test;
+      case "development":
+        return ${className}.Dev;
+      case "production":
+      default:
+        return ${className}.Live;
+    }
+  });
+}`)
+  } else if (providerType === "graphql") {
     // GraphQL Live Layer
     builder.addRaw(`  /**
    * Live Layer - GraphQL API client
@@ -691,7 +756,39 @@ export class ${className} extends Context.Tag("${className}")<
         mutation: execute
       }
     })
-  )`);
+  )
+
+  /**
+   * Test layer - Same as Live
+   *
+   * Testing is done by mocking GraphQL responses.
+   */
+  static readonly Test = this.Live;
+
+  /**
+   * Dev layer - Same as Live
+   *
+   * Enhanced logging for GraphQL operations.
+   */
+  static readonly Dev = this.Live;
+
+  /**
+   * Auto layer - Environment-aware layer selection
+   *
+   * Uses type-safe env library for environment access.
+   */
+  static readonly Auto = Layer.suspend(() => {
+    switch (env.NODE_ENV) {
+      case "test":
+        return ${className}.Test;
+      case "development":
+        return ${className}.Dev;
+      case "production":
+      default:
+        return ${className}.Live;
+    }
+  });
+}`)
   } else {
     // SDK Live Layer - Uses in-memory baseline implementation
     // Replace with real SDK calls when integrating with external service
@@ -943,17 +1040,17 @@ export class ${className} extends Context.Tag("${className}")<
    * Dev Layer - Development with enhanced logging
    *
    * Wraps Live layer with request/response logging for debugging.
-   * Useful for debugging external SDK integrations.
+   * Uses Effect.logDebug for testable, structured logging.
    */
   static readonly Dev = Layer.effect(
     ${className},
     Effect.gen(function* () {
-      console.log("[${className}] [DEV] Initializing development layer");
+      yield* Effect.logDebug("[${className}] [DEV] Initializing development layer");
 
       // Get actual implementation from Live layer
       const liveService = yield* ${className}.Live.pipe(
         Layer.build,
-        Effect.map(Context.unsafeGet(${className}))
+        Effect.map((ctx) => Context.get(ctx, ${className}))
       );
 
       // Wrap all operations with logging
@@ -961,55 +1058,78 @@ export class ${className} extends Context.Tag("${className}")<
         config: liveService.config,
 
         healthCheck: Effect.gen(function* () {
-          console.log("[${className}] [DEV] healthCheck called");
+          yield* Effect.logDebug("[${className}] [DEV] healthCheck called");
           const result = yield* liveService.healthCheck;
-          console.log("[${className}] [DEV] healthCheck result:", result);
+          yield* Effect.logDebug("[${className}] [DEV] healthCheck result", { result });
           return result;
         }),
 
         list: (params) =>
           Effect.gen(function* () {
-            console.log("[${className}] [DEV] list called with:", params);
+            yield* Effect.logDebug("[${className}] [DEV] list called", { params });
             const result = yield* liveService.list(params);
-            console.log("[${className}] [DEV] list result:", { count: result.data.length, total: result.total });
+            yield* Effect.logDebug("[${className}] [DEV] list result", { count: result.data.length, total: result.total });
             return result;
           }),
 
         get: (id) =>
           Effect.gen(function* () {
-            console.log("[${className}] [DEV] get called with id:", id);
+            yield* Effect.logDebug("[${className}] [DEV] get called", { id });
             const result = yield* liveService.get(id);
-            console.log("[${className}] [DEV] get result:", result);
+            yield* Effect.logDebug("[${className}] [DEV] get result", { result });
             return result;
           }),
 
         create: (data) =>
           Effect.gen(function* () {
-            console.log("[${className}] [DEV] create called with:", data);
+            yield* Effect.logDebug("[${className}] [DEV] create called", { data });
             const result = yield* liveService.create(data);
-            console.log("[${className}] [DEV] create result:", result);
+            yield* Effect.logDebug("[${className}] [DEV] create result", { result });
             return result;
           }),
 
         update: (id, data) =>
           Effect.gen(function* () {
-            console.log("[${className}] [DEV] update called with id:", id, "data:", data);
+            yield* Effect.logDebug("[${className}] [DEV] update called", { id, data });
             const result = yield* liveService.update(id, data);
-            console.log("[${className}] [DEV] update result:", result);
+            yield* Effect.logDebug("[${className}] [DEV] update result", { result });
             return result;
           }),
 
         delete: (id) =>
           Effect.gen(function* () {
-            console.log("[${className}] [DEV] delete called with id:", id);
+            yield* Effect.logDebug("[${className}] [DEV] delete called", { id });
             yield* liveService.delete(id);
-            console.log("[${className}] [DEV] delete completed");
+            yield* Effect.logDebug("[${className}] [DEV] delete completed", { id });
           })
       };
     })
   );
-}`);
+
+  /**
+   * Auto Layer - Environment-aware layer selection
+   *
+   * Automatically selects the appropriate layer based on NODE_ENV:
+   * - "production" → Live layer
+   * - "development" → Dev layer (with logging)
+   * - "test" → Test layer
+   * - undefined/other → Live layer (default)
+   *
+   * Use this layer when you want automatic environment detection.
+   */
+  static readonly Auto = Layer.suspend(() => {
+    switch (env.NODE_ENV) {
+      case "test":
+        return ${className}.Test;
+      case "development":
+        return ${className}.Dev;
+      case "production":
+      default:
+        return ${className}.Live;
+    }
+  });
+}`)
   }
 
-  return builder.toString();
+  return builder.toString()
 }

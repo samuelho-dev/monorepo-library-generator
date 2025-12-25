@@ -6,17 +6,17 @@
  * @module monorepo-library-generator/data-access/repository/delete-operation-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { DataAccessTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/delete.ts file
  */
 export function generateRepositoryDeleteOperationFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Delete Operations`,
@@ -24,29 +24,29 @@ export function generateRepositoryDeleteOperationFile(options: DataAccessTemplat
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { deleteOperations } from '@scope/data-access-${fileName}/repository/operations/delete'`,
-    module: `${scope}/data-access-${fileName}/repository/operations`,
-  });
-  builder.addBlankLine();
+    module: `${scope}/data-access-${fileName}/repository/operations`
+  })
+  builder.addBlankLine()
 
-  builder.addImports([{ from: 'effect', imports: ['Effect', 'Duration'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
+  builder.addBlankLine()
 
   builder.addImports([
     {
-      from: '../../shared/errors',
-      imports: [`${className}TimeoutError`],
-      isTypeOnly: false,
-    },
-  ]);
-  builder.addBlankLine();
+      from: "../../shared/errors",
+      imports: [`${className}TimeoutError`, `${className}NotFoundRepositoryError`],
+      isTypeOnly: false
+    }
+  ])
+  builder.addBlankLine()
 
   // Import infrastructure services
-  builder.addComment('Infrastructure services - Database for persistence');
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
-  builder.addBlankLine();
+  builder.addComment("Infrastructure services - Database for persistence")
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
+  builder.addBlankLine()
 
-  builder.addSectionComment('Delete Operations');
-  builder.addBlankLine();
+  builder.addSectionComment("Delete Operations")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Delete operations for ${className} repository
@@ -64,24 +64,26 @@ export const deleteOperations = {
    * Delete ${className} entity by ID
    */
   delete: (id: string) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Deleting ${className} with id: \${id}\`);
 
       const result = yield* database.query((db) =>
         db
-          .deleteFrom("${fileName}s")
+          .deleteFrom("${fileName}")
           .where("id", "=", id)
           .executeTakeFirst()
       );
 
       const deletedCount = Number(result.numDeletedRows);
-      if (deletedCount > 0) {
-        yield* Effect.logDebug(\`${className} deleted successfully (id: \${id})\`);
-      } else {
-        yield* Effect.logDebug(\`${className} not found for deletion (id: \${id})\`);
+      if (deletedCount === 0) {
+        // Throw NotFoundRepositoryError when record doesn't exist
+        // This ensures callers can distinguish "deleted" from "nothing to delete"
+        return yield* Effect.fail(${className}NotFoundRepositoryError.create(id));
       }
+
+      yield* Effect.logDebug(\`${className} deleted successfully (id: \${id})\`);
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -92,22 +94,34 @@ export const deleteOperations = {
 
   /**
    * Delete multiple ${className} entities by IDs
+   *
+   * Note: This operation is idempotent for batch deletes - it does not fail
+   * if some records don't exist. Returns the count of actually deleted records.
+   * Use \`delete\` for single-record deletion with strict existence checking.
+   *
+   * @returns The number of records that were actually deleted
    */
   deleteMany: (ids: ReadonlyArray<string>) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
+
+      if (ids.length === 0) {
+        return 0;
+      }
 
       yield* Effect.logDebug(\`Deleting \${ids.length} ${className} entities\`);
 
       const result = yield* database.query((db) =>
         db
-          .deleteFrom("${fileName}s")
+          .deleteFrom("${fileName}")
           .where("id", "in", ids)
           .executeTakeFirst()
       );
 
       const deletedCount = Number(result.numDeletedRows);
       yield* Effect.logDebug(\`Deleted \${deletedCount}/\${ids.length} ${className} entities\`);
+
+      return deletedCount;
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
@@ -120,7 +134,7 @@ export const deleteOperations = {
 /**
  * Type alias for the delete operations object
  */
-export type Delete${className}Operations = typeof deleteOperations;`);
+export type Delete${className}Operations = typeof deleteOperations;`)
 
-  return builder.toString();
+  return builder.toString()
 }

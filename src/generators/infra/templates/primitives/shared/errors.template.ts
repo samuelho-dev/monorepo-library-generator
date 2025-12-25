@@ -1,112 +1,78 @@
 /**
  * Primitive Errors Template
  *
- * Generates Schema.TaggedError based errors for primitive infrastructure services.
- * Uses modern Effect patterns for serializable, discriminated error types.
+ * Generates Data.TaggedError based errors for primitive infrastructure services.
+ * Uses shared error utilities to ensure consistency across all generated libraries.
+ *
+ * Note: Primitives are internal services, not RPC boundaries.
+ * They use Data.TaggedError (non-serializable) for internal error handling.
+ * Schema.TaggedError is reserved for RPC boundary errors only (in infra-rpc).
  *
  * @module monorepo-library-generator/infra-templates/primitives/shared
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
+import {
+  type ErrorGeneratorConfig,
+  generateBaseError,
+  generateConfigError,
+  generateConnectionError,
+  generateInternalError,
+  generateTimeoutError
+} from "../../../../shared/errors"
 
 /**
  * Generate errors.ts file for primitive infrastructure services
+ *
+ * Uses shared error utilities with 'data' style for Data.TaggedError pattern.
+ * Primitives are internal services - Schema.TaggedError is only for RPC boundary.
  */
 export function generatePrimitiveErrorsFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Errors`,
     description: `Error types for ${className} infrastructure service.
 
-Uses Schema.TaggedError for:
-- Serializable errors (can cross process boundaries)
-- Discriminated union types (pattern matching)
-- Runtime type validation`,
+Uses Data.TaggedError for internal infrastructure errors:
+- Discriminated union types (pattern matching with Effect.catchTag)
+- Non-serializable (stays within service boundaries)
+- Transformed to RPC errors at handler boundaries`,
     module: `${scope}/infra-${fileName}/errors`,
-    see: ['Effect documentation for Schema.TaggedError patterns'],
-  });
+    see: ["Effect documentation for Data.TaggedError patterns"]
+  })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Schema'],
-    },
-  ]);
+      from: "effect",
+      imports: ["Data"]
+    }
+  ])
 
-  builder.addSectionComment('Base Error Type');
+  builder.addSectionComment("Error Types")
 
-  builder.addRaw(`/**
- * Base error class for ${className} service
- *
- * All ${className} errors extend this tagged error type.
- * The _tag field enables pattern matching and type narrowing.
- */
-export class ${className}ServiceError extends Schema.TaggedError<${className}ServiceError>()(
-  "${className}ServiceError",
-  {
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown)
+  // Use shared error generators with 'data' style (internal services)
+  const errorConfig: ErrorGeneratorConfig = {
+    className,
+    style: "data",
+    includeStaticCreate: false // Keep consistent with other infra errors
   }
-) {}
-`);
 
-  builder.addSectionComment('Specific Error Types');
+  // Generate standard infrastructure errors
+  generateBaseError(builder, errorConfig)
+  generateInternalError(builder, errorConfig)
+  generateConfigError(builder, errorConfig)
+  generateConnectionError(builder, errorConfig)
+  generateTimeoutError(builder, errorConfig)
 
-  builder.addRaw(`/**
- * Internal error - unexpected failures
- *
- * Use for errors that indicate bugs or unexpected conditions.
- */
-export class ${className}InternalError extends Schema.TaggedError<${className}InternalError>()(
-  "${className}InternalError",
-  {
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown)
-  }
-) {}
+  builder.addSectionComment("Error Type Union")
 
-/**
- * Configuration error - invalid or missing configuration
- */
-export class ${className}ConfigError extends Schema.TaggedError<${className}ConfigError>()(
-  "${className}ConfigError",
-  {
-    message: Schema.String,
-    field: Schema.optional(Schema.String)
-  }
-) {}
-
-/**
- * Connection error - failure to connect to backing service
- */
-export class ${className}ConnectionError extends Schema.TaggedError<${className}ConnectionError>()(
-  "${className}ConnectionError",
-  {
-    message: Schema.String,
-    endpoint: Schema.optional(Schema.String),
-    cause: Schema.optional(Schema.Unknown)
-  }
-) {}
-
-/**
- * Timeout error - operation exceeded time limit
- */
-export class ${className}TimeoutError extends Schema.TaggedError<${className}TimeoutError>()(
-  "${className}TimeoutError",
-  {
-    message: Schema.String,
-    timeoutMs: Schema.optional(Schema.Number)
-  }
-) {}
-`);
-
-  builder.addSectionComment('Error Type Union');
-
+  // Generate error union
+  // Note: Uses ServiceError suffix for base error to avoid conflict with union type
   builder.addRaw(`/**
  * Union of all ${className} error types
  *
@@ -117,13 +83,13 @@ export class ${className}TimeoutError extends Schema.TaggedError<${className}Tim
  * Effect.catchTag("${className}TimeoutError", (err) => ...)
  * \`\`\`
  */
-export type ${className}Error =
-  | ${className}ServiceError
+export type ${className}ServiceError =
+  | ${className}Error
   | ${className}InternalError
   | ${className}ConfigError
   | ${className}ConnectionError
   | ${className}TimeoutError
-`);
+`)
 
-  return builder.toString();
+  return builder.toString()
 }

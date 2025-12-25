@@ -10,14 +10,13 @@
  * @module monorepo-library-generator/filesystem
  */
 
-import * as nodeFs from 'node:fs';
-import * as nodePath from 'node:path';
-import { FileSystem, Path } from '@effect/platform';
-import { NodeFileSystem, NodePath } from '@effect/platform-node';
-import type { Tree } from '@nx/devkit';
-import { Context, Data, Effect } from 'effect';
-import type { WorkspaceContext } from '../infrastructure/workspace/types';
-import { copyAllDotfiles, type DotfileName } from './dotfiles';
+import { FileSystem, Path } from "@effect/platform"
+import { NodeFileSystem, NodePath } from "@effect/platform-node"
+import type { Tree } from "@nx/devkit"
+import { Context, Data, Effect } from "effect"
+import * as nodeFs from "node:fs"
+import * as nodePath from "node:path"
+import type { WorkspaceContext } from "../infrastructure"
 
 // ============================================================================
 // Error Types
@@ -26,43 +25,43 @@ import { copyAllDotfiles, type DotfileName } from './dotfiles';
 /**
  * Base file system error
  */
-export class FileSystemError extends Data.TaggedError('FileSystemError')<{
-  readonly message: string;
-  readonly path?: string;
-  readonly cause?: unknown;
+export class FileSystemError extends Data.TaggedError("FileSystemError")<{
+  readonly message: string
+  readonly path?: string
+  readonly cause?: unknown
 }> {}
 
 /**
  * File not found error
  */
-export class FileNotFoundError extends Data.TaggedError('FileNotFoundError')<{
-  readonly path: string;
-  readonly cause?: unknown;
+export class FileNotFoundError extends Data.TaggedError("FileNotFoundError")<{
+  readonly path: string
+  readonly cause?: unknown
 }> {}
 
 /**
  * Directory creation error
  */
-export class DirectoryCreationError extends Data.TaggedError('DirectoryCreationError')<{
-  readonly path: string;
-  readonly cause?: unknown;
+export class DirectoryCreationError extends Data.TaggedError("DirectoryCreationError")<{
+  readonly path: string
+  readonly cause?: unknown
 }> {}
 
 /**
  * File write error
  */
-export class FileWriteError extends Data.TaggedError('FileWriteError')<{
-  readonly path: string;
-  readonly content?: string;
-  readonly cause?: unknown;
+export class FileWriteError extends Data.TaggedError("FileWriteError")<{
+  readonly path: string
+  readonly content?: string
+  readonly cause?: unknown
 }> {}
 
 /**
  * File read error
  */
-export class FileReadError extends Data.TaggedError('FileReadError')<{
-  readonly path: string;
-  readonly cause?: unknown;
+export class FileReadError extends Data.TaggedError("FileReadError")<{
+  readonly path: string
+  readonly cause?: unknown
 }> {}
 
 /**
@@ -73,7 +72,7 @@ export type FileSystemErrors =
   | FileNotFoundError
   | DirectoryCreationError
   | FileWriteError
-  | FileReadError;
+  | FileReadError
 
 // ============================================================================
 // FileSystemAdapter Interface
@@ -92,13 +91,13 @@ export interface FileSystemAdapter {
    * Creates parent directories if they don't exist.
    *
    * @param path - Absolute or relative file path
-   * @param content - File content as string
+   * @param content - File content
    * @returns Effect that succeeds with void or fails with FileWriteError
    */
   writeFile(
     path: string,
-    content: string,
-  ): Effect.Effect<void, FileWriteError | DirectoryCreationError>;
+    content: string
+  ): Effect.Effect<void, FileWriteError | DirectoryCreationError>
 
   /**
    * Read a file from the specified path
@@ -106,7 +105,7 @@ export interface FileSystemAdapter {
    * @param path - Absolute or relative file path
    * @returns Effect that succeeds with file content or fails with FileReadError
    */
-  readFile(path: string): Effect.Effect<string, FileReadError>;
+  readFile(path: string): Effect.Effect<string, FileReadError>
 
   /**
    * Check if a file or directory exists
@@ -114,7 +113,7 @@ export interface FileSystemAdapter {
    * @param path - Absolute or relative path
    * @returns Effect that succeeds with boolean (true if exists)
    */
-  exists(path: string): Effect.Effect<boolean, FileSystemError>;
+  exists(path: string): Effect.Effect<boolean, FileSystemError>
 
   /**
    * Create a directory (including parent directories)
@@ -122,7 +121,7 @@ export interface FileSystemAdapter {
    * @param path - Absolute or relative directory path
    * @returns Effect that succeeds with void or fails with DirectoryCreationError
    */
-  makeDirectory(path: string): Effect.Effect<void, DirectoryCreationError>;
+  makeDirectory(path: string): Effect.Effect<void, DirectoryCreationError>
 
   /**
    * List contents of a directory
@@ -130,7 +129,7 @@ export interface FileSystemAdapter {
    * @param path - Absolute or relative directory path
    * @returns Effect that succeeds with array of file/directory names
    */
-  listDirectory(path: string): Effect.Effect<ReadonlyArray<string>, FileSystemError>;
+  listDirectory(path: string): Effect.Effect<ReadonlyArray<string>, FileSystemError>
 
   /**
    * Delete a file or directory
@@ -139,27 +138,27 @@ export interface FileSystemAdapter {
    * @param recursive - If true, delete directories recursively
    * @returns Effect that succeeds with void or fails with FileSystemError
    */
-  remove(path: string, options?: { recursive?: boolean }): Effect.Effect<void, FileSystemError>;
+  remove(path: string, options?: { recursive?: boolean }): Effect.Effect<void, FileSystemError>
 
   /**
    * Get the root directory of the workspace
    *
    * @returns Workspace root path
    */
-  getWorkspaceRoot(): string;
+  getWorkspaceRoot(): string
 
   /**
    * Check if running in Nx mode or Effect mode
    *
    * @returns 'nx' or 'effect'
    */
-  getMode(): 'nx' | 'effect';
+  getMode(): "nx" | "effect"
 }
 
 /**
  * FileSystemService context tag for dependency injection
  */
-export class FileSystemService extends Context.Tag('FileSystemService')<
+export class FileSystemService extends Context.Tag("FileSystemService")<
   FileSystemService,
   FileSystemAdapter
 >() {}
@@ -179,7 +178,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
     private readonly workspaceRoot: string,
     private readonly fs: FileSystem.FileSystem,
     private readonly pathService: Path.Path,
-    private readonly mode: 'nx' | 'effect' = 'effect',
+    private readonly mode: "nx" | "effect" = "effect"
   ) {}
 
   /**
@@ -188,19 +187,19 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
    * Creates parent directories if they don't exist
    */
   writeFile(path: string, content: string) {
-    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path);
+    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path)
 
     // Create parent directory
-    const parentDir = this.pathService.dirname(absolutePath);
+    const parentDir = this.pathService.dirname(absolutePath)
     const createDir = this.fs.makeDirectory(parentDir, { recursive: true }).pipe(
       Effect.mapError(
         (error) =>
           new DirectoryCreationError({
             path: parentDir,
-            cause: error,
-          }),
-      ),
-    );
+            cause: error
+          })
+      )
+    )
 
     // Write file
     const writeFile = this.fs.writeFileString(absolutePath, content).pipe(
@@ -209,39 +208,39 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
           new FileWriteError({
             path: absolutePath,
             content,
-            cause: error,
-          }),
-      ),
-    );
+            cause: error
+          })
+      )
+    )
 
-    return Effect.gen(function* () {
-      yield* createDir;
-      yield* writeFile;
-    });
+    return Effect.gen(function*() {
+      yield* createDir
+      yield* writeFile
+    })
   }
 
   /**
    * Read a file using @effect/platform FileSystem
    */
   readFile(path: string) {
-    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path);
+    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path)
 
     return this.fs.readFileString(absolutePath).pipe(
       Effect.mapError(
         (error) =>
           new FileReadError({
             path: absolutePath,
-            cause: error,
-          }),
-      ),
-    );
+            cause: error
+          })
+      )
+    )
   }
 
   /**
    * Check if a file exists using @effect/platform FileSystem
    */
   exists(path: string) {
-    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path);
+    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path)
 
     return this.fs.exists(absolutePath).pipe(
       Effect.mapError(
@@ -249,34 +248,34 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
           new FileSystemError({
             message: `Failed to check existence of: ${absolutePath}`,
             path: absolutePath,
-            cause: error,
-          }),
-      ),
-    );
+            cause: error
+          })
+      )
+    )
   }
 
   /**
    * Create a directory using @effect/platform FileSystem
    */
   makeDirectory(path: string) {
-    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path);
+    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path)
 
     return this.fs.makeDirectory(absolutePath, { recursive: true }).pipe(
       Effect.mapError(
         (error) =>
           new DirectoryCreationError({
             path: absolutePath,
-            cause: error,
-          }),
-      ),
-    );
+            cause: error
+          })
+      )
+    )
   }
 
   /**
    * List directory contents using @effect/platform FileSystem
    */
   listDirectory(path: string) {
-    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path);
+    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path)
 
     return this.fs.readDirectory(absolutePath).pipe(
       Effect.mapError(
@@ -284,17 +283,17 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
           new FileSystemError({
             message: `Failed to list directory: ${absolutePath}`,
             path: absolutePath,
-            cause: error,
-          }),
-      ),
-    );
+            cause: error
+          })
+      )
+    )
   }
 
   /**
    * Delete a file or directory using @effect/platform FileSystem
    */
   remove(path: string, options?: { recursive?: boolean }) {
-    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path);
+    const absolutePath = this.pathService.isAbsolute(path) ? path : this.pathService.resolve(path)
 
     return this.fs.remove(absolutePath, { recursive: options?.recursive ?? false }).pipe(
       Effect.mapError(
@@ -302,24 +301,24 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
           new FileSystemError({
             message: `Failed to delete: ${absolutePath}`,
             path: absolutePath,
-            cause: error,
-          }),
-      ),
-    );
+            cause: error
+          })
+      )
+    )
   }
 
   /**
    * Get workspace root
    */
   getWorkspaceRoot() {
-    return this.workspaceRoot;
+    return this.workspaceRoot
   }
 
   /**
    * Get mode (always 'effect' for EffectFsAdapter)
    */
   getMode() {
-    return this.mode;
+    return this.mode
   }
 }
 
@@ -333,12 +332,12 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
  * @returns Effect that provides FileSystemAdapter
  */
 export function createEffectFsAdapter(workspaceRoot: string) {
-  return Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const pathService = yield* Path.Path;
+  return Effect.gen(function*() {
+    const fs = yield* FileSystem.FileSystem
+    const pathService = yield* Path.Path
 
-    return new EffectFsAdapterImpl(workspaceRoot, fs, pathService);
-  });
+    return new EffectFsAdapterImpl(workspaceRoot, fs, pathService)
+  })
 }
 
 // ============================================================================
@@ -349,20 +348,20 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   constructor(private readonly workspaceRoot: string) {}
 
   writeFile(path: string, content: string) {
-    return Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const dir = nodePath.dirname(path);
+    return Effect.gen(function*() {
+      const fs = yield* FileSystem.FileSystem
+      const dir = nodePath.dirname(path)
 
       yield* fs.makeDirectory(dir, { recursive: true }).pipe(
         Effect.catchAll((error) =>
           Effect.fail(
             new DirectoryCreationError({
               path: dir,
-              cause: error,
-            }),
-          ),
-        ),
-      );
+              cause: error
+            })
+          )
+        )
+      )
 
       yield* fs.writeFileString(path, content).pipe(
         Effect.catchAll((error) =>
@@ -370,108 +369,108 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
             new FileWriteError({
               path,
               content,
-              cause: error,
-            }),
-          ),
-        ),
-      );
-    }).pipe(Effect.provide(NodeFileSystem.layer));
+              cause: error
+            })
+          )
+        )
+      )
+    }).pipe(Effect.provide(NodeFileSystem.layer))
   }
 
   readFile(path: string) {
-    return Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
+    return Effect.gen(function*() {
+      const fs = yield* FileSystem.FileSystem
       return yield* fs.readFileString(path).pipe(
         Effect.catchAll((error) =>
           Effect.fail(
             new FileReadError({
               path,
-              cause: error,
-            }),
-          ),
-        ),
-      );
-    }).pipe(Effect.provide(NodeFileSystem.layer));
+              cause: error
+            })
+          )
+        )
+      )
+    }).pipe(Effect.provide(NodeFileSystem.layer))
   }
 
   exists(path: string) {
-    return Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
+    return Effect.gen(function*() {
+      const fs = yield* FileSystem.FileSystem
       return yield* fs.exists(path).pipe(
         Effect.catchAll((error) =>
           Effect.fail(
             new FileSystemError({
               message: `Failed to check if path exists: ${path}`,
               path,
-              cause: error,
-            }),
-          ),
-        ),
-      );
-    }).pipe(Effect.provide(NodeFileSystem.layer));
+              cause: error
+            })
+          )
+        )
+      )
+    }).pipe(Effect.provide(NodeFileSystem.layer))
   }
 
   makeDirectory(path: string) {
-    return Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
+    return Effect.gen(function*() {
+      const fs = yield* FileSystem.FileSystem
       yield* fs.makeDirectory(path, { recursive: true }).pipe(
         Effect.catchAll((error) =>
           Effect.fail(
             new DirectoryCreationError({
               path,
-              cause: error,
-            }),
-          ),
-        ),
-      );
-    }).pipe(Effect.provide(NodeFileSystem.layer));
+              cause: error
+            })
+          )
+        )
+      )
+    }).pipe(Effect.provide(NodeFileSystem.layer))
   }
 
   listDirectory(path: string) {
-    return Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
+    return Effect.gen(function*() {
+      const fs = yield* FileSystem.FileSystem
       return yield* fs.readDirectory(path).pipe(
         Effect.catchAll((error) =>
           Effect.fail(
             new FileSystemError({
               message: `Failed to list directory: ${path}`,
               path,
-              cause: error,
-            }),
-          ),
-        ),
-      );
-    }).pipe(Effect.provide(NodeFileSystem.layer));
+              cause: error
+            })
+          )
+        )
+      )
+    }).pipe(Effect.provide(NodeFileSystem.layer))
   }
 
   remove(path: string, options?: { recursive?: boolean }) {
-    return Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
+    return Effect.gen(function*() {
+      const fs = yield* FileSystem.FileSystem
       yield* fs.remove(path, options).pipe(
         Effect.catchAll((error) =>
           Effect.fail(
             new FileSystemError({
               message: `Failed to remove: ${path}`,
               path,
-              cause: error,
-            }),
-          ),
-        ),
-      );
-    }).pipe(Effect.provide(NodeFileSystem.layer));
+              cause: error
+            })
+          )
+        )
+      )
+    }).pipe(Effect.provide(NodeFileSystem.layer))
   }
 
   getWorkspaceRoot() {
-    return this.workspaceRoot;
+    return this.workspaceRoot
   }
 
-  getMode(): 'nx' | 'effect' {
-    return 'effect';
+  getMode() {
+    return "effect" as const
   }
 }
 
 export function createMCPAdapter(workspaceRoot: string) {
-  return new MCPFileSystemAdapter(workspaceRoot);
+  return new MCPFileSystemAdapter(workspaceRoot)
 }
 
 // ============================================================================
@@ -486,7 +485,7 @@ export function createMCPAdapter(workspaceRoot: string) {
 export class TreeAdapter implements FileSystemAdapter {
   constructor(
     private readonly tree: Tree,
-    private readonly mode: 'nx' | 'effect' = 'nx',
+    private readonly mode: "nx" | "effect" = "nx"
   ) {}
 
   /**
@@ -499,16 +498,16 @@ export class TreeAdapter implements FileSystemAdapter {
       try: () => {
         // Tree API expects paths relative to workspace root
         // Strip workspace root prefix if present
-        const relativePath = this.toRelativePath(path);
-        this.tree.write(relativePath, content);
+        const relativePath = this.toRelativePath(path)
+        this.tree.write(relativePath, content)
       },
       catch: (error) =>
         new FileWriteError({
           path,
           content,
-          cause: error,
-        }),
-    });
+          cause: error
+        })
+    })
   }
 
   /**
@@ -523,29 +522,29 @@ export class TreeAdapter implements FileSystemAdapter {
   readFile(path: string) {
     return Effect.try({
       try: () => {
-        const relativePath = this.toRelativePath(path);
-        const content = this.tree.read(relativePath);
+        const relativePath = this.toRelativePath(path)
+        const content = this.tree.read(relativePath)
 
         if (content === null) {
           // Fallback: Try reading from real filesystem
           // This allows tests to work with template files outside virtual tree
           // (e.g., dotfile templates in src/dotfiles/)
           if (nodeFs.existsSync(path)) {
-            return nodeFs.readFileSync(path, 'utf-8');
+            return nodeFs.readFileSync(path, "utf-8")
           }
 
-          throw new Error(`File not found: ${path}`);
+          throw new Error(`File not found: ${path}`)
         }
 
         // Convert Buffer to string
-        return content.toString('utf-8');
+        return content.toString("utf-8")
       },
       catch: (error) =>
         new FileReadError({
           path,
-          cause: error,
-        }),
-    });
+          cause: error
+        })
+    })
   }
 
   /**
@@ -554,16 +553,16 @@ export class TreeAdapter implements FileSystemAdapter {
   exists(path: string) {
     return Effect.try({
       try: () => {
-        const relativePath = this.toRelativePath(path);
-        return this.tree.exists(relativePath);
+        const relativePath = this.toRelativePath(path)
+        return this.tree.exists(relativePath)
       },
       catch: (error) =>
         new FileSystemError({
           message: `Failed to check existence of: ${path}`,
           path,
-          cause: error,
-        }),
-    });
+          cause: error
+        })
+    })
   }
 
   /**
@@ -582,9 +581,9 @@ export class TreeAdapter implements FileSystemAdapter {
       catch: (error) =>
         new DirectoryCreationError({
           path,
-          cause: error,
-        }),
-    });
+          cause: error
+        })
+    })
   }
 
   /**
@@ -593,18 +592,18 @@ export class TreeAdapter implements FileSystemAdapter {
   listDirectory(path: string) {
     return Effect.try({
       try: () => {
-        const relativePath = this.toRelativePath(path);
-        const children = this.tree.children(relativePath);
-        const result: ReadonlyArray<string> = children;
-        return result;
+        const relativePath = this.toRelativePath(path)
+        const children = this.tree.children(relativePath)
+        const result: ReadonlyArray<string> = children
+        return result
       },
       catch: (error) =>
         new FileSystemError({
           message: `Failed to list directory: ${path}`,
           path,
-          cause: error,
-        }),
-    });
+          cause: error
+        })
+    })
   }
 
   /**
@@ -613,30 +612,30 @@ export class TreeAdapter implements FileSystemAdapter {
   remove(path: string) {
     return Effect.try({
       try: () => {
-        const relativePath = this.toRelativePath(path);
-        this.tree.delete(relativePath);
+        const relativePath = this.toRelativePath(path)
+        this.tree.delete(relativePath)
       },
       catch: (error) =>
         new FileSystemError({
           message: `Failed to delete: ${path}`,
           path,
-          cause: error,
-        }),
-    });
+          cause: error
+        })
+    })
   }
 
   /**
    * Get workspace root from Tree
    */
   getWorkspaceRoot() {
-    return this.tree.root;
+    return this.tree.root
   }
 
   /**
    * Get mode (always 'nx' for TreeAdapter)
    */
   getMode() {
-    return this.mode;
+    return this.mode
   }
 
   /**
@@ -646,14 +645,14 @@ export class TreeAdapter implements FileSystemAdapter {
    * If path starts with workspace root, strip it.
    */
   private toRelativePath(path: string) {
-    const workspaceRoot = this.tree.root;
+    const workspaceRoot = this.tree.root
     if (path.startsWith(`${workspaceRoot}/`)) {
-      return path.slice(workspaceRoot.length + 1);
+      return path.slice(workspaceRoot.length + 1)
     }
     if (path.startsWith(workspaceRoot)) {
-      return path.slice(workspaceRoot.length);
+      return path.slice(workspaceRoot.length)
     }
-    return path;
+    return path
   }
 }
 
@@ -664,7 +663,7 @@ export class TreeAdapter implements FileSystemAdapter {
  * @returns TreeAdapter instance
  */
 export function createTreeAdapter(tree: Tree) {
-  return new TreeAdapter(tree);
+  return new TreeAdapter(tree)
 }
 
 // ============================================================================
@@ -672,104 +671,51 @@ export function createTreeAdapter(tree: Tree) {
 // ============================================================================
 
 export interface AdapterOptions {
-  readonly context: WorkspaceContext;
-  readonly nxTree?: Tree;
+  readonly context: WorkspaceContext
+  readonly nxTree?: Tree
 }
 
 export function createAdapter(options: AdapterOptions) {
-  const { context, nxTree } = options;
+  const { context, nxTree } = options
 
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     switch (context.interfaceType) {
-      case 'nx': {
+      case "nx": {
         if (!nxTree) {
           return yield* Effect.fail(
             new FileSystemError({
-              message: 'Nx Tree required for Nx interface but not provided',
-              path: context.root,
-            }),
-          );
+              message: "Nx Tree required for Nx interface but not provided",
+              path: context.root
+            })
+          )
         }
-        return createTreeAdapter(nxTree);
+        return createTreeAdapter(nxTree)
       }
 
-      case 'cli': {
-        return yield* createEffectFsAdapter(context.root);
+      case "cli": {
+        return yield* createEffectFsAdapter(context.root)
       }
 
-      case 'mcp': {
-        return createMCPAdapter(context.root);
+      case "mcp": {
+        return createMCPAdapter(context.root)
       }
 
       default: {
-        const _exhaustive: never = context.interfaceType;
+        const _exhaustive: never = context.interfaceType
         return yield* Effect.fail(
           new FileSystemError({
             message: `Unknown interface type: ${_exhaustive}`,
-            path: context.root,
-          }),
-        );
+            path: context.root
+          })
+        )
       }
     }
-  }).pipe(Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer));
+  }).pipe(Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer))
 }
 
 export function createAdapterFromContext(context: WorkspaceContext, nxTree?: Tree) {
-  return createAdapter({ context, nxTree });
+  return createAdapter({ context, nxTree })
 }
-
-// ============================================================================
-// Generator Dotfile Utilities
-// ============================================================================
-
-const LIBRARY_DOTFILES: ReadonlyArray<DotfileName> = ['eslint.config.mjs', 'tsconfig.json'];
-
-/**
- * Generator-specific dotfile options
- */
-export interface GeneratorDotfileOptions {
-  readonly projectRoot: string;
-  readonly overwrite?: boolean;
-  readonly merge?: boolean;
-}
-
-/**
- * Add Effect.ts dotfiles to a generated library
- *
- * IMPORTANT: Only library-specific dotfiles are included:
- * - eslint.config.mjs: Library-level linting rules (extends workspace config)
- * - tsconfig.json: Library-level TypeScript config (extends workspace config)
- *
- * Workspace-level dotfiles (.editorconfig, .vscode/*) should NOT be added per-library.
- *
- * @param adapter - FileSystem adapter for Nx Tree or CLI
- * @param options - Dotfile generation options
- * @returns Effect with copy results
- */
-export const addDotfilesToLibrary = (
-  adapter: FileSystemAdapter,
-  options: GeneratorDotfileOptions,
-) =>
-  Effect.gen(function* () {
-    const { merge = true, overwrite = false, projectRoot } = options;
-
-    // Only include library-specific dotfiles (exclude workspace-level files)
-    const dotfileOptions = {
-      targetDir: projectRoot,
-      overwrite,
-      merge,
-      include: LIBRARY_DOTFILES,
-    };
-
-    // Copy dotfiles with merge support
-    const result = yield* copyAllDotfiles(adapter, dotfileOptions);
-
-    yield* Effect.logInfo(
-      `Added ${result.copied} library-specific dotfiles to ${projectRoot} (${result.merged} merged)`,
-    );
-
-    return result;
-  });
 
 // ============================================================================
 // Environment Variable Injection Utilities
@@ -779,9 +725,9 @@ export const addDotfilesToLibrary = (
  * Environment variable to inject into libs/env/src/env.ts
  */
 export interface EnvVarToInject {
-  readonly name: string;
-  readonly type: 'string' | 'number' | 'redacted';
-  readonly context?: 'server' | 'client' | 'shared';
+  readonly name: string
+  readonly type: "string" | "number" | "redacted"
+  readonly context?: "server" | "client" | "shared"
 }
 
 /**
@@ -795,63 +741,63 @@ export interface EnvVarToInject {
  * @returns Effect that succeeds with void or fails with file system errors
  */
 export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<EnvVarToInject>) {
-  return Effect.gen(function* () {
-    const workspaceRoot = adapter.getWorkspaceRoot();
-    const envFilePath = `${workspaceRoot}/libs/env/src/env.ts`;
+  return Effect.gen(function*() {
+    const workspaceRoot = adapter.getWorkspaceRoot()
+    const envFilePath = `${workspaceRoot}/libs/env/src/env.ts`
 
     // Check if env file exists
-    const envFileExists = yield* adapter.exists(envFilePath);
+    const envFileExists = yield* adapter.exists(envFilePath)
     if (!envFileExists) {
       yield* Effect.logWarning(
-        `libs/env/src/env.ts not found. Environment variables not injected: ${vars.map((v) => v.name).join(', ')}`,
-      );
-      return;
+        `libs/env/src/env.ts not found. Environment variables not injected: ${vars.map((v) => v.name).join(", ")}`
+      )
+      return
     }
 
     // Read current content
-    const content = yield* adapter.readFile(envFilePath);
+    const content = yield* adapter.readFile(envFilePath)
 
     // Group vars by context
-    const serverVars = vars.filter((v) => v.context === 'server' || !v.context);
-    const clientVars = vars.filter((v) => v.context === 'client');
-    const sharedVars = vars.filter((v) => v.context === 'shared');
+    const serverVars = vars.filter((v) => v.context === "server" || !v.context)
+    const clientVars = vars.filter((v) => v.context === "client")
+    const sharedVars = vars.filter((v) => v.context === "shared")
 
-    let updatedContent = content;
+    let updatedContent = content
 
     // Helper to create config line
     const makeConfigLine = (v: EnvVarToInject) => {
       switch (v.type) {
-        case 'redacted':
-          return `    ${v.name}: Config.redacted("${v.name}"),`;
-        case 'number':
-          return `    ${v.name}: Config.number("${v.name}"),`;
+        case "redacted":
+          return `    ${v.name}: Config.redacted("${v.name}"),`
+        case "number":
+          return `    ${v.name}: Config.number("${v.name}"),`
         default:
-          return `    ${v.name}: Config.string("${v.name}"),`;
+          return `    ${v.name}: Config.string("${v.name}"),`
       }
-    };
+    }
 
     // Inject server vars
     if (serverVars.length > 0) {
       for (const v of serverVars) {
         // Check if var already exists
         if (updatedContent.includes(`${v.name}:`)) {
-          continue;
+          continue
         }
 
         // Find the closing brace of the server section
-        const serverMatch = updatedContent.match(/server:\s*\{([^}]*)\}/s);
+        const serverMatch = updatedContent.match(/server:\s*\{([^}]*)\}/s)
         if (serverMatch) {
-          const serverSection = serverMatch[0];
-          const closingBrace = serverSection.lastIndexOf('}');
-          const beforeBrace = serverSection.slice(0, closingBrace);
-          const afterBrace = serverSection.slice(closingBrace);
+          const serverSection = serverMatch[0]
+          const closingBrace = serverSection.lastIndexOf("}")
+          const beforeBrace = serverSection.slice(0, closingBrace)
+          const afterBrace = serverSection.slice(closingBrace)
 
           // Trim trailing whitespace and ensure no double comma
-          const trimmed = beforeBrace.trimEnd();
-          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`;
-          const newServerSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`;
+          const trimmed = beforeBrace.trimEnd()
+          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
+          const newServerSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
 
-          updatedContent = updatedContent.replace(serverSection, newServerSection);
+          updatedContent = updatedContent.replace(serverSection, newServerSection)
         }
       }
     }
@@ -860,21 +806,21 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<En
     if (clientVars.length > 0) {
       for (const v of clientVars) {
         if (updatedContent.includes(`${v.name}:`)) {
-          continue;
+          continue
         }
 
-        const clientMatch = updatedContent.match(/client:\s*\{([^}]*)\}/s);
+        const clientMatch = updatedContent.match(/client:\s*\{([^}]*)\}/s)
         if (clientMatch) {
-          const clientSection = clientMatch[0];
-          const closingBrace = clientSection.lastIndexOf('}');
-          const beforeBrace = clientSection.slice(0, closingBrace);
-          const afterBrace = clientSection.slice(closingBrace);
+          const clientSection = clientMatch[0]
+          const closingBrace = clientSection.lastIndexOf("}")
+          const beforeBrace = clientSection.slice(0, closingBrace)
+          const afterBrace = clientSection.slice(closingBrace)
 
-          const trimmed = beforeBrace.trimEnd();
-          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`;
-          const newClientSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`;
+          const trimmed = beforeBrace.trimEnd()
+          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
+          const newClientSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
 
-          updatedContent = updatedContent.replace(clientSection, newClientSection);
+          updatedContent = updatedContent.replace(clientSection, newClientSection)
         }
       }
     }
@@ -883,31 +829,31 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<En
     if (sharedVars.length > 0) {
       for (const v of sharedVars) {
         if (updatedContent.includes(`${v.name}:`)) {
-          continue;
+          continue
         }
 
-        const sharedMatch = updatedContent.match(/shared:\s*\{([^}]*)\}/s);
+        const sharedMatch = updatedContent.match(/shared:\s*\{([^}]*)\}/s)
         if (sharedMatch) {
-          const sharedSection = sharedMatch[0];
-          const closingBrace = sharedSection.lastIndexOf('}');
-          const beforeBrace = sharedSection.slice(0, closingBrace);
-          const afterBrace = sharedSection.slice(closingBrace);
+          const sharedSection = sharedMatch[0]
+          const closingBrace = sharedSection.lastIndexOf("}")
+          const beforeBrace = sharedSection.slice(0, closingBrace)
+          const afterBrace = sharedSection.slice(closingBrace)
 
-          const trimmed = beforeBrace.trimEnd();
-          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`;
-          const newSharedSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`;
+          const trimmed = beforeBrace.trimEnd()
+          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
+          const newSharedSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
 
-          updatedContent = updatedContent.replace(sharedSection, newSharedSection);
+          updatedContent = updatedContent.replace(sharedSection, newSharedSection)
         }
       }
     }
 
     // Write updated content if changed
     if (updatedContent !== content) {
-      yield* adapter.writeFile(envFilePath, updatedContent);
+      yield* adapter.writeFile(envFilePath, updatedContent)
       yield* Effect.logInfo(
-        `Injected environment variables into libs/env/src/env.ts: ${vars.map((v) => v.name).join(', ')}`,
-      );
+        `Injected environment variables into libs/env/src/env.ts: ${vars.map((v) => v.name).join(", ")}`
+      )
     }
-  });
+  })
 }

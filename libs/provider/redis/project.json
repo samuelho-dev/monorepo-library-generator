@@ -1,0 +1,48 @@
+{
+  "name": "provider-redis",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/provider/redis/src",
+  "tags": [
+    "type:provider",
+    "scope:redis",
+    "provider",
+    "effect",
+    "builtin"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/provider/redis",
+        "tsConfig": "libs/provider/redis/tsconfig.lib.json",
+        "main": "libs/provider/redis/src/index.ts",
+        "batch": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "libs/provider/redis/src/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/libs/provider/redis",
+        "config": "libs/provider/redis/vitest.config.ts"
+      }
+    }
+  }
+}

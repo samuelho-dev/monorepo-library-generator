@@ -23,7 +23,7 @@ export interface DataAccessGeneratorSchema {
    * // Creates @custom-repo/data-access-product
    * ```
    */
-  readonly name: string;
+  readonly name: string
 
   /**
    * Directory where the library will be created
@@ -32,7 +32,7 @@ export interface DataAccessGeneratorSchema {
    *
    * @default "libs/data-access"
    */
-  readonly directory?: string;
+  readonly directory?: string
 
   /**
    * Description of the data-access library
@@ -42,25 +42,25 @@ export interface DataAccessGeneratorSchema {
    * @example
    * "Repository-based data access for product domain"
    */
-  readonly description?: string;
+  readonly description?: string
 
   /**
    * Tags to add to the library
    */
-  readonly tags?: string;
+  readonly tags?: string
 
   /**
    * Contract library to use for domain entities
    */
-  readonly contractLibrary?: string;
+  readonly contractLibrary?: string
 
   /**
    * Include cache support
    */
-  readonly includeCache?: boolean;
+  readonly includeCache?: boolean
 
   // Dotfile generation options (Effect.ts code quality enforcement)
   // Only library-specific dotfiles (eslint.config.mjs, tsconfig.json) are added
-  addDotfiles?: boolean; // Default: true
-  overwriteDotfiles?: boolean; // Default: false
+  addDotfiles?: boolean // Default: true
+  overwriteDotfiles?: boolean // Default: false
 }

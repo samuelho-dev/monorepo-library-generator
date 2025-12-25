@@ -6,17 +6,17 @@
  * @module monorepo-library-generator/data-access/repository/update-operation-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { DataAccessTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/update.ts file
  */
 export function generateRepositoryUpdateOperationFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Update Operations`,
@@ -24,33 +24,35 @@ export function generateRepositoryUpdateOperationFile(options: DataAccessTemplat
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { updateOperations } from '@scope/data-access-${fileName}/repository/operations/update'`,
-    module: `${scope}/data-access-${fileName}/repository/operations`,
-  });
-  builder.addBlankLine();
+    module: `${scope}/data-access-${fileName}/repository/operations`
+  })
+  builder.addBlankLine()
 
-  builder.addImports([{ from: 'effect', imports: ['Effect', 'Duration'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
+  builder.addBlankLine()
 
   builder.addImports([
     {
-      from: '../../shared/types',
+      from: "../../shared/types",
       imports: [`${className}UpdateInput`],
-      isTypeOnly: true,
+      isTypeOnly: true
     },
     {
-      from: '../../shared/errors',
-      imports: [`${className}NotFoundError`, `${className}TimeoutError`],
-    },
-  ]);
-  builder.addBlankLine();
+      from: "../../shared/errors",
+      // Use REPOSITORY errors, not domain errors
+      // Repository → Service layer maps these to domain errors
+      imports: [`${className}NotFoundRepositoryError`, `${className}TimeoutError`]
+    }
+  ])
+  builder.addBlankLine()
 
   // Import infrastructure services
-  builder.addComment('Infrastructure services - Database for persistence');
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
-  builder.addBlankLine();
+  builder.addComment("Infrastructure services - Database for persistence")
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
+  builder.addBlankLine()
 
-  builder.addSectionComment('Update Operations');
-  builder.addBlankLine();
+  builder.addSectionComment("Update Operations")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Update operations for ${className} repository
@@ -68,17 +70,17 @@ export const updateOperations = {
    * Update ${className} entity by ID
    */
   update: (id: string, input: ${className}UpdateInput) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Updating ${className} with id: \${id}\`);
 
       const updated = yield* database.query((db) =>
         db
-          .updateTable("${fileName}s")
+          .updateTable("${fileName}")
           .set({
             ...input,
-            updated_at: new Date(),
+            updatedAt: new Date(),
           })
           .where("id", "=", id)
           .returningAll()
@@ -87,7 +89,7 @@ export const updateOperations = {
 
       if (!updated) {
         yield* Effect.logWarning(\`${className} not found: \${id}\`);
-        return yield* Effect.fail(${className}NotFoundError.create(id));
+        return yield* Effect.fail(${className}NotFoundRepositoryError.create(id));
       }
 
       yield* Effect.logDebug(\`${className} updated successfully (id: \${id})\`);
@@ -105,7 +107,7 @@ export const updateOperations = {
 /**
  * Type alias for the update operations object
  */
-export type Update${className}Operations = typeof updateOperations;`);
+export type Update${className}Operations = typeof updateOperations;`)
 
-  return builder.toString();
+  return builder.toString()
 }

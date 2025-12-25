@@ -4,51 +4,87 @@
  * Generates the AuthService that orchestrates authentication.
  * Consumes SupabaseAuth from provider-supabase.
  *
+ * Contract-First Architecture:
+ * - contract-auth defines AuthVerifier interface (single source of truth)
+ * - This module provides AuthVerifierLive that implements it
+ * - Schema.decode validates at boundaries
+ *
  * @module monorepo-library-generator/infra-templates/auth/service
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate auth service.ts file
  */
 export function generateAuthServiceFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { packageName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { packageName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'Auth Infrastructure Service',
+    title: "Auth Infrastructure Service",
     description: `Auth service that orchestrates authentication providers.
 
 Consumes SupabaseAuth from provider-supabase and provides:
 - Token verification (for RPC middleware)
 - Session management
 - User lookup
+- AuthVerifierLive layer for infra-rpc middleware integration
 
-API key management requires a repository from data-access layer.
-This service is used by infra-rpc for auth middleware.`,
-    module: `${packageName}/service`,
-  });
-  builder.addBlankLine();
+Contract-First Architecture:
+- contract-auth defines AuthVerifier interface (single source of truth)
+- This module provides AuthVerifierLive that implements it
+- Schema.decode validates CurrentUserData at boundaries
+- Middleware is consolidated in infra-rpc
 
-  // Imports
-  builder.addImports([{ from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Option'] }]);
+Integration:
+  import { AuthMiddlewareLive } from '${scope}/infra-rpc';
+  import { AuthVerifierLive } from '${packageName}';
+
+  const middleware = AuthMiddlewareLive.pipe(Layer.provide(AuthVerifierLive));`,
+    module: `${packageName}/service`
+  })
+  builder.addBlankLine()
+
+  // Imports - all files in lib/ as siblings
+  builder.addImports([{ from: "effect", imports: ["Context", "Effect", "Layer", "Option", "Schema"] }])
   builder.addRaw(`import { Headers } from "@effect/platform";
 import { SupabaseAuth, type AuthUser } from "${scope}/provider-supabase";
+
+// ============================================================================
+// Contract-Auth Imports (Single Source of Truth)
+// ============================================================================
+
+// Import canonical types from contract-auth
+import {
+  // Schemas - for validation at boundaries
+  CurrentUserDataSchema,
+  type CurrentUserData,
+
+  // Errors - for RPC middleware
+  AuthError as ContractAuthError,
+
+  // Ports - interface to implement
+  AuthVerifier,
+} from "${scope}/contract-auth";
+
+// Re-export for convenience (consumers can import from infra-auth OR contract-auth)
+export { AuthVerifier, type CurrentUserData };
+
 import {
   AuthError,
   UnauthorizedError,
   InvalidTokenError,
 } from "./errors";
-import type { AuthContext } from "./types";`);
-  builder.addBlankLine();
+import type { AuthContext } from "./types";`)
+  builder.addBlankLine()
 
   // Service interface
-  builder.addSectionComment('Service Interface');
-  builder.addBlankLine();
+  builder.addSectionComment("Service Interface")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Auth Service Interface
@@ -87,12 +123,12 @@ export interface AuthServiceInterface {
   readonly buildAuthContext: (
     headers: Headers.Headers
   ) => Effect.Effect<Option.Option<AuthContext>, AuthError>;
-}`);
-  builder.addBlankLine();
+}`)
+  builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment('Context.Tag');
-  builder.addBlankLine();
+  builder.addSectionComment("Context.Tag")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Auth Service Tag
@@ -112,23 +148,23 @@ export class AuthService extends Context.Tag("AuthService")<
    */
   static readonly Live = Layer.effect(
     AuthService,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const supabaseAuth = yield* SupabaseAuth;
 
       return {
         verifyToken: (token) =>
           supabaseAuth.verifyToken(token).pipe(
-            Effect.mapError((error) => {
-              if (error._tag === "SupabaseTokenError") {
-                return new InvalidTokenError({
-                  message: error.message,
-                  tokenType: "access",
-                });
-              }
-              return new UnauthorizedError({
-                message: \`Token verification failed: \${String(error)}\`,
-              });
-            }),
+            Effect.catchTag("SupabaseTokenError", (error) =>
+              Effect.fail(new InvalidTokenError({
+                message: error.message,
+                tokenType: "access",
+              }))
+            ),
+            Effect.catchAll((error) =>
+              Effect.fail(new UnauthorizedError({
+                message: \`Token verification failed: \${error.message}\`,
+              }))
+            ),
             Effect.withSpan("AuthService.verifyToken")
           ),
 
@@ -143,16 +179,16 @@ export class AuthService extends Context.Tag("AuthService")<
                 metadata: user.user_metadata,
               }))
             ),
-            Effect.mapError((error) =>
-              new AuthError({
-                message: \`Failed to get current user: \${String(error)}\`,
-              })
+            Effect.catchAll((error) =>
+              Effect.fail(new AuthError({
+                message: \`Failed to get current user: \${error.message}\`,
+              }))
             ),
             Effect.withSpan("AuthService.getCurrentUser")
           ),
 
         buildAuthContext: (headers) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const authHeader = Headers.get(headers, "authorization");
             const cookie = Headers.get(headers, "cookie");
 
@@ -246,12 +282,12 @@ export class AuthService extends Context.Tag("AuthService")<
    */
   static readonly Dev = Layer.effect(
     AuthService,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       yield* Effect.logDebug("[AuthService] Initializing dev auth service...");
 
       return {
         verifyToken: (token) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[AuthService] verifyToken", { tokenLength: token.length });
             return {
               id: \`dev-user-\${token.slice(0, 8)}\`,
@@ -262,7 +298,7 @@ export class AuthService extends Context.Tag("AuthService")<
           }),
 
         getCurrentUser: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[AuthService] getCurrentUser");
             return Option.some({
               id: "dev-user-id",
@@ -273,7 +309,7 @@ export class AuthService extends Context.Tag("AuthService")<
           }),
 
         buildAuthContext: (headers) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[AuthService] buildAuthContext", { headers: Object.keys(headers) });
             return Option.some<AuthContext>({
               user: {
@@ -288,7 +324,92 @@ export class AuthService extends Context.Tag("AuthService")<
       };
     })
   );
-}`);
+}`)
+  builder.addBlankLine()
 
-  return builder.toString();
+  // AuthVerifierLive layer for infra-rpc integration
+  builder.addSectionComment("AuthVerifier Implementation (for contract-auth)")
+  builder.addBlankLine()
+
+  builder.addRaw(`/**
+ * AuthVerifierLive Layer
+ *
+ * Implements the AuthVerifier interface from contract-auth.
+ * This is the bridge between infra-auth and infra-rpc middleware.
+ *
+ * Contract-First Architecture:
+ * - AuthVerifier interface defined in contract-auth (single source of truth)
+ * - This layer provides implementation using AuthService
+ * - Schema.decode validates CurrentUserData at the boundary
+ *
+ * @example
+ * \`\`\`typescript
+ * import { AuthMiddlewareLive } from '${scope}/infra-rpc';
+ * import { AuthVerifierLive, AuthService } from '${packageName}';
+ * import { SupabaseAuth } from '${scope}/provider-supabase';
+ *
+ * // Compose layers for RPC middleware
+ * const RpcAuthLayer = AuthMiddlewareLive.pipe(
+ *   Layer.provide(AuthVerifierLive),
+ *   Layer.provide(AuthService.Live),
+ *   Layer.provide(SupabaseAuth.Live),
+ * );
+ * \`\`\`
+ */
+export const AuthVerifierLive = Layer.effect(
+  AuthVerifier,
+  Effect.gen(function*() {
+    const authService = yield* AuthService;
+
+    return {
+      verify: (token: string) =>
+        authService.verifyToken(token).pipe(
+          // Map provider-specific user to CurrentUserData shape
+          Effect.map((user) => ({
+            id: user.id,
+            email: user.email ?? "",
+            roles: user.role ? [user.role] : [],
+            metadata: user.user_metadata,
+          })),
+          // Validate at boundary using Schema.decode
+          Effect.flatMap((data) =>
+            Schema.decode(CurrentUserDataSchema)(data).pipe(
+              Effect.mapError((parseError) =>
+                ContractAuthError.invalidToken(\`Invalid user data: \${parseError.message}\`)
+              )
+            )
+          ),
+          // Map infra errors to contract errors using Effect.catchTags
+          Effect.catchTags({
+            AuthError: (error) => Effect.fail(error),
+            InvalidTokenError: (error) =>
+              Effect.fail(ContractAuthError.invalidToken(error.message)),
+            UnauthorizedError: (error) =>
+              Effect.fail(ContractAuthError.unauthorized(error.message)),
+          }),
+          Effect.catchAll((error) =>
+            Effect.fail(ContractAuthError.unauthorized(error.message))
+          ),
+          Effect.withSpan("AuthVerifierLive.verify")
+        ),
+    };
+  })
+);
+
+/**
+ * AuthVerifierTest Layer
+ *
+ * Test implementation that always succeeds with a test user.
+ * Use for unit testing RPC handlers.
+ */
+export const AuthVerifierTest = Layer.succeed(AuthVerifier, {
+  verify: (_token: string) =>
+    Effect.succeed<CurrentUserData>({
+      id: "test-user-id",
+      email: "test@example.com",
+      roles: ["user"],
+    }),
+});`)
+
+  return builder.toString()
 }

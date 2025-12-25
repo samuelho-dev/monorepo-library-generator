@@ -7,19 +7,19 @@
  * @module monorepo-library-generator/infra-templates/primitives/shared
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder';
-import { detectInfraConcern } from '../../../../../utils/infra-provider-mapping';
-import type { InfraTemplateOptions } from '../../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import { detectInfraConcern } from "../../../../../utils/infra-provider-mapping"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate index.ts file for primitive infrastructure services
  */
 export function generatePrimitiveIndexFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName, name } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
-  const concern = detectInfraConcern(name);
+  const builder = new TypeScriptBuilder()
+  const { className, fileName, name } = options
+  const scope = WORKSPACE_CONFIG.getScope()
+  const concern = detectInfraConcern(name)
 
   builder.addFileHeader({
     title: `${scope}/infra-${fileName}`,
@@ -27,22 +27,22 @@ export function generatePrimitiveIndexFile(options: InfraTemplateOptions) {
 
 Provides ${className} functionality using Effect primitives.
 Layers are available as static members on the service class.`,
-    module: `${scope}/infra-${fileName}`,
-  });
+    module: `${scope}/infra-${fileName}`
+  })
 
-  builder.addSectionComment('Service and Types');
+  builder.addSectionComment("Service and Types")
 
   // Determine what to export from service based on concern type
-  const serviceExports = getServiceExports(className, concern);
+  const serviceExports = getServiceExports(className, concern)
 
   builder.addRaw(`// Service with static layers (Memory, Test, Live)
 export {
   ${className}Service,
 ${serviceExports}
-} from "./lib/service/service"
-`);
+} from "./lib/service"
+`)
 
-  builder.addSectionComment('Error Types');
+  builder.addSectionComment("Error Types")
 
   builder.addRaw(`// Error types for error handling
 export {
@@ -52,18 +52,18 @@ export {
   ${className}ConnectionError,
   ${className}TimeoutError,
   type ${className}Error
-} from "./lib/service/errors"
-`);
+} from "./lib/errors"
+`)
 
-  builder.addSectionComment('Additional Layers');
+  builder.addSectionComment("Additional Layers")
 
   // Add concern-specific layer exports
-  const layerExport = getLayerExport(className, concern);
+  const layerExport = getLayerExport(className, concern)
   if (layerExport) {
-    builder.addRaw(layerExport);
+    builder.addRaw(layerExport)
   }
 
-  return builder.toString();
+  return builder.toString()
 }
 
 /**
@@ -71,90 +71,93 @@ export {
  */
 function getServiceExports(className: string, concern: string) {
   switch (concern) {
-    case 'cache':
+    case "cache":
       return `  type CacheHandle,
-  type SimpleCacheHandle`;
+  type SimpleCacheHandle`
 
-    case 'database':
-      return `  type Database`;
+    case "database":
+      return `  type Database`
 
-    case 'queue':
+    case "queue":
       return `  type BoundedQueueHandle,
   type UnboundedQueueHandle,
-  type QueueOptions`;
+  type QueueOptions`
 
-    case 'pubsub':
+    case "pubsub":
       return `  type TopicHandle,
-  type TopicOptions`;
+  type TopicOptions`
 
-    case 'logging':
+    case "logging":
       return `  type LogContext,
-  type ${className}Operations`;
+  type ${className}Operations`
 
-    case 'metrics':
+    case "metrics":
       return `  type CounterHandle,
   type GaugeHandle,
   type HistogramHandle,
-  type MetricOptions`;
+  type MetricOptions`
 
     default:
-      return '';
+      return ""
   }
 }
 
 /**
  * Get layer export based on concern type
+ * Layers are now at lib/layers.ts (not in a subdirectory)
  */
 function getLayerExport(className: string, concern: string) {
   switch (concern) {
-    case 'cache':
+    case "cache":
       return `// Redis-backed distributed layer
 export {
   ${className}RedisLayer,
   RedisClientTag,
   type RedisClient
-} from "./lib/layers/redis-layer"
-`;
+} from "./lib/layers"
+`
 
-    case 'queue':
+    case "queue":
       return `// Redis-backed distributed layer
 export {
   ${className}RedisLayer,
   RedisQueueClientTag,
-  type RedisQueueClient
-} from "./lib/layers/redis-layer"
-`;
+  type RedisQueueClient,
+  withJobEnqueuing
+} from "./lib/layers"
+`
 
-    case 'pubsub':
+    case "pubsub":
       return `// Redis-backed distributed layer
 export {
   ${className}RedisLayer,
   RedisPubSubClientTag,
-  type RedisPubSubClient
-} from "./lib/layers/redis-layer"
-`;
+  type RedisPubSubClient,
+  withEventPublishing
+} from "./lib/layers"
+`
 
-    case 'logging':
+    case "logging":
       return `// OpenTelemetry integration
 export {
   make${className}OtelLayer,
   withMinLogLevel,
   LogLevelConfigs,
   type OtelLoggingConfig
-} from "./lib/layers/otel-layer"
-`;
+} from "./lib/layers"
+`
 
-    case 'metrics':
+    case "metrics":
       return `// OpenTelemetry integration
 export {
   make${className}OtelLayer,
   HistogramBoundaries,
   StandardMetricNames,
   type OtelMetricsConfig
-} from "./lib/layers/otel-layer"
-`;
+} from "./lib/layers"
+`
 
     default:
-      return null;
+      return null
   }
 }

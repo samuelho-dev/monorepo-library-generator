@@ -7,17 +7,17 @@
  * @module monorepo-library-generator/infra-templates/primitives/queue
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate queue service interface using Effect.Queue
  */
 export function generateQueueInterfaceFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Service`,
@@ -35,22 +35,23 @@ Effect.Queue Features:
 - Graceful shutdown support
 - Type-safe message handling`,
     module: `${scope}/infra-${fileName}/service`,
-    see: ['EFFECT_PATTERNS.md for queue patterns'],
-  });
+    see: ["EFFECT_PATTERNS.md for queue patterns"]
+  })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Context', 'Effect', 'Layer', 'Queue'],
+      from: "effect",
+      imports: ["Context", "Effect", "Layer", "Queue"]
     },
     {
-      from: 'effect',
-      imports: ['Chunk', 'Option', 'Scope'],
-      isTypeOnly: true,
+      from: "effect",
+      imports: ["Chunk", "Option", "Scope"],
+      isTypeOnly: true
     },
-  ]);
+    { from: `${scope}/env`, imports: ["env"] }
+  ])
 
-  builder.addSectionComment('Queue Service Interface (Effect.Queue Wrapper)');
+  builder.addSectionComment("Queue Service Interface (Effect.Queue Wrapper)")
 
   builder.addRaw(`/**
  * Queue handle for bounded queue operations
@@ -256,9 +257,9 @@ export class ${className}Service extends Context.Tag(
    */
   static readonly Memory = Layer.succeed(this, {
     bounded: <T>(capacity: number, _options?: QueueOptions) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const queue = yield* Queue.bounded<T>(capacity)
-
+        // Return object literal - TS infers BoundedQueueHandle<T> from Context.Tag
         return {
           offer: (item: T) => Queue.offer(queue, item),
           take: Queue.take(queue),
@@ -268,13 +269,13 @@ export class ${className}Service extends Context.Tag(
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)
-        } satisfies BoundedQueueHandle<T>
+        }
       }),
 
     unbounded: <T>(_options?: QueueOptions) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const queue = yield* Queue.unbounded<T>()
-
+        // Return object literal - TS infers UnboundedQueueHandle<T> from Context.Tag
         return {
           offer: (item: T) => Queue.offer(queue, item),
           take: Queue.take(queue),
@@ -282,13 +283,13 @@ export class ${className}Service extends Context.Tag(
           takeAll: Queue.takeAll(queue),
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue)
-        } satisfies UnboundedQueueHandle<T>
+        }
       }),
 
     dropping: <T>(capacity: number, _options?: QueueOptions) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const queue = yield* Queue.dropping<T>(capacity)
-
+        // Return object literal - TS infers BoundedQueueHandle<T> from Context.Tag
         return {
           offer: (item: T) => Queue.offer(queue, item),
           take: Queue.take(queue),
@@ -298,13 +299,13 @@ export class ${className}Service extends Context.Tag(
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)
-        } satisfies BoundedQueueHandle<T>
+        }
       }),
 
     sliding: <T>(capacity: number, _options?: QueueOptions) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const queue = yield* Queue.sliding<T>(capacity)
-
+        // Return object literal - TS infers BoundedQueueHandle<T> from Context.Tag
         return {
           offer: (item: T) => Queue.offer(queue, item),
           take: Queue.take(queue),
@@ -314,7 +315,7 @@ export class ${className}Service extends Context.Tag(
           size: Queue.size(queue),
           shutdown: Queue.shutdown(queue),
           isShutdown: Queue.isShutdown(queue)
-        } satisfies BoundedQueueHandle<T>
+        }
       }),
 
     healthCheck: () => Effect.succeed(true)
@@ -339,8 +340,120 @@ export class ${className}Service extends Context.Tag(
    * For Redis-backed distributed queuing, use RedisQueue layer from layers/
    */
   static readonly Live = ${className}Service.Memory
-}
-`);
 
-  return builder.toString();
+  // ===========================================================================
+  // Dev Layer
+  // ===========================================================================
+
+  /**
+   * Dev Layer - Memory with debug logging
+   */
+  static readonly Dev = Layer.succeed(this, {
+    bounded: <T>(capacity: number, options?: QueueOptions) =>
+      Effect.gen(function*() {
+        yield* Effect.logDebug("[${className}Service] [DEV] Creating bounded queue", { capacity, name: options?.name })
+        const queue = yield* Queue.bounded<T>(capacity)
+        return {
+          offer: (item: T) =>
+            Effect.gen(function*() {
+              yield* Effect.logDebug("[${className}Service] [DEV] bounded.offer")
+              return yield* Queue.offer(queue, item)
+            }),
+          take: Effect.gen(function*() {
+            yield* Effect.logDebug("[${className}Service] [DEV] bounded.take")
+            return yield* Queue.take(queue)
+          }),
+          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
+          takeAll: Queue.takeAll(queue),
+          poll: Queue.poll(queue),
+          size: Queue.size(queue),
+          shutdown: Queue.shutdown(queue),
+          isShutdown: Queue.isShutdown(queue)
+        }
+      }),
+
+    unbounded: <T>(options?: QueueOptions) =>
+      Effect.gen(function*() {
+        yield* Effect.logDebug("[${className}Service] [DEV] Creating unbounded queue", { name: options?.name })
+        const queue = yield* Queue.unbounded<T>()
+        return {
+          offer: (item: T) =>
+            Effect.gen(function*() {
+              yield* Effect.logDebug("[${className}Service] [DEV] unbounded.offer")
+              return yield* Queue.offer(queue, item)
+            }),
+          take: Effect.gen(function*() {
+            yield* Effect.logDebug("[${className}Service] [DEV] unbounded.take")
+            return yield* Queue.take(queue)
+          }),
+          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
+          takeAll: Queue.takeAll(queue),
+          size: Queue.size(queue),
+          shutdown: Queue.shutdown(queue)
+        }
+      }),
+
+    dropping: <T>(capacity: number, options?: QueueOptions) =>
+      Effect.gen(function*() {
+        yield* Effect.logDebug("[${className}Service] [DEV] Creating dropping queue", { capacity, name: options?.name })
+        const queue = yield* Queue.dropping<T>(capacity)
+        return {
+          offer: (item: T) => Queue.offer(queue, item),
+          take: Queue.take(queue),
+          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
+          takeAll: Queue.takeAll(queue),
+          poll: Queue.poll(queue),
+          size: Queue.size(queue),
+          shutdown: Queue.shutdown(queue),
+          isShutdown: Queue.isShutdown(queue)
+        }
+      }),
+
+    sliding: <T>(capacity: number, options?: QueueOptions) =>
+      Effect.gen(function*() {
+        yield* Effect.logDebug("[${className}Service] [DEV] Creating sliding queue", { capacity, name: options?.name })
+        const queue = yield* Queue.sliding<T>(capacity)
+        return {
+          offer: (item: T) => Queue.offer(queue, item),
+          take: Queue.take(queue),
+          takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
+          takeAll: Queue.takeAll(queue),
+          poll: Queue.poll(queue),
+          size: Queue.size(queue),
+          shutdown: Queue.shutdown(queue),
+          isShutdown: Queue.isShutdown(queue)
+        }
+      }),
+
+    healthCheck: () => Effect.succeed(true)
+  })
+
+  // ===========================================================================
+  // Auto Layer
+  // ===========================================================================
+
+  /**
+   * Auto Layer - Environment-aware layer selection
+   *
+   * Selects appropriate layer based on NODE_ENV:
+   * - "production" → Live (Memory)
+   * - "development" → Dev (Memory with logging)
+   * - "test" → Test (Memory)
+   * - default → Dev
+   */
+  static readonly Auto = Layer.suspend(() => {
+    switch (env.NODE_ENV) {
+      case "production":
+        return ${className}Service.Live
+      case "test":
+        return ${className}Service.Test
+      default:
+        // "development" and other environments use Dev
+        return ${className}Service.Dev
+    }
+  })
+}
+`)
+
+  return builder.toString()
 }

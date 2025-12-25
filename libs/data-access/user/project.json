@@ -1,0 +1,49 @@
+{
+  "name": "data-access-user",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/data-access/user/src",
+  "tags": [
+    "type:data-access",
+    "scope:user",
+    "data-access",
+    "domain",
+    "user",
+    "builtin"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/data-access/user",
+        "tsConfig": "libs/data-access/user/tsconfig.lib.json",
+        "main": "libs/data-access/user/src/index.ts",
+        "batch": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "libs/data-access/user/src/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/libs/data-access/user",
+        "config": "libs/data-access/user/vitest.config.ts"
+      }
+    }
+  }
+}

@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/queries-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import type { ContractTemplateOptions } from '../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { ContractTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate queries.ts file for contract library
@@ -21,60 +21,61 @@ import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
  * - Query union types
  */
 export function generateQueriesFile(options: ContractTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName, propertyName } = options;
-  const domainName = propertyName;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName, propertyName } = options
+  const domainName = propertyName
+  const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header
-  builder.addRaw(createFileHeader(className, fileName, scope));
-  builder.addBlankLine();
+  builder.addRaw(createFileHeader(className, fileName, scope))
+  builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
 
-  builder.addImports([{ from: './types/database', imports: [`${className}Id`] }]);
+  // Import ID type from rpc-definitions (single source of truth for ID schema)
+  builder.addImports([{ from: "./rpc-definitions", imports: [`${className}Id`] }])
 
-  builder.addBlankLine();
+  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 1: CRUD Queries
   // ============================================================================
 
-  builder.addSectionComment('CRUD Queries');
-  builder.addBlankLine();
+  builder.addSectionComment("CRUD Queries")
+  builder.addBlankLine()
 
   // Get query
-  builder.addRaw(createGetQuery(className, propertyName));
-  builder.addBlankLine();
+  builder.addRaw(createGetQuery(className, propertyName))
+  builder.addBlankLine()
 
   // List query
-  builder.addRaw(createListQuery(className));
-  builder.addBlankLine();
+  builder.addRaw(createListQuery(className))
+  builder.addBlankLine()
 
   // Search query
-  builder.addRaw(createSearchQuery(className));
-  builder.addBlankLine();
+  builder.addRaw(createSearchQuery(className))
+  builder.addBlankLine()
 
   // TODO comment for custom queries
-  builder.addComment('TODO: Add domain-specific queries here');
-  builder.addComment('Example - Get by slug query:');
-  builder.addComment('');
+  builder.addComment("TODO: Add domain-specific queries here")
+  builder.addComment("Example - Get by slug query:")
+  builder.addComment("")
   builder.addComment(
-    `export class Get${className}BySlugQuery extends Schema.Class<Get${className}BySlugQuery>("Get${className}BySlugQuery")({`,
-  );
-  builder.addComment('  slug: Schema.String,');
-  builder.addComment('}) {');
-  builder.addComment('  static create(slug: string) { ... }');
-  builder.addComment('}');
-  builder.addBlankLine();
+    `export class Get${className}BySlugQuery extends Schema.Class<Get${className}BySlugQuery>("Get${className}BySlugQuery")({`
+  )
+  builder.addComment("  slug: Schema.String,")
+  builder.addComment("}) {")
+  builder.addComment("  static create(slug: string) { ... }")
+  builder.addComment("}")
+  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 2: Query Union Type
   // ============================================================================
 
-  builder.addSectionComment('Query Union Type');
-  builder.addBlankLine();
+  builder.addSectionComment("Query Union Type")
+  builder.addBlankLine()
 
   builder.addTypeAlias({
     name: `${className}Query`,
@@ -83,11 +84,11 @@ export function generateQueriesFile(options: ContractTemplateOptions) {
   | List${className}sQuery
   | Search${className}sQuery`,
     exported: true,
-    jsdoc: `Union of all ${domainName} queries`,
-  });
+    jsdoc: `Union of all ${domainName} queries`
+  })
 
-  builder.addComment('TODO: Add custom queries to this union');
-  builder.addBlankLine();
+  builder.addComment("TODO: Add custom queries to this union")
+  builder.addBlankLine()
 
   // Query schema union
   builder.addRaw(`/**
@@ -99,9 +100,9 @@ export const ${className}QuerySchema = Schema.Union(
   Search${className}sQuery
   // TODO: Add custom query schemas
 );
-`);
+`)
 
-  return builder.toString();
+  return builder.toString()
 }
 
 /**
@@ -124,7 +125,7 @@ function createFileHeader(className: string, fileName: string, scope: string) {
  * 7. Add pagination support
  *
  * @module ${scope}/contract-${fileName}/queries
- */`;
+ */`
 }
 
 /**
@@ -152,7 +153,7 @@ export class Get${className}Query extends Schema.Class<Get${className}Query>("Ge
   static create(${propertyName}Id: ${className}Id) {
     return new Get${className}Query({ ${propertyName}Id });
   }
-}`;
+}`
 }
 
 /**
@@ -219,7 +220,7 @@ export class List${className}sQuery extends Schema.Class<List${className}sQuery>
       ...(params.sortDirection !== undefined && { sortDirection: params.sortDirection }),
     });
   }
-}`;
+}`
 }
 
 /**
@@ -276,5 +277,5 @@ export class Search${className}sQuery extends Schema.Class<Search${className}sQu
       limit: params.limit ?? 20,
     });
   }
-}`;
+}`
 }

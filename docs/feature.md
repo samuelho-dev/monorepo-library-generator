@@ -70,14 +70,14 @@ export class CartService extends Context.Tag("CartService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const productRepo = yield* ProductRepository    // Injected
       const userRepo = yield* UserRepository          // Injected
       const cartAtom = yield* Atom.make<CartState>({}) // Client state
 
       return {
         addItem: (item) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Validate product exists
             const product = yield* productRepo.findById(item.productId)
             if (Option.isNone(product)) {
@@ -92,7 +92,7 @@ export class CartService extends Context.Tag("CartService")<
           }),
 
         getTotal: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const state = yield* Atom.get(cartAtom)
             return state.items.reduce((sum, item) => sum + item.price * item.qty, 0)
           })
@@ -158,13 +158,13 @@ export class SearchService extends Context.Tag("SearchService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const productRepo = yield* ProductRepository
       const analyticsService = yield* AnalyticsService
 
       return {
         search: (query) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Business logic - no UI state here
             const results = yield* productRepo.search(query)
             yield* analyticsService.trackSearch(query, results.length)
@@ -190,7 +190,7 @@ export const SearchRequest = Schema.Struct({
 export const searchRouter = Rpc.make([
   SearchRequest.pipe(
     Rpc.toHandler((req) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const searchService = yield* SearchService
 
         // Server logic
@@ -533,7 +533,7 @@ export const PaymentRpcs = RpcGroup.make("PaymentRpcs", {
 // ✅ CORRECT: HandlersFrom type ensures type safety
 export const PaymentHandlers: HandlersFrom<typeof PaymentRpcs> = {
   getPaymentStatus: (req) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* PaymentService;
       const payment = yield* service.getPayment(req.paymentId);
 
@@ -545,7 +545,7 @@ export const PaymentHandlers: HandlersFrom<typeof PaymentRpcs> = {
     }),
 
   verifyPaymentIntent: (req) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const service = yield* PaymentService;
       const verified = yield* service.verifyPaymentIntent(
         req.paymentId,
@@ -560,7 +560,7 @@ export const PaymentHandlers: HandlersFrom<typeof PaymentRpcs> = {
 
   // Protected endpoints with CurrentUser
   processPayment: (req) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const user = yield* CurrentUser;
       const service = yield* PaymentService;
 
@@ -572,7 +572,7 @@ export const PaymentHandlers: HandlersFrom<typeof PaymentRpcs> = {
     }),
 
   refundPayment: (req) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const user = yield* CurrentUser;
       const service = yield* PaymentService;
 
@@ -584,7 +584,7 @@ export const PaymentHandlers: HandlersFrom<typeof PaymentRpcs> = {
     }),
 
   listUserPayments: (req) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const user = yield* CurrentUser;
       const service = yield* PaymentService;
 
@@ -683,13 +683,13 @@ export class PaymentService extends Context.Tag("PaymentService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService;
       const paymentRepo = yield* PaymentRepository;
 
       return {
         processPayment: (params) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Business logic: Create Stripe payment intent
             const paymentIntent = yield* stripe.paymentIntents.create({
               amount: params.amount,
@@ -728,7 +728,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
           }),
 
         refundPayment: (params) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Authorization: Verify user owns this payment
             const paymentOpt = yield* paymentRepo.findById(params.paymentId);
             const payment = yield* Option.match(paymentOpt, {
@@ -766,7 +766,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
           }),
 
         listPayments: (params) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Scoped query: Only user's own payments
             return yield* paymentRepo.findByUser(params.userId, {
               page: params.page,
@@ -775,7 +775,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
           }),
 
         getPayment: (paymentId) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const paymentOpt = yield* paymentRepo.findById(paymentId);
             return yield* Option.match(paymentOpt, {
               onNone: () =>
@@ -785,7 +785,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
           }),
 
         verifyPaymentIntent: (paymentId, clientSecret) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Verification logic via Stripe
             const intent = yield* stripe.paymentIntents.retrieve(paymentId);
             return intent.client_secret === clientSecret;
@@ -855,7 +855,7 @@ export const PaymentRpcLive = RpcRouter.toHandler(PaymentRpcs).pipe(
   Layer.provide(
     Layer.effect(
       CurrentUser,
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // App-specific authentication logic
         const user = yield* authenticateRequest();
         return user;
@@ -896,7 +896,7 @@ export const PaymentRpcClientLive = HttpRpcClient.layer(PaymentRpcs, {
 });
 
 // Usage in application
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const client = yield* PaymentRpcs;
 
   // Type-safe RPC calls with full inference
@@ -1064,14 +1064,14 @@ export class PaymentService extends Context.Tag("PaymentService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService;
       const database = yield* DatabaseService;
       const productRepo = yield* ProductRepository;
       const userRepo = yield* UserRepository;
       return {
         processPayment: (params) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Validate user exists
             const user = yield* userRepo.findById(params.userId).pipe(
               Effect.flatMap(
@@ -1110,7 +1110,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
 
             // Record payment in database
             yield* database.transaction((tx) =>
-              Effect.gen(function* () {
+              Effect.gen(function*() {
                 yield* tx.insert("payments", {
                   id: payment.id,
                   userId: params.userId,
@@ -1135,7 +1135,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
           }),
 
         refundPayment: (params) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Get payment from database
             const payment = yield* database
               .query((db) =>
@@ -1165,7 +1165,7 @@ export class PaymentService extends Context.Tag("PaymentService")<
 
             // Update payment status in database
             yield* database.transaction((tx) =>
-              Effect.gen(function* () {
+              Effect.gen(function*() {
                 yield* tx
                   .update("payments")
                   .set({ status: "refunded", refundedAt: new Date() })
@@ -1215,7 +1215,7 @@ import { InventoryService } from "@creativetoolkits/feature-inventory/server";
 import { EmailService } from "@creativetoolkits/infra-messaging/server";
 
 export const checkoutOperation = (params: CheckoutParams) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const payment = yield* PaymentService;
     const inventory = yield* InventoryService;
     const email = yield* EmailService;
@@ -1288,7 +1288,7 @@ import { SellerRepository } from "@creativetoolkits/contract-seller";
 import { AnalyticsService } from "@creativetoolkits/feature-analytics/server";
 
 export const getProductDetail = (productId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const productRepo = yield* ProductRepository;
     const reviewRepo = yield* ReviewRepository;
     const sellerRepo = yield* SellerRepository;
@@ -1299,7 +1299,7 @@ export const getProductDetail = (productId: string) =>
       {
         product: productRepo.findById(productId),
         reviews: reviewRepo.findByProduct(productId),
-        seller: Effect.gen(function* () {
+        seller: Effect.gen(function*() {
           const prod = yield* productRepo.findById(productId);
           return yield* sellerRepo.findById(prod.sellerId);
         }),
@@ -1327,7 +1327,7 @@ When operations depend on each other, use sequential composition:
 ```typescript
 // libs/feature/order/src/lib/server/operations/order-fulfillment.ts
 export const fulfillOrder = (orderId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const orders = yield* OrderRepository;
     const inventory = yield* InventoryService;
     const shipping = yield* ShippingService;
@@ -1380,7 +1380,7 @@ Use for **pure computations** where same input always produces same output:
 ```typescript
 // libs/feature/pricing/src/lib/server/service.ts
 export const calculateDiscount = (tier: string, amount: number) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const rules = yield* DiscountRulesRepository;
     const tierRules = yield* rules.findByTier(tier);
 
@@ -1412,7 +1412,7 @@ Use for **frequently accessed data** that changes periodically:
 ```typescript
 // libs/feature/catalog/src/lib/server/service.ts
 export const getFeaturedProducts = () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* ProductRepository;
     const products = yield* repo.findByCriteria({ featured: true });
     return products;
@@ -1438,7 +1438,7 @@ Use for **high-traffic endpoints** in multi-server deployments:
 ```typescript
 // libs/feature/product/src/lib/server/service.ts
 export const getProductDetails = (productId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // L2 Cache: Check Redis first
     const cache = yield* CacheService;
     const cached = yield* cache.get<Product>(`product:${productId}`);
@@ -1477,7 +1477,7 @@ Use for **application setup** that should run exactly once:
 ```typescript
 // libs/feature/config/src/lib/server/service.ts
 export const initializeFeatureFlags = () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* ConfigService;
     const logger = yield* LoggingService;
 
@@ -1508,7 +1508,7 @@ import { cachedFunction } from "effect/Function";
 // libs/feature/pricing/src/lib/server/service.ts
 const calculateShippingCost = cachedFunction(
   (weight: number, distance: number, express: boolean) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const rules = yield* ShippingRulesRepository;
       // Expensive calculation...
       return calculateCost(rules, weight, distance, express);
@@ -1517,7 +1517,7 @@ const calculateShippingCost = cachedFunction(
 
 // Each unique (weight, distance, express) combination is cached
 export const getShippingQuote = (order: Order) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const cost = yield* calculateShippingCost(
       order.weight,
       order.distance,
@@ -1542,7 +1542,7 @@ export const updateProduct = (
   productId: string,
   updates: ProductUpdate,
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* ProductRepository;
     const cache = yield* CacheService;
 
@@ -1595,9 +1595,9 @@ When integrating with **callback-based APIs** (WebSockets, event emitters, SDK c
 import { Effect, Runtime } from "effect";
 import type { WebSocket } from "ws";
 import { MessageService } from "./service";
-import { LoggingService } from "@creativetoolkits/infra-logging";
+import { LoggingService } from "@creativetoolkits/infra-observability";
 
-export const createWebSocketHandler = Effect.gen(function* () {
+export const createWebSocketHandler = Effect.gen(function*() {
   // ✅ CORRECT: Capture runtime for WebSocket callbacks
   const runtime = yield* Effect.runtime<MessageService | LoggingService>();
   const runFork = Runtime.runFork(runtime);
@@ -1605,7 +1605,7 @@ export const createWebSocketHandler = Effect.gen(function* () {
   return (ws: WebSocket) => {
     // WebSocket callbacks execute outside Effect context
     ws.on("message", (data) => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const messageService = yield* MessageService;
         const logger = yield* LoggingService;
 
@@ -1623,7 +1623,7 @@ export const createWebSocketHandler = Effect.gen(function* () {
     });
 
     ws.on("error", (error) => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const logger = yield* LoggingService;
         yield* logger.error("WebSocket error", { error });
       });
@@ -1641,9 +1641,9 @@ export const createWebSocketHandler = Effect.gen(function* () {
 import { Effect, Runtime } from "effect";
 import { EventEmitter } from "events";
 import { NotificationService } from "./service";
-import { LoggingService } from "@creativetoolkits/infra-logging";
+import { LoggingService } from "@creativetoolkits/infra-observability";
 
-export const setupEventHandlers = Effect.gen(function* () {
+export const setupEventHandlers = Effect.gen(function*() {
   const runtime = yield* Effect.runtime<NotificationService | LoggingService>();
   const runFork = Runtime.runFork(runtime);
 
@@ -1651,7 +1651,7 @@ export const setupEventHandlers = Effect.gen(function* () {
 
   // Handle payment events
   emitter.on("payment.completed", (data) => {
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const notifications = yield* NotificationService;
       const logger = yield* LoggingService;
 
@@ -1664,7 +1664,7 @@ export const setupEventHandlers = Effect.gen(function* () {
 
   // Handle errors in event handlers
   emitter.on("error", (error) => {
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const logger = yield* LoggingService;
       yield* logger.error("Event handler error", { error });
     });
@@ -1725,7 +1725,7 @@ import { PaymentService } from "../service";
 export class SubscriptionWorkflow {
   static readonly process = (subscriptionId: string) =>
     pipe(
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const payment = yield* PaymentService;
 
         // Step 1: Validate subscription
@@ -1757,7 +1757,7 @@ export class SubscriptionWorkflow {
       ),
       // Handle final failure
       Effect.catchAll((error) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const payment = yield* PaymentService;
           yield* payment.updateSubscriptionStatus(subscriptionId, "failed");
           yield* payment.notifySubscriptionFailure(subscriptionId, error);
@@ -1904,7 +1904,7 @@ export class PaymentRpcClient extends Context.Tag("PaymentRpcClient")<
 // Create client layer
 export const PaymentRpcClientLive = Layer.effect(
   PaymentRpcClient,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const http = yield* HttpClient.HttpClient;
 
     return RpcClient.make(PaymentRpcs, {
@@ -1942,7 +1942,7 @@ export function usePayment() {
       setError(null);
 
       // Create Effect program
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* PaymentRpcClient;
         return yield* client.processPayment(params);
       });
@@ -1965,7 +1965,7 @@ export function usePayment() {
 
   const getPaymentStatus = useCallback(
     async (paymentId: string) => {
-      const program = Effect.gen(function* () {
+      const program = Effect.gen(function*() {
         const client = yield* PaymentRpcClient;
         return yield* client.getPaymentStatus({ paymentId });
       });
@@ -2051,7 +2051,7 @@ export class CartStore extends Context.Tag("CartStore")<
    */
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Create atom with initial cart state
       const cartAtom = yield* Atom.make<CartStoreState>({ items: [] });
 
@@ -2060,7 +2060,7 @@ export class CartStore extends Context.Tag("CartStore")<
          * Get all items in cart
          */
         getItems: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const state = yield* Atom.get(cartAtom);
             return state.items;
           }),
@@ -2104,7 +2104,7 @@ export class CartStore extends Context.Tag("CartStore")<
          * Calculate total price of all items
          */
         getTotalPrice: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const state = yield* Atom.get(cartAtom);
             return state.items.reduce(
               (sum, item) => sum + item.price * item.quantity,
@@ -2120,12 +2120,12 @@ export class CartStore extends Context.Tag("CartStore")<
    */
   static readonly Test = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const cartAtom = yield* Atom.make<CartStoreState>({ items: [] });
 
       return {
         getItems: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const state = yield* Atom.get(cartAtom);
             return state.items;
           }),
@@ -2148,7 +2148,7 @@ export class CartStore extends Context.Tag("CartStore")<
           })),
         clearCart: () => Atom.set(cartAtom, { items: [] }),
         getTotalPrice: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const state = yield* Atom.get(cartAtom);
             return state.items.reduce(
               (sum, item) => sum + item.price * item.quantity,
@@ -2181,7 +2181,7 @@ export function useCart() {
 
   useEffect(() => {
     // Fetch initial state - run Effect synchronously in browser
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const store = yield* CartStore;
       const cartItems = yield* store.getItems();
       const price = yield* store.getTotalPrice();
@@ -2194,7 +2194,7 @@ export function useCart() {
   }, []);
 
   const addItem = (item: CartItem) => {
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const store = yield* CartStore;
       yield* store.addItem(item);
       const newItems = yield* store.getItems();
@@ -2222,7 +2222,7 @@ export function useWishlist(userId: string) {
 
   // Initial load and subscription
   useEffect(() => {
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       // Get initial wishlist
       const initial = yield* client.getWishlist(userId);
       setWishlist(initial);
@@ -2289,7 +2289,7 @@ import { ProductRepositoryLive } from "@creativetoolkits/data-access-product/ser
 import { UserRepositoryLive } from "@creativetoolkits/data-access-user/server";
 import { DatabaseServiceLive } from "@creativetoolkits/infra-database/server";
 import { StripeServiceLive } from "@creativetoolkits/provider-stripe/server";
-import { LoggingServiceLive } from "@creativetoolkits/infra-logging/server";
+import { LoggingServiceLive } from "@creativetoolkits/infra-observability/server";
 
 // Complete layer with all dependencies
 export const PaymentLive = PaymentService.Live.pipe(
@@ -2409,7 +2409,7 @@ const StripeServiceMock = Layer.succeed(StripeService, {
 describe("PaymentService", () => {
   // Use it.scoped for all tests
   it.scoped("processPayment creates payment intent", () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const payment = yield* PaymentService;
 
       const result = yield* payment.processPayment({
@@ -2434,7 +2434,7 @@ describe("PaymentService", () => {
   );
 
   it.scoped("handles payment failure gracefully", () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const failingStripeMock = Layer.succeed(StripeService, {
         paymentIntents: {
           create: () =>
@@ -2681,7 +2681,7 @@ export { PaymentEdgeService } from "./lib/edge/service";
     "@creativetoolkits/data-access-product": "*",
     "@creativetoolkits/data-access-user": "*",
     "@creativetoolkits/infra-database": "*",
-    "@creativetoolkits/infra-logging": "*",
+    "@creativetoolkits/infra-observability": "*",
     "@creativetoolkits/provider-stripe": "*"
   }
 }
@@ -2841,13 +2841,13 @@ export class <%= className %> extends Context.Tag("<%= className %>")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // TODO: Inject dependencies
       // const repo = yield* SomeRepository;
 
       return {
         doSomething: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // TODO: Implement business logic
             yield* Effect.log("Operation completed");
           })

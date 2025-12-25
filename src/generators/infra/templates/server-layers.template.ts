@@ -6,38 +6,39 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate server layers file for infrastructure service
  */
 export function generateServerLayersFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   // File header
   builder.addFileHeader({
     title: `${className} Service Layers`,
-    description: `Layer compositions for server-side dependency injection using Effect.\nProvides additional layer variants for different environments and use cases.\n\nNOTE: The primary Live and Test layers are now static members of ${className}Service\n(see ../service/service.ts). This file provides optional additional layer variants.`,
+    description:
+      `Layer compositions for server-side dependency injection using Effect.\nProvides additional layer variants for different environments and use cases.\n\nNOTE: The primary Live and Test layers are now static members of ${className}Service\n(see ../service/service.ts). This file provides optional additional layer variants.`,
     module: `${scope}/infra-${fileName}/layers`,
-    see: ['https://effect.website/docs/guides/context-management for layer patterns'],
-  });
+    see: ["https://effect.website/docs/guides/context-management for layer patterns"]
+  })
 
-  // Imports
+  // Imports - layers.ts is now at lib/layers.ts, service at lib/service.ts
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Layer', 'Effect', 'Option'],
+      from: "effect",
+      imports: ["Layer", "Effect", "Option"]
     },
-    { from: '../service/service', imports: [`${className}Service`] },
-    { from: `${scope}/env`, imports: ['env'] },
-  ]);
+    { from: "./service", imports: [`${className}Service`] },
+    { from: `${scope}/env`, imports: ["env"] }
+  ])
 
   // Section: Primary Layers Comment
-  builder.addSectionComment('Primary Layers (Available as Static Members)');
+  builder.addSectionComment("Primary Layers (Available as Static Members)")
 
   builder.addRaw(`//
 // The primary Live and Test layers are defined as static members of ${className}Service:
@@ -47,17 +48,17 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
 //
 // Usage:
 // \`\`\`typescript
-// const program = Effect.gen(function* () {
+// const program = Effect.gen(function*() {
 //   const service = yield* ${className}Service;
 //   return yield* service.get("id");
 // }).pipe(
 //   Effect.provide(${className}Service.Live)  // Use static Live layer
 // );
-// \`\`\``);
-  builder.addBlankLine();
+// \`\`\``)
+  builder.addBlankLine()
 
   // Section: Development Layer
-  builder.addSectionComment('Development Layer (Optional)');
+  builder.addSectionComment("Development Layer (Optional)")
 
   builder.addRaw(`/**
  * Development Layer
@@ -74,7 +75,7 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
  * @example
  * \`\`\`typescript
  * // Usage in development:
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const service = yield* ${className}Service;
  *   return yield* service.get("id");
  * }).pipe(
@@ -84,7 +85,7 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
  */
 export const ${className}ServiceDev = Layer.effect(
   ${className}Service,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // TODO: Inject dependencies
     // const config = yield* ${className}Config;
     // const logger = yield* LoggingService;
@@ -94,7 +95,7 @@ export const ${className}ServiceDev = Layer.effect(
 
     return {
       get: (id: string) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* Effect.logDebug(\`[${className}] DEV GET id=\${id}\`);
           return Option.none();
         }),
@@ -103,7 +104,7 @@ export const ${className}ServiceDev = Layer.effect(
         skip?: number,
         limit?: number
       ) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* Effect.logDebug(
             "[${className}] DEV findByCriteria",
             { criteria, skip, limit }
@@ -111,28 +112,28 @@ export const ${className}ServiceDev = Layer.effect(
           return [];
         }),
       create: (input: Record<string, unknown>) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* Effect.logDebug("[${className}] DEV create", input);
           return { id: "dev-id", ...input };
         }),
       update: (id: string, input: Record<string, unknown>) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* Effect.logDebug(\`[${className}] DEV update id=\${id}\`, input);
           return { id, ...input };
         }),
       delete: (id: string) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* Effect.logDebug(\`[${className}] DEV delete id=\${id}\`);
         }),
       healthCheck: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* Effect.logDebug("[${className}] DEV healthCheck");
           return true;
         }),
     };
   }),
-);`);
-  builder.addBlankLine();
+);`)
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Development Layer WITH Resource Cleanup (Optional Example)
@@ -149,7 +150,7 @@ export const ${className}ServiceDev = Layer.effect(
  * // When you need cleanup:
  * export const ${className}ServiceWithCleanup = Layer.scoped(
  *   ${className}Service,
- *   Effect.gen(function* () {
+ *   Effect.gen(function*() {
  *     // Acquire resource with automatic cleanup
  *     const resource = yield* Effect.acquireRelease(
  *       Effect.sync(() => {
@@ -168,11 +169,11 @@ export const ${className}ServiceDev = Layer.effect(
  *   })
  * );
  * \`\`\`
- */`);
-  builder.addBlankLine();
+ */`)
+  builder.addBlankLine()
 
   // Section: Auto Layer
-  builder.addSectionComment('Auto Layer (Environment Detection) - Optional');
+  builder.addSectionComment("Auto Layer (Environment Detection) - Optional")
 
   builder.addRaw(`/**
  * Automatic Layer Selection
@@ -193,7 +194,7 @@ export const ${className}ServiceDev = Layer.effect(
  * @example
  * \`\`\`typescript
  * // Usage in application:
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const service = yield* ${className}Service;
  *   return yield* service.get("id");
  * }).pipe(
@@ -210,11 +211,11 @@ export const ${className}ServiceAuto = Layer.suspend(() => {
     default:
       return ${className}ServiceDev;
   }
-});`);
-  builder.addBlankLine();
+});`)
+  builder.addBlankLine()
 
   // Section: Advanced Pattern Examples
-  builder.addSectionComment('Advanced Pattern Examples (DELETE IF NOT NEEDED)');
+  builder.addSectionComment("Advanced Pattern Examples (DELETE IF NOT NEEDED)")
 
   builder.addRaw(`/**
  * Example: Layer with Custom Configuration
@@ -230,7 +231,7 @@ export const ${className}ServiceCustom = (customConfig: {
 }) =>
   Layer.scoped(
     ${className}Service,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Merge custom config with defaults
       const defaults = {
         timeout: 5000,
@@ -242,7 +243,7 @@ export const ${className}ServiceCustom = (customConfig: {
 
       return {
         get: (id: string) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Use custom config in implementation
             yield* Effect.logDebug(\`[${className}] GET id=\${id} with \${defaults.timeout}ms timeout\`);
             return Option.none();
@@ -252,29 +253,29 @@ export const ${className}ServiceCustom = (customConfig: {
           skip?: number,
           limit?: number
         ) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[${className}] findByCriteria", { criteria, skip, limit });
             return [];
           }),
         create: (input: Record<string, unknown>) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug("[${className}] create", input);
             return { id: "custom-id", ...input };
           }),
         update: (id: string, input: Record<string, unknown>) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug(\`[${className}] update id=\${id}\`, input);
             return { id, ...input };
           }),
         delete: (id: string) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.logDebug(\`[${className}] delete id=\${id}\`);
           }),
         healthCheck: () => Effect.succeed(true),
       };
     }),
-  );`);
-  builder.addBlankLine();
+  );`)
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Example: Layer with Retry Policy (Code Example)
@@ -290,7 +291,7 @@ export const ${className}ServiceCustom = (customConfig: {
  * // Add retry logic by wrapping the Live layer
  * export const ${className}ServiceWithRetry = Layer.effect(
  *   ${className}Service,
- *   Effect.gen(function* () {
+ *   Effect.gen(function*() {
  *     const service = yield* ${className}Service;
  *
  *     const retryPolicy = {
@@ -314,11 +315,11 @@ export const ${className}ServiceCustom = (customConfig: {
  *   }),
  * ).pipe(Layer.provide(${className}Service.Live));
  * \`\`\`
- */`);
-  builder.addBlankLine();
+ */`)
+  builder.addBlankLine()
 
   // Section: Layer Composition Examples
-  builder.addSectionComment('Layer Composition Examples');
+  builder.addSectionComment("Layer Composition Examples")
 
   builder.addRaw(`/**
  * Example: Composed Layer with Dependencies
@@ -330,7 +331,7 @@ export const ${className}ServiceCustom = (customConfig: {
  *
  * @example
  * \`\`\`typescript
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const service = yield* ${className}Service;
  *   return yield* service.get("id");
  * }).pipe(
@@ -343,7 +344,7 @@ export const ${className}ServiceCustom = (customConfig: {
 //   ${className}ConfigLive,
 //   LoggingServiceLive,
 //   // ... other dependency layers
-// );`);
+// );`)
 
-  return builder.toString();
+  return builder.toString()
 }

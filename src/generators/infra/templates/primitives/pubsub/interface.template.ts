@@ -7,17 +7,17 @@
  * @module monorepo-library-generator/infra-templates/primitives/pubsub
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate pubsub service interface using Effect.PubSub
  */
 export function generatePubSubInterfaceFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Service`,
@@ -35,38 +35,49 @@ Effect.PubSub Features:
 - Fiber-safe concurrent access
 - Backpressure handling`,
     module: `${scope}/infra-${fileName}/service`,
-    see: ['EFFECT_PATTERNS.md for pubsub patterns'],
-  });
+    see: ["EFFECT_PATTERNS.md for pubsub patterns"]
+  })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Effect', 'Layer', 'Context', 'PubSub'],
+      from: "effect",
+      imports: ["Effect", "Layer", "Context", "PubSub", "Schema"]
     },
     {
-      from: 'effect',
-      imports: ['Queue', 'Scope'],
-      isTypeOnly: true,
+      from: "effect",
+      imports: ["Queue", "Scope"],
+      isTypeOnly: true
     },
-  ]);
+    {
+      from: "effect/ParseResult",
+      imports: ["ParseError"],
+      isTypeOnly: true
+    },
+    { from: `${scope}/env`, imports: ["env"] }
+  ])
 
-  builder.addSectionComment('PubSub Service Interface (Effect.PubSub Wrapper)');
+  builder.addSectionComment("PubSub Service Interface (Effect.PubSub Wrapper)")
 
   builder.addRaw(`/**
  * Topic handle for publish/subscribe operations
+ *
+ * @typeParam T - Message type
+ * @typeParam E - Error type (ParseError for schema validation)
  */
-export interface TopicHandle<T> {
+export interface TopicHandle<T, E> {
   /**
    * Publish a message to all subscribers
+   * Validates message against schema before publishing.
    *
    * @returns true if published to at least one subscriber
    */
-  readonly publish: (message: T) => Effect.Effect<boolean>
+  readonly publish: (message: T) => Effect.Effect<boolean, E>
 
   /**
    * Publish multiple messages
+   * Validates each message against schema before publishing.
    */
-  readonly publishAll: (messages: Iterable<T>) => Effect.Effect<boolean>
+  readonly publishAll: (messages: Iterable<T>) => Effect.Effect<boolean, E>
 
   /**
    * Subscribe to receive messages
@@ -104,7 +115,12 @@ export interface TopicOptions {
  * ${className} Service
  *
  * PubSub infrastructure using Effect.PubSub primitive.
- * Provides topic-based publish/subscribe with multiple subscriber support.
+ * Provides topic-based publish/subscribe with Schema-validated type safety.
+ *
+ * IMPORTANT: Schema must have no context requirements (R = never) because
+ * message decoding occurs in synchronous callbacks that cannot provide
+ * Effect context. If your schema has dependencies, resolve them first
+ * using Schema.to() or Schema.provide().
  */
 export class ${className}Service extends Context.Tag(
   "${scope}/infra-${fileName}/${className}Service"
@@ -112,42 +128,54 @@ export class ${className}Service extends Context.Tag(
   ${className}Service,
   {
     /**
-     * Create or get a topic for publishing and subscribing
+     * Create a typed topic for publishing and subscribing
      *
-     * Topics are created lazily and cached by name.
-     * Multiple calls with the same name return the same topic.
+     * Requires a Schema for compile-time and runtime type safety.
+     * Each topic is independent - for shared messaging, use Redis layer.
+     *
+     * @param name - Topic name for identification
+     * @param schema - Schema for message type validation (must have R = never)
+     * @param options - Topic configuration
      *
      * @example
      * \`\`\`typescript
-     * // Publisher
-     * const orderEvents = yield* pubsub.topic<OrderEvent>("orders");
+     * // Define message schema
+     * const OrderEventSchema = Schema.Union(
+     *   Schema.Struct({ type: Schema.Literal("created"), orderId: Schema.String }),
+     *   Schema.Struct({ type: Schema.Literal("paid"), orderId: Schema.String, amount: Schema.Number })
+     * );
+     * type OrderEvent = Schema.Schema.Type<typeof OrderEventSchema>;
+     *
+     * // Create topic with schema
+     * const orderEvents = yield* pubsub.topic("orders", OrderEventSchema);
+     *
+     * // Type-safe publish (validated by Schema)
      * yield* orderEvents.publish({ type: "created", orderId: "123" });
      *
-     * // Subscriber (different fiber/service)
-     * const orderEvents = yield* pubsub.topic<OrderEvent>("orders");
+     * // Type-safe subscribe
      * const subscription = yield* orderEvents.subscribe;
-     *
-     * // Process events
-     * yield* Queue.take(subscription).pipe(
-     *   Effect.tap((event) => processEvent(event)),
-     *   Effect.forever,
-     *   Effect.forkScoped
-     * );
+     * const event = yield* Queue.take(subscription);
+     * // event is properly typed as OrderEvent
      * \`\`\`
      */
-    readonly topic: <T>(
+    readonly topic: <A, I>(
       name: string,
+      schema: Schema.Schema<A, I, never>,
       options?: TopicOptions
-    ) => Effect.Effect<TopicHandle<T>>
+    ) => Effect.Effect<TopicHandle<A, ParseError>>
 
     /**
      * Create an anonymous topic (not shared)
      *
      * Use for local pub/sub within a single scope.
+     *
+     * @param schema - Schema for message type validation (must have R = never)
+     * @param options - Topic configuration
      */
-    readonly createTopic: <T>(
+    readonly createTopic: <A, I>(
+      schema: Schema.Schema<A, I, never>,
       options?: TopicOptions
-    ) => Effect.Effect<TopicHandle<T>, never, Scope.Scope>
+    ) => Effect.Effect<TopicHandle<A, ParseError>, never, Scope.Scope>
 
     /**
      * Health check for monitoring
@@ -163,49 +191,53 @@ export class ${className}Service extends Context.Tag(
    * Memory Layer - Pure Effect.PubSub implementation
    *
    * Uses Effect's built-in PubSub for in-memory messaging.
-   * Topics are stored in a Map and cleaned up when all subscribers leave.
+   * Each topic() call creates a fresh PubSub - for shared messaging use Redis.
+   * Schema validation is performed on publish operations.
    */
   static readonly Memory = Layer.scoped(
     this,
-    Effect.gen(function* () {
-      // Topic registry for named topics
-      const topics = new Map<string, PubSub.PubSub<unknown>>()
-
-      const getOrCreateTopic = <T>(
-        name: string,
-        capacity: number
-      ): Effect.Effect<PubSub.PubSub<T>> =>
-        Effect.gen(function* () {
-          const existing = topics.get(name)
-          if (existing) {
-            return existing as PubSub.PubSub<T>
-          }
-
-          const newTopic = yield* PubSub.bounded<T>(capacity)
-          topics.set(name, newTopic as PubSub.PubSub<unknown>)
-          return newTopic
-        })
-
-      const makeTopicHandle = <T>(pubsub: PubSub.PubSub<T>): TopicHandle<T> => ({
-        publish: (message: T) => PubSub.publish(pubsub, message),
-        publishAll: (messages: Iterable<T>) => PubSub.publishAll(pubsub, messages),
+    Effect.gen(function*() {
+      const makeTopicHandle = <A, E>(
+        pubsub: PubSub.PubSub<A>,
+        validate: (message: A) => Effect.Effect<A, E>,
+        topicName: string
+      ) => ({
+        publish: (message: A) =>
+          validate(message).pipe(
+            Effect.flatMap((validated) => PubSub.publish(pubsub, validated)),
+            Effect.withSpan("PubSub.publish", { attributes: { topic: topicName } })
+          ),
+        publishAll: (messages: Iterable<A>) =>
+          Effect.forEach([...messages], validate).pipe(
+            Effect.flatMap((validated) => PubSub.publishAll(pubsub, validated)),
+            Effect.withSpan("PubSub.publishAll", { attributes: { topic: topicName } })
+          ),
         subscribe: PubSub.subscribe(pubsub),
         subscriberCount: Effect.sync(() => 0) // PubSub doesn't expose this directly
       })
 
       return {
-        topic: <T>(name: string, options?: TopicOptions) =>
-          Effect.gen(function* () {
+        topic: <A, I>(
+          name: string,
+          schema: Schema.Schema<A, I, never>,
+          options?: TopicOptions
+        ) =>
+          Effect.gen(function*() {
             const capacity = options?.capacity ?? 1000
-            const pubsub = yield* getOrCreateTopic<T>(name, capacity)
-            return makeTopicHandle(pubsub)
+            const pubsub = yield* PubSub.bounded<A>(capacity)
+            const validate = Schema.validate(schema)
+            return makeTopicHandle<A, ParseError>(pubsub, validate, name)
           }),
 
-        createTopic: <T>(options?: TopicOptions) =>
-          Effect.gen(function* () {
+        createTopic: <A, I>(
+          schema: Schema.Schema<A, I, never>,
+          options?: TopicOptions
+        ) =>
+          Effect.gen(function*() {
             const capacity = options?.capacity ?? 1000
-            const pubsub = yield* PubSub.bounded<T>(capacity)
-            return makeTopicHandle(pubsub)
+            const pubsub = yield* PubSub.bounded<A>(capacity)
+            const validate = Schema.validate(schema)
+            return makeTopicHandle<A, ParseError>(pubsub, validate, "anonymous")
           }),
 
         healthCheck: () => Effect.succeed(true)
@@ -232,28 +264,135 @@ export class ${className}Service extends Context.Tag(
    * For Redis-backed distributed pub/sub, use RedisPubSub layer from layers/
    */
   static readonly Live = ${className}Service.Memory
-}
-`);
 
-  builder.addSectionComment('Common PubSub Patterns');
+  // ===========================================================================
+  // Dev Layer
+  // ===========================================================================
+
+  /**
+   * Dev Layer - Memory with debug logging and schema validation
+   */
+  static readonly Dev = Layer.scoped(
+    this,
+    Effect.gen(function*() {
+      yield* Effect.logDebug("[${className}Service] [DEV] Initializing pubsub service")
+
+      const makeTopicHandle = <A, E>(
+        pubsub: PubSub.PubSub<A>,
+        validate: (message: A) => Effect.Effect<A, E>,
+        topicName: string
+      ) => ({
+        publish: (message: A) =>
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[${className}Service] [DEV] publish", { topic: topicName })
+            const validated = yield* validate(message)
+            return yield* PubSub.publish(pubsub, validated)
+          }),
+        publishAll: (messages: Iterable<A>) =>
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[${className}Service] [DEV] publishAll", { topic: topicName })
+            const validated = yield* Effect.forEach([...messages], validate)
+            return yield* PubSub.publishAll(pubsub, validated)
+          }),
+        subscribe: Effect.gen(function*() {
+          yield* Effect.logDebug("[${className}Service] [DEV] subscribe", { topic: topicName })
+          return yield* PubSub.subscribe(pubsub)
+        }),
+        subscriberCount: Effect.sync(() => 0)
+      })
+
+      return {
+        topic: <A, I>(
+          name: string,
+          schema: Schema.Schema<A, I, never>,
+          options?: TopicOptions
+        ) =>
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[${className}Service] [DEV] Creating topic", { name })
+            const capacity = options?.capacity ?? 1000
+            const pubsub = yield* PubSub.bounded<A>(capacity)
+            const validate = Schema.validate(schema)
+            return makeTopicHandle<A, ParseError>(pubsub, validate, name)
+          }),
+
+        createTopic: <A, I>(
+          schema: Schema.Schema<A, I, never>,
+          options?: TopicOptions
+        ) =>
+          Effect.gen(function*() {
+            yield* Effect.logDebug("[${className}Service] [DEV] Creating anonymous topic")
+            const capacity = options?.capacity ?? 1000
+            const pubsub = yield* PubSub.bounded<A>(capacity)
+            const validate = Schema.validate(schema)
+            return makeTopicHandle<A, ParseError>(pubsub, validate, "anonymous")
+          }),
+
+        healthCheck: () => Effect.succeed(true)
+      }
+    })
+  )
+
+  // ===========================================================================
+  // Auto Layer
+  // ===========================================================================
+
+  /**
+   * Auto Layer - Environment-aware layer selection
+   *
+   * Selects appropriate layer based on NODE_ENV:
+   * - "production" → Live (Memory)
+   * - "development" → Dev (Memory with logging)
+   * - "test" → Test (Memory)
+   * - default → Dev
+   */
+  static readonly Auto = Layer.suspend(() => {
+    switch (env.NODE_ENV) {
+      case "production":
+        return ${className}Service.Live
+      case "test":
+        return ${className}Service.Test
+      default:
+        return ${className}Service.Dev
+    }
+  })
+}
+`)
+
+  builder.addSectionComment("Common PubSub Patterns")
 
   builder.addRaw(`/**
  * Helper: Create an event bus for domain events
  *
  * @example
  * \`\`\`typescript
- * type OrderEvent =
- *   | { type: "created"; orderId: string; userId: string }
- *   | { type: "paid"; orderId: string; amount: number }
- *   | { type: "shipped"; orderId: string; trackingNumber: string };
+ * // Define event schema for type safety
+ * const OrderEventSchema = Schema.Union(
+ *   Schema.Struct({
+ *     type: Schema.Literal("created"),
+ *     orderId: Schema.String,
+ *     userId: Schema.String
+ *   }),
+ *   Schema.Struct({
+ *     type: Schema.Literal("paid"),
+ *     orderId: Schema.String,
+ *     amount: Schema.Number
+ *   }),
+ *   Schema.Struct({
+ *     type: Schema.Literal("shipped"),
+ *     orderId: Schema.String,
+ *     trackingNumber: Schema.String
+ *   })
+ * );
+ * type OrderEvent = Schema.Schema.Type<typeof OrderEventSchema>;
  *
- * const program = Effect.gen(function* () {
+ * const program = Effect.gen(function*() {
  *   const pubsub = yield* ${className}Service;
- *   const orderEvents = yield* pubsub.topic<OrderEvent>("order-events");
+ *   // Pass schema for type-safe messaging
+ *   const orderEvents = yield* pubsub.topic("order-events", OrderEventSchema);
  *
  *   // Start event processor
  *   yield* Effect.forkScoped(
- *     Effect.gen(function* () {
+ *     Effect.gen(function*() {
  *       const subscription = yield* orderEvents.subscribe;
  *
  *       yield* Queue.take(subscription).pipe(
@@ -272,12 +411,12 @@ export class ${className}Service extends Context.Tag(
  *     })
  *   );
  *
- *   // Publish events from business logic
+ *   // Type-safe publish (Schema validates at compile time)
  *   yield* orderEvents.publish({ type: "created", orderId: "123", userId: "456" });
  * });
  * \`\`\`
  */
-`);
+`)
 
-  return builder.toString();
+  return builder.toString()
 }

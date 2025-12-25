@@ -106,7 +106,7 @@ lib/
 ```typescript
 import { DockerService } from '@workspace/provider-docker'
 
-Effect.gen(function* () {
+Effect.gen(function*() {
   const docker = yield* DockerService
   const result = yield* docker.execute(["ps", "-a"])
   const version = yield* docker.version
@@ -149,7 +149,7 @@ lib/
 ```typescript
 import { AcmeApiService } from '@workspace/provider-acme-api'
 
-Effect.gen(function* () {
+Effect.gen(function*() {
   const api = yield* AcmeApiService
   const resources = yield* api.list({ page: 1, limit: 10 })
   const resource = yield* api.get("resource-id")
@@ -193,7 +193,7 @@ lib/
 ```typescript
 import { HasuraService } from '@workspace/provider-hasura'
 
-Effect.gen(function* () {
+Effect.gen(function*() {
   const hasura = yield* HasuraService
 
   const data = yield* hasura.query<QueryResult>(`
@@ -568,7 +568,7 @@ export class StripeService extends Context.Tag("StripeService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* StripeConfig;
 
       // Initialize Stripe client
@@ -704,7 +704,7 @@ export class StripeService extends Context.Tag("StripeService")<
 
         webhooks: {
           constructEvent: (payload, signature) =>
-            Effect.gen(function* () {
+            Effect.gen(function*() {
               const secret = config.webhookSecret;
               if (!secret) {
                 return yield* Effect.fail(
@@ -741,7 +741,7 @@ export class StripeService extends Context.Tag("StripeService")<
 // libs/provider/stripe/src/lib/layers.ts
 import { Layer } from "effect";
 import { StripeService } from "./service";
-import { LoggingService } from "@creativetoolkits/infra-logging/server";
+import { LoggingService } from "@creativetoolkits/infra-observability/server";
 
 // Production layer with all dependencies
 export const StripeServiceLive = StripeService.Live.pipe(
@@ -920,7 +920,7 @@ export const StripeServiceTest = Layer.succeed(StripeService, {
 // Development layer with sandbox credentials
 export const StripeServiceDev = Layer.effect(
   StripeService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Use sandbox/test credentials
     const testConfig = {
       secretKey: Config.succeed("sk_test_..."),
@@ -1159,7 +1159,7 @@ describe("StripeService", () => {
   const mockLayer = Layer.succeed(StripeService, mockStripeSDK);
 
   it.scoped("wraps SDK method correctly", () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const stripe = yield* StripeService;
 
       const result = yield* stripe.paymentIntents.create({
@@ -1173,7 +1173,7 @@ describe("StripeService", () => {
   );
 
   it.scoped("transforms SDK errors to domain errors", () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const failingMock = Layer.succeed(StripeService, {
         paymentIntents: {
           create: () =>
@@ -1261,7 +1261,7 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const apiKey = yield* Config.secret("OPENAI_API_KEY");
       const openai = new OpenAI({ apiKey: Config.unwrap(apiKey) });
 
@@ -1333,7 +1333,7 @@ export class RedisService extends Context.Tag("RedisService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const host = yield* Config.string("REDIS_HOST").pipe(
         Config.withDefault("localhost"),
       );
@@ -1407,7 +1407,7 @@ External SDKs use callback patterns that require preserving the Effect runtime. 
 // libs/provider/openai/src/lib/service.ts
 import { Effect, Runtime, Stream } from "effect";
 import OpenAI from "openai";
-import { LoggingService } from "@creativetoolkits/infra-logging";
+import { LoggingService } from "@creativetoolkits/infra-observability";
 
 export class OpenAIService extends Context.Tag("OpenAIService")<
   OpenAIService,
@@ -1419,7 +1419,7 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* OpenAIConfig;
       const logger = yield* LoggingService;
       const runtime = yield* Effect.runtime<LoggingService>();
@@ -1447,7 +1447,7 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
 
                     // Log with Effect runtime
                     runFork(
-                      Effect.gen(function* () {
+                      Effect.gen(function*() {
                         const log = yield* LoggingService;
                         yield* log.debug("Stream chunk", { content });
                       })
@@ -1472,10 +1472,10 @@ export class OpenAIService extends Context.Tag("OpenAIService")<
 // libs/provider/stripe/src/lib/webhook-handler.ts
 import { Effect, Runtime } from "effect";
 import Stripe from "stripe";
-import { LoggingService } from "@creativetoolkits/infra-logging";
+import { LoggingService } from "@creativetoolkits/infra-observability";
 import { DatabaseService } from "@creativetoolkits/infra-database";
 
-export const createStripeWebhookHandler = Effect.gen(function* () {
+export const createStripeWebhookHandler = Effect.gen(function*() {
   const runtime = yield* Effect.runtime<
     LoggingService | DatabaseService
   >();
@@ -1491,7 +1491,7 @@ export const createStripeWebhookHandler = Effect.gen(function* () {
     );
 
     // Handle webhook event with Effect runtime
-    const program = Effect.gen(function* () {
+    const program = Effect.gen(function*() {
       const db = yield* DatabaseService;
       const log = yield* LoggingService;
 
@@ -1538,7 +1538,7 @@ export const createStripeWebhookHandler = Effect.gen(function* () {
 // libs/provider/supabase/src/lib/realtime.ts
 import { Effect, Runtime, Queue } from "effect";
 import { createClient, RealtimeChannel } from "@supabase/supabase-js";
-import { LoggingService } from "@creativetoolkits/infra-logging";
+import { LoggingService } from "@creativetoolkits/infra-observability";
 
 export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeService")<
   SupabaseRealtimeService,
@@ -1550,7 +1550,7 @@ export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeServic
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* SupabaseConfig;
       const runtime = yield* Effect.runtime<LoggingService>();
       const runFork = Runtime.runFork(runtime);
@@ -1564,7 +1564,7 @@ export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeServic
 
       return {
         subscribe: (table) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             const queue = yield* Queue.unbounded<DatabaseChange>();
 
             const channel = client
@@ -1576,7 +1576,7 @@ export class SupabaseRealtimeService extends Context.Tag("SupabaseRealtimeServic
                   // Use runtime to enqueue with logging
                   // Payload type is inferred from Supabase's postgres_changes callback
                   runFork(
-                    Effect.gen(function* () {
+                    Effect.gen(function*() {
                       const logger = yield* LoggingService;
                       yield* logger.debug("Database change", { payload });
                       yield* Queue.offer(queue, payload);
@@ -1643,7 +1643,7 @@ Without runtime preservation in these cases:
 5. **MUST log SDK events** through the captured runtime for consistent observability
    ```typescript
    runFork(
-     Effect.gen(function* () {
+     Effect.gen(function*() {
        const logger = yield* LoggingService
        yield* logger.info("SDK event received", { eventType })
      })
@@ -1765,7 +1765,7 @@ If ANY answer is YES, you MUST preserve the runtime. No exceptions.
     "effect": "^3.0.0"
   },
   "dependencies": {
-    "@creativetoolkits/infra-logging": "*",
+    "@creativetoolkits/infra-observability": "*",
     "stripe": "^14.0.0"
   }
 }
@@ -1957,7 +1957,7 @@ export class StripeService extends Context.Tag("StripeService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // ✅ Access dependencies via Effect.gen
       const config = yield* StripeConfig;
 
@@ -1991,7 +1991,7 @@ export class RedisService extends Context.Tag("RedisService")<
 >() {
   static readonly Live = Layer.scoped(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // ✅ Access dependencies
       const host = yield* Config.string("REDIS_HOST");
       const port = yield* Config.integer("REDIS_PORT");
@@ -2022,7 +2022,7 @@ export class RedisService extends Context.Tag("RedisService")<
 // ❌ WRONG: Layer.scoped with no cleanup
 static readonly Live = Layer.scoped(
   this,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* Config;
     const stripe = new Stripe(config.apiKey); // No cleanup needed!
     return { /* ... */ };
@@ -2032,7 +2032,7 @@ static readonly Live = Layer.scoped(
 // ✅ CORRECT: Use Layer.effect instead
 static readonly Live = Layer.effect(
   this,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* Config;
     const stripe = new Stripe(config.apiKey);
     return { /* ... */ };
@@ -2051,7 +2051,7 @@ static readonly Live = Layer.sync(this, () => {
 // ✅ CORRECT: Use Layer.effect to access dependencies
 static readonly Live = Layer.effect(
   this,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* Config;
     return { /* ... */ };
   })
@@ -2063,7 +2063,7 @@ static readonly Live = Layer.effect(
 // ❌ WRONG: Manual cleanup won't run on interruption
 static readonly Live = Layer.effect(
   this,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const redis = new Redis();
     // ❌ This won't run if scope is interrupted!
     return {
@@ -2076,7 +2076,7 @@ static readonly Live = Layer.effect(
 // ✅ CORRECT: Use acquireRelease with Layer.scoped
 static readonly Live = Layer.scoped(
   this,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const redis = yield* Effect.acquireRelease(
       Effect.sync(() => new Redis()),
       (client) => Effect.promise(() => client.quit())

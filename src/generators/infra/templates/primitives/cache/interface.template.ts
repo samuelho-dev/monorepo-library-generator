@@ -7,17 +7,17 @@
  * @module monorepo-library-generator/infra-templates/primitives/cache
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate cache service interface using Effect.Cache primitive
  */
 export function generateCacheInterfaceFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Service`,
@@ -34,20 +34,20 @@ Effect.Cache Features:
 - LRU eviction when capacity exceeded
 - Type-safe key/value pairs`,
     module: `${scope}/infra-${fileName}/service`,
-    see: ['EFFECT_PATTERNS.md for cache patterns'],
-  });
+    see: ["EFFECT_PATTERNS.md for cache patterns"]
+  })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Cache', 'Context', 'Duration', 'Effect', 'Layer', 'Option'],
+      from: "effect",
+      imports: ["Cache", "Context", "Duration", "Effect", "Layer", "Option"]
     },
-  ]);
+    { from: `${scope}/env`, imports: ["env"] }
+  ])
 
-  builder.addSectionComment('Cache Service Interface (Effect.Cache Wrapper)');
+  builder.addSectionComment("Cache Service Interface (Effect.Cache Wrapper)")
 
   builder.addRaw(`/**
- * Cache handle returned by make/makeSimple
  *
  * Note: The R (requirements) type parameter from the lookup function
  * is captured during cache creation. Methods return Effect without R.
@@ -139,25 +139,6 @@ export class ${className}Service extends Context.Tag(
     }) => Effect.Effect<CacheHandle<K, V, E>>
 
     /**
-     * Create a simple key-value cache without lookup function
-     *
-     * @example
-     * \`\`\`typescript
-     * const sessionCache = yield* service.makeSimple<string, SessionData>({
-     *   capacity: 10000,
-     *   ttl: Duration.hours(24)
-     * });
-     *
-     * yield* sessionCache.set("session-abc", sessionData);
-     * const session = yield* sessionCache.get("session-abc");
-     * \`\`\`
-     */
-    readonly makeSimple: <K, V>(options: {
-      readonly capacity: number
-      readonly ttl: Duration.Duration
-    }) => Effect.Effect<SimpleCacheHandle<K, V>>
-
-    /**
      * Health check for monitoring
      */
     readonly healthCheck: () => Effect.Effect<boolean>
@@ -179,70 +160,21 @@ export class ${className}Service extends Context.Tag(
       readonly capacity: number
       readonly ttl: Duration.Duration
     }) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const cache = yield* Cache.make({
           lookup: options.lookup,
           capacity: options.capacity,
           timeToLive: options.ttl
         })
 
+        // Return object literal - TS infers CacheHandle<K, V, E> from Context.Tag
         return {
           get: (key: K) => cache.get(key),
           invalidate: (key: K) => cache.invalidate(key),
           invalidateAll: cache.invalidateAll,
           refresh: (key: K) => cache.refresh(key),
           size: cache.size
-        } satisfies CacheHandle<K, V, E>
-      }),
-
-    makeSimple: <K, V>(options: {
-      readonly capacity: number
-      readonly ttl: Duration.Duration
-    }) =>
-      Effect.gen(function* () {
-        // Use a Map with manual TTL tracking for simple cache
-        const store = new Map<K, { value: V; expiresAt: number }>()
-        const ttlMs = Duration.toMillis(options.ttl)
-
-        const cleanup = () => {
-          const now = Date.now()
-          for (const [key, entry] of store) {
-            if (entry.expiresAt <= now) {
-              store.delete(key)
-            }
-          }
-          // Evict oldest if over capacity
-          while (store.size > options.capacity) {
-            const oldestKey = store.keys().next().value
-            if (oldestKey !== undefined) {
-              store.delete(oldestKey)
-            }
-          }
         }
-
-        return {
-          get: (key: K) =>
-            Effect.sync(() => {
-              const entry = store.get(key)
-              if (!entry || entry.expiresAt <= Date.now()) {
-                store.delete(key)
-                return Option.none<V>()
-              }
-              return Option.some(entry.value)
-            }),
-          set: (key: K, value: V) =>
-            Effect.sync(() => {
-              cleanup()
-              store.set(key, { value, expiresAt: Date.now() + ttlMs })
-            }),
-          delete: (key: K) =>
-            Effect.sync(() => {
-              store.delete(key)
-            }),
-          clear: Effect.sync(() => {
-            store.clear()
-          })
-        } satisfies SimpleCacheHandle<K, V>
       }),
 
     healthCheck: () => Effect.succeed(true)
@@ -254,55 +186,36 @@ export class ${className}Service extends Context.Tag(
 
   /**
    * Test Layer - Mock implementation for testing
+   *
+   * Uses Layer.sync for test isolation (fresh cache per test run).
    */
-  static readonly Test = Layer.succeed(this, {
+  static readonly Test = Layer.sync(this, () => ({
     make: <K, V, E = never>(options: {
       readonly lookup: (key: K) => Effect.Effect<V, E>
       readonly capacity: number
       readonly ttl: Duration.Duration
     }) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const cache = yield* Cache.make({
           lookup: options.lookup,
           capacity: options.capacity,
           timeToLive: options.ttl
         })
 
+        // Return object literal - TS infers CacheHandle<K, V, E> from Context.Tag
         return {
           get: (key: K) => cache.get(key),
           invalidate: (key: K) => cache.invalidate(key),
           invalidateAll: cache.invalidateAll,
           refresh: (key: K) => cache.refresh(key),
           size: cache.size
-        } satisfies CacheHandle<K, V, E>
+        }
       }),
 
-    makeSimple: <K, V>(_options: {
-      readonly capacity: number
-      readonly ttl: Duration.Duration
-    }) =>
-      Effect.gen(function* () {
-        const store = new Map<K, V>()
-
-        return {
-          get: (key: K) =>
-            Effect.sync(() => Option.fromNullable(store.get(key))),
-          set: (key: K, value: V) =>
-            Effect.sync(() => {
-              store.set(key, value)
-            }),
-          delete: (key: K) =>
-            Effect.sync(() => {
-              store.delete(key)
-            }),
-          clear: Effect.sync(() => {
-            store.clear()
-          })
-        } satisfies SimpleCacheHandle<K, V>
-      }),
+  
 
     healthCheck: () => Effect.succeed(true)
-  })
+  }))
 
   // ===========================================================================
   // Alias: Live = Memory (default)
@@ -314,8 +227,88 @@ export class ${className}Service extends Context.Tag(
    * For Redis-backed distributed caching, use RedisCache layer from layers/
    */
   static readonly Live = ${className}Service.Memory
-}
-`);
 
-  return builder.toString();
+  // ===========================================================================
+  // Dev Layer
+  // ===========================================================================
+
+  /**
+   * Dev Layer - Memory with debug logging
+   */
+  static readonly Dev = Layer.succeed(this, {
+    make: <K, V, E = never>(options: {
+      readonly lookup: (key: K) => Effect.Effect<V, E>
+      readonly capacity: number
+      readonly ttl: Duration.Duration
+    }) =>
+      Effect.gen(function*() {
+        yield* Effect.logDebug("[${className}Service] [DEV] Creating cache", {
+          capacity: options.capacity,
+          ttl: Duration.toMillis(options.ttl)
+        })
+        const cache = yield* Cache.make({
+          lookup: (key: K) =>
+            Effect.gen(function*() {
+              yield* Effect.logDebug("[${className}Service] [DEV] Cache miss", { key })
+              return yield* options.lookup(key)
+            }),
+          capacity: options.capacity,
+          timeToLive: options.ttl
+        })
+
+        return {
+          get: (key: K) =>
+            Effect.gen(function*() {
+              yield* Effect.logDebug("[${className}Service] [DEV] get", { key })
+              return yield* cache.get(key)
+            }),
+          invalidate: (key: K) =>
+            Effect.gen(function*() {
+              yield* Effect.logDebug("[${className}Service] [DEV] invalidate", { key })
+              return yield* cache.invalidate(key)
+            }),
+          invalidateAll: Effect.gen(function*() {
+            yield* Effect.logDebug("[${className}Service] [DEV] invalidateAll")
+            return yield* cache.invalidateAll
+          }),
+          refresh: (key: K) =>
+            Effect.gen(function*() {
+              yield* Effect.logDebug("[${className}Service] [DEV] refresh", { key })
+              return yield* cache.refresh(key)
+            }),
+          size: cache.size
+        }
+      }),
+
+    healthCheck: () => Effect.succeed(true)
+  })
+
+  // ===========================================================================
+  // Auto Layer
+  // ===========================================================================
+
+  /**
+   * Auto Layer - Environment-aware layer selection
+   *
+   * Selects appropriate layer based on NODE_ENV:
+   * - "production" → Live (Memory)
+   * - "development" → Dev (Memory with logging)
+   * - "test" → Test
+   * - default → Dev
+   */
+  static readonly Auto = Layer.suspend(() => {
+    switch (env.NODE_ENV) {
+      case "production":
+        return ${className}Service.Live
+      case "test":
+        return ${className}Service.Test
+      default:
+        // "development" and other environments use Dev
+        return ${className}Service.Dev
+    }
+  })
+}
+`)
+
+  return builder.toString()
 }

@@ -1,347 +1,163 @@
 /**
  * Data Access Errors Template
  *
- * Generates errors.ts file for data-access libraries with comprehensive
- * domain-specific error types using Data.TaggedError pattern.
+ * Re-exports domain errors from contract library (Contract-First Architecture)
+ * and adds infrastructure-specific errors for data-access layer operations.
+ *
+ * Uses the error factory pattern for consistent, maintainable error generation.
+ *
+ * CONTRACT-FIRST ARCHITECTURE:
+ * ============================
+ * The contract library is the SINGLE SOURCE OF TRUTH for all domain errors.
+ * Data-access re-exports these errors and adds only infrastructure-specific
+ * errors that are unique to data access operations.
  *
  * @module monorepo-library-generator/data-access/errors-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import { createErrorUnionType, createTypeGuardFunctions } from '../../../utils/templates';
-import type { DataAccessTemplateOptions } from '../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import {
+  createDataAccessContractReExports,
+  createErrorFactory,
+  ERROR_SETS,
+  getInfrastructureErrorNames
+} from "../../shared/factories"
 
 /**
  * Generate errors.ts file for data-access library
  *
- * Creates comprehensive error definitions including:
- * - Base error type
- * - Domain-specific errors (NotFound, Validation, Conflict, etc.)
- * - Helper factory methods
- * - Error union types
- * - Type guards
+ * Contract-First Architecture:
+ * - Re-exports ALL errors from contract library (single source of truth)
+ * - Adds infrastructure-specific errors (Connection, Timeout, Transaction)
+ * - Provides unified error union type for repository signatures
  */
 export function generateErrorsFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   // Add comprehensive file header with documentation
   builder.addFileHeader({
-    title: `${className} Domain Error Types`,
-    description: `Defines domain-specific error types using Effect's Data.TaggedError pattern.
-These errors are thrown by repository operations and should be caught
-at the service/feature layer for proper error handling and user feedback.
+    title: `${className} Data Access Errors`,
+    description: `Re-exports domain errors from contract and adds infrastructure-specific errors.
 
-ARCHITECTURE: All errors use Data.TaggedError for:
-- Discriminated unions (_tag property for pattern matching)
-- Effect integration (Effect.catchTag support)
-- Type safety (no instanceof checks needed)
-- Proper error channel composition
+CONTRACT-FIRST ARCHITECTURE:
+This file follows the contract-first pattern where:
+- Domain errors (NotFound, Validation, etc.) are defined in @${scope}/contract-${fileName}
+- Data-access layer re-exports these as the single source of truth
+- Only infrastructure-specific errors are defined here
 
-TODO: Customize this file:
-1. Add domain-specific error types beyond the base set
-2. Document error conditions and recovery strategies
-3. Add structured error data properties
-4. Add custom factory methods for error creation
+Error Categories:
+1. Domain Errors (from contract):
+   - ${className}NotFoundError - Entity not found
+   - ${className}ValidationError - Input validation failed
+   - ${className}AlreadyExistsError - Duplicate entity
+   - ${className}PermissionError - Operation not permitted
 
-@see https://effect.website/docs/guides/error-management/error-channel-operations for patterns
-@see https://effect.website/docs/other/data/tagged-error for Data.TaggedError`,
-    module: `${scope}/data-access-${fileName}/server`,
-  });
-  builder.addBlankLine();
+2. Repository Errors (from contract):
+   - ${className}NotFoundRepositoryError - Repository-level not found
+   - ${className}ValidationRepositoryError - Repository-level validation
+   - ${className}ConflictRepositoryError - Repository-level conflict
+   - ${className}DatabaseRepositoryError - Database operation failure
+
+3. Infrastructure Errors (defined here):
+   - ${className}ConnectionError - Database connection failure
+   - ${className}TimeoutError - Operation timeout
+   - ${className}TransactionError - Transaction failure
+
+@see ${scope}/contract-${fileName}/errors for domain error definitions
+@see https://effect.website/docs/guides/error-management`,
+    module: `${scope}/data-access-${fileName}/errors`
+  })
+  builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Data'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Data"] }])
+  // Import type for local use (verbatimModuleSyntax requires separate import for types used locally)
+  builder.addImports([{
+    from: `${scope}/contract-${fileName}`,
+    imports: [`${className}RepositoryError`],
+    isTypeOnly: true
+  }])
+  builder.addBlankLine()
 
-  // Base Error Type
-  builder.addSectionComment('Base Error Type');
-  builder.addBlankLine();
+  // ============================================================================
+  // Re-export Domain Errors from Contract (Single Source of Truth)
+  // ============================================================================
 
-  builder.addRaw(`/**
- * Base error type for all ${className} domain errors
- *
- * All ${className}-specific errors should extend this type.
- * This allows for centralized error handling at higher layers.
- *
- * @example
- * \`\`\`typescript
- * // Catch all ${className} errors
- * const result = yield* operation.pipe(
- *   Effect.catchTag("${className}Error", (error) => {
- *     console.error(\`${className} error: \${error.message}\`, { cause: error.cause });
- *     return Effect.fail(new ServiceError("Operation failed"));
- *   })
- * );
- * \`\`\`
- */
-export class ${className}Error extends Data.TaggedError(
-  "${className}Error"
-)<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}`);
-  builder.addBlankLine();
+  createDataAccessContractReExports({
+    className,
+    scope,
+    fileName
+  })(builder)
 
-  // Domain-Specific Error Types
-  builder.addSectionComment('Domain-Specific Error Types');
-  builder.addBlankLine();
+  // ============================================================================
+  // Infrastructure-Specific Errors (Data-Access Only)
+  // ============================================================================
 
-  // NotFoundError
-  builder.addRaw(`/**
- * Error thrown when a ${className} entity is not found
- *
- * Client error (404). Occurs during lookup operations (findById, findOne).
- *
- * @example
- * \`\`\`typescript
- * if (Option.isNone(result)) {
- *   return yield* Effect.fail(${className}NotFoundError.create(id));
- * }
- * \`\`\`
- */
-export class ${className}NotFoundError extends Data.TaggedError(
-  "${className}NotFoundError"
-)<{
-  readonly message: string;
-  readonly id: string;
-}> {
-  static create(id: string) {
-    return new ${className}NotFoundError({
-      message: \`${className} not found: \${id}\`,
-      id,
-    });
-  }
-}`);
-  builder.addBlankLine();
+  builder.addSectionComment("Infrastructure Errors (Data-Access Specific)")
+  builder.addComment("These errors are specific to data-access infrastructure operations.")
+  builder.addComment("They do not exist in the contract layer as they are implementation details.")
+  builder.addBlankLine()
 
-  // ValidationError
-  builder.addRaw(`/**
- * Error thrown when input validation fails
- *
- * Client error (400). Occurs when provided data doesn't meet domain requirements.
- *
- * @example
- * \`\`\`typescript
- * if (!isValidEmail(email)) {
- *   return yield* Effect.fail(
- *     ${className}ValidationError.create(["Invalid email format"])
- *   );
- * }
- * \`\`\`
- */
-export class ${className}ValidationError extends Data.TaggedError(
-  "${className}ValidationError"
-)<{
-  readonly message: string;
-  readonly errors: readonly string[];
-}> {
-  static create(errors: readonly string[]) {
-    return new ${className}ValidationError({
-      message: "Validation failed",
-      errors,
-    });
-  }
-}`);
-  builder.addBlankLine();
+  // Generate infrastructure errors using the factory
+  createErrorFactory({
+    className,
+    style: "data",
+    errors: ERROR_SETS.dataAccess(className),
+    includeUnionType: false, // We'll add custom union types below
+    includeStaticCreate: true
+  })(builder)
 
-  // ConflictError
-  builder.addRaw(`/**
- * Error thrown when operation violates unique constraints
- *
- * Client error (409 Conflict). Occurs when trying to create/update an entity
- * with duplicate values that violate unique constraints.
- *
- * @example
- * \`\`\`typescript
- * if (existingEmail) {
- *   return yield* Effect.fail(
- *     ${className}ConflictError.create("Email already registered")
- *   );
- * }
- * \`\`\`
- */
-export class ${className}ConflictError extends Data.TaggedError(
-  "${className}ConflictError"
-)<{
-  readonly message: string;
-  readonly conflictingId?: string;
-}> {
-  static create(conflictingId?: string) {
-    return new ${className}ConflictError({
-      message: conflictingId
-        ? \`Resource already exists: \${conflictingId}\`
-        : "Resource already exists",
-      ...(conflictingId !== undefined && { conflictingId }),
-    });
-  }
-}`);
-  builder.addBlankLine();
+  // ============================================================================
+  // Infrastructure Error Union Type
+  // ============================================================================
 
-  // ConfigError
-  builder.addRaw(`/**
- * Error thrown for configuration issues
- *
- * Configuration error. Occurs when service is misconfigured or required
- * configuration is missing.
- */
-export class ${className}ConfigError extends Data.TaggedError(
-  "${className}ConfigError"
-)<{
-  readonly message: string;
-  readonly property: string;
-}> {
-  static create(property: string, reason: string) {
-    return new ${className}ConfigError({
-      message: \`Invalid configuration for \${property}: \${reason}\`,
-      property,
-    });
-  }
-}`);
-  builder.addBlankLine();
+  builder.addSectionComment("Infrastructure Error Union Type")
+  builder.addBlankLine()
 
-  // ConnectionError
-  builder.addRaw(`/**
- * Error thrown when connection to external service fails
- *
- * Server error (503). Occurs when unable to connect to database or other services.
- */
-export class ${className}ConnectionError extends Data.TaggedError(
-  "${className}ConnectionError"
-)<{
-  readonly message: string;
-  readonly target: string;
-  readonly cause: unknown;
-}> {
-  static create(target: string, cause: unknown) {
-    return new ${className}ConnectionError({
-      message: \`Failed to connect to \${target}\`,
-      target,
-      cause,
-    });
-  }
-}`);
-  builder.addBlankLine();
+  const infraErrors = getInfrastructureErrorNames(className)
+  builder.addTypeAlias({
+    name: `${className}InfrastructureError`,
+    type: `
+  | ${infraErrors.join("\n  | ")}`,
+    exported: true,
+    jsdoc: `Union of infrastructure-specific errors
 
-  // TimeoutError
-  builder.addRaw(`/**
- * Error thrown when operation exceeds timeout
- *
- * Server error (504). Occurs when database query or external call takes too long.
- */
-export class ${className}TimeoutError extends Data.TaggedError(
-  "${className}TimeoutError"
-)<{
-  readonly message: string;
-  readonly operation: string;
-  readonly timeoutMs: number;
-}> {
-  static create(operation: string, timeoutMs: number) {
-    return new ${className}TimeoutError({
-      message: \`Operation "\${operation}" timed out after \${timeoutMs}ms\`,
-      operation,
-      timeoutMs,
-    });
-  }
-}`);
-  builder.addBlankLine();
+These errors are specific to data-access operations and do not
+appear in the contract layer. They should be caught and mapped
+to repository errors at the data-access boundary.`
+  })
 
-  // InternalError
-  builder.addRaw(`/**
- * Error thrown when an internal system error occurs
- *
- * Server error (500). Occurs for database errors, network issues, or unexpected failures.
- * This is a catch-all for errors that should not happen in normal operation.
- *
- * @example
- * \`\`\`typescript
- * try {
- *   // database operation
- * } catch (error) {
- *   return yield* Effect.fail(
- *     ${className}InternalError.create("Failed to save ${className}", error)
- *   );
- * }
- * \`\`\`
- */
-export class ${className}InternalError extends Data.TaggedError(
-  "${className}InternalError"
-)<{
-  readonly message: string;
-  readonly cause: unknown;
-}> {
-  static create(reason: string, cause: unknown) {
-    return new ${className}InternalError({
-      message: \`Internal error: \${reason}\`,
-      cause,
-    });
-  }
-}`);
-  builder.addBlankLine();
+  // ============================================================================
+  // Combined Data Access Error Type
+  // ============================================================================
 
-  // Error Type Union
-  builder.addSectionComment('Error Type Union');
-  builder.addBlankLine();
+  builder.addSectionComment("Combined Data Access Error Type")
+  builder.addBlankLine()
 
-  builder.addRaw(
-    createErrorUnionType({
-      typeName: `${className}RepositoryError`,
-      baseError: `${className}Error`,
-      errorTypes: [
-        `${className}NotFoundError`,
-        `${className}ValidationError`,
-        `${className}ConflictError`,
-        `${className}ConfigError`,
-        `${className}ConnectionError`,
-        `${className}TimeoutError`,
-        `${className}InternalError`,
-      ],
-      jsdoc: `Union of all ${className} repository errors\n\nUse this type for repository method signatures:\n\n@example\n\`\`\`typescript\nexport interface ${className}Repository {\n  readonly findById: (id: string) => Effect.Effect<\n    Option.Option<${className}>,\n    ${className}RepositoryError\n  >;\n}\n\`\`\``,
-    }),
-  );
-  builder.addBlankLine();
+  builder.addTypeAlias({
+    name: `${className}DataAccessError`,
+    type: `${className}RepositoryError | ${className}InfrastructureError`,
+    exported: true,
+    jsdoc: `All possible data-access layer errors
 
-  // Type Guards
-  builder.addSectionComment('Type Guards (using _tag property)');
-  builder.addBlankLine();
+Use this type for repository method signatures:
 
-  // Generate type guard functions using utility
-  builder.addRaw(
-    createTypeGuardFunctions({
-      className,
-      errorTypes: [
-        'NotFoundError',
-        'ValidationError',
-        'ConflictError',
-        'ConfigError',
-        'ConnectionError',
-        'TimeoutError',
-        'InternalError',
-      ],
-    }),
-  );
-  builder.addBlankLine();
+@example
+\`\`\`typescript
+export interface ${className}Repository {
+  readonly findById: (id: string) => Effect.Effect<
+    Option.Option<${className}>,
+    ${className}DataAccessError
+  >;
+}
+\`\`\``
+  })
 
-  // Add TODO comment for additional error types
-  builder.addRaw(`// TODO: Add domain-specific error types here
-// Example:
-//
-// export class ${className}BusinessRuleError extends Data.TaggedError(
-//   "${className}BusinessRuleError"
-// )<{
-//   readonly message: string;
-//   readonly rule: string;
-// }> {
-//   static create(rule: string): ${className}BusinessRuleError {
-//     return new ${className}BusinessRuleError({
-//       message: \`Business rule violated: \${rule}\`,
-//       rule,
-//     });
-//   }
-// }
-`);
+  builder.addBlankLine()
 
-  return builder.toString();
+  return builder.toString()
 }

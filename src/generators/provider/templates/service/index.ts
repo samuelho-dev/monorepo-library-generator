@@ -8,5 +8,5 @@
  * @module monorepo-library-generator/provider/service-templates
  */
 
-export { generateProviderServiceFile } from './service.template';
-export { generateProviderServiceIndexFile } from './service-index.template';
+export { generateProviderServiceIndexFile } from "./service-index.template"
+export { generateProviderServiceFile } from "./service.template"

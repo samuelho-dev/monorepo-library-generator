@@ -1,0 +1,48 @@
+{
+  "name": "infra-cache",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/infra/cache/src",
+  "tags": [
+    "type:infra",
+    "scope:cache",
+    "infra",
+    "orchestration",
+    "builtin"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/infra/cache",
+        "tsConfig": "libs/infra/cache/tsconfig.lib.json",
+        "main": "libs/infra/cache/src/index.ts",
+        "batch": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "libs/infra/cache/src/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/libs/infra/cache",
+        "config": "libs/infra/cache/vitest.config.ts"
+      }
+    }
+  }
+}

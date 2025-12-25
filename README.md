@@ -316,7 +316,7 @@ libs/infra/{concern}/
 - `infra-database` - Database connection management
 - `infra-cache` - Caching (Redis, Memory)
 - `infra-storage` - File storage (S3, Supabase)
-- `infra-logging` - Structured logging
+- `infra-observability` - Structured logging
 - `infra-queue` - Job queues
 
 **Dependencies:** `provider-*` (external service adapters)
@@ -388,7 +388,7 @@ export class UserService extends Context.Tag("UserService")<
 >() {}
 
 // Usage
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const userService = yield* UserService
   const user = yield* userService.findById("123")
   return user
@@ -400,7 +400,7 @@ const program = Effect.gen(function* () {
 // ✅ CORRECT: Layer.scoped with cleanup
 export const RedisServiceLive = Layer.scoped(
   RedisService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const client = yield* Effect.sync(() => createRedisClient(config))
 
     // Register cleanup function

@@ -1,51 +1,62 @@
 /**
  * Provider Service Index Template
  *
- * Generates service/index.ts barrel file
+ * Generates service/index.ts barrel file for service internals
  *
  * @module monorepo-library-generator/provider/service/service-index-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { ProviderTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate service/index.ts file
  *
- * Creates barrel export for service interface and operations
+ * The service/ directory contains internals (errors, types, validation, layers).
+ * The main service.ts is at lib/ level for clean import resolution:
+ *   - import { Service } from "./lib/service" → resolves to lib/service.ts
+ *   - import { SomeError } from "./lib/service/errors" → resolves to lib/service/errors.ts
  */
 export function generateProviderServiceIndexFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: `${className} Service`,
-    description: `Service barrel exports with granular operation support.
+    title: `${className} Service Internals`,
+    description: `Barrel exports for service supporting modules.
 
-Import options (from most optimal to most convenient):
+Structure:
+  lib/service.ts        - Main service (Context.Tag with static layers)
+  lib/service/          - Service internals (this directory)
+    errors.ts           - Error types
+    types.ts            - Service types
+    validation.ts       - Validation helpers
+    layers.ts           - Layer compositions
+    index.ts            - This barrel file
 
-1. Direct operations:
-   import { createOperations } from '@scope/provider-${fileName}/service/operations/create'
+Import patterns:
+  import { ${className} } from '${scope}/provider-${fileName}'  // Main service
+  import { ${className}Error } from '${scope}/provider-${fileName}/service/errors'  // Direct error import`,
+    module: `${scope}/provider-${fileName}/service`
+  })
+  builder.addBlankLine()
 
-2. Service tag:
-   import { ${className} } from '@scope/provider-${fileName}/service'
+  builder.addSectionComment("Re-export service internals")
+  builder.addBlankLine()
 
-3. Type-only:
-   import type { ${className}ServiceInterface } from '@scope/provider-${fileName}/service'
+  builder.addRaw(`// Error types
+export * from "./errors";
 
-4. Package barrel (largest):
-   import { ${className} } from '@scope/provider-${fileName}'`,
-    module: `${scope}/provider-${fileName}/service`,
-  });
-  builder.addBlankLine();
+// Service types
+export * from "./types";
 
-  builder.addSectionComment('Re-export service interface and tag');
-  builder.addBlankLine();
+// Validation helpers
+export * from "./validation";
 
-  builder.addRaw(`export { ${className} } from "./service";
-export type { ${className}ServiceInterface } from "./service";`);
+// Layer compositions
+export * from "./layers";`)
 
-  return builder.toString();
+  return builder.toString()
 }

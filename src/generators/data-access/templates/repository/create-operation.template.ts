@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository/create-operation-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { DataAccessTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/create.ts file
@@ -16,9 +16,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * Creates implementation for entity creation operations
  */
 export function generateRepositoryCreateOperationFile(options: DataAccessTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Create Operations`,
@@ -26,36 +26,36 @@ export function generateRepositoryCreateOperationFile(options: DataAccessTemplat
 
 Bundle optimization: Import this file directly for smallest bundle size:
   import { createOperations } from '@scope/data-access-${fileName}/repository/operations/create'`,
-    module: `${scope}/data-access-${fileName}/repository/operations`,
-  });
-  builder.addBlankLine();
+    module: `${scope}/data-access-${fileName}/repository/operations`
+  })
+  builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Effect', 'Duration'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Effect", "Duration"] }])
+  builder.addBlankLine()
 
   builder.addImports([
     {
-      from: '../../shared/types',
+      from: "../../shared/types",
       imports: [`${className}CreateInput`],
-      isTypeOnly: true,
+      isTypeOnly: true
     },
     {
-      from: '../../shared/errors',
+      from: "../../shared/errors",
       imports: [`${className}TimeoutError`],
-      isTypeOnly: false,
-    },
-  ]);
-  builder.addBlankLine();
+      isTypeOnly: false
+    }
+  ])
+  builder.addBlankLine()
 
   // Import infrastructure services
-  builder.addComment('Infrastructure services - Database for persistence');
-  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`);
-  builder.addBlankLine();
+  builder.addComment("Infrastructure services - Database for persistence")
+  builder.addRaw(`import { DatabaseService } from "${scope}/infra-database";`)
+  builder.addBlankLine()
 
   // Live implementation
-  builder.addSectionComment('Create Operations');
-  builder.addBlankLine();
+  builder.addSectionComment("Create Operations")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Create operations for ${className} repository
@@ -73,18 +73,18 @@ export const createOperations = {
    * Create a new ${className} entity
    */
   create: (input: ${className}CreateInput) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Creating ${className}: \${JSON.stringify(input)}\`);
 
       const entity = yield* database.query((db) =>
         db
-          .insertInto("${fileName}s")
+          .insertInto("${fileName}")
           .values({
             ...input,
-            created_at: new Date(),
-            updated_at: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
           })
           .returningAll()
           .executeTakeFirstOrThrow()
@@ -105,19 +105,19 @@ export const createOperations = {
    * Create multiple ${className} entities in batch
    */
   createMany: (inputs: ReadonlyArray<${className}CreateInput>) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const database = yield* DatabaseService;
 
       yield* Effect.logDebug(\`Creating \${inputs.length} ${className} entities\`);
 
       const entities = yield* database.query((db) =>
         db
-          .insertInto("${fileName}s")
+          .insertInto("${fileName}")
           .values(
             inputs.map((input) => ({
               ...input,
-              created_at: new Date(),
-              updated_at: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
             }))
           )
           .returningAll()
@@ -139,7 +139,7 @@ export const createOperations = {
 /**
  * Type alias for the create operations object
  */
-export type Create${className}Operations = typeof createOperations;`);
+export type Create${className}Operations = typeof createOperations;`)
 
-  return builder.toString();
+  return builder.toString()
 }

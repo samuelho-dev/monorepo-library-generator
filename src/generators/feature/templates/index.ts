@@ -6,23 +6,44 @@
  * @module monorepo-library-generator/feature/templates
  */
 
-export { generateAtomsFile } from './atoms.template';
+export { generateAtomsFile } from "./atoms.template"
 // Client layer templates
-export { generateAtomsIndexFile } from './atoms-index.template';
+export { generateAtomsIndexFile } from "./atoms-index.template"
 // Shared layer templates
-export { generateErrorsFile } from './errors.template';
-export { generateHooksFile } from './hooks.template';
-export { generateHooksIndexFile } from './hooks-index.template';
+export { generateErrorsFile } from "./errors.template"
+export { generateHooksIndexFile } from "./hooks-index.template"
+export { generateHooksFile } from "./hooks.template"
 // Index template
-export { generateIndexFile } from './index.template';
+export { generateIndexFile } from "./index.template"
 // Server layer templates
-export { generateLayersFile } from './layers.template';
-// Edge layer templates
-export { generateMiddlewareFile } from './middleware.template';
-export { generateRpcFile } from './rpc.template';
-// RPC layer templates
-export { generateRpcErrorsFile } from './rpc-errors.template';
-export { generateRpcHandlersFile } from './rpc-handlers.template';
-export { generateSchemasFile } from './schemas.template';
-export { generateServiceSpecFile } from './service-spec.template';
-export { generateTypesFile } from './types.template';
+export { generateLayersFile } from "./layers.template"
+// RPC templates (Contract-First architecture)
+export { generateRpcErrorsFile } from "./rpc-errors.template"
+export {
+  // Unified handlers and router (no external/internal split)
+  generateHandlersFile as generateRpcHandlersFile,
+  generateRouterFile as generateRpcRouterFile,
+  generateRpcBarrelFile
+} from "./rpc/index"
+// Events templates (PubSub integration)
+export { generateEventsPublisherFile } from "./events/events-publisher.template"
+// Jobs templates (Queue integration)
+export { generateJobsQueueFile } from "./jobs/jobs-queue.template"
+// CQRS templates
+export {
+  generateCommandsBaseFile,
+  generateCommandsIndexFile,
+  generateCqrsIndexFile,
+  generateOperationsExecutorFile,
+  generateOperationsIndexFile,
+  generateProjectionsBuilderFile,
+  generateProjectionsIndexFile,
+  generateQueriesBaseFile,
+  generateQueriesIndexFile,
+  // Sub-module CQRS bus
+  generateSubModuleCqrsBusFile
+} from "./cqrs/index"
+// Other templates
+export { generateSchemasFile } from "./schemas.template"
+export { generateServiceSpecFile } from "./service-spec.template"
+export { generateTypesFile } from "./types.template"

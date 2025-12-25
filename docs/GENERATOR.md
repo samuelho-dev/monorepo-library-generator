@@ -271,7 +271,7 @@ const myLibraryExecutor = createExecutor(
 )
 
 export const handleGenerateMyLibrary = (input) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const validated = yield* decodeMyLibraryInput(input)
     const result = yield* myLibraryExecutor.execute({
       ...validated,

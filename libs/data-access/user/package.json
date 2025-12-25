@@ -1,0 +1,57 @@
+{
+  "name": "@samuelho-dev/data-access-user",
+  "version": "0.0.1",
+  "type": "module",
+  "sideEffects": false,
+  "description": "User data access with cache integration",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./types": {
+      "import": "./src/types.ts",
+      "types": "./src/types.ts"
+    },
+    "./repository": {
+      "import": "./src/lib/repository/index.ts",
+      "types": "./src/lib/repository/index.ts"
+    },
+    "./repository/operations": {
+      "import": "./src/lib/repository/operations/index.ts",
+      "types": "./src/lib/repository/operations/index.ts"
+    },
+    "./repository/operations/*": {
+      "import": "./src/lib/repository/operations/*.ts",
+      "types": "./src/lib/repository/operations/*.ts"
+    },
+    "./queries": {
+      "import": "./src/lib/queries/index.ts",
+      "types": "./src/lib/queries/index.ts"
+    },
+    "./queries/*": {
+      "import": "./src/lib/queries/*.ts",
+      "types": "./src/lib/queries/*.ts"
+    },
+    "./validation": {
+      "import": "./src/lib/validation/index.ts",
+      "types": "./src/lib/validation/index.ts"
+    },
+    "./validation/*": {
+      "import": "./src/lib/validation/*.ts",
+      "types": "./src/lib/validation/*.ts"
+    },
+    "./layers": {
+      "import": "./src/lib/layers/index.ts",
+      "types": "./src/lib/layers/index.ts"
+    },
+    "./layers/*": {
+      "import": "./src/lib/layers/*.ts",
+      "types": "./src/lib/layers/*.ts"
+    }
+  },
+  "peerDependencies": {
+    "effect": "*",
+    "kysely": "*"
+  }
+}

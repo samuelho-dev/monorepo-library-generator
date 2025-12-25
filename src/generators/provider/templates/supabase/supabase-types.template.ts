@@ -9,32 +9,32 @@
  * @module monorepo-library-generator/provider/templates/supabase/types
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { ProviderTemplateOptions } from '../../../../utils/types';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate Supabase provider types.ts file
  */
 export function generateSupabaseTypesFile(options: ProviderTemplateOptions) {
-  const builder = new TypeScriptBuilder();
+  const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: 'Supabase Provider Types',
+    title: "Supabase Provider Types",
     description: `Type definitions and Effect Schemas for Supabase services.
 
 Uses Effect Schema for runtime validation and type-safe serialization.
 All schemas are composable and can be extended for domain-specific needs.`,
-    module: `${options.packageName}/types`,
-  });
-  builder.addBlankLine();
+    module: `${options.packageName}/types`
+  })
+  builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
-  builder.addBlankLine();
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addBlankLine()
 
   // Configuration
-  builder.addSectionComment('Configuration');
-  builder.addBlankLine();
+  builder.addSectionComment("Configuration")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Supabase client configuration
@@ -54,12 +54,12 @@ export const SupabaseConfigSchema = Schema.Struct({
   url: Schema.String.pipe(Schema.nonEmptyString()),
   anonKey: Schema.String.pipe(Schema.nonEmptyString()),
   serviceRoleKey: Schema.optional(Schema.String.pipe(Schema.nonEmptyString())),
-});`);
-  builder.addBlankLine();
+});`)
+  builder.addBlankLine()
 
   // User types
-  builder.addSectionComment('User Types');
-  builder.addBlankLine();
+  builder.addSectionComment("User Types")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Supabase user metadata
@@ -102,12 +102,12 @@ export const AuthUserSchema = Schema.Struct({
   metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
 });
 
-export type AuthUser = Schema.Schema.Type<typeof AuthUserSchema>;`);
-  builder.addBlankLine();
+export type AuthUser = Schema.Schema.Type<typeof AuthUserSchema>;`)
+  builder.addBlankLine()
 
   // Session types
-  builder.addSectionComment('Session Types');
-  builder.addBlankLine();
+  builder.addSectionComment("Session Types")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Supabase session
@@ -131,79 +131,30 @@ export const AuthResultSchema = Schema.Struct({
   session: Schema.NullOr(SupabaseSessionSchema),
 });
 
-export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>;`);
-  builder.addBlankLine();
+export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>;`)
+  builder.addBlankLine()
 
-  // Storage types
-  builder.addSectionComment('Storage Types');
-  builder.addBlankLine();
+  // Storage types - re-exported from native SDK
+  builder.addSectionComment("Storage Types")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
- * Storage bucket
- */
-export const StorageBucketSchema = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  public: Schema.Boolean,
-  created_at: Schema.String,
-  updated_at: Schema.String,
-  file_size_limit: Schema.optional(Schema.Number),
-  allowed_mime_types: Schema.optional(Schema.Array(Schema.String)),
-});
-
-export type StorageBucket = Schema.Schema.Type<typeof StorageBucketSchema>;
-
-/**
- * Storage file object
- */
-export const StorageFileSchema = Schema.Struct({
-  name: Schema.String,
-  id: Schema.optional(Schema.String),
-  bucket_id: Schema.optional(Schema.String),
-  created_at: Schema.optional(Schema.String),
-  updated_at: Schema.optional(Schema.String),
-  last_accessed_at: Schema.optional(Schema.String),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-});
-
-export type StorageFile = Schema.Schema.Type<typeof StorageFileSchema>;
-
-/**
- * Upload options
- */
-export interface UploadOptions {
-  readonly cacheControl?: string;
-  readonly contentType?: string;
-  readonly upsert?: boolean;
-}
-
-/**
- * Download options
+ * Storage types are re-exported from the native @supabase/storage-js SDK.
+ * Import directly from "@supabase/storage-js" for:
+ * - FileObject
+ * - Bucket
+ * - FileOptions
+ * - SearchOptions
+ * - TransformOptions
  *
- * Note: format is limited to 'origin' per Supabase SDK constraints.
+ * This avoids type duplication and ensures compatibility with SDK updates.
  */
-export interface DownloadOptions {
-  readonly transform?: {
-    readonly width?: number;
-    readonly height?: number;
-    readonly quality?: number;
-    readonly format?: 'origin';
-  };
-}
-
-/**
- * Signed URL options
- */
-export interface SignedUrlOptions {
-  readonly expiresIn: number;
-  readonly download?: string | boolean;
-  readonly transform?: DownloadOptions['transform'];
-}`);
-  builder.addBlankLine();
+export type { FileObject, Bucket, FileOptions, SearchOptions, TransformOptions } from "@supabase/storage-js";`)
+  builder.addBlankLine()
 
   // Auth method types
-  builder.addSectionComment('Auth Method Types');
-  builder.addBlankLine();
+  builder.addSectionComment("Auth Method Types")
+  builder.addBlankLine()
 
   builder.addRaw(`/**
  * Authentication method used
@@ -252,7 +203,7 @@ export type OAuthProvider =
   | "linkedin_oidc"
   | "apple"
   | "keycloak"
-  | "workos";`);
+  | "workos";`)
 
-  return builder.toString();
+  return builder.toString()
 }

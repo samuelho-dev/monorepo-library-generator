@@ -15,7 +15,7 @@ import { Effect, Layer } from "effect"
 
 ```typescript
 it.scoped("test description", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* ServiceName;
     const result = yield* service.method();
     expect(result).toBeDefined();
@@ -57,7 +57,7 @@ it.scoped("test description", () =>
 ```typescript
 // ✅ CORRECT: it.scoped handles Scope automatically
 it.scoped("test", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* ServiceName; // Scope provided automatically
     yield* service.operation();
   }).pipe(Effect.provide(Layer.fresh(ServiceName.Test)))
@@ -65,7 +65,7 @@ it.scoped("test", () =>
 
 // ❌ WRONG: it.effect doesn't provide Scope
 it.effect("test", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* ServiceName; // Error: No Scope available!
     yield* service.operation();
   }).pipe(Effect.provide(Layer.fresh(ServiceName.Test)))
@@ -99,14 +99,14 @@ it.effect("test", () =>
 const SharedLayer = MyService.Test;
 
 it.scoped("test 1", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
     yield* service.setState("test1");
   }).pipe(Effect.provide(SharedLayer))
 );
 
 it.scoped("test 2", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
     // BUG: Might see state from test 1!
     yield* service.getState();
@@ -115,14 +115,14 @@ it.scoped("test 2", () =>
 
 // ✅ CORRECT: Fresh layer per test
 it.scoped("test 1", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
     yield* service.setState("test1");
   }).pipe(Effect.provide(Layer.fresh(MyService.Test)))
 );
 
 it.scoped("test 2", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
     // Guaranteed: Clean state every time
     yield* service.getState();
@@ -172,7 +172,7 @@ import { describe, expect, it } from "@effect/vitest"
 ```typescript
 // WRONG
 it("test", async () => {
-  const program = Effect.gen(function* () {
+  const program = Effect.gen(function*() {
     const service = yield* ServiceName;
     return yield* service.method();
   });
@@ -186,7 +186,7 @@ it("test", async () => {
 
 // CORRECT
 it.scoped("test", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* ServiceName;
     const result = yield* service.method();
     expect(result).toBeDefined();
@@ -213,7 +213,7 @@ it("test", async () => {
 
 // CORRECT
 it.scoped("test", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* ServiceName;
     const result = yield* service.method();
     expect(result).toBeDefined();
@@ -234,7 +234,7 @@ it.scoped("test", () =>
 ```typescript
 // WRONG: it.effect doesn't provide Scope
 it.effect("test", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* ServiceName; // May fail if service needs Scope
     yield* service.operation();
   }).pipe(Effect.provide(Layer.fresh(ServiceName.Test)))
@@ -242,7 +242,7 @@ it.effect("test", () =>
 
 // CORRECT: it.scoped provides Scope automatically
 it.scoped("test", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* ServiceName;
     yield* service.operation();
   }).pipe(Effect.provide(Layer.fresh(ServiceName.Test)))
@@ -265,13 +265,13 @@ const testLayer = MyService.Test;
 
 describe("MyService", () => {
   it.scoped("test 1", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // ...
     }).pipe(Effect.provide(testLayer)) // Shared!
   );
 
   it.scoped("test 2", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // ...
     }).pipe(Effect.provide(testLayer)) // Shared!
   );
@@ -280,13 +280,13 @@ describe("MyService", () => {
 // CORRECT
 describe("MyService", () => {
   it.scoped("test 1", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // ...
     }).pipe(Effect.provide(Layer.fresh(MyService.Test))) // Fresh!
   );
 
   it.scoped("test 2", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // ...
     }).pipe(Effect.provide(Layer.fresh(MyService.Test))) // Fresh!
   );
@@ -307,7 +307,7 @@ describe("MyService", () => {
 
 ```typescript
 it.scoped("should execute operation successfully", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
     const result = yield* service.operation();
     expect(result).toBeDefined();
@@ -321,7 +321,7 @@ it.scoped("should execute operation successfully", () =>
 
 ```typescript
 it.scoped("should use mocked dependency", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Create inline mock layer
     const MockDependency = Layer.succeed(DependencyService, {
       method: () => Effect.succeed("mocked"),
@@ -345,7 +345,7 @@ it.scoped("should use mocked dependency", () =>
 
 ```typescript
 it.scoped("should handle errors correctly", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
 
     const result = yield* service.failingOperation().pipe(
@@ -366,7 +366,7 @@ it.scoped("should handle errors correctly", () =>
 
 ```typescript
 it.scoped("should compose multiple services", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service1 = yield* Service1;
     const service2 = yield* Service2;
 
@@ -390,7 +390,7 @@ it.scoped("should compose multiple services", () =>
 
 ```typescript
 it.scoped("should match custom assertion", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
     const result = yield* service.operation();
 
@@ -436,10 +436,10 @@ it.scoped("should match custom assertion", () =>
 import { TestClock } from "effect"
 
 it.scoped("advances time without waiting", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Fork operation with 1-second delay
     const fiber = yield* Effect.fork(
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         yield* Effect.sleep("1 second");
         return "completed";
       })
@@ -465,7 +465,7 @@ it.scoped("advances time without waiting", () =>
 
 ```typescript
 it.scoped("completes operation after delay", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
 
     // Fork operation with delay
@@ -490,7 +490,7 @@ it.scoped("completes operation after delay", () =>
 
 ```typescript
 it.scoped("times out for slow operations", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* MyService;
 
     const result = yield* service.slowOperation().pipe(
@@ -511,12 +511,12 @@ it.scoped("times out for slow operations", () =>
 
 ```typescript
 it.scoped("expires cache after TTL", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let queryCount = 0;
 
     const cachingService = Layer.succeed(MyService, {
       getData: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           queryCount++;
           return { count: queryCount };
         }).pipe(Effect.cachedWithTTL("10 minutes"))
@@ -550,12 +550,12 @@ it.scoped("expires cache after TTL", () =>
 
 ```typescript
 it.scoped("retries with exponential backoff", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let attempts = 0;
 
     const unreliableService = Layer.succeed(MyService, {
       operation: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           attempts++;
           if (attempts < 3) {
             return yield* Effect.fail(new Error("Temporary failure"));
@@ -596,12 +596,12 @@ it.scoped("retries with exponential backoff", () =>
 
 ```typescript
 it.scoped("runs scheduled cleanup operations", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let cleanupCount = 0;
 
     const scheduledService = Layer.scoped(
       MyService,
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Schedule cleanup every 5 minutes
         yield* Effect.forkScoped(
           Effect.repeat(
@@ -614,7 +614,7 @@ it.scoped("runs scheduled cleanup operations", () =>
       })
     );
 
-    yield* Effect.gen(function* () {
+    yield* Effect.gen(function*() {
       const service = yield* MyService;
       expect(service).toBeDefined();
 
@@ -635,13 +635,13 @@ it.scoped("runs scheduled cleanup operations", () =>
 
 ```typescript
 it.scoped("refreshes authentication token on schedule", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let refreshCount = 0;
     let currentToken = "initial-token";
 
     const tokenService = Layer.scoped(
       AuthService,
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Schedule token refresh every 30 minutes
         yield* Effect.forkScoped(
           Effect.repeat(
@@ -660,7 +660,7 @@ it.scoped("refreshes authentication token on schedule", () =>
       })
     );
 
-    yield* Effect.gen(function* () {
+    yield* Effect.gen(function*() {
       const service = yield* AuthService;
 
       // Initial token
@@ -691,7 +691,7 @@ it.scoped("refreshes authentication token on schedule", () =>
 
 ```typescript
 it.scoped("processes batch after delay", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* OrderService;
 
     const fiber = yield* Effect.fork(
@@ -712,12 +712,12 @@ it.scoped("processes batch after delay", () =>
 
 ```typescript
 it.scoped("refreshes repository cache after TTL", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let queryCount = 0;
 
     const cachingRepo = Layer.succeed(UserRepository, {
       findById: (id: string) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           queryCount++;
           return Option.some({ id, name: `User ${queryCount}` });
         }).pipe(Effect.cachedWithTTL("10 minutes"))
@@ -749,12 +749,12 @@ it.scoped("refreshes repository cache after TTL", () =>
 
 ```typescript
 it.scoped("retries after API rate limit", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let attempts = 0;
 
     const rateLimitedProvider = Layer.succeed(StripeService, {
       createCharge: () =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           attempts++;
           if (attempts < 3) {
             return yield* Effect.fail(new StripeError({ message: "Rate limited" }));
@@ -793,15 +793,15 @@ it.scoped("retries after API rate limit", () =>
 
 ```typescript
 it.scoped("handles session expiration", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let sessionValid = true;
 
     const sessionService = Layer.scoped(
       SessionService,
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Expire session after 1 hour
         yield* Effect.forkScoped(
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* Effect.sleep("1 hour");
             sessionValid = false;
           })
@@ -816,7 +816,7 @@ it.scoped("handles session expiration", () =>
       })
     );
 
-    yield* Effect.gen(function* () {
+    yield* Effect.gen(function*() {
       const service = yield* SessionService;
 
       // Session valid
@@ -843,7 +843,7 @@ it.scoped("handles session expiration", () =>
 ```typescript
 // WRONG: Operation blocks forever
 it.scoped("test delayed operation", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     yield* Effect.sleep("1 second"); // Blocks!
     yield* TestClock.adjust("1 second"); // Never reached
   })
@@ -851,7 +851,7 @@ it.scoped("test delayed operation", () =>
 
 // CORRECT: Fork the delayed operation
 it.scoped("test delayed operation", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const fiber = yield* Effect.fork(
       Effect.sleep("1 second")
     );
@@ -868,7 +868,7 @@ it.scoped("test delayed operation", () =>
 ```typescript
 // WRONG: Not matching exponential backoff schedule
 it.scoped("test retry", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const fiber = yield* Effect.fork(
       operation.pipe(
         Effect.retry(Schedule.exponential("100 millis"))
@@ -883,7 +883,7 @@ it.scoped("test retry", () =>
 
 // CORRECT: Match exponential backoff sequence
 it.scoped("test retry", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const fiber = yield* Effect.fork(
       operation.pipe(
         Effect.retry(Schedule.exponential("100 millis"))
@@ -910,7 +910,7 @@ it.scoped("test with real delay", async () => {
 
 // CORRECT: Use TestClock
 it.scoped("test with TestClock", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const fiber = yield* Effect.fork(
       Effect.sleep("1 second")
     );
@@ -992,7 +992,7 @@ If you have existing code using Jest:
 
    // After
    it.scoped("test", () =>
-     Effect.gen(function* () {
+     Effect.gen(function*() {
        const result = yield* operation();
        expect(result).toBeDefined();
      }).pipe(Effect.provide(Layer.fresh(ServiceName.Test)))
@@ -1032,7 +1032,7 @@ If you have existing code using plain vitest:
 
    // After
    it.scoped("test", () =>
-     Effect.gen(function* () {
+     Effect.gen(function*() {
        expect(true).toBe(true);
      })
    );
@@ -1136,7 +1136,7 @@ const MockPaymentService = Layer.succeed(PaymentService, {
 
 // Use in tests
 it.scoped("processes payment correctly", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* PaymentService;
     const result = yield* service.processPayment(testParams);
     expect(result.status).toBe("pending");

@@ -137,11 +137,11 @@ export class UserRepository extends Context.Tag("UserRepository")<
 // libs/data-access/user/src/lib/repository.ts
 export const UserRepositoryLive = Layer.effect(
   UserRepository,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* KyselyService
 
     return UserRepository.of({
-      findById: (id) => Effect.gen(function* () {
+      findById: (id) => Effect.gen(function*() {
         const row = yield* db
           .selectFrom("users")
           .where("id", "=", id)
@@ -191,7 +191,7 @@ export const UserRepositoryLive = Layer.effect(
 ```typescript
 // libs/feature/payment/src/lib/server/service.ts
 export const processPayment = (amount: number, customerId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Orchestrate multiple services
     const paymentRepo = yield* PaymentRepository
     const stripe = yield* StripeService
@@ -300,7 +300,7 @@ export const CacheServiceMemory = Layer.sync(
 // libs/provider/stripe/src/lib/service.ts
 export const StripeServiceLive = Layer.scoped(
   StripeService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* StripeConfig
     const stripe = new Stripe(config.apiKey)
 
@@ -367,7 +367,7 @@ export const UserRepositoryPostgres = Layer.effect(
 )
 
 // Step 3: Use contract in features (libs/feature/auth)
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const userRepo = yield* UserRepository  // Depends on abstraction
   return yield* userRepo.findById("user-123")
 })
@@ -406,7 +406,7 @@ const AppLayer = Layer.mergeAll(
 )
 
 // Provide to program
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const userRepo = yield* UserRepository  // Automatic injection
   const payment = yield* PaymentService
   // ...
@@ -537,7 +537,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
 >() {}
 
 // Automatic injection
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const repo = yield* UserRepository  // Type-safe injection
   return yield* repo.findById("user-123")
 })
@@ -612,7 +612,7 @@ async function getUserOrders(userId: string) {
 **Pattern**:
 ```typescript
 // Repository abstraction
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const userRepo = yield* UserRepository
   const orderRepo = yield* OrderRepository
 
@@ -658,7 +658,7 @@ export const RedisServiceLive = Layer.succeed(
 // Scoped layer with cleanup
 export const RedisServiceLive = Layer.scoped(
   RedisService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const client = yield* Effect.acquireRelease(
       Effect.sync(() => new Redis()),
       (client) => Effect.sync(() => client.disconnect())
@@ -682,7 +682,7 @@ export const RedisServiceLive = Layer.scoped(
 ```typescript
 // libs/feature/payment/src/lib/server/service.ts
 export const processPayment = (amount: number, customerId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Inject all dependencies via yield*
     const paymentRepo = yield* PaymentRepository
     const customerRepo = yield* CustomerRepository
@@ -740,11 +740,11 @@ export const PaymentServiceLive = Layer.mergeAll(
 // libs/data-access/user/src/lib/repository.ts
 export const UserRepositoryLive = Layer.effect(
   UserRepository,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* KyselyService  // Inject database
 
     return UserRepository.of({
-      findById: (id) => Effect.gen(function* () {
+      findById: (id) => Effect.gen(function*() {
         const row = yield* db
           .selectFrom("users")
           .where("id", "=", id)
@@ -851,7 +851,7 @@ export class CacheService extends Context.Tag("CacheService")<
 // libs/infra/cache/src/lib/layers/server-layers.ts (Redis)
 export const CacheServiceRedis = Layer.scoped(
   CacheService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const redis = yield* RedisService
     return CacheService.of({
       get: (key) => redis.get(key),
@@ -935,7 +935,7 @@ nx g provider mongo --externalService="MongoDB"
 # libs/data-access/user/src/lib/repository-mongo.ts
 export const UserRepositoryMongo = Layer.effect(
   UserRepository,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const mongo = yield* MongoService
     // Implementation using MongoDB
   })
@@ -967,7 +967,7 @@ import { Schedule } from "effect"
 
 export const StripeServiceLive = Layer.scoped(
   StripeService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const stripe = new Stripe(apiKey)
 
     return StripeService.of({
@@ -1000,13 +1000,13 @@ export const StripeServiceLive = Layer.scoped(
 // libs/data-access/user/src/lib/repository-cached.ts
 export const UserRepositoryCached = Layer.effect(
   UserRepository,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const baseRepo = yield* UserRepository
     const cache = yield* CacheService
 
     return UserRepository.of({
       findById: (id) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           // Check cache first
           const cached = yield* cache.get(`user:${id}`)
 
@@ -1077,7 +1077,7 @@ nx g feature user-registration
 # Step 5: Implement service
 # libs/feature/user-registration/src/lib/server/service.ts
 export const registerUser = (data: CreateUserData) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const userRepo = yield* UserRepository
     const sendgrid = yield* SendGridService
     const logger = yield* LoggingService
@@ -1106,7 +1106,7 @@ export const registerUser = (data: CreateUserData) =>
 **Pattern**: Use `Effect.tap` and `Effect.tapError` for debugging.
 
 ```typescript
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
   const userRepo = yield* UserRepository
 
   const user = yield* userRepo.findById("user-123").pipe(
@@ -1132,7 +1132,7 @@ const program = Effect.gen(function* () {
 
 ```typescript
 export const processPaymentWithTelemetry = (amount: number, customerId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const metrics = yield* MetricsService
     const logger = yield* LoggingService
 
@@ -1172,7 +1172,7 @@ export const processPaymentWithTelemetry = (amount: number, customerId: string) 
 
 ```typescript
 export const transferFunds = (fromId: string, toId: string, amount: number) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const db = yield* KyselyService
 
     return yield* db.transaction().execute(async (trx) => {
@@ -1203,7 +1203,7 @@ export const transferFunds = (fromId: string, toId: string, amount: number) =>
 
 ```typescript
 export const createUsers = (users: Array<CreateUserData>) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const userRepo = yield* UserRepository
 
     // Process all in parallel
@@ -1223,7 +1223,7 @@ import { CircuitBreaker } from "effect"
 
 export const ExternalAPIServiceLive = Layer.scoped(
   ExternalAPIService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const breaker = yield* CircuitBreaker.make({
       maxFailures: 5,
       resetTimeout: Duration.seconds(60)
@@ -1251,7 +1251,7 @@ export const ExternalAPIServiceLive = Layer.scoped(
 **Bad**:
 ```typescript
 // libs/feature/payment/src/lib/server/service.ts
-export const processPayment = Effect.gen(function* () {
+export const processPayment = Effect.gen(function*() {
   const db = yield* KyselyService
 
   // ❌ Direct SQL in feature layer
@@ -1264,7 +1264,7 @@ export const processPayment = Effect.gen(function* () {
 
 **Good**:
 ```typescript
-export const processPayment = Effect.gen(function* () {
+export const processPayment = Effect.gen(function*() {
   const paymentRepo = yield* PaymentRepository
 
   // ✅ Use repository abstraction
@@ -1311,7 +1311,7 @@ export const RedisServiceLive = Layer.succeed(
 // ✅ Scoped layer with cleanup
 export const RedisServiceLive = Layer.scoped(
   RedisService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const client = yield* Effect.acquireRelease(
       Effect.sync(() => new Redis()),
       (client) => Effect.sync(() => client.disconnect())

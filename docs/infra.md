@@ -80,7 +80,7 @@ yield* Ref.update(counter, n => n + 1)
 // ✅ Cache with database refresh capability
 const cache = yield* SynchronizedRef.make<CacheEntry[]>([])
 yield* SynchronizedRef.updateEffect(cache, (entries) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const fresh = yield* fetchFromDatabase()
     return [...entries, fresh]
   })
@@ -101,9 +101,9 @@ yield* SynchronizedRef.updateEffect(cache, (entries) =>
 | `infra-cache`          | Redis/Memory caching with cache-aside pattern    | Server    | provider-redis                     |
 | `infra-database`       | Kysely orchestration with transaction management | Server    | provider-kysely, types-database    |
 | `infra-storage`        | Supabase storage with React hooks                | Universal | provider-supabase                  |
-| `infra-logging`        | Multi-platform structured logging                | Universal | provider-sentry (optional)         |
+| `infra-observability`        | Multi-platform structured logging                | Universal | provider-sentry (optional)         |
 | `infra-telemetry`      | OpenTelemetry spans and traces                   | Server    | provider-sentry                    |
-| `infra-webhooks`       | Event processing and validation                  | Server    | infra-logging                      |
+| `infra-webhooks`       | Event processing and validation                  | Server    | infra-observability                      |
 | `infra-messaging`      | Redis/CloudAMQP pub/sub                          | Server    | provider-redis, provider-cloudamqp |
 | `infra-rpc`            | Effect RPC layer factories                       | Universal | None                               |
 | `infra-error-tracking` | Sentry integration with Effect errors            | Universal | provider-sentry                    |
@@ -188,7 +188,7 @@ export class StorageService extends Context.Tag("StorageService")<
   // ✅ Static Live layer directly in the service class
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const client = yield* SupabaseClient;
 
       // ✅ Direct object return (Effect 3.0+), no .of() needed
@@ -238,19 +238,19 @@ export class DatabaseService extends Context.Tag("DatabaseService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const kysely = yield* KyselyService; // Interface from provider-kysely
-      const logger = yield* LoggingService; // Interface from infra-logging
+      const logger = yield* LoggingService; // Interface from infra-observability
 
       // ✅ Direct object return (Effect 3.0+), no .of() needed
       return {
         query: <A>(fn: (db: Database) => Promise<A>) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.debug("Executing query");
             return yield* Effect.tryPromise(() => fn(kysely.instance));
           }),
         transaction: <A>(fn: (tx: Transaction) => Effect.Effect<A>) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.debug("Starting transaction");
             return yield* kysely.transaction(fn);
           }),
@@ -277,7 +277,7 @@ Infrastructure services compose through **Effect Layers**, enabling:
 // Simple service with no dependencies
 export const CacheServiceLive = Layer.scoped(
   CacheService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const redis = yield* RedisService;
     const cache = yield* makeCache(redis);
 
@@ -308,7 +308,7 @@ Infrastructure services manage **resource lifecycles** automatically using Effec
 ```typescript
 export const DatabaseServiceLive = Layer.scoped(
   DatabaseService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const kysely = yield* KyselyService;
     const logger = yield* LoggingService;
 
@@ -317,7 +317,7 @@ export const DatabaseServiceLive = Layer.scoped(
 
     // Register cleanup (runs automatically on scope exit)
     yield* Effect.addFinalizer(() =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         yield* logger.info("Database service shutting down");
         yield* Effect.promise(() => kysely.destroy());
       }),
@@ -381,7 +381,7 @@ export class CacheConfig extends Context.Tag("CacheConfig")<
 // Load configuration from environment
 export const CacheConfigLive = Layer.effect(
   CacheConfig,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const redisUrl = yield* Config.secret("REDIS_URL");
     const ttl = yield* Config.number("CACHE_TTL").pipe(
       Config.withDefault(3600),
@@ -399,7 +399,7 @@ export const CacheConfigLive = Layer.effect(
 );
 
 // Use configuration in service
-const makeCacheService = Effect.gen(function* () {
+const makeCacheService = Effect.gen(function*() {
   const config = yield* CacheConfig;
   const redis = yield* RedisService;
 
@@ -492,7 +492,7 @@ export class StripeService extends Context.Tag("StripeService")<
 
 ```typescript
 // libs/infra/database/src/lib/service/service.ts
-const makeDatabaseService = Effect.gen(function* () {
+const makeDatabaseService = Effect.gen(function*() {
   const kysely = yield* KyselyService; // Provider
   const cache = yield* CacheService; // Infrastructure
   const logger = yield* LoggingService; // Infrastructure
@@ -501,7 +501,7 @@ const makeDatabaseService = Effect.gen(function* () {
   // Orchestrates multiple services with application logic
   return {
     query: <A>(fn: (db) => Promise<A>) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         yield* telemetry.startSpan("database.query");
         yield* logger.debug("Executing query");
 
@@ -539,13 +539,13 @@ export const CacheServiceLive = Layer.succeed(CacheService, {
 
 ```typescript
 // libs/data-access/product/src/lib/server/product-repository.ts
-const makeProductRepository = Effect.gen(function* () {
+const makeProductRepository = Effect.gen(function*() {
   const database = yield* DatabaseService; // Infrastructure
   const cache = yield* CacheService; // Infrastructure
 
   return {
     findById: (id: string) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Try cache first
         const cached = yield* cache.get(`product:${id}`, ProductSchema);
         if (Option.isSome(cached)) return cached.value;
@@ -599,7 +599,7 @@ export interface MessagingServiceInterface {
 
 ```typescript
 // libs/feature/payment/src/lib/services/payment-service.ts
-const processPayment = Effect.gen(function* () {
+const processPayment = Effect.gen(function*() {
   const stripe = yield* StripeService; // Provider
   const messaging = yield* MessagingService; // Infrastructure
   const logger = yield* LoggingService; // Infrastructure
@@ -678,7 +678,7 @@ pnpm exec nx g @workspace:infra my-service --description="My service description
 
 - Needs browser hooks or client components
 - Platform-specific behavior (Node.js vs Browser)
-- Examples: `infra-storage` (has `useStorageUpload` hook), `infra-logging`
+- Examples: `infra-storage` (has `useStorageUpload` hook), `infra-observability`
 
 **Decision Tree:**
 
@@ -985,7 +985,7 @@ export class ServiceConfig extends Context.Tag("ServiceConfig")<
 
 export const ServiceConfigLive = Layer.effect(
   ServiceConfig,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const url = yield* Config.string("SERVICE_URL");
     const timeout = yield* Config.number("SERVICE_TIMEOUT").pipe(
       Config.withDefault(5000),
@@ -1004,14 +1004,14 @@ import { Service } from "./interface";
 import type { ServiceError } from "./errors";
 import { ServiceOperationError } from "./errors";
 import { ProviderService } from "@creativetoolkits/provider-example";
-import { LoggingService } from "@creativetoolkits/infra-logging";
+import { LoggingService } from "@creativetoolkits/infra-observability";
 
-const makeService = Effect.gen(function* () {
+const makeService = Effect.gen(function*() {
   const provider = yield* ProviderService;
   const logger = yield* LoggingService;
 
   const operation = (input: string) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       yield* logger.debug(`Operation called with: ${input}`);
 
       const result = yield* Effect.tryPromise({
@@ -1041,11 +1041,11 @@ import { Service } from "../service/interface";
 import { makeService } from "../service/service";
 import { ServiceConfigLive } from "../service/config";
 import { ProviderServiceLive } from "@creativetoolkits/provider-example/server";
-import { LoggingServiceLive } from "@creativetoolkits/infra-logging/server";
+import { LoggingServiceLive } from "@creativetoolkits/infra-observability/server";
 
 export const ServiceLive = Layer.scoped(
   Service,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const service = yield* makeService;
 
     // Register cleanup
@@ -1144,24 +1144,24 @@ export class CacheService extends Context.Tag("CacheService")<
   // ✅ Static Live layer directly in the service class
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const redis = yield* RedisService;
       const logger = yield* LoggingService;
 
       // ✅ Direct object return (Effect 3.0+), no .of() needed
       return {
         get: <A>(key: string) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.debug("Cache get", { key });
             return yield* redis.get(key);
           }),
         set: <A>(key: string, value: A, ttl?: number) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.debug("Cache set", { key, ttl });
             return yield* redis.set(key, JSON.stringify(value), ttl);
           }),
         delete: (key: string) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.debug("Cache delete", { key });
             return yield* redis.delete(key);
           }),
@@ -1241,18 +1241,18 @@ export class CacheService extends Context.Tag("CacheService")<
 ```typescript
 export const CacheServiceLive = Layer.scoped(
   CacheService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const redis = yield* RedisService;
     const logger = yield* LoggingService;
 
     // ✅ BEST PRACTICE: Use acquireRelease for resource management
     const connection = yield* Effect.acquireRelease(
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         yield* logger.info("Cache service initializing");
         return redis;
       }),
       (redis) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* logger.info("Cache service shutting down");
           yield* Effect.tryPromise(() => redis.disconnect());
         }),
@@ -1283,7 +1283,7 @@ export const CacheServiceLive = Layer.scoped(
 ```typescript
 export const ConfigServiceLive = Layer.effect(
   ConfigService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const apiKey = yield* Config.secret("API_KEY");
     const timeout = yield* Config.number("TIMEOUT").pipe(
       Config.withDefault(5000),
@@ -1346,7 +1346,7 @@ const transaction = <A, E>(fn: (tx) => Effect.Effect<A, E>) =>
 
 // ✅ CORRECT: Runtime preserved
 const transaction = <A, E>(fn: (tx) => Effect.Effect<A, E>) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Capture current runtime (includes all context)
     const runtime = yield* Effect.runtime();
 
@@ -1378,12 +1378,12 @@ import { Effect, Runtime } from "effect";
 import type { Kysely } from "kysely";
 import type { Database } from "@creativetoolkits/types-database";
 
-const makeDatabaseService = Effect.gen(function* () {
+const makeDatabaseService = Effect.gen(function*() {
   const kysely = yield* KyselyService;
   const logger = yield* LoggingService;
 
   const transaction = <A, E>(fn: (tx) => Effect.Effect<A, E>) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // 1. Capture runtime with all context
       const runtime = yield* Effect.runtime<
         LoggingService | TelemetryService
@@ -1397,7 +1397,7 @@ const makeDatabaseService = Effect.gen(function* () {
           kysely.transaction(async (tx) => {
             // 3. Run Effect with preserved runtime
             const result = await Runtime.runPromise(runtime)(
-              Effect.gen(function* () {
+              Effect.gen(function*() {
                 // Now we can use all services inside transaction!
                 yield* logger.debug("Inside transaction");
                 return yield* fn(tx);
@@ -1422,13 +1422,13 @@ const makeDatabaseService = Effect.gen(function* () {
 ```typescript
 // Repository can use all services inside transaction
 const createProduct = (data: ProductInsert) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const database = yield* DatabaseService;
     const cache = yield* CacheService;
     const logger = yield* LoggingService; // Available in transaction!
 
     const result = yield* database.transaction((tx) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // All context preserved!
         yield* logger.info("Creating product in transaction");
 
@@ -1471,7 +1471,7 @@ export class CacheConfig extends Context.Tag("CacheConfig")<
 // 2. Load configuration from environment
 export const CacheConfigLive = Layer.effect(
   CacheConfig,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const redisUrl = yield* Config.secret("REDIS_URL");
     const ttl = yield* Config.number("CACHE_TTL").pipe(
       Config.withDefault(3600), // Default value if not set
@@ -1489,7 +1489,7 @@ export const CacheConfigLive = Layer.effect(
 );
 
 // 3. Use configuration in service
-const makeCacheService = Effect.gen(function* () {
+const makeCacheService = Effect.gen(function*() {
   const config = yield* CacheConfig;
   const redis = yield* RedisService;
 
@@ -1524,7 +1524,7 @@ import { Config, Effect, Schema } from "effect";
 // Complex configuration with validation
 export const DatabaseConfigLive = Layer.effect(
   DatabaseConfig,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const host = yield* Config.string("DB_HOST");
     const port = yield* Config.number("DB_PORT").pipe(
       Config.validate((n) =>
@@ -1564,11 +1564,11 @@ export interface HealthCheckable {
 }
 
 // Implementation in infrastructure service
-const makeCacheService = Effect.gen(function* () {
+const makeCacheService = Effect.gen(function*() {
   const redis = yield* RedisService;
 
   const healthCheck = (): Effect.Effect<{ status: "healthy" | "unhealthy"; timestamp: number }, never> =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const pingResult: "healthy" | "unhealthy" = yield* Effect.tryPromise(() => redis.ping()).pipe(
         Effect.map((): "healthy" | "unhealthy" => "healthy"),
         Effect.catchAll(() => Effect.succeed<"healthy" | "unhealthy">("unhealthy")),
@@ -1607,7 +1607,7 @@ const makeCacheService = Effect.gen(function* () {
 import { CacheService } from "@creativetoolkits/infra-cache/server";
 import { DatabaseService } from "@creativetoolkits/infra-database/server";
 
-const healthCheck = Effect.gen(function* () {
+const healthCheck = Effect.gen(function*() {
   const cache = yield* CacheService;
   const database = yield* DatabaseService;
 
@@ -1666,7 +1666,7 @@ export type CacheError =
 
 // Translate at boundary
 const get = <A>(key: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const redis = yield* RedisService;
 
     const result = yield* Effect.tryPromise({
@@ -1712,7 +1712,7 @@ const get = <A>(key: string) =>
 // Layer is memoized - only created once
 export const CacheServiceLive = Layer.scoped(
   CacheService,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     yield* Effect.log("CacheService initializing"); // Runs once
     const redis = yield* RedisService;
     return makeCacheService(redis);
@@ -1771,7 +1771,7 @@ export class ResourceService extends Context.Tag("ResourceService")<
 >() {
   static readonly Live = Layer.scoped(  // ← Use scoped, not effect
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const config = yield* ConfigService
       const logger = yield* LoggingService
 
@@ -1843,7 +1843,7 @@ libs/infra/[name]/
 
 **Examples:**
 - `infra-storage`: `useStorageUpload()` hook
-- `infra-logging`: Browser console implementation
+- `infra-observability`: Browser console implementation
 - Most infra libraries DON'T have client exports
 
 ### Edge Exports (`/edge`)
@@ -1853,7 +1853,7 @@ libs/infra/[name]/
 - Minimal logging, auth validation
 
 **Examples:**
-- `infra-logging`: Minimal edge logger
+- `infra-observability`: Minimal edge logger
 - `infra-error-tracking`: Edge Sentry client
 - Most infra libraries DON'T have edge exports
 
@@ -1933,13 +1933,13 @@ export interface DatabaseServiceInterface {
 import { DatabaseService } from "@creativetoolkits/infra-database/server";
 
 const createProduct = (data: ProductInsert) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const database = yield* DatabaseService;
     const cache = yield* CacheService;
 
     // Transaction with preserved Effect context
     const product = yield* database.transaction((tx) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Insert product
         const product = yield* Effect.tryPromise(() =>
           tx
@@ -2019,7 +2019,7 @@ const createProduct = (data: ProductInsert) =>
 
 **Critical Pattern:** Client hooks intentionally use promises for React state, not Effect
 
-### 4. infra-logging
+### 4. infra-observability
 
 **Purpose:** Multi-platform structured logging
 **Location:** `libs/infra/logging/`
@@ -2065,7 +2065,7 @@ const createProduct = (data: ProductInsert) =>
 ```typescript
 const fetchProduct = (id: string) =>
   Effect.withSpan("product.fetch", { attributes: { productId: id } })(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Span automatically tracks this operation
       const product = yield* database.query(/* ... */);
 
@@ -2107,7 +2107,7 @@ const fetchProduct = (id: string) =>
 **Purpose:** Event processing and validation
 **Location:** `libs/infra/webhooks/`
 **Platform:** Server-only
-**Dependencies:** `infra-logging`
+**Dependencies:** `infra-observability`
 
 **Key Methods:**
 
@@ -2150,7 +2150,7 @@ const fetchProduct = (id: string) =>
 // ✅ CORRECT: Preserve runtime for callback handlers
 subscribe: (channel) =>
   Stream.unwrapScoped(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const queue = yield* Queue.unbounded<string>();
       const runtime = yield* Effect.runtime(); // Capture runtime
 
@@ -2221,7 +2221,7 @@ export class ProductCreatedEvent extends Schema.Class<ProductCreatedEvent>("Prod
 }) {}
 
 export const createProduct = (command: CreateProductCommand) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const repo = yield* ProductRepository;
     const messaging = yield* MessagingService;
 
@@ -2252,7 +2252,7 @@ export const createProduct = (command: CreateProductCommand) =>
 // libs/feature/product/src/lib/server/events/handlers.ts
 import { Stream } from "effect";
 
-export const setupProductEventHandlers = Effect.gen(function* () {
+export const setupProductEventHandlers = Effect.gen(function*() {
   const messaging = yield* MessagingService;
   const projectionRepo = yield* ProductProjectionRepository;
 
@@ -2261,7 +2261,7 @@ export const setupProductEventHandlers = Effect.gen(function* () {
 
   // Process stream with runForEach
   yield* Stream.runForEach(eventStream, (message) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       yield* projectionRepo.invalidateProjectionCache(message.data.productId);
       // Next query will rebuild projection from current DB state
     })
@@ -2272,7 +2272,7 @@ export const setupProductEventHandlers = Effect.gen(function* () {
 **For Parallel Event Processing:**
 
 ```typescript
-export const setupProductEventHandlers = Effect.gen(function* () {
+export const setupProductEventHandlers = Effect.gen(function*() {
   const messaging = yield* MessagingService;
   const projectionRepo = yield* ProductProjectionRepository;
 
@@ -2388,7 +2388,7 @@ APPLICATION → Provide implementations (Layer.succeed(AuthMiddleware, { authent
 - ✅ Adds cross-cutting concerns (logging, caching, telemetry)
 - ✅ Provides domain-specific abstractions (e.g., DatabaseService adds transaction management)
 - ✅ Composes other infrastructure services
-- ✅ Example: `infra-cache`, `infra-database`, `infra-logging`
+- ✅ Example: `infra-cache`, `infra-database`, `infra-observability`
 
 **When to Create Provider Library:**
 - ✅ Wraps external SDK directly with minimal abstraction
@@ -2496,7 +2496,7 @@ Infrastructure uses Effect Config for environment variables:
 ```typescript
 // Configuration layer
 export const ConfigLive = Layer.effect(ServiceConfig,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const host = yield* Config.string("SERVICE_HOST");
     const port = yield* Config.number("SERVICE_PORT").pipe(Config.withDefault(5432));
     return { host, port };
@@ -2505,7 +2505,7 @@ export const ConfigLive = Layer.effect(ServiceConfig,
 
 // Service layer depends on config
 export const ServiceLive = Layer.effect(Service,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const config = yield* ServiceConfig;
     // Use config.host, config.port
 ).pipe(
@@ -2722,7 +2722,7 @@ export class MyServiceConfig extends Context.Tag("MyServiceConfig")<
 
 export const MyServiceConfigLive = Layer.effect(
   MyServiceConfig,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const apiKey = yield* Config.secret("MY_SERVICE_API_KEY");
     const timeout = yield* Config.number("MY_SERVICE_TIMEOUT").pipe(
       Config.withDefault(5000),
@@ -2745,12 +2745,12 @@ import { Effect, Layer, Option, Scope } from "effect";
 import { MyService } from "./interface";
 import { MyServiceOperationError } from "./errors";
 import { ProviderService } from "@creativetoolkits/provider-example";
-import { LoggingService } from "@creativetoolkits/infra-logging";
+import { LoggingService } from "@creativetoolkits/infra-observability";
 
 export class MyServiceImpl extends MyService {
   static readonly Live = Layer.scoped(
     MyService,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const provider = yield* ProviderService;
       const logger = yield* LoggingService;
       const scope = yield* Scope.Scope;
@@ -2761,14 +2761,14 @@ export class MyServiceImpl extends MyService {
       // Add cleanup finalizer
       yield* Scope.addFinalizer(
         scope,
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           yield* logger.info("MyService shutting down");
         }),
       );
 
       return {
         doSomething: (input: string) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.debug(`Operation: ${input}`);
 
             const result = yield* Effect.tryPromise({
@@ -2784,11 +2784,11 @@ export class MyServiceImpl extends MyService {
             return Option.fromNullable(result);
           }),
         cleanup: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.info("Cleaning up resources");
           }),
         healthCheck: () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             yield* logger.debug("Health check");
             return true;
           }),
@@ -2808,7 +2808,7 @@ import { MyService } from "../service/interface";
 import { MyServiceImpl } from "../service/service";
 import { MyServiceConfigLive } from "../service/config";
 import { ProviderServiceLive } from "@creativetoolkits/provider-example/server";
-import { LoggingServiceLive } from "@creativetoolkits/infra-logging/server";
+import { LoggingServiceLive } from "@creativetoolkits/infra-observability/server";
 
 // Production layer with all dependencies
 export const MyServiceLive = MyServiceImpl.Live.pipe(
@@ -2845,7 +2845,7 @@ import { MyServiceTest } from "../layers/server-layers";
 describe("MyService", () => {
   it("should do something", async () => {
     const result = await Effect.runPromise(
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const service = yield* MyService;
         return yield* service.doSomething("test");
       }).pipe(Effect.provide(MyServiceTest)),
@@ -2897,7 +2897,7 @@ Provides [brief description of what this infrastructure does]
 \`\`\`typescript
 import { MyService, MyServiceLive } from '@creativetoolkits/infra-my-service/server';
 
-const program = Effect.gen(function* () {
+const program = Effect.gen(function*() {
 const myService = yield* MyService;
 const result = yield\* myService.doSomething('input');
 return result;
@@ -2946,7 +2946,7 @@ const TestLayer = CacheServiceLive.pipe(Layer.provide(RedisServiceMock));
 describe("CacheService", () => {
   // Use it.scoped for resource management
   it.scoped("get returns null when key doesn't exist", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const cache = yield* CacheService;
       const result = yield* cache.get("non-existent-key");
 
@@ -2955,7 +2955,7 @@ describe("CacheService", () => {
   );
 
   it.scoped("set stores value successfully", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const cache = yield* CacheService;
 
       yield* cache.set("test-key", { data: "test-value" }, 3600);
@@ -2966,7 +2966,7 @@ describe("CacheService", () => {
   );
 
   it.scoped("delete removes key from cache", () =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const cache = yield* CacheService;
 
       yield* cache.delete("test-key");
@@ -2986,12 +2986,12 @@ For services that manage resources with finalizers:
 ```typescript
 // Test resource cleanup
 it.scoped("releases resource on scope exit", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let cleanupCalled = false;
 
     const TestLayer = Layer.scoped(
       DatabaseService,
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Register cleanup
         yield* Effect.addFinalizer(() =>
           Effect.sync(() => {
@@ -3006,7 +3006,7 @@ it.scoped("releases resource on scope exit", () =>
     );
 
     yield* Effect.scoped(
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const db = yield* DatabaseService;
         yield* db.query("SELECT 1");
       }).pipe(Effect.provide(TestLayer)),
@@ -3025,7 +3025,7 @@ Test that provider errors are transformed to domain errors:
 ```typescript
 // Test error transformation
 it.scoped("transforms provider errors to domain errors", () =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const RedisServiceMock = Layer.succeed(RedisService, {
       get: () => Effect.fail(new Error("Redis connection failed")),
       set: () => Effect.succeed(void 0),
@@ -3034,7 +3034,7 @@ it.scoped("transforms provider errors to domain errors", () =>
     });
 
     const result = yield* Effect.either(
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const cache = yield* CacheService;
         yield* cache.get("test-key");
       }).pipe(
@@ -3092,7 +3092,7 @@ export default defineConfig({
 | Practice | Implementation |
 |----------|----------------|
 | **Context.Tag with inline interface** | `class Service extends Context.Tag("Service")<Service, Interface>() {}` |
-| **Layer.scoped for resources** | `Layer.scoped(Service, Effect.gen(function* () { ... }))` |
+| **Layer.scoped for resources** | `Layer.scoped(Service, Effect.gen(function*() { ... }))` |
 | **Error translation** | `Effect.tryPromise({ try: ..., catch: (e) => new ServiceError() })` |
 | **Effect Config** | `Config.secret("KEY")`, `Config.number("PORT").pipe(Config.withDefault(3000))` |
 | **Runtime preservation** | `const runtime = yield* Effect.runtime(); Runtime.runPromise(runtime)(...)` |
@@ -3233,7 +3233,7 @@ export class CacheService extends Context.Tag("CacheService")<
   CacheServiceInterface
 >() {}
 
-const makeCacheService = Effect.gen(function* () {
+const makeCacheService = Effect.gen(function*() {
   const redis = yield* RedisService;
 
   const get = (key: string) => Effect.tryPromise(() => redis.get(key));
@@ -3257,7 +3257,7 @@ export async function createService() {
 // After (Layer.scoped)
 export const ServiceLive = Layer.scoped(
   Service,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const connection = yield* Effect.tryPromise(() => connect());
 
     yield* Effect.addFinalizer(() => Effect.promise(() => connection.close()));
@@ -3279,7 +3279,7 @@ const timeout = parseInt(process.env.TIMEOUT || "5000");
 // After (Effect Config)
 const ConfigLive = Layer.effect(
   Config,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const apiKey = yield* Config.secret("API_KEY");
     const timeout = yield* Config.number("TIMEOUT").pipe(
       Config.withDefault(5000),

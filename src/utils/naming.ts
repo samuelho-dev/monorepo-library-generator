@@ -26,7 +26,7 @@ function toPascalCase(input: string) {
   return input
     .split(/[-_\s]+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('');
+    .join("")
 }
 
 /**
@@ -41,8 +41,8 @@ function toPascalCase(input: string) {
  * toCamelCase("UserProfile") // "userProfile"
  */
 function toCamelCase(input: string) {
-  const pascal = toPascalCase(input);
-  return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+  const pascal = toPascalCase(input)
+  return pascal.charAt(0).toLowerCase() + pascal.slice(1)
 }
 
 /**
@@ -60,14 +60,14 @@ function toKebabCase(input: string) {
   return (
     input
       // Insert hyphen before uppercase letters
-      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
       // Replace spaces and underscores with hyphens
-      .replace(/[\s_]+/g, '-')
+      .replace(/[\s_]+/g, "-")
       // Convert to lowercase
       .toLowerCase()
       // Remove leading/trailing hyphens
-      .replace(/^-+|-+$/g, '')
-  );
+      .replace(/^-+|-+$/g, "")
+  )
 }
 
 /**
@@ -85,14 +85,14 @@ function toScreamingSnakeCase(input: string) {
   return (
     input
       // Insert underscore before uppercase letters
-      .replace(/([a-z])([A-Z])/g, '$1_$2')
+      .replace(/([a-z])([A-Z])/g, "$1_$2")
       // Replace hyphens and spaces with underscores
-      .replace(/[-\s]+/g, '_')
+      .replace(/[-\s]+/g, "_")
       // Convert to uppercase
       .toUpperCase()
       // Remove leading/trailing underscores
-      .replace(/^_+|_+$/g, '')
-  );
+      .replace(/^_+|_+$/g, "")
+  )
 }
 
 /**
@@ -129,19 +129,19 @@ function toScreamingSnakeCase(input: string) {
  * ```
  */
 export function createNamingVariants(input: string) {
-  if (!input || input.trim() === '') {
-    throw new Error('Input name cannot be empty');
+  if (!input || input.trim() === "") {
+    throw new Error("Input name cannot be empty")
   }
 
-  const trimmedInput = input.trim();
+  const trimmedInput = input.trim()
 
   return {
     name: trimmedInput,
     className: toPascalCase(trimmedInput),
     propertyName: toCamelCase(trimmedInput),
     fileName: toKebabCase(trimmedInput),
-    constantName: toScreamingSnakeCase(trimmedInput),
-  };
+    constantName: toScreamingSnakeCase(trimmedInput)
+  }
 }
 
 /**
@@ -151,4 +151,4 @@ export function createNamingVariants(input: string) {
  *
  * @deprecated Use createNamingVariants instead for clarity
  */
-export const names = createNamingVariants;
+export const names = createNamingVariants

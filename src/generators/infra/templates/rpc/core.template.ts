@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate RPC core file
@@ -17,9 +17,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * Creates re-exports and utilities for RPC infrastructure.
  */
 export function generateRpcCoreFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Core`,
@@ -33,22 +33,22 @@ This module provides:
 Middleware is defined in middleware.ts.
 Router utilities are in router.ts.`,
     module: `${scope}/infra-${fileName}/core`,
-    see: ['@effect/rpc documentation'],
-  });
+    see: ["@effect/rpc documentation"]
+  })
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect'], isTypeOnly: true },
-    { from: 'effect', imports: ['Schema'] },
-    { from: '@effect/rpc', imports: ['Rpc', 'RpcGroup'] },
-  ]);
+    { from: "effect", imports: ["Effect"], isTypeOnly: true },
+    { from: "effect", imports: ["Schema"] },
+    { from: "@effect/rpc", imports: ["Rpc", "RpcGroup"] }
+  ])
 
-  builder.addSectionComment('Re-exports from @effect/rpc');
+  builder.addSectionComment("Re-exports from @effect/rpc")
 
   builder.addRaw(`// Re-export core RPC primitives for convenience
 export { Rpc, RpcGroup } from "@effect/rpc"
-`);
+`)
 
-  builder.addSectionComment('RPC Definition Helpers');
+  builder.addSectionComment("RPC Definition Helpers")
 
   builder.addRaw(`/**
  * Helper to create an RPC definition with proper typing
@@ -92,9 +92,9 @@ export const defineRpc = Rpc.make
  * \`\`\`
  */
 export const defineRpcGroup = RpcGroup.make
-`);
+`)
 
-  builder.addSectionComment('Handler Creation Helpers');
+  builder.addSectionComment("Handler Creation Helpers")
 
   builder.addRaw(`/**
  * Create a handler layer from an RPC group
@@ -110,14 +110,14 @@ export const defineRpcGroup = RpcGroup.make
  *
  * export const UserHandlers = createHandlers(UserRpcs, {
  *   GetUser: ({ id }) =>
- *     Effect.gen(function* () {
+ *     Effect.gen(function*() {
  *       const user = yield* CurrentUser; // From AuthMiddleware
  *       const repo = yield* UserRepository;
  *       return yield* repo.findById(id);
  *     }),
  *
  *   CreateUser: (input) =>
- *     Effect.gen(function* () {
+ *     Effect.gen(function*() {
  *       const user = yield* CurrentUser;
  *       const repo = yield* UserRepository;
  *       return yield* repo.create({ ...input, createdBy: user.id });
@@ -154,9 +154,9 @@ export type HandlersFor<G> =
           : never
       }
     : never
-`);
+`)
 
-  builder.addSectionComment('Schema Helpers');
+  builder.addSectionComment("Schema Helpers")
 
   builder.addRaw(`/**
  * Create a paginated response schema
@@ -209,9 +209,9 @@ export const SuccessResponse = Schema.Struct({
  * Standard empty request (for operations with no input)
  */
 export const EmptyRequest = Schema.Struct({})
-`);
+`)
 
-  builder.addSectionComment('Error Helpers');
+  builder.addSectionComment("Error Helpers")
 
   builder.addRaw(`/**
  * Domain Error Pattern
@@ -235,7 +235,7 @@ export const EmptyRequest = Schema.Struct({})
  * \`\`\`
  */
 // Schema.TaggedError is re-exported from effect/Schema for convenience
-`);
+`)
 
-  return builder.toString();
+  return builder.toString()
 }

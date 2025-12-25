@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/events-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder';
-import type { ContractTemplateOptions } from '../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { ContractTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate events.ts file for contract library
@@ -20,28 +20,29 @@ import { WORKSPACE_CONFIG } from '../../../utils/workspace-config';
  * - CRUD domain events (Created, Updated, Deleted)
  */
 export function generateEventsFile(options: ContractTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName, propertyName } = options;
-  const domainName = propertyName;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName, propertyName } = options
+  const domainName = propertyName
+  const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header
-  builder.addRaw(createFileHeader(className, domainName, fileName, scope));
-  builder.addBlankLine();
+  builder.addRaw(createFileHeader(className, domainName, fileName, scope))
+  builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }]);
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
 
-  builder.addImports([{ from: './types/database', imports: [`${className}Id`], isTypeOnly: true }]);
+  // Import ID type from rpc-definitions (single source of truth for ID schema)
+  builder.addImports([{ from: "./rpc-definitions", imports: [`${className}Id`], isTypeOnly: true }])
 
-  builder.addBlankLine();
+  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 1: Base Event Metadata
   // ============================================================================
 
-  builder.addSectionComment('Base Event Metadata');
-  builder.addBlankLine();
+  builder.addSectionComment("Base Event Metadata")
+  builder.addBlankLine()
 
   // EventMetadata schema
   builder.addRaw(`/**
@@ -90,9 +91,9 @@ export const EventMetadata = Schema.Struct({
     description: "Standard metadata included in all domain events"
   })
 );
-`);
+`)
 
-  builder.addBlankLine();
+  builder.addBlankLine()
 
   // AggregateMetadata schema
   builder.addRaw(`/**
@@ -127,35 +128,35 @@ export const AggregateMetadata = Schema.Struct({
     description: "Metadata for event sourcing and aggregate tracking"
   })
 );
-`);
+`)
 
-  builder.addBlankLine();
+  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 2: CRUD Domain Events
   // ============================================================================
 
-  builder.addSectionComment('CRUD Domain Events');
-  builder.addBlankLine();
+  builder.addSectionComment("CRUD Domain Events")
+  builder.addBlankLine()
 
   // CreatedEvent
-  builder.addRaw(createCreatedEvent(className, propertyName));
-  builder.addBlankLine();
+  builder.addRaw(createCreatedEvent(className, propertyName))
+  builder.addBlankLine()
 
   // UpdatedEvent
-  builder.addRaw(createUpdatedEvent(className, propertyName));
-  builder.addBlankLine();
+  builder.addRaw(createUpdatedEvent(className, propertyName))
+  builder.addBlankLine()
 
   // DeletedEvent
-  builder.addRaw(createDeletedEvent(className, propertyName));
-  builder.addBlankLine();
+  builder.addRaw(createDeletedEvent(className, propertyName))
+  builder.addBlankLine()
 
   // ============================================================================
   // SECTION 3: Event Union Types
   // ============================================================================
 
-  builder.addSectionComment('Event Union Types');
-  builder.addBlankLine();
+  builder.addSectionComment("Event Union Types")
+  builder.addBlankLine()
 
   builder.addTypeAlias({
     name: `${className}DomainEvent`,
@@ -164,12 +165,12 @@ export const AggregateMetadata = Schema.Struct({
   | ${className}UpdatedEvent
   | ${className}DeletedEvent`,
     exported: true,
-    jsdoc: `Union of all ${domainName} domain events`,
-  });
+    jsdoc: `Union of all ${domainName} domain events`
+  })
 
-  builder.addBlankLine();
+  builder.addBlankLine()
 
-  return builder.toString();
+  return builder.toString()
 }
 
 /**
@@ -184,7 +185,7 @@ function createFileHeader(className: string, domainName: string, fileName: strin
  *
  * @see https://effect.website/docs/schema/schema for Schema patterns
  * @module ${scope}/contract-${fileName}/events
- */`;
+ */`
 }
 
 /**
@@ -234,7 +235,7 @@ export class ${className}CreatedEvent extends Schema.Class<${className}CreatedEv
       ...(params.correlationId && { correlationId: params.correlationId }),
     });
   }
-}`;
+}`
 }
 
 /**
@@ -278,7 +279,7 @@ export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEv
     aggregateVersion: number;
     aggregateId?: string;
     updatedBy?: string;
-    changedFields?: string[];
+    changedFields?: Array<string>;
     correlationId?: string;
   }) {
     return new ${className}UpdatedEvent({
@@ -293,7 +294,7 @@ export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEv
       ...(params.correlationId && { correlationId: params.correlationId }),
     });
   }
-}`;
+}`
 }
 
 /**
@@ -352,5 +353,5 @@ export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEv
       ...(params.correlationId && { correlationId: params.correlationId }),
     });
   }
-}`;
+}`
 }

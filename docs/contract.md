@@ -1298,7 +1298,7 @@ import { ProductRepository } from "@creativetoolkits/contract-product";
 
 export const ProductRepositoryLive = Layer.effect(
   ProductRepository, // ← Implements contract interface
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const database = yield* DatabaseService;
 
     return {
@@ -1318,12 +1318,12 @@ import { ProductRepository } from "@creativetoolkits/contract-product";
 export class ProductService extends Context.Tag("ProductService")<...>() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const repository = yield* ProductRepository; // ← Uses contract
 
       return {
         createProduct: (data) =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // Business logic
             const product = yield* repository.create(data);
             return product;
@@ -1358,7 +1358,7 @@ export const ProductRpcs = Rpc.router({
     response: Product, // ← Contract entity as response
     error: ProductRpcError,
     handler: (req) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Access middleware context
         const user = yield* CurrentUser;
         const service = yield* ProductService; // ← Uses feature service
@@ -1437,7 +1437,7 @@ describe("Product Contract", () => {
   // ========================================
 
   it.scoped("ProductEntity validates correct data", () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const validProduct: ProductSelect = {
         id: "prod-123",
         name: "Test Product",
@@ -1455,7 +1455,7 @@ describe("Product Contract", () => {
   );
 
   it.scoped("ProductEntity rejects invalid price", () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const invalidProduct = {
         id: "prod-123",
         name: "Test Product",
@@ -1476,7 +1476,7 @@ describe("Product Contract", () => {
   // ========================================
 
   it.scoped("ProductCreatedEvent validates correctly", () => // ✅ Always it.scoped
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const event = {
         type: "ProductCreated",
         productId: "prod-123",

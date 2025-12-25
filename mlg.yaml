@@ -1,0 +1,434 @@
+domains:
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 1: FOUNDATION
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: user
+    description: User identity, authentication, and profile management
+    submodules:
+      - name: auth
+        description: Authentication and session management
+        methods:
+          - signup
+          - login
+          - logout
+          - refreshToken
+          - resetPassword
+          - verifyEmail
+          - changePassword
+          - getSession
+          - revokeSession
+      - name: profile
+        description: User profile and preferences
+        methods:
+          - uploadAvatar
+          - deleteAvatar
+          - getPreferences
+          - updatePreferences
+      - name: messaging
+        description: Direct messaging between users (future)
+        methods:
+          - createConversation
+          - archiveConversation
+          - sendMessage
+          - markAsRead
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 2: SELLER (depends on: user)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: seller
+    description: Seller onboarding via Stripe Connect, storefront, and settings
+    submodules:
+      - name: onboarding
+        description: Stripe Connect Express onboarding flow
+        methods:
+          - initiate
+          - createConnectAccount
+          - generateOnboardingLink
+          - getOnboardingStatus
+          - complete
+          - handleWebhook
+          - syncAccountStatus
+      - name: storefront
+        description: Seller public storefront (store name, bio, branding)
+        methods:
+          - updateBranding
+          - updateSocialLinks
+      - name: settings
+        description: Seller account settings
+        methods:
+          - getPayoutSchedule
+          - updatePayoutSchedule
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 3: PRODUCT (depends on: seller)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: product
+    description: Digital product catalog, media, downloads, and licensing
+    submodules:
+      - name: catalog
+        description: Product CRUD, categories, pricing, publishing
+        methods:
+          - publish
+          - unpublish
+          - archive
+          - duplicate
+      - name: media
+        description: Product images, previews, thumbnails
+        methods:
+          - upload
+          - delete
+          - reorder
+          - setFeatured
+      - name: downloads
+        description: Digital file management and secure download URLs
+        methods:
+          - upload
+          - delete
+          - createVersion
+          - getLatestVersion
+          - generateDownloadUrl
+          - validateAccess
+      - name: licensing
+        description: License types and key generation
+        methods:
+          - createType
+          - generate
+          - validate
+          - revoke
+          - transfer
+      - name: metadata
+        description: Tags, SEO, searchable attributes
+        methods:
+          - getTags
+          - addTags
+          - removeTags
+          - getSpecifications
+          - updateSpecifications
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 4: SEARCH (depends on: product)
+  # All methods kept - Typesense provider operations
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: search
+    description: Product search and discovery with Typesense
+    submodules:
+      - name: indexing
+        description: Document sync to Typesense
+        methods:
+          - createCollection
+          - getSchema
+          - updateSchema
+          - indexDocument
+          - updateDocument
+          - deleteDocument
+          - bulkIndex
+          - bulkDelete
+          - getStatus
+      - name: query
+        description: Search execution (text, filters, facets)
+        methods:
+          - search
+          - multiSearch
+          - autocomplete
+          - getSuggestions
+          - getFacets
+          - getFilterOptions
+      - name: curation
+        description: Result merchandising (overrides, synonyms)
+        methods:
+          - createOverride
+          - updateOverride
+          - deleteOverride
+          - createSynonym
+          - deleteSynonym
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 5: ORDER (depends on: user, product)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: order
+    description: Cart, checkout, and order fulfillment
+    submodules:
+      - name: cart
+        description: Shopping cart management (async, mutable)
+        methods:
+          - addItem
+          - updateItemQuantity
+          - removeItem
+          - clear
+          - mergeGuest
+          - validate
+      - name: checkout
+        description: Checkout flow and order creation (sync, transactional)
+        methods:
+          - initiate
+          - getSession
+          - applyDiscount
+          - removeDiscount
+          - calculateTotals
+          - submit
+      - name: fulfillment
+        description: Order status and digital delivery (async, event-driven)
+        methods:
+          - updateStatus
+          - fulfill
+          - cancel
+          - getTimeline
+      - name: history
+        description: Purchase history and receipts
+        methods:
+          - findOrderDetails
+          - listPurchasedProducts
+          - getReceipt
+          - getDownloadAccess
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 6: PAYMENT (depends on: order, seller)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: payment
+    description: Stripe Connect payments, payouts, refunds
+    submodules:
+      - name: intent
+        description: Payment intent and checkout session creation
+        methods:
+          - create
+          - confirm
+          - cancel
+          - createCheckoutSession
+          - getCheckoutSession
+      - name: methods
+        description: Customer payment methods
+        methods:
+          - attach
+          - detach
+          - setDefault
+      - name: transactions
+        description: Transaction records and fee calculations
+        methods:
+          - calculatePlatformFee
+          - calculateSellerEarnings
+      - name: payouts
+        description: Seller payout management
+        methods:
+          - getBalance
+          - getSchedule
+          - createTransfer
+          - schedule
+      - name: refunds
+        description: Refund processing
+        methods:
+          - create
+          - calculateAmount
+      - name: webhooks
+        description: Stripe webhook handling
+        methods:
+          - process
+          - verifySignature
+          - retryEvent
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 7: REVIEW (depends on: user, product, order)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: review
+    description: Product reviews and ratings
+    submodules:
+      - name: submissions
+        description: Review creation and management
+        methods:
+          - create
+          - update
+          - delete
+          - respond
+          - updateResponse
+      - name: ratings
+        description: Star ratings and aggregations
+        methods:
+          - getAverage
+          - getDistribution
+          - recalculate
+      - name: moderation
+        description: Review moderation workflow
+        methods:
+          - flag
+          - unflag
+          - approve
+          - reject
+          - listQueue
+          - getHistory
+      - name: helpfulness
+        description: Review voting
+        methods:
+          - voteHelpful
+          - voteUnhelpful
+          - removeVote
+          - getScore
+          - listMostHelpful
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 8: PROMOTION (depends on: user, order)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: promotion
+    description: Coupons, referrals, and gamification
+    submodules:
+      - name: coupons
+        description: Coupon management and redemption
+        methods:
+          - validate
+          - redeem
+          - getUsage
+      - name: referrals
+        description: Referral program
+        methods:
+          - generateCode
+          - trackClick
+          - trackSignup
+          - attribute
+          - getStats
+      - name: rewards
+        description: Points and credits system
+        methods:
+          - getBalance
+          - allocate
+          - redeem
+          - listHistory
+          - expire
+      - name: gamification
+        description: Leaderboards, badges, achievements
+        methods:
+          - getLeaderboard
+          - getUserRank
+          - updateScore
+          - awardBadge
+          - revokeBadge
+          - listAchievements
+          - unlockAchievement
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 9: ANALYTICS (depends on: all)
+  # All methods kept - PostHog provider operations
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: analytics
+    description: Platform-wide analytics and metrics (PostHog)
+    submodules:
+      - name: events
+        description: Event tracking infrastructure
+        methods:
+          - track
+          - trackPageView
+          - trackClick
+          - trackConversion
+          - aggregate
+      - name: seller
+        description: Seller dashboard metrics
+        methods:
+          - getMetrics
+          - getRevenueSummary
+          - getRevenueByPeriod
+          - getViewsCount
+          - getConversionRate
+          - getTopProducts
+          - export
+      - name: product
+        description: Product performance metrics
+        methods:
+          - getMetrics
+          - getViews
+          - getConversions
+          - getTrends
+          - compare
+      - name: platform
+        description: Platform-wide KPIs
+        methods:
+          - getMetrics
+          - getGMV
+          - getActiveUsers
+          - getNewUsers
+          - getNewSellers
+          - getRetentionRate
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 10: CONTENT (depends on: user)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: content
+    description: Platform and seller blog posts, content management
+    submodules:
+      - name: posts
+        description: Blog post CRUD (platform and seller authored)
+        methods:
+          - publish
+          - unpublish
+          - saveDraft
+          - feature
+          - unfeature
+      - name: categories
+        description: Content categorization
+        methods: []
+        # All CRUD auto-generated, no custom methods needed
+      - name: media
+        description: Content media assets
+        methods:
+          - upload
+          - updateMetadata
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY 11: COMMUNICATION (consolidated notification + email)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - name: communication
+    description: All user communications (in-app, push, email)
+    submodules:
+      - name: dispatch
+        description: Send notifications across channels
+        methods:
+          - sendInApp
+          - sendPush
+          - sendEmail
+          - broadcast
+          - schedule
+          - cancelScheduled
+      - name: preferences
+        description: User communication preferences
+        methods:
+          - update
+          - optIn
+          - optOut
+          - listOptedChannels
+      - name: templates
+        description: Communication templates (all channels)
+        methods:
+          - render
+          - preview
+          - duplicate
+      - name: history
+        description: Communication history
+        methods:
+          - getUnreadCount
+          - markAsRead
+          - markAllAsRead
+          - dismiss
+      - name: tracking
+        description: Email analytics and delivery status
+        methods:
+          - getStats
+          - getOpenRate
+          - getClickRate
+          - listBounces
+          - listUnsubscribes
+          - handleBounce
+          - handleUnsubscribe
+      - name: campaigns
+        description: Marketing campaigns and newsletters
+        methods:
+          - send
+          - schedule
+          - cancel
+          - getStats

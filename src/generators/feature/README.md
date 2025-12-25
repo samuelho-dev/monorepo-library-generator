@@ -26,7 +26,7 @@ Feature libraries implement the **Service Layer Pattern** for business logic orc
 ```typescript
 // Feature: Process Payment
 export const processPayment = (amount: number, customerId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Orchestrate cross-service workflow
     const paymentRepo = yield* PaymentRepository
     const stripe = yield* StripeService
@@ -121,7 +121,7 @@ pnpm exec nx g @tools/workspace-plugin:feature payment --platform=node
 ```typescript
 // lib/server/service.ts
 export const processPayment = (amount: number, customerId: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const paymentRepo = yield* PaymentRepository
     const stripe = yield* StripeService
 

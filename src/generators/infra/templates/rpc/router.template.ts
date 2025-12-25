@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder';
-import type { InfraTemplateOptions } from '../../../../utils/types';
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate RPC router utilities file
@@ -16,9 +16,9 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config';
  * Creates router composition and feature registration utilities.
  */
 export function generateRpcRouterFile(options: InfraTemplateOptions) {
-  const builder = new TypeScriptBuilder();
-  const { className, fileName } = options;
-  const scope = WORKSPACE_CONFIG.getScope();
+  const builder = new TypeScriptBuilder()
+  const { className, fileName } = options
+  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
     title: `${className} Router`,
@@ -33,15 +33,16 @@ Features:
 Middleware is applied per-RPC, not per-router.
 See middleware.ts for AuthMiddleware usage.`,
     module: `${scope}/infra-${fileName}/router`,
-    see: ['@effect/rpc documentation', 'middleware.ts for auth patterns'],
-  });
+    see: ["@effect/rpc documentation", "middleware.ts for auth patterns"]
+  })
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect'] },
-    { from: 'effect', imports: ['Layer'], isTypeOnly: true },
-  ]);
+    { from: "effect", imports: ["Effect", "Option", "Cause", "Exit"] },
+    { from: "effect", imports: ["Layer"], isTypeOnly: true },
+    { from: "@effect/schema", imports: ["Schema"] }
+  ])
 
-  builder.addSectionComment('Router Composition');
+  builder.addSectionComment("Router Composition")
 
   builder.addRaw(`/**
  * Compose multiple RpcGroups into a single router
@@ -95,9 +96,9 @@ export const defaultRouterConfig: Required<RouterConfig> = {
   healthCheck: true,
   introspection: false
 }
-`);
+`)
 
-  builder.addSectionComment('HTTP Integration');
+  builder.addSectionComment("HTTP Integration")
 
   builder.addRaw(`/**
  * Create HTTP routes from an RPC router
@@ -138,9 +139,9 @@ export const defaultRouterConfig: Required<RouterConfig> = {
 export type RpcRequiredLayers<R> = R extends Layer.Layer<infer _A, infer _E, infer Deps>
   ? Deps
   : never
-`);
+`)
 
-  builder.addSectionComment('App Router Integration (Next.js)');
+  builder.addSectionComment("App Router Integration (Next.js)")
 
   builder.addRaw(`/**
  * Create a Next.js App Router handler
@@ -262,21 +263,31 @@ export interface NextRpcHandler {
 
 export const createNextRpcHandler = <R, E>(
   options: NextRpcHandlerOptions<R, E>
-) => {
+): NextRpcHandler => {
   const config = { ...defaultRouterConfig, ...options.config }
+
+  // Schema for RPC request body validation
+  const RpcRequestBodySchema = Schema.Struct({
+    operation: Schema.String,
+    payload: Schema.optional(Schema.Unknown)
+  })
 
   const execute = async (request: Request) => {
     try {
-      const body = await request.json() as { operation?: string; payload?: unknown }
-      const operation = body.operation
-      const payload = body.payload
+      const rawBody: unknown = await request.json()
 
-      if (!operation || typeof operation !== "string") {
+      // Validate request body with Schema
+      const parseResult = Schema.decodeUnknownOption(RpcRequestBodySchema)(rawBody)
+      if (Option.isNone(parseResult)) {
         return Response.json(
-          { _tag: "RpcInfraError", message: "Missing operation", code: "INVALID_REQUEST" },
+          { _tag: "RpcInfraError", message: "Invalid request body: expected { operation: string, payload?: unknown }", code: "INVALID_REQUEST" },
           { status: 400 }
         )
       }
+
+      const body = parseResult.value
+      const operation = body.operation
+      const payload = body.payload
 
       const handler = options.handlers[operation]
       if (!handler) {
@@ -292,16 +303,25 @@ export const createNextRpcHandler = <R, E>(
         options.layer
       )
 
-      const result = await Effect.runPromise(runnableEffect)
-      return Response.json(result)
-    } catch (error) {
-      if (options.onError) {
-        return options.onError(error)
+      const exit = await Effect.runPromiseExit(runnableEffect)
+
+      if (Exit.isSuccess(exit)) {
+        return Response.json(exit.value)
       }
 
-      const message = error instanceof Error ? error.message : "Internal error"
+      // Handle failure
+      if (options.onError) {
+        return options.onError(exit.cause)
+      }
+
       return Response.json(
-        { _tag: "RpcInfraError", message, code: "INTERNAL_ERROR" },
+        { _tag: "RpcInfraError", message: Cause.pretty(exit.cause), code: "INTERNAL_ERROR" },
+        { status: 500 }
+      )
+    } catch (error) {
+      // Only for non-Effect errors (e.g., JSON parsing)
+      return Response.json(
+        { _tag: "RpcInfraError", message: "Request processing failed", code: "INTERNAL_ERROR" },
         { status: 500 }
       )
     }
@@ -322,9 +342,9 @@ export const createNextRpcHandler = <R, E>(
     }
   }
 }
-`);
+`)
 
-  builder.addSectionComment('Server Actions Integration');
+  builder.addSectionComment("Server Actions Integration")
 
   builder.addRaw(`/**
  * Create a Server Action from an Effect handler
@@ -347,7 +367,7 @@ export const createNextRpcHandler = <R, E>(
  *
  * // Define the handler with typed payload
  * const getUserHandler = (input: { id: string }) =>
- *   Effect.gen(function* () {
+ *   Effect.gen(function*() {
  *     const repo = yield* UserRepository;
  *     return yield* repo.findById(input.id);
  *   });
@@ -401,9 +421,9 @@ export const createServerActionSafe = <Payload, Success, Failure, R>(
     return Effect.runPromiseExit(program)
   }
 }
-`);
+`)
 
-  builder.addSectionComment('Health Check');
+  builder.addSectionComment("Health Check")
 
   builder.addRaw(`/**
  * Standard health check response
@@ -436,8 +456,8 @@ export interface HealthCheckResponse {
 export const healthCheck = (options?: {
   version?: string
   checks?: Record<string, () => Effect.Effect<"ok", unknown>>
-}): Effect.Effect<HealthCheckResponse> =>
-  Effect.gen(function* () {
+}) =>
+  Effect.gen(function*() {
     const timestamp = new Date().toISOString()
     let status: "ok" | "degraded" | "error" = "ok"
 
@@ -448,10 +468,10 @@ export const healthCheck = (options?: {
         const start = Date.now()
         const result = yield* check().pipe(
           Effect.map(() => ({ status: "ok" as const, latencyMs: Date.now() - start })),
-          Effect.catchAll((e) => Effect.succeed({
+          Effect.catchAllCause((cause) => Effect.succeed({
             status: "error" as const,
             latencyMs: Date.now() - start,
-            message: e instanceof Error ? e.message : "Check failed"
+            message: Cause.pretty(cause)
           }))
         )
         checksResult[name] = result
@@ -461,18 +481,12 @@ export const healthCheck = (options?: {
       }
     }
 
-    // Build response with only defined properties (exactOptionalPropertyTypes)
+    // Build response immutably with only defined properties
     const response: HealthCheckResponse = {
       status,
-      timestamp
-    }
-
-    if (options?.version !== undefined) {
-      (response as { version: string }).version = options.version
-    }
-
-    if (Object.keys(checksResult).length > 0) {
-      (response as { checks: typeof checksResult }).checks = checksResult
+      timestamp,
+      ...(options?.version !== undefined ? { version: options.version } : {}),
+      ...(Object.keys(checksResult).length > 0 ? { checks: checksResult } : {})
     }
 
     return response
@@ -483,7 +497,7 @@ export const healthCheck = (options?: {
  * @deprecated Use healthCheck instead
  */
 export const createHealthCheck = healthCheck
-`);
+`)
 
-  return builder.toString();
+  return builder.toString()
 }

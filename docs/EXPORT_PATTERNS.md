@@ -394,7 +394,7 @@ export class ProductService extends Context.Tag("ProductService")<
 >() {
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Implementation
     })
   );
