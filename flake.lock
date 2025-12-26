@@ -7,11 +7,11 @@
         "sops-nix": "sops-nix"
       },
       "locked": {
-        "lastModified": 1766722005,
-        "narHash": "sha256-96YmZjFcEp2Pv/Wt925Ul4EOA+FnSVGiQp4t4PTL9mM=",
+        "lastModified": 1766786159,
+        "narHash": "sha256-7F/8rTFIuL8uQx3+JbBVo9nYNUuaNPRl6ktVoE07M0k=",
         "owner": "samuelho-dev",
         "repo": "dev-config",
-        "rev": "56285f51bd68bfd781a7505221ea15c7cabc1629",
+        "rev": "23fc8ca2a4e304e2509eefe40bf218ad86f39da5",
         "type": "github"
       },
       "original": {

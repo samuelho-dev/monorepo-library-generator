@@ -71,3 +71,40 @@ export {
   WorkspaceDetectionError,
   type WorkspaceType
 } from "./workspace"
+
+// Metrics - Generator observability
+export {
+  filesGenerated,
+  generatorDuration,
+  generatorErrors,
+  generatorExecutions,
+  infrastructureDuration,
+  taggedFilesGenerated,
+  taggedGeneratorDuration,
+  taggedGeneratorError,
+  taggedGeneratorExecution,
+  taggedTemplateDuration,
+  templateCompilations,
+  templateDuration
+} from "./metrics"
+
+// Code Validation - Pattern-based validation for generated code
+export {
+  aggregateResults,
+  classNamingRule,
+  CodeValidationError,
+  type CodeValidationResult,
+  type CodeValidationRule,
+  type CodeViolation,
+  contextImportRule,
+  createCodeRule,
+  dataImportRule,
+  defaultCodeRules,
+  effectImportRule,
+  layerOrderRule,
+  schemaImportRule,
+  taggedErrorReadonlyRule,
+  validateGeneratedCode,
+  validateGeneratedFiles,
+  yieldStarRequiredRule
+} from "./code-validation"
