@@ -78,3 +78,64 @@ export {
   addTypeAlias,
   addTypeImport
 } from "./ast/effect-builders"
+
+// Fragments
+export {
+  // Registry
+  createFragmentRegistry,
+  FragmentNotFoundError,
+  FragmentRegistry,
+  getFragmentRegistry,
+  registerFragment,
+  // Error fragments
+  alreadyExistsErrorFragment,
+  databaseErrorFragment,
+  domainErrorFragments,
+  notFoundErrorFragment,
+  permissionErrorFragment,
+  renderTaggedErrorFragment,
+  repositoryErrorFragments,
+  validationErrorFragment,
+  // Service fragments
+  projectionRepositoryFragment,
+  renderContextTagFragment,
+  repositoryFragment,
+  serviceFragment,
+  // Schema fragments
+  brandedIdFragment,
+  commonSchemaFields,
+  createInputSchemaFragment,
+  entitySchemaFragment,
+  renderSchemaFragment,
+  updateInputSchemaFragment,
+  // Layer fragments
+  composedLayerFragment,
+  infrastructureLayerFragment,
+  liveRepositoryLayerFragment,
+  liveServiceLayerFragment,
+  renderLayerFragment,
+  testRepositoryLayerFragment
+} from "./fragments"
+
+// Fragment types
+export type {
+  AnyFragmentConfig,
+  ContextTagFragmentConfig,
+  ErrorField,
+  ErrorStaticMethod,
+  FragmentConfig,
+  FragmentDefinition,
+  FragmentRegistryEntry,
+  FragmentRenderer,
+  ImportFragmentConfig,
+  LayerComposition,
+  LayerFragmentConfig,
+  MethodParam,
+  SchemaAnnotations,
+  SchemaField,
+  SchemaFragmentConfig,
+  SectionCommentFragmentConfig,
+  ServiceMethod,
+  StaticLayer,
+  TaggedErrorFragmentConfig
+} from "./fragments"
