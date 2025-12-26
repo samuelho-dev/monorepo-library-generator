@@ -68,7 +68,7 @@
     "ink-select-input": "^6.0.0",
     "ink-spinner": "^5.0.0",
     "ink-text-input": "^6.0.0",
-    "ioredis": "catalog:",
+    "ioredis": "^5.4.1",
     "ioredis-mock": "^8.13.1",
     "nx": "^22.3.1",
     "pg": "^8.12.0",
