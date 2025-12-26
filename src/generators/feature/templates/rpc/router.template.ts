@@ -25,7 +25,7 @@ import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
  */
 export function generateRouterFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, name, subModules } = options
+  const { className, fileName, name, subModules } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   const subModulesList = subModules?.filter(Boolean) ?? []
@@ -41,8 +41,8 @@ Contract-First Architecture:
 - Router creates HTTP endpoint
 
 Usage:
-  // In Next.js App Router (app/api/${name}/route.ts)
-  import { create${className}Handler } from "${scope}/feature-${name}/rpc";
+  // In Next.js App Router (app/api/${fileName}/route.ts)
+  import { create${className}Handler } from "${scope}/feature-${fileName}/rpc";
   export const POST = create${className}Handler()`
   })
 
@@ -96,8 +96,8 @@ export const ${className}TestLayer = Layer.mergeAll(
  *
  * @example
  * \`\`\`typescript
- * // app/api/${name}/route.ts
- * import { ${className}Handlers, ${className}ProductionLayer } from "${scope}/feature-${name}/rpc";
+ * // app/api/${fileName}/route.ts
+ * import { ${className}Handlers, ${className}ProductionLayer } from "${scope}/feature-${fileName}/rpc";
  * import { RpcServer } from "@effect/rpc-http";
  * import { HttpRouter, HttpServer } from "@effect/platform";
  *
@@ -116,7 +116,7 @@ export const ${className}TestLayer = Layer.mergeAll(
  * For simpler Next.js integration, use Effect.runPromise directly:
  * @example
  * \`\`\`typescript
- * // app/api/${name}/route.ts
+ * // app/api/${fileName}/route.ts
  * export async function POST(request: Request) {
  *   const body = await request.json()
  *   // Handle RPC call using provided layers

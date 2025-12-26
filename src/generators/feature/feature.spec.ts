@@ -340,17 +340,20 @@ describe("feature generator", () => {
       expect(handlersContent).toContain("PaymentRpcs.toLayer")
     })
 
-    it("should re-export errors from shared in RPC errors (prewired)", async () => {
+    it("should generate RPC boundary wrapper for error transformation (prewired)", async () => {
       // RPC is always prewired
       await featureGenerator(tree, { name: "payment" })
 
       const errorsContent = tree.read("libs/feature/payment/src/lib/rpc/errors.ts", "utf-8")
 
-      // Contract-First: Single error type in shared/errors with Schema.TaggedError
-      // RPC errors just re-export from shared (no separate PaymentRpcError needed)
-      expect(errorsContent).toContain("PaymentNotFoundError")
-      expect(errorsContent).toContain("PaymentServiceError")
+      // Contract-First: RPC errors file provides domain-specific error boundary wrapper
+      // Domain errors are caught and transformed to RPC errors (Schema.TaggedError from infra-rpc)
+      expect(errorsContent).toContain("withPaymentRpcBoundary")
+      expect(errorsContent).toContain("PaymentFeatureError")
       expect(errorsContent).toContain("../shared/errors")
+      // Imports RPC errors from infra-rpc
+      expect(errorsContent).toContain("RpcNotFoundError")
+      expect(errorsContent).toContain("infra-rpc")
     })
 
     it("should use Atom.make in client atoms (prewired for universal)", async () => {

@@ -225,7 +225,7 @@ export function computeMetadata(input: MetadataInput, context: WorkspaceContext)
   return {
     // Required by Nx template substitutions
     tmpl: "" as const,
-    name: input.name,
+    name: nameVariants.name, // camelCase for JS identifiers
     offsetFromRoot,
     tags,
 

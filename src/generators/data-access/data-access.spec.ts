@@ -203,12 +203,12 @@ describe("Data Access Library Generator", () => {
       // Should import Data from effect
       expect(content).toContain("import { Data } from 'effect'")
 
-      // Contract-First Architecture: re-exports domain errors from contract library
+      // Contract-First Architecture: domain errors are imported TYPE-ONLY from contract library
+      // No re-exports - import domain errors directly from contract
+      expect(content).toContain("@samuelho-dev/contract-product")
+      // Documentation mentions domain errors
       expect(content).toContain("ProductNotFoundError")
       expect(content).toContain("ProductValidationError")
-      expect(content).toContain("ProductAlreadyExistsError")
-      // Generated code imports from contract library
-      expect(content).toContain("@samuelho-dev/contract-product")
 
       // Infrastructure-specific errors are defined here (not re-exported)
       expect(content).toContain("class ProductConnectionError extends Data.TaggedError")
@@ -284,10 +284,11 @@ describe("Data Access Library Generator", () => {
 
       const paymentRoot = "libs/data-access/payment-method"
 
-      // Check errors use PascalCase
+      // Check infrastructure errors use PascalCase (domain errors are in contract)
       const errorContent = tree.read(`${paymentRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
-      expect(errorContent).toContain("PaymentMethodError")
-      expect(errorContent).toContain("PaymentMethodNotFoundError")
+      expect(errorContent).toContain("PaymentMethodConnectionError")
+      expect(errorContent).toContain("PaymentMethodTimeoutError")
+      expect(errorContent).toContain("PaymentMethodInfrastructureError")
 
       // Check types use PascalCase
       const typeContent = tree.read(`${paymentRoot}/src/lib/shared/types.ts`, "utf-8") || ""
@@ -431,8 +432,9 @@ describe("Data Access Library Generator", () => {
 
       const errorContent = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
 
-      // Should use PascalCase with Error suffix
-      expect(errorContent).toContain("ProductError")
+      // Should use PascalCase for infrastructure errors
+      expect(errorContent).toContain("ProductConnectionError")
+      expect(errorContent).toContain("ProductInfrastructureError")
     })
 
     it("should not have incomplete EJS placeholders", async () => {
@@ -668,10 +670,11 @@ describe("Data Access Library Generator", () => {
       const repositoryContent = tree.read(`${userRoot}/src/lib/repository/repository.ts`, "utf-8") || ""
       expect(repositoryContent).toContain("UserProfileRepository")
 
-      // Errors should use PascalCase
+      // Infrastructure errors should use PascalCase (domain errors are in contract)
       const errorContent = tree.read(`${userRoot}/src/lib/shared/errors.ts`, "utf-8") || ""
-      expect(errorContent).toContain("UserProfileError")
-      expect(errorContent).toContain("UserProfileNotFoundError")
+      expect(errorContent).toContain("UserProfileConnectionError")
+      expect(errorContent).toContain("UserProfileTimeoutError")
+      expect(errorContent).toContain("UserProfileInfrastructureError")
 
       // Types should use PascalCase
       const typeContent = tree.read(`${userRoot}/src/lib/shared/types.ts`, "utf-8") || ""

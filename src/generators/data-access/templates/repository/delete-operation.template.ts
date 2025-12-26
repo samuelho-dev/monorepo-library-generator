@@ -15,7 +15,7 @@ import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
  */
 export function generateRepositoryDeleteOperationFile(options: DataAccessTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const { className, fileName, name } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
@@ -73,7 +73,7 @@ export const deleteOperations = {
         // This ensures callers can distinguish "deleted" from "nothing to delete"
         return yield* Effect.fail(new ${className}NotFoundError({
           message: \`${className} not found: \${id}\`,
-          ${fileName}Id: id
+          ${name}Id: id
         }))
       }
 

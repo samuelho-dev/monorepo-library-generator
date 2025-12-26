@@ -15,7 +15,7 @@ import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
  */
 export function generateRepositoryUpdateOperationFile(options: DataAccessTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const { className, fileName, name } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
@@ -77,7 +77,7 @@ export const updateOperations = {
         yield* Effect.logWarning(\`${className} not found: \${id}\`)
         return yield* Effect.fail(new ${className}NotFoundError({
           message: \`${className} not found: \${id}\`,
-          ${fileName}Id: id
+          ${name}Id: id
         }))
       }
 

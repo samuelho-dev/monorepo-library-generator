@@ -244,16 +244,17 @@ describe("Infra Generator - Primitive Concerns", () => {
   })
 
   describe("Observability Primitive", () => {
-    it("should generate observability SDK with OTEL layers", async () => {
+    it("should generate observability files with OTEL layers", async () => {
       await infraGenerator(tree, { name: "observability" })
 
-      // Should generate all observability files
-      expect(tree.exists("libs/infra/observability/src/lib/sdk.ts")).toBe(true)
+      // Should generate all observability files (sdk.ts was replaced by presets.ts + separate provider)
       expect(tree.exists("libs/infra/observability/src/lib/supervisor.ts")).toBe(true)
       expect(tree.exists("libs/infra/observability/src/lib/config.ts")).toBe(true)
       expect(tree.exists("libs/infra/observability/src/lib/presets.ts")).toBe(true)
       expect(tree.exists("libs/infra/observability/src/lib/errors.ts")).toBe(true)
       expect(tree.exists("libs/infra/observability/src/lib/constants.ts")).toBe(true)
+      expect(tree.exists("libs/infra/observability/src/lib/logging.ts")).toBe(true)
+      expect(tree.exists("libs/infra/observability/src/lib/metrics.ts")).toBe(true)
     })
 
     it("should generate logging service as part of observability", async () => {
@@ -275,8 +276,8 @@ describe("Infra Generator - Primitive Concerns", () => {
     it("should detect logging keyword as observability concern", async () => {
       await infraGenerator(tree, { name: "logging" })
 
-      // logging keyword now maps to observability
-      expect(tree.exists("libs/infra/logging/src/lib/sdk.ts")).toBe(true)
+      // logging keyword now maps to observability (sdk.ts replaced by presets.ts)
+      expect(tree.exists("libs/infra/logging/src/lib/presets.ts")).toBe(true)
       expect(tree.exists("libs/infra/logging/src/lib/logging.ts")).toBe(true)
       expect(tree.exists("libs/infra/logging/src/lib/metrics.ts")).toBe(true)
     })
@@ -284,8 +285,8 @@ describe("Infra Generator - Primitive Concerns", () => {
     it("should detect metrics keyword as observability concern", async () => {
       await infraGenerator(tree, { name: "metrics" })
 
-      // metrics keyword now maps to observability
-      expect(tree.exists("libs/infra/metrics/src/lib/sdk.ts")).toBe(true)
+      // metrics keyword now maps to observability (sdk.ts replaced by presets.ts)
+      expect(tree.exists("libs/infra/metrics/src/lib/presets.ts")).toBe(true)
       expect(tree.exists("libs/infra/metrics/src/lib/logging.ts")).toBe(true)
       expect(tree.exists("libs/infra/metrics/src/lib/metrics.ts")).toBe(true)
     })

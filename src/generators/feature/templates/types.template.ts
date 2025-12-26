@@ -17,14 +17,14 @@ import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
  */
 export function generateTypesFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, name } = options
+  const { className, fileName, name } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header
   builder.addFileHeader({
     title: `${className} Types`,
     description: `Shared type definitions for ${name} domain.`,
-    module: `${scope}/feature-${name}/shared/types`
+    module: `${scope}/feature-${fileName}/shared/types`
   })
 
   // Add Config interface

@@ -17,7 +17,7 @@ import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
  */
 export function generateAtomsIndexFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, fileName } = options
+  const { className, fileName, propertyName } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header
@@ -37,14 +37,14 @@ export function generateAtomsIndexFile(options: FeatureTemplateOptions) {
   type ${className}OperationState,
   type ${className}State,
   // Atoms
-  ${fileName}Atom,
-  ${fileName}EntityFamily,
+  ${propertyName}Atom,
+  ${propertyName}EntityFamily,
   get${className}Atom,
   // Derived Atoms
-  ${fileName}IsLoadingAtom,
-  ${fileName}ErrorAtom,
-  ${fileName}DataAtom,
-  ${fileName}ListAtom,
+  ${propertyName}IsLoadingAtom,
+  ${propertyName}ErrorAtom,
+  ${propertyName}DataAtom,
+  ${propertyName}ListAtom,
   // State Updaters
   update${className}Entity,
   update${className}List,

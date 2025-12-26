@@ -20,7 +20,7 @@ import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
  */
 export function generateProjectionsBuilderFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, name, propertyName } = options
+  const { className, fileName, name, propertyName } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
@@ -48,10 +48,10 @@ Usage:
   builder.addSectionComment("Domain Events")
   builder.addImports([
     {
-      from: `${scope}/contract-${name}`,
+      from: `${scope}/contract-${fileName}`,
       imports: [`${className}CreatedEvent`, `${className}DeletedEvent`, `${className}UpdatedEvent`]
     },
-    { from: `${scope}/contract-${name}`, imports: [`${className}DomainEvent`], isTypeOnly: true }
+    { from: `${scope}/contract-${fileName}`, imports: [`${className}DomainEvent`], isTypeOnly: true }
   ])
   builder.addBlankLine()
 
@@ -78,8 +78,10 @@ export type ProjectionHandler<TEvent, TModel> = (
  */
 export interface ProjectionDefinition<TEvent, TModel> {
   /** Unique projection name */
-  readonly name: string  /** Event type this projection handles */
-  readonly eventType: string  /** Handler function */
+  readonly name: string
+  /** Event type this projection handles */
+  readonly eventType: string
+  /** Handler function */
   readonly handler: ProjectionHandler<TEvent, TModel>
 }
 
@@ -202,7 +204,8 @@ const createProjectionBuilderImpl = (
           break;
       }
 
-      yield* counter.increment      yield* logger.info("Projection updated", {
+      yield* counter.increment
+      yield* logger.info("Projection updated", {
         eventType: event.eventType,
         entityId: id,
       })
@@ -280,7 +283,8 @@ export class ${className}ProjectionBuilder extends Context.Tag("${className}Proj
       Effect.gen(function*() {
         const pubsub = yield* PubsubService;
         const logger = yield* LoggingService;
-        const metrics = yield* MetricsService        return createProjectionBuilderImpl(pubsub, logger, metrics, store)
+        const metrics = yield* MetricsService
+        return createProjectionBuilderImpl(pubsub, logger, metrics, store)
       })
     )
   }

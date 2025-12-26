@@ -38,17 +38,17 @@ export function generateErrorsFile(options: FeatureTemplateOptions) {
     description: `Service-level errors for feature layer operations.
 
 CONTRACT-FIRST ARCHITECTURE:
-Domain errors are defined in ${scope}/contract-${name} - import directly from there.
+Domain errors are defined in ${scope}/contract-${fileName} - import directly from there.
 This file only contains service-level errors specific to feature operations.
 
 For domain errors, import from contract:
-  import { ${className}NotFoundError, ${className}ValidationError } from "${scope}/contract-${name}"For infrastructure errors, import from data-access:
-  import { ${className}TimeoutError, ${className}ConnectionError } from "${scope}/data-access-${name}"Service Errors (defined here):
+  import { ${className}NotFoundError, ${className}ValidationError } from "${scope}/contract-${fileName}"For infrastructure errors, import from data-access:
+  import { ${className}TimeoutError, ${className}ConnectionError } from "${scope}/data-access-${fileName}"Service Errors (defined here):
   - ${className}ServiceError - Orchestration/dependency failures
 
-@see ${scope}/contract-${name} for domain error definitions
-@see ${scope}/data-access-${name} for infrastructure error definitions`,
-    module: `${scope}/feature-${name}/shared/errors`
+@see ${scope}/contract-${fileName} for domain error definitions
+@see ${scope}/data-access-${fileName} for infrastructure error definitions`,
+    module: `${scope}/feature-${fileName}/shared/errors`
   })
   builder.addBlankLine()
 
@@ -56,12 +56,12 @@ For domain errors, import from contract:
   builder.addImports([{ from: "effect", imports: ["Data"] }])
   // Import type for local use (verbatimModuleSyntax requires separate import for types used locally)
   builder.addImports([{
-    from: `${scope}/contract-${fileName ?? name}`,
+    from: `${scope}/contract-${fileName}`,
     imports: [`${className}DomainError`],
     isTypeOnly: true
   }])
   builder.addImports([{
-    from: `${scope}/data-access-${fileName ?? name}`,
+    from: `${scope}/data-access-${fileName}`,
     imports: [`${className}InfrastructureError`],
     isTypeOnly: true
   }])
@@ -173,7 +173,7 @@ yield* Effect.catchTag("${className}ConnectionError", (error) =>
 
   builder.addSectionComment("Combined Feature Error Types")
   builder.addComment("For infrastructure errors, import directly from data-access:")
-  builder.addComment(`  import { ${className}TimeoutError } from "${scope}/data-access-${fileName ?? name}";`)
+  builder.addComment(`  import { ${className}TimeoutError } from "${scope}/data-access-${fileName}";`)
   builder.addBlankLine()
 
   builder.addTypeAlias({
@@ -182,8 +182,8 @@ yield* Effect.catchTag("${className}ConnectionError", (error) =>
     exported: true,
     jsdoc: `All possible feature-level errors
 
-Domain errors - import from ${scope}/contract-${name}
-Infrastructure errors - import from ${scope}/data-access-${name}
+Domain errors - import from ${scope}/contract-${fileName}
+Infrastructure errors - import from ${scope}/data-access-${fileName}
 Service errors - defined in this file`
   })
 

@@ -60,8 +60,7 @@ describe("Contract Generator - Foundation", () => {
     it("should always generate RPC files by default", async () => {
       await contractGenerator(tree, { name: "product" })
 
-      // RPC is always generated (prewired integration)
-      expect(tree.exists("libs/contract/product/src/lib/rpc.ts")).toBe(true)
+      // RPC is always generated (prewired integration) - rpc.ts was split into separate files
       expect(tree.exists("libs/contract/product/src/lib/rpc-errors.ts")).toBe(true)
       expect(tree.exists("libs/contract/product/src/lib/rpc-definitions.ts")).toBe(true)
       expect(tree.exists("libs/contract/product/src/lib/rpc-group.ts")).toBe(true)
@@ -159,14 +158,7 @@ describe("Contract Generator - RPC Files", () => {
     it("should always generate RPC files with Schema.TaggedError", async () => {
       await contractGenerator(tree, { name: "product" })
 
-      const rpcPath = "libs/contract/product/src/lib/rpc.ts"
-      expect(tree.exists(rpcPath)).toBe(true)
-
-      // rpc.ts is a barrel file that re-exports from rpc-errors, rpc-definitions, rpc-group
-      const rpcContent = tree.read(rpcPath, "utf-8")
-      expect(rpcContent).toContain("export * from './rpc-errors'")
-
-      // Check rpc-errors.ts for Schema.TaggedError usage
+      // Check rpc-errors.ts for Schema.TaggedError usage (rpc.ts was removed)
       const rpcErrorsPath = "libs/contract/product/src/lib/rpc-errors.ts"
       expect(tree.exists(rpcErrorsPath)).toBe(true)
 
@@ -183,8 +175,7 @@ describe("Contract Generator - RPC Files", () => {
     it("should generate all RPC modules", async () => {
       await contractGenerator(tree, { name: "product" })
 
-      // All RPC files are always generated
-      expect(tree.exists("libs/contract/product/src/lib/rpc.ts")).toBe(true)
+      // All RPC files are always generated (rpc.ts was split into separate modules)
       expect(tree.exists("libs/contract/product/src/lib/rpc-errors.ts")).toBe(true)
       expect(tree.exists("libs/contract/product/src/lib/rpc-definitions.ts")).toBe(true)
       expect(tree.exists("libs/contract/product/src/lib/rpc-group.ts")).toBe(true)
@@ -240,8 +231,9 @@ describe("Contract Generator - Exports", () => {
       await contractGenerator(tree, { name: "product" })
 
       const indexContent = tree.read("libs/contract/product/src/index.ts", "utf-8")
-      // RPC is always exported (prewired integration)
-      expect(indexContent).toContain("from './lib/rpc'")
+      // RPC is always exported (prewired integration) - separate files now
+      expect(indexContent).toContain("from './lib/rpc-errors'")
+      expect(indexContent).toContain("from './lib/rpc-definitions'")
     })
   })
 

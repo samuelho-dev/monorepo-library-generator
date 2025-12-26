@@ -23,7 +23,7 @@ import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
  */
 export function generateRpcBarrelFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, name, subModules } = options
+  const { className, fileName, name, subModules } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   const subModulesList = subModules?.filter(Boolean) ?? []
@@ -39,8 +39,8 @@ Contract-First Architecture:
 - Middleware re-exported from infra-rpc
 
 Usage:
-  import { ${className}Handlers, ${className}HandlersLayer } from "${scope}/feature-${name}/rpc";
-  import { ${className}Rpcs, Get${className}, Create${className} } from "${scope}/feature-${name}/rpc";`
+  import { ${className}Handlers, ${className}HandlersLayer } from "${scope}/feature-${fileName}/rpc";
+  import { ${className}Rpcs, Get${className}, Create${className} } from "${scope}/feature-${fileName}/rpc";`
   })
 
   builder.addSectionComment("Contract Re-exports (Single Source of Truth)")
@@ -81,7 +81,7 @@ export {
   isServiceRoute,
   isPublicRoute,
   ${className}RpcsByRoute
-} from "${scope}/contract-${name}"
+} from "${scope}/contract-${fileName}"
 `)
 
   builder.addSectionComment("Handler Exports")

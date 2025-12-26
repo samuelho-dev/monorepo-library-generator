@@ -101,6 +101,9 @@ function toScreamingSnakeCase(input: string) {
  * This function replaces NX's `names()` utility with a workspace-agnostic implementation.
  * It generates all common naming conventions used in code generation.
  *
+ * IMPORTANT: `name` is camelCase for use in JavaScript identifiers (object properties, variables).
+ * Use `fileName` for kebab-case paths and package names.
+ *
  * @param input - Input name (any format)
  * @returns Object with all naming variants
  *
@@ -108,11 +111,11 @@ function toScreamingSnakeCase(input: string) {
  * ```typescript
  * const variants = createNamingVariants("user-profile")
  * // {
- * //   name: "user-profile",
- * //   className: "UserProfile",
- * //   propertyName: "userProfile",
- * //   fileName: "user-profile",
- * //   constantName: "USER_PROFILE"
+ * //   name: "userProfile",        // camelCase for JS identifiers
+ * //   className: "UserProfile",   // PascalCase for classes
+ * //   propertyName: "userProfile", // camelCase (same as name)
+ * //   fileName: "user-profile",   // kebab-case for file paths
+ * //   constantName: "USER_PROFILE" // SCREAMING_SNAKE for constants
  * // }
  * ```
  *
@@ -120,7 +123,7 @@ function toScreamingSnakeCase(input: string) {
  * ```typescript
  * const variants = createNamingVariants("UserProfile")
  * // {
- * //   name: "UserProfile",
+ * //   name: "userProfile",
  * //   className: "UserProfile",
  * //   propertyName: "userProfile",
  * //   fileName: "user-profile",
@@ -134,11 +137,12 @@ export function createNamingVariants(input: string) {
   }
 
   const trimmedInput = input.trim()
+  const camelCase = toCamelCase(trimmedInput)
 
   return {
-    name: trimmedInput,
+    name: camelCase, // camelCase for JS identifiers
     className: toPascalCase(trimmedInput),
-    propertyName: toCamelCase(trimmedInput),
+    propertyName: camelCase,
     fileName: toKebabCase(trimmedInput),
     constantName: toScreamingSnakeCase(trimmedInput)
   }

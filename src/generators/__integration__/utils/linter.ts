@@ -92,7 +92,8 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
 
       // Check for yield without * in Effect.gen context
       // This is a simplified check - the real rule is more sophisticated
-      if (line.match(/yield\s+(?!\*)/) && content.includes("Effect.gen")) {
+      // Skip comment lines to avoid false positives from documentation
+      if (!isCommentLine && line.match(/yield\s+(?!\*)/) && content.includes("Effect.gen")) {
         // Additional check to make sure we're in Effect.gen context
         const contextLines = lines.slice(Math.max(0, index - 10), index + 1).join("\n")
         if (contextLines.includes("Effect.gen(function*")) {

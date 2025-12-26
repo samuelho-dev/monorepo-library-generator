@@ -24,7 +24,7 @@ import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
  */
 export function generateHandlersFile(options: FeatureTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, name, subModules } = options
+  const { className, fileName, name, subModules } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   const subModulesList = subModules?.filter(Boolean) ?? []
@@ -35,7 +35,7 @@ export function generateHandlersFile(options: FeatureTemplateOptions) {
     description: `Handler implementations for ${name} RPC operations.
 
 Contract-First Architecture:
-- RPC definitions imported from @${scope}/contract-${name}
+- RPC definitions imported from @${scope}/contract-${fileName}
 - Handlers implement the RPC interface using the service layer
 - Middleware (auth, service-auth, request-meta) is applied automatically
   based on RouteTag defined in the contract
@@ -49,7 +49,7 @@ Usage:
     { from: "effect", imports: [{ name: "Array", alias: "EffectArray" }, "DateTime", "Effect", "Layer", "Option"] },
     // RPC errors for response mapping
     {
-      from: `${scope}/contract-${name}`,
+      from: `${scope}/contract-${fileName}`,
       imports: [
         `${className}NotFoundRpcError`,
         `${className}Rpcs`,
@@ -58,7 +58,7 @@ Usage:
     },
     // Service input types for handler transformations
     {
-      from: `${scope}/data-access-${name}`,
+      from: `${scope}/data-access-${fileName}`,
       imports: [`${className}CreateInput`, `${className}UpdateInput`],
       isTypeOnly: true
     },
