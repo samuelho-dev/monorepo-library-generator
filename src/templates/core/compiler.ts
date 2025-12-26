@@ -248,7 +248,9 @@ export class TemplateCompiler {
       switch (content.type) {
         case "raw": {
           const value = interpolateSync(content.value, context)
-          sourceFile.addStatements(value)
+          // Use insertText instead of addStatements to avoid ts-morph parsing issues
+          // with JavaScript template literals like ${variable}
+          sourceFile.insertText(sourceFile.getEnd(), "\n" + value + "\n")
           break
         }
 

@@ -32,9 +32,10 @@ export class InterpolationError extends Data.TaggedError("InterpolationError")<{
  * Variable pattern for interpolation
  *
  * Matches {variableName} patterns in strings.
+ * Uses negative lookbehind (?<!\$) to skip JavaScript template literals like ${variable}.
  * Supports nested paths like {options.name} for future extension.
  */
-const VARIABLE_PATTERN = /\{([a-zA-Z_][a-zA-Z0-9_.]*)\}/g
+const VARIABLE_PATTERN = /(?<!\$)\{([a-zA-Z_][a-zA-Z0-9_.]*)\}/g
 
 /**
  * Interpolate variables in a string
@@ -105,11 +106,12 @@ export function interpolateSync(template: string, context: TemplateContext): str
  * Check if a string contains interpolation placeholders
  *
  * @param template - String to check
- * @returns true if string contains {variable} patterns
+ * @returns true if string contains {variable} patterns (but not ${variable} JS template literals)
  */
 export function hasInterpolation(template: string): boolean {
   // Create fresh regex to avoid stateful global regex issues
-  const pattern = /\{([a-zA-Z_][a-zA-Z0-9_.]*)\}/
+  // Use negative lookbehind to skip ${...} JavaScript template literals
+  const pattern = /(?<!\$)\{([a-zA-Z_][a-zA-Z0-9_.]*)\}/
   return pattern.test(template)
 }
 
