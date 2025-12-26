@@ -71,3 +71,19 @@ export {
   WorkspaceDetectionError,
   type WorkspaceType
 } from "./workspace"
+
+// Metrics - Generator observability
+export {
+  filesGenerated,
+  generatorDuration,
+  generatorErrors,
+  generatorExecutions,
+  infrastructureDuration,
+  taggedFilesGenerated,
+  taggedGeneratorDuration,
+  taggedGeneratorError,
+  taggedGeneratorExecution,
+  taggedTemplateDuration,
+  templateCompilations,
+  templateDuration
+} from "./metrics"

@@ -17,6 +17,10 @@ import { Effect } from "effect"
 import type { FileSystemAdapter } from "../../utils/filesystem"
 import { parseTags } from "../../utils/generators"
 import { createNamingVariants } from "../../utils/naming"
+import {
+  generateTemplatesWithSpan,
+  writeContentWithSpan
+} from "../../utils/template-spans"
 import type { ContractTemplateOptions } from "../../utils/types"
 import { generateCommandsFile } from "../contract/templates/commands.template"
 import { generateErrorsFile } from "../contract/templates/errors.template"
@@ -246,7 +250,10 @@ Effect.gen(function*() {
 \`\`\`
 `
 
-    yield* adapter.writeFile(
+    // Generate CLAUDE.md with observability
+    yield* writeContentWithSpan(
+      adapter,
+      "contract/claude-md",
       `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
       claudeDoc
     )
@@ -254,77 +261,85 @@ Effect.gen(function*() {
     // Create lib directory
     yield* adapter.makeDirectory(sourceLibPath)
 
-    // Generate core domain files (always generated)
-    const coreFiles = [
-      { path: "errors.ts", generator: generateErrorsFile },
-      { path: "ports.ts", generator: generatePortsFile },
-      { path: "events.ts", generator: generateEventsFile }
+    // Generate core domain files (always generated) with spans
+    const coreTemplates = [
+      { id: "contract/errors", path: "errors.ts", generator: generateErrorsFile },
+      { id: "contract/ports", path: "ports.ts", generator: generatePortsFile },
+      { id: "contract/events", path: "events.ts", generator: generateEventsFile }
     ]
 
-    for (const { generator, path } of coreFiles) {
-      const filePath = `${sourceLibPath}/${path}`
-      const content = generator(templateOptions)
-      yield* adapter.writeFile(filePath, content)
-      files.push(filePath)
-    }
+    const coreFilePaths = yield* generateTemplatesWithSpan(
+      adapter,
+      coreTemplates,
+      sourceLibPath,
+      templateOptions
+    )
+    files.push(...coreFilePaths)
 
     // NOTE: Entity types come from prisma-effect-kysely generated types-database package
     // No placeholder generation - typesDatabasePackage should always be specified
 
-    // Generate types-only file (types.ts) for zero-runtime imports
+    // Generate types-only file (types.ts) for zero-runtime imports with span
     const typesOnlyPath = `${workspaceRoot}/${sourceRoot}/types.ts`
     const typesContent = generateTypesOnlyFile({
       entities: templateOptions.entities,
       includeCQRS: templateOptions.includeCQRS,
       typesDatabasePackage: templateOptions.typesDatabasePackage
     })
-    yield* adapter.writeFile(typesOnlyPath, typesContent)
+    yield* writeContentWithSpan(
+      adapter,
+      "contract/types-only",
+      typesOnlyPath,
+      typesContent
+    )
     files.push(typesOnlyPath)
 
-    // Generate CQRS files (conditional)
+    // Generate CQRS files (conditional) with spans
     if (templateOptions.includeCQRS) {
-      const cqrsFiles = [
-        { path: "commands.ts", generator: generateCommandsFile },
-        { path: "queries.ts", generator: generateQueriesFile },
-        { path: "projections.ts", generator: generateProjectionsFile }
+      const cqrsTemplates = [
+        { id: "contract/commands", path: "commands.ts", generator: generateCommandsFile },
+        { id: "contract/queries", path: "queries.ts", generator: generateQueriesFile },
+        { id: "contract/projections", path: "projections.ts", generator: generateProjectionsFile }
       ]
 
-      for (const { generator, path } of cqrsFiles) {
-        const filePath = `${sourceLibPath}/${path}`
-        const content = generator(templateOptions)
-        yield* adapter.writeFile(filePath, content)
-        files.push(filePath)
-      }
+      const cqrsFilePaths = yield* generateTemplatesWithSpan(
+        adapter,
+        cqrsTemplates,
+        sourceLibPath,
+        templateOptions
+      )
+      files.push(...cqrsFilePaths)
     }
 
-    // Generate RPC files (always - prewired integration)
+    // Generate RPC files (always - prewired integration) with spans
     // Contract-First: RPC definitions are the single source of truth
-    // Generate RPC errors (Schema.TaggedError for serialization)
-    const rpcErrorsPath = `${sourceLibPath}/rpc-errors.ts`
-    const rpcErrorsContent = generateRpcErrorsFile(templateOptions)
-    yield* adapter.writeFile(rpcErrorsPath, rpcErrorsContent)
-    files.push(rpcErrorsPath)
+    const rpcTemplates = [
+      { id: "contract/rpc-errors", path: "rpc-errors.ts", generator: generateRpcErrorsFile },
+      { id: "contract/rpc-definitions", path: "rpc-definitions.ts", generator: generateRpcDefinitionsFile },
+      { id: "contract/rpc-group", path: "rpc-group.ts", generator: generateRpcGroupFile }
+    ]
 
-    // Generate RPC definitions (Rpc.make with RouteTag)
-    const rpcDefinitionsPath = `${sourceLibPath}/rpc-definitions.ts`
-    const rpcDefinitionsContent = generateRpcDefinitionsFile(templateOptions)
-    yield* adapter.writeFile(rpcDefinitionsPath, rpcDefinitionsContent)
-    files.push(rpcDefinitionsPath)
-
-    // Generate RPC group (RpcGroup.make composition)
-    const rpcGroupPath = `${sourceLibPath}/rpc-group.ts`
-    const rpcGroupContent = generateRpcGroupFile(templateOptions)
-    yield* adapter.writeFile(rpcGroupPath, rpcGroupContent)
-    files.push(rpcGroupPath)
+    const rpcFilePaths = yield* generateTemplatesWithSpan(
+      adapter,
+      rpcTemplates,
+      sourceLibPath,
+      templateOptions
+    )
+    files.push(...rpcFilePaths)
 
     // NOTE: rpc.ts barrel file eliminated - biome noBarrelFile compliance
     // Consumers should import directly from rpc-errors.ts, rpc-definitions.ts, or rpc-group.ts
     // Main index.ts provides unified imports for convenience
 
-    // Generate index file (barrel exports)
+    // Generate index file (barrel exports) with span
     const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
     const indexContent = generateIndexFile(templateOptions)
-    yield* adapter.writeFile(indexPath, indexContent)
+    yield* writeContentWithSpan(
+      adapter,
+      "contract/index",
+      indexPath,
+      indexContent
+    )
     files.push(indexPath)
 
     // Generate sub-module namespaces (Hybrid DDD pattern)

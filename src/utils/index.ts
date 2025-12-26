@@ -34,3 +34,5 @@ export * from "./workspace-detection"
 export * from "./sub-modules"
 // File Batch - Batch file operations
 export * from "./file-batch"
+// Template Spans - Observability for template generation
+export * from "./template-spans"

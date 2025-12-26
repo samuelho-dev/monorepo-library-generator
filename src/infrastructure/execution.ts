@@ -15,9 +15,15 @@
 
 import type { Tree } from "@nx/devkit"
 import { addProjectConfiguration } from "@nx/devkit"
-import { Data, Effect } from "effect"
+import { Data, Effect, Metric } from "effect"
 import { createAdapterFromContext, type FileSystemAdapter, type FileSystemErrors } from "../utils/filesystem"
 import { generateLibraryInfrastructure, type InfrastructureOptions } from "../utils/infrastructure"
+import {
+  taggedFilesGenerated,
+  taggedGeneratorDuration,
+  taggedGeneratorError,
+  taggedGeneratorExecution
+} from "./metrics"
 import { computeMetadata } from "./metadata"
 import type { LibraryMetadata, LibraryType } from "./metadata"
 import { createWorkspaceContext } from "./workspace"
@@ -199,15 +205,30 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
   return {
     execute: (validated: ExtendedInput<TInput>) =>
       Effect.gen(function*() {
-        // 1. Create workspace context
         const interfaceType = validated.__interfaceType ?? "cli"
+        const startTime = Date.now()
+
+        // Track execution count
+        yield* Metric.increment(taggedGeneratorExecution(libraryType, interfaceType))
+
+        // 1. Create workspace context
         const context = yield* createWorkspaceContext(validated.workspaceRoot, interfaceType).pipe(
-          mapToExecutionError("Failed to detect workspace context")
+          mapToExecutionError("Failed to detect workspace context"),
+          Effect.withSpan("generator.workspace_context", {
+            attributes: {
+              "workspace.root": validated.workspaceRoot ?? "auto-detected"
+            }
+          })
         )
 
         // 2. Create appropriate adapter
         const adapter = yield* createAdapterFromContext(context, validated.__nxTree).pipe(
-          mapToExecutionError("Failed to create filesystem adapter")
+          mapToExecutionError("Failed to create filesystem adapter"),
+          Effect.withSpan("generator.create_adapter", {
+            attributes: {
+              "adapter.type": validated.__nxTree ? "nx-tree" : "effect-fs"
+            }
+          })
         )
 
         // 3. Compute library metadata
@@ -251,7 +272,12 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
         }
 
         const infraResult = yield* generateLibraryInfrastructure(adapter, infraOptions).pipe(
-          mapToExecutionError("Failed to generate infrastructure files")
+          mapToExecutionError("Failed to generate infrastructure files"),
+          Effect.withSpan("generator.infrastructure", {
+            attributes: {
+              "infra.project_root": metadata.projectRoot
+            }
+          })
         )
 
         // 4b. Register project with Nx if in Nx mode
@@ -266,15 +292,48 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
         }
 
         // 5. Generate domain-specific files using core generator
-        // TypeScript now knows the exact type of validated (TInput)
-        // No type assertion needed - the generic preserves the specific type!
         const coreOptions = inputToOptions(validated, metadata)
         const result = yield* coreGenerator(adapter, coreOptions).pipe(
-          mapToExecutionError("Failed to generate domain files")
+          mapToExecutionError("Failed to generate domain files"),
+          Effect.withSpan("generator.domain_files", {
+            attributes: {
+              "domain.library_type": libraryType,
+              "domain.library_name": validated.name
+            }
+          })
+        )
+
+        // Track files generated
+        yield* taggedFilesGenerated(libraryType).pipe(
+          Metric.incrementBy(result.filesGenerated.length)
+        )
+
+        // Track duration
+        const duration = Date.now() - startTime
+        yield* taggedGeneratorDuration(libraryType).pipe(
+          Metric.update(duration)
         )
 
         return result
-      })
+      }).pipe(
+        // Wrap entire execution in a span
+        Effect.withSpan(`generator.${libraryType}`, {
+          attributes: {
+            "generator.library_type": libraryType,
+            "generator.interface": validated.__interfaceType ?? "cli",
+            "generator.library_name": validated.name
+          }
+        }),
+        // Handle errors with metrics
+        Effect.tapError((error) =>
+          Effect.gen(function*() {
+            const errorType = error instanceof GeneratorExecutionError
+              ? "execution_error"
+              : "unknown_error"
+            yield* Metric.increment(taggedGeneratorError(errorType, libraryType))
+          })
+        )
+      )
   }
 }
 
