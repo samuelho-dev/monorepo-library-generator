@@ -24,3 +24,15 @@ export {
   featureLayersTemplate,
   featureServiceTemplate
 } from "./feature"
+
+// Infra templates
+export {
+  infraErrorsTemplate,
+  infraServiceTemplate
+} from "./infra"
+
+// Provider templates
+export {
+  providerErrorsTemplate,
+  providerServiceTemplate
+} from "./provider"
