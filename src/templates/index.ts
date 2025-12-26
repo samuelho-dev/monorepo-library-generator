@@ -139,3 +139,37 @@ export type {
   StaticLayer,
   TaggedErrorFragmentConfig
 } from "./fragments"
+
+// Registry
+export {
+  // Registry functions
+  createTemplateRegistry,
+  getAvailableFileTypes,
+  getRegisteredLibraryTypes,
+  getTemplate,
+  getTemplateRegistry,
+  hasTemplate,
+  validateContext,
+  // Generator functions
+  ContextValidationError,
+  generate,
+  generateDomain,
+  generateFile,
+  generateLibrary,
+  GenerationError,
+  TemplateNotFoundError
+} from "./registry"
+
+// Registry types
+export type {
+  FileType,
+  GeneratedFile,
+  GenerationResult,
+  GeneratorError,
+  GeneratorOptions,
+  LibraryType,
+  TemplateKey,
+  TemplateMetadata,
+  TemplateRegistry,
+  TemplateRegistryEntry
+} from "./registry"
