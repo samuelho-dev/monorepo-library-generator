@@ -9,7 +9,7 @@
 
 import { Data, Effect, Metric, MetricBoundaries } from "effect"
 import { createNamingVariants } from "../../utils/naming"
-import { getCompiler } from "../core/compiler"
+import { TemplateCompiler } from "../core/compiler"
 import type { TemplateContext } from "../core/types"
 import { getTemplateRegistry, validateContext } from "./registry"
 import type {
@@ -126,12 +126,14 @@ function getOutputPath(libraryType: LibraryType, fileType: FileType, fileName: s
 
 /**
  * Generate a single file from a template
+ *
+ * Requires TemplateCompiler service to be provided.
  */
 export function generateFile(
   libraryType: LibraryType,
   fileType: FileType,
   context: TemplateContext
-): Effect.Effect<GeneratedFile, GeneratorError> {
+): Effect.Effect<GeneratedFile, GeneratorError, TemplateCompiler> {
   return Effect.gen(function* () {
     const templateKey = `${libraryType}/${fileType}` as TemplateKey
     const registry = getTemplateRegistry()
@@ -159,8 +161,8 @@ export function generateFile(
       )
     }
 
-    // Compile template
-    const compiler = getCompiler()
+    // Compile template using Effect service pattern
+    const compiler = yield* TemplateCompiler
     const content = yield* compiler.compile(entry.template, context).pipe(
       Effect.mapError(err => new GenerationError({
         templateKey,
@@ -194,10 +196,12 @@ export function generateFile(
 
 /**
  * Generate all files for a library type
+ *
+ * Requires TemplateCompiler service to be provided.
  */
 export function generateLibrary(
   options: GeneratorOptions
-): Effect.Effect<GenerationResult, GeneratorError> {
+): Effect.Effect<GenerationResult, GeneratorError, TemplateCompiler> {
   return Effect.gen(function* () {
     const startTime = Date.now()
     const registry = getTemplateRegistry()
@@ -250,13 +254,15 @@ export function generateLibrary(
 
 /**
  * Generate files for multiple library types (full domain generation)
+ *
+ * Requires TemplateCompiler service to be provided.
  */
 export function generateDomain(
   name: string,
   scope: string,
   libraryTypes: ReadonlyArray<LibraryType>,
   context?: Record<string, unknown>
-): Effect.Effect<ReadonlyArray<GenerationResult>, GeneratorError> {
+): Effect.Effect<ReadonlyArray<GenerationResult>, GeneratorError, TemplateCompiler> {
   return Effect.gen(function* () {
     const results: GenerationResult[] = []
 

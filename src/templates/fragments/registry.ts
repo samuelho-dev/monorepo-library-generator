@@ -1,23 +1,23 @@
 /**
- * Fragment Registry
+ * Fragment Registry Service
  *
- * Central registry for all fragment types.
- * Fragments are looked up by type and rendered with their config.
+ * Effect-idiomatic service for fragment type registration and lookup.
+ * Uses Context.Tag pattern with Layer-based dependency injection.
  *
  * @module monorepo-library-generator/templates/fragments/registry
  */
 
-import { Data, Effect, Option } from "effect"
-import type { SourceFile } from "ts-morph"
-import type { InterpolationError } from "../core/resolver"
-import type { TemplateContext } from "../core/types"
+import { Context, Data, Effect, Layer, Option } from 'effect'
+import type { SourceFile } from 'ts-morph'
+import type { InterpolationError } from '../core/resolver'
+import type { TemplateContext } from '../core/types'
 import type {
   AnyFragmentConfig,
   FragmentConfig,
   FragmentDefinition,
   FragmentRegistryEntry,
   FragmentRenderer
-} from "./types"
+} from './types'
 
 // ============================================================================
 // Error Types
@@ -26,7 +26,7 @@ import type {
 /**
  * Error when fragment type is not found in registry
  */
-export class FragmentNotFoundError extends Data.TaggedError("FragmentNotFoundError")<{
+export class FragmentNotFoundError extends Data.TaggedError('FragmentNotFoundError')<{
   readonly fragmentType: string
   readonly message: string
 }> {
@@ -39,149 +39,238 @@ export class FragmentNotFoundError extends Data.TaggedError("FragmentNotFoundErr
 }
 
 // ============================================================================
-// Fragment Registry
+// Service Interface
 // ============================================================================
 
 /**
- * Fragment Registry
+ * Fragment Registry Service Interface
  *
- * Manages fragment type registration and lookup.
+ * All methods return Effect<A, E, never> - no dependencies in R.
  */
-export class FragmentRegistry {
-  private readonly entries: Map<string, FragmentRegistryEntry<FragmentConfig>> = new Map()
-
+interface FragmentRegistryImpl {
   /**
    * Register a fragment type
    */
-  register<TConfig extends FragmentConfig>(
+  readonly register: <TConfig extends FragmentConfig>(
     type: string,
     renderer: FragmentRenderer<TConfig>,
-    requiredImports: ReadonlyArray<string> = []
-  ): this {
-    this.entries.set(type, {
-      type,
-      renderer: renderer as FragmentRenderer<FragmentConfig>,
-      requiredImports
-    })
-    return this
-  }
+    requiredImports?: ReadonlyArray<string>
+  ) => Effect.Effect<void, never, never>
 
   /**
    * Get a fragment entry by type
    */
-  get(type: string): Option.Option<FragmentRegistryEntry<FragmentConfig>> {
-    const entry = this.entries.get(type)
-    return entry ? Option.some(entry) : Option.none()
-  }
+  readonly get: (
+    type: string
+  ) => Effect.Effect<Option.Option<FragmentRegistryEntry<FragmentConfig>>, never, never>
 
   /**
    * Check if a fragment type is registered
    */
-  has(type: string): boolean {
-    return this.entries.has(type)
-  }
+  readonly has: (type: string) => Effect.Effect<boolean, never, never>
 
   /**
    * Get all registered fragment types
    */
-  getTypes(): ReadonlyArray<string> {
-    return Array.from(this.entries.keys())
-  }
+  readonly getTypes: () => Effect.Effect<ReadonlyArray<string>, never, never>
 
   /**
    * Render a fragment definition
    */
-  render(
+  readonly render: (
     sourceFile: SourceFile,
     definition: FragmentDefinition<AnyFragmentConfig>,
     context: TemplateContext
-  ): Effect.Effect<void, FragmentNotFoundError | InterpolationError> {
-    return Effect.gen(this, function*() {
-      const entry = this.get(definition.type)
-
-      if (Option.isNone(entry)) {
-        return yield* Effect.fail(FragmentNotFoundError.create(definition.type))
-      }
-
-      yield* entry.value.renderer(sourceFile, definition.config, context)
-    })
-  }
+  ) => Effect.Effect<void, FragmentNotFoundError | InterpolationError, never>
 
   /**
    * Render multiple fragments
    */
-  renderAll(
+  readonly renderAll: (
     sourceFile: SourceFile,
     definitions: ReadonlyArray<FragmentDefinition<AnyFragmentConfig>>,
     context: TemplateContext
-  ): Effect.Effect<void, FragmentNotFoundError | InterpolationError> {
-    return Effect.gen(this, function*() {
-      for (const definition of definitions) {
-        // Check condition if present
-        if (definition.condition) {
-          const conditionValue = context[definition.condition]
-          if (!conditionValue) continue
-        }
-
-        yield* this.render(sourceFile, definition, context)
-      }
-    })
-  }
+  ) => Effect.Effect<void, FragmentNotFoundError | InterpolationError, never>
 
   /**
    * Get all required imports for a set of fragments
    */
-  getRequiredImports(definitions: ReadonlyArray<FragmentDefinition<AnyFragmentConfig>>): ReadonlyArray<string> {
-    const imports = new Set<string>()
+  readonly getRequiredImports: (
+    definitions: ReadonlyArray<FragmentDefinition<AnyFragmentConfig>>
+  ) => Effect.Effect<ReadonlyArray<string>, never, never>
+}
 
-    for (const definition of definitions) {
-      const entry = this.get(definition.type)
-      if (Option.isSome(entry)) {
-        for (const imp of entry.value.requiredImports) {
-          imports.add(imp)
-        }
-      }
+// ============================================================================
+// Service Tag
+// ============================================================================
+
+/**
+ * Fragment Registry Service Tag
+ *
+ * Usage:
+ * ```typescript
+ * const program = Effect.gen(function* () {
+ *   const registry = yield* FragmentRegistry
+ *   yield* registry.register("myFragment", renderer)
+ *   yield* registry.render(sourceFile, definition, context)
+ * })
+ *
+ * // Provide the layer
+ * program.pipe(Effect.provide(FragmentRegistry.Live))
+ * ```
+ */
+export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
+  FragmentRegistry,
+  FragmentRegistryImpl
+>() {
+  /**
+   * Live implementation with internal Map storage
+   */
+  static readonly Live: Layer.Layer<FragmentRegistry> = Layer.sync(FragmentRegistry, () => {
+    // Capture entries Map at layer construction
+    const entries = new Map<string, FragmentRegistryEntry<FragmentConfig>>()
+
+    return {
+      register: (type, renderer, requiredImports = []) =>
+        Effect.sync(() => {
+          entries.set(type, {
+            type,
+            renderer: renderer as FragmentRenderer<FragmentConfig>,
+            requiredImports
+          })
+        }),
+
+      get: (type) =>
+        Effect.sync(() => {
+          const entry = entries.get(type)
+          return entry ? Option.some(entry) : Option.none()
+        }),
+
+      has: (type) => Effect.sync(() => entries.has(type)),
+
+      getTypes: () => Effect.sync(() => Array.from(entries.keys())),
+
+      render: (sourceFile, definition, context) =>
+        Effect.gen(function* () {
+          const entry = entries.get(definition.type)
+
+          if (!entry) {
+            return yield* Effect.fail(FragmentNotFoundError.create(definition.type))
+          }
+
+          yield* entry.renderer(sourceFile, definition.config, context)
+        }),
+
+      renderAll: (sourceFile, definitions, context) =>
+        Effect.gen(function* () {
+          for (const definition of definitions) {
+            // Check condition if present
+            if (definition.condition) {
+              const conditionValue = context[definition.condition]
+              if (!conditionValue) continue
+            }
+
+            const entry = entries.get(definition.type)
+
+            if (!entry) {
+              return yield* Effect.fail(FragmentNotFoundError.create(definition.type))
+            }
+
+            yield* entry.renderer(sourceFile, definition.config, context)
+          }
+        }),
+
+      getRequiredImports: (definitions) =>
+        Effect.sync(() => {
+          const imports = new Set<string>()
+
+          for (const definition of definitions) {
+            const entry = entries.get(definition.type)
+            if (entry) {
+              for (const imp of entry.requiredImports) {
+                imports.add(imp)
+              }
+            }
+          }
+
+          return Array.from(imports)
+        })
     }
+  })
 
-    return Array.from(imports)
-  }
-}
+  /**
+   * Test implementation with isolated state
+   *
+   * Creates a fresh Map instance per test to prevent test pollution.
+   */
+  static readonly Test: Layer.Layer<FragmentRegistry> = Layer.sync(FragmentRegistry, () => {
+    // Fresh Map per test - isolated from Live
+    const entries = new Map<string, FragmentRegistryEntry<FragmentConfig>>()
 
-// ============================================================================
-// Default Registry Instance
-// ============================================================================
+    return {
+      register: (type, renderer, requiredImports = []) =>
+        Effect.sync(() => {
+          entries.set(type, {
+            type,
+            renderer: renderer as FragmentRenderer<FragmentConfig>,
+            requiredImports
+          })
+        }),
 
-let defaultRegistry: FragmentRegistry | null = null
+      get: (type) =>
+        Effect.sync(() => {
+          const entry = entries.get(type)
+          return entry ? Option.some(entry) : Option.none()
+        }),
 
-/**
- * Get the default fragment registry
- *
- * Creates the registry on first call and registers all built-in fragments.
- */
-export function getFragmentRegistry(): FragmentRegistry {
-  if (!defaultRegistry) {
-    defaultRegistry = new FragmentRegistry()
-    // Built-in fragments are registered by the fragment modules when imported
-  }
-  return defaultRegistry
-}
+      has: (type) => Effect.sync(() => entries.has(type)),
 
-/**
- * Create a fresh fragment registry
- *
- * Useful for testing or isolated contexts.
- */
-export function createFragmentRegistry(): FragmentRegistry {
-  return new FragmentRegistry()
-}
+      getTypes: () => Effect.sync(() => Array.from(entries.keys())),
 
-/**
- * Register a fragment on the default registry
- */
-export function registerFragment<TConfig extends FragmentConfig>(
-  type: string,
-  renderer: FragmentRenderer<TConfig>,
-  requiredImports: ReadonlyArray<string> = []
-): void {
-  getFragmentRegistry().register(type, renderer, requiredImports)
+      render: (sourceFile, definition, context) =>
+        Effect.gen(function* () {
+          const entry = entries.get(definition.type)
+
+          if (!entry) {
+            return yield* Effect.fail(FragmentNotFoundError.create(definition.type))
+          }
+
+          yield* entry.renderer(sourceFile, definition.config, context)
+        }),
+
+      renderAll: (sourceFile, definitions, context) =>
+        Effect.gen(function* () {
+          for (const definition of definitions) {
+            if (definition.condition) {
+              const conditionValue = context[definition.condition]
+              if (!conditionValue) continue
+            }
+
+            const entry = entries.get(definition.type)
+
+            if (!entry) {
+              return yield* Effect.fail(FragmentNotFoundError.create(definition.type))
+            }
+
+            yield* entry.renderer(sourceFile, definition.config, context)
+          }
+        }),
+
+      getRequiredImports: (definitions) =>
+        Effect.sync(() => {
+          const imports = new Set<string>()
+
+          for (const definition of definitions) {
+            const entry = entries.get(definition.type)
+            if (entry) {
+              for (const imp of entry.requiredImports) {
+                imports.add(imp)
+              }
+            }
+          }
+
+          return Array.from(imports)
+        })
+    }
+  })
 }

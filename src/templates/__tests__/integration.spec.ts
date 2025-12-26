@@ -7,6 +7,7 @@
 
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
+import { TemplateCompiler } from "../core/compiler"
 import {
   ContextValidationError,
   generate,
@@ -17,6 +18,12 @@ import {
   TemplateNotFoundError
 } from "../registry"
 import type { TemplateContext } from "../core/types"
+
+/**
+ * Run an effect with TemplateCompiler.Test layer
+ */
+const runWithCompiler = <A, E>(effect: Effect.Effect<A, E, TemplateCompiler>) =>
+  Effect.runPromise(effect.pipe(Effect.provide(TemplateCompiler.Test)))
 
 describe("Template Integration", () => {
   /**
@@ -37,7 +44,7 @@ describe("Template Integration", () => {
   describe("All Template Types Generation", () => {
     describe("Contract Templates", () => {
       it("should generate errors.ts with correct error classes", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("contract", "errors", baseContext)
         )
 
@@ -55,7 +62,7 @@ describe("Template Integration", () => {
       })
 
       it("should generate events.ts with event schemas", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("contract", "events", baseContext)
         )
 
@@ -69,7 +76,7 @@ describe("Template Integration", () => {
       })
 
       it("should generate ports.ts with repository and service interfaces", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("contract", "ports", baseContext)
         )
 
@@ -88,7 +95,7 @@ describe("Template Integration", () => {
       const dataAccessContext = { ...baseContext, libraryType: "data-access" as const }
 
       it("should generate errors.ts with infrastructure errors", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("data-access", "errors", dataAccessContext)
         )
 
@@ -99,7 +106,7 @@ describe("Template Integration", () => {
       })
 
       it("should generate layers.ts with layer compositions", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("data-access", "layers", dataAccessContext)
         )
 
@@ -114,7 +121,7 @@ describe("Template Integration", () => {
       const featureContext = { ...baseContext, libraryType: "feature" as const }
 
       it("should generate service.ts with service implementation", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("feature", "service", featureContext)
         )
 
@@ -125,7 +132,7 @@ describe("Template Integration", () => {
       })
 
       it("should generate layers.ts with feature layers", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("feature", "layers", featureContext)
         )
 
@@ -139,7 +146,7 @@ describe("Template Integration", () => {
       const infraContext = { ...baseContext, libraryType: "infra" as const }
 
       it("should generate errors.ts with infrastructure service errors", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("infra", "errors", infraContext)
         )
 
@@ -149,7 +156,7 @@ describe("Template Integration", () => {
       })
 
       it("should generate service.ts with infrastructure service", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("infra", "service", infraContext)
         )
 
@@ -168,7 +175,7 @@ describe("Template Integration", () => {
       }
 
       it("should generate errors.ts with provider errors", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("provider", "errors", providerContext)
         )
 
@@ -179,7 +186,7 @@ describe("Template Integration", () => {
       })
 
       it("should generate service.ts with external service adapter", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generateFile("provider", "service", providerContext)
         )
 
@@ -194,7 +201,7 @@ describe("Template Integration", () => {
   describe("Edge Cases", () => {
     describe("Naming Conventions", () => {
       it("should handle single word names", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generate.contract("user", "@myorg")
         )
 
@@ -203,7 +210,7 @@ describe("Template Integration", () => {
       })
 
       it("should handle multi-word names (kebab-case input)", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generate.contract("payment-method", "@myorg")
         )
 
@@ -212,7 +219,7 @@ describe("Template Integration", () => {
       })
 
       it("should handle camelCase input by converting to proper naming", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generate.contract("shoppingCart", "@myorg")
         )
 
@@ -221,7 +228,7 @@ describe("Template Integration", () => {
       })
 
       it("should handle PascalCase input by converting to proper naming", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generate.contract("OrderItem", "@myorg")
         )
 
@@ -232,7 +239,7 @@ describe("Template Integration", () => {
 
     describe("Custom Context Override", () => {
       it("should allow custom entityTypeSource", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generate.contract("product", "@shop", {
             entityTypeSource: "@shop/shared-types"
           })
@@ -242,7 +249,7 @@ describe("Template Integration", () => {
       })
 
       it("should allow custom externalService for provider", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generate.provider("payment", "@shop", {
             externalService: "StripeAPI"
           })
@@ -255,7 +262,7 @@ describe("Template Integration", () => {
 
     describe("Scope Variations", () => {
       it("should handle standard npm scope in package imports", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generate.contract("user", "@company")
         )
 
@@ -265,7 +272,7 @@ describe("Template Integration", () => {
       })
 
       it("should handle custom scope format in package imports", async () => {
-        const result = await Effect.runPromise(
+        const result = await runWithCompiler(
           generate.contract("user", "@my-org")
         )
 
@@ -278,7 +285,7 @@ describe("Template Integration", () => {
 
   describe("Error Handling", () => {
     it("should return TemplateNotFoundError for invalid template key", async () => {
-      const error = await Effect.runPromise(
+      const error = await runWithCompiler(
         generateFile("contract", "invalid" as any, baseContext).pipe(Effect.flip)
       )
 
@@ -289,7 +296,7 @@ describe("Template Integration", () => {
     it("should return ContextValidationError for missing required context", async () => {
       const incompleteContext = { className: "Test" } as TemplateContext
 
-      const error = await Effect.runPromise(
+      const error = await runWithCompiler(
         generateFile("contract", "errors", incompleteContext).pipe(Effect.flip)
       )
 
@@ -299,7 +306,7 @@ describe("Template Integration", () => {
     })
 
     it("should track warnings for partial library generation", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateLibrary({
           name: "test",
           scope: "@test",
@@ -316,7 +323,7 @@ describe("Template Integration", () => {
 
   describe("Full Domain Generation", () => {
     it("should generate all libraries for a domain", async () => {
-      const results = await Effect.runPromise(
+      const results = await runWithCompiler(
         generate.fullDomain("customer", "@shop")
       )
 
@@ -335,7 +342,7 @@ describe("Template Integration", () => {
     })
 
     it("should generate custom domain with specific library types", async () => {
-      const results = await Effect.runPromise(
+      const results = await runWithCompiler(
         generateDomain("invoice", "@billing", ["contract", "feature"])
       )
 
@@ -346,7 +353,7 @@ describe("Template Integration", () => {
 
   describe("Output Path Mapping", () => {
     it("should map errors to domain folder", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateFile("contract", "errors", baseContext)
       )
 
@@ -354,7 +361,7 @@ describe("Template Integration", () => {
     })
 
     it("should map events to domain folder", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateFile("contract", "events", baseContext)
       )
 
@@ -363,7 +370,7 @@ describe("Template Integration", () => {
 
     it("should map service to server folder", async () => {
       const featureContext = { ...baseContext, libraryType: "feature" as const }
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateFile("feature", "service", featureContext)
       )
 
@@ -372,7 +379,7 @@ describe("Template Integration", () => {
 
     it("should map layers to server folder", async () => {
       const featureContext = { ...baseContext, libraryType: "feature" as const }
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateFile("feature", "layers", featureContext)
       )
 
@@ -382,7 +389,7 @@ describe("Template Integration", () => {
 
   describe("TypeScript Validity", () => {
     it("should generate valid import statements", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generate.contract("user", "@myorg")
       )
 
@@ -396,7 +403,7 @@ describe("Template Integration", () => {
     })
 
     it("should generate valid class declarations", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generate.contract("product", "@shop")
       )
 
@@ -408,7 +415,7 @@ describe("Template Integration", () => {
     })
 
     it("should generate proper Effect patterns", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generate.feature("order", "@shop")
       )
 
@@ -424,7 +431,7 @@ describe("Template Integration", () => {
 
   describe("Performance Metrics", () => {
     it("should track generation duration", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateLibrary({
           name: "test",
           scope: "@perf",
@@ -437,7 +444,7 @@ describe("Template Integration", () => {
     })
 
     it("should track duration for full domain generation", async () => {
-      const results = await Effect.runPromise(
+      const results = await runWithCompiler(
         generate.fullDomain("analytics", "@metrics")
       )
 

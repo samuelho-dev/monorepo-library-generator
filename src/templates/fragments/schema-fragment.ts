@@ -11,7 +11,6 @@ import { Effect } from "effect"
 import type { SourceFile } from "ts-morph"
 import { interpolateSync } from "../core/resolver"
 import type { TemplateContext } from "../core/types"
-import { registerFragment } from "./registry"
 import type { SchemaAnnotations, SchemaField, SchemaFragmentConfig } from "./types"
 
 // ============================================================================
@@ -293,10 +292,3 @@ export const commonSchemaFields = {
     optional: true
   })
 }
-
-// ============================================================================
-// Register Fragment
-// ============================================================================
-
-// Register on import
-registerFragment("schema", renderSchemaFragment, ["Schema"])

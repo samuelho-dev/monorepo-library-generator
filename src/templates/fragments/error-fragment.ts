@@ -11,7 +11,6 @@ import { Effect } from "effect"
 import type { SourceFile } from "ts-morph"
 import { interpolateSync } from "../core/resolver"
 import type { TemplateContext } from "../core/types"
-import { registerFragment } from "./registry"
 import type { ErrorField, ErrorStaticMethod, TaggedErrorFragmentConfig } from "./types"
 
 // ============================================================================
@@ -363,10 +362,3 @@ export function repositoryErrorFragments(
     databaseErrorFragment(className)
   ]
 }
-
-// ============================================================================
-// Register Fragment
-// ============================================================================
-
-// Register on import
-registerFragment("taggedError", renderTaggedErrorFragment, ["Data"])

@@ -6,8 +6,17 @@
 
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
-import { createCompiler, TemplateCompiler } from "../core/compiler"
+import { TemplateCompiler } from "../core/compiler"
 import type { TemplateContext, TemplateDefinition } from "../core/types"
+
+/**
+ * Compile a template using the Effect service pattern
+ */
+const compile = (template: TemplateDefinition, ctx: TemplateContext) =>
+  Effect.gen(function* () {
+    const compiler = yield* TemplateCompiler
+    return yield* compiler.compile(template, ctx)
+  }).pipe(Effect.provide(TemplateCompiler.Test))
 
 describe("Template Compiler", () => {
   const context: TemplateContext = {
@@ -22,14 +31,11 @@ describe("Template Compiler", () => {
   }
 
   describe("TemplateCompiler", () => {
-    it("should create a new compiler instance", () => {
-      const compiler = new TemplateCompiler()
-      expect(compiler).toBeInstanceOf(TemplateCompiler)
+    it("should be a Context.Tag service", () => {
+      expect(TemplateCompiler.key).toBe("TemplateCompiler")
     })
 
     it("should compile a simple template", async () => {
-      const compiler = createCompiler()
-
       const template: TemplateDefinition = {
         id: "test/simple",
         meta: {
@@ -50,8 +56,7 @@ describe("Template Compiler", () => {
         ]
       }
 
-      const effect = compiler.compile(template, context)
-      const result = await Effect.runPromise(effect)
+      const result = await Effect.runPromise(compile(template, context))
 
       expect(result).toContain("User Types")
       expect(result).toContain("import { Effect, Context } from \"effect\"")
@@ -59,8 +64,6 @@ describe("Template Compiler", () => {
     })
 
     it("should compile template with Context.Tag", async () => {
-      const compiler = createCompiler()
-
       const template: TemplateDefinition = {
         id: "test/context-tag",
         meta: {
@@ -96,8 +99,7 @@ describe("Template Compiler", () => {
         ]
       }
 
-      const effect = compiler.compile(template, context)
-      const result = await Effect.runPromise(effect)
+      const result = await Effect.runPromise(compile(template, context))
 
       expect(result).toContain("class UserRepository")
       expect(result).toContain("Context.Tag(\"UserRepository\")")
@@ -106,8 +108,6 @@ describe("Template Compiler", () => {
     })
 
     it("should compile template with TaggedError", async () => {
-      const compiler = createCompiler()
-
       const template: TemplateDefinition = {
         id: "test/tagged-error",
         meta: {
@@ -135,8 +135,7 @@ describe("Template Compiler", () => {
         ]
       }
 
-      const effect = compiler.compile(template, context)
-      const result = await Effect.runPromise(effect)
+      const result = await Effect.runPromise(compile(template, context))
 
       expect(result).toContain("class UserNotFoundError")
       expect(result).toContain("Data.TaggedError(\"UserNotFoundError\")")
@@ -145,8 +144,6 @@ describe("Template Compiler", () => {
     })
 
     it("should compile template with Schema", async () => {
-      const compiler = createCompiler()
-
       const template: TemplateDefinition = {
         id: "test/schema",
         meta: {
@@ -174,8 +171,7 @@ describe("Template Compiler", () => {
         ]
       }
 
-      const effect = compiler.compile(template, context)
-      const result = await Effect.runPromise(effect)
+      const result = await Effect.runPromise(compile(template, context))
 
       expect(result).toContain("UserSchema")
       expect(result).toContain("Schema.Struct")
@@ -185,8 +181,6 @@ describe("Template Compiler", () => {
     })
 
     it("should handle conditional imports", async () => {
-      const compiler = createCompiler()
-
       const template: TemplateDefinition = {
         id: "test/conditional-imports",
         meta: {
@@ -202,20 +196,18 @@ describe("Template Compiler", () => {
 
       // Without condition
       const withoutRpc = await Effect.runPromise(
-        compiler.compile(template, { ...context, includeRpc: false })
+        compile(template, { ...context, includeRpc: false })
       )
       expect(withoutRpc).not.toContain("Rpc")
 
       // With condition
       const withRpc = await Effect.runPromise(
-        compiler.compile(template, { ...context, includeRpc: true })
+        compile(template, { ...context, includeRpc: true })
       )
       expect(withRpc).toContain("Rpc")
     })
 
     it("should handle conditional sections", async () => {
-      const compiler = createCompiler()
-
       const template: TemplateDefinition = {
         id: "test/conditional-sections",
         meta: {
@@ -238,22 +230,20 @@ describe("Template Compiler", () => {
 
       // Without condition
       const withoutCQRS = await Effect.runPromise(
-        compiler.compile(template, { ...context, includeCQRS: false })
+        compile(template, { ...context, includeCQRS: false })
       )
       expect(withoutCQRS).toContain("Always included")
       expect(withoutCQRS).not.toContain("CQRS section")
 
       // With condition
       const withCQRS = await Effect.runPromise(
-        compiler.compile(template, { ...context, includeCQRS: true })
+        compile(template, { ...context, includeCQRS: true })
       )
       expect(withCQRS).toContain("Always included")
       expect(withCQRS).toContain("CQRS section")
     })
 
     it("should handle conditionals block", async () => {
-      const compiler = createCompiler()
-
       const template: TemplateDefinition = {
         id: "test/conditionals-block",
         meta: {
@@ -278,24 +268,35 @@ describe("Template Compiler", () => {
 
       // Without condition
       const without = await Effect.runPromise(
-        compiler.compile(template, { ...context, includeEvents: false })
+        compile(template, { ...context, includeEvents: false })
       )
       expect(without).not.toContain("Events section")
 
       // With condition
       const with_ = await Effect.runPromise(
-        compiler.compile(template, { ...context, includeEvents: true })
+        compile(template, { ...context, includeEvents: true })
       )
       expect(with_).toContain("Events section")
       expect(with_).toContain("UserEvent")
     })
   })
 
-  describe("createCompiler", () => {
-    it("should create a fresh compiler instance", () => {
-      const c1 = createCompiler()
-      const c2 = createCompiler()
-      expect(c1).not.toBe(c2)
+  describe("TemplateCompiler.Test layer", () => {
+    it("should provide isolated instances per test", async () => {
+      // Each call to Effect.provide(TemplateCompiler.Test) creates a fresh instance
+      const template: TemplateDefinition = {
+        id: "test/isolation",
+        meta: { title: "Test", description: "Test" },
+        imports: [],
+        sections: []
+      }
+
+      const result1 = await Effect.runPromise(compile(template, context))
+      const result2 = await Effect.runPromise(compile(template, context))
+
+      // Both should succeed independently
+      expect(result1).toBeDefined()
+      expect(result2).toBeDefined()
     })
   })
 })

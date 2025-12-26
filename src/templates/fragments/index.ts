@@ -29,14 +29,8 @@ export type {
   TaggedErrorFragmentConfig
 } from "./types"
 
-// Registry
-export {
-  createFragmentRegistry,
-  FragmentNotFoundError,
-  FragmentRegistry,
-  getFragmentRegistry,
-  registerFragment
-} from "./registry"
+// Registry (Effect Service Pattern)
+export { FragmentNotFoundError, FragmentRegistry } from "./registry"
 
 // Error fragments
 export {
@@ -77,9 +71,3 @@ export {
   renderLayerFragment,
   testRepositoryLayerFragment
 } from "./layer-fragment"
-
-// Import all fragments to register them
-import "./error-fragment"
-import "./service-fragment"
-import "./schema-fragment"
-import "./layer-fragment"

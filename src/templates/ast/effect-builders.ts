@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/templates/ast/effect-builders
  */
 
-import type { ClassDeclaration, SourceFile, VariableDeclarationKind } from "ts-morph"
-import { StructureKind } from "ts-morph"
+import { VariableDeclarationKind } from "ts-morph"
+import type { ClassDeclaration, SourceFile } from "ts-morph"
 import type {
   ContextTagConfig,
   LayerConfig,
@@ -209,7 +209,7 @@ export function addSchemaDefinition(
 
   const statement = sourceFile.addVariableStatement({
     isExported: true,
-    declarationKind: "const" as unknown as VariableDeclarationKind,
+    declarationKind: VariableDeclarationKind.Const,
     declarations: [
       {
         name: config.name,
@@ -398,7 +398,7 @@ export function addConstExport(
 ): void {
   const statement = sourceFile.addVariableStatement({
     isExported: true,
-    declarationKind: "const" as unknown as VariableDeclarationKind,
+    declarationKind: VariableDeclarationKind.Const,
     declarations: [
       {
         name,

@@ -11,7 +11,6 @@ import { Effect } from "effect"
 import type { SourceFile } from "ts-morph"
 import { interpolateSync } from "../core/resolver"
 import type { TemplateContext } from "../core/types"
-import { registerFragment } from "./registry"
 import type { LayerFragmentConfig } from "./types"
 
 // ============================================================================
@@ -274,10 +273,3 @@ export function infrastructureLayerFragment(
     jsdoc: options.jsdoc ?? `${variant} infrastructure layer`
   }
 }
-
-// ============================================================================
-// Register Fragment
-// ============================================================================
-
-// Register on import
-registerFragment("layer", renderLayerFragment, ["Layer", "Effect"])

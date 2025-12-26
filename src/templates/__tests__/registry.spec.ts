@@ -6,6 +6,7 @@
 
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
+import { TemplateCompiler } from "../core/compiler"
 import {
   createTemplateRegistry,
   generate,
@@ -19,6 +20,12 @@ import {
   validateContext
 } from "../registry"
 import type { LibraryType, TemplateContext } from "../registry"
+
+/**
+ * Run an effect with TemplateCompiler.Test layer
+ */
+const runWithCompiler = <A, E>(effect: Effect.Effect<A, E, TemplateCompiler>) =>
+  Effect.runPromise(effect.pipe(Effect.provide(TemplateCompiler.Test)))
 
 describe("Template Registry", () => {
   describe("createTemplateRegistry", () => {
@@ -218,7 +225,7 @@ describe("Template Generator", () => {
 
   describe("generateFile", () => {
     it("should generate contract/errors file", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateFile("contract", "errors", context)
       )
 
@@ -230,7 +237,7 @@ describe("Template Generator", () => {
 
     it("should generate feature/service file", async () => {
       const featureContext = { ...context, libraryType: "feature" as const }
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateFile("feature", "service", featureContext)
       )
 
@@ -241,7 +248,7 @@ describe("Template Generator", () => {
     })
 
     it("should fail for unknown template", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateFile("contract", "unknown" as any, context).pipe(
           Effect.flip
         )
@@ -252,7 +259,7 @@ describe("Template Generator", () => {
 
     it("should fail for missing context", async () => {
       const incompleteContext = { className: "User" } as any
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateFile("contract", "errors", incompleteContext).pipe(
           Effect.flip
         )
@@ -264,7 +271,7 @@ describe("Template Generator", () => {
 
   describe("generateLibrary", () => {
     it("should generate all contract files", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateLibrary({
           name: "user",
           scope: "@myorg",
@@ -281,7 +288,7 @@ describe("Template Generator", () => {
     })
 
     it("should generate specific file types only", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateLibrary({
           name: "user",
           scope: "@myorg",
@@ -295,7 +302,7 @@ describe("Template Generator", () => {
     })
 
     it("should add warnings for missing templates", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generateLibrary({
           name: "user",
           scope: "@myorg",
@@ -312,7 +319,7 @@ describe("Template Generator", () => {
 
   describe("generate helpers", () => {
     it("should generate contract library", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generate.contract("order", "@acme")
       )
 
@@ -321,7 +328,7 @@ describe("Template Generator", () => {
     })
 
     it("should generate data-access library", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generate.dataAccess("order", "@acme")
       )
 
@@ -330,7 +337,7 @@ describe("Template Generator", () => {
     })
 
     it("should generate feature library", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generate.feature("order", "@acme")
       )
 
@@ -339,7 +346,7 @@ describe("Template Generator", () => {
     })
 
     it("should generate infra library", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generate.infra("cache", "@acme")
       )
 
@@ -348,7 +355,7 @@ describe("Template Generator", () => {
     })
 
     it("should generate provider library", async () => {
-      const result = await Effect.runPromise(
+      const result = await runWithCompiler(
         generate.provider("stripe", "@acme", { externalService: "Stripe" })
       )
 
@@ -357,7 +364,7 @@ describe("Template Generator", () => {
     })
 
     it("should generate full domain", async () => {
-      const results = await Effect.runPromise(
+      const results = await runWithCompiler(
         generate.fullDomain("product", "@acme")
       )
 

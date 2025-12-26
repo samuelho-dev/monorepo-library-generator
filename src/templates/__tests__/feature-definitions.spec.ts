@@ -6,12 +6,21 @@
 
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
-import { createCompiler } from "../core/compiler"
-import type { TemplateContext } from "../core/types"
+import { TemplateCompiler } from "../core/compiler"
+import type { TemplateContext, TemplateDefinition } from "../core/types"
 import {
   featureLayersTemplate,
   featureServiceTemplate
 } from "../definitions"
+
+/**
+ * Compile a template using the Effect service pattern
+ */
+const compile = (template: TemplateDefinition, ctx: TemplateContext) =>
+  Effect.gen(function* () {
+    const compiler = yield* TemplateCompiler
+    return yield* compiler.compile(template, ctx)
+  }).pipe(Effect.provide(TemplateCompiler.Test))
 
 describe("Feature Template Definitions", () => {
   const context: TemplateContext = {
@@ -32,9 +41,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should compile with service implementation", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("createServiceImpl")
@@ -48,9 +56,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should compile with Context.Tag", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("class UserService extends Context.Tag")
@@ -58,9 +65,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should compile with static layers", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("static readonly Live")
@@ -72,9 +78,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should compile with event schema", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("UserEventSchema")
@@ -85,27 +90,24 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should compile with service interface type", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("type UserServiceInterface = ReturnType<typeof createServiceImpl>")
     })
 
     it("should include Effect imports", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain('import { Effect, Layer, Context, Option, Schema } from "effect"')
     })
 
     it("should include infrastructure imports", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("LoggingService")
@@ -115,18 +117,16 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should include repository import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain('import { UserRepository } from "@myorg/data-access-user"')
     })
 
     it("should include CurrentUser for authentication", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("CurrentUser")
@@ -134,9 +134,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should include observability (logging, metrics, tracing)", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("logger.debug")
@@ -147,9 +146,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should export type aliases", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("export type { User, UserCreateInput, UserUpdateInput, UserFilter }")
@@ -163,9 +161,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should compile with infrastructure layers", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, context)
+        compile(featureLayersTemplate, context)
       )
 
       expect(result).toContain("InfrastructureLive")
@@ -174,9 +171,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should compile with feature layers", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, context)
+        compile(featureLayersTemplate, context)
       )
 
       expect(result).toContain("UserFeatureLive")
@@ -185,9 +181,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should compile with auto layer", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, context)
+        compile(featureLayersTemplate, context)
       )
 
       expect(result).toContain("UserFeatureAuto")
@@ -196,18 +191,16 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should include Layer import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, context)
+        compile(featureLayersTemplate, context)
       )
 
       expect(result).toContain('import { Layer } from "effect"')
     })
 
     it("should include all infrastructure service imports", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, context)
+        compile(featureLayersTemplate, context)
       )
 
       expect(result).toContain("DatabaseService")
@@ -218,27 +211,24 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should include service import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, context)
+        compile(featureLayersTemplate, context)
       )
 
       expect(result).toContain('import { UserService } from "./service"')
     })
 
     it("should include repository import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, context)
+        compile(featureLayersTemplate, context)
       )
 
       expect(result).toContain('import { UserRepository } from "@myorg/data-access-user"')
     })
 
     it("should use Layer.mergeAll pattern", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, context)
+        compile(featureLayersTemplate, context)
       )
 
       expect(result).toContain("Layer.mergeAll")
@@ -248,7 +238,6 @@ describe("Feature Template Definitions", () => {
 
   describe("Variable interpolation", () => {
     it("should interpolate className in service template", async () => {
-      const compiler = createCompiler()
       const orderContext: TemplateContext = {
         ...context,
         className: "Order",
@@ -257,7 +246,7 @@ describe("Feature Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, orderContext)
+        compile(featureServiceTemplate, orderContext)
       )
 
       expect(result).toContain("OrderService")
@@ -268,7 +257,6 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should interpolate className in layers template", async () => {
-      const compiler = createCompiler()
       const orderContext: TemplateContext = {
         ...context,
         className: "Order",
@@ -277,7 +265,7 @@ describe("Feature Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(featureLayersTemplate, orderContext)
+        compile(featureLayersTemplate, orderContext)
       )
 
       expect(result).toContain("OrderFeatureLive")
@@ -287,14 +275,13 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should interpolate scope in imports", async () => {
-      const compiler = createCompiler()
       const customScopeContext: TemplateContext = {
         ...context,
         scope: "@acme"
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, customScopeContext)
+        compile(featureServiceTemplate, customScopeContext)
       )
 
       expect(result).toContain("@acme/contract-user")
@@ -303,9 +290,8 @@ describe("Feature Template Definitions", () => {
     })
 
     it("should interpolate propertyName in metrics", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(featureServiceTemplate, context)
+        compile(featureServiceTemplate, context)
       )
 
       expect(result).toContain("user_get_duration_seconds")

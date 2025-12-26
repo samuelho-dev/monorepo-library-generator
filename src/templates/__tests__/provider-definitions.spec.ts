@@ -6,12 +6,21 @@
 
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
-import { createCompiler } from "../core/compiler"
-import type { TemplateContext } from "../core/types"
+import { TemplateCompiler } from "../core/compiler"
+import type { TemplateContext, TemplateDefinition } from "../core/types"
 import {
   providerErrorsTemplate,
   providerServiceTemplate
 } from "../definitions"
+
+/**
+ * Compile a template using the Effect service pattern
+ */
+const compile = (template: TemplateDefinition, ctx: TemplateContext) =>
+  Effect.gen(function* () {
+    const compiler = yield* TemplateCompiler
+    return yield* compiler.compile(template, ctx)
+  }).pipe(Effect.provide(TemplateCompiler.Test))
 
 describe("Provider Template Definitions", () => {
   const context: TemplateContext = {
@@ -33,9 +42,8 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should compile with all error types", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerErrorsTemplate, context)
+        compile(providerErrorsTemplate, context)
       )
 
       // Check all error types
@@ -51,9 +59,8 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should compile with error union type", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerErrorsTemplate, context)
+        compile(providerErrorsTemplate, context)
       )
 
       expect(result).toContain("type StripeServiceError")
@@ -62,18 +69,16 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should include Data import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerErrorsTemplate, context)
+        compile(providerErrorsTemplate, context)
       )
 
       expect(result).toContain('import { Data } from "effect"')
     })
 
     it("should include rate limit error with retry info", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerErrorsTemplate, context)
+        compile(providerErrorsTemplate, context)
       )
 
       expect(result).toContain("retryAfterMs")
@@ -88,9 +93,8 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should compile with Context.Tag", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, context)
+        compile(providerServiceTemplate, context)
       )
 
       expect(result).toContain("class Stripe extends Context.Tag")
@@ -98,9 +102,8 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should compile with service interface", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, context)
+        compile(providerServiceTemplate, context)
       )
 
       expect(result).toContain("interface StripeServiceInterface")
@@ -114,9 +117,8 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should compile with static layers", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, context)
+        compile(providerServiceTemplate, context)
       )
 
       expect(result).toContain("static readonly Live")
@@ -126,18 +128,16 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should include Effect imports", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, context)
+        compile(providerServiceTemplate, context)
       )
 
       expect(result).toContain('import { Context, Effect, Layer, Redacted } from "effect"')
     })
 
     it("should include type imports", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, context)
+        compile(providerServiceTemplate, context)
       )
 
       expect(result).toContain("StripeConfig")
@@ -147,9 +147,8 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should include environment config in Live layer", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, context)
+        compile(providerServiceTemplate, context)
       )
 
       expect(result).toContain("STRIPE_API_KEY")
@@ -158,9 +157,8 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should include dev layer with logging", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, context)
+        compile(providerServiceTemplate, context)
       )
 
       expect(result).toContain("Effect.logDebug")
@@ -168,9 +166,8 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should include auto layer with environment detection", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, context)
+        compile(providerServiceTemplate, context)
       )
 
       expect(result).toContain("Layer.suspend")
@@ -183,7 +180,6 @@ describe("Provider Template Definitions", () => {
 
   describe("Variable interpolation", () => {
     it("should interpolate className in errors template", async () => {
-      const compiler = createCompiler()
       const twilioContext: TemplateContext = {
         ...context,
         className: "Twilio",
@@ -193,7 +189,7 @@ describe("Provider Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(providerErrorsTemplate, twilioContext)
+        compile(providerErrorsTemplate, twilioContext)
       )
 
       expect(result).toContain("TwilioError")
@@ -203,7 +199,6 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should interpolate className in service template", async () => {
-      const compiler = createCompiler()
       const twilioContext: TemplateContext = {
         ...context,
         className: "Twilio",
@@ -213,7 +208,7 @@ describe("Provider Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, twilioContext)
+        compile(providerServiceTemplate, twilioContext)
       )
 
       expect(result).toContain("class Twilio extends Context.Tag")
@@ -223,21 +218,19 @@ describe("Provider Template Definitions", () => {
     })
 
     it("should interpolate scope in imports", async () => {
-      const compiler = createCompiler()
       const customScopeContext: TemplateContext = {
         ...context,
         scope: "@acme"
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, customScopeContext)
+        compile(providerServiceTemplate, customScopeContext)
       )
 
       expect(result).toContain("@acme/env")
     })
 
     it("should interpolate constantName in env vars", async () => {
-      const compiler = createCompiler()
       const awsContext: TemplateContext = {
         ...context,
         className: "AwsS3",
@@ -247,7 +240,7 @@ describe("Provider Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(providerServiceTemplate, awsContext)
+        compile(providerServiceTemplate, awsContext)
       )
 
       expect(result).toContain("AWS_S3_API_KEY")

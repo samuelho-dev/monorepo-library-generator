@@ -13,10 +13,9 @@ import {
   brandedIdFragment,
   commonSchemaFields,
   composedLayerFragment,
-  createFragmentRegistry,
   domainErrorFragments,
   entitySchemaFragment,
-  getFragmentRegistry,
+  FragmentRegistry,
   liveRepositoryLayerFragment,
   notFoundErrorFragment,
   permissionErrorFragment,
@@ -47,22 +46,37 @@ describe("Fragment System", () => {
   }
 
   describe("FragmentRegistry", () => {
-    it("should create a fresh registry", () => {
-      const registry = createFragmentRegistry()
-      expect(registry).toBeDefined()
+    it("should be a Context.Tag service", () => {
+      expect(FragmentRegistry.key).toBe("FragmentRegistry")
     })
 
-    it("should return default registry", () => {
-      const registry = getFragmentRegistry()
-      expect(registry.has("taggedError")).toBe(true)
-      expect(registry.has("contextTag")).toBe(true)
-      expect(registry.has("schema")).toBe(true)
-      expect(registry.has("layer")).toBe(true)
+    it("should provide register and get methods via Effect", async () => {
+      const program = Effect.gen(function* () {
+        const registry = yield* FragmentRegistry
+        yield* registry.register("test", () => Effect.succeed(undefined), [])
+        const hasTest = yield* registry.has("test")
+        return hasTest
+      })
+
+      const result = await Effect.runPromise(
+        program.pipe(Effect.provide(FragmentRegistry.Test))
+      )
+      expect(result).toBe(true)
     })
 
-    it("should list registered fragment types", () => {
-      const registry = getFragmentRegistry()
-      const types = registry.getTypes()
+    it("should list registered fragment types via Effect", async () => {
+      const program = Effect.gen(function* () {
+        const registry = yield* FragmentRegistry
+        yield* registry.register("taggedError", renderTaggedErrorFragment, ["Data"])
+        yield* registry.register("contextTag", renderContextTagFragment, ["Context", "Effect"])
+        yield* registry.register("schema", renderSchemaFragment, ["Schema"])
+        yield* registry.register("layer", renderLayerFragment, ["Layer", "Effect"])
+        return yield* registry.getTypes()
+      })
+
+      const types = await Effect.runPromise(
+        program.pipe(Effect.provide(FragmentRegistry.Test))
+      )
       expect(types).toContain("taggedError")
       expect(types).toContain("contextTag")
       expect(types).toContain("schema")

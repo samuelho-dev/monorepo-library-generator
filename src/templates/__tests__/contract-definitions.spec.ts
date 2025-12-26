@@ -6,13 +6,22 @@
 
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
-import { createCompiler } from "../core/compiler"
-import type { TemplateContext } from "../core/types"
+import { TemplateCompiler } from "../core/compiler"
+import type { TemplateContext, TemplateDefinition } from "../core/types"
 import {
   contractErrorsTemplate,
   contractEventsTemplate,
   contractPortsTemplate
 } from "../definitions"
+
+/**
+ * Compile a template using the Effect service pattern
+ */
+const compile = (template: TemplateDefinition, ctx: TemplateContext) =>
+  Effect.gen(function* () {
+    const compiler = yield* TemplateCompiler
+    return yield* compiler.compile(template, ctx)
+  }).pipe(Effect.provide(TemplateCompiler.Test))
 
 describe("Contract Template Definitions", () => {
   const context: TemplateContext = {
@@ -34,9 +43,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with domain errors", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractErrorsTemplate, context)
+        compile(contractErrorsTemplate, context)
       )
 
       // Check domain errors
@@ -50,9 +58,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with repository errors", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractErrorsTemplate, context)
+        compile(contractErrorsTemplate, context)
       )
 
       // Check repository errors
@@ -66,18 +73,16 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with combined error type", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractErrorsTemplate, context)
+        compile(contractErrorsTemplate, context)
       )
 
       expect(result).toContain("type UserError = UserDomainError | UserRepositoryError")
     })
 
     it("should include Data import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractErrorsTemplate, context)
+        compile(contractErrorsTemplate, context)
       )
 
       expect(result).toContain('import { Data } from "effect"')
@@ -91,9 +96,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with supporting types", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractPortsTemplate, context)
+        compile(contractPortsTemplate, context)
       )
 
       expect(result).toContain("interface UserFilters")
@@ -103,9 +107,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with repository port", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractPortsTemplate, context)
+        compile(contractPortsTemplate, context)
       )
 
       expect(result).toContain("class UserRepository")
@@ -120,9 +123,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with service port", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractPortsTemplate, context)
+        compile(contractPortsTemplate, context)
       )
 
       expect(result).toContain("class UserService")
@@ -131,18 +133,16 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should include Context import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractPortsTemplate, context)
+        compile(contractPortsTemplate, context)
       )
 
       expect(result).toContain('import { Context } from "effect"')
     })
 
     it("should include CQRS projection when enabled", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractPortsTemplate, { ...context, includeCQRS: true })
+        compile(contractPortsTemplate, { ...context, includeCQRS: true })
       )
 
       expect(result).toContain("class UserProjectionRepository")
@@ -151,9 +151,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should not include CQRS projection when disabled", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractPortsTemplate, { ...context, includeCQRS: false })
+        compile(contractPortsTemplate, { ...context, includeCQRS: false })
       )
 
       expect(result).not.toContain("class UserProjectionRepository")
@@ -167,9 +166,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with event metadata", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractEventsTemplate, context)
+        compile(contractEventsTemplate, context)
       )
 
       expect(result).toContain("const EventMetadata")
@@ -179,9 +177,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with aggregate metadata", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractEventsTemplate, context)
+        compile(contractEventsTemplate, context)
       )
 
       expect(result).toContain("const UserAggregateMetadata")
@@ -190,9 +187,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with domain events", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractEventsTemplate, context)
+        compile(contractEventsTemplate, context)
       )
 
       expect(result).toContain("class UserCreatedEvent")
@@ -201,9 +197,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with event union type", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractEventsTemplate, context)
+        compile(contractEventsTemplate, context)
       )
 
       expect(result).toContain("type UserEvent")
@@ -213,9 +208,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should compile with event factory helpers", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractEventsTemplate, context)
+        compile(contractEventsTemplate, context)
       )
 
       expect(result).toContain("function createEventMetadata")
@@ -223,9 +217,8 @@ describe("Contract Template Definitions", () => {
     })
 
     it("should include Schema import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(contractEventsTemplate, context)
+        compile(contractEventsTemplate, context)
       )
 
       expect(result).toContain('import { Schema } from "effect"')
@@ -234,7 +227,6 @@ describe("Contract Template Definitions", () => {
 
   describe("Variable interpolation", () => {
     it("should interpolate className in all templates", async () => {
-      const compiler = createCompiler()
       const orderContext: TemplateContext = {
         ...context,
         className: "Order",
@@ -243,19 +235,19 @@ describe("Contract Template Definitions", () => {
       }
 
       const errorsResult = await Effect.runPromise(
-        compiler.compile(contractErrorsTemplate, orderContext)
+        compile(contractErrorsTemplate, orderContext)
       )
       expect(errorsResult).toContain("OrderNotFoundError")
       expect(errorsResult).toContain("OrderValidationError")
 
       const portsResult = await Effect.runPromise(
-        compiler.compile(contractPortsTemplate, orderContext)
+        compile(contractPortsTemplate, orderContext)
       )
       expect(portsResult).toContain("OrderRepository")
       expect(portsResult).toContain("OrderService")
 
       const eventsResult = await Effect.runPromise(
-        compiler.compile(contractEventsTemplate, orderContext)
+        compile(contractEventsTemplate, orderContext)
       )
       expect(eventsResult).toContain("OrderCreatedEvent")
       expect(eventsResult).toContain("OrderUpdatedEvent")

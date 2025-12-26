@@ -6,12 +6,21 @@
 
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
-import { createCompiler } from "../core/compiler"
-import type { TemplateContext } from "../core/types"
+import { TemplateCompiler } from "../core/compiler"
+import type { TemplateContext, TemplateDefinition } from "../core/types"
 import {
   dataAccessErrorsTemplate,
   dataAccessLayersTemplate
 } from "../definitions"
+
+/**
+ * Compile a template using the Effect service pattern
+ */
+const compile = (template: TemplateDefinition, ctx: TemplateContext) =>
+  Effect.gen(function* () {
+    const compiler = yield* TemplateCompiler
+    return yield* compiler.compile(template, ctx)
+  }).pipe(Effect.provide(TemplateCompiler.Test))
 
 describe("Data Access Template Definitions", () => {
   const context: TemplateContext = {
@@ -32,9 +41,8 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should compile with infrastructure errors", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, context)
+        compile(dataAccessErrorsTemplate, context)
       )
 
       // Check infrastructure errors
@@ -44,9 +52,8 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should compile with infrastructure error union", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, context)
+        compile(dataAccessErrorsTemplate, context)
       )
 
       expect(result).toContain("type UserInfrastructureError")
@@ -56,45 +63,40 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should compile with combined data access error type", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, context)
+        compile(dataAccessErrorsTemplate, context)
       )
 
       expect(result).toContain("type UserDataAccessError = UserRepositoryError | UserInfrastructureError")
     })
 
     it("should include Data import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, context)
+        compile(dataAccessErrorsTemplate, context)
       )
 
       expect(result).toContain('import { Data } from "effect"')
     })
 
     it("should include contract repository error import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, context)
+        compile(dataAccessErrorsTemplate, context)
       )
 
       expect(result).toContain('import type { UserRepositoryError } from "@myorg/contract-user"')
     })
 
     it("should contain static create methods", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, context)
+        compile(dataAccessErrorsTemplate, context)
       )
 
       expect(result).toContain("static create(")
     })
 
     it("should contain contract-first documentation", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, context)
+        compile(dataAccessErrorsTemplate, context)
       )
 
       expect(result).toContain("CONTRACT-FIRST ARCHITECTURE")
@@ -109,9 +111,8 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should compile with infrastructure layers", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessLayersTemplate, context)
+        compile(dataAccessLayersTemplate, context)
       )
 
       expect(result).toContain("InfrastructureLive")
@@ -120,9 +121,8 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should compile with domain layers", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessLayersTemplate, context)
+        compile(dataAccessLayersTemplate, context)
       )
 
       expect(result).toContain("UserDataAccessLive")
@@ -131,9 +131,8 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should compile with auto layer", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessLayersTemplate, context)
+        compile(dataAccessLayersTemplate, context)
       )
 
       expect(result).toContain("UserDataAccessAuto")
@@ -142,18 +141,16 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should include Layer import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessLayersTemplate, context)
+        compile(dataAccessLayersTemplate, context)
       )
 
       expect(result).toContain('import { Layer } from "effect"')
     })
 
     it("should include infrastructure service imports", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessLayersTemplate, context)
+        compile(dataAccessLayersTemplate, context)
       )
 
       expect(result).toContain("DatabaseService")
@@ -163,9 +160,8 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should include repository import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessLayersTemplate, context)
+        compile(dataAccessLayersTemplate, context)
       )
 
       expect(result).toContain("UserRepository")
@@ -174,7 +170,6 @@ describe("Data Access Template Definitions", () => {
 
   describe("Variable interpolation", () => {
     it("should interpolate className in errors template", async () => {
-      const compiler = createCompiler()
       const orderContext: TemplateContext = {
         ...context,
         className: "Order",
@@ -183,7 +178,7 @@ describe("Data Access Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, orderContext)
+        compile(dataAccessErrorsTemplate, orderContext)
       )
 
       expect(result).toContain("OrderConnectionError")
@@ -194,7 +189,6 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should interpolate className in layers template", async () => {
-      const compiler = createCompiler()
       const orderContext: TemplateContext = {
         ...context,
         className: "Order",
@@ -203,7 +197,7 @@ describe("Data Access Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessLayersTemplate, orderContext)
+        compile(dataAccessLayersTemplate, orderContext)
       )
 
       expect(result).toContain("OrderDataAccessLive")
@@ -213,14 +207,13 @@ describe("Data Access Template Definitions", () => {
     })
 
     it("should interpolate scope in imports", async () => {
-      const compiler = createCompiler()
       const customScopeContext: TemplateContext = {
         ...context,
         scope: "@acme"
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(dataAccessErrorsTemplate, customScopeContext)
+        compile(dataAccessErrorsTemplate, customScopeContext)
       )
 
       expect(result).toContain("@acme/contract-user")

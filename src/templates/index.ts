@@ -46,13 +46,8 @@ export type {
   TemplateMeta
 } from "./core/types"
 
-// Compiler
-export {
-  CompilationError,
-  createCompiler,
-  getCompiler,
-  TemplateCompiler
-} from "./core/compiler"
+// Compiler (Effect Service Pattern)
+export { CompilationError, TemplateCompiler } from "./core/compiler"
 
 // Resolver
 export {
@@ -79,14 +74,11 @@ export {
   addTypeImport
 } from "./ast/effect-builders"
 
-// Fragments
+// Fragments (Effect Service Pattern)
 export {
   // Registry
-  createFragmentRegistry,
   FragmentNotFoundError,
   FragmentRegistry,
-  getFragmentRegistry,
-  registerFragment,
   // Error fragments
   alreadyExistsErrorFragment,
   databaseErrorFragment,

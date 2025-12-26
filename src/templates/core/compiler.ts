@@ -1,18 +1,15 @@
 /**
- * Template Compiler
+ * Template Compiler Service
  *
- * Compiles template definitions to TypeScript source code using ts-morph.
- * Handles imports, sections, conditionals, and Effect pattern generation.
+ * Effect-idiomatic service for compiling template definitions to TypeScript.
+ * Uses Context.Tag pattern with Layer-based dependency injection.
  *
  * @module monorepo-library-generator/templates/core/compiler
  */
 
-import { Data, Effect, Metric } from "effect"
-import { Project, type SourceFile } from "ts-morph"
-import {
-  taggedTemplateDuration,
-  templateCompilations
-} from "../../infrastructure/metrics"
+import { Context, Data, Effect, Layer, Metric } from 'effect'
+import { Project, type SourceFile } from 'ts-morph'
+import { taggedTemplateDuration, templateCompilations } from '../../infrastructure/metrics'
 import {
   addConstExport,
   addContextTagClass,
@@ -21,10 +18,9 @@ import {
   addSchemaDefinition,
   addSectionComment,
   addTaggedErrorClass,
-  addTypeAlias,
   addTypeImport
-} from "../ast/effect-builders"
-import { interpolateDeep, interpolateSync } from "./resolver"
+} from '../ast/effect-builders'
+import { interpolateDeep, interpolateSync } from './resolver'
 import type {
   ClassConfig,
   ConditionalContent,
@@ -38,7 +34,7 @@ import type {
   TaggedErrorConfig,
   TemplateContext,
   TemplateDefinition
-} from "./types"
+} from './types'
 
 // ============================================================================
 // Error Types
@@ -47,27 +43,73 @@ import type {
 /**
  * Template Compilation Error
  */
-export class CompilationError extends Data.TaggedError("CompilationError")<{
+export class CompilationError extends Data.TaggedError('CompilationError')<{
   readonly templateId: string
   readonly message: string
   readonly diagnostics?: ReadonlyArray<{ line: number; column: number; message: string }>
 }> {}
 
 // ============================================================================
-// Template Compiler
+// Service Interface
 // ============================================================================
 
 /**
- * Template Compiler
+ * Template Compiler Service Interface
  *
- * Compiles template definitions to TypeScript source code.
- * Uses ts-morph for type-safe AST manipulation.
+ * All methods return Effect<A, E, never> - no dependencies in R.
+ * Dependencies are captured at Layer construction time.
  */
-export class TemplateCompiler {
-  private project: Project
+interface TemplateCompilerImpl {
+  /**
+   * Compile a template definition to TypeScript source
+   */
+  readonly compile: (
+    template: TemplateDefinition,
+    context: TemplateContext
+  ) => Effect.Effect<string, CompilationError, never>
 
-  constructor() {
-    this.project = new Project({
+  /**
+   * Get compilation diagnostics for source code
+   */
+  readonly getDiagnostics: (
+    code: string
+  ) => Effect.Effect<ReadonlyArray<{ line: number; column: number; message: string }>, never, never>
+
+  /**
+   * Reset the compiler (clear all files)
+   */
+  readonly reset: () => Effect.Effect<void, never, never>
+}
+
+// ============================================================================
+// Service Tag
+// ============================================================================
+
+/**
+ * Template Compiler Service Tag
+ *
+ * Usage:
+ * ```typescript
+ * const program = Effect.gen(function* () {
+ *   const compiler = yield* TemplateCompiler
+ *   const result = yield* compiler.compile(template, context)
+ *   return result
+ * })
+ *
+ * // Provide the layer
+ * program.pipe(Effect.provide(TemplateCompiler.Live))
+ * ```
+ */
+export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
+  TemplateCompiler,
+  TemplateCompilerImpl
+>() {
+  /**
+   * Live implementation with ts-morph Project
+   */
+  static readonly Live: Layer.Layer<TemplateCompiler> = Layer.sync(TemplateCompiler, () => {
+    // Capture Project instance at layer construction
+    const project = new Project({
       useInMemoryFileSystem: true,
       compilerOptions: {
         strict: true,
@@ -78,96 +120,10 @@ export class TemplateCompiler {
         skipLibCheck: true
       }
     })
-  }
 
-  /**
-   * Compile a template definition to TypeScript source
-   *
-   * @param template - Template definition to compile
-   * @param context - Template context with variables
-   * @returns Effect with compiled TypeScript source code
-   */
-  compile(
-    template: TemplateDefinition,
-    context: TemplateContext
-  ): Effect.Effect<string, CompilationError> {
-    return Effect.gen(this, function*() {
-      const startTime = Date.now()
-
-      // Track compilation
-      yield* templateCompilations.pipe(
-        Metric.tagged("template_id", template.id),
-        Metric.increment
-      )
-
-      // Create source file
-      const sourceFile = this.project.createSourceFile(
-        `${template.id.replace("/", "-")}.ts`,
-        "",
-        { overwrite: true }
-      )
-
-      try {
-        // Add file header comment
-        const title = interpolateSync(template.meta.title, context)
-        const description = interpolateSync(template.meta.description, context)
-        this.addFileHeader(sourceFile, title, description)
-
-        // Process imports
-        yield* this.processImports(sourceFile, template.imports, context)
-
-        // Process sections
-        for (const section of template.sections) {
-          yield* this.processSection(sourceFile, section, context)
-        }
-
-        // Process conditionals
-        if (template.conditionals) {
-          for (const [conditionKey, content] of Object.entries(template.conditionals)) {
-            if (context[conditionKey]) {
-              yield* this.processConditionalContent(sourceFile, content, context)
-            }
-          }
-        }
-
-        // Format and return
-        sourceFile.formatText({
-          indentSize: 2,
-          convertTabsToSpaces: true
-        })
-
-        const result = sourceFile.getFullText()
-
-        // Track duration
-        const duration = Date.now() - startTime
-        yield* taggedTemplateDuration(template.id).pipe(
-          Metric.update(duration)
-        )
-
-        return result
-      } catch (error) {
-        return yield* Effect.fail(
-          new CompilationError({
-            templateId: template.id,
-            message: error instanceof Error ? error.message : String(error)
-          })
-        )
-      }
-    }).pipe(
-      Effect.withSpan(`template.compile.${template.id}`, {
-        attributes: {
-          "template.id": template.id,
-          "context.className": context.className
-        }
-      })
-    )
-  }
-
-  /**
-   * Add file header comment
-   */
-  private addFileHeader(sourceFile: SourceFile, title: string, description: string): void {
-    sourceFile.addStatements(`/**
+    // Helper functions (pure, no this references)
+    const addFileHeader = (sourceFile: SourceFile, title: string, description: string): void => {
+      sourceFile.addStatements(`/**
  * ${title}
  *
  * ${description}
@@ -175,303 +131,648 @@ export class TemplateCompiler {
  * @generated This file was generated by monorepo-library-generator
  */
 `)
-  }
+    }
 
-  /**
-   * Process imports
-   */
-  private processImports(
-    sourceFile: SourceFile,
-    imports: ReadonlyArray<ImportDefinition>,
-    context: TemplateContext
-  ): Effect.Effect<void, CompilationError> {
-    return Effect.gen(this, function*() {
-      for (const imp of imports) {
-        // Check condition
-        if (imp.condition && !context[imp.condition]) {
-          continue
-        }
-
-        // Interpolate items
-        const items = imp.items.map((item) => interpolateSync(item, context))
-        const from = interpolateSync(imp.from, context)
-
-        if (imp.isTypeOnly) {
-          addTypeImport(sourceFile, from, items)
-        } else if (from === "effect") {
-          addEffectImports(sourceFile, items)
-        } else {
-          addImport(sourceFile, from, items)
-        }
-      }
-    })
-  }
-
-  /**
-   * Process a section
-   */
-  private processSection(
-    sourceFile: SourceFile,
-    section: SectionDefinition,
-    context: TemplateContext
-  ): Effect.Effect<void, CompilationError> {
-    return Effect.gen(this, function*() {
-      // Check condition
-      if (section.condition && !context[section.condition]) {
-        return
-      }
-
-      // Add section title comment
-      if (section.title) {
-        const title = interpolateSync(section.title, context)
-        addSectionComment(sourceFile, title)
-      }
-
-      // Process content
-      const contents = Array.isArray(section.content) ? section.content : [section.content]
-
-      for (const content of contents) {
-        yield* this.processContent(sourceFile, content, context)
-      }
-    })
-  }
-
-  /**
-   * Process content definition
-   */
-  private processContent(
-    sourceFile: SourceFile,
-    content: ContentDefinition,
-    context: TemplateContext
-  ): Effect.Effect<void, CompilationError> {
-    return Effect.gen(this, function*() {
-      switch (content.type) {
-        case "raw": {
-          const value = interpolateSync(content.value, context)
-          // Use insertText instead of addStatements to avoid ts-morph parsing issues
-          // with JavaScript template literals like ${variable}
-          sourceFile.insertText(sourceFile.getEnd(), "\n" + value + "\n")
-          break
-        }
-
-        case "contextTag": {
-          const config = yield* this.interpolateConfig(content.config, context) as Effect.Effect<ContextTagConfig, never>
-          addContextTagClass(sourceFile, config)
-          break
-        }
-
-        case "taggedError": {
-          const config = yield* this.interpolateConfig(content.config, context) as Effect.Effect<TaggedErrorConfig, never>
-          addTaggedErrorClass(sourceFile, config)
-          break
-        }
-
-        case "schema": {
-          const config = yield* this.interpolateConfig(content.config, context) as Effect.Effect<SchemaConfig, never>
-          addSchemaDefinition(sourceFile, config)
-          break
-        }
-
-        case "interface": {
-          const config = yield* this.interpolateConfig(content.config, context) as Effect.Effect<InterfaceConfig, never>
-          this.addInterface(sourceFile, config)
-          break
-        }
-
-        case "class": {
-          const config = yield* this.interpolateConfig(content.config, context) as Effect.Effect<ClassConfig, never>
-          this.addClass(sourceFile, config)
-          break
-        }
-
-        case "constant": {
-          const config = yield* this.interpolateConfig(content.config, context) as Effect.Effect<ConstantConfig, never>
-          addConstExport(sourceFile, config.name, config.type, config.value, config.jsdoc)
-          break
-        }
-
-        case "rpcDefinition": {
-          // RPC definitions use raw content for now (complex structure)
-          // TODO: Implement RPC builder in Phase 3
-          break
-        }
-
-        case "fragment": {
-          // Fragment references are resolved by FragmentLibrary
-          // TODO: Implement fragment resolution in Phase 3
-          break
-        }
-      }
-    })
-  }
-
-  /**
-   * Process conditional content
-   */
-  private processConditionalContent(
-    sourceFile: SourceFile,
-    content: ConditionalContent,
-    context: TemplateContext
-  ): Effect.Effect<void, CompilationError> {
-    return Effect.gen(this, function*() {
-      // Process additional imports
-      if (content.imports) {
-        yield* this.processImports(sourceFile, content.imports, context)
-      }
-
-      // Process sections
-      for (const section of content.sections) {
-        yield* this.processSection(sourceFile, section, context)
-      }
-    })
-  }
-
-  /**
-   * Interpolate all strings in a config object
-   */
-  private interpolateConfig<T>(
-    config: T,
-    context: TemplateContext
-  ): Effect.Effect<T, never> {
-    return interpolateDeep(config, context).pipe(
-      Effect.catchAll(() => Effect.succeed(config))
-    )
-  }
-
-  /**
-   * Add an interface to source file
-   */
-  private addInterface(sourceFile: SourceFile, config: InterfaceConfig): void {
-    const properties = config.properties.map((p) => ({
-      name: p.name,
-      type: p.type,
-      isReadonly: p.readonly,
-      hasQuestionToken: p.optional
-    }))
-
-    const methods = config.methods?.map((m) => ({
-      name: m.name,
-      parameters: m.params.map((p) => ({
+    const addInterface = (sourceFile: SourceFile, config: InterfaceConfig): void => {
+      const properties = config.properties.map((p) => ({
         name: p.name,
         type: p.type,
+        isReadonly: p.readonly,
         hasQuestionToken: p.optional
-      })),
-      returnType: m.returnType
-    })) ?? []
+      }))
 
-    const interfaceDecl = sourceFile.addInterface({
-      name: config.name,
-      isExported: config.isExported ?? true,
-      extends: config.extends,
-      properties,
-      methods
-    })
+      const methods =
+        config.methods?.map((m) => ({
+          name: m.name,
+          parameters: m.params.map((p) => ({
+            name: p.name,
+            type: p.type,
+            hasQuestionToken: p.optional
+          })),
+          returnType: m.returnType
+        })) ?? []
 
-    if (config.jsdoc) {
-      interfaceDecl.addJsDoc({ description: config.jsdoc })
+      const interfaceDecl = sourceFile.addInterface({
+        name: config.name,
+        isExported: config.isExported ?? true,
+        extends: config.extends,
+        properties,
+        methods
+      })
+
+      if (config.jsdoc) {
+        interfaceDecl.addJsDoc({ description: config.jsdoc })
+      }
     }
-  }
+
+    const addClass = (sourceFile: SourceFile, config: ClassConfig): void => {
+      const properties =
+        config.properties?.map((p) => ({
+          name: p.name,
+          type: p.type,
+          isReadonly: p.readonly,
+          hasQuestionToken: p.optional
+        })) ?? []
+
+      const methods =
+        config.methods?.map((m) => ({
+          name: m.name,
+          isStatic: m.isStatic,
+          isAsync: m.isAsync,
+          parameters: m.params.map((p) => ({
+            name: p.name,
+            type: p.type,
+            hasQuestionToken: p.optional
+          })),
+          returnType: m.returnType,
+          statements: m.body
+        })) ?? []
+
+      const statics =
+        config.statics?.map((s) => ({
+          name: s.name,
+          isStatic: true,
+          type: s.type,
+          initializer: s.value
+        })) ?? []
+
+      const classDecl = sourceFile.addClass({
+        name: config.name,
+        isExported: config.isExported ?? true,
+        extends: config.extends,
+        implements: config.implements,
+        properties: [...properties, ...statics],
+        methods
+      })
+
+      if (config.jsdoc) {
+        classDecl.addJsDoc({ description: config.jsdoc })
+      }
+    }
+
+    const interpolateConfig = <T>(config: T, context: TemplateContext): Effect.Effect<T, never> =>
+      interpolateDeep(config, context).pipe(
+        Effect.catchAll((error) =>
+          Effect.succeed(config).pipe(
+            Effect.tap(() =>
+              Effect.logWarning(
+                `Interpolation failed: ${error instanceof Error ? error.message : String(error)}, using original config`
+              )
+            )
+          )
+        )
+      )
+
+    // Content processor (functional, captures helpers via closure)
+    const processContent = (
+      sourceFile: SourceFile,
+      content: ContentDefinition,
+      context: TemplateContext
+    ): Effect.Effect<void, CompilationError> =>
+      Effect.gen(function* () {
+        switch (content.type) {
+          case 'raw': {
+            const value = interpolateSync(content.value, context)
+            sourceFile.insertText(sourceFile.getEnd(), `\n${value}\n`)
+            break
+          }
+
+          case 'contextTag': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              ContextTagConfig,
+              never
+            >
+            addContextTagClass(sourceFile, config)
+            break
+          }
+
+          case 'taggedError': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              TaggedErrorConfig,
+              never
+            >
+            addTaggedErrorClass(sourceFile, config)
+            break
+          }
+
+          case 'schema': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              SchemaConfig,
+              never
+            >
+            addSchemaDefinition(sourceFile, config)
+            break
+          }
+
+          case 'interface': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              InterfaceConfig,
+              never
+            >
+            addInterface(sourceFile, config)
+            break
+          }
+
+          case 'class': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              ClassConfig,
+              never
+            >
+            addClass(sourceFile, config)
+            break
+          }
+
+          case 'constant': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              ConstantConfig,
+              never
+            >
+            addConstExport(sourceFile, config.name, config.type, config.value, config.jsdoc)
+            break
+          }
+
+          case 'rpcDefinition':
+          case 'fragment':
+            // TODO: Implement in Phase 3
+            break
+        }
+      })
+
+    // Section processor
+    const processSection = (
+      sourceFile: SourceFile,
+      section: SectionDefinition,
+      context: TemplateContext
+    ): Effect.Effect<void, CompilationError> =>
+      Effect.gen(function* () {
+        if (section.condition && !context[section.condition]) {
+          return
+        }
+
+        if (section.title) {
+          const title = interpolateSync(section.title, context)
+          addSectionComment(sourceFile, title)
+        }
+
+        const contents = Array.isArray(section.content) ? section.content : [section.content]
+        for (const content of contents) {
+          yield* processContent(sourceFile, content, context)
+        }
+      })
+
+    // Import processor
+    const processImports = (
+      sourceFile: SourceFile,
+      imports: ReadonlyArray<ImportDefinition>,
+      context: TemplateContext
+    ): Effect.Effect<void, CompilationError> =>
+      Effect.gen(function* () {
+        for (const imp of imports) {
+          if (imp.condition && !context[imp.condition]) {
+            continue
+          }
+
+          const items = imp.items.map((item) => interpolateSync(item, context))
+          const from = interpolateSync(imp.from, context)
+
+          if (imp.isTypeOnly) {
+            addTypeImport(sourceFile, from, items)
+          } else if (from === 'effect') {
+            addEffectImports(sourceFile, items)
+          } else {
+            addImport(sourceFile, from, items)
+          }
+        }
+      })
+
+    // Conditional content processor
+    const processConditionalContent = (
+      sourceFile: SourceFile,
+      content: ConditionalContent,
+      context: TemplateContext
+    ): Effect.Effect<void, CompilationError> =>
+      Effect.gen(function* () {
+        if (content.imports) {
+          yield* processImports(sourceFile, content.imports, context)
+        }
+
+        for (const section of content.sections) {
+          yield* processSection(sourceFile, section, context)
+        }
+      })
+
+    // Return the service implementation
+    return {
+      compile: (template, context) =>
+        Effect.gen(function* () {
+          const startTime = Date.now()
+
+          yield* templateCompilations.pipe(
+            Metric.tagged('template_id', template.id),
+            Metric.increment
+          )
+
+          const sourceFile = project.createSourceFile(`${template.id.replace('/', '-')}.ts`, '', {
+            overwrite: true
+          })
+
+          const title = interpolateSync(template.meta.title, context)
+          const description = interpolateSync(template.meta.description, context)
+          addFileHeader(sourceFile, title, description)
+
+          yield* processImports(sourceFile, template.imports, context)
+
+          for (const section of template.sections) {
+            yield* processSection(sourceFile, section, context)
+          }
+
+          if (template.conditionals) {
+            for (const [conditionKey, content] of Object.entries(template.conditionals)) {
+              if (context[conditionKey]) {
+                yield* processConditionalContent(sourceFile, content, context)
+              }
+            }
+          }
+
+          sourceFile.formatText({
+            indentSize: 2,
+            convertTabsToSpaces: true
+          })
+
+          const result = sourceFile.getFullText()
+
+          const duration = Date.now() - startTime
+          yield* taggedTemplateDuration(template.id).pipe(Metric.update(duration))
+
+          return result
+        }).pipe(
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new CompilationError({
+                templateId: template.id,
+                message: error instanceof Error ? error.message : String(error)
+              })
+            )
+          ),
+          Effect.catchAllDefect((defect) =>
+            Effect.fail(
+              new CompilationError({
+                templateId: template.id,
+                message: defect instanceof Error ? defect.message : String(defect)
+              })
+            )
+          ),
+          Effect.withSpan(`template.compile.${template.id}`, {
+            attributes: {
+              'template.id': template.id,
+              'context.className': context.className
+            }
+          })
+        ),
+
+      getDiagnostics: (code) =>
+        Effect.sync(() => {
+          const sourceFile = project.createSourceFile('__check__.ts', code, { overwrite: true })
+          const diagnostics = sourceFile.getPreEmitDiagnostics()
+
+          return diagnostics.map((d) => {
+            const start = d.getStart()
+            const lineAndCol =
+              start !== undefined ? sourceFile.getLineAndColumnAtPos(start) : { line: 0, column: 0 }
+
+            return {
+              line: lineAndCol.line,
+              column: lineAndCol.column,
+              message: d.getMessageText().toString()
+            }
+          })
+        }),
+
+      reset: () =>
+        Effect.sync(() => {
+          for (const sourceFile of project.getSourceFiles()) {
+            project.removeSourceFile(sourceFile)
+          }
+        })
+    }
+  })
 
   /**
-   * Add a class to source file
+   * Test implementation with isolated state
+   *
+   * Creates a fresh Project instance per test to prevent test pollution.
    */
-  private addClass(sourceFile: SourceFile, config: ClassConfig): void {
-    const properties = config.properties?.map((p) => ({
-      name: p.name,
-      type: p.type,
-      isReadonly: p.readonly,
-      hasQuestionToken: p.optional
-    })) ?? []
-
-    const methods = config.methods?.map((m) => ({
-      name: m.name,
-      isStatic: m.isStatic,
-      isAsync: m.isAsync,
-      parameters: m.params.map((p) => ({
-        name: p.name,
-        type: p.type,
-        hasQuestionToken: p.optional
-      })),
-      returnType: m.returnType,
-      statements: m.body
-    })) ?? []
-
-    const statics = config.statics?.map((s) => ({
-      name: s.name,
-      isStatic: true,
-      type: s.type,
-      initializer: s.value
-    })) ?? []
-
-    const classDecl = sourceFile.addClass({
-      name: config.name,
-      isExported: config.isExported ?? true,
-      extends: config.extends,
-      implements: config.implements,
-      properties: [...properties, ...statics],
-      methods
-    })
-
-    if (config.jsdoc) {
-      classDecl.addJsDoc({ description: config.jsdoc })
-    }
-  }
-
-  /**
-   * Reset the project (clear all files)
-   */
-  reset(): void {
-    for (const sourceFile of this.project.getSourceFiles()) {
-      this.project.removeSourceFile(sourceFile)
-    }
-  }
-
-  /**
-   * Get compilation diagnostics for a source file
-   */
-  getDiagnostics(code: string): ReadonlyArray<{ line: number; column: number; message: string }> {
-    const sourceFile = this.project.createSourceFile("__check__.ts", code, { overwrite: true })
-    const diagnostics = sourceFile.getPreEmitDiagnostics()
-
-    return diagnostics.map((d) => {
-      const start = d.getStart()
-      const lineAndCol = start !== undefined
-        ? sourceFile.getLineAndColumnAtPos(start)
-        : { line: 0, column: 0 }
-
-      return {
-        line: lineAndCol.line,
-        column: lineAndCol.column,
-        message: d.getMessageText().toString()
+  static readonly Test: Layer.Layer<TemplateCompiler> = Layer.sync(TemplateCompiler, () => {
+    // Fresh Project instance per test - isolated from Live
+    const project = new Project({
+      useInMemoryFileSystem: true,
+      compilerOptions: {
+        strict: true,
+        target: 99,
+        module: 99,
+        moduleResolution: 100,
+        declaration: true,
+        skipLibCheck: true
       }
     })
-  }
-}
 
-// ============================================================================
-// Singleton Compiler Instance
-// ============================================================================
-
-/**
- * Shared compiler instance
+    // Helper functions (same as Live)
+    const addFileHeader = (sourceFile: SourceFile, title: string, description: string): void => {
+      sourceFile.addStatements(`/**
+ * ${title}
  *
- * Reuses ts-morph Project for better performance.
+ * ${description}
+ *
+ * @generated This file was generated by monorepo-library-generator
  */
-let sharedCompiler: TemplateCompiler | null = null
+`)
+    }
 
-/**
- * Get shared compiler instance
- */
-export function getCompiler(): TemplateCompiler {
-  if (!sharedCompiler) {
-    sharedCompiler = new TemplateCompiler()
-  }
-  return sharedCompiler
-}
+    const addInterface = (sourceFile: SourceFile, config: InterfaceConfig): void => {
+      const properties = config.properties.map((p) => ({
+        name: p.name,
+        type: p.type,
+        isReadonly: p.readonly,
+        hasQuestionToken: p.optional
+      }))
 
-/**
- * Create a fresh compiler instance
- */
-export function createCompiler(): TemplateCompiler {
-  return new TemplateCompiler()
+      const methods =
+        config.methods?.map((m) => ({
+          name: m.name,
+          parameters: m.params.map((p) => ({
+            name: p.name,
+            type: p.type,
+            hasQuestionToken: p.optional
+          })),
+          returnType: m.returnType
+        })) ?? []
+
+      const interfaceDecl = sourceFile.addInterface({
+        name: config.name,
+        isExported: config.isExported ?? true,
+        extends: config.extends,
+        properties,
+        methods
+      })
+
+      if (config.jsdoc) {
+        interfaceDecl.addJsDoc({ description: config.jsdoc })
+      }
+    }
+
+    const addClass = (sourceFile: SourceFile, config: ClassConfig): void => {
+      const properties =
+        config.properties?.map((p) => ({
+          name: p.name,
+          type: p.type,
+          isReadonly: p.readonly,
+          hasQuestionToken: p.optional
+        })) ?? []
+
+      const methods =
+        config.methods?.map((m) => ({
+          name: m.name,
+          isStatic: m.isStatic,
+          isAsync: m.isAsync,
+          parameters: m.params.map((p) => ({
+            name: p.name,
+            type: p.type,
+            hasQuestionToken: p.optional
+          })),
+          returnType: m.returnType,
+          statements: m.body
+        })) ?? []
+
+      const statics =
+        config.statics?.map((s) => ({
+          name: s.name,
+          isStatic: true,
+          type: s.type,
+          initializer: s.value
+        })) ?? []
+
+      const classDecl = sourceFile.addClass({
+        name: config.name,
+        isExported: config.isExported ?? true,
+        extends: config.extends,
+        implements: config.implements,
+        properties: [...properties, ...statics],
+        methods
+      })
+
+      if (config.jsdoc) {
+        classDecl.addJsDoc({ description: config.jsdoc })
+      }
+    }
+
+    const interpolateConfig = <T>(config: T, context: TemplateContext): Effect.Effect<T, never> =>
+      interpolateDeep(config, context).pipe(
+        Effect.catchAll((error) =>
+          Effect.succeed(config).pipe(
+            Effect.tap(() =>
+              Effect.logWarning(
+                `Interpolation failed: ${error instanceof Error ? error.message : String(error)}, using original config`
+              )
+            )
+          )
+        )
+      )
+
+    const processContent = (
+      sourceFile: SourceFile,
+      content: ContentDefinition,
+      context: TemplateContext
+    ): Effect.Effect<void, CompilationError> =>
+      Effect.gen(function* () {
+        switch (content.type) {
+          case 'raw': {
+            const value = interpolateSync(content.value, context)
+            sourceFile.insertText(sourceFile.getEnd(), `\n${value}\n`)
+            break
+          }
+          case 'contextTag': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              ContextTagConfig,
+              never
+            >
+            addContextTagClass(sourceFile, config)
+            break
+          }
+          case 'taggedError': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              TaggedErrorConfig,
+              never
+            >
+            addTaggedErrorClass(sourceFile, config)
+            break
+          }
+          case 'schema': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              SchemaConfig,
+              never
+            >
+            addSchemaDefinition(sourceFile, config)
+            break
+          }
+          case 'interface': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              InterfaceConfig,
+              never
+            >
+            addInterface(sourceFile, config)
+            break
+          }
+          case 'class': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              ClassConfig,
+              never
+            >
+            addClass(sourceFile, config)
+            break
+          }
+          case 'constant': {
+            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
+              ConstantConfig,
+              never
+            >
+            addConstExport(sourceFile, config.name, config.type, config.value, config.jsdoc)
+            break
+          }
+          case 'rpcDefinition':
+          case 'fragment':
+            break
+        }
+      })
+
+    const processSection = (
+      sourceFile: SourceFile,
+      section: SectionDefinition,
+      context: TemplateContext
+    ): Effect.Effect<void, CompilationError> =>
+      Effect.gen(function* () {
+        if (section.condition && !context[section.condition]) {
+          return
+        }
+        if (section.title) {
+          const title = interpolateSync(section.title, context)
+          addSectionComment(sourceFile, title)
+        }
+        const contents = Array.isArray(section.content) ? section.content : [section.content]
+        for (const content of contents) {
+          yield* processContent(sourceFile, content, context)
+        }
+      })
+
+    const processImports = (
+      sourceFile: SourceFile,
+      imports: ReadonlyArray<ImportDefinition>,
+      context: TemplateContext
+    ): Effect.Effect<void, CompilationError> =>
+      Effect.gen(function* () {
+        for (const imp of imports) {
+          if (imp.condition && !context[imp.condition]) {
+            continue
+          }
+          const items = imp.items.map((item) => interpolateSync(item, context))
+          const from = interpolateSync(imp.from, context)
+          if (imp.isTypeOnly) {
+            addTypeImport(sourceFile, from, items)
+          } else if (from === 'effect') {
+            addEffectImports(sourceFile, items)
+          } else {
+            addImport(sourceFile, from, items)
+          }
+        }
+      })
+
+    const processConditionalContent = (
+      sourceFile: SourceFile,
+      content: ConditionalContent,
+      context: TemplateContext
+    ): Effect.Effect<void, CompilationError> =>
+      Effect.gen(function* () {
+        if (content.imports) {
+          yield* processImports(sourceFile, content.imports, context)
+        }
+        for (const section of content.sections) {
+          yield* processSection(sourceFile, section, context)
+        }
+      })
+
+    return {
+      compile: (template, context) =>
+        Effect.gen(function* () {
+          const startTime = Date.now()
+          yield* templateCompilations.pipe(
+            Metric.tagged('template_id', template.id),
+            Metric.increment
+          )
+          const sourceFile = project.createSourceFile(`${template.id.replace('/', '-')}.ts`, '', {
+            overwrite: true
+          })
+          const title = interpolateSync(template.meta.title, context)
+          const description = interpolateSync(template.meta.description, context)
+          addFileHeader(sourceFile, title, description)
+          yield* processImports(sourceFile, template.imports, context)
+          for (const section of template.sections) {
+            yield* processSection(sourceFile, section, context)
+          }
+          if (template.conditionals) {
+            for (const [conditionKey, content] of Object.entries(template.conditionals)) {
+              if (context[conditionKey]) {
+                yield* processConditionalContent(sourceFile, content, context)
+              }
+            }
+          }
+          sourceFile.formatText({ indentSize: 2, convertTabsToSpaces: true })
+          const result = sourceFile.getFullText()
+          const duration = Date.now() - startTime
+          yield* taggedTemplateDuration(template.id).pipe(Metric.update(duration))
+          return result
+        }).pipe(
+          Effect.catchAll((error) =>
+            Effect.fail(
+              new CompilationError({
+                templateId: template.id,
+                message: error instanceof Error ? error.message : String(error)
+              })
+            )
+          ),
+          Effect.catchAllDefect((defect) =>
+            Effect.fail(
+              new CompilationError({
+                templateId: template.id,
+                message: defect instanceof Error ? defect.message : String(defect)
+              })
+            )
+          ),
+          Effect.withSpan(`template.compile.${template.id}`, {
+            attributes: { 'template.id': template.id, 'context.className': context.className }
+          })
+        ),
+
+      getDiagnostics: (code) =>
+        Effect.sync(() => {
+          const sourceFile = project.createSourceFile('__check__.ts', code, { overwrite: true })
+          const diagnostics = sourceFile.getPreEmitDiagnostics()
+          return diagnostics.map((d) => {
+            const start = d.getStart()
+            const lineAndCol =
+              start !== undefined ? sourceFile.getLineAndColumnAtPos(start) : { line: 0, column: 0 }
+            return {
+              line: lineAndCol.line,
+              column: lineAndCol.column,
+              message: d.getMessageText().toString()
+            }
+          })
+        }),
+
+      reset: () =>
+        Effect.sync(() => {
+          for (const sourceFile of project.getSourceFiles()) {
+            project.removeSourceFile(sourceFile)
+          }
+        })
+    }
+  })
 }

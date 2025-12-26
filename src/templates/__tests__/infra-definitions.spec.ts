@@ -6,12 +6,21 @@
 
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
-import { createCompiler } from "../core/compiler"
-import type { TemplateContext } from "../core/types"
+import { TemplateCompiler } from "../core/compiler"
+import type { TemplateContext, TemplateDefinition } from "../core/types"
 import {
   infraErrorsTemplate,
   infraServiceTemplate
 } from "../definitions"
+
+/**
+ * Compile a template using the Effect service pattern
+ */
+const compile = (template: TemplateDefinition, ctx: TemplateContext) =>
+  Effect.gen(function* () {
+    const compiler = yield* TemplateCompiler
+    return yield* compiler.compile(template, ctx)
+  }).pipe(Effect.provide(TemplateCompiler.Test))
 
 describe("Infrastructure Template Definitions", () => {
   const context: TemplateContext = {
@@ -32,9 +41,8 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should compile with all error types", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraErrorsTemplate, context)
+        compile(infraErrorsTemplate, context)
       )
 
       // Check all error types
@@ -49,9 +57,8 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should compile with error union type", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraErrorsTemplate, context)
+        compile(infraErrorsTemplate, context)
       )
 
       expect(result).toContain("type CacheServiceError")
@@ -61,18 +68,16 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should include Data import", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraErrorsTemplate, context)
+        compile(infraErrorsTemplate, context)
       )
 
       expect(result).toContain('import { Data } from "effect"')
     })
 
     it("should include static create methods", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraErrorsTemplate, context)
+        compile(infraErrorsTemplate, context)
       )
 
       expect(result).toContain("static create(")
@@ -86,9 +91,8 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should compile with Context.Tag", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, context)
+        compile(infraServiceTemplate, context)
       )
 
       expect(result).toContain("class CacheService extends Context.Tag")
@@ -96,9 +100,8 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should compile with service interface", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, context)
+        compile(infraServiceTemplate, context)
       )
 
       expect(result).toContain("readonly get:")
@@ -110,9 +113,8 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should compile with static layers", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, context)
+        compile(infraServiceTemplate, context)
       )
 
       expect(result).toContain("static readonly Live")
@@ -122,18 +124,16 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should include Effect imports", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, context)
+        compile(infraServiceTemplate, context)
       )
 
       expect(result).toContain('import { Effect, Layer, Option, Context } from "effect"')
     })
 
     it("should include error imports", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, context)
+        compile(infraServiceTemplate, context)
       )
 
       expect(result).toContain("CacheInternalError")
@@ -142,9 +142,8 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should include dev layer with logging", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, context)
+        compile(infraServiceTemplate, context)
       )
 
       expect(result).toContain("Effect.logDebug")
@@ -152,9 +151,8 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should include auto layer with environment detection", async () => {
-      const compiler = createCompiler()
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, context)
+        compile(infraServiceTemplate, context)
       )
 
       expect(result).toContain("Layer.suspend")
@@ -167,7 +165,6 @@ describe("Infrastructure Template Definitions", () => {
 
   describe("Variable interpolation", () => {
     it("should interpolate className in errors template", async () => {
-      const compiler = createCompiler()
       const dbContext: TemplateContext = {
         ...context,
         className: "Database",
@@ -176,7 +173,7 @@ describe("Infrastructure Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(infraErrorsTemplate, dbContext)
+        compile(infraErrorsTemplate, dbContext)
       )
 
       expect(result).toContain("DatabaseBaseError")
@@ -185,7 +182,6 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should interpolate className in service template", async () => {
-      const compiler = createCompiler()
       const dbContext: TemplateContext = {
         ...context,
         className: "Database",
@@ -194,7 +190,7 @@ describe("Infrastructure Template Definitions", () => {
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, dbContext)
+        compile(infraServiceTemplate, dbContext)
       )
 
       expect(result).toContain("DatabaseService")
@@ -202,14 +198,13 @@ describe("Infrastructure Template Definitions", () => {
     })
 
     it("should interpolate scope in imports", async () => {
-      const compiler = createCompiler()
       const customScopeContext: TemplateContext = {
         ...context,
         scope: "@acme"
       }
 
       const result = await Effect.runPromise(
-        compiler.compile(infraServiceTemplate, customScopeContext)
+        compile(infraServiceTemplate, customScopeContext)
       )
 
       expect(result).toContain("@acme/env")
