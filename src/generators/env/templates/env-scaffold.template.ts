@@ -38,6 +38,7 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
   })
 
   // Imports
+  builder.addRaw("import { Redacted } from \"effect\"")
   builder.addRaw("import { Config, createEnv } from \"./createEnv\"")
   builder.addBlankLine()
 
@@ -67,7 +68,7 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
     "    DATABASE_URL: Config.redacted(\"DATABASE_URL\").pipe("
   )
   builder.addRaw(
-    "      Config.withDefault(\"postgresql://localhost:5432/dev\")"
+    "      Config.withDefault(Redacted.make(\"postgresql://localhost:5432/dev\"))"
   )
   builder.addRaw(
     "    ),"
@@ -88,7 +89,7 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
     "    SUPABASE_ANON_KEY: Config.redacted(\"SUPABASE_ANON_KEY\").pipe("
   )
   builder.addRaw(
-    "      Config.withDefault(\"dev-anon-key\")"
+    "      Config.withDefault(Redacted.make(\"dev-anon-key\"))"
   )
   builder.addRaw(
     "    ),"
@@ -97,7 +98,7 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
     "    SUPABASE_SERVICE_ROLE_KEY: Config.redacted(\"SUPABASE_SERVICE_ROLE_KEY\").pipe("
   )
   builder.addRaw(
-    "      Config.withDefault(\"dev-service-role-key\")"
+    "      Config.withDefault(Redacted.make(\"dev-service-role-key\"))"
   )
   builder.addRaw(
     "    ),"
@@ -201,6 +202,37 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
   builder.addRaw(
     "    ),"
   )
+  builder.addRaw(
+    "    OTEL_METRICS_EXPORT_INTERVAL_MS: Config.string(\"OTEL_METRICS_EXPORT_INTERVAL_MS\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"60000\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addRaw(
+    "    OTEL_TRACES_SAMPLER_ARG: Config.string(\"OTEL_TRACES_SAMPLER_ARG\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"1.0\")"
+  )
+  builder.addRaw(
+    "    ),"
+  )
+  builder.addBlankLine()
+
+  builder.addRaw("    // Runtime environment")
+  builder.addRaw(
+    "    NODE_ENV: Config.string(\"NODE_ENV\").pipe("
+  )
+  builder.addRaw(
+    "      Config.withDefault(\"development\")"
+  )
+  builder.addRaw(
+    "    )"
+  )
+
   // Add any user-defined server vars (excluding infrastructure vars already defined above)
   const infraVars = new Set([
     "DATABASE_URL",
@@ -217,34 +249,15 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
     "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
     "OTEL_TRACES_ENABLED",
     "OTEL_METRICS_ENABLED",
-    "OTEL_METRICS_EXPORT_INTERVAL_MS"
+    "OTEL_METRICS_EXPORT_INTERVAL_MS",
+    "OTEL_TRACES_SAMPLER_ARG",
+    "NODE_ENV"
   ])
   const userServerVars = serverVars.filter((v) => !infraVars.has(v.name))
 
-  // Last infra var - add comma only if there are user vars
   if (userServerVars.length > 0) {
-    builder.addRaw(
-      "    OTEL_METRICS_EXPORT_INTERVAL_MS: Config.string(\"OTEL_METRICS_EXPORT_INTERVAL_MS\").pipe("
-    )
-    builder.addRaw(
-      "      Config.withDefault(\"60000\")"
-    )
-    builder.addRaw(
-      "    ),"
-    )
-  } else {
-    builder.addRaw(
-      "    OTEL_METRICS_EXPORT_INTERVAL_MS: Config.string(\"OTEL_METRICS_EXPORT_INTERVAL_MS\").pipe("
-    )
-    builder.addRaw(
-      "      Config.withDefault(\"60000\")"
-    )
-    builder.addRaw(
-      "    )"
-    )
-  }
-
-  if (userServerVars.length > 0) {
+    // Need to add comma after NODE_ENV since there are more vars
+    builder.addRaw(",")
     builder.addBlankLine()
     builder.addRaw("    // User-defined server variables")
     for (let i = 0; i < userServerVars.length; i++) {
@@ -275,28 +288,9 @@ export function generateEnvScaffoldFile(vars: Array<ParsedEnvVar>) {
   builder.addRaw("  },")
   builder.addBlankLine()
 
-  // Shared section
+  // Shared section (empty - NODE_ENV is in server section for proper type inference)
   builder.addRaw("  // Shared variables (available in both contexts)")
-  builder.addRaw("  shared: {")
-  if (sharedVars.length === 0) {
-    builder.addRaw(
-      "    NODE_ENV: Config.string(\"NODE_ENV\").pipe("
-    )
-    builder.addRaw(
-      "      Config.withDefault(\"development\")"
-    )
-    builder.addRaw(
-      "    )"
-    )
-  } else {
-    for (let i = 0; i < sharedVars.length; i++) {
-      const varDef = sharedVars[i]
-      const configCall = generateConfigCall(varDef)
-      const isLast = i === sharedVars.length - 1
-      builder.addRaw(`    ${varDef.name}: ${configCall}${isLast ? "" : ","}`)
-    }
-  }
-  builder.addRaw("  },")
+  builder.addRaw("  shared: {},")
   builder.addBlankLine()
 
   // Client prefix

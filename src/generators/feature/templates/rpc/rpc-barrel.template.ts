@@ -127,9 +127,7 @@ export {
   getHandlerContextOptional,
   type HandlerContext,
 
-  // Route selection
-  RouteTag,
-  type RouteType,
+  // Route selection utilities (RouteTag/RouteType re-exported from contract above)
   createMiddlewareSelector,
   type MiddlewareSelectorConfig,
 

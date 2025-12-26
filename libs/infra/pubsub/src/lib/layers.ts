@@ -62,7 +62,8 @@ export const PubsubRedisLayer = Layer.scoped(
     const pubsubClient = redis.pubsub
 
     // Track active topic subscriptions for cleanup
-    const activeSubscribers = new Map<string, Fiber.Fiber<void, never>>()
+    // Error type is unknown to accommodate any provider error type from Redis subscription
+    const activeSubscribers = new Map<string, Fiber.Fiber<void, unknown>>()
 
     /**
      * Create a typed topic handle with Schema-based serialization
@@ -105,8 +106,9 @@ export const PubsubRedisLayer = Layer.scoped(
           publish: (message: A) =>
             Effect.gen(function*() {
               // Type-safe encode using Schema
-              const serialized = yield* encode(message).pipe(Effect.orDie)
-              const count = yield* pubsubClient.publish(channelName, serialized)
+              const serialized = yield* encode(message)
+              // Redis errors are converted to defects (orDie) since they indicate infrastructure failure
+              const count = yield* pubsubClient.publish(channelName, serialized).pipe(Effect.orDie)
               // Also publish to local PubSub for same-process subscribers
               yield* PubSub.publish(localPubSub, message)
               return count > 0
@@ -116,8 +118,8 @@ export const PubsubRedisLayer = Layer.scoped(
             Effect.gen(function*() {
               let success = false
               for (const message of messages) {
-                const serialized = yield* encode(message).pipe(Effect.orDie)
-                const count = yield* pubsubClient.publish(channelName, serialized)
+                const serialized = yield* encode(message)
+                const count = yield* pubsubClient.publish(channelName, serialized).pipe(Effect.orDie)
                 yield* PubSub.publish(localPubSub, message)
                 if (count > 0) success = true
               }
@@ -178,8 +180,8 @@ export const PubsubRedisLayer = Layer.scoped(
           return {
             publish: (message: A) =>
               Effect.gen(function*() {
-                const serialized = yield* encode(message).pipe(Effect.orDie)
-                const count = yield* pubsubClient.publish(name, serialized)
+                const serialized = yield* encode(message)
+                const count = yield* pubsubClient.publish(name, serialized).pipe(Effect.orDie)
                 yield* PubSub.publish(localPubSub, message)
                 return count > 0
               }),
@@ -188,8 +190,8 @@ export const PubsubRedisLayer = Layer.scoped(
               Effect.gen(function*() {
                 let success = false
                 for (const message of messages) {
-                  const serialized = yield* encode(message).pipe(Effect.orDie)
-                  const count = yield* pubsubClient.publish(name, serialized)
+                  const serialized = yield* encode(message)
+                  const count = yield* pubsubClient.publish(name, serialized).pipe(Effect.orDie)
                   yield* PubSub.publish(localPubSub, message)
                   if (count > 0) success = true
                 }

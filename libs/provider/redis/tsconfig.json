@@ -2,6 +2,8 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "types": [
       "node"

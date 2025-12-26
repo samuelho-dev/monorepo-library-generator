@@ -90,3 +90,8 @@ export class InvalidFileTypeError extends Data.TaggedError("InvalidFileTypeError
  * Union of all storage errors
  */
 export type StorageServiceError = StorageError | FileNotFoundError | BucketNotFoundError | UploadFailedError | DownloadFailedError | FileSizeExceededError | InvalidFileTypeError
+
+/**
+ * Alias for index exports - union of all storage infrastructure errors
+ */
+export type StorageInfraError = StorageServiceError

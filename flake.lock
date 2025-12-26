@@ -7,11 +7,11 @@
         "sops-nix": "sops-nix"
       },
       "locked": {
-        "lastModified": 1766649441,
-        "narHash": "sha256-UNxnlyBQyhnuLdzsvHZRg1YD0psC+x2KMUXBb1CSu4U=",
+        "lastModified": 1766722005,
+        "narHash": "sha256-96YmZjFcEp2Pv/Wt925Ul4EOA+FnSVGiQp4t4PTL9mM=",
         "owner": "samuelho-dev",
         "repo": "dev-config",
-        "rev": "767bac52a51947494060936dd14955293e103bcb",
+        "rev": "56285f51bd68bfd781a7505221ea15c7cabc1629",
         "type": "github"
       },
       "original": {
@@ -59,11 +59,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1766309749,
-        "narHash": "sha256-3xY8CZ4rSnQ0NqGhMKAy5vgC+2IVK0NoVEzDoOh4DA4=",
+        "lastModified": 1766651565,
+        "narHash": "sha256-QEhk0eXgyIqTpJ/ehZKg9IKS7EtlWxF3N7DXy42zPfU=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "a6531044f6d0bef691ea18d4d4ce44d0daa6e816",
+        "rev": "3e2499d5539c16d0d173ba53552a4ff8547f4539",
         "type": "github"
       },
       "original": {

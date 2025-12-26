@@ -107,20 +107,16 @@ export { ${className}RedisLayer } from "./lib/layers"
       return `// Redis-backed distributed layer
 export {
   ${className}RedisLayer,
-  RedisQueueClientTag,
   withJobEnqueuing
 } from "./lib/layers"
-export type { RedisQueueClient } from "./lib/layers"
 `
 
     case "pubsub":
       return `// Redis-backed distributed layer
 export {
   ${className}RedisLayer,
-  RedisPubSubClientTag,
   withEventPublishing
 } from "./lib/layers"
-export type { RedisPubSubClient } from "./lib/layers"
 `
 
     case "logging":

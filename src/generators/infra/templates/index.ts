@@ -59,7 +59,7 @@ export {
   // Cache
   generateCacheInterfaceFile,
   generateCacheRedisLayerFile,
-  // Observability
+  // Observability (LoggingService, MetricsService - consumes provider-opentelemetry)
   generateLoggingServiceFile,
   generateMetricsServiceFile,
   generateObservabilityConfigFile,
@@ -67,9 +67,7 @@ export {
   generateObservabilityErrorsFile,
   generateObservabilityIndexFile,
   generateObservabilityPresetsFile,
-  generateObservabilitySdkFile,
   generateObservabilitySupervisorFile,
-  generateOtelProviderFile,
   // Shared primitives
   generatePrimitiveErrorsFile,
   generatePrimitiveIndexFile,

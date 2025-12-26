@@ -360,13 +360,14 @@ export class StorageService extends Context.Tag("StorageService")<
           ),
 
         createSignedUrl: (bucket, path, options) => {
+          // Extract expiresIn as separate parameter for Supabase API
+          const expiresIn = options?.expiresIn ?? config.signedUrlExpiresIn ?? 3600
           const signedUrlOptions = {
-            expiresIn: options?.expiresIn ?? config.signedUrlExpiresIn ?? 3600,
             ...(options?.download !== undefined && { download: options.download }),
             ...(options?.transform !== undefined && { transform: options.transform })
           }
           return storage
-            .createSignedUrl(bucket, path, signedUrlOptions)
+            .createSignedUrl(bucket, path, expiresIn, signedUrlOptions)
             .pipe(
               Effect.catchTag("SupabaseFileNotFoundError", mapFileNotFoundError),
               Effect.catchAll(mapStorageError),

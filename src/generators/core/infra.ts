@@ -47,9 +47,7 @@ import {
   generateObservabilityErrorsFile,
   generateObservabilityIndexFile,
   generateObservabilityPresetsFile,
-  generateObservabilitySdkFile,
   generateObservabilitySupervisorFile,
-  generateOtelProviderFile,
   generatePrimitiveErrorsFile,
   generatePrimitiveIndexFile,
   generatePubSubInterfaceFile,
@@ -475,20 +473,9 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
           break
 
         case "observability":
-          // Observability infrastructure generates unified tracing, logging, and metrics
+          // Observability infrastructure generates logging and metrics services
+          // that consume OpenTelemetryProvider from provider-opentelemetry
           // All files in lib/ directory
-          // OtelProvider - the "Redis" equivalent for observability
-          yield* adapter.writeFile(
-            `${sourceLibPath}/provider.ts`,
-            generateOtelProviderFile(templateOptions)
-          )
-          filesGenerated.push(`${sourceLibPath}/provider.ts`)
-          // SDK layer factories (used internally by OtelProvider, exported for advanced users)
-          yield* adapter.writeFile(
-            `${sourceLibPath}/sdk.ts`,
-            generateObservabilitySdkFile(templateOptions)
-          )
-          filesGenerated.push(`${sourceLibPath}/sdk.ts`)
           yield* adapter.writeFile(
             `${sourceLibPath}/supervisor.ts`,
             generateObservabilitySupervisorFile(templateOptions)

@@ -110,9 +110,16 @@ export interface OtlpPresetConfig {
  */
 export const OtlpPreset = (config: OtlpPresetConfig) => {
   const baseUrl = config.endpoint ?? "http://localhost:4318"
-  const headers = config.authorization
-    ? { Authorization: config.authorization }
-    : undefined
+
+  // Build exporter configs - only include headers if authorization is provided
+  // This avoids exactOptionalPropertyTypes issues with undefined headers
+  const traceExporterConfig = config.authorization
+    ? { url: \`\${baseUrl}/v1/traces\`, headers: { Authorization: config.authorization } }
+    : { url: \`\${baseUrl}/v1/traces\` }
+
+  const metricExporterConfig = config.authorization
+    ? { url: \`\${baseUrl}/v1/metrics\`, headers: { Authorization: config.authorization } }
+    : { url: \`\${baseUrl}/v1/metrics\` }
 
   return NodeSdk.layer(() => ({
     resource: {
@@ -120,16 +127,10 @@ export const OtlpPreset = (config: OtlpPresetConfig) => {
       serviceVersion: config.serviceVersion ?? "0.0.0",
     },
     spanProcessor: new BatchSpanProcessor(
-      new OTLPTraceExporter({
-        url: \`\${baseUrl}/v1/traces\`,
-        headers,
-      })
+      new OTLPTraceExporter(traceExporterConfig)
     ),
     metricReader: new PeriodicExportingMetricReader({
-      exporter: new OTLPMetricExporter({
-        url: \`\${baseUrl}/v1/metrics\`,
-        headers,
-      }),
+      exporter: new OTLPMetricExporter(metricExporterConfig),
       exportIntervalMillis: config.metricsIntervalMs ?? 60000,
     })
   }))

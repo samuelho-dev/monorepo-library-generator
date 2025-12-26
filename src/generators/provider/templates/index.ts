@@ -50,3 +50,13 @@ export {
   generateSupabaseStorageServiceFile,
   generateSupabaseTypesFile
 } from "./supabase/index"
+
+// OpenTelemetry provider templates
+export {
+  generateOtelErrorsFile,
+  generateOtelIndexFile,
+  generateOtelServiceFile,
+  generateOtelSpecFile,
+  generateOtelTypesFile,
+  generateOtelTypesOnlyFile
+} from "./opentelemetry/index"

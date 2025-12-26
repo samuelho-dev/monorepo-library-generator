@@ -5,39 +5,35 @@ import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node"
 import { env } from "@samuelho-dev/env"
 import { Context, Layer } from "effect"
+import type { OpenTelemetryConfig } from "./types"
 
 /**
- * Observability OTEL Provider
+ * OpenTelemetry Provider Service
  *
- * OpenTelemetry SDK provider service for observability infrastructure.
-
-This is the "Redis" equivalent for observability - the underlying provider
-that LoggingService and MetricsService consume.
+ * OpenTelemetry SDK provider for Effect integration.
 
 Provides:
-- SDK initialization with trace and metrics exporters
-- Live/Test/Dev/Auto layer presets
-- Graceful shutdown support
-- Configuration from environment variables
+- OpenTelemetryProvider: Context.Tag for OTEL SDK access
+- Static layers: Live, Test, Dev, Auto
+- Automatic Effect.withSpan() and Effect.Metric export
 
-Usage:
-- LoggingService.Live internally provides OtelProvider.Live
-- MetricsService.Live internally provides OtelProvider.Live
-- For custom setup: Layer.provide(LoggingService.WithOtel, myCustomOtelProvider)
+This provider is consumed by infra-observability's LoggingService and MetricsService.
+When this layer is composed in the application, Effect's built-in tracing and
+metrics automatically export to OpenTelemetry.
  *
- * @module @samuelho-dev/infra-observability/provider
+ * @module @samuelho-dev/provider-opentelemetry/service
  * @see https://effect.website/docs/observability/otel-tracing
  */
 // ============================================================================
-// OtelProvider Interface
+// Service Interface
 // ============================================================================
 /**
- * OtelProvider operations interface
+ * OpenTelemetry provider operations interface
  *
- * The underlying OTEL SDK that LoggingService and MetricsService consume.
+ * Exposes SDK state for service composition.
  * Application code typically doesn't interact with this directly.
  */
-export interface OtelProviderOperations {
+export interface OpenTelemetryProviderOperations {
   /**
    * Whether trace export is enabled
    */
@@ -59,70 +55,72 @@ export interface OtelProviderOperations {
   readonly serviceVersion: string
 }
 
+// ============================================================================
+// Context.Tag
+// ============================================================================
 /**
- * OtelProvider Service
+ * OpenTelemetry Provider Service
  *
- * OpenTelemetry SDK provider for observability infrastructure.
- * This is consumed by LoggingService and MetricsService internally.
+ * Provides the OTEL SDK layer for Effect integration.
+ * When this layer is composed in the application, Effect.withSpan()
+ * and Effect.Metric automatically export to OpenTelemetry.
  *
  * @example
  * ```typescript
- * // Usually you don't interact with OtelProvider directly.
- * // Instead use LoggingService.Live which internally provides OtelProvider.Live:
- *
+ * import { OpenTelemetryProvider } from "@samuelho-dev/provider-opentelemetry";
  * import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability";
  *
+ * // Application layer composition
  * const AppLayer = Layer.mergeAll(
- *   LoggingService.Live,  // Internally provides OtelProvider.Live
- *   MetricsService.Live,  // Shares the same OTEL SDK
+ *   OpenTelemetryProvider.Live,  // OTEL SDK
+ *   LoggingService.Live,          // Logging with OTEL export
+ *   MetricsService.Live,          // Metrics with OTEL export
  * )
  *
- * // For custom OTEL setup:
- * const customOtel = OtelProvider.make({
- *   serviceName: "my-service",
- *   tracesEndpoint: "http://custom-collector:4318/v1/traces"
- * })
+ * // For custom configuration:
  * const CustomAppLayer = Layer.mergeAll(
- *   Layer.provide(LoggingService.WithOtel, customOtel),
- *   Layer.provide(MetricsService.WithOtel, customOtel),
+ *   OpenTelemetryProvider.make({
+ *     serviceName: "my-api",
+ *     serviceVersion: "1.0.0",
+ *     traces: { endpoint: "http://jaeger:4318/v1/traces" },
+ *   }),
+ *   LoggingService.WithProvider,
+ *   MetricsService.WithProvider,
  * )
  * ```
  */
-export class OtelProvider extends Context.Tag(
-  "@samuelho-dev/infra-observability/OtelProvider"
+export class OpenTelemetryProvider extends Context.Tag(
+  "@samuelho-dev/provider-opentelemetry/OpenTelemetryProvider"
 )<
-  OtelProvider,
-  OtelProviderOperations
+  OpenTelemetryProvider,
+  OpenTelemetryProviderOperations
 >() {
   // ===========================================================================
   // Factory: Create Custom Provider
   // ===========================================================================
 
   /**
-   * Create a custom OtelProvider layer from configuration
+   * Create a custom OpenTelemetryProvider layer from configuration
    *
    * @example
    * ```typescript
-   * const customOtel = OtelProvider.make({
+   * const customOtel = OpenTelemetryProvider.make({
    *   serviceName: "my-api",
    *   serviceVersion: "1.0.0",
-   *   tracesEndpoint: "http://jaeger:4318/v1/traces",
-   *   metricsEndpoint: "http://prometheus:4318/v1/metrics",
-   *   metricsExportIntervalMs: 30000
+   *   traces: {
+   *     endpoint: "http://jaeger:4318/v1/traces",
+   *     samplingRatio: 0.1,
+   *   },
+   *   metrics: {
+   *     endpoint: "http://prometheus:4318/v1/metrics",
+   *     exportIntervalMs: 30000,
+   *   },
    * })
    * ```
    */
-  static make(config: {
-    readonly serviceName: string
-    readonly serviceVersion?: string
-    readonly tracesEnabled?: boolean
-    readonly tracesEndpoint?: string
-    readonly metricsEnabled?: boolean
-    readonly metricsEndpoint?: string
-    readonly metricsExportIntervalMs?: number
-  }) {
-    const tracesEnabled = config.tracesEnabled !== false
-    const metricsEnabled = config.metricsEnabled !== false
+  static make(config: OpenTelemetryConfig) {
+    const tracesEnabled = config.traces?.enabled !== false
+    const metricsEnabled = config.metrics?.enabled !== false
     const serviceVersion = config.serviceVersion ?? "0.0.0"
 
     // Create the OTEL SDK layer
@@ -130,26 +128,27 @@ export class OtelProvider extends Context.Tag(
       resource: {
         serviceName: config.serviceName,
         serviceVersion,
+        ...config.resourceAttributes,
       },
       spanProcessor: tracesEnabled
         ? new BatchSpanProcessor(
             new OTLPTraceExporter({
-              url: config.tracesEndpoint ?? "http://localhost:4318/v1/traces",
+              url: config.traces?.endpoint ?? "http://localhost:4318/v1/traces",
             })
           )
         : undefined,
       metricReader: metricsEnabled
         ? new PeriodicExportingMetricReader({
             exporter: new OTLPMetricExporter({
-              url: config.metricsEndpoint ?? "http://localhost:4318/v1/metrics"
+              url: config.metrics?.endpoint ?? "http://localhost:4318/v1/metrics"
             }),
-            exportIntervalMillis: config.metricsExportIntervalMs ?? 60000
+            exportIntervalMillis: config.metrics?.exportIntervalMs ?? 60000
           })
         : undefined,
     }))
 
-    // Create the OtelProvider service layer that depends on SDK initialization
-    const providerLayer = Layer.succeed(OtelProvider, {
+    // Create the OpenTelemetryProvider service layer
+    const providerLayer = Layer.succeed(OpenTelemetryProvider, {
       tracesEnabled,
       metricsEnabled,
       serviceName: config.serviceName,
@@ -177,22 +176,29 @@ export class OtelProvider extends Context.Tag(
    * - OTEL_METRICS_ENABLED: Enable/disable metrics (default: true)
    * - OTEL_METRICS_EXPORT_INTERVAL_MS: Export interval (default: 60000)
    */
-  static readonly Live = OtelProvider.make({
+  static readonly Live = OpenTelemetryProvider.make({
     serviceName: env.OTEL_SERVICE_NAME ?? "unknown-service",
     serviceVersion: env.OTEL_SERVICE_VERSION ?? "0.0.0",
-    tracesEnabled: env.OTEL_TRACES_ENABLED !== "false",
-    tracesEndpoint:
-      env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ??
-      env.OTEL_EXPORTER_OTLP_ENDPOINT ??
-      "http://localhost:4318/v1/traces",
-    metricsEnabled: env.OTEL_METRICS_ENABLED !== "false",
-    metricsEndpoint:
-      env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ??
-      env.OTEL_EXPORTER_OTLP_ENDPOINT ??
-      "http://localhost:4318/v1/metrics",
-    metricsExportIntervalMs: env.OTEL_METRICS_EXPORT_INTERVAL_MS
-      ? Number.parseInt(env.OTEL_METRICS_EXPORT_INTERVAL_MS, 10)
-      : 60000
+    traces: {
+      enabled: env.OTEL_TRACES_ENABLED !== "false",
+      endpoint:
+        env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ??
+        env.OTEL_EXPORTER_OTLP_ENDPOINT ??
+        "http://localhost:4318/v1/traces",
+      samplingRatio: env.OTEL_TRACES_SAMPLER_ARG
+        ? Number.parseFloat(env.OTEL_TRACES_SAMPLER_ARG)
+        : 1.0,
+    },
+    metrics: {
+      enabled: env.OTEL_METRICS_ENABLED !== "false",
+      endpoint:
+        env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ??
+        env.OTEL_EXPORTER_OTLP_ENDPOINT ??
+        "http://localhost:4318/v1/metrics",
+      exportIntervalMs: env.OTEL_METRICS_EXPORT_INTERVAL_MS
+        ? Number.parseInt(env.OTEL_METRICS_EXPORT_INTERVAL_MS, 10)
+        : 60000,
+    },
   })
 
   // ===========================================================================
@@ -205,7 +211,7 @@ export class OtelProvider extends Context.Tag(
    * Provides the service tag but without actual SDK initialization.
    * Effect.withSpan and Effect.Metric still work but data is not exported.
    */
-  static readonly Test = Layer.succeed(OtelProvider, {
+  static readonly Test = Layer.succeed(OpenTelemetryProvider, {
     tracesEnabled: false,
     metricsEnabled: false,
     serviceName: "test-service",
@@ -222,14 +228,19 @@ export class OtelProvider extends Context.Tag(
    * Attempts to connect to localhost:4318 but won't fail if collector
    * is unavailable. Useful for local development with optional observability.
    */
-  static readonly Dev = OtelProvider.make({
+  static readonly Dev = OpenTelemetryProvider.make({
     serviceName: env.OTEL_SERVICE_NAME ?? "dev-service",
     serviceVersion: "0.0.0-dev",
-    tracesEnabled: true,
-    tracesEndpoint: "http://localhost:4318/v1/traces",
-    metricsEnabled: true,
-    metricsEndpoint: "http://localhost:4318/v1/metrics",
-    metricsExportIntervalMs: 30000, // Faster export in dev
+    traces: {
+      enabled: true,
+      endpoint: "http://localhost:4318/v1/traces",
+      samplingRatio: 1.0,
+    },
+    metrics: {
+      enabled: true,
+      endpoint: "http://localhost:4318/v1/metrics",
+      exportIntervalMs: 30000, // Faster export in dev
+    },
   })
 
   // ===========================================================================
@@ -248,12 +259,20 @@ export class OtelProvider extends Context.Tag(
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "production":
-        return OtelProvider.Live
+        return OpenTelemetryProvider.Live
       case "test":
-        return OtelProvider.Test
+        return OpenTelemetryProvider.Test
       default:
         // "development" and other environments use Dev
-        return OtelProvider.Dev
+        return OpenTelemetryProvider.Dev
     }
   })
 }
+
+// ============================================================================
+// Export Alias
+// ============================================================================
+/**
+ * OpenTelemetry alias (shorthand for OpenTelemetryProvider)
+ */
+export { OpenTelemetryProvider as OpenTelemetry }

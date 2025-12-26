@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Unified observability infrastructure with OTEL SDK, LoggingService, and MetricsService",
+  "description": "Unified observability infrastructure with LoggingService and MetricsService (consumes provider-opentelemetry)",
   "exports": {
     ".": {
       "import": "./src/index.ts",

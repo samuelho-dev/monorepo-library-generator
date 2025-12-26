@@ -48,22 +48,23 @@ const pubsubSubscriberGauge = Metric.gauge("pubsub.subscribers", {
  * Topic handle for publish/subscribe operations
  *
  * @typeParam T - Message type
- * @typeParam E - Error type (ParseError for schema validation)
+ * @typeParam E - Error type from schema validation (typically ParseError)
+ * @typeParam ProviderE - Error type from the underlying provider (e.g., RedisPubSubError) - defaults to never for in-memory
  */
-export interface TopicHandle<T, E> {
+export interface TopicHandle<T, E, ProviderE = never> {
   /**
    * Publish a message to all subscribers
    * Validates message against schema before publishing.
    *
    * @returns true if published to at least one subscriber
    */
-  readonly publish: (message: T) => Effect.Effect<boolean, E>
+  readonly publish: (message: T) => Effect.Effect<boolean, E | ProviderE>
 
   /**
    * Publish multiple messages
    * Validates each message against schema before publishing.
    */
-  readonly publishAll: (messages: Iterable<T>) => Effect.Effect<boolean, E>
+  readonly publishAll: (messages: Iterable<T>) => Effect.Effect<boolean, E | ProviderE>
 
   /**
    * Subscribe to receive messages
@@ -78,7 +79,7 @@ export interface TopicHandle<T, E> {
   /**
    * Get current subscriber count
    */
-  readonly subscriberCount: Effect.Effect<number>
+  readonly subscriberCount: Effect.Effect<number, ProviderE>
 }
 
 /**
@@ -148,7 +149,7 @@ export class PubsubService extends Context.Tag(
       name: string,
       schema: Schema.Schema<A, I, never>,
       options?: TopicOptions
-    ) => Effect.Effect<TopicHandle<A, ParseError>>
+    ) => Effect.Effect<TopicHandle<A, ParseError, never>>
 
     /**
      * Create an anonymous topic (not shared)
@@ -161,7 +162,7 @@ export class PubsubService extends Context.Tag(
     readonly createTopic: <A, I>(
       schema: Schema.Schema<A, I, never>,
       options?: TopicOptions
-    ) => Effect.Effect<TopicHandle<A, ParseError>, never, Scope.Scope>
+    ) => Effect.Effect<TopicHandle<A, ParseError, never>, never, Scope.Scope>
 
     /**
      * Health check for monitoring
@@ -194,11 +195,13 @@ export class PubsubService extends Context.Tag(
             const validated = yield* validate(message).pipe(
               Effect.tapError((error) =>
                 Effect.gen(function*() {
-                  yield* pubsubPublishErrorCounter.pipe(
-                    Metric.increment,
+                  // Tag and increment counter - use counter as effect wrapper
+                  const taggedErrorCounter = pubsubPublishErrorCounter.pipe(
                     Metric.tagged("topic", topicName),
-                    Metric.tagged("error", String(error))
+                    Metric.tagged("error", String(error)),
+                    Metric.withConstantInput(1)
                   )
+                  yield* taggedErrorCounter(Effect.void)
                   yield* Effect.logWarning("[PubSub] Validation error", {
                     topic: topicName,
                     error: String(error)
@@ -211,10 +214,12 @@ export class PubsubService extends Context.Tag(
             const published = yield* PubSub.publish(pubsub, validated)
 
             // Track metrics
-            yield* pubsubPublishCounter.pipe(
-              Metric.increment,
-              Metric.tagged("topic", topicName)
+            // Tag and increment counter
+            const taggedCounter = pubsubPublishCounter.pipe(
+              Metric.tagged("topic", topicName),
+              Metric.withConstantInput(1)
             )
+            yield* taggedCounter(Effect.void)
 
             return published
           }).pipe(
@@ -235,11 +240,13 @@ export class PubsubService extends Context.Tag(
               validate(msg).pipe(
                 Effect.tapError((error) =>
                   Effect.gen(function*() {
-                    yield* pubsubPublishErrorCounter.pipe(
-                      Metric.increment,
+                    // Tag and increment error counter
+                    const taggedErrorCounter = pubsubPublishErrorCounter.pipe(
                       Metric.tagged("topic", topicName),
-                      Metric.tagged("error", String(error))
+                      Metric.tagged("error", String(error)),
+                      Metric.withConstantInput(1)
                     )
+                    yield* taggedErrorCounter(Effect.void)
                     yield* Effect.logWarning("[PubSub] Validation error", {
                       topic: topicName,
                       error: String(error)
@@ -253,10 +260,11 @@ export class PubsubService extends Context.Tag(
             const published = yield* PubSub.publishAll(pubsub, validated)
 
             // Track metrics (batch count)
-            yield* pubsubPublishCounter.pipe(
-              Metric.incrementBy(messageArray.length),
-              Metric.tagged("topic", topicName)
+            const taggedBatchCounter = pubsubPublishCounter.pipe(
+              Metric.tagged("topic", topicName),
+              Metric.withConstantInput(messageArray.length)
             )
+            yield* taggedBatchCounter(Effect.void)
 
             return published
           }).pipe(
@@ -269,12 +277,13 @@ export class PubsubService extends Context.Tag(
           ),
 
         subscribe: PubSub.subscribe(pubsub).pipe(
-          Effect.tap(() =>
-            pubsubSubscriberGauge.pipe(
-              Metric.increment,
-              Metric.tagged("topic", topicName)
+          Effect.tap(() => {
+            const taggedSubscriberGauge = pubsubSubscriberGauge.pipe(
+              Metric.tagged("topic", topicName),
+              Metric.withConstantInput(1)
             )
-          )
+            return taggedSubscriberGauge(Effect.void)
+          })
         ),
 
         subscriberCount: Effect.sync(() => 0) // PubSub doesn't expose this directly
@@ -357,11 +366,13 @@ export class PubsubService extends Context.Tag(
             const validated = yield* validate(message).pipe(
               Effect.tapError((error) =>
                 Effect.gen(function*() {
-                  yield* pubsubPublishErrorCounter.pipe(
-                    Metric.increment,
+                  // Tag and increment counter - use counter as effect wrapper
+                  const taggedErrorCounter = pubsubPublishErrorCounter.pipe(
                     Metric.tagged("topic", topicName),
-                    Metric.tagged("error", String(error))
+                    Metric.tagged("error", String(error)),
+                    Metric.withConstantInput(1)
                   )
+                  yield* taggedErrorCounter(Effect.void)
                   yield* Effect.logError("[PubsubService] [DEV] Validation error", {
                     topic: topicName,
                     error: String(error),
@@ -374,10 +385,12 @@ export class PubsubService extends Context.Tag(
             const published = yield* PubSub.publish(pubsub, validated)
 
             // Track metrics
-            yield* pubsubPublishCounter.pipe(
-              Metric.increment,
-              Metric.tagged("topic", topicName)
+            // Tag and increment counter
+            const taggedCounter = pubsubPublishCounter.pipe(
+              Metric.tagged("topic", topicName),
+              Metric.withConstantInput(1)
             )
+            yield* taggedCounter(Effect.void)
 
             yield* Effect.logDebug("[PubsubService] [DEV] Message published", {
               topic: topicName,
@@ -405,11 +418,13 @@ export class PubsubService extends Context.Tag(
               validate(msg).pipe(
                 Effect.tapError((error) =>
                   Effect.gen(function*() {
-                    yield* pubsubPublishErrorCounter.pipe(
-                      Metric.increment,
+                    // Tag and increment error counter
+                    const taggedErrorCounter = pubsubPublishErrorCounter.pipe(
                       Metric.tagged("topic", topicName),
-                      Metric.tagged("error", String(error))
+                      Metric.tagged("error", String(error)),
+                      Metric.withConstantInput(1)
                     )
+                    yield* taggedErrorCounter(Effect.void)
                     yield* Effect.logError("[PubsubService] [DEV] Validation error", {
                       topic: topicName,
                       error: String(error),
@@ -422,11 +437,12 @@ export class PubsubService extends Context.Tag(
 
             const published = yield* PubSub.publishAll(pubsub, validated)
 
-            // Track metrics
-            yield* pubsubPublishCounter.pipe(
-              Metric.incrementBy(messageArray.length),
-              Metric.tagged("topic", topicName)
+            // Track metrics (batch count)
+            const taggedBatchCounter = pubsubPublishCounter.pipe(
+              Metric.tagged("topic", topicName),
+              Metric.withConstantInput(messageArray.length)
             )
+            yield* taggedBatchCounter(Effect.void)
 
             yield* Effect.logDebug("[PubsubService] [DEV] Batch published", {
               topic: topicName,
@@ -449,10 +465,12 @@ export class PubsubService extends Context.Tag(
 
           const subscription = yield* PubSub.subscribe(pubsub)
 
-          yield* pubsubSubscriberGauge.pipe(
-            Metric.increment,
-            Metric.tagged("topic", topicName)
+          // Tag and increment subscriber gauge
+          const taggedSubscriberGauge = pubsubSubscriberGauge.pipe(
+            Metric.tagged("topic", topicName),
+            Metric.withConstantInput(1)
           )
+          yield* taggedSubscriberGauge(Effect.void)
 
           yield* Effect.logInfo("[PubsubService] [DEV] Subscribed to topic", {
             topic: topicName

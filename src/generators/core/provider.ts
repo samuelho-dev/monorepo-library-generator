@@ -52,6 +52,14 @@ import {
   generateSupabaseStorageServiceFile,
   generateSupabaseTypesFile
 } from "../provider/templates/supabase/index"
+import {
+  generateOtelErrorsFile,
+  generateOtelIndexFile,
+  generateOtelServiceFile,
+  generateOtelSpecFile,
+  generateOtelTypesFile,
+  generateOtelTypesOnlyFile
+} from "../provider/templates/opentelemetry/index"
 
 /**
  * Provider Generator Core Options
@@ -154,6 +162,7 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
     const isKyselyProvider = options.name === "kysely" || options.externalService === "Kysely"
     const isSupabaseProvider = options.name === "supabase" || options.externalService === "Supabase"
     const isRedisProvider = options.name === "redis" || options.externalService === "Redis"
+    const isOpenTelemetryProvider = options.name === "opentelemetry" || options.externalService === "OpenTelemetry"
 
     // Generate barrel exports - special providers use specialized templates
     yield* adapter.writeFile(
@@ -164,16 +173,21 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
         ? generateSupabaseIndexFile(templateOptions)
         : isRedisProvider
         ? generateRedisIndexFile(templateOptions)
+        : isOpenTelemetryProvider
+        ? generateOtelIndexFile(templateOptions)
         : generateIndexFile(templateOptions)
     )
     filesGenerated.push(`${options.sourceRoot}/index.ts`)
 
     // Generate types.ts for type-only exports (zero runtime overhead)
-    // Redis uses flat lib/ structure, so it needs a specialized template
+    // Redis and OpenTelemetry use flat lib/ structure, so they need specialized templates
     const workspaceRoot = adapter.getWorkspaceRoot()
     if (isRedisProvider) {
       const redisTypesOnlyContent = generateRedisTypesOnlyFile(templateOptions)
       yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, redisTypesOnlyContent)
+    } else if (isOpenTelemetryProvider) {
+      const otelTypesOnlyContent = generateOtelTypesOnlyFile(templateOptions)
+      yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, otelTypesOnlyContent)
     } else {
       const typesOnlyOptions: TypesOnlyExportOptions = {
         libraryType: "provider",
@@ -601,6 +615,8 @@ The baseline implementation remains useful for unit tests and demonstrations.
         ? generateSupabaseErrorsFile(templateOptions)
         : isRedisProvider
         ? generateRedisErrorsFile(templateOptions)
+        : isOpenTelemetryProvider
+        ? generateOtelErrorsFile(templateOptions)
         : generateErrorsFile(templateOptions)
     )
     filesGenerated.push(`${sourceLibPath}/errors.ts`)
@@ -620,12 +636,14 @@ The baseline implementation remains useful for unit tests and demonstrations.
         ? generateSupabaseTypesFile(templateOptions)
         : isRedisProvider
         ? generateRedisTypesFile(templateOptions)
+        : isOpenTelemetryProvider
+        ? generateOtelTypesFile(templateOptions)
         : generateTypesFile(templateOptions)
     )
     filesGenerated.push(`${sourceLibPath}/types.ts`)
 
-    // Supabase and Redis don't need validation.ts (use Effect Schema in types.ts)
-    if (!(isSupabaseProvider || isRedisProvider)) {
+    // Supabase, Redis, and OpenTelemetry don't need validation.ts (use Effect Schema in types.ts)
+    if (!(isSupabaseProvider || isRedisProvider || isOpenTelemetryProvider)) {
       yield* adapter.writeFile(
         `${sourceLibPath}/validation.ts`,
         generateValidationFile(templateOptions)
@@ -652,6 +670,13 @@ The baseline implementation remains useful for unit tests and demonstrations.
         generateSupabaseStorageServiceFile(templateOptions)
       )
       filesGenerated.push(`${sourceLibPath}/storage.ts`)
+    } else if (isOpenTelemetryProvider) {
+      // OpenTelemetry has a single service file (otel.ts)
+      yield* adapter.writeFile(
+        `${sourceLibPath}/otel.ts`,
+        generateOtelServiceFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/otel.ts`)
     } else if (isRedisProvider) {
       // Redis has multiple service files (service, cache, pubsub, queue)
       yield* adapter.writeFile(
@@ -701,22 +726,31 @@ The baseline implementation remains useful for unit tests and demonstrations.
     //   - ${className}.Dev
     //   - ${className}.Auto
 
-    yield* adapter.writeFile(
-      `${sourceLibPath}/service.spec.ts`,
-      isSupabaseProvider
-        ? generateSupabaseSpecFile(templateOptions)
-        : isRedisProvider
-        ? generateRedisSpecFile()
-        : generateServiceSpecFile(templateOptions)
-    )
-    filesGenerated.push(`${sourceLibPath}/service.spec.ts`)
+    // OpenTelemetry has its own spec file (otel.spec.ts)
+    if (isOpenTelemetryProvider) {
+      yield* adapter.writeFile(
+        `${sourceLibPath}/otel.spec.ts`,
+        generateOtelSpecFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/otel.spec.ts`)
+    } else {
+      yield* adapter.writeFile(
+        `${sourceLibPath}/service.spec.ts`,
+        isSupabaseProvider
+          ? generateSupabaseSpecFile(templateOptions)
+          : isRedisProvider
+          ? generateRedisSpecFile()
+          : generateServiceSpecFile(templateOptions)
+      )
+      filesGenerated.push(`${sourceLibPath}/service.spec.ts`)
+    }
 
     // Platform-specific export files removed - rely on automatic tree-shaking
     // All exports are now handled through the main index.ts
 
     // Inject environment variables for this provider (except for built-in providers)
-    // Built-in providers (kysely, supabase, redis) are handled by init command
-    const builtInProviders = ["kysely", "supabase", "redis"]
+    // Built-in providers (kysely, supabase, redis, opentelemetry) are handled by init command
+    const builtInProviders = ["kysely", "supabase", "redis", "opentelemetry"]
     if (!builtInProviders.includes(options.name)) {
       yield* injectEnvVars(adapter, [
         { name: `${options.constantName}_API_KEY`, type: "redacted", context: "server" },

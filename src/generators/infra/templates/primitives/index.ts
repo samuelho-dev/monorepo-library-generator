@@ -24,7 +24,7 @@ export { generatePubSubRedisLayerFile } from "./pubsub/redis-layer.template"
 // Queue primitive templates
 export { generateQueueInterfaceFile } from "./queue/interface.template"
 export { generateQueueRedisLayerFile } from "./queue/redis-layer.template"
-// Observability primitive templates (unified tracing, logging, metrics)
+// Observability primitive templates (LoggingService, MetricsService - consumes provider-opentelemetry)
 export { generateObservabilityConfigFile } from "./observability/config.template"
 export { generateObservabilityConstantsFile } from "./observability/constants.template"
 export { generateObservabilityErrorsFile } from "./observability/errors.template"
@@ -32,8 +32,6 @@ export { generateObservabilityIndexFile } from "./observability/index.template"
 export { generateLoggingServiceFile } from "./observability/logging-service.template"
 export { generateMetricsServiceFile } from "./observability/metrics-service.template"
 export { generateObservabilityPresetsFile } from "./observability/presets.template"
-export { generateOtelProviderFile } from "./observability/provider.template"
-export { generateObservabilitySdkFile } from "./observability/sdk.template"
 export { generateObservabilitySupervisorFile } from "./observability/supervisor.template"
 // Shared utilities and templates
 export { generatePrimitiveErrorsFile } from "./shared/errors.template"

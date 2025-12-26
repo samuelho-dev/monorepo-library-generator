@@ -126,9 +126,14 @@ function toAuthUser(user: SupabaseUser) {
 }
 
 /**
+ * Auth operation type for error typing
+ */
+type AuthOperation = "signIn" | "signOut" | "signUp" | "verifyToken" | "refreshToken" | "getSession" | "getUser"
+
+/**
  * Validate and decode user from SDK response
  */
-function validateUser(user: unknown, operation: string) {
+function validateUser(user: unknown, operation: AuthOperation) {
   const userOption = decodeUser(user)
   if (Option.isNone(userOption)) {
     return Effect.fail(

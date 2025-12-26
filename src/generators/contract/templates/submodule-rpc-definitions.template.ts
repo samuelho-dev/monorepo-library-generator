@@ -84,9 +84,8 @@ export function generateSubModuleRpcDefinitionsFile(options: SubModuleRpcDefinit
     { from: "./rpc-errors", imports: [`${subModuleClassName}RpcError`] }
   ])
 
-  // Re-export RouteTag
-  builder.addSectionComment("Re-export Route System")
-  builder.addRaw(`export { RouteTag, type RouteType }`)
+  // Note: RouteTag is imported from parent, not re-exported to avoid duplicates
+  // Use import { RouteTag } from "@scope/contract-{parent}" in consuming code
 
   // Generate domain-specific RPC definitions
   const rpcContent = generateSubModuleRpcs(subModuleName, subModuleClassName)

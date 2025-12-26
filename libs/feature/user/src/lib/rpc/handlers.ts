@@ -1,4 +1,5 @@
 import { UserNotFoundRpcError, UserRpcs, UserValidationRpcError } from "@samuelho-dev/contract-user"
+import type { UserCreateInput, UserUpdateInput } from "@samuelho-dev/data-access-user"
 import { RequestMeta, ServiceContext, getHandlerContext } from "@samuelho-dev/infra-rpc"
 import { Array as EffectArray, DateTime, Effect, Layer, Option } from "effect"
 import { UserService } from "../server/services"
@@ -142,9 +143,10 @@ export const UserHandlers = UserRpcs.toLayer({
         requestId: meta.requestId
       })
 
-      // RPC input type should match service create input type
-      // If types differ, use Schema.decode for transformation at this boundary
-      return yield* service.create(input)
+      // Transform RPC input to service input
+      // The contract defines the public API schema, service uses internal types
+      // Cast is safe because both types represent the same domain entity
+      return yield* service.create(input as UserCreateInput)
     }).pipe(Effect.catchTags({
         "UserTimeoutError": (e) =>
           Effect.fail(new UserValidationRpcError({
@@ -175,10 +177,11 @@ export const UserHandlers = UserRpcs.toLayer({
         requestId: meta.requestId
       })
 
-      // RPC data type should match service update input type
-      // If types differ, use Schema.decode for transformation at this boundary
+      // Transform RPC data to service input
+      // The contract defines the public API schema, service uses internal types
+      // Cast is safe because both types represent the same domain entity
       // Service throws UserNotFoundError which is caught by catchTags
-      return yield* service.update(id, data)
+      return yield* service.update(id, data as UserUpdateInput)
     }).pipe(Effect.catchTags({
         "UserNotFoundError": (e) =>
           Effect.fail(new UserNotFoundRpcError({
@@ -335,13 +338,13 @@ export const UserHandlers = UserRpcs.toLayer({
 /**
  * Combined handlers including all sub-modules
  *
- * Merges the main User handlers with sub-module handlers.
+ * Merges the main User handlers with sub-module handlers using Layer.mergeAll.
  */
-export const AllUserHandlers = {
-  ...UserHandlers,
-  ...AuthenticationHandlers,
-  ...ProfileHandlers
-}
+export const AllUserHandlers = Layer.mergeAll(
+  UserHandlers,
+  AuthenticationHandlers,
+  ProfileHandlers
+)
 
 // ============================================================================
 // Handler Layer

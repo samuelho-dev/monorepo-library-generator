@@ -54,8 +54,9 @@ All infrastructure dependencies are properly wired.`,
   )
 
   builder.addSectionComment("Data Access Import")
+  // Data-access libraries don't have sub-modules - use parent repository
   builder.addRaw(
-    `import { ${subModuleClassName}RepositoryLive, ${subModuleClassName}RepositoryTest } from "${scope}/data-access-${parentFileName}/${subModuleName}"
+    `import { ${parentClassName}Repository } from "${scope}/data-access-${parentFileName}"
 `
   )
 
@@ -72,7 +73,7 @@ All infrastructure dependencies are properly wired.`,
  *
  * Full production layer with all dependencies composed:
  * - ${subModuleClassName}Service (business logic)
- * - ${subModuleClassName}Repository (data access)
+ * - ${parentClassName}Repository (data access via parent)
  * - LoggingService (structured logging)
  * - MetricsService (observability)
  * - DatabaseService (persistence)
@@ -92,7 +93,7 @@ All infrastructure dependencies are properly wired.`,
  * \`\`\`
  */
 export const ${subModuleClassName}Live = ${subModuleClassName}ServiceLive.pipe(
-  Layer.provide(${subModuleClassName}RepositoryLive),
+  Layer.provide(${parentClassName}Repository.Live),
   Layer.provide(LoggingService.Live),
   Layer.provide(MetricsService.Live),
   Layer.provide(DatabaseService.Live)
@@ -104,7 +105,7 @@ export const ${subModuleClassName}Live = ${subModuleClassName}ServiceLive.pipe(
  * ${subModuleClassName}Test Layer
  *
  * Test layer with mocked infrastructure:
- * - ${subModuleClassName}RepositoryTest (in-memory store)
+ * - ${parentClassName}Repository.Test (in-memory store)
  * - LoggingService.Test (test logger)
  * - MetricsService.Test (test metrics)
  *
@@ -124,7 +125,7 @@ export const ${subModuleClassName}Live = ${subModuleClassName}ServiceLive.pipe(
  * \`\`\`
  */
 export const ${subModuleClassName}Test = ${subModuleClassName}ServiceLive.pipe(
-  Layer.provide(${subModuleClassName}RepositoryTest),
+  Layer.provide(${parentClassName}Repository.Test),
   Layer.provide(LoggingService.Test),
   Layer.provide(MetricsService.Test)
 )`)

@@ -178,21 +178,33 @@ export const ObservabilityConfigSchema = Schema.Struct({
    * Tracing configuration
    */
   traces: Schema.optionalWith(TracesConfigSchema, {
-    default: () => ({})
+    default: () => ({
+      enabled: true,
+      endpoint: "http://localhost:4318/v1/traces",
+      samplingRatio: 1.0
+    })
   }),
 
   /**
    * Metrics configuration
    */
   metrics: Schema.optionalWith(MetricsConfigSchema, {
-    default: () => ({})
+    default: () => ({
+      enabled: true,
+      endpoint: "http://localhost:4318/v1/metrics",
+      exportIntervalMs: 60000
+    })
   }),
 
   /**
    * Logs configuration
    */
   logs: Schema.optionalWith(LogsConfigSchema, {
-    default: () => ({})
+    default: () => ({
+      enabled: true,
+      endpoint: "http://localhost:4318/v1/logs",
+      minLevel: "info" as const
+    })
   }),
 
   /**
@@ -224,16 +236,19 @@ export const ProductionConfig: Partial<ObservabilityConfig> = {
   environment: "production",
   traces: {
     enabled: true,
-    samplingRatio: 0.1, // Sample 10% of traces
+    endpoint: "http://localhost:4318/v1/traces",
+    samplingRatio: 0.1 // Sample 10% of traces
   },
   metrics: {
     enabled: true,
-    exportIntervalMs: 60000, // 1 minute
+    endpoint: "http://localhost:4318/v1/metrics",
+    exportIntervalMs: 60000 // 1 minute
   },
   logs: {
     enabled: true,
+    endpoint: "http://localhost:4318/v1/logs",
     minLevel: "info"
-  },
+  }
 }
 
 /**
@@ -247,16 +262,19 @@ export const DevelopmentConfig: Partial<ObservabilityConfig> = {
   environment: "development",
   traces: {
     enabled: true,
-    samplingRatio: 1.0, // Sample all traces
+    endpoint: "http://localhost:4318/v1/traces",
+    samplingRatio: 1.0 // Sample all traces
   },
   metrics: {
     enabled: true,
-    exportIntervalMs: 10000, // 10 seconds
+    endpoint: "http://localhost:4318/v1/metrics",
+    exportIntervalMs: 10000 // 10 seconds
   },
   logs: {
     enabled: true,
+    endpoint: "http://localhost:4318/v1/logs",
     minLevel: "debug"
-  },
+  }
 }
 
 /**
@@ -266,7 +284,7 @@ export const DevelopmentConfig: Partial<ObservabilityConfig> = {
  */
 export const TestConfig: Partial<ObservabilityConfig> = {
   environment: "test",
-  traces: { enabled: false },
-  metrics: { enabled: false },
-  logs: { enabled: false },
+  traces: { enabled: false, endpoint: "", samplingRatio: 0 },
+  metrics: { enabled: false, endpoint: "", exportIntervalMs: 60000 },
+  logs: { enabled: false, endpoint: "", minLevel: "info" }
 }

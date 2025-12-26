@@ -102,6 +102,11 @@ const BUILTIN_PROVIDERS: ReadonlyArray<BuiltinProvider> = Object.freeze([
     name: "redis",
     externalService: "Redis",
     description: "Redis provider for cache, queue, and pubsub backing with ioredis"
+  }),
+  Object.freeze({
+    name: "opentelemetry",
+    externalService: "OpenTelemetry",
+    description: "OpenTelemetry SDK provider for Effect tracing and metrics export"
   })
 ])
 
@@ -130,7 +135,7 @@ const BUILTIN_INFRA: ReadonlyArray<BuiltinInfra> = Object.freeze([
   }),
   Object.freeze({
     name: "observability",
-    description: "Unified observability infrastructure with OTEL SDK, LoggingService, and MetricsService"
+    description: "Unified observability infrastructure with LoggingService and MetricsService (consumes provider-opentelemetry)"
   }),
   Object.freeze({
     name: "queue",

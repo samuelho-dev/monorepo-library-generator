@@ -367,6 +367,8 @@ function generateTsConfigFiles(
       extends: `${normalizedOffset}/tsconfig.base.json`,
       compilerOptions: {
         outDir: "./dist",
+        module: "ESNext", // Required for verbatimModuleSyntax with ESM
+        moduleResolution: "bundler", // Modern resolution for ESM packages
         verbatimModuleSyntax: true, // Preserve import/export for optimal tree-shaking
         types: ["node"] // Explicitly include only node types (for crypto, etc.)
       },

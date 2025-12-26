@@ -21,14 +21,42 @@ This service is consumed by infra-storage for file operations.
  */
 
 // ============================================================================
+// Result Types
+// ============================================================================
+
+/**
+ * Upload result - minimal type for upload operations
+ *
+ * Supabase SDK returns minimal data on upload. Full FileObject
+ * requires a separate list() call to retrieve.
+ */
+export interface StorageUploadResult {
+  readonly name: string
+  readonly bucket_id?: string
+}
+
+/**
+ * Bucket creation result - minimal type for createBucket operations
+ *
+ * SDK returns minimal data. Full Bucket requires getBucket() call.
+ */
+export interface StorageBucketResult {
+  readonly id: string
+  readonly name: string
+  readonly public: boolean
+  readonly created_at?: string
+  readonly updated_at?: string
+}
+
+// ============================================================================
 // Service Interface
 // ============================================================================
 
 /**
  * SupabaseStorage Service Interface
  *
- * Uses native types from @supabase/storage-js SDK.
- * Return types inferred from implementation.
+ * Uses native types from @supabase/storage-js SDK where possible.
+ * Upload and createBucket return minimal types since SDK doesn't return full objects.
  */
 export interface SupabaseStorageServiceInterface {
   /** Upload a file to storage */
@@ -37,7 +65,7 @@ export interface SupabaseStorageServiceInterface {
     path: string,
     file: Blob | File | ArrayBuffer | string,
     options?: FileOptions
-  ) => Effect.Effect<FileObject, SupabaseStorageError | SupabaseBucketNotFoundError>
+  ) => Effect.Effect<StorageUploadResult, SupabaseStorageError | SupabaseBucketNotFoundError>
 
   /** Download a file from storage */
   readonly download: (
@@ -99,7 +127,7 @@ export interface SupabaseStorageServiceInterface {
   readonly createBucket: (
     name: string,
     options?: { public?: boolean; fileSizeLimit?: number; allowedMimeTypes?: Array<string> }
-  ) => Effect.Effect<Bucket, SupabaseStorageError>
+  ) => Effect.Effect<StorageBucketResult, SupabaseStorageError>
 
   /** Delete a bucket (must be empty) */
   readonly deleteBucket: (
@@ -167,20 +195,12 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
             )
           }
 
-          // SDK returns { id, path, fullPath } - we need to fetch full FileObject
-          const { data: fileData, error: listError } = yield* Effect.tryPromise({
-            try: () => client.storage.from(bucket).list(path.split("/").slice(0, -1).join("/"), {
-              search: path.split("/").pop(),
-              limit: 1
-            }),
-            catch: () => null
-          })
-
-          if (listError || !fileData?.[0]) {
-            // Return minimal FileObject if list fails
-            return { name: data.path, bucket_id: bucket };
+          // SDK returns { id, path, fullPath } - return minimal StorageUploadResult
+          // We don't need to fetch full FileObject since interface only requires name
+          return {
+            name: data.path,
+            bucket_id: bucket
           }
-          return fileData[0]
         }).pipe(Effect.withSpan("SupabaseStorage.upload")),
 
       download: (bucket: string, path: string, options?: { transform?: TransformOptions }) =>
@@ -465,7 +485,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
           const bucketOptions = {
             public: options?.public ?? false,
             ...(options?.fileSizeLimit !== undefined && { fileSizeLimit: options.fileSizeLimit }),
-            ...(options?.allowedMimeTypes && { allowedMimeTypes: options.allowedMimeTypes }),
+            ...(options?.allowedMimeTypes !== undefined && { allowedMimeTypes: options.allowedMimeTypes }),
           }
 
           const { data, error } = yield* Effect.tryPromise({
@@ -491,16 +511,30 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
           }
 
           // Fetch full bucket data after creation
-          const { data: bucketData, error: getBucketError } = yield* Effect.tryPromise({
+          const bucketResult = yield* Effect.tryPromise({
             try: () => client.storage.getBucket(name),
-            catch: () => null
-          })
+            catch: (error) =>
+              new SupabaseStorageError({
+                message: "Failed to fetch created bucket details",
+                operation: "createBucket",
+                bucket: name,
+                cause: error
+              })
+          }).pipe(Effect.option)
 
-          if (getBucketError || !bucketData) {
+          // Return full bucket data if available, otherwise minimal result
+          const bucketData = bucketResult._tag === "Some" ? bucketResult.value : null
+          if (!bucketData?.data) {
             // Return minimal bucket if fetch fails
-            return { id: data.name, name: data.name, public: options?.public ?? false };
+            return { id: data.name, name: data.name, public: options?.public ?? false }
           }
-          return bucketData
+          return {
+            id: bucketData.data.id,
+            name: bucketData.data.name,
+            public: bucketData.data.public,
+            created_at: bucketData.data.created_at,
+            updated_at: bucketData.data.updated_at
+          }
         }).pipe(Effect.withSpan("SupabaseStorage.createBucket")),
 
       deleteBucket: (name: string) =>
@@ -692,6 +726,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
           Array.from(buckets.keys()).map((name) => ({
             id: name,
             name,
+            owner: "test-owner",
             public: buckets.get(name)?.public ?? false,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -704,6 +739,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
             ? Option.some({
                 id: name,
                 name,
+                owner: "test-owner",
                 public: buckets.get(name)?.public ?? false,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()

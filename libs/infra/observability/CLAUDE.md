@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-observability
 
-Unified observability infrastructure with OTEL SDK, LoggingService, and MetricsService
+Unified observability infrastructure with LoggingService and MetricsService (consumes provider-opentelemetry)
 
 ## AI Agent Reference
 

@@ -33,7 +33,5 @@ export type { QueueError, QueueServiceError } from "./lib/errors"
 // Redis-backed distributed layer
 export {
   QueueRedisLayer,
-  RedisQueueClientTag,
   withJobEnqueuing
 } from "./lib/layers"
-export type { RedisQueueClient } from "./lib/layers"

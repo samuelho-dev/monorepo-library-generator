@@ -1,6 +1,6 @@
 import { env } from "@samuelho-dev/env"
+import { OpenTelemetryProvider } from "@samuelho-dev/provider-opentelemetry"
 import { Context, Effect, Layer } from "effect"
-import { OtelProvider } from "./provider"
 
 /**
  * Observability Logging Service
@@ -15,10 +15,10 @@ Provides:
 
 Layer Architecture (follows Service + Provider pattern):
 - Console: Standalone logging without OTEL export
-- WithOtel: Requires OtelProvider dependency
-- Live: Console layer (OTEL export handled by SDK layer composition)
+- WithProvider: Requires OpenTelemetryProvider dependency
+- Live: With OpenTelemetryProvider.Live for production
 - Test: Silent mock for testing
-- Dev: Console with debug output
+- Dev: With OpenTelemetryProvider.Dev for development
 - Auto: Environment-aware selection
 
 Effect Logger Features:
@@ -176,27 +176,27 @@ export class LoggingService extends Context.Tag(
   static readonly Console = Layer.succeed(LoggingService, LoggingService.makeLogger({}))
 
   // ===========================================================================
-  // WithOtel Layer (Requires OtelProvider)
+  // WithProvider Layer (Requires OpenTelemetryProvider)
   // ===========================================================================
 
   /**
-   * WithOtel Layer - Logging with OTEL provider dependency
+   * WithProvider Layer - Logging with OpenTelemetry provider dependency
    *
-   * Requires OtelProvider to be provided. Use this when you want to
-   * compose with a custom OtelProvider configuration.
+   * Requires OpenTelemetryProvider to be provided. Use this when you want to
+   * compose with a custom OpenTelemetryProvider configuration.
    *
    * @example
    * ```typescript
    * const customLayer = Layer.provide(
-   *   LoggingService.WithOtel,
-   *   OtelProvider.make({ serviceName: "custom" })
+   *   LoggingService.WithProvider,
+   *   OpenTelemetryProvider.make({ serviceName: "custom" })
    * )
    * ```
    */
-  static readonly WithOtel = Layer.effect(
+  static readonly WithProvider = Layer.effect(
     LoggingService,
     Effect.gen(function*() {
-      const otel = yield* OtelProvider
+      const otel = yield* OpenTelemetryProvider
       // Create logger with OTEL context
       return LoggingService.makeLogger({
         "otel.service.name": otel.serviceName,
@@ -210,17 +210,17 @@ export class LoggingService extends Context.Tag(
   // ===========================================================================
 
   /**
-   * Live Layer - Production logging with OTEL
+   * Live Layer - Production logging with OpenTelemetry
    *
-   * Uses Console logger but when composed with OtelProvider.Live in the
+   * Uses Console logger but when composed with OpenTelemetryProvider.Live in the
    * application layer, Effect's logging will be exported via OTEL.
    *
-   * Note: The OTEL SDK layer (from OtelProvider) handles the actual export.
+   * Note: The OTEL SDK layer (from OpenTelemetryProvider) handles the actual export.
    * This layer just provides the logging interface.
    */
   static readonly Live = Layer.provide(
-    LoggingService.WithOtel,
-    OtelProvider.Live
+    LoggingService.WithProvider,
+    OpenTelemetryProvider.Live
   )
 
   // ===========================================================================
@@ -257,14 +257,14 @@ export class LoggingService extends Context.Tag(
   // ===========================================================================
 
   /**
-   * Dev Layer - Development logging with OTEL
+   * Dev Layer - Development logging with OpenTelemetry
    *
-   * Uses OTEL provider for local development. Attempts to connect to
+   * Uses OpenTelemetry provider for local development. Attempts to connect to
    * localhost OTEL collector but won't fail if unavailable.
    */
   static readonly Dev = Layer.provide(
-    LoggingService.WithOtel,
-    OtelProvider.Dev
+    LoggingService.WithProvider,
+    OpenTelemetryProvider.Dev
   )
 
   // ===========================================================================
@@ -275,8 +275,8 @@ export class LoggingService extends Context.Tag(
    * Auto Layer - Environment-aware layer selection
    *
    * Selects appropriate layer based on NODE_ENV:
-   * - "production" → Live (with OtelProvider.Live)
-   * - "development" → Dev (with OtelProvider.Dev)
+   * - "production" → Live (with OpenTelemetryProvider.Live)
+   * - "development" → Dev (with OpenTelemetryProvider.Dev)
    * - "test" → Test (silent, no OTEL)
    * - default → Dev
    */

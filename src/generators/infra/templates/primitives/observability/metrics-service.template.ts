@@ -34,10 +34,10 @@ Provides:
 
 Layer Architecture (follows Service + Provider pattern):
 - Memory: In-memory metrics without OTEL export
-- WithOtel: Requires OtelProvider dependency
-- Live: With OtelProvider.Live for production
+- WithProvider: Requires OpenTelemetryProvider dependency
+- Live: With OpenTelemetryProvider.Live for production
 - Test: In-memory for testing
-- Dev: With OtelProvider.Dev for development
+- Dev: With OpenTelemetryProvider.Dev for development
 - Auto: Environment-aware selection
 
 Effect.Metric Features:
@@ -56,7 +56,7 @@ Effect.Metric Features:
       imports: ["Context", "Effect", "Layer", "Metric", "MetricBoundaries"]
     },
     { from: `${scope}/env`, imports: ["env"] },
-    { from: "./provider", imports: ["OtelProvider"] }
+    { from: `${scope}/provider-opentelemetry`, imports: ["OpenTelemetryProvider"] }
   ])
 
   builder.addSectionComment("Metrics Service Interface")
@@ -375,29 +375,29 @@ export class MetricsService extends Context.Tag(
   static readonly Memory = Layer.succeed(MetricsService, MetricsService.makeMetrics())
 
   // ===========================================================================
-  // WithOtel Layer (Requires OtelProvider)
+  // WithProvider Layer (Requires OpenTelemetryProvider)
   // ===========================================================================
 
   /**
-   * WithOtel Layer - Metrics with OTEL provider dependency
+   * WithProvider Layer - Metrics with OpenTelemetry provider dependency
    *
-   * Requires OtelProvider to be provided. When the OTEL SDK is initialized,
+   * Requires OpenTelemetryProvider to be provided. When the OTEL SDK is initialized,
    * Effect.Metric automatically exports to OpenTelemetry.
    *
    * @example
    * \`\`\`typescript
    * const customLayer = Layer.provide(
-   *   MetricsService.WithOtel,
-   *   OtelProvider.make({ serviceName: "custom" })
+   *   MetricsService.WithProvider,
+   *   OpenTelemetryProvider.make({ serviceName: "custom" })
    * )
    * \`\`\`
    */
-  static readonly WithOtel = Layer.effect(
+  static readonly WithProvider = Layer.effect(
     MetricsService,
     Effect.gen(function*() {
-      // Just verify OtelProvider is available
+      // Just verify OpenTelemetryProvider is available
       // The OTEL SDK layer handles the actual export
-      yield* OtelProvider
+      yield* OpenTelemetryProvider
       return MetricsService.makeMetrics()
     })
   )
@@ -407,13 +407,13 @@ export class MetricsService extends Context.Tag(
   // ===========================================================================
 
   /**
-   * Live Layer - Production metrics with OTEL
+   * Live Layer - Production metrics with OpenTelemetry
    *
    * Uses Effect.Metric with OTEL SDK for production export.
    */
   static readonly Live = Layer.provide(
-    MetricsService.WithOtel,
-    OtelProvider.Live
+    MetricsService.WithProvider,
+    OpenTelemetryProvider.Live
   )
 
   // ===========================================================================
@@ -432,12 +432,12 @@ export class MetricsService extends Context.Tag(
   // ===========================================================================
 
   /**
-   * Dev Layer - Metrics with debug logging and OTEL
+   * Dev Layer - Metrics with debug logging and OpenTelemetry
    */
   static readonly Dev = Layer.effect(
     MetricsService,
     Effect.gen(function*() {
-      const otel = yield* OtelProvider
+      const otel = yield* OpenTelemetryProvider
       yield* Effect.logDebug("[MetricsService] [DEV] Initialized", {
         serviceName: otel.serviceName,
         metricsEnabled: otel.metricsEnabled
@@ -465,7 +465,7 @@ export class MetricsService extends Context.Tag(
           })
       }
     })
-  ).pipe(Layer.provide(OtelProvider.Dev))
+  ).pipe(Layer.provide(OpenTelemetryProvider.Dev))
 
   // ===========================================================================
   // Auto Layer
@@ -475,7 +475,7 @@ export class MetricsService extends Context.Tag(
    * Auto Layer - Environment-aware layer selection
    *
    * Selects appropriate layer based on NODE_ENV:
-   * - "production" → Live (with OtelProvider.Live)
+   * - "production" → Live (with OpenTelemetryProvider.Live)
    * - "development" → Dev (with logging)
    * - "test" → Test (in-memory)
    * - default → Dev

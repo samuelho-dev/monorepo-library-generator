@@ -33,7 +33,5 @@ export type { PubsubError, PubsubServiceError } from "./lib/errors"
 // Redis-backed distributed layer
 export {
   PubsubRedisLayer,
-  RedisPubSubClientTag,
   withEventPublishing
 } from "./lib/layers"
-export type { RedisPubSubClient } from "./lib/layers"

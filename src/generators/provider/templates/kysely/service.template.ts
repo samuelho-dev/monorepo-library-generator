@@ -43,7 +43,7 @@ Architecture:
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect"] },
+    { from: "effect", imports: ["Context", "Effect", "Runtime"] },
     {
       from: "kysely",
       imports: [
@@ -236,17 +236,20 @@ export const make${className}Service = <DB = unknown>(config: ${className}Config
         }),
 
       transaction: (fn) =>
-        Effect.tryPromise({
-          try: async () => {
-            return await db.transaction().execute(async (tx) => {
-              return await Effect.runPromise(fn(tx))
-            })
-          },
-          catch: (error) =>
-            new DatabaseTransactionError({
-              message: \`Transaction failed: \${error}\`,
-              cause: error
-            })
+        Effect.gen(function*() {
+          // Get runtime to preserve fiber context inside transaction
+          const runtime = yield* Effect.runtime()
+          return yield* Effect.tryPromise({
+            try: () =>
+              db.transaction().execute((tx) =>
+                Runtime.runPromise(runtime)(fn(tx))
+              ),
+            catch: (error) =>
+              new DatabaseTransactionError({
+                message: \`Transaction failed: \${error}\`,
+                cause: error
+              })
+          })
         }),
 
       sql: (query) =>
@@ -436,7 +439,7 @@ export const makeTest${className}Service = <DB = unknown>(
                 cause: new Error("Simulated execution failure")
               })
             )
-          : Effect.succeed(mockData[query.sql] ?? mockData.execute ?? [])
+          : Effect.succeed(mockData[query.sql] ?? mockData["execute"] ?? [])
       ),
 
     // Transaction uses DummyDriver's transaction support
@@ -449,13 +452,16 @@ export const makeTest${className}Service = <DB = unknown>(
                 cause: new Error("Simulated transaction failure")
               })
             )
-          : Effect.tryPromise({
-              try: () => db.transaction().execute((tx) => Effect.runPromise(fn(tx))),
-              catch: (error) =>
-                new DatabaseTransactionError({
-                  message: \`Transaction failed: \${error}\`,
-                  cause: error
-                })
+          : Effect.gen(function*() {
+              const runtime = yield* Effect.runtime()
+              return yield* Effect.tryPromise({
+                try: () => db.transaction().execute((tx) => Runtime.runPromise(runtime)(fn(tx))),
+                catch: (error) =>
+                  new DatabaseTransactionError({
+                    message: \`Transaction failed: \${error}\`,
+                    cause: error
+                  })
+              })
             })
       ),
 

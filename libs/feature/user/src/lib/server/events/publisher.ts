@@ -69,6 +69,7 @@ export const UserEventTopics = {
  * User Event Publisher Interface
  *
  * Provides methods to publish domain events to the message broker.
+ * Methods can fail with ParseError if event schema validation fails.
  */
 export interface UserEventPublisherInterface {
   /**
@@ -76,28 +77,28 @@ export interface UserEventPublisherInterface {
    */
   readonly publishCreated: (
     event: UserCreatedEvent
-  ) => Effect.Effect<void>
+  ) => Effect.Effect<void, ParseResult.ParseError>
 
   /**
    * Publish an updated event
    */
   readonly publishUpdated: (
     event: UserUpdatedEvent
-  ) => Effect.Effect<void>
+  ) => Effect.Effect<void, ParseResult.ParseError>
 
   /**
    * Publish a deleted event
    */
   readonly publishDeleted: (
     event: UserDeletedEvent
-  ) => Effect.Effect<void>
+  ) => Effect.Effect<void, ParseResult.ParseError>
 
   /**
    * Publish any domain event (auto-routes to correct topic)
    */
   readonly publish: (
     event: UserDomainEvent
-  ) => Effect.Effect<void>
+  ) => Effect.Effect<void, ParseResult.ParseError>
 }
 
 

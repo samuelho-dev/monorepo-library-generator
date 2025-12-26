@@ -249,7 +249,7 @@ export interface NextRpcHandler {
 
 export const createNextRpcHandler = <R, E>(
   options: NextRpcHandlerOptions<R, E>
-) => {
+): NextRpcHandler => {
   const config = { ...defaultRouterConfig, ...options.config }
 
   // Schema for RPC request body validation

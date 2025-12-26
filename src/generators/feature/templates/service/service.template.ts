@@ -68,11 +68,13 @@ Import only the operations you need for smallest bundle size.`,
     { from: `${scope}/infra-pubsub`, imports: ["TopicHandle"], isTypeOnly: true }
   ])
 
-  builder.addSectionComment("Authentication Context (Optional)")
-  builder.addComment("Services can optionally access CurrentUser for auth-aware operations")
-  builder.addComment("Use CurrentUser.pipe(Effect.orElse(() => Effect.succeed(null))) for optional auth")
+  builder.addSectionComment("Authentication Context")
+  builder.addComment("CurrentUser is request-scoped - yield inside methods, NOT at layer construction")
+  builder.addComment("Service methods that need auth will have CurrentUser in their Effect requirements")
+  builder.addComment("RPC middleware provides CurrentUser for protected routes (per-request)")
+  builder.addComment("Job processors must provide SystemUserLayer for background processing")
   builder.addImports([
-    { from: `${scope}/contract-auth`, imports: ["CurrentUser"], isTypeOnly: false }
+    { from: `${scope}/contract-auth`, imports: ["CurrentUser"] }
   ])
 
   // Note: Environment checking uses process.env directly for Auto layer
@@ -208,22 +210,18 @@ const createServiceImpl = (
       const histogram = yield* metrics.histogram("${name.toLowerCase()}_create_duration_seconds")
       const start = Date.now()
 
-      // Optional: Get current user for audit fields (createdBy, etc.)
-      // Use Option.getOrNull to handle cases where CurrentUser is not available (e.g., system operations)
-      const currentUser = yield* CurrentUser.pipe(
-        Effect.option,
-        Effect.map(Option.getOrNull)
-      )
+      // CurrentUser is request-scoped - yield it inside the method, not at layer construction
+      // RPC middleware provides CurrentUser for protected routes
+      // Job processors must provide SystemUserLayer for background processing
+      const currentUser = yield* CurrentUser
 
       yield* logger.info("${className}Service.create", {
         input,
-        userId: currentUser?.id
+        userId: currentUser.id
       })
 
       // If your schema has createdBy/updatedBy fields, you can enrich the input:
-      // const enrichedInput = currentUser
-      //   ? { ...input, createdBy: currentUser.id, updatedBy: currentUser.id }
-      //   : input
+      // const enrichedInput = { ...input, createdBy: currentUser.id, updatedBy: currentUser.id }
 
       // Errors bubble up with full type information
       const result = yield* repo.create(input)
@@ -231,7 +229,7 @@ const createServiceImpl = (
       yield* counter.increment
       yield* logger.info("${className} created", {
         id: result.id,
-        userId: currentUser?.id
+        userId: currentUser.id
       })
 
       // Record duration and publish event after successful operation
@@ -249,22 +247,17 @@ const createServiceImpl = (
       const histogram = yield* metrics.histogram("${name.toLowerCase()}_update_duration_seconds")
       const start = Date.now()
 
-      // Optional: Get current user for audit fields (updatedBy, etc.)
-      const currentUser = yield* CurrentUser.pipe(
-        Effect.option,
-        Effect.map(Option.getOrNull)
-      )
+      // CurrentUser is request-scoped - yield it inside the method
+      const currentUser = yield* CurrentUser
 
       yield* logger.info("${className}Service.update", {
         id,
         input,
-        userId: currentUser?.id
+        userId: currentUser.id
       })
 
       // If your schema has updatedBy field, you can enrich the input:
-      // const enrichedInput = currentUser
-      //   ? { ...input, updatedBy: currentUser.id }
-      //   : input
+      // const enrichedInput = { ...input, updatedBy: currentUser.id }
 
       // First check if entity exists - fail with domain error if not found
       const existing = yield* repo.findById(id)
@@ -282,7 +275,7 @@ const createServiceImpl = (
       yield* counter.increment
       yield* logger.info("${className} updated", {
         id,
-        userId: currentUser?.id
+        userId: currentUser.id
       })
 
       // Record duration and publish event after successful operation
@@ -300,15 +293,12 @@ const createServiceImpl = (
       const histogram = yield* metrics.histogram("${name.toLowerCase()}_delete_duration_seconds")
       const start = Date.now()
 
-      // Optional: Get current user for authorization/audit logging
-      const currentUser = yield* CurrentUser.pipe(
-        Effect.option,
-        Effect.map(Option.getOrNull)
-      )
+      // CurrentUser is request-scoped - yield it inside the method
+      const currentUser = yield* CurrentUser
 
       yield* logger.info("${className}Service.delete", {
         id,
-        userId: currentUser?.id
+        userId: currentUser.id
       })
 
       // First check if entity exists - fail with domain error if not found
@@ -338,7 +328,7 @@ const createServiceImpl = (
       yield* counter.increment
       yield* logger.info("${className} deleted", {
         id,
-        userId: currentUser?.id
+        userId: currentUser.id
       })
 
       // Record duration and publish event after successful operation
@@ -391,12 +381,19 @@ export class ${className}Service extends Context.Tag("${className}Service")<
    * - delete() → ${className}Deleted
    *
    * Authentication Context:
-   * - Service operations can optionally access CurrentUser via Effect Context
-   * - CurrentUser is provided by RPC middleware (not by this service layer)
-   * - Use CurrentUser.pipe(Effect.option) to handle cases where auth is not available
+   * - CurrentUser is request-scoped and must be yielded inside service methods
+   * - DO NOT yield CurrentUser at layer construction (layers are memoized/shared)
+   * - Service methods that need CurrentUser will have it in their Effect requirements
    *
    * Requires: ${className}Repository, LoggingService, MetricsService, PubsubService
-   * Optional: CurrentUser (provided by RPC layer when handling authenticated requests)
+   *
+   * Service method requirements (inferred):
+   * - create/update/delete: Effect<Entity, Errors, CurrentUser | DatabaseService>
+   * - get/findByCriteria/count: Effect<Entity, Errors, DatabaseService>
+   *
+   * CurrentUser is provided at call site by:
+   * - RPC middleware for protected HTTP routes (per-request)
+   * - SystemUserLayer for background job processing
    */
   static readonly Live = Layer.effect(
     this,
@@ -407,6 +404,8 @@ export class ${className}Service extends Context.Tag("${className}Service")<
       const pubsub = yield* PubsubService
       const eventTopic = yield* pubsub.topic("${name.toLowerCase()}-events", ${className}EventSchema)
 
+      // DO NOT yield CurrentUser here - it's request-scoped, not application-scoped
+      // Service methods yield CurrentUser inside to get fresh context per call
       return createServiceImpl(repo, logger, metrics, eventTopic)
     })
   )

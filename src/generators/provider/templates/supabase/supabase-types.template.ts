@@ -139,17 +139,69 @@ export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>`)
   builder.addBlankLine()
 
   builder.addRaw(`/**
- * Storage types are re-exported from the native @supabase/storage-js SDK.
- * Import directly from "@supabase/storage-js" for:
- * - FileObject
- * - Bucket
- * - FileOptions
- * - SearchOptions
- * - TransformOptions
- *
- * This avoids type duplication and ensures compatibility with SDK updates.
+ * Storage types are re-exported from the native @supabase/storage-js SDK
+ * with aliases for consistent naming across the provider.
  */
-export type { Bucket, FileObject, FileOptions, SearchOptions, TransformOptions } from "@supabase/storage-js"`)
+export type { Bucket, FileObject, FileOptions, SearchOptions, TransformOptions } from "@supabase/storage-js"
+import type { Bucket, FileObject, FileOptions, TransformOptions } from "@supabase/storage-js"
+
+/**
+ * Type alias for storage bucket (matches Bucket from SDK)
+ */
+export type StorageBucket = Bucket
+
+/**
+ * Type alias for storage file (matches FileObject from SDK)
+ */
+export type StorageFile = FileObject
+
+/**
+ * Upload options for storage operations
+ */
+export type UploadOptions = FileOptions
+
+/**
+ * Download options for storage operations
+ */
+export interface DownloadOptions {
+  readonly transform?: TransformOptions
+}
+
+/**
+ * Options for creating signed URLs
+ */
+export interface SignedUrlOptions {
+  readonly expiresIn?: number
+  readonly download?: string | boolean
+  readonly transform?: TransformOptions
+}
+
+/**
+ * Storage bucket schema for runtime validation
+ */
+export const StorageBucketSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  public: Schema.Boolean,
+  created_at: Schema.optional(Schema.String),
+  updated_at: Schema.optional(Schema.String),
+  owner: Schema.optional(Schema.String),
+  file_size_limit: Schema.optional(Schema.NullOr(Schema.Number)),
+  allowed_mime_types: Schema.optional(Schema.NullOr(Schema.Array(Schema.String)))
+})
+
+/**
+ * Storage file schema for runtime validation
+ */
+export const StorageFileSchema = Schema.Struct({
+  name: Schema.String,
+  id: Schema.optional(Schema.String),
+  bucket_id: Schema.optional(Schema.String),
+  created_at: Schema.optional(Schema.String),
+  updated_at: Schema.optional(Schema.String),
+  last_accessed_at: Schema.optional(Schema.String),
+  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+})`)
   builder.addBlankLine()
 
   // Auth method types

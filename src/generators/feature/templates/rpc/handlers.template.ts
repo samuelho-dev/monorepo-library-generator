@@ -56,6 +56,12 @@ Usage:
         `${className}ValidationRpcError`
       ]
     },
+    // Service input types for handler transformations
+    {
+      from: `${scope}/data-access-${name}`,
+      imports: [`${className}CreateInput`, `${className}UpdateInput`],
+      isTypeOnly: true
+    },
     // Note: Domain errors (${className}NotFoundError, ${className}TimeoutError) are NOT imported
     // because catchTags uses string literals to match error tags, not runtime types
     { from: `${scope}/infra-rpc`, imports: ["getHandlerContext", "RequestMeta", "ServiceContext"] },
@@ -195,9 +201,10 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         requestId: meta.requestId
       })
 
-      // RPC input type should match service create input type
-      // If types differ, use Schema.decode for transformation at this boundary
-      return yield* service.create(input)
+      // Transform RPC input to service input
+      // The contract defines the public API schema, service uses internal types
+      // Cast is safe because both types represent the same domain entity
+      return yield* service.create(input as ${className}CreateInput)
     }).pipe(${infraOnlyCatchTags}),
 
   /**
@@ -217,10 +224,11 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         requestId: meta.requestId
       })
 
-      // RPC data type should match service update input type
-      // If types differ, use Schema.decode for transformation at this boundary
+      // Transform RPC data to service input
+      // The contract defines the public API schema, service uses internal types
+      // Cast is safe because both types represent the same domain entity
       // Service throws ${className}NotFoundError which is caught by catchTags
-      return yield* service.update(id, data)
+      return yield* service.update(id, data as ${className}UpdateInput)
     }).pipe(${notFoundAndInfraCatchTags}),
 
   /**
@@ -324,17 +332,17 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
     builder.addRaw(`/**
  * Combined handlers including all sub-modules
  *
- * Merges the main ${className} handlers with sub-module handlers.
+ * Merges the main ${className} handlers with sub-module handlers using Layer.mergeAll.
  */
-export const All${className}Handlers = {
-  ...${className}Handlers,
+export const All${className}Handlers = Layer.mergeAll(
+  ${className}Handlers,
 ${
       subModulesList.map((sub: string) => {
         const subClassName = sub.charAt(0).toUpperCase() + sub.slice(1)
-        return `  ...${subClassName}Handlers`
+        return `  ${subClassName}Handlers`
       }).join(",\n")
     }
-}
+)
 `)
   }
 

@@ -1,8 +1,10 @@
 {
-  description = "Project with dev-config integration"  inputs = {
+  description = "Project with dev-config integration";
+
+  inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    dev-config.url = "github:samuelho-dev/dev-config"
-  }
+    dev-config.url = "github:samuelho-dev/dev-config";
+  };
 
   outputs = {
     nixpkgs,
@@ -10,13 +12,15 @@
     ...
   }: let
     # Supported systems
-    systems = ["aarch64-darwin" "x86_64-darwin" "x86_64-linux" "aarch64-linux"]    # Helper to generate attrs for all systems
+    systems = ["aarch64-darwin" "x86_64-darwin" "x86_64-linux" "aarch64-linux"];
+
+    # Helper to generate attrs for all systems
     forAllSystems = fn:
       nixpkgs.lib.genAttrs systems (system:
         fn {
           pkgs = nixpkgs.legacyPackages.${system};
-          inherit system
-        })
+          inherit system;
+        });
   in {
     devShells = forAllSystems ({pkgs, ...}: {
       default = pkgs.mkShell {
@@ -24,16 +28,18 @@
           # Add your project dependencies here
           # pkgs.nodejs_20
           # pkgs.bun
-        ]        shellHook = ''
+        ];
+
+        shellHook = ''
           ${dev-config.lib.devShellHook}
 
           # Add project-specific shell setup here
           echo "🚀 Development environment ready"
         '';
       };
-    })
+    });
 
     # Optional: Add formatter
-    formatter = forAllSystems ({pkgs, ...}: pkgs.alejandra)
-  }
+    formatter = forAllSystems ({pkgs, ...}: pkgs.alejandra);
+  };
 }

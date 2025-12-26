@@ -108,7 +108,12 @@ export class InvalidFileTypeError extends Data.TaggedError("InvalidFileTypeError
   builder.addRaw(`/**
  * Union of all storage errors
  */
-export type StorageServiceError = StorageError | FileNotFoundError | BucketNotFoundError | UploadFailedError | DownloadFailedError | FileSizeExceededError | InvalidFileTypeError`)
+export type StorageServiceError = StorageError | FileNotFoundError | BucketNotFoundError | UploadFailedError | DownloadFailedError | FileSizeExceededError | InvalidFileTypeError
+
+/**
+ * Alias for index exports - union of all storage infrastructure errors
+ */
+export type StorageInfraError = StorageServiceError`)
 
   return builder.toString()
 }

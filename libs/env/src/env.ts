@@ -21,6 +21,7 @@ Re-run generator to sync with .env changes:
  *
  * @module @workspace/env
  */
+import { Redacted } from "effect"
 import { Config, createEnv } from "./createEnv"
 
 // ============================================================================
@@ -38,7 +39,7 @@ export const env = createEnv({
   server: {
     // Database
     DATABASE_URL: Config.redacted("DATABASE_URL").pipe(
-      Config.withDefault("postgresql://localhost:5432/dev")
+      Config.withDefault(Redacted.make("postgresql://localhost:5432/dev"))
     ),
 
     // Supabase
@@ -46,10 +47,10 @@ export const env = createEnv({
       Config.withDefault("http://localhost:54321")
     ),
     SUPABASE_ANON_KEY: Config.redacted("SUPABASE_ANON_KEY").pipe(
-      Config.withDefault("dev-anon-key")
+      Config.withDefault(Redacted.make("dev-anon-key"))
     ),
     SUPABASE_SERVICE_ROLE_KEY: Config.redacted("SUPABASE_SERVICE_ROLE_KEY").pipe(
-      Config.withDefault("dev-service-role-key")
+      Config.withDefault(Redacted.make("dev-service-role-key"))
     ),
 
     // Redis
@@ -89,6 +90,14 @@ export const env = createEnv({
     ),
     OTEL_METRICS_EXPORT_INTERVAL_MS: Config.string("OTEL_METRICS_EXPORT_INTERVAL_MS").pipe(
       Config.withDefault("60000")
+    ),
+    OTEL_TRACES_SAMPLER_ARG: Config.string("OTEL_TRACES_SAMPLER_ARG").pipe(
+      Config.withDefault("1.0")
+    ),
+
+    // Runtime environment
+    NODE_ENV: Config.string("NODE_ENV").pipe(
+      Config.withDefault("development")
     )
   },
 
@@ -99,11 +108,7 @@ export const env = createEnv({
   },
 
   // Shared variables (available in both contexts)
-  shared: {
-    NODE_ENV: Config.string("NODE_ENV").pipe(
-      Config.withDefault("development")
-    )
-  },
+  shared: {},
 
   // Required prefix for client variables
   clientPrefix: "PUBLIC_"

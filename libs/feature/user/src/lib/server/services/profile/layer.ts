@@ -20,7 +20,7 @@ import { ProfileServiceLive } from "./service"
 // ============================================================================
 // Data Access Import
 // ============================================================================
-import { ProfileRepositoryLive, ProfileRepositoryTest } from "@samuelho-dev/data-access-user/profile"
+import { UserRepository } from "@samuelho-dev/data-access-user"
 
 // ============================================================================
 // Infrastructure Imports
@@ -33,7 +33,7 @@ import { ProfileRepositoryLive, ProfileRepositoryTest } from "@samuelho-dev/data
  *
  * Full production layer with all dependencies composed:
  * - ProfileService (business logic)
- * - ProfileRepository (data access)
+ * - UserRepository (data access via parent)
  * - LoggingService (structured logging)
  * - MetricsService (observability)
  * - DatabaseService (persistence)
@@ -53,7 +53,7 @@ import { ProfileRepositoryLive, ProfileRepositoryTest } from "@samuelho-dev/data
  * ```
  */
 export const ProfileLive = ProfileServiceLive.pipe(
-  Layer.provide(ProfileRepositoryLive),
+  Layer.provide(UserRepository.Live),
   Layer.provide(LoggingService.Live),
   Layer.provide(MetricsService.Live),
   Layer.provide(DatabaseService.Live)
@@ -65,7 +65,7 @@ export const ProfileLive = ProfileServiceLive.pipe(
  * ProfileTest Layer
  *
  * Test layer with mocked infrastructure:
- * - ProfileRepositoryTest (in-memory store)
+ * - UserRepository.Test (in-memory store)
  * - LoggingService.Test (test logger)
  * - MetricsService.Test (test metrics)
  *
@@ -85,7 +85,7 @@ export const ProfileLive = ProfileServiceLive.pipe(
  * ```
  */
 export const ProfileTest = ProfileServiceLive.pipe(
-  Layer.provide(ProfileRepositoryTest),
+  Layer.provide(UserRepository.Test),
   Layer.provide(LoggingService.Test),
   Layer.provide(MetricsService.Test)
 )

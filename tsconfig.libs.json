@@ -1,7 +1,19 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": true,
     "baseUrl": ".",
     "types": ["node"],
     "paths": {
@@ -38,7 +50,9 @@
       "@samuelho-dev/provider-supabase": ["libs/provider/supabase/src/index.ts"],
       "@samuelho-dev/provider-supabase/*": ["libs/provider/supabase/src/*"],
       "@samuelho-dev/provider-redis": ["libs/provider/redis/src/index.ts"],
-      "@samuelho-dev/provider-redis/*": ["libs/provider/redis/src/*"]
+      "@samuelho-dev/provider-redis/*": ["libs/provider/redis/src/*"],
+      "@samuelho-dev/provider-opentelemetry": ["libs/provider/opentelemetry/src/index.ts"],
+      "@samuelho-dev/provider-opentelemetry/*": ["libs/provider/opentelemetry/src/*"]
     }
   },
   "include": [

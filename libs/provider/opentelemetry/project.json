@@ -1,0 +1,48 @@
+{
+  "name": "provider-opentelemetry",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/provider/opentelemetry/src",
+  "tags": [
+    "type:provider",
+    "scope:opentelemetry",
+    "provider",
+    "effect",
+    "builtin"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/libs/provider/opentelemetry",
+        "tsConfig": "libs/provider/opentelemetry/tsconfig.lib.json",
+        "main": "libs/provider/opentelemetry/src/index.ts",
+        "batch": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "libs/provider/opentelemetry/src/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/libs/provider/opentelemetry",
+        "config": "libs/provider/opentelemetry/vitest.config.ts"
+      }
+    }
+  }
+}

@@ -1,44 +1,25 @@
 /**
  * @samuelho-dev/infra-observability
  *
- * Unified OpenTelemetry observability infrastructure.
+ * Unified observability infrastructure using Effect primitives.
 
-Provides layer factories for OTEL SDK setup with optional fiber tracking.
-Effect's built-in tracing (Effect.withSpan) and metrics (Effect.Metric)
-automatically integrate with these layers.
+Provides services for logging and metrics that integrate with OpenTelemetry
+via the provider-opentelemetry library.
+
+Architecture:
+- LoggingService and MetricsService consume OpenTelemetryProvider
+- When OpenTelemetryProvider is composed in the layer tree, Effect.withSpan()
+  and Effect.Metric automatically export to OpenTelemetry
 
 Key exports:
-- makeSdkLayer: Create OTEL SDK layer from configuration
-- Live/Test/Dev/Auto: Static layer presets
+- LoggingService: Structured logging with Effect.log* primitives
+- MetricsService: Counters, gauges, histograms with Effect.Metric
 - withFiberTracking: Optional Supervisor layer for fiber tracking
 - Presets: OtlpPreset, JaegerPreset, ConsolePreset, etc.
  *
  * @module @samuelho-dev/infra-observability
  * @see https://effect.website/docs/observability/otel-tracing
  */
-// ============================================================================
-// OTEL Provider (Infrastructure)
-// ============================================================================
-// OpenTelemetry SDK provider - the "Redis" equivalent for observability
-// This is consumed internally by LoggingService and MetricsService
-export {
-  OtelProvider,
-  type OtelProviderOperations,
-} from "./lib/provider"
-
-// ============================================================================
-// SDK Layer Factories (Advanced)
-// ============================================================================
-// Advanced: Direct OTEL SDK layer factories for custom setups
-// Most users should use LoggingService.Live and MetricsService.Live instead
-export {
-  makeSdkLayer,
-  Live as SdkLive,
-  Test as SdkTest,
-  Dev as SdkDev,
-  Auto as SdkAuto,
-} from "./lib/sdk"
-
 // ============================================================================
 // Fiber Tracking Supervisor
 // ============================================================================

@@ -26,6 +26,12 @@ import {
  */
 
 // ============================================================================
+// Parent Entity Re-Export
+// ============================================================================
+// Sub-modules use parent entity type - re-export for convenience
+export type { UserEntity } from "../lib/rpc-definitions"
+
+// ============================================================================
 // Error Exports (Contract-First)
 // ============================================================================
 // Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these
@@ -65,8 +71,6 @@ export {
 // RPC Exports
 // ============================================================================
 export {
-  RouteTag,
-  type RouteType,
   CreateProfileInput,
   UpdateProfileInput,
   ProfileGet,

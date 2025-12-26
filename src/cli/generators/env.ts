@@ -144,6 +144,8 @@ export function generateEnv(options: EnvGeneratorOptions = {}) {
       extends: "../../tsconfig.base.json",
       compilerOptions: {
         outDir: "./dist",
+        module: "ESNext", // Required for verbatimModuleSyntax with ESM
+        moduleResolution: "bundler", // Modern resolution for ESM packages
         verbatimModuleSyntax: true
       },
       include: ["src/**/*.ts"],

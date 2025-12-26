@@ -20,7 +20,7 @@ import { AuthenticationServiceLive } from "./service"
 // ============================================================================
 // Data Access Import
 // ============================================================================
-import { AuthenticationRepositoryLive, AuthenticationRepositoryTest } from "@samuelho-dev/data-access-user/authentication"
+import { UserRepository } from "@samuelho-dev/data-access-user"
 
 // ============================================================================
 // Infrastructure Imports
@@ -33,7 +33,7 @@ import { AuthenticationRepositoryLive, AuthenticationRepositoryTest } from "@sam
  *
  * Full production layer with all dependencies composed:
  * - AuthenticationService (business logic)
- * - AuthenticationRepository (data access)
+ * - UserRepository (data access via parent)
  * - LoggingService (structured logging)
  * - MetricsService (observability)
  * - DatabaseService (persistence)
@@ -53,7 +53,7 @@ import { AuthenticationRepositoryLive, AuthenticationRepositoryTest } from "@sam
  * ```
  */
 export const AuthenticationLive = AuthenticationServiceLive.pipe(
-  Layer.provide(AuthenticationRepositoryLive),
+  Layer.provide(UserRepository.Live),
   Layer.provide(LoggingService.Live),
   Layer.provide(MetricsService.Live),
   Layer.provide(DatabaseService.Live)
@@ -65,7 +65,7 @@ export const AuthenticationLive = AuthenticationServiceLive.pipe(
  * AuthenticationTest Layer
  *
  * Test layer with mocked infrastructure:
- * - AuthenticationRepositoryTest (in-memory store)
+ * - UserRepository.Test (in-memory store)
  * - LoggingService.Test (test logger)
  * - MetricsService.Test (test metrics)
  *
@@ -85,7 +85,7 @@ export const AuthenticationLive = AuthenticationServiceLive.pipe(
  * ```
  */
 export const AuthenticationTest = AuthenticationServiceLive.pipe(
-  Layer.provide(AuthenticationRepositoryTest),
+  Layer.provide(UserRepository.Test),
   Layer.provide(LoggingService.Test),
   Layer.provide(MetricsService.Test)
 )
