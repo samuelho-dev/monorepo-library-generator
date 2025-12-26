@@ -12,3 +12,15 @@ export {
   contractEventsTemplate,
   contractPortsTemplate
 } from "./contract"
+
+// Data-access templates
+export {
+  dataAccessErrorsTemplate,
+  dataAccessLayersTemplate
+} from "./data-access"
+
+// Feature templates
+export {
+  featureLayersTemplate,
+  featureServiceTemplate
+} from "./feature"
