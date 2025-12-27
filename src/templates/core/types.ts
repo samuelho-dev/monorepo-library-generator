@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/core/types
  */
 
-import type { Data } from 'effect'
+import type { Data } from "effect"
 
 // ============================================================================
 // Template Definition Types
@@ -95,7 +95,7 @@ export type ContentDefinition =
  * Raw TypeScript content (string-based)
  */
 export interface RawContent {
-  readonly type: 'raw'
+  readonly type: "raw"
   /** Raw TypeScript code with interpolation support */
   readonly value: string
 }
@@ -104,7 +104,7 @@ export interface RawContent {
  * Effect Context.Tag class definition
  */
 export interface ContextTagContent {
-  readonly type: 'contextTag'
+  readonly type: "contextTag"
   readonly config: ContextTagConfig
 }
 
@@ -112,7 +112,7 @@ export interface ContextTagContent {
  * Effect Data.TaggedError class definition
  */
 export interface TaggedErrorContent {
-  readonly type: 'taggedError'
+  readonly type: "taggedError"
   readonly config: TaggedErrorConfig
 }
 
@@ -120,7 +120,7 @@ export interface TaggedErrorContent {
  * Effect Schema definition
  */
 export interface SchemaContent {
-  readonly type: 'schema'
+  readonly type: "schema"
   readonly config: SchemaConfig
 }
 
@@ -128,7 +128,7 @@ export interface SchemaContent {
  * Effect RPC definition
  */
 export interface RpcDefinitionContent {
-  readonly type: 'rpcDefinition'
+  readonly type: "rpcDefinition"
   readonly config: RpcConfig
 }
 
@@ -136,7 +136,7 @@ export interface RpcDefinitionContent {
  * Reference to a reusable fragment
  */
 export interface FragmentReference {
-  readonly type: 'fragment'
+  readonly type: "fragment"
   /** Fragment ID (e.g., "effect-patterns/context-tag") */
   readonly ref: string
   /** Parameters to pass to the fragment */
@@ -147,7 +147,7 @@ export interface FragmentReference {
  * TypeScript interface definition
  */
 export interface InterfaceContent {
-  readonly type: 'interface'
+  readonly type: "interface"
   readonly config: InterfaceConfig
 }
 
@@ -155,7 +155,7 @@ export interface InterfaceContent {
  * TypeScript class definition
  */
 export interface ClassContent {
-  readonly type: 'class'
+  readonly type: "class"
   readonly config: ClassConfig
 }
 
@@ -163,7 +163,7 @@ export interface ClassContent {
  * TypeScript constant definition
  */
 export interface ConstantContent {
-  readonly type: 'constant'
+  readonly type: "constant"
   readonly config: ConstantConfig
 }
 
@@ -322,13 +322,13 @@ export interface SchemaConfig {
 
   /** Schema type (Class, Struct, Union, etc.) */
   readonly schemaType:
-    | 'Class'
-    | 'Struct'
-    | 'Union'
-    | 'TaggedUnion'
-    | 'String'
-    | 'Number'
-    | 'Boolean'
+    | "Class"
+    | "Struct"
+    | "Union"
+    | "TaggedUnion"
+    | "String"
+    | "Number"
+    | "Boolean"
 
   /** Schema fields */
   readonly fields?: ReadonlyArray<SchemaFieldDefinition>
@@ -367,7 +367,7 @@ export interface RpcConfig {
   readonly name: string
 
   /** Route type for access control */
-  readonly routeType: 'public' | 'protected' | 'admin'
+  readonly routeType: "public" | "protected" | "admin"
 
   /** Payload schema configuration */
   readonly payload: RpcPayloadConfig
@@ -386,9 +386,9 @@ export interface RpcConfig {
  * RPC Payload Configuration
  */
 export type RpcPayloadConfig =
-  | { readonly type: 'struct'; readonly fields: ReadonlyArray<SchemaFieldDefinition> }
-  | { readonly type: 'schema'; readonly name: string }
-  | { readonly type: 'void' }
+  | { readonly type: "struct"; readonly fields: ReadonlyArray<SchemaFieldDefinition> }
+  | { readonly type: "schema"; readonly name: string }
+  | { readonly type: "void" }
 
 // ============================================================================
 // TypeScript Pattern Configs
@@ -557,7 +557,7 @@ export interface TemplateContext {
  * Template Compilation Error
  */
 export interface CompilationError extends Data.Case {
-  readonly _tag: 'CompilationError'
+  readonly _tag: "CompilationError"
   readonly templateId: string
   readonly message: string
   readonly diagnostics?: ReadonlyArray<CompilationDiagnostic>
@@ -570,14 +570,14 @@ export interface CompilationDiagnostic {
   readonly line: number
   readonly column: number
   readonly message: string
-  readonly severity: 'error' | 'warning'
+  readonly severity: "error" | "warning"
 }
 
 /**
  * Fragment Not Found Error
  */
 export interface FragmentNotFoundError extends Data.Case {
-  readonly _tag: 'FragmentNotFoundError'
+  readonly _tag: "FragmentNotFoundError"
   readonly fragmentId: string
 }
 
@@ -585,7 +585,7 @@ export interface FragmentNotFoundError extends Data.Case {
  * Interpolation Error
  */
 export interface InterpolationError extends Data.Case {
-  readonly _tag: 'InterpolationError'
+  readonly _tag: "InterpolationError"
   readonly variable: string
   readonly message: string
 }

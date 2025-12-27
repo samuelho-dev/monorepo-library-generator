@@ -5,14 +5,9 @@
  * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect, ParseResult } from 'effect'
-import { type FeatureCoreOptions, generateFeatureCore } from '../../generators/core/feature'
-import {
-  createExecutor,
-  decodeFeatureInput,
-  type FeatureInput,
-  formatOutput
-} from '../../infrastructure'
+import { Console, Effect, ParseResult } from "effect"
+import { type FeatureCoreOptions, generateFeatureCore } from "../../generators/core/feature"
+import { createExecutor, decodeFeatureInput, type FeatureInput, formatOutput } from "../../infrastructure"
 
 /**
  * Feature Generator Options - imported from validation registry
@@ -21,7 +16,7 @@ import {
 export type FeatureGeneratorOptions = FeatureInput
 
 const featureExecutor = createExecutor<FeatureInput, FeatureCoreOptions>(
-  'feature',
+  "feature",
   generateFeatureCore,
   (validated, metadata) => ({
     ...metadata,
@@ -41,7 +36,7 @@ const featureExecutor = createExecutor<FeatureInput, FeatureCoreOptions>(
 )
 
 export function generateFeature(options: FeatureGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeFeatureInput(options).pipe(
       Effect.mapError(
@@ -53,10 +48,10 @@ export function generateFeature(options: FeatureGeneratorOptions) {
 
     const result = yield* featureExecutor.execute({
       ...validated,
-      __interfaceType: 'cli'
+      __interfaceType: "cli"
     })
 
-    const output = formatOutput(result, 'cli')
+    const output = formatOutput(result, "cli")
     yield* Console.log(output)
 
     return result

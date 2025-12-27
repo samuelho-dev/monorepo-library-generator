@@ -14,12 +14,12 @@
  * @module monorepo-library-generator/core/sub-modules
  */
 
-import { Effect } from 'effect'
-import type { FileSystemAdapter } from '../../utils/filesystem'
-import { createNamingVariants } from '../../utils/naming'
-import { generateSubModuleHandlersFile } from '../feature/templates/sub-module/handlers.template'
-import { generateSubModuleLayerFile } from '../feature/templates/sub-module/layer.template'
-import { generateSubModuleServiceFile } from '../feature/templates/sub-module/service.template'
+import { Effect } from "effect"
+import type { FileSystemAdapter } from "../../utils/filesystem"
+import { createNamingVariants } from "../../utils/naming"
+import { generateSubModuleHandlersFile } from "../feature/templates/sub-module/handlers.template"
+import { generateSubModuleLayerFile } from "../feature/templates/sub-module/layer.template"
+import { generateSubModuleServiceFile } from "../feature/templates/sub-module/service.template"
 
 export interface SubModuleOptions {
   /** Project root directory */
@@ -35,12 +35,12 @@ export interface SubModuleOptions {
   /** Parent file name (e.g., 'order') */
   parentFileName: string
   /** Array of sub-module names (e.g., ['cart', 'checkout', 'management']) */
-  subModules: string[]
+  subModules: Array<string>
 }
 
 export interface SubModuleGenerationResult {
   /** List of generated sub-modules */
-  generatedModules: string[]
+  generatedModules: Array<string>
   /** Total files generated */
   filesGenerated: number
   /** Parent integration code */
@@ -70,7 +70,7 @@ export interface SubModuleGenerationResult {
  * - Gap #3: Server barrel exports
  */
 export const generateSubModules = (adapter: FileSystemAdapter, options: SubModuleOptions) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Sub-modules go in lib/server/services/{submodule}/
     // The main service.ts is also in lib/server/services/
     const servicesDir = `${options.sourceRoot}/lib/server/services`
@@ -84,7 +84,7 @@ export const generateSubModules = (adapter: FileSystemAdapter, options: SubModul
           servicesDir,
           moduleName
         }),
-      { concurrency: 'unbounded' }
+      { concurrency: "unbounded" }
     )
 
     // Generate parent integration code (for documentation/guidance)
@@ -105,7 +105,7 @@ const generateSingleSubModule = (
   adapter: FileSystemAdapter,
   options: SubModuleOptions & { servicesDir: string; moduleName: string }
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const serviceDir = `${options.servicesDir}/${options.moduleName}`
     const subModuleClassName = createNamingVariants(options.moduleName).className
 
@@ -155,16 +155,16 @@ function generateParentIntegrationCode(options: SubModuleOptions) {
   // Gap #1: Parent service imports and yields
   const imports = subModules
     .map((s) => `import { ${s.className}Service } from "./services/${s.name}";`)
-    .join('\n')
+    .join("\n")
 
   const yields = subModules
     .map((s) => `    const ${s.propertyName}Service = yield* ${s.className}Service;`)
-    .join('\n')
+    .join("\n")
 
   // Gap #2: Layer composition
   const layerProvides = subModules
     .map((s) => `  Layer.provide(${s.className}Dependencies),`)
-    .join('\n')
+    .join("\n")
 
   // Gap #3: Server barrel exports
   const serverExports = `// Sub-Module Exports

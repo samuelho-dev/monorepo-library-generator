@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/rpc-group
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract RPC Group Template Definition
@@ -20,9 +20,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - RPCs organized by route type
  */
 export const contractRpcGroupTemplate: TemplateDefinition = {
-  id: 'contract/rpc-group',
+  id: "contract/rpc-group",
   meta: {
-    title: '{className} RPC Group',
+    title: "{className} RPC Group",
     description: `Unified RPC group combining all {className} operations.
 This is the primary export for handler registration.
 
@@ -41,40 +41,41 @@ export const {className}Handlers = {className}Rpcs.toLayer({
   BulkGet{className}s: (input) => Effect.flatMap({className}Service, s => s.bulkGet(input.ids)),
 })
 \`\`\``,
-    module: '{scope}/contract-{fileName}/rpc-group'
+    module: "{scope}/contract-{fileName}/rpc-group"
   },
   imports: [
-    { from: '@effect/rpc', items: ['RpcGroup'] },
+    { from: "@effect/rpc", items: ["RpcGroup"] },
     {
-      from: './rpc-definitions',
+      from: "./rpc-definitions",
       items: [
-        'BulkGet{className}s',
-        'Create{className}',
-        'Delete{className}',
-        'Get{className}',
-        'List{className}s',
-        'RouteTag',
-        'Update{className}',
-        'Validate{className}'
+        "BulkGet{className}s",
+        "Create{className}",
+        "Delete{className}",
+        "Get{className}",
+        "List{className}s",
+        "RouteTag",
+        "Update{className}",
+        "Validate{className}"
       ]
     },
-    { from: './rpc-definitions', items: ['RouteType'], isTypeOnly: true }
+    { from: "./rpc-definitions", items: ["RouteType"], isTypeOnly: true }
   ],
   sections: [
     // Re-export Route System
     {
-      title: 'Re-export Route System',
+      title: "Re-export Route System",
       content: {
-        type: 'raw',
-        value: `// biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system
+        type: "raw",
+        value:
+          `// biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system
 export { RouteTag, type RouteType } from "./rpc-definitions"`
       }
     },
     // RPC Group Composition
     {
-      title: 'RPC Group Composition',
+      title: "RPC Group Composition",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} RPC Group
  *
@@ -99,9 +100,9 @@ export const {className}Rpcs = RpcGroup.make(BulkGet{className}s, Create{classNa
     },
     // Type Exports
     {
-      title: 'Type Exports',
+      title: "Type Exports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Type of the {className} RPC group
  */
@@ -123,9 +124,9 @@ export type {className}RpcDefinitions = {
     },
     // Re-export Individual RPCs
     {
-      title: 'Re-export Individual RPCs',
+      title: "Re-export Individual RPCs",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   Get{className},
   List{className}s,
@@ -139,9 +140,9 @@ export type {className}RpcDefinitions = {
     },
     // Route Helpers
     {
-      title: 'Route Helpers',
+      title: "Route Helpers",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Get route type for an RPC definition
  *

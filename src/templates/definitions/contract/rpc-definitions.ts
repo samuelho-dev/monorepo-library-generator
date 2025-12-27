@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/rpc-definitions
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract RPC Definitions Template Definition
@@ -21,9 +21,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Service-to-service RPC definitions (Validate, BulkGet)
  */
 export const contractRpcDefinitionsTemplate: TemplateDefinition = {
-  id: 'contract/rpc-definitions',
+  id: "contract/rpc-definitions",
   meta: {
-    title: '{className} RPC Definitions',
+    title: "{className} RPC Definitions",
     description: `Contract-first RPC definitions using @effect/rpc.
 This is the single source of truth for {className} RPC operations.
 
@@ -40,19 +40,19 @@ export const {className}Handlers = {className}Rpcs.toLayer({
   Get{className}: (input) => Effect.flatMap({className}Service, s => s.get(input.id)),
 })
 \`\`\``,
-    module: '{scope}/contract-{fileName}/rpc'
+    module: "{scope}/contract-{fileName}/rpc"
   },
   imports: [
-    { from: '@effect/rpc', items: ['Rpc'] },
-    { from: 'effect', items: ['Schema'] },
-    { from: './rpc-errors', items: ['{className}RpcError'] }
+    { from: "@effect/rpc", items: ["Rpc"] },
+    { from: "effect", items: ["Schema"] },
+    { from: "./rpc-errors", items: ["{className}RpcError"] }
   ],
   sections: [
     // Branded ID Type
     {
-      title: 'Branded ID Type',
+      title: "Branded ID Type",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} ID Schema
  *
@@ -84,9 +84,9 @@ export type {className}Id = Schema.Schema.Type<typeof {className}Id>`
     },
     // Route Tag System
     {
-      title: 'Route Tag System',
+      title: "Route Tag System",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Route types for middleware selection
  *
@@ -109,9 +109,9 @@ export const RouteTag = Symbol.for("@contract/RouteTag")`
     },
     // Entity Schema
     {
-      title: 'Entity Schema',
+      title: "Entity Schema",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Entity Schema
  *
@@ -137,9 +137,9 @@ export type {className}Entity = Schema.Schema.Type<typeof {className}Schema>`
     },
     // Request/Response Schemas
     {
-      title: 'Request/Response Schemas',
+      title: "Request/Response Schemas",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Pagination parameters for list operations
  */
@@ -249,9 +249,9 @@ export type BulkGet{className}Input = Schema.Schema.Type<typeof BulkGet{classNam
     },
     // RPC Definitions - CRUD
     {
-      title: 'RPC Definitions (Contract-First)',
+      title: "RPC Definitions (Contract-First)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Get {className} by ID
  *
@@ -270,7 +270,7 @@ export class Get{className} extends Rpc.make("Get{className}", {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * List {className}s with pagination
  *
@@ -287,7 +287,7 @@ export class List{className}s extends Rpc.make("List{className}s", {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Create a new {className}
  *
@@ -304,7 +304,7 @@ export class Create{className} extends Rpc.make("Create{className}", {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Update an existing {className}
  *
@@ -324,7 +324,7 @@ export class Update{className} extends Rpc.make("Update{className}", {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Delete a {className}
  *
@@ -346,9 +346,9 @@ export class Delete{className} extends Rpc.make("Delete{className}", {
     },
     // Service-to-Service RPCs
     {
-      title: 'Service-to-Service RPC Definitions',
+      title: "Service-to-Service RPC Definitions",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validate a {className} entity
  *
@@ -365,7 +365,7 @@ export class Validate{className} extends Rpc.make("Validate{className}", {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Fetch multiple {className}s by ID (batch operation)
  *

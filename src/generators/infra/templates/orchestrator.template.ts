@@ -7,11 +7,11 @@
  * @module monorepo-library-generator/infra/templates/orchestrator
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { createNamingVariants } from '../../../utils/naming'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { createNamingVariants } from "../../../utils/naming"
 
 export interface OrchestratorOptions {
-  readonly providers: readonly string[]
+  readonly providers: ReadonlyArray<string>
   readonly packageName: string
 }
 
@@ -22,22 +22,22 @@ export interface OrchestratorOptions {
  * for bootstrap, health check, and teardown operations.
  */
 export function generateOrchestratorTemplate(options: OrchestratorOptions) {
-  const workspaceName = options.packageName.split('/')[0]
+  const workspaceName = options.packageName.split("/")[0]
 
   const builder = new TypeScriptBuilder()
 
   // File header
   builder.addFileHeader({
-    title: 'Cluster Orchestrator',
-    description: 'Coordinates multiple providers for complex cluster operations'
+    title: "Cluster Orchestrator",
+    description: "Coordinates multiple providers for complex cluster operations"
   })
 
   builder.addBlankLine()
 
   // Add imports
-  builder.addImport('effect', 'Context')
-  builder.addImport('effect', 'Effect')
-  builder.addImport('effect', 'Layer')
+  builder.addImport("effect", "Context")
+  builder.addImport("effect", "Effect")
+  builder.addImport("effect", "Layer")
 
   for (const provider of options.providers) {
     const { className } = createNamingVariants(provider)
@@ -47,12 +47,12 @@ export function generateOrchestratorTemplate(options: OrchestratorOptions) {
   builder.addBlankLine()
 
   // Generate provider dependencies union type
-  const providerDeps = options.providers.map((p) => createNamingVariants(p).className).join(' | ')
+  const providerDeps = options.providers.map((p) => createNamingVariants(p).className).join(" | ")
 
   // Generate provider yield statements
   const providerYields = options.providers
     .map((p) => `      const ${p} = yield* ${createNamingVariants(p).className}`)
-    .join('\n')
+    .join("\n")
 
   builder.addRaw(`/**
  * ClusterOrchestrator service

@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates/auth/types
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate auth types.ts file
@@ -19,7 +19,7 @@ export function generateAuthTypesFile(options: InfraTemplateOptions) {
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'Auth Infrastructure Types',
+    title: "Auth Infrastructure Types",
     description: `Type definitions for auth infrastructure.
 
 Re-exports types from provider-supabase and adds auth-specific types
@@ -29,11 +29,11 @@ for middleware and RPC integration.`,
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
   builder.addBlankLine()
 
   // Import from provider-supabase for local use
-  builder.addSectionComment('Provider Imports')
+  builder.addSectionComment("Provider Imports")
   builder.addBlankLine()
 
   builder.addRaw(`// Import auth schemas from provider-supabase
@@ -42,7 +42,7 @@ import { AuthUserSchema as ProviderAuthUserSchema } from "${scope}/provider-supa
   builder.addBlankLine()
 
   // Auth context types for RPC
-  builder.addSectionComment('RPC Auth Context Types')
+  builder.addSectionComment("RPC Auth Context Types")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -85,7 +85,7 @@ export const AuthContextSchema = Schema.Struct({
   builder.addBlankLine()
 
   // HTTP Headers note
-  builder.addSectionComment('HTTP Headers')
+  builder.addSectionComment("HTTP Headers")
   builder.addBlankLine()
 
   builder.addRaw(`// NOTE: For Headers type, import directly from @effect/platform:

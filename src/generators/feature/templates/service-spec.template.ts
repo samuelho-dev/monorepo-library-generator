@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/feature/service-spec-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../utils/types'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../utils/types"
 
 /**
  * Generate server/service.spec.ts file for feature library
@@ -27,9 +27,9 @@ Uses ${className}Service.TestLayer which composes:
   })
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Option'] },
-    { from: '@effect/vitest', imports: ['describe', 'expect', 'it'] },
-    { from: './service', imports: [`${className}Service`] }
+    { from: "effect", imports: ["Effect", "Layer", "Option"] },
+    { from: "@effect/vitest", imports: ["describe", "expect", "it"] },
+    { from: "./service", imports: [`${className}Service`] }
   ])
   builder.addBlankLine()
 

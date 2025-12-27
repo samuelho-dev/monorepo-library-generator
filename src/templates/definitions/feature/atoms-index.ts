@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/atoms-index
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Atoms Index Template Definition
@@ -16,17 +16,17 @@ import type { TemplateDefinition } from '../../core/types'
  * Uses named exports to comply with biome noBarrelFile rule.
  */
 export const featureAtomsIndexTemplate: TemplateDefinition = {
-  id: 'feature/atoms-index',
+  id: "feature/atoms-index",
   meta: {
-    title: 'Client Atoms Barrel Export',
-    description: 'Barrel export for client-side state atoms',
-    module: '{scope}/feature-{fileName}/client/atoms'
+    title: "Client Atoms Barrel Export",
+    description: "Barrel export for client-side state atoms",
+    module: "{scope}/feature-{fileName}/client/atoms"
   },
   imports: [],
   sections: [
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   // State Types
   type LoadingState,

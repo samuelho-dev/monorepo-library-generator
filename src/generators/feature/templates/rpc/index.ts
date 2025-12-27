@@ -12,6 +12,6 @@
  */
 
 // Contract-First RPC templates (unified handlers, no external/internal split)
-export { generateHandlersFile } from './handlers.template'
-export { generateRouterFile } from './router.template'
-export { generateRpcBarrelFile } from './rpc-barrel.template'
+export { generateHandlersFile } from "./handlers.template"
+export { generateRouterFile } from "./router.template"
+export { generateRpcBarrelFile } from "./rpc-barrel.template"

@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/queue
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate Redis-backed queue layer
@@ -34,28 +34,28 @@ Use Cases:
 - Task distribution
 - Event processing pipelines`,
     module: `${scope}/infra-${fileName}/layers/redis`,
-    see: ['EFFECT_PATTERNS.md for queue patterns', `${scope}/provider-redis for Redis provider`]
+    see: ["EFFECT_PATTERNS.md for queue patterns", `${scope}/provider-redis for Redis provider`]
   })
 
   // Imports - layers.ts is at lib/layers.ts, service at lib/service.ts
   // Order: effect first, then external packages, then local imports
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Chunk', 'Effect', 'Layer', 'Option', 'Schema']
+      from: "effect",
+      imports: ["Chunk", "Effect", "Layer", "Option", "Schema"]
     }
   ])
-  builder.addImports([{ from: `${scope}/provider-redis`, imports: ['Redis'] }])
+  builder.addImports([{ from: `${scope}/provider-redis`, imports: ["Redis"] }])
   builder.addImports([
-    { from: './service', imports: [`${className}Service`] },
+    { from: "./service", imports: [`${className}Service`] },
     {
-      from: './service',
-      imports: ['BoundedQueueHandle', 'QueueOptions', 'UnboundedQueueHandle'],
+      from: "./service",
+      imports: ["BoundedQueueHandle", "QueueOptions", "UnboundedQueueHandle"],
       isTypeOnly: true
     }
   ])
 
-  builder.addSectionComment('Redis Queue Layer')
+  builder.addSectionComment("Redis Queue Layer")
 
   builder.addRaw(`/**
  * Redis-backed distributed queue layer
@@ -379,7 +379,7 @@ export const ${className}RedisLayer = Layer.effect(
   // Job Enqueuing Helpers
   // ============================================================================
 
-  builder.addSectionComment('Job Enqueuing Helper')
+  builder.addSectionComment("Job Enqueuing Helper")
 
   builder.addRaw(`/**
  * Wrap an Effect with job enqueuing

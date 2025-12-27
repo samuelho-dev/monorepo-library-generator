@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/hooks-index
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Hooks Index Template Definition
@@ -16,17 +16,17 @@ import type { TemplateDefinition } from '../../core/types'
  * Uses named exports to comply with biome noBarrelFile rule.
  */
 export const featureHooksIndexTemplate: TemplateDefinition = {
-  id: 'feature/hooks-index',
+  id: "feature/hooks-index",
   meta: {
-    title: 'Client Hooks Barrel Export',
-    description: 'Barrel export for client-side hooks',
-    module: '{scope}/feature-{fileName}/client/hooks'
+    title: "Client Hooks Barrel Export",
+    description: "Barrel export for client-side hooks",
+    module: "{scope}/feature-{fileName}/client/hooks"
   },
   imports: [],
   sections: [
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export { use{className}, type Use{className}Return } from "./use-{fileName}"`
       }
     }

@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/provider/templates/opentelemetry
  */
 
-export { generateOtelErrorsFile } from './otel-errors.template'
-export { generateOtelIndexFile } from './otel-index.template'
-export { generateOtelServiceFile } from './otel-service.template'
-export { generateOtelSpecFile } from './otel-spec.template'
-export { generateOtelTypesFile } from './otel-types.template'
-export { generateOtelTypesOnlyFile } from './otel-types-only.template'
+export { generateOtelErrorsFile } from "./otel-errors.template"
+export { generateOtelIndexFile } from "./otel-index.template"
+export { generateOtelServiceFile } from "./otel-service.template"
+export { generateOtelSpecFile } from "./otel-spec.template"
+export { generateOtelTypesOnlyFile } from "./otel-types-only.template"
+export { generateOtelTypesFile } from "./otel-types.template"

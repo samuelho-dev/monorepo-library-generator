@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/provider/templates/supabase/auth
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate SupabaseAuth service file
@@ -18,7 +18,7 @@ export function generateSupabaseAuthServiceFile(options: ProviderTemplateOptions
   const { packageName } = options
 
   builder.addFileHeader({
-    title: 'SupabaseAuth Service',
+    title: "SupabaseAuth Service",
     description: `Supabase authentication provider with Effect integration.
 
 Wraps Supabase Auth API for:
@@ -29,45 +29,45 @@ Wraps Supabase Auth API for:
 
 This service is consumed by infra-auth for the auth middleware.`,
     module: `${packageName}/service/auth`,
-    see: ['https://supabase.com/docs/reference/javascript/auth-api']
+    see: ["https://supabase.com/docs/reference/javascript/auth-api"]
   })
   builder.addBlankLine()
 
   // Imports
   builder.addImports([
     {
-      from: '@supabase/supabase-js',
-      imports: [{ name: 'SupabaseClient', alias: 'SupabaseSDKClient' }],
+      from: "@supabase/supabase-js",
+      imports: [{ name: "SupabaseClient", alias: "SupabaseSDKClient" }],
       isTypeOnly: true
     },
-    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Option', 'Schema'] },
-    { from: './client', imports: ['SupabaseClient'] },
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Option", "Schema"] },
+    { from: "./client", imports: ["SupabaseClient"] },
     {
-      from: './errors',
+      from: "./errors",
       imports: [
-        'SupabaseAuthError',
-        'SupabaseInvalidCredentialsError',
-        'SupabaseSessionExpiredError',
-        'SupabaseTokenError'
+        "SupabaseAuthError",
+        "SupabaseInvalidCredentialsError",
+        "SupabaseSessionExpiredError",
+        "SupabaseTokenError"
       ]
     },
     {
-      from: './types',
+      from: "./types",
       imports: [
-        'AuthResult',
-        'AuthUser',
-        'SignInCredentials',
-        'SignUpCredentials',
-        'SupabaseSession',
-        'SupabaseUser'
+        "AuthResult",
+        "AuthUser",
+        "SignInCredentials",
+        "SignUpCredentials",
+        "SupabaseSession",
+        "SupabaseUser"
       ],
       isTypeOnly: true
     },
-    { from: './types', imports: ['SupabaseSessionSchema', 'SupabaseUserSchema'] }
+    { from: "./types", imports: ["SupabaseSessionSchema", "SupabaseUserSchema"] }
   ])
 
   // Service interface
-  builder.addSectionComment('Service Interface')
+  builder.addSectionComment("Service Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -142,7 +142,7 @@ export interface SupabaseAuthServiceInterface {
   builder.addBlankLine()
 
   // Helper to map Supabase user to AuthUser
-  builder.addSectionComment('Helpers')
+  builder.addSectionComment("Helpers")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -225,7 +225,7 @@ function buildAuthResult(user: SupabaseUser, session: unknown) {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment('Context.Tag')
+  builder.addSectionComment("Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**

@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/queue
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate queue service interface using Effect.Queue
@@ -35,30 +35,30 @@ Effect.Queue Features:
 - Graceful shutdown support
 - Type-safe message handling`,
     module: `${scope}/infra-${fileName}/service`,
-    see: ['EFFECT_PATTERNS.md for queue patterns']
+    see: ["EFFECT_PATTERNS.md for queue patterns"]
   })
 
   // Import order: effect first, then external packages
   // Chunk and Option are only used in type annotations, so import as type-only
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Context', 'Effect', 'Layer', 'Queue', 'Schema']
+      from: "effect",
+      imports: ["Context", "Effect", "Layer", "Queue", "Schema"]
     },
     {
-      from: 'effect',
-      imports: ['Chunk', 'Option', 'Scope'],
+      from: "effect",
+      imports: ["Chunk", "Option", "Scope"],
       isTypeOnly: true
     },
     {
-      from: 'effect/ParseResult',
-      imports: ['ParseError'],
+      from: "effect/ParseResult",
+      imports: ["ParseError"],
       isTypeOnly: true
     }
   ])
-  builder.addImports([{ from: `${scope}/env`, imports: ['env'] }])
+  builder.addImports([{ from: `${scope}/env`, imports: ["env"] }])
 
-  builder.addSectionComment('Queue Service Interface (Effect.Queue Wrapper)')
+  builder.addSectionComment("Queue Service Interface (Effect.Queue Wrapper)")
 
   builder.addRaw(`/**
  * Queue handle for bounded queue operations

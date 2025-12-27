@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/service
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Service Template Definition
@@ -22,9 +22,9 @@ import type { TemplateDefinition } from '../../core/types'
  * Uses raw content for complex Effect.gen patterns with JavaScript template literals.
  */
 export const featureServiceTemplate: TemplateDefinition = {
-  id: 'feature/service',
+  id: "feature/service",
   meta: {
-    title: '{className} Service Interface',
+    title: "{className} Service Interface",
     description: `Context.Tag definition for {className}Service.
 
 Includes:
@@ -34,26 +34,26 @@ Includes:
 
 Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.`,
-    module: '{scope}/feature-{fileName}/server/services'
+    module: "{scope}/feature-{fileName}/server/services"
   },
   imports: [
-    { from: 'effect', items: ['Effect', 'Layer', 'Context', 'Option', 'Schema'] },
-    { from: 'effect/ParseResult', items: ['ParseError'], isTypeOnly: true },
-    { from: '{scope}/env', items: ['env'] },
-    { from: '{scope}/contract-{fileName}', items: ['{className}NotFoundError'] },
-    { from: '{scope}/data-access-{fileName}', items: ['{className}Repository'] },
-    { from: '{scope}/infra-database', items: ['DatabaseService'] },
-    { from: '{scope}/infra-observability', items: ['LoggingService', 'MetricsService'] },
-    { from: '{scope}/infra-pubsub', items: ['PubsubService'] },
-    { from: '{scope}/infra-pubsub', items: ['TopicHandle'], isTypeOnly: true },
-    { from: '{scope}/contract-auth', items: ['CurrentUser'] },
+    { from: "effect", items: ["Effect", "Layer", "Context", "Option", "Schema"] },
+    { from: "effect/ParseResult", items: ["ParseError"], isTypeOnly: true },
+    { from: "{scope}/env", items: ["env"] },
+    { from: "{scope}/contract-{fileName}", items: ["{className}NotFoundError"] },
+    { from: "{scope}/data-access-{fileName}", items: ["{className}Repository"] },
+    { from: "{scope}/infra-database", items: ["DatabaseService"] },
+    { from: "{scope}/infra-observability", items: ["LoggingService", "MetricsService"] },
+    { from: "{scope}/infra-pubsub", items: ["PubsubService"] },
+    { from: "{scope}/infra-pubsub", items: ["TopicHandle"], isTypeOnly: true },
+    { from: "{scope}/contract-auth", items: ["CurrentUser"] },
     {
-      from: '{scope}/data-access-{fileName}',
+      from: "{scope}/data-access-{fileName}",
       items: [
-        '{className}',
-        '{className}CreateInput',
-        '{className}UpdateInput',
-        '{className}Filter'
+        "{className}",
+        "{className}CreateInput",
+        "{className}UpdateInput",
+        "{className}Filter"
       ],
       isTypeOnly: true
     }
@@ -61,18 +61,18 @@ Import only the operations you need for smallest bundle size.`,
   sections: [
     // Type Re-exports
     {
-      title: 'Repository Type Re-exports',
+      title: "Repository Type Re-exports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type { {className}, {className}CreateInput, {className}UpdateInput, {className}Filter }`
       }
     },
 
     // Event Schema
     {
-      title: 'Event Schema',
+      title: "Event Schema",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Event Schema
  *
@@ -102,9 +102,9 @@ type {className}Event = Schema.Schema.Type<typeof {className}EventSchema>`
 
     // Service Implementation
     {
-      title: 'Service Implementation',
+      title: "Service Implementation",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Create service implementation
  *
@@ -295,9 +295,9 @@ const createServiceImpl = (
 
     // Service Interface Type
     {
-      title: 'Service Interface (Inferred from Implementation)',
+      title: "Service Interface (Inferred from Implementation)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service Interface
  *
@@ -311,9 +311,9 @@ export type {className}ServiceInterface = ReturnType<typeof createServiceImpl>`
 
     // Context.Tag
     {
-      title: 'Context.Tag',
+      title: "Context.Tag",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service Context.Tag
  *

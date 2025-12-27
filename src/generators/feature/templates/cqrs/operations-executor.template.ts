@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/feature/cqrs/operations-executor-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate server/cqrs/operations/executor.ts file
@@ -40,16 +40,16 @@ Usage:
   })
   builder.addBlankLine()
 
-  builder.addImports([{ from: 'effect', imports: ['Context', 'Effect', 'Layer'] }])
+  builder.addImports([{ from: "effect", imports: ["Context", "Effect", "Layer"] }])
   builder.addBlankLine()
 
-  builder.addSectionComment('Infrastructure Services')
+  builder.addSectionComment("Infrastructure Services")
   builder.addImports([
-    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] }
+    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment('Operation Types')
+  builder.addSectionComment("Operation Types")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -82,7 +82,7 @@ export type Middleware<A, E, R> = (
 ) => Effect.Effect<A, E, R>`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Operation Executor Interface')
+  builder.addSectionComment("Operation Executor Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -106,7 +106,7 @@ export interface OperationExecutorInterface {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Operation Executor Implementation')
+  builder.addSectionComment("Operation Executor Implementation")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -174,7 +174,7 @@ const createExecutorImpl = (
 })`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Operation Executor Context.Tag')
+  builder.addSectionComment("Operation Executor Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -225,7 +225,7 @@ export class ${className}OperationExecutor extends Context.Tag("${className}Oper
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Common Middlewares')
+  builder.addSectionComment("Common Middlewares")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -288,7 +288,7 @@ export function generateOperationsIndexFile(options: FeatureTemplateOptions) {
 
   builder.addFileHeader({
     title: `${className} CQRS Operations Index`,
-    description: 'Barrel export for CQRS operations.',
+    description: "Barrel export for CQRS operations.",
     module: `${options.packageName}/server/cqrs/operations`
   })
   builder.addBlankLine()

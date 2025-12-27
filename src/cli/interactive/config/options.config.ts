@@ -11,26 +11,26 @@
  * @module monorepo-library-generator/cli/interactive/config/options
  */
 
-import type { LibraryType, WizardOptions } from '../types'
+import type { LibraryType, WizardOptions } from "../types"
 
 /**
  * Platform options - must match Schema.Literal in validation registry
  */
-export const PLATFORM_OPTIONS = ['node', 'browser', 'universal', 'edge'] as const
+export const PLATFORM_OPTIONS = ["node", "browser", "universal", "edge"] as const
 export type PlatformOption = (typeof PLATFORM_OPTIONS)[number]
 
 /**
  * Option types for UI rendering
  */
 export interface BooleanOptionConfig {
-  readonly type: 'boolean'
+  readonly type: "boolean"
   readonly key: keyof WizardOptions
   readonly label: string
   readonly description: string
 }
 
 export interface TextOptionConfig {
-  readonly type: 'text'
+  readonly type: "text"
   readonly key: keyof WizardOptions
   readonly label: string
   readonly description: string
@@ -38,7 +38,7 @@ export interface TextOptionConfig {
 }
 
 export interface SelectOptionConfig {
-  readonly type: 'select'
+  readonly type: "select"
   readonly key: keyof WizardOptions
   readonly label: string
   readonly description: string
@@ -53,33 +53,33 @@ export type OptionConfig = BooleanOptionConfig | TextOptionConfig | SelectOption
  */
 const SHARED_OPTIONS = {
   platform: {
-    type: 'select',
-    key: 'platform',
-    label: 'Platform',
-    description: 'Target platform for the library',
+    type: "select",
+    key: "platform",
+    label: "Platform",
+    description: "Target platform for the library",
     options: PLATFORM_OPTIONS
   },
 
   scope: {
-    type: 'text',
-    key: 'scope',
-    label: 'Scope',
-    description: 'Custom scope for the library',
-    placeholder: '@myorg'
+    type: "text",
+    key: "scope",
+    label: "Scope",
+    description: "Custom scope for the library",
+    placeholder: "@myorg"
   },
 
   includeCQRS: {
-    type: 'boolean',
-    key: 'includeCQRS',
-    label: 'Include CQRS',
-    description: 'Include CQRS pattern files (commands, queries, projections)'
+    type: "boolean",
+    key: "includeCQRS",
+    label: "Include CQRS",
+    description: "Include CQRS pattern files (commands, queries, projections)"
   },
 
   includeClientServer: {
-    type: 'boolean',
-    key: 'includeClientServer',
-    label: 'Include Client/Server',
-    description: 'Generate client-side hooks and state management'
+    type: "boolean",
+    key: "includeClientServer",
+    label: "Include Client/Server",
+    description: "Generate client-side hooks and state management"
   }
 } as const
 
@@ -111,7 +111,7 @@ const OPTIONS_BY_TYPE: Record<LibraryType, ReadonlyArray<OptionConfig>> = {
 
   domain: [SHARED_OPTIONS.scope, SHARED_OPTIONS.includeClientServer, SHARED_OPTIONS.includeCQRS],
 
-  'data-access': [],
+  "data-access": [],
 
   provider: [SHARED_OPTIONS.platform]
 }

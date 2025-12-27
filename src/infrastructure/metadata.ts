@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infrastructure/metadata
  */
 
-import { offsetFromRoot as computeOffsetFromRoot } from '@nx/devkit'
-import { createNamingVariants } from '../utils/naming'
-import type { WorkspaceContext } from './workspace'
+import { offsetFromRoot as computeOffsetFromRoot } from "@nx/devkit"
+import { createNamingVariants } from "../utils/naming"
+import type { WorkspaceContext } from "./workspace"
 
 // ============================================================================
 // Types
@@ -17,7 +17,7 @@ import type { WorkspaceContext } from './workspace'
 /**
  * Library type - identifies which kind of library is being generated
  */
-export type LibraryType = 'contract' | 'data-access' | 'feature' | 'provider' | 'infra' | 'util'
+export type LibraryType = "contract" | "data-access" | "feature" | "provider" | "infra" | "util"
 
 /**
  * Universal library metadata
@@ -34,7 +34,7 @@ export type LibraryType = 'contract' | 'data-access' | 'feature' | 'provider' | 
  */
 export interface LibraryMetadata {
   // Required by Nx template substitutions
-  readonly tmpl: ''
+  readonly tmpl: ""
   readonly name: string
   readonly offsetFromRoot: string
   readonly tags: string
@@ -82,10 +82,10 @@ export interface MetadataInput {
  * @param librariesRoot - Root directory for libraries (default: "libs")
  * @returns Directory path for this library type
  */
-function getDefaultDirectory(libraryType: LibraryType, librariesRoot = 'libs') {
+function getDefaultDirectory(libraryType: LibraryType, librariesRoot = "libs") {
   const directories: Record<LibraryType, string> = {
     contract: `${librariesRoot}/contract`,
-    'data-access': `${librariesRoot}/data-access`,
+    "data-access": `${librariesRoot}/data-access`,
     feature: `${librariesRoot}/feature`,
     provider: `${librariesRoot}/provider`,
     infra: `${librariesRoot}/infra`,
@@ -108,9 +108,9 @@ function getDefaultDirectory(libraryType: LibraryType, librariesRoot = 'libs') {
  */
 function createDomainName(fileName: string) {
   return fileName
-    .split('-')
+    .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+    .join(" ")
 }
 
 /**
@@ -133,7 +133,7 @@ function buildTags(
   additionalTags?: ReadonlyArray<string>
 ) {
   // Check if a custom scope tag is already provided in additionalTags
-  const hasCustomScope = additionalTags?.some((tag) => tag.startsWith('scope:'))
+  const hasCustomScope = additionalTags?.some((tag) => tag.startsWith("scope:"))
 
   const baseTags = [`type:${libraryType}`]
 
@@ -148,7 +148,7 @@ function buildTags(
     }
   }
 
-  return baseTags.join(',')
+  return baseTags.join(",")
 }
 
 // ============================================================================
@@ -224,7 +224,7 @@ export function computeMetadata(input: MetadataInput, context: WorkspaceContext)
 
   return {
     // Required by Nx template substitutions
-    tmpl: '' as const,
+    tmpl: "" as const,
     name: nameVariants.name, // camelCase for JS identifiers
     offsetFromRoot,
     tags,

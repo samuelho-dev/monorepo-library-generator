@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/cache
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate Redis-backed cache layer
@@ -33,20 +33,20 @@ On cache miss:
 3. Call lookup function
 4. Store in both memory and Redis`,
     module: `${scope}/infra-${fileName}/layers/redis`,
-    see: ['EFFECT_PATTERNS.md for cache patterns', `${scope}/provider-redis for Redis provider`]
+    see: ["EFFECT_PATTERNS.md for cache patterns", `${scope}/provider-redis for Redis provider`]
   })
 
   // Imports - layers.ts is at lib/layers.ts, service at lib/service.ts
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Cache', 'Duration', 'Effect', 'Layer']
+      from: "effect",
+      imports: ["Cache", "Duration", "Effect", "Layer"]
     },
-    { from: `${scope}/provider-redis`, imports: ['Redis'] },
-    { from: './service', imports: [`${className}Service`] }
+    { from: `${scope}/provider-redis`, imports: ["Redis"] },
+    { from: "./service", imports: [`${className}Service`] }
   ])
 
-  builder.addSectionComment('Redis Cache Layer')
+  builder.addSectionComment("Redis Cache Layer")
 
   builder.addRaw(`/**
  * Redis-backed distributed cache layer
@@ -158,7 +158,7 @@ export const ${className}RedisLayer = Layer.effect(
 )
 `)
 
-  builder.addSectionComment('Usage Examples')
+  builder.addSectionComment("Usage Examples")
 
   builder.addRaw(`/**
  * Example: Using Redis-backed cache with provider-redis

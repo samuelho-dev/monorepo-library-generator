@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/schemas
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Schemas Template Definition
@@ -18,21 +18,21 @@ import type { TemplateDefinition } from '../../core/types'
  * - Common validation schemas
  */
 export const featureSchemasTemplate: TemplateDefinition = {
-  id: 'feature/schemas',
+  id: "feature/schemas",
   meta: {
-    title: '{className} Feature Schemas',
+    title: "{className} Feature Schemas",
     description: `Shared Effect Schema definitions for {propertyName} feature.
 
 Contains validation schemas used across the feature layer.`,
-    module: '{scope}/feature-{fileName}/shared/schemas'
+    module: "{scope}/feature-{fileName}/shared/schemas"
   },
-  imports: [{ from: 'effect', items: ['Schema'] }],
+  imports: [{ from: "effect", items: ["Schema"] }],
   sections: [
     // Result Schemas
     {
-      title: 'Result Schemas',
+      title: "Result Schemas",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Service operation result schema
  *
@@ -49,7 +49,7 @@ export type {className}Result = Schema.Schema.Type<typeof {className}ResultSchem
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Bulk operation result schema
  */
@@ -68,9 +68,9 @@ export type {className}BulkResult = Schema.Schema.Type<typeof {className}BulkRes
     },
     // Configuration Schemas
     {
-      title: 'Configuration Schemas',
+      title: "Configuration Schemas",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Service configuration schema
  *
@@ -93,9 +93,9 @@ export type {className}Config = Schema.Schema.Type<typeof {className}ConfigSchem
     },
     // Validation Schemas
     {
-      title: 'Validation Schemas',
+      title: "Validation Schemas",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Pagination parameters schema
  */
@@ -114,7 +114,7 @@ export type Pagination = Schema.Schema.Type<typeof PaginationSchema>`
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Sort direction schema
  */
@@ -124,7 +124,7 @@ export type SortDirection = Schema.Schema.Type<typeof SortDirectionSchema>`
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Generic sort options schema factory
  */

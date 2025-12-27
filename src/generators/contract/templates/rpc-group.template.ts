@@ -12,9 +12,9 @@
  * @module monorepo-library-generator/contract/rpc-group-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { ContractTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { ContractTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate RPC group file for contract library
@@ -54,35 +54,35 @@ export function generateRpcGroupFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: '@effect/rpc', imports: ['RpcGroup'] }])
+  builder.addImports([{ from: "@effect/rpc", imports: ["RpcGroup"] }])
 
-  builder.addSectionComment('RPC Definition Imports')
+  builder.addSectionComment("RPC Definition Imports")
   builder.addImports([
     {
-      from: './rpc-definitions',
+      from: "./rpc-definitions",
       imports: [
         `BulkGet${className}s`,
         `Create${className}`,
         `Delete${className}`,
         `Get${className}`,
         `List${className}s`,
-        'RouteTag',
+        "RouteTag",
         `Update${className}`,
         `Validate${className}`
       ]
     }
   ])
-  builder.addImports([{ from: './rpc-definitions', imports: ['RouteType'], isTypeOnly: true }])
+  builder.addImports([{ from: "./rpc-definitions", imports: ["RouteType"], isTypeOnly: true }])
 
   // Re-export RouteTag - needed for Contract-First Architecture
-  builder.addSectionComment('Re-export Route System')
+  builder.addSectionComment("Re-export Route System")
   builder.addComment(
-    'biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system'
+    "biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system"
   )
   builder.addRaw(`export { RouteTag, type RouteType } from "./rpc-definitions"`)
 
   // RpcGroup composition
-  builder.addSectionComment('RPC Group Composition')
+  builder.addSectionComment("RPC Group Composition")
 
   builder.addRaw(`/**
  * ${className} RPC Group
@@ -106,7 +106,7 @@ export function generateRpcGroupFile(options: ContractTemplateOptions) {
 export const ${className}Rpcs = RpcGroup.make(BulkGet${className}s, Create${className}, Delete${className}, Get${className}, List${className}s, Update${className}, Validate${className})`)
 
   // Type exports
-  builder.addSectionComment('Type Exports')
+  builder.addSectionComment("Type Exports")
 
   builder.addRaw(`/**
  * Type of the ${className} RPC group
@@ -127,7 +127,7 @@ export type ${className}RpcDefinitions = {
 }`)
 
   // Re-export individual RPCs
-  builder.addSectionComment('Re-export Individual RPCs')
+  builder.addSectionComment("Re-export Individual RPCs")
 
   builder.addRaw(`export {
   Get${className},
@@ -140,7 +140,7 @@ export type ${className}RpcDefinitions = {
 } from "./rpc-definitions"`)
 
   // Route helpers
-  builder.addSectionComment('Route Helpers')
+  builder.addSectionComment("Route Helpers")
 
   builder.addRaw(`/**
  * Get route type for an RPC definition

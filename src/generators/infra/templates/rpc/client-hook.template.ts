@@ -13,8 +13,8 @@
  * @module monorepo-library-generator/infra-templates/rpc/client-hook
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate client hooks file for infra-rpc
@@ -26,7 +26,7 @@ export function generateRpcClientHooksFile(options: InfraTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: 'RPC Client Hooks',
+    title: "RPC Client Hooks",
     description: `React hooks for making RPC calls from client components.
 
 Provides:
@@ -47,15 +47,15 @@ Usage:
   })
 
   builder.addImports([
-    { from: 'effect', imports: ['Option', 'Runtime', 'Schema'] },
-    { from: 'effect', imports: ['Exit'], isTypeOnly: true },
-    { from: 'react', imports: ['useCallback', 'useEffect', 'useState'] }
+    { from: "effect", imports: ["Option", "Runtime", "Schema"] },
+    { from: "effect", imports: ["Exit"], isTypeOnly: true },
+    { from: "react", imports: ["useCallback", "useEffect", "useState"] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment('Types')
+  builder.addSectionComment("Types")
 
-  builder.addImports([{ from: 'effect', imports: ['Effect'], isTypeOnly: true }])
+  builder.addImports([{ from: "effect", imports: ["Effect"], isTypeOnly: true }])
 
   builder.addRaw(`/**
  * Parsed RPC error for display in React components
@@ -69,7 +69,7 @@ export interface ParsedRpcError {
   readonly code?: string
 }`)
 
-  builder.addSectionComment('Error Parsing (Schema-based)')
+  builder.addSectionComment("Error Parsing (Schema-based)")
 
   builder.addRaw(`/**
  * Schema for parsing RPC error responses
@@ -102,7 +102,7 @@ function parseRpcError(error: unknown): ParsedRpcError {
   return { _tag: "UnknownError", message: "An unexpected error occurred" }
 }`)
 
-  builder.addSectionComment('RPC Runtime Context')
+  builder.addSectionComment("RPC Runtime Context")
 
   builder.addRaw(`/**
  * RPC Runtime for executing Effect programs
@@ -135,7 +135,7 @@ export function runEffectExit<A, E>(
 }
 `)
 
-  builder.addSectionComment('RPC Call Function')
+  builder.addSectionComment("RPC Call Function")
 
   builder.addRaw(`/**
  * RPC call options
@@ -209,7 +209,7 @@ export async function callRpc<T>(
 }
 `)
 
-  builder.addSectionComment('Mutation Hook')
+  builder.addSectionComment("Mutation Hook")
 
   builder.addRaw(`/**
  * Hook for RPC mutations with loading/error state
@@ -272,7 +272,7 @@ export function useRpcMutation<TInput, TOutput>(
 }
 `)
 
-  builder.addSectionComment('Query Hook')
+  builder.addSectionComment("Query Hook")
 
   builder.addRaw(`/**
  * Hook for RPC queries with automatic fetching
@@ -336,7 +336,7 @@ export function useRpcQuery<TInput, TOutput>(
 }
 `)
 
-  builder.addSectionComment('Lazy Query Hook')
+  builder.addSectionComment("Lazy Query Hook")
 
   builder.addRaw(`/**
  * Hook for RPC queries that are triggered manually

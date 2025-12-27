@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/submodule-index-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 export interface SubModuleIndexOptions {
   /** Parent domain name (e.g., 'order') */
@@ -57,14 +57,14 @@ import {
   })
   builder.addBlankLine()
 
-  builder.addSectionComment('Parent Entity Re-Export')
-  builder.addComment('Sub-modules use parent entity type - re-export for convenience')
+  builder.addSectionComment("Parent Entity Re-Export")
+  builder.addComment("Sub-modules use parent entity type - re-export for convenience")
   builder.addRaw(`export type { ${parentClassName}Entity } from "../lib/rpc-definitions"`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Error Exports (Contract-First)')
+  builder.addSectionComment("Error Exports (Contract-First)")
   builder.addComment(
-    'Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these'
+    "Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these"
   )
   builder.addRaw(`export {
   ${subModuleClassName}NotFoundError,
@@ -76,7 +76,7 @@ import {
 } from "./errors"`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Entity Exports')
+  builder.addSectionComment("Entity Exports")
   builder.addRaw(`export {
   ${subModuleClassName}Id,
   ${subModuleClassName},
@@ -87,7 +87,7 @@ import {
 } from "./entities"`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Event Exports')
+  builder.addSectionComment("Event Exports")
   builder.addRaw(`export {
   ${subModuleClassName}Created,
   ${subModuleClassName}Updated,
@@ -97,7 +97,7 @@ import {
 } from "./events"`)
   builder.addBlankLine()
 
-  builder.addSectionComment('RPC Exports')
+  builder.addSectionComment("RPC Exports")
   // Note: RouteTag/RouteType are NOT re-exported to avoid duplicates
   // Import them from the parent contract: @scope/contract-{parent}
   builder.addRaw(`export {

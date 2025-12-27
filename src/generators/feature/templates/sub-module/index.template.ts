@@ -14,8 +14,8 @@
  * @module monorepo-library-generator/feature/sub-module/index-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 export interface SubModuleIndexOptions {
   /** Parent domain name (e.g., 'order') */
@@ -54,7 +54,7 @@ NOTE: State is managed by parent ${parentClassName} atoms.`,
     module: `${scope}/feature-${parentFileName}/server/services/${subModuleName}`
   })
 
-  builder.addSectionComment('Service Exports')
+  builder.addSectionComment("Service Exports")
   builder.addRaw(`export {
   // Context.Tag
   ${subModuleClassName}Service,
@@ -66,7 +66,7 @@ NOTE: State is managed by parent ${parentClassName} atoms.`,
   ${subModuleClassName}ServiceError
 } from "./service"`)
 
-  builder.addSectionComment('Composed Layer Exports')
+  builder.addSectionComment("Composed Layer Exports")
   builder.addRaw(`export {
   // Full production layer
   ${subModuleClassName}Live,
@@ -76,7 +76,7 @@ NOTE: State is managed by parent ${parentClassName} atoms.`,
   ${subModuleClassName}Dependencies
 } from "./layer"`)
 
-  builder.addSectionComment('RPC Handler Exports')
+  builder.addSectionComment("RPC Handler Exports")
   builder.addRaw(`export { ${subModuleClassName}Handlers } from "./handlers"`)
 
   return builder.toString()

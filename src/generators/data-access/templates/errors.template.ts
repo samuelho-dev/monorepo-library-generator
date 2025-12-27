@@ -15,10 +15,10 @@
  * @module monorepo-library-generator/data-access/errors-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
-import { createErrorFactory, ERROR_SETS, getInfrastructureErrorNames } from '../../shared/factories'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { createErrorFactory, ERROR_SETS, getInfrastructureErrorNames } from "../../shared/factories"
 
 /**
  * Generate errors.ts file for data-access library
@@ -61,7 +61,7 @@ For domain errors, import from contract:
       imports: [`${className}RepositoryError`],
       isTypeOnly: true
     },
-    { from: 'effect', imports: ['Data'] }
+    { from: "effect", imports: ["Data"] }
   ])
   builder.addBlankLine()
 
@@ -69,10 +69,10 @@ For domain errors, import from contract:
   // Infrastructure-Specific Errors (Data-Access Only)
   // ============================================================================
 
-  builder.addSectionComment('Infrastructure Errors (Data-Access Specific)')
-  builder.addComment('These errors are specific to data-access infrastructure operations.')
-  builder.addComment('They do not exist in the contract layer as they are implementation details.')
-  builder.addComment('')
+  builder.addSectionComment("Infrastructure Errors (Data-Access Specific)")
+  builder.addComment("These errors are specific to data-access infrastructure operations.")
+  builder.addComment("They do not exist in the contract layer as they are implementation details.")
+  builder.addComment("")
   builder.addComment(`For domain errors, import directly from contract:`)
   builder.addComment(`  import { ${className}NotFoundError } from "${scope}/contract-${fileName}";`)
   builder.addBlankLine()
@@ -80,7 +80,7 @@ For domain errors, import from contract:
   // Generate infrastructure errors using the factory
   createErrorFactory({
     className,
-    style: 'data',
+    style: "data",
     errors: ERROR_SETS.dataAccess(className),
     includeUnionType: false, // We'll add custom union types below
     includeStaticCreate: true
@@ -90,13 +90,13 @@ For domain errors, import from contract:
   // Infrastructure Error Union Type
   // ============================================================================
 
-  builder.addSectionComment('Infrastructure Error Union Type')
+  builder.addSectionComment("Infrastructure Error Union Type")
   builder.addBlankLine()
 
   const infraErrors = getInfrastructureErrorNames(className)
   builder.addTypeAlias({
     name: `${className}InfrastructureError`,
-    type: infraErrors.join(' | '),
+    type: infraErrors.join(" | "),
     exported: true,
     jsdoc: `Union of infrastructure-specific errors
 
@@ -110,7 +110,7 @@ to repository errors at the data-access boundary.`
   // Combined Data Access Error Type
   // ============================================================================
 
-  builder.addSectionComment('Combined Data Access Error Type')
+  builder.addSectionComment("Combined Data Access Error Type")
   builder.addBlankLine()
 
   builder.addTypeAlias({

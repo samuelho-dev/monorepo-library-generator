@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/hooks
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Hooks Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Loading/error state handling
  */
 export const featureHooksTemplate: TemplateDefinition = {
-  id: 'feature/hooks',
+  id: "feature/hooks",
   meta: {
-    title: 'use{className} Hook',
+    title: "use{className} Hook",
     description: `React hook for {propertyName} operations with RPC integration.
 
 Features:
@@ -29,37 +29,37 @@ Features:
 - CRUD operations via RPC client
 - Integration with atom-based state
 - Optimistic updates support`,
-    module: '{scope}/feature-{fileName}/client/hooks'
+    module: "{scope}/feature-{fileName}/client/hooks"
   },
   imports: [
-    { from: 'react', items: ['useCallback', 'useEffect'], isTypeOnly: false },
-    { from: 'effect', items: ['Effect', 'Schema', 'Option'] },
-    { from: '@effect/rpc', items: ['RpcClient'] },
-    { from: '@effect-atom/atom/react', items: ['useAtom', 'useAtomValue'] },
-    { from: '{scope}/contract-{fileName}', items: ['{className}Rpc'] },
+    { from: "react", items: ["useCallback", "useEffect"], isTypeOnly: false },
+    { from: "effect", items: ["Effect", "Schema", "Option"] },
+    { from: "@effect/rpc", items: ["RpcClient"] },
+    { from: "@effect-atom/atom/react", items: ["useAtom", "useAtomValue"] },
+    { from: "{scope}/contract-{fileName}", items: ["{className}Rpc"] },
     {
-      from: '{scope}/contract-{fileName}',
-      items: ['{className}', '{className}Id', '{className}CreateInput', '{className}UpdateInput'],
+      from: "{scope}/contract-{fileName}",
+      items: ["{className}", "{className}Id", "{className}CreateInput", "{className}UpdateInput"],
       isTypeOnly: true
     },
     {
-      from: '../atoms/{fileName}-atoms',
+      from: "../atoms/{fileName}-atoms",
       items: [
-        '{propertyName}Atom',
-        '{propertyName}EntityFamily',
-        'update{className}Entity',
-        'update{className}List',
-        'update{className}Operation',
-        'reset{className}State'
+        "{propertyName}Atom",
+        "{propertyName}EntityFamily",
+        "update{className}Entity",
+        "update{className}List",
+        "update{className}Operation",
+        "reset{className}State"
       ]
     }
   ],
   sections: [
     // Hook Return Type
     {
-      title: 'Hook Return Type',
+      title: "Hook Return Type",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Return type for use{className} hook
  */
@@ -82,9 +82,9 @@ export interface Use{className}Return {
     },
     // Hook Implementation
     {
-      title: 'Hook Implementation',
+      title: "Hook Implementation",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * use{className} Hook
  *

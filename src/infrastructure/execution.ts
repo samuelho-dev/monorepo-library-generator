@@ -13,26 +13,22 @@
  * @module monorepo-library-generator/infrastructure/execution
  */
 
-import type { Tree } from '@nx/devkit'
-import { addProjectConfiguration } from '@nx/devkit'
-import { Data, Effect, Metric } from 'effect'
-import { TemplateCompiler } from '../templates/core/compiler'
-import {
-  createAdapterFromContext,
-  type FileSystemAdapter,
-  type FileSystemErrors
-} from '../utils/filesystem'
-import { generateLibraryInfrastructure, type InfrastructureOptions } from '../utils/infrastructure'
-import type { LibraryMetadata, LibraryType } from './metadata'
-import { computeMetadata } from './metadata'
+import type { Tree } from "@nx/devkit"
+import { addProjectConfiguration } from "@nx/devkit"
+import { Data, Effect, Metric } from "effect"
+import { TemplateCompiler } from "../templates/core/compiler"
+import { createAdapterFromContext, type FileSystemAdapter, type FileSystemErrors } from "../utils/filesystem"
+import { generateLibraryInfrastructure, type InfrastructureOptions } from "../utils/infrastructure"
+import type { LibraryMetadata, LibraryType } from "./metadata"
+import { computeMetadata } from "./metadata"
 import {
   taggedFilesGenerated,
   taggedGeneratorDuration,
   taggedGeneratorError,
   taggedGeneratorExecution
-} from './metrics'
-import type { InterfaceType } from './workspace'
-import { createWorkspaceContext } from './workspace'
+} from "./metrics"
+import type { InterfaceType } from "./workspace"
+import { createWorkspaceContext } from "./workspace"
 
 // ============================================================================
 // Types
@@ -68,7 +64,7 @@ export type CoreGeneratorFn<TOptions> = (
  * Tagged error for generator execution failures with structured error information.
  * Preserves the original error cause for debugging.
  */
-export class GeneratorExecutionError extends Data.TaggedError('GeneratorExecutionError')<{
+export class GeneratorExecutionError extends Data.TaggedError("GeneratorExecutionError")<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -210,8 +206,8 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
 ) {
   return {
     execute: (validated: ExtendedInput<TInput>) =>
-      Effect.gen(function* () {
-        const interfaceType = validated.__interfaceType ?? 'cli'
+      Effect.gen(function*() {
+        const interfaceType = validated.__interfaceType ?? "cli"
         const startTime = Date.now()
 
         // Track execution count
@@ -219,20 +215,20 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
 
         // 1. Create workspace context
         const context = yield* createWorkspaceContext(validated.workspaceRoot, interfaceType).pipe(
-          mapToExecutionError('Failed to detect workspace context'),
-          Effect.withSpan('generator.workspace_context', {
+          mapToExecutionError("Failed to detect workspace context"),
+          Effect.withSpan("generator.workspace_context", {
             attributes: {
-              'workspace.root': validated.workspaceRoot ?? 'auto-detected'
+              "workspace.root": validated.workspaceRoot ?? "auto-detected"
             }
           })
         )
 
         // 2. Create appropriate adapter
         const adapter = yield* createAdapterFromContext(context, validated.__nxTree).pipe(
-          mapToExecutionError('Failed to create filesystem adapter'),
-          Effect.withSpan('generator.create_adapter', {
+          mapToExecutionError("Failed to create filesystem adapter"),
+          Effect.withSpan("generator.create_adapter", {
             attributes: {
-              'adapter.type': validated.__nxTree ? 'nx-tree' : 'effect-fs'
+              "adapter.type": validated.__nxTree ? "nx-tree" : "effect-fs"
             }
           })
         )
@@ -248,7 +244,7 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
             description: validated.description
           }),
           ...(validated.tags !== undefined && {
-            additionalTags: validated.tags.split(',').map((t) => t.trim())
+            additionalTags: validated.tags.split(",").map((t) => t.trim())
           })
         }
 
@@ -262,14 +258,14 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
           packageName: metadata.packageName,
           libraryType,
           description: metadata.description,
-          platform: 'node',
+          platform: "node",
           offsetFromRoot: metadata.offsetFromRoot,
-          tags: metadata.tags.split(',').map((t) => t.trim()),
+          tags: metadata.tags.split(",").map((t) => t.trim()),
           // Contract-specific: pass sub-modules for subpath exports
           ...(validated.subModules !== undefined && {
             subModules: Array.isArray(validated.subModules)
               ? validated.subModules
-              : validated.subModules.split(',').map((s) => s.trim())
+              : validated.subModules.split(",").map((s) => s.trim())
           }),
           // Contract-specific: pass entities for entity exports
           ...(validated.entities !== undefined && {
@@ -278,10 +274,10 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
         }
 
         const infraResult = yield* generateLibraryInfrastructure(adapter, infraOptions).pipe(
-          mapToExecutionError('Failed to generate infrastructure files'),
-          Effect.withSpan('generator.infrastructure', {
+          mapToExecutionError("Failed to generate infrastructure files"),
+          Effect.withSpan("generator.infrastructure", {
             attributes: {
-              'infra.project_root': metadata.projectRoot
+              "infra.project_root": metadata.projectRoot
             }
           })
         )
@@ -290,7 +286,7 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
         if (infraResult.requiresNxRegistration && infraResult.projectConfig && validated.__nxTree) {
           addProjectConfiguration(validated.__nxTree, infraResult.projectConfig.name, {
             root: infraResult.projectConfig.root,
-            projectType: 'library' as const,
+            projectType: "library" as const,
             sourceRoot: infraResult.projectConfig.sourceRoot,
             tags: infraResult.projectConfig.tags,
             targets: infraResult.projectConfig.targets
@@ -301,11 +297,11 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
         const coreOptions = inputToOptions(validated, metadata)
         const result = yield* coreGenerator(adapter, coreOptions).pipe(
           Effect.provide(TemplateCompiler.Live),
-          mapToExecutionError('Failed to generate domain files'),
-          Effect.withSpan('generator.domain_files', {
+          mapToExecutionError("Failed to generate domain files"),
+          Effect.withSpan("generator.domain_files", {
             attributes: {
-              'domain.library_type': libraryType,
-              'domain.library_name': validated.name
+              "domain.library_type": libraryType,
+              "domain.library_name": validated.name
             }
           })
         )
@@ -324,16 +320,15 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
         // Wrap entire execution in a span
         Effect.withSpan(`generator.${libraryType}`, {
           attributes: {
-            'generator.library_type': libraryType,
-            'generator.interface': validated.__interfaceType ?? 'cli',
-            'generator.library_name': validated.name
+            "generator.library_type": libraryType,
+            "generator.interface": validated.__interfaceType ?? "cli",
+            "generator.library_name": validated.name
           }
         }),
         // Handle errors with metrics
         Effect.tapError((error) =>
-          Effect.gen(function* () {
-            const errorType =
-              error instanceof GeneratorExecutionError ? 'execution_error' : 'unknown_error'
+          Effect.gen(function*() {
+            const errorType = error instanceof GeneratorExecutionError ? "execution_error" : "unknown_error"
             yield* Metric.increment(taggedGeneratorError(errorType, libraryType))
           })
         )
@@ -358,7 +353,7 @@ export function executeGenerator<TOptions>(
   coreOptions: TOptions,
   infrastructureOptions?: Partial<InfrastructureOptions>
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Generate infrastructure files
     const infraOptions: InfrastructureOptions = {
       projectRoot: metadata.projectRoot,
@@ -367,20 +362,20 @@ export function executeGenerator<TOptions>(
       packageName: metadata.packageName,
       libraryType: metadata.libraryType,
       description: metadata.description,
-      platform: 'node',
+      platform: "node",
       offsetFromRoot: metadata.offsetFromRoot,
-      tags: metadata.tags.split(',').map((t) => t.trim()),
+      tags: metadata.tags.split(",").map((t) => t.trim()),
       ...infrastructureOptions
     }
 
     yield* generateLibraryInfrastructure(adapter, infraOptions).pipe(
-      mapToExecutionError('Failed to generate infrastructure')
+      mapToExecutionError("Failed to generate infrastructure")
     )
 
     // Generate domain files (provide TemplateCompiler layer)
     const result = yield* coreGenerator(adapter, coreOptions).pipe(
       Effect.provide(TemplateCompiler.Live),
-      mapToExecutionError('Failed to generate domain files')
+      mapToExecutionError("Failed to generate domain files")
     )
 
     return result

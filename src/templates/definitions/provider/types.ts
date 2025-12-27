@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/provider/types
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Provider Types Template Definition
@@ -25,19 +25,19 @@ import type { TemplateDefinition } from '../../core/types'
  * - cli: CLI wrapper types
  */
 export const providerTypesTemplate: TemplateDefinition = {
-  id: 'provider/types',
+  id: "provider/types",
   meta: {
-    title: '{className} - Type Definitions',
-    description: 'Common types used across the provider service',
-    module: '{scope}/provider-{fileName}/lib/types'
+    title: "{className} - Type Definitions",
+    description: "Common types used across the provider service",
+    module: "{scope}/provider-{fileName}/lib/types"
   },
-  imports: [{ from: 'effect', items: ['Schema'] }],
+  imports: [{ from: "effect", items: ["Schema"] }],
   sections: [
     // Configuration
     {
-      title: 'Configuration',
+      title: "Configuration",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Configuration
  */
@@ -50,9 +50,9 @@ export interface {className}Config {
     },
     // Resource Types
     {
-      title: 'Resource Types',
+      title: "Resource Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Resource Schema - customize based on your API
  *
@@ -71,9 +71,9 @@ export type Resource = Schema.Schema.Type<typeof ResourceSchema>`
     },
     // Pagination Types
     {
-      title: 'Pagination Types',
+      title: "Pagination Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * List Parameters
  */
@@ -96,7 +96,7 @@ export interface PaginatedResult<T> {
     // Health Check
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Health Check Result
  */
@@ -108,9 +108,9 @@ export interface HealthCheckResult {
     },
     // Service Metadata
     {
-      title: 'Service Metadata',
+      title: "Service Metadata",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Service Metadata
  */
@@ -126,9 +126,9 @@ export interface ServiceMetadata {
     },
     // Query Options
     {
-      title: 'Query Options',
+      title: "Query Options",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Pagination Options
  */

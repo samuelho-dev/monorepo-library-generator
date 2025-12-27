@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/feature/cqrs/queries-base-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate server/cqrs/queries/base.ts file
@@ -40,11 +40,11 @@ Usage:
   builder.addBlankLine()
 
   builder.addImports([
-    { from: 'effect', imports: ['Context', 'Duration', 'Effect', 'Layer', 'Option', 'Schema'] }
+    { from: "effect", imports: ["Context", "Duration", "Effect", "Layer", "Option", "Schema"] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment('Query Base Class')
+  builder.addSectionComment("Query Base Class")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -127,7 +127,7 @@ export abstract class Query<
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment('QueryBus Interface')
+  builder.addSectionComment("QueryBus Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -170,7 +170,7 @@ export interface QueryBusInterface {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment('QueryBus Context.Tag')
+  builder.addSectionComment("QueryBus Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -238,7 +238,7 @@ export function generateQueriesIndexFile(options: FeatureTemplateOptions) {
 
   builder.addFileHeader({
     title: `${className} CQRS Queries Index`,
-    description: 'Barrel export for CQRS queries.',
+    description: "Barrel export for CQRS queries.",
     module: `${options.packageName}/server/cqrs/queries`
   })
   builder.addBlankLine()

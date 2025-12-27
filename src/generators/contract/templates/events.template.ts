@@ -9,7 +9,6 @@
 
 import { TypeScriptBuilder } from "../../../utils/code-builder"
 import type { ContractTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate events.ts file for contract library
@@ -23,12 +22,11 @@ import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
  */
 export function generateEventsFile(options: ContractTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, fileName, propertyName } = options
+  const { className, propertyName } = options
   const domainName = propertyName
-  const scope = WORKSPACE_CONFIG.getScope()
 
   // Add file header
-  builder.addRaw(createFileHeader(className, domainName, fileName, scope))
+  builder.addRaw(createFileHeader(className, domainName))
   builder.addBlankLine()
 
   // Add imports
@@ -240,7 +238,7 @@ export function createAggregateMetadata(
 /**
  * Create file header
  */
-function createFileHeader(className: string, domainName: string, fileName: string, scope: string) {
+function createFileHeader(className: string, domainName: string) {
   return `/**
  * ${className} Domain Events
  *

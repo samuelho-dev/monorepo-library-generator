@@ -12,8 +12,8 @@
  * @module monorepo-library-generator/infra-templates/rpc/index
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate RPC index.ts file
@@ -23,7 +23,7 @@ export function generateRpcIndexFile(options: InfraTemplateOptions) {
   const { className, packageName } = options
 
   builder.addFileHeader({
-    title: 'RPC Infrastructure Library',
+    title: "RPC Infrastructure Library",
     description: `RPC infrastructure for Effect-based applications.
 
 Contract-First Architecture:
@@ -51,7 +51,7 @@ Usage:
   builder.addBlankLine()
 
   // Error exports
-  builder.addSectionComment('Errors')
+  builder.addSectionComment("Errors")
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -82,7 +82,7 @@ Usage:
   builder.addBlankLine()
 
   // Core exports
-  builder.addSectionComment('Core RPC Utilities')
+  builder.addSectionComment("Core RPC Utilities")
   builder.addBlankLine()
 
   builder.addRaw(`// Re-exports from @effect/rpc
@@ -108,7 +108,7 @@ export {
   builder.addBlankLine()
 
   // Client exports
-  builder.addSectionComment('RPC Client')
+  builder.addSectionComment("RPC Client")
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -120,7 +120,7 @@ export {
   builder.addBlankLine()
 
   // Transport exports
-  builder.addSectionComment('Transport Layer')
+  builder.addSectionComment("Transport Layer")
   builder.addBlankLine()
 
   builder.addRaw(`// Transport types
@@ -160,7 +160,7 @@ export {
   builder.addBlankLine()
 
   // Middleware exports - now from middleware module
-  builder.addSectionComment('Middleware (Contract-First Architecture)')
+  builder.addSectionComment("Middleware (Contract-First Architecture)")
   builder.addBlankLine()
 
   builder.addRaw(`// User Authentication (Protected Routes)
@@ -270,7 +270,7 @@ export {
   builder.addBlankLine()
 
   // Client Hooks exports
-  builder.addSectionComment('Client Hooks (React)')
+  builder.addSectionComment("Client Hooks (React)")
   builder.addBlankLine()
 
   builder.addRaw(`export {

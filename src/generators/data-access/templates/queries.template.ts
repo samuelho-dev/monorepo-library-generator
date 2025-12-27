@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/queries-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate queries.ts file for data-access library
@@ -36,20 +36,20 @@ Encapsulates common query patterns and SQL building logic.
   // Add imports
   builder.addImports([
     {
-      from: 'kysely',
-      imports: ['Kysely'],
+      from: "kysely",
+      imports: ["Kysely"],
       isTypeOnly: true
     },
     {
       from: `${scope}/infra-database`,
-      imports: ['Database'],
+      imports: ["Database"],
       isTypeOnly: true
     }
   ])
   builder.addBlankLine()
 
   // Query Type Aliases
-  builder.addSectionComment('Query Type Aliases')
+  builder.addSectionComment("Query Type Aliases")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -68,7 +68,7 @@ export interface PaginationOptions {
   builder.addBlankLine()
 
   // Query Builders
-  builder.addSectionComment('Query Builders')
+  builder.addSectionComment("Query Builders")
   builder.addBlankLine()
 
   // buildFindAllQuery

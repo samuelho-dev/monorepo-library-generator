@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/data-access/queries
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Data Access Queries Template Definition
@@ -18,25 +18,25 @@ import type { TemplateDefinition } from '../../core/types'
  * - Filter, sort, and pagination helpers
  */
 export const dataAccessQueriesTemplate: TemplateDefinition = {
-  id: 'data-access/queries',
+  id: "data-access/queries",
   meta: {
-    title: 'Kysely Query Builders for {className}',
+    title: "Kysely Query Builders for {className}",
     description: `Helper functions for building type-safe queries using Kysely.
 Encapsulates common query patterns and SQL building logic.
 
 @see https://kysely.dev/docs/category/queries for Kysely API reference`,
-    module: '{scope}/data-access-{fileName}/server'
+    module: "{scope}/data-access-{fileName}/server"
   },
   imports: [
-    { from: 'kysely', items: ['Kysely'], isTypeOnly: true },
-    { from: '{scope}/infra-database', items: ['Database'], isTypeOnly: true }
+    { from: "kysely", items: ["Kysely"], isTypeOnly: true },
+    { from: "{scope}/infra-database", items: ["Database"], isTypeOnly: true }
   ],
   sections: [
     // Query Type Aliases
     {
-      title: 'Query Type Aliases',
+      title: "Query Type Aliases",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Filter options for queries
  */
@@ -45,7 +45,7 @@ export type {className}QueryFilters = Record<string, never>`
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Pagination options
  */
@@ -57,9 +57,9 @@ export interface PaginationOptions {
     },
     // Query Builders
     {
-      title: 'Query Builders',
+      title: "Query Builders",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Build find all query for {className}
  *
@@ -79,7 +79,7 @@ export function buildFindAllQuery(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Build find by ID query
  *
@@ -101,7 +101,7 @@ export function buildFindByIdQuery(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Build count query
  *

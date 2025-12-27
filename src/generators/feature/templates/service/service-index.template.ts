@@ -6,10 +6,10 @@
  * @module monorepo-library-generator/feature/service/service-index-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import { createNamingVariants } from '../../../../utils/naming'
-import type { FeatureTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import { createNamingVariants } from "../../../../utils/naming"
+import type { FeatureTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate server/services/index.ts file
@@ -38,7 +38,7 @@ Import options:
     module: `${scope}/feature-${fileName}/server/services`
   })
 
-  builder.addSectionComment('Main Service')
+  builder.addSectionComment("Main Service")
 
   builder.addRaw(`export { ${className}Service } from "./service"
 export type { ${className}ServiceInterface } from "./service"
@@ -49,7 +49,7 @@ export type { ${className}ServiceInterface } from "./service"
   // NOTE: Sub-modules don't have index.ts (biome noBarrelFile compliance)
   // Import directly from service.ts and layer.ts
   if (options.subModules && options.subModules.length > 0) {
-    builder.addSectionComment('Sub-Module Services')
+    builder.addSectionComment("Sub-Module Services")
 
     for (const subModule of options.subModules) {
       const subClassName = createNamingVariants(subModule).className

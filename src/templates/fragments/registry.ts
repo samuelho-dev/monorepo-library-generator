@@ -7,10 +7,10 @@
  * @module monorepo-library-generator/templates/fragments/registry
  */
 
-import { Context, Data, Effect, Layer, Option } from 'effect'
-import type { SourceFile } from 'ts-morph'
-import type { InterpolationError } from '../core/resolver'
-import type { TemplateContext } from '../core/types'
+import { Context, Data, Effect, Layer, Option } from "effect"
+import type { SourceFile } from "ts-morph"
+import type { InterpolationError } from "../core/resolver"
+import type { TemplateContext } from "../core/types"
 import type {
   AnyFragmentConfig,
   FragmentConfig,
@@ -18,7 +18,7 @@ import type {
   FragmentRegistryEntry,
   FragmentRenderer,
   InternalFragmentEntry
-} from './types'
+} from "./types"
 
 // ============================================================================
 // Error Types
@@ -27,7 +27,7 @@ import type {
 /**
  * Error when fragment type is not found in registry
  */
-export class FragmentNotFoundError extends Data.TaggedError('FragmentNotFoundError')<{
+export class FragmentNotFoundError extends Data.TaggedError("FragmentNotFoundError")<{
   readonly fragmentType: string
   readonly message: string
 }> {
@@ -120,7 +120,7 @@ interface FragmentRegistryImpl {
  * program.pipe(Effect.provide(FragmentRegistry.Live))
  * ```
  */
-export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
+export class FragmentRegistry extends Context.Tag("FragmentRegistry")<
   FragmentRegistry,
   FragmentRegistryImpl
 >() {
@@ -154,7 +154,7 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
       getTypes: () => Effect.sync(() => Array.from(entries.keys())),
 
       render: (sourceFile, definition, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const entry = entries.get(definition.type)
 
           if (!entry) {
@@ -165,7 +165,7 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
         }),
 
       renderAll: (sourceFile, definitions, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           for (const definition of definitions) {
             // Check condition if present
             if (definition.condition) {
@@ -233,7 +233,7 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
       getTypes: () => Effect.sync(() => Array.from(entries.keys())),
 
       render: (sourceFile, definition, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const entry = entries.get(definition.type)
 
           if (!entry) {
@@ -244,7 +244,7 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
         }),
 
       renderAll: (sourceFile, definitions, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           for (const definition of definitions) {
             if (definition.condition) {
               const conditionValue = context[definition.condition]

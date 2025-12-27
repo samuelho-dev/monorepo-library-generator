@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/layers
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Layers Template Definition
@@ -20,9 +20,9 @@ import type { TemplateDefinition } from '../../core/types'
  * Uses raw content for complex Layer.mergeAll expressions.
  */
 export const featureLayersTemplate: TemplateDefinition = {
-  id: 'feature/layers',
+  id: "feature/layers",
   meta: {
-    title: '{className} Layers',
+    title: "{className} Layers",
     description: `Layer composition for {propertyName} feature.
 
 Provides different layer implementations for different environments:
@@ -30,24 +30,24 @@ Provides different layer implementations for different environments:
 - Test: Testing with in-memory infrastructure
 - Dev: Development with local infrastructure
 - Auto: Automatically selects based on NODE_ENV`,
-    module: '{scope}/feature-{fileName}/server'
+    module: "{scope}/feature-{fileName}/server"
   },
   imports: [
-    { from: 'effect', items: ['Layer'] },
-    { from: '{scope}/env', items: ['env'] },
-    { from: './service', items: ['{className}Service'] },
-    { from: '{scope}/data-access-{fileName}', items: ['{className}Repository'] },
-    { from: '{scope}/infra-database', items: ['DatabaseService'] },
-    { from: '{scope}/infra-observability', items: ['LoggingService', 'MetricsService'] },
-    { from: '{scope}/infra-cache', items: ['CacheService'] },
-    { from: '{scope}/infra-pubsub', items: ['PubsubService'] }
+    { from: "effect", items: ["Layer"] },
+    { from: "{scope}/env", items: ["env"] },
+    { from: "./service", items: ["{className}Service"] },
+    { from: "{scope}/data-access-{fileName}", items: ["{className}Repository"] },
+    { from: "{scope}/infra-database", items: ["DatabaseService"] },
+    { from: "{scope}/infra-observability", items: ["LoggingService", "MetricsService"] },
+    { from: "{scope}/infra-cache", items: ["CacheService"] },
+    { from: "{scope}/infra-pubsub", items: ["PubsubService"] }
   ],
   sections: [
     // Service Layer Notes
     {
-      title: 'Service Layer Notes',
+      title: "Service Layer Notes",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Service Layer Pattern:
  *
@@ -62,9 +62,9 @@ Provides different layer implementations for different environments:
 
     // Infrastructure Layers Section
     {
-      title: 'Composed Infrastructure Layers',
+      title: "Composed Infrastructure Layers",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Live infrastructure layer
  *
@@ -86,7 +86,7 @@ export const InfrastructureLive = Layer.mergeAll(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Development infrastructure layer
  *
@@ -103,7 +103,7 @@ export const InfrastructureDev = Layer.mergeAll(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Test infrastructure layer
  *
@@ -121,9 +121,9 @@ export const InfrastructureTest = Layer.mergeAll(
 
     // Full Feature Layers Section
     {
-      title: 'Full Feature Layers',
+      title: "Full Feature Layers",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Full Live Layer for production
  *
@@ -150,7 +150,7 @@ export const {className}FeatureLive = Layer.mergeAll(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Full Test Layer for testing
  *
@@ -178,7 +178,7 @@ export const {className}FeatureTest = Layer.mergeAll(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Full Dev Layer for development
  *
@@ -193,9 +193,9 @@ export const {className}FeatureDev = Layer.mergeAll(
 
     // Auto Layer Section
     {
-      title: 'Environment-Aware Layer',
+      title: "Environment-Aware Layer",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Auto-selecting layer based on NODE_ENV
  *

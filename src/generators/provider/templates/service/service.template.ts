@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/provider/service/service-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate service/service.ts file
@@ -17,7 +17,7 @@ import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
  */
 export function generateProviderServiceFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, cliCommand, externalService, fileName, providerType = 'sdk' } = options
+  const { className, cliCommand, externalService, fileName, providerType = "sdk" } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
@@ -27,60 +27,60 @@ export function generateProviderServiceFile(options: ProviderTemplateOptions) {
 External Service: ${externalService}
 
 ${
-  providerType === 'sdk'
-    ? `Operations are split into separate files for optimal tree-shaking.
+      providerType === "sdk"
+        ? `Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.
 
 Bundle optimization:
   - Granular import: import { createOperations } from './operations/create'
   - Full service: import { ${className} } from './service'`
-    : `Provider Type: ${providerType}`
-}`,
+        : `Provider Type: ${providerType}`
+    }`,
     module: `${scope}/provider-${fileName}/service`
   })
   builder.addBlankLine()
 
   // Add imports based on provider type
-  const effectImports = ['Context', 'Effect', 'Layer']
-  if (providerType === 'cli') {
-    effectImports.push('Command')
+  const effectImports = ["Context", "Effect", "Layer"]
+  if (providerType === "cli") {
+    effectImports.push("Command")
   }
 
-  builder.addImports([{ from: 'effect', imports: [...effectImports, 'Redacted'] }])
+  builder.addImports([{ from: "effect", imports: [...effectImports, "Redacted"] }])
   builder.addBlankLine()
 
   // Add platform imports for HTTP/GraphQL
-  if (providerType === 'http' || providerType === 'graphql') {
+  if (providerType === "http" || providerType === "graphql") {
     builder.addImports([
       {
-        from: '@effect/platform',
-        imports: ['HttpClient', 'HttpClientRequest', 'HttpClientResponse']
+        from: "@effect/platform",
+        imports: ["HttpClient", "HttpClientRequest", "HttpClientResponse"]
       }
     ])
-    if (providerType === 'http') {
-      builder.addImports([{ from: '@effect/platform', imports: ['HttpBody'] }])
+    if (providerType === "http") {
+      builder.addImports([{ from: "@effect/platform", imports: ["HttpBody"] }])
     }
-    builder.addImports([{ from: 'effect', imports: ['Schedule'] }])
+    builder.addImports([{ from: "effect", imports: ["Schedule"] }])
     builder.addBlankLine()
   }
 
   // Import shared types and errors - conditional based on provider type
   const typeImports = [`${className}Config`]
-  if (providerType === 'cli') {
-    typeImports.push('CommandResult')
+  if (providerType === "cli") {
+    typeImports.push("CommandResult")
   } else {
-    typeImports.push('Resource', 'ListParams', 'PaginatedResult', 'HealthCheckResult')
+    typeImports.push("Resource", "ListParams", "PaginatedResult", "HealthCheckResult")
   }
 
   // Import from lib/ (flat structure - all files at same level as service.ts)
   builder.addImports([
     {
-      from: './types',
+      from: "./types",
       imports: typeImports,
       isTypeOnly: true
     },
     {
-      from: './errors',
+      from: "./errors",
       imports: [`${className}ServiceError`],
       isTypeOnly: true
     }
@@ -89,31 +89,31 @@ Bundle optimization:
   // Import NotFoundError as value for Test layer usage
   builder.addImports([
     {
-      from: './errors',
+      from: "./errors",
       imports: [`${className}NotFoundError`]
     }
   ])
 
   // Environment configuration
-  builder.addImports([{ from: `${scope}/env`, imports: ['env'] }])
+  builder.addImports([{ from: `${scope}/env`, imports: ["env"] }])
 
   // HTTP/GraphQL providers need ResourceSchema as a value import (not type-only)
   // for HttpClientResponse.schemaBodyJson() validation
-  if (providerType === 'http' || providerType === 'graphql') {
+  if (providerType === "http" || providerType === "graphql") {
     builder.addImports([
       {
-        from: './types',
-        imports: ['ResourceSchema']
+        from: "./types",
+        imports: ["ResourceSchema"]
       }
     ])
   }
   builder.addBlankLine()
 
   // Service interface - conditional based on provider type
-  builder.addSectionComment('Service Interface')
+  builder.addSectionComment("Service Interface")
   builder.addBlankLine()
 
-  if (providerType === 'cli') {
+  if (providerType === "cli") {
     // CLI Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -142,7 +142,7 @@ export interface ${className}ServiceInterface {
    */
   readonly version
 }`)
-  } else if (providerType === 'http') {
+  } else if (providerType === "http") {
     // HTTP Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -191,7 +191,7 @@ export interface ${className}ServiceInterface {
    */
   readonly list: (params?: ListParams)
 }`)
-  } else if (providerType === 'graphql') {
+  } else if (providerType === "graphql") {
     // GraphQL Provider Interface
     builder.addRaw(`/**
  * ${className} Service Interface
@@ -461,7 +461,7 @@ export interface ${className}ServiceInterface {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment('Context.Tag')
+  builder.addSectionComment("Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -484,7 +484,7 @@ export class ${className} extends Context.Tag("${className}")<
 >() {`)
 
   // Add conditional Live layer implementation
-  if (providerType === 'cli') {
+  if (providerType === "cli") {
     // CLI Live Layer
     builder.addRaw(`  /**
    * Live Layer - CLI command execution
@@ -545,7 +545,7 @@ export class ${className} extends Context.Tag("${className}")<
     }
   })
 }`)
-  } else if (providerType === 'http') {
+  } else if (providerType === "http") {
     // HTTP Live Layer
     builder.addRaw(`  /**
    * Live Layer - HTTP REST API client
@@ -681,7 +681,7 @@ export class ${className} extends Context.Tag("${className}")<
     }
   })
 }`)
-  } else if (providerType === 'graphql') {
+  } else if (providerType === "graphql") {
     // GraphQL Live Layer
     builder.addRaw(`  /**
    * Live Layer - GraphQL API client

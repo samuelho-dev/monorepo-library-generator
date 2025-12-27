@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates/storage/types
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate storage types.ts file
@@ -19,7 +19,7 @@ export function generateStorageTypesFile(options: InfraTemplateOptions) {
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'Storage Infrastructure Types',
+    title: "Storage Infrastructure Types",
     description: `Type definitions for storage infrastructure.
 
 Re-exports types from provider-supabase and adds storage-specific types.`,
@@ -28,11 +28,11 @@ Re-exports types from provider-supabase and adds storage-specific types.`,
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
   builder.addBlankLine()
 
   // Note about provider imports
-  builder.addSectionComment('Provider Types')
+  builder.addSectionComment("Provider Types")
   builder.addBlankLine()
 
   builder.addRaw(`// NOTE: For provider-specific types (StorageBucket, StorageFile, etc.),
@@ -42,7 +42,7 @@ Re-exports types from provider-supabase and adds storage-specific types.`,
   builder.addBlankLine()
 
   // Storage config types
-  builder.addSectionComment('Storage Configuration')
+  builder.addSectionComment("Storage Configuration")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -82,7 +82,7 @@ export const StorageConfigSchema = Schema.Struct({
   builder.addBlankLine()
 
   // Upload result types
-  builder.addSectionComment('Operation Types')
+  builder.addSectionComment("Operation Types")
   builder.addBlankLine()
 
   builder.addRaw(`/**

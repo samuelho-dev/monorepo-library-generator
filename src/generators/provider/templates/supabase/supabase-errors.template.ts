@@ -10,8 +10,8 @@
  * @module monorepo-library-generator/provider/templates/supabase/errors
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate Supabase provider errors.ts file
@@ -20,7 +20,7 @@ export function generateSupabaseErrorsFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: 'Supabase Provider Errors',
+    title: "Supabase Provider Errors",
     description: `Data.TaggedError-based error types for Supabase operations.
 
 All errors extend Data.TaggedError for:
@@ -32,11 +32,11 @@ All errors extend Data.TaggedError for:
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Data'] }])
+  builder.addImports([{ from: "effect", imports: ["Data"] }])
   builder.addBlankLine()
 
   // Base error type
-  builder.addSectionComment('Base Error Type')
+  builder.addSectionComment("Base Error Type")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -52,7 +52,7 @@ export class SupabaseError extends Data.TaggedError("SupabaseError")<{
   builder.addBlankLine()
 
   // Connection error
-  builder.addSectionComment('Connection Errors')
+  builder.addSectionComment("Connection Errors")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -67,7 +67,7 @@ export class SupabaseConnectionError extends Data.TaggedError("SupabaseConnectio
   builder.addBlankLine()
 
   // Auth errors
-  builder.addSectionComment('Authentication Errors')
+  builder.addSectionComment("Authentication Errors")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -114,7 +114,7 @@ export class SupabaseTokenError extends Data.TaggedError("SupabaseTokenError")<{
   builder.addBlankLine()
 
   // Storage errors
-  builder.addSectionComment('Storage Errors')
+  builder.addSectionComment("Storage Errors")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -155,7 +155,7 @@ export class SupabaseBucketNotFoundError extends Data.TaggedError("SupabaseBucke
   builder.addBlankLine()
 
   // Union type
-  builder.addSectionComment('Error Union Type')
+  builder.addSectionComment("Error Union Type")
   builder.addBlankLine()
 
   builder.addRaw(`/**

@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/index-barrel
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Index Template Definition
@@ -21,9 +21,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - CQRS exports (conditional: commands, queries, projections)
  */
 export const contractIndexTemplate: TemplateDefinition = {
-  id: 'contract/index',
+  id: "contract/index",
   meta: {
-    title: '{className} Contract Library',
+    title: "{className} Contract Library",
     description: `Domain interfaces, ports, entities, errors, and events for {className}.
 
 This library defines the contract between layers:
@@ -32,15 +32,15 @@ This library defines the contract between layers:
 - Ports: Repository and service interfaces
 - Events: Domain events for event-driven architecture
 - RPC: Request/Response schemas for network boundaries`,
-    module: '{scope}/contract-{fileName}'
+    module: "{scope}/contract-{fileName}"
   },
   imports: [],
   sections: [
     // Core Exports
     {
-      title: 'Core Exports',
+      title: "Core Exports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Errors
 export {
   {className}NotFoundError,
@@ -59,7 +59,7 @@ export {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Entity types from database schema
 export type {
   {className}Table,
@@ -74,7 +74,7 @@ export type {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Ports (Repository and Service interfaces)
 export {
   {className}Repository,
@@ -88,7 +88,7 @@ export {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Events
 export {
   EventMetadata,
@@ -102,9 +102,9 @@ export {
     },
     // RPC Exports Section
     {
-      title: 'RPC Exports (Contract-First - Always Prewired)',
+      title: "RPC Exports (Contract-First - Always Prewired)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// RPC Errors (Schema.TaggedError for network serialization)
 export {
   {className}NotFoundRpcError,
@@ -116,7 +116,7 @@ export {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// RPC Definitions (Rpc.make with RouteTag)
 export {
   {className}Id,
@@ -143,7 +143,7 @@ export {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// RPC Group (RpcGroup.make composition)
 export {
   {className}Rpcs,
@@ -158,9 +158,9 @@ export {
     },
     // Sub-Module Namespace Section
     {
-      title: 'Sub-Module Namespace Exports (Hybrid DDD Pattern)',
+      title: "Sub-Module Namespace Exports (Hybrid DDD Pattern)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Sub-modules are imported as namespaces to preserve module boundaries
 // Import specific items: import { Authentication } from "@scope/contract-name"
 // Then use: Authentication.AuthenticationNotFoundError`
@@ -172,9 +172,9 @@ export {
       imports: [],
       sections: [
         {
-          title: 'CQRS Exports',
+          title: "CQRS Exports",
           content: {
-            type: 'raw',
+            type: "raw",
             value: `// Commands (Write operations)
 export {
   Create{className}Command,
@@ -186,7 +186,7 @@ export {
         },
         {
           content: {
-            type: 'raw',
+            type: "raw",
             value: `// Queries (Read operations)
 export {
   Get{className}Query,
@@ -197,7 +197,7 @@ export {
         },
         {
           content: {
-            type: 'raw',
+            type: "raw",
             value: `// Projections (Read models)
 export {
   {className}Projection,

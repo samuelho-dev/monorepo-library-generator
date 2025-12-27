@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/errors
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Errors Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Combined error union types
  */
 export const featureErrorsTemplate: TemplateDefinition = {
-  id: 'feature/errors',
+  id: "feature/errors",
   meta: {
-    title: '{className} Feature Errors',
+    title: "{className} Feature Errors",
     description: `Service-level errors for {propertyName} feature.
 
 Error Categories:
@@ -30,26 +30,26 @@ Error Categories:
 
 CONTRACT-FIRST: Domain errors ({className}NotFoundError, etc.) are imported from contract library.
 This file defines SERVICE-LEVEL errors for orchestration failures.`,
-    module: '{scope}/feature-{fileName}/shared/errors'
+    module: "{scope}/feature-{fileName}/shared/errors"
   },
   imports: [
-    { from: 'effect', items: ['Data'] },
+    { from: "effect", items: ["Data"] },
     {
-      from: '{scope}/contract-{fileName}',
+      from: "{scope}/contract-{fileName}",
       items: [
-        '{className}NotFoundError',
-        '{className}ValidationError',
-        '{className}AlreadyExistsError',
-        '{className}PermissionError'
+        "{className}NotFoundError",
+        "{className}ValidationError",
+        "{className}AlreadyExistsError",
+        "{className}PermissionError"
       ]
     }
   ],
   sections: [
     // Re-export Domain Errors
     {
-      title: 'Domain Error Re-exports',
+      title: "Domain Error Re-exports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Re-export domain errors from contract library
  *
@@ -66,9 +66,9 @@ export {
     },
     // Service Error Codes
     {
-      title: 'Service Error Codes',
+      title: "Service Error Codes",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service Error Codes
  *
@@ -87,9 +87,9 @@ export const {className}ServiceErrorCode = {
     },
     // Service Dependency Error
     {
-      title: 'Service Errors',
+      title: "Service Errors",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Dependency Error
  *
@@ -115,7 +115,7 @@ export class {className}DependencyError extends Data.TaggedError("{className}Dep
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Orchestration Error
  *
@@ -148,7 +148,7 @@ export class {className}OrchestrationError extends Data.TaggedError("{className}
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Internal Error
  *
@@ -172,9 +172,9 @@ export class {className}InternalError extends Data.TaggedError("{className}Inter
     },
     // Combined Error Types
     {
-      title: 'Combined Error Types',
+      title: "Combined Error Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Domain Error Union
  *
@@ -189,7 +189,7 @@ export type {className}DomainError =
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service Error Union
  *
@@ -203,7 +203,7 @@ export type {className}ServiceError =
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Feature Error Union
  *

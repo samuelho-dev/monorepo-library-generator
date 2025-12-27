@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/rpc/middleware/index
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate middleware index file
@@ -49,7 +49,7 @@ import {
     module: `${scope}/infra-${fileName}/middleware`
   })
 
-  builder.addImports([{ from: 'effect', imports: ['Layer'] }])
+  builder.addImports([{ from: "effect", imports: ["Layer"] }])
 
   // Import middleware layers at the top to ensure proper type inference
   // This must come BEFORE re-exports to avoid TypeScript losing type information
@@ -73,7 +73,7 @@ import {
 import type { MiddlewareSelectorConfig } from "./route-selector"
 `)
 
-  builder.addSectionComment('User Authentication (Protected Routes)')
+  builder.addSectionComment("User Authentication (Protected Routes)")
 
   builder.addRaw(`// Re-export user auth middleware
 export {
@@ -103,7 +103,7 @@ export {
 export { AuthMiddleware, AuthMiddlewareLive, AuthMiddlewareTest }
 `)
 
-  builder.addSectionComment('Service Authentication (Service Routes)')
+  builder.addSectionComment("Service Authentication (Service Routes)")
 
   builder.addRaw(`// Re-export service auth middleware
 export {
@@ -132,7 +132,7 @@ export {
 export { ServiceMiddleware, ServiceMiddlewareLive, ServiceMiddlewareTest }
 `)
 
-  builder.addSectionComment('Request Metadata (All Routes)')
+  builder.addSectionComment("Request Metadata (All Routes)")
 
   builder.addRaw(`// Re-export request meta middleware
 export {
@@ -152,7 +152,7 @@ export {
 export { RequestMetaMiddleware, RequestMetaMiddlewareLive }
 `)
 
-  builder.addSectionComment('Route Selection (Contract-First)')
+  builder.addSectionComment("Route Selection (Contract-First)")
 
   builder.addRaw(`// Re-export route selector
 export {
@@ -182,7 +182,7 @@ export {
 } from "./route-selector"
 `)
 
-  builder.addSectionComment('Combined Middleware Layers')
+  builder.addSectionComment("Combined Middleware Layers")
 
   // Combined layers use the middleware imported at the top of the file
   builder.addRaw(`/**

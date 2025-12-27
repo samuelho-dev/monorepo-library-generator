@@ -13,19 +13,19 @@
  * @module monorepo-library-generator/generators/core/infra-generator-core
  */
 
-import { Effect } from 'effect'
-import { computePlatformConfiguration, type PlatformType } from '../../utils/build'
-import type { FileSystemAdapter } from '../../utils/filesystem'
-import { detectInfraConcern, usesEffectPrimitives } from '../../utils/infra-provider-mapping'
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates'
-import type { InfraTemplateOptions } from '../../utils/types'
+import { Effect } from "effect"
+import { computePlatformConfiguration, type PlatformType } from "../../utils/build"
+import type { FileSystemAdapter } from "../../utils/filesystem"
+import { detectInfraConcern, usesEffectPrimitives } from "../../utils/infra-provider-mapping"
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates"
+import type { InfraTemplateOptions } from "../../utils/types"
 import {
   generateAuthErrorsFile,
   generateAuthIndexFile,
   generateAuthServiceFile,
   generateAuthTypesFile
-} from '../infra/templates/auth'
-import { generateDatabaseServiceFile } from '../infra/templates/database-service.template'
+} from "../infra/templates/auth"
+import { generateDatabaseServiceFile } from "../infra/templates/database-service.template"
 import {
   generateClientLayersFile,
   generateConfigFile,
@@ -36,7 +36,7 @@ import {
   generateServerLayersFile,
   generateServiceFile,
   generateUseHookFile
-} from '../infra/templates/index'
+} from "../infra/templates/index"
 import {
   generateCacheInterfaceFile,
   generateCacheRedisLayerFile,
@@ -54,12 +54,12 @@ import {
   generatePubSubRedisLayerFile,
   generateQueueInterfaceFile,
   generateQueueRedisLayerFile
-} from '../infra/templates/primitives'
+} from "../infra/templates/primitives"
 import {
+  generateAuthMiddlewareFile as generateRpcAuthMiddlewareFile,
   generateMiddlewareIndexFile,
   generateRequestMetaMiddlewareFile,
   generateRouteSelectorMiddlewareFile,
-  generateAuthMiddlewareFile as generateRpcAuthMiddlewareFile,
   generateRpcClientFile,
   generateRpcClientHooksFile,
   generateRpcCoreFile,
@@ -68,14 +68,14 @@ import {
   generateRpcRouterFile,
   generateRpcTransportFile,
   generateServiceAuthMiddlewareFile
-} from '../infra/templates/rpc'
+} from "../infra/templates/rpc"
 import {
   generateStorageErrorsFile,
   generateStorageIndexFile,
   generateStorageServiceFile,
   generateStorageTypesFile
-} from '../infra/templates/storage'
-import { generateProviderConsolidation } from './provider-consolidation'
+} from "../infra/templates/storage"
+import { generateProviderConsolidation } from "./provider-consolidation"
 
 /**
  * Infrastructure Generator Core Options
@@ -119,7 +119,7 @@ export interface GeneratorResult {
   readonly projectRoot: string
   readonly sourceRoot: string
   readonly packageName: string
-  readonly filesGenerated: string[]
+  readonly filesGenerated: Array<string>
 }
 
 /**
@@ -136,7 +136,7 @@ export interface GeneratorResult {
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
 export function generateInfraCore(adapter: FileSystemAdapter, options: InfraCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Detect infrastructure concern type early for conditional generation
     // Must be done before platform configuration to determine prewired defaults
     const concern = detectInfraConcern(options.name)
@@ -152,8 +152,8 @@ export function generateInfraCore(adapter: FileSystemAdapter, options: InfraCore
         includeClientServer: isPrimitiveConcern ? options.includeClientServer : true
       },
       {
-        defaultPlatform: 'node',
-        libraryType: 'infra'
+        defaultPlatform: "node",
+        libraryType: "infra"
       }
     )
 
@@ -166,19 +166,19 @@ export function generateInfraCore(adapter: FileSystemAdapter, options: InfraCore
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: 'infra',
+      libraryType: "infra",
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       offsetFromRoot: options.offsetFromRoot,
       description: options.description,
-      tags: options.tags.split(','),
+      tags: options.tags.split(","),
       includeClientServer
     }
 
     // Generate all domain files
-    const filesGenerated: string[] = []
+    const filesGenerated: Array<string> = []
 
     // Compute directory paths
     const sourceLibPath = `${options.sourceRoot}/lib`
@@ -190,11 +190,11 @@ export function generateInfraCore(adapter: FileSystemAdapter, options: InfraCore
     // Skip for primitives as they don't have config.ts
     if (!isPrimitiveConcern) {
       const typesOnlyOptions: TypesOnlyExportOptions = {
-        libraryType: 'infra',
+        libraryType: "infra",
         className: options.className,
         fileName: options.fileName,
         packageName: options.packageName,
-        platform: includeClientServer ? 'universal' : 'server'
+        platform: includeClientServer ? "universal" : "server"
       }
       const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
       yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, typesOnlyContent)
@@ -217,9 +217,7 @@ This is an infrastructure library following Effect-based service patterns.
 - **lib/errors.ts**: Data.TaggedError-based error types
 - **lib/config.ts**: Service configuration types
 - **lib/memory.ts**: In-memory provider implementation
-${
-  includeClientServer ? `- **lib/client/hooks/use-${templateOptions.fileName}.ts**: React hook` : ''
-}
+${includeClientServer ? `- **lib/client/hooks/use-${templateOptions.fileName}.ts**: React hook` : ""}
 
 ### Import Patterns
 
@@ -268,8 +266,8 @@ const result = program.pipe(
 )
 \`\`\`
 ${
-  includeClientServer
-    ? `
+      includeClientServer
+        ? `
 ### Client Usage
 
 \`\`\`typescript
@@ -279,8 +277,8 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
 }
 \`\`\`
 `
-    : ''
-}
+        : ""
+    }
 ### Testing Strategy
 
 1. **Use Test layer** - pure mock implementation for unit tests
@@ -311,7 +309,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
       filesGenerated.push(`${sourceLibPath}/errors.ts`)
 
       switch (concern) {
-        case 'cache':
+        case "cache":
           yield* adapter.writeFile(
             `${sourceLibPath}/service.ts`,
             generateCacheInterfaceFile(templateOptions)
@@ -324,7 +322,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
           filesGenerated.push(`${sourceLibPath}/layers.ts`)
           break
 
-        case 'queue':
+        case "queue":
           yield* adapter.writeFile(
             `${sourceLibPath}/service.ts`,
             generateQueueInterfaceFile(templateOptions)
@@ -337,7 +335,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
           filesGenerated.push(`${sourceLibPath}/layers.ts`)
           break
 
-        case 'pubsub':
+        case "pubsub":
           yield* adapter.writeFile(
             `${sourceLibPath}/service.ts`,
             generatePubSubInterfaceFile(templateOptions)
@@ -350,7 +348,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
           filesGenerated.push(`${sourceLibPath}/layers.ts`)
           break
 
-        case 'database':
+        case "database":
           // Database delegates to Kysely provider - uses specialized template
           yield* adapter.writeFile(
             `${sourceLibPath}/service.ts`,
@@ -360,7 +358,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
           // Database doesn't need config.ts or memory.ts - delegates to Kysely provider
           break
 
-        case 'rpc': {
+        case "rpc": {
           // RPC infrastructure generates multiple files - all in lib/
           yield* adapter.writeFile(`${sourceLibPath}/core.ts`, generateRpcCoreFile(templateOptions))
           filesGenerated.push(`${sourceLibPath}/core.ts`)
@@ -423,7 +421,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
           break
         }
 
-        case 'auth':
+        case "auth":
           // Auth infrastructure generates service and types - all in lib/
           // Middleware is consolidated in infra-rpc (AuthVerifier interface)
           yield* adapter.writeFile(
@@ -443,7 +441,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
           filesGenerated.push(`${sourceLibPath}/types.ts`)
           break
 
-        case 'storage':
+        case "storage":
           // Storage infrastructure generates service and types - all in lib/
           yield* adapter.writeFile(
             `${sourceLibPath}/service.ts`,
@@ -462,7 +460,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
           filesGenerated.push(`${sourceLibPath}/types.ts`)
           break
 
-        case 'observability':
+        case "observability":
           // Observability infrastructure generates logging and metrics services
           // that consume OpenTelemetryProvider from provider-opentelemetry
           // All files in lib/ directory
@@ -577,7 +575,7 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
     // Generate provider consolidation (conditional)
     if (options.consolidatesProviders && options.providers) {
       const providersList = options.providers
-        .split(',')
+        .split(",")
         .map((p) => p.trim())
         .filter(Boolean)
 
@@ -598,16 +596,16 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
       // Generate standard index file (barrel exports) when not consolidating providers
       // Use concern-specific index templates where available
       let indexContent: string
-      if (concern === 'auth') {
+      if (concern === "auth") {
         // Auth has specialized index with handler factories (protectedHandler, publicHandler)
         indexContent = generateAuthIndexFile(templateOptions)
-      } else if (concern === 'rpc') {
+      } else if (concern === "rpc") {
         // RPC has specialized index with client, transport, router, middleware
         indexContent = generateRpcIndexFile(templateOptions)
-      } else if (concern === 'storage') {
+      } else if (concern === "storage") {
         // Storage has specialized index with proper error exports
         indexContent = generateStorageIndexFile(templateOptions)
-      } else if (concern === 'observability') {
+      } else if (concern === "observability") {
         // Observability has specialized index with SDK layers, presets, and Supervisor
         indexContent = generateObservabilityIndexFile(templateOptions)
       } else if (isPrimitiveConcern) {

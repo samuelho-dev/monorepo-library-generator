@@ -10,8 +10,8 @@
  * @module cli/generators/contract-auth
  */
 
-import { execSync } from 'node:child_process'
-import { Console, Effect } from 'effect'
+import { Console, Effect } from "effect"
+import { execSync } from "node:child_process"
 import {
   generateAuthErrorsFile,
   generateAuthIndexFile,
@@ -19,9 +19,9 @@ import {
   generateAuthPortsFile,
   generateAuthSchemasFile,
   generateAuthTypesFile
-} from '../../generators/contract/templates/auth'
-import { createEffectFsAdapter } from '../../utils/filesystem'
-import { WORKSPACE_CONFIG } from '../../utils/workspace-config'
+} from "../../generators/contract/templates/auth"
+import { createEffectFsAdapter } from "../../utils/filesystem"
+import { WORKSPACE_CONFIG } from "../../utils/workspace-config"
 
 /**
  * Contract Auth Generator Options
@@ -42,10 +42,10 @@ export interface ContractAuthOptions {
  * - types.ts (type-only exports)
  */
 export function generateContractAuth(options: ContractAuthOptions = {}) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const scope = WORKSPACE_CONFIG.getScope()
     const packageName = `${scope}/contract-auth`
-    const projectRoot = 'libs/contract/auth'
+    const projectRoot = "libs/contract/auth"
     const sourceRoot = `${projectRoot}/src`
 
     yield* Console.log(`Creating contract-auth library...`)
@@ -87,25 +87,25 @@ export function generateContractAuth(options: ContractAuthOptions = {}) {
     // 7. Generate package.json
     const packageJson = {
       name: packageName,
-      version: '0.0.1',
-      type: 'module',
-      main: './src/index.ts',
-      types: './src/index.ts',
+      version: "0.0.1",
+      type: "module",
+      main: "./src/index.ts",
+      types: "./src/index.ts",
       exports: {
-        '.': {
-          import: './src/index.ts',
-          types: './src/index.ts'
+        ".": {
+          import: "./src/index.ts",
+          types: "./src/index.ts"
         },
-        './types': {
-          import: './src/types.ts',
-          types: './src/types.ts'
+        "./types": {
+          import: "./src/types.ts",
+          types: "./src/types.ts"
         }
       },
       dependencies: {
-        effect: 'catalog:'
+        effect: "catalog:"
       },
       peerDependencies: {
-        effect: '^3.0.0'
+        effect: "^3.0.0"
       }
     }
     yield* adapter.writeFile(
@@ -115,16 +115,16 @@ export function generateContractAuth(options: ContractAuthOptions = {}) {
 
     // 8. Generate tsconfig.json
     const tsconfig = {
-      extends: '../../../tsconfig.base.json',
+      extends: "../../../tsconfig.base.json",
       compilerOptions: {
-        outDir: './dist',
-        rootDir: './src',
+        outDir: "./dist",
+        rootDir: "./src",
         declaration: true,
         declarationMap: true,
         composite: true
       },
-      include: ['src/**/*.ts'],
-      exclude: ['node_modules', 'dist']
+      include: ["src/**/*.ts"],
+      exclude: ["node_modules", "dist"]
     }
     yield* adapter.writeFile(
       `${workspaceRoot}/${projectRoot}/tsconfig.json`,
@@ -134,7 +134,7 @@ export function generateContractAuth(options: ContractAuthOptions = {}) {
     // 9. Generate CLAUDE.md
     const claudeDoc = `# ${packageName}
 
-${options.description ?? 'Auth contract - single source of truth for auth types'}
+${options.description ?? "Auth contract - single source of truth for auth types"}
 
 ## AI Agent Reference
 
@@ -186,7 +186,7 @@ export const AuthVerifierLive = Layer.effect(AuthVerifier, Effect.gen(function*(
     // Format generated code
     yield* Effect.try(() => {
       execSync(`pnpm exec eslint ${projectRoot}/src --ext .ts --fix`, {
-        stdio: 'ignore',
+        stdio: "ignore",
         cwd: process.cwd()
       })
     }).pipe(
@@ -198,7 +198,7 @@ export const AuthVerifierLive = Layer.effect(AuthVerifier, Effect.gen(function*(
     )
 
     return {
-      projectName: 'contract-auth',
+      projectName: "contract-auth",
       projectRoot,
       packageName,
       sourceRoot,

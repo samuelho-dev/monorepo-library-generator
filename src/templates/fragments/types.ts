@@ -7,10 +7,10 @@
  * @module monorepo-library-generator/templates/fragments/types
  */
 
-import type { Effect } from 'effect'
-import type { SourceFile } from 'ts-morph'
-import type { InterpolationError } from '../core/resolver'
-import type { TemplateContext } from '../core/types'
+import type { Effect } from "effect"
+import type { SourceFile } from "ts-morph"
+import type { InterpolationError } from "../core/resolver"
+import type { TemplateContext } from "../core/types"
 
 // ============================================================================
 // Fragment Configuration Types
@@ -188,7 +188,7 @@ export interface SchemaFragmentConfig extends FragmentConfig {
   readonly name: string
 
   /** Schema type: Struct, String, Number, etc. */
-  readonly schemaType: 'Struct' | 'String' | 'Number' | 'Boolean' | 'Array' | 'Union'
+  readonly schemaType: "Struct" | "String" | "Number" | "Boolean" | "Array" | "Union"
 
   /** Fields for Struct schemas */
   readonly fields?: ReadonlyArray<SchemaField>
@@ -228,7 +228,7 @@ export interface LayerFragmentConfig extends FragmentConfig {
   readonly name: string
 
   /** Layer creation type */
-  readonly layerType: 'effect' | 'sync' | 'scoped' | 'succeed' | 'suspend'
+  readonly layerType: "effect" | "sync" | "scoped" | "succeed" | "suspend"
 
   /** Service tag being implemented */
   readonly serviceTag: string

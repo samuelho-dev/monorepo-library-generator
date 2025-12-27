@@ -33,7 +33,7 @@
  * ```
  */
 
-export type { ContractDomainErrorConfig, DataAccessContractReExportConfig } from './error-factory'
+export type { ContractDomainErrorConfig, DataAccessContractReExportConfig } from "./error-factory"
 
 // Error factory
 export {
@@ -46,13 +46,8 @@ export {
   generateErrorFile,
   getErrorNames,
   validateErrorFactoryConfig
-} from './error-factory'
-export type {
-  AutoLayerConfig,
-  DomainLayerConfig,
-  InfrastructureLayerConfig,
-  LayerImportsConfig
-} from './layer-factory'
+} from "./error-factory"
+export type { AutoLayerConfig, DomainLayerConfig, InfrastructureLayerConfig, LayerImportsConfig } from "./layer-factory"
 // Layer factory
 export {
   createAutoLayer,
@@ -63,9 +58,9 @@ export {
   generateLayersFile,
   getInfraPackageName,
   INFRASTRUCTURE_SERVICES
-} from './layer-factory'
+} from "./layer-factory"
 // Presets
-export { ERROR_DEFINITIONS, ERROR_SETS, getInfrastructureErrorNames } from './presets'
+export { ERROR_DEFINITIONS, ERROR_SETS, getInfrastructureErrorNames } from "./presets"
 // Types
 export type {
   ComposedLayerConfig,
@@ -100,4 +95,4 @@ export type {
   StaticMethodDef,
   StringFactory,
   ValidationResult
-} from './types'
+} from "./types"

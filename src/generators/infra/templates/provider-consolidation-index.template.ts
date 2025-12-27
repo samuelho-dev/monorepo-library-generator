@@ -7,11 +7,11 @@
  * @module monorepo-library-generator/infra/templates/provider-consolidation-index
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { createNamingVariants } from '../../../utils/naming'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { createNamingVariants } from "../../../utils/naming"
 
 export interface ProviderConsolidationIndexOptions {
-  readonly providers: readonly string[]
+  readonly providers: ReadonlyArray<string>
   readonly packageName: string
 }
 
@@ -22,14 +22,14 @@ export interface ProviderConsolidationIndexOptions {
  * consolidated layers, and multi-provider orchestration.
  */
 export function generateProviderConsolidationIndexTemplate(options: ProviderConsolidationIndexOptions) {
-  const workspaceName = options.packageName.split('/')[0]
+  const workspaceName = options.packageName.split("/")[0]
 
   const builder = new TypeScriptBuilder()
 
   // File header
   builder.addFileHeader({
-    title: 'Provider Consolidation Layer',
-    description: 'Unified access to cluster-related providers',
+    title: "Provider Consolidation Layer",
+    description: "Unified access to cluster-related providers",
     module: options.packageName
   })
 
@@ -44,7 +44,7 @@ export function generateProviderConsolidationIndexTemplate(options: ProviderCons
   builder.addBlankLine()
 
   // Re-export individual providers for granular access
-  builder.addComment('Re-export individual providers for granular access')
+  builder.addComment("Re-export individual providers for granular access")
   for (const provider of options.providers) {
     const { className } = createNamingVariants(provider)
     builder.addRaw(`export { ${className} }`)
@@ -53,14 +53,14 @@ export function generateProviderConsolidationIndexTemplate(options: ProviderCons
   builder.addBlankLine()
 
   // Consolidated layers
-  builder.addComment('Consolidated layers')
-  builder.addRaw('export { ClusterInfrastructureLive } from "./lib/layers"')
+  builder.addComment("Consolidated layers")
+  builder.addRaw("export { ClusterInfrastructureLive } from \"./lib/layers\"")
 
   builder.addBlankLine()
 
   // Multi-provider orchestration
-  builder.addComment('Multi-provider orchestration')
-  builder.addRaw('export { ClusterOrchestrator } from "./lib/orchestrator"')
+  builder.addComment("Multi-provider orchestration")
+  builder.addRaw("export { ClusterOrchestrator } from \"./lib/orchestrator\"")
 
   builder.addBlankLine()
 

@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/kysely/errors
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate Kysely provider errors file
@@ -17,7 +17,7 @@ export function generateKyselyErrorsFile(options: ProviderTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: 'Database Provider Errors',
+    title: "Database Provider Errors",
     description: `Error types for Kysely database provider using Data.TaggedError.
 
 Uses Data.TaggedError for internal provider errors (not serializable).
@@ -26,10 +26,10 @@ Schema.TaggedError is reserved for RPC boundary errors only.`,
   })
   builder.addBlankLine()
 
-  builder.addImports([{ from: 'effect', imports: ['Data'] }])
+  builder.addImports([{ from: "effect", imports: ["Data"] }])
   builder.addBlankLine()
 
-  builder.addSectionComment('Error Types')
+  builder.addSectionComment("Error Types")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -68,7 +68,7 @@ export class DatabaseTransactionError extends Data.TaggedError(
 }> {}`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Error Type Union')
+  builder.addSectionComment("Error Type Union")
   builder.addBlankLine()
 
   builder.addRaw(`/**

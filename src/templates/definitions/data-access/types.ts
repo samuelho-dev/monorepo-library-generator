@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/data-access/types
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Data Access Types Template Definition
@@ -19,20 +19,20 @@ import type { TemplateDefinition } from '../../core/types'
  * - Response types
  */
 export const dataAccessTypesTemplate: TemplateDefinition = {
-  id: 'data-access/types',
+  id: "data-access/types",
   meta: {
-    title: '{className} Shared Type Definitions',
+    title: "{className} Shared Type Definitions",
     description: `Common types used across the data-access layer for {className} operations.
 Re-exports entity types from contract library and provides query-specific types.`,
-    module: '{scope}/data-access-{fileName}/server'
+    module: "{scope}/data-access-{fileName}/server"
   },
   imports: [],
   sections: [
     // Entity Types from Contract
     {
-      title: 'Entity Types (from Contract Library)',
+      title: "Entity Types (from Contract Library)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Re-export entity types from contract library
 // Note: Contract re-exports Prisma-generated types (Select, Insert, Update)
 // and defines branded ID type in rpc-definitions.ts
@@ -46,9 +46,9 @@ export type {
     },
     // Filter & Query Types
     {
-      title: 'Filter & Query Types',
+      title: "Filter & Query Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Filter Options
  *
@@ -85,7 +85,7 @@ export interface {className}Filter {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Sort direction for queries
  */
@@ -105,7 +105,7 @@ export interface {className}Sort {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Pagination Options
  *
@@ -140,9 +140,9 @@ export interface QueryOptions {
     },
     // Response Types
     {
-      title: 'Response Types',
+      title: "Response Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Paginated List Response
  *

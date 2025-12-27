@@ -12,7 +12,7 @@
  * @module monorepo-library-generator/infra-templates/auth
  */
 
-export { generateAuthIndexFile } from './auth-index.template'
-export { generateAuthErrorsFile } from './errors.template'
-export { generateAuthServiceFile } from './service.template'
-export { generateAuthTypesFile } from './types.template'
+export { generateAuthIndexFile } from "./auth-index.template"
+export { generateAuthErrorsFile } from "./errors.template"
+export { generateAuthServiceFile } from "./service.template"
+export { generateAuthTypesFile } from "./types.template"

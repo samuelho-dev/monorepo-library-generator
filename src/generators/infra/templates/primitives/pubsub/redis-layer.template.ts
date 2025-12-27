@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/pubsub
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate Redis-backed pubsub layer
@@ -34,30 +34,30 @@ Use Cases:
 - Cache invalidation events
 - Distributed event broadcasting`,
     module: `${scope}/infra-${fileName}/layers/redis`,
-    see: ['EFFECT_PATTERNS.md for pubsub patterns', `${scope}/provider-redis for Redis provider`]
+    see: ["EFFECT_PATTERNS.md for pubsub patterns", `${scope}/provider-redis for Redis provider`]
   })
 
   // Imports - layers.ts is at lib/layers.ts, service at lib/service.ts
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Effect', 'Layer', 'PubSub', 'Schema']
+      from: "effect",
+      imports: ["Effect", "Layer", "PubSub", "Schema"]
     },
     {
-      from: 'effect',
-      imports: ['Fiber'],
+      from: "effect",
+      imports: ["Fiber"],
       isTypeOnly: true
     },
-    { from: `${scope}/provider-redis`, imports: ['Redis'] },
-    { from: './service', imports: [`${className}Service`] },
+    { from: `${scope}/provider-redis`, imports: ["Redis"] },
+    { from: "./service", imports: [`${className}Service`] },
     {
-      from: './service',
-      imports: ['TopicHandle', 'TopicOptions'],
+      from: "./service",
+      imports: ["TopicHandle", "TopicOptions"],
       isTypeOnly: true
     }
   ])
 
-  builder.addSectionComment('Redis PubSub Layer')
+  builder.addSectionComment("Redis PubSub Layer")
 
   builder.addRaw(`/**
  * Redis-backed distributed pub/sub layer
@@ -247,7 +247,7 @@ export const ${className}RedisLayer = Layer.scoped(
 )
 `)
 
-  builder.addSectionComment('Usage Examples')
+  builder.addSectionComment("Usage Examples")
 
   builder.addRaw(`/**
  * Example: Using Redis-backed pub/sub with provider-redis
@@ -310,7 +310,7 @@ export const ${className}RedisLayer = Layer.scoped(
   // Event Publishing Helpers
   // ============================================================================
 
-  builder.addSectionComment('Event Publishing Helper')
+  builder.addSectionComment("Event Publishing Helper")
 
   builder.addRaw(`/**
  * Wrap an Effect with event publishing

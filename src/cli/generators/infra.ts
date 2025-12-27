@@ -5,14 +5,9 @@
  * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect, ParseResult } from 'effect'
-import { generateInfraCore, type InfraCoreOptions } from '../../generators/core/infra'
-import {
-  createExecutor,
-  decodeInfraInput,
-  formatOutput,
-  type InfraInput
-} from '../../infrastructure'
+import { Console, Effect, ParseResult } from "effect"
+import { generateInfraCore, type InfraCoreOptions } from "../../generators/core/infra"
+import { createExecutor, decodeInfraInput, formatOutput, type InfraInput } from "../../infrastructure"
 
 /**
  * Infra Generator Options - imported from validation registry
@@ -21,7 +16,7 @@ import {
 export type InfraGeneratorOptions = InfraInput
 
 const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
-  'infra',
+  "infra",
   generateInfraCore,
   (validated, metadata) => {
     let includeClientServer = validated.includeClientServer
@@ -38,7 +33,7 @@ const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
 )
 
 export function generateInfra(options: InfraGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeInfraInput(options).pipe(
       Effect.mapError(
@@ -50,10 +45,10 @@ export function generateInfra(options: InfraGeneratorOptions) {
 
     const result = yield* infraExecutor.execute({
       ...validated,
-      __interfaceType: 'cli'
+      __interfaceType: "cli"
     })
 
-    const output = formatOutput(result, 'cli')
+    const output = formatOutput(result, "cli")
     yield* Console.log(output)
 
     return result

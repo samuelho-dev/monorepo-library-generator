@@ -6,4 +6,4 @@
  * @module monorepo-library-generator/generators/shared/factories/presets
  */
 
-export { ERROR_DEFINITIONS, ERROR_SETS, getInfrastructureErrorNames } from './error-presets'
+export { ERROR_DEFINITIONS, ERROR_SETS, getInfrastructureErrorNames } from "./error-presets"

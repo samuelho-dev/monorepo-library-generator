@@ -5,14 +5,9 @@
  * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect, ParseResult } from 'effect'
-import { generateProviderCore, type ProviderCoreOptions } from '../../generators/core/provider'
-import {
-  createExecutor,
-  decodeProviderInput,
-  formatOutput,
-  type ProviderInput
-} from '../../infrastructure'
+import { Console, Effect, ParseResult } from "effect"
+import { generateProviderCore, type ProviderCoreOptions } from "../../generators/core/provider"
+import { createExecutor, decodeProviderInput, formatOutput, type ProviderInput } from "../../infrastructure"
 
 /**
  * Provider Generator Options - imported from validation registry
@@ -27,18 +22,18 @@ export type ProviderGeneratorOptions = ProviderInput
  * throughout the flow, allowing TypeScript to verify all field access.
  */
 const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
-  'provider',
+  "provider",
   generateProviderCore,
   (validated, metadata) => ({
     ...metadata,
     externalService: validated.externalService,
-    platform: validated.platform ?? 'node',
-    operations: validated.operations ?? ['create', 'read', 'update', 'delete', 'query']
+    platform: validated.platform ?? "node",
+    operations: validated.operations ?? ["create", "read", "update", "delete", "query"]
   })
 )
 
 export function generateProvider(options: ProviderGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeProviderInput(options).pipe(
       Effect.mapError(
@@ -50,10 +45,10 @@ export function generateProvider(options: ProviderGeneratorOptions) {
 
     const result = yield* providerExecutor.execute({
       ...validated,
-      __interfaceType: 'cli'
+      __interfaceType: "cli"
     })
 
-    const output = formatOutput(result, 'cli')
+    const output = formatOutput(result, "cli")
     yield* Console.log(output)
 
     return result

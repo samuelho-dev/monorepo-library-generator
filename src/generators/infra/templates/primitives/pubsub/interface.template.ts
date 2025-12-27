@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/pubsub
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate pubsub service interface using Effect.PubSub
@@ -35,28 +35,28 @@ Effect.PubSub Features:
 - Fiber-safe concurrent access
 - Backpressure handling`,
     module: `${scope}/infra-${fileName}/service`,
-    see: ['EFFECT_PATTERNS.md for pubsub patterns']
+    see: ["EFFECT_PATTERNS.md for pubsub patterns"]
   })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Effect', 'Layer', 'Context', 'PubSub', 'Schema', 'Metric']
+      from: "effect",
+      imports: ["Effect", "Layer", "Context", "PubSub", "Schema", "Metric"]
     },
     {
-      from: 'effect',
-      imports: ['Queue', 'Scope'],
+      from: "effect",
+      imports: ["Queue", "Scope"],
       isTypeOnly: true
     },
     {
-      from: 'effect/ParseResult',
-      imports: ['ParseError'],
+      from: "effect/ParseResult",
+      imports: ["ParseError"],
       isTypeOnly: true
     },
-    { from: `${scope}/env`, imports: ['env'] }
+    { from: `${scope}/env`, imports: ["env"] }
   ])
 
-  builder.addSectionComment('Metrics Definitions')
+  builder.addSectionComment("Metrics Definitions")
 
   builder.addRaw(`/**
  * Metrics for tracking PubSub operations
@@ -74,7 +74,7 @@ const pubsubSubscriberGauge = Metric.gauge("pubsub.subscribers", {
 })
 `)
 
-  builder.addSectionComment('PubSub Service Interface (Effect.PubSub Wrapper)')
+  builder.addSectionComment("PubSub Service Interface (Effect.PubSub Wrapper)")
 
   builder.addRaw(`/**
  * Topic handle for publish/subscribe operations
@@ -571,7 +571,7 @@ export class ${className}Service extends Context.Tag(
 }
 `)
 
-  builder.addSectionComment('Observability Features')
+  builder.addSectionComment("Observability Features")
 
   builder.addRaw(`/**
  * OBSERVABILITY INTEGRATION
@@ -605,7 +605,7 @@ export class ${className}Service extends Context.Tag(
  */
 `)
 
-  builder.addSectionComment('Common PubSub Patterns')
+  builder.addSectionComment("Common PubSub Patterns")
 
   builder.addRaw(`/**
  * Helper: Create an event bus for domain events

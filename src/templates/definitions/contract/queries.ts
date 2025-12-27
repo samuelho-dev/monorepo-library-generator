@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/queries
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Queries Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Schema union for validation
  */
 export const contractQueriesTemplate: TemplateDefinition = {
-  id: 'contract/queries',
+  id: "contract/queries",
   meta: {
-    title: '{className} Queries (CQRS Read Operations)',
+    title: "{className} Queries (CQRS Read Operations)",
     description: `Queries represent read intentions without side effects.
 They define what data to fetch and how to filter it.
 
@@ -33,18 +33,18 @@ TODO: Customize for your domain:
 5. Add Schema.transform() for search term normalization
 6. Create custom queries for common patterns
 7. Add pagination support`,
-    module: '{scope}/contract-{fileName}/queries'
+    module: "{scope}/contract-{fileName}/queries"
   },
   imports: [
-    { from: 'effect', items: ['Schema'] },
-    { from: './rpc-definitions', items: ['{className}Id'] }
+    { from: "effect", items: ["Schema"] },
+    { from: "./rpc-definitions", items: ["{className}Id"] }
   ],
   sections: [
     // Get Query
     {
-      title: 'CRUD Queries',
+      title: "CRUD Queries",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Query to get a single {className} by ID
  *
@@ -72,7 +72,7 @@ export class Get{className}Query extends Schema.Class<Get{className}Query>("Get{
     // List Query
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Query to list {className}s with filters and pagination
  *
@@ -139,7 +139,7 @@ export class List{className}sQuery extends Schema.Class<List{className}sQuery>("
     // Search Query
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Query to search {className}s by text
  *
@@ -196,7 +196,7 @@ export class Search{className}sQuery extends Schema.Class<Search{className}sQuer
     // TODO comment for custom queries
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// TODO: Add domain-specific queries here
 // Example - Get by slug query:
 //
@@ -209,9 +209,9 @@ export class Search{className}sQuery extends Schema.Class<Search{className}sQuer
     },
     // Query Union Type Section
     {
-      title: 'Query Union Type',
+      title: "Query Union Type",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Union of all {propertyName} queries
  */
@@ -225,7 +225,7 @@ export type {className}Query =
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Schema for {className}Query union
  */

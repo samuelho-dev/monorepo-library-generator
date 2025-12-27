@@ -14,22 +14,22 @@
 /**
  * Library types supported by the generator
  */
-export type LibraryType = 'contract' | 'data-access' | 'feature' | 'provider' | 'infra' | 'util'
+export type LibraryType = "contract" | "data-access" | "feature" | "provider" | "infra" | "util"
 
 /**
  * Platform type for build configuration
  */
-export type PlatformType = 'node' | 'browser' | 'universal' | 'edge'
+export type PlatformType = "node" | "browser" | "universal" | "edge"
 
 /**
  * Runtime platforms supported by libraries
  */
-export type Platform = 'client' | 'server' | 'edge' | 'universal'
+export type Platform = "client" | "server" | "edge" | "universal"
 
 /**
  * Provider integration types
  */
-export type ProviderType = 'sdk' | 'cli' | 'http' | 'graphql'
+export type ProviderType = "sdk" | "cli" | "http" | "graphql"
 
 // ============================================================================
 // Naming Variants
@@ -191,7 +191,7 @@ export interface DataAccessTemplateOptions extends BaseTemplateOptions {
   /**
    * Database type (for type-specific query builders)
    */
-  readonly databaseType?: 'postgres' | 'mysql' | 'sqlite'
+  readonly databaseType?: "postgres" | "mysql" | "sqlite"
 
   /**
    * Contract library this data-access implements
@@ -218,14 +218,14 @@ export interface InfrastructureTemplateOptions extends BaseTemplateOptions {
    * Type of infrastructure service
    */
   readonly infraType:
-    | 'cache'
-    | 'logging'
-    | 'metrics'
-    | 'auth'
-    | 'config'
-    | 'storage'
-    | 'messaging'
-    | 'custom'
+    | "cache"
+    | "logging"
+    | "metrics"
+    | "auth"
+    | "config"
+    | "storage"
+    | "messaging"
+    | "custom"
 
   /**
    * Platforms this infrastructure service supports
@@ -260,7 +260,7 @@ export interface ProviderTemplateOptions extends BaseTemplateOptions {
   /**
    * Type of provider integration
    */
-  readonly providerType?: 'sdk' | 'cli' | 'http' | 'graphql'
+  readonly providerType?: "sdk" | "cli" | "http" | "graphql"
 
   /**
    * CLI command name (for CLI providers)
@@ -275,7 +275,7 @@ export interface ProviderTemplateOptions extends BaseTemplateOptions {
   /**
    * Authentication type (for HTTP/GraphQL providers)
    */
-  readonly authType?: 'bearer' | 'apikey' | 'oauth' | 'basic' | 'none'
+  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
 }
 
 // ============================================================================
@@ -285,22 +285,22 @@ export interface ProviderTemplateOptions extends BaseTemplateOptions {
 /**
  * Operation category for data-access repositories
  */
-export type RepositoryOperationType = 'create' | 'read' | 'update' | 'delete' | 'aggregate'
+export type RepositoryOperationType = "create" | "read" | "update" | "delete" | "aggregate"
 
 /**
  * Operation category for feature services
  */
-export type ServiceOperationType = 'create' | 'update' | 'delete' | 'query' | 'batch'
+export type ServiceOperationType = "create" | "update" | "delete" | "query" | "batch"
 
 /**
  * Handler category for RPC handlers
  */
-export type HandlerCategory = 'mutation' | 'query' | 'batch' | 'subscription'
+export type HandlerCategory = "mutation" | "query" | "batch" | "subscription"
 
 /**
  * Query builder category
  */
-export type QueryBuilderType = 'find' | 'mutation' | 'aggregate'
+export type QueryBuilderType = "find" | "mutation" | "aggregate"
 
 /**
  * File split configuration
@@ -413,7 +413,7 @@ export interface GeneratorContext {
   /**
    * Package manager being used
    */
-  readonly packageManager: 'npm' | 'yarn' | 'pnpm'
+  readonly packageManager: "npm" | "yarn" | "pnpm"
 
   /**
    * Whether this is an NX workspace

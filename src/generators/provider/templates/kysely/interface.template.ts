@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/provider/templates/kysely/interface
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate Kysely provider interface file
@@ -18,33 +18,33 @@ export function generateKyselyInterfaceFile(options: ProviderTemplateOptions) {
   const { className, packageName } = options
 
   builder.addFileHeader({
-    title: 'Kysely Service Interface',
+    title: "Kysely Service Interface",
     description: `Type-safe database service interface.
 
 Generic over DB type - the database schema is specified when creating the service.
 All method parameter types are inferred from the interface.`,
     module: `${packageName}/interface`,
-    see: ['https://kysely.dev for Kysely documentation']
+    see: ["https://kysely.dev for Kysely documentation"]
   })
   builder.addBlankLine()
 
   // Imports
   builder.addImports([
-    { from: 'effect', imports: ['Effect'], isTypeOnly: true },
+    { from: "effect", imports: ["Effect"], isTypeOnly: true },
     {
-      from: 'kysely',
-      imports: ['CompiledQuery', 'Kysely', 'RawBuilder', 'Transaction'],
+      from: "kysely",
+      imports: ["CompiledQuery", "Kysely", "RawBuilder", "Transaction"],
       isTypeOnly: true
     },
     {
-      from: './errors',
-      imports: ['DatabaseConnectionError', 'DatabaseQueryError', 'DatabaseTransactionError'],
+      from: "./errors",
+      imports: ["DatabaseConnectionError", "DatabaseQueryError", "DatabaseTransactionError"],
       isTypeOnly: true
     }
   ])
 
   // Interface
-  builder.addSectionComment('Service Interface')
+  builder.addSectionComment("Service Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**

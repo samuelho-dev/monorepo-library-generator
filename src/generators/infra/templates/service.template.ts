@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 // Provider mapping utilities - available for future integration
 // import {
 //   hasProviderMapping,
@@ -33,28 +33,29 @@ export function generateServiceFile(options: InfraTemplateOptions) {
   const providerPackage: string | undefined = undefined
 
   // Check if this is a database infrastructure
-  const isDatabaseInfra = fileName === 'database'
+  const isDatabaseInfra = fileName === "database"
 
   // File header
   builder.addFileHeader({
     title: `${className} Service`,
-    description: `Infrastructure service using Effect 3.0+ Context.Tag pattern.\n\nProvides CRUD operations with dependency injection and resource management.\nCustomize resource initialization, dependencies, and error handling as needed.`,
+    description:
+      `Infrastructure service using Effect 3.0+ Context.Tag pattern.\n\nProvides CRUD operations with dependency injection and resource management.\nCustomize resource initialization, dependencies, and error handling as needed.`,
     module: `${scope}/infra-${fileName}/service`,
-    see: ['EFFECT_PATTERNS.md for service patterns and examples']
+    see: ["EFFECT_PATTERNS.md for service patterns and examples"]
   })
 
   // Imports - all files in lib/ as siblings
   builder.addImports([
-    { from: 'node:crypto', imports: ['randomUUID'] },
-    { from: 'effect', imports: ['Effect', 'Layer', 'Option', 'Context'] },
+    { from: "node:crypto", imports: ["randomUUID"] },
+    { from: "effect", imports: ["Effect", "Layer", "Option", "Context"] },
     {
-      from: './errors',
+      from: "./errors",
       imports: [`${className}InternalError`]
     },
     // Use ServiceError union type for interface (compatible with all error subtypes)
-    { from: './errors', imports: [`${className}ServiceError`], isTypeOnly: true },
+    { from: "./errors", imports: [`${className}ServiceError`], isTypeOnly: true },
     // Environment configuration
-    { from: `${scope}/env`, imports: ['env'] }
+    { from: `${scope}/env`, imports: ["env"] }
   ])
 
   // Add provider import if mapping exists
@@ -66,7 +67,7 @@ export function generateServiceFile(options: InfraTemplateOptions) {
   // with their specific database schema types
 
   // Section: Service Context.Tag Definition
-  builder.addSectionComment('Service Context.Tag Definition with Inline Interface (Effect 3.0+)')
+  builder.addSectionComment("Service Context.Tag Definition with Inline Interface (Effect 3.0+)")
 
   // Service class with Context.Tag
   builder.addRaw(`/**
@@ -162,23 +163,23 @@ export class ${className}Service extends Context.Tag(
      * \`\`\`
      */
     readonly healthCheck: () => Effect.Effect<boolean, never>${
-      isDatabaseInfra
-        ? `
+    isDatabaseInfra
+      ? `
 
     // TODO: Add database-specific operations here
     // For Kysely integration, add query and transaction methods:
     //
     // readonly query: <A>(fn: (db: Kysely<Database>) => Promise<A>)
     // readonly transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>)`
-        : ''
-    }
+      : ""
+  }
   }
 >() {`)
 
   // Static Live Layer
-  builder.addRaw(`  // ${'='.repeat(74)}
+  builder.addRaw(`  // ${"=".repeat(74)}
   // Static Live Layer (Effect 3.0+ Pattern)
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Live Layer - Production implementation
@@ -194,23 +195,23 @@ export class ${className}Service extends Context.Tag(
       // const config = yield* ${className}Config;
       // const logger = yield* LoggingService;
       ${
-        hasProvider && providerClassName
-          ? `const provider = yield* ${providerClassName};`
-          : `// const provider = yield* ProviderService; // Replace with actual provider`
-      }
+    hasProvider && providerClassName
+      ? `const provider = yield* ${providerClassName};`
+      : `// const provider = yield* ProviderService; // Replace with actual provider`
+  }
 ${
-  isDatabaseInfra
-    ? `
+    isDatabaseInfra
+      ? `
       // Note: For database operations, implement your Kysely provider integration here
       // Example: const kysely = yield* KyselyProvider;`
-    : ''
-}
+      : ""
+  }
 
       // 2. Acquire Resources with Effect.acquireRelease
       // Example: Connection pool that needs cleanup
 ${
-  hasProvider && providerClassName
-    ? `      // When using a provider, resource acquisition is handled by the provider
+    hasProvider && providerClassName
+      ? `      // When using a provider, resource acquisition is handled by the provider
       // Uncomment below if you need additional custom resources
       // const resource = yield* Effect.acquireRelease(
       //   Effect.gen(function*() {
@@ -242,7 +243,7 @@ ${
       //       Effect.catchAll(() => Effect.void) // Ignore cleanup errors
       //     )
       // )`
-    : `      const resource = yield* Effect.acquireRelease(
+      : `      const resource = yield* Effect.acquireRelease(
         Effect.sync(() => {
           // Acquire phase: Initialize resource (sync baseline)
           // For async initialization with dependencies, use Effect.gen with yield*
@@ -276,11 +277,11 @@ ${
             Effect.catchAll(() => Effect.void) // Ignore cleanup errors
           )
       )`
-}
+  }
 
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       // OPTIONAL: Background Job Queue with Queue
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       //
       // Use Queue for async task processing, job queuing, and work distribution:
       //
@@ -322,11 +323,11 @@ ${
       //
       // See EFFECT_PATTERNS.md "Queue - Producer/Consumer Patterns" for comprehensive examples.
       //
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
 
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       // OPTIONAL: Event Broadcasting with PubSub
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       //
       // Use PubSub for event streaming, notifications, and message broadcasting:
       //
@@ -383,11 +384,11 @@ ${
       //
       // See EFFECT_PATTERNS.md "PubSub - Event Broadcasting" for comprehensive examples.
       //
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
 
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       // OPTIONAL: Startup Coordination with Latch
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       //
       // Use Latch to block operations until prerequisites complete:
       //
@@ -422,11 +423,11 @@ ${
       //
       // See EFFECT_PATTERNS.md "Latch - Startup Coordination" for comprehensive examples.
       //
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
 
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       // OPTIONAL: Fiber Coordination with Deferred
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       //
       // Use Deferred for value passing between fibers with coordination:
       //
@@ -480,11 +481,11 @@ ${
       //
       // See EFFECT_PATTERNS.md "Deferred - Fiber Coordination" for comprehensive examples.
       //
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
 
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       // Advanced Pattern: Exit-Aware Finalizers
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
       //
       // Conditional cleanup based on operation outcome using Scope.addFinalizer + Exit.match
       //
@@ -544,7 +545,7 @@ ${
       //
       // See EFFECT_PATTERNS.md "Exit-Aware Finalizers" for full examples and patterns.
       //
-      // ${'='.repeat(74)}
+      // ${"=".repeat(74)}
 
       // 3. Return Service Implementation
       // ✅ Direct object return (Effect 3.0+), no .of() needed
@@ -555,15 +556,15 @@ ${
             // yield* logger.debug(\`Getting item: \${id}\`)
 
             ${
-              hasProvider && providerClassName
-                ? `// Delegate to provider
+    hasProvider && providerClassName
+      ? `// Delegate to provider
             return yield* provider.get(id).pipe(
               Effect.map(Option.some),
               Effect.catchTag("${providerClassName}NotFoundError", () =>
                 Effect.succeed(Option.none())
               )
             )`
-                : `const result = yield* Effect.tryPromise({
+      : `const result = yield* Effect.tryPromise({
               try: () => resource.query(id),
               catch: (error) => new ${className}InternalError({
                 message: \`Failed to get item \${id}\`,
@@ -571,7 +572,7 @@ ${
               })
             })
             return Option.fromNullable(result)`
-            }
+  }
           }).pipe(Effect.withSpan("${className}.get")),
 
         findByCriteria: (criteria, skip = 0, limit = 10) =>
@@ -597,10 +598,10 @@ ${
             // yield* logger.info("Creating item", { input })
 
             ${
-              hasProvider && providerClassName
-                ? `// Delegate to provider
+    hasProvider && providerClassName
+      ? `// Delegate to provider
             return yield* provider.create(input)`
-                : `const result = yield* Effect.tryPromise({
+      : `const result = yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual creation logic
                 return { id: randomUUID(), ...input, createdAt: new Date() };
@@ -611,7 +612,7 @@ ${
               })
             })
             return result;`
-            }
+  }
           }).pipe(Effect.withSpan("${className}.create")),
 
         update: (id, input) =>
@@ -619,10 +620,10 @@ ${
             // yield* logger.info(\`Updating item: \${id}\`, { input })
 
             ${
-              hasProvider && providerClassName
-                ? `// Delegate to provider
+    hasProvider && providerClassName
+      ? `// Delegate to provider
             return yield* provider.update(id, input)`
-                : `// Note: Cannot use yield* inside async callback
+      : `// Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
             const result = yield* Effect.tryPromise({
               try: async () => {
@@ -636,7 +637,7 @@ ${
               })
             })
             return result;`
-            }
+  }
           }).pipe(Effect.withSpan("${className}.update")),
 
         delete: (id) =>
@@ -644,10 +645,10 @@ ${
             // yield* logger.info(\`Deleting item: \${id}\`)
 
             ${
-              hasProvider && providerClassName
-                ? `// Delegate to provider
+    hasProvider && providerClassName
+      ? `// Delegate to provider
             yield* provider.delete(id)`
-                : `// Note: Cannot use yield* inside async callback
+      : `// Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
             yield* Effect.tryPromise({
               try: async () => {
@@ -660,17 +661,17 @@ ${
                 cause: error
               })
             })`
-            }
+  }
           }).pipe(Effect.withSpan("${className}.delete")),
 
         healthCheck: () =>
           ${
-            hasProvider && providerClassName
-              ? `Effect.gen(function*() {
+    hasProvider && providerClassName
+      ? `Effect.gen(function*() {
             // Delegate to provider
             return yield* provider.healthCheck()
           })`
-              : `Effect.sync(() => {
+      : `Effect.sync(() => {
             // Check resource health (sync baseline)
             // For async health checks, use Effect.gen with yield*
             //
@@ -686,9 +687,9 @@ ${
             // Baseline: Return sync health status
             return resource.isConnected;
           })`
-          }.pipe(Effect.withSpan("${className}.healthCheck"))${
-            isDatabaseInfra
-              ? `
+  }.pipe(Effect.withSpan("${className}.healthCheck"))${
+    isDatabaseInfra
+      ? `
 
         // TODO: Add database query and transaction operations with your database schema type
         // Example implementation:
@@ -711,15 +712,15 @@ ${
         //       })
         //     )
         //   }).pipe(Effect.withSpan("${className}.transaction"))`
-              : ''
-          }
+      : ""
+  }
       };
     })
   )
 
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
   // Static Test Layer
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Test Layer - In-memory implementation
@@ -769,8 +770,8 @@ ${
           yield* Effect.logDebug(\`[${className}] TEST healthCheck\`)
           return true
         })${
-          isDatabaseInfra
-            ? `
+    isDatabaseInfra
+      ? `
 
       // TODO: Add test mock implementations for database query and transaction operations
       // Example:
@@ -778,14 +779,14 @@ ${
       //   Effect.succeed({}),
       // transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
       //   fn.pipe(Effect.provideService(${className}Service, ${className}Service.Test))`
-            : ''
-        }
+      : ""
+  }
     }
   })
 
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
   // Static Dev Layer
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Dev Layer - Development with enhanced logging
@@ -852,8 +853,8 @@ ${
             yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck result:\`, result)
             return result;
           })${
-            isDatabaseInfra
-              ? `
+    isDatabaseInfra
+      ? `
 
         // TODO: Add development layer wrappers for database query and transaction operations
         // Example:
@@ -871,15 +872,15 @@ ${
         //     yield* Effect.logDebug(\`[${className}Service] [DEV] transaction completed\`)
         //     return result;
         //   })`
-              : ''
-          }
+      : ""
+  }
       };
     })
   )
 
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
   // Static Auto Layer
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Auto Layer - Environment-aware layer selection
@@ -905,9 +906,9 @@ ${
     includeClientServer
       ? `
 
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
   // Platform-Specific Layers (Client/Server)
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Client Live Layer
@@ -924,7 +925,7 @@ ${
    * This property is assigned at module load time.
    */
   static ServerLive: Layer.Layer<${className}Service, never, never>`
-      : ''
+      : ""
   }
 }`)
 

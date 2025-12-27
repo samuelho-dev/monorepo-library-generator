@@ -12,7 +12,7 @@
  * @module monorepo-library-generator/infrastructure/metrics
  */
 
-import { Metric, MetricBoundaries } from 'effect'
+import { Metric, MetricBoundaries } from "effect"
 
 // ============================================================================
 // Duration Metrics
@@ -27,7 +27,7 @@ import { Metric, MetricBoundaries } from 'effect'
  * Boundaries: 10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120ms
  */
 export const generatorDuration = Metric.histogram(
-  'generator.duration_ms',
+  "generator.duration_ms",
   MetricBoundaries.exponential({ start: 10, factor: 2, count: 10 })
 )
 
@@ -40,7 +40,7 @@ export const generatorDuration = Metric.histogram(
  * Boundaries: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512ms
  */
 export const templateDuration = Metric.histogram(
-  'generator.template_duration_ms',
+  "generator.template_duration_ms",
   MetricBoundaries.exponential({ start: 1, factor: 2, count: 10 })
 )
 
@@ -50,7 +50,7 @@ export const templateDuration = Metric.histogram(
  * Tracks time spent generating infrastructure files (package.json, tsconfig, etc.)
  */
 export const infrastructureDuration = Metric.histogram(
-  'generator.infrastructure_duration_ms',
+  "generator.infrastructure_duration_ms",
   MetricBoundaries.exponential({ start: 5, factor: 2, count: 8 })
 )
 
@@ -64,7 +64,7 @@ export const infrastructureDuration = Metric.histogram(
  * Counts total files generated across all generator executions.
  * Tagged by library type for granular analysis.
  */
-export const filesGenerated = Metric.counter('generator.files_generated')
+export const filesGenerated = Metric.counter("generator.files_generated")
 
 /**
  * Generator execution counter
@@ -72,7 +72,7 @@ export const filesGenerated = Metric.counter('generator.files_generated')
  * Counts total generator executions.
  * Tagged by library type and interface type (cli, mcp, nx).
  */
-export const generatorExecutions = Metric.counter('generator.executions')
+export const generatorExecutions = Metric.counter("generator.executions")
 
 /**
  * Generator error counter
@@ -80,14 +80,14 @@ export const generatorExecutions = Metric.counter('generator.executions')
  * Counts generator errors by error type.
  * Useful for identifying common failure modes.
  */
-export const generatorErrors = Metric.counter('generator.errors')
+export const generatorErrors = Metric.counter("generator.errors")
 
 /**
  * Template compilation counter
  *
  * Counts template compilations by template ID.
  */
-export const templateCompilations = Metric.counter('generator.template_compilations')
+export const templateCompilations = Metric.counter("generator.template_compilations")
 
 // ============================================================================
 // Gauge Metrics
@@ -99,7 +99,7 @@ export const templateCompilations = Metric.counter('generator.template_compilati
  * Tracks currently executing generators.
  * Useful for concurrency monitoring.
  */
-export const activeGenerators = Metric.gauge('generator.active')
+export const activeGenerators = Metric.gauge("generator.active")
 
 // ============================================================================
 // Tagged Metric Helpers
@@ -109,15 +109,15 @@ export const activeGenerators = Metric.gauge('generator.active')
  * Create tagged duration metric for a specific library type
  */
 export const taggedGeneratorDuration = (libraryType: string) =>
-  generatorDuration.pipe(Metric.tagged('library_type', libraryType))
+  generatorDuration.pipe(Metric.tagged("library_type", libraryType))
 
 /**
  * Create tagged execution counter for a specific library type and interface
  */
 export const taggedGeneratorExecution = (libraryType: string, interfaceType: string) =>
   generatorExecutions.pipe(
-    Metric.tagged('library_type', libraryType),
-    Metric.tagged('interface_type', interfaceType)
+    Metric.tagged("library_type", libraryType),
+    Metric.tagged("interface_type", interfaceType)
   )
 
 /**
@@ -125,18 +125,18 @@ export const taggedGeneratorExecution = (libraryType: string, interfaceType: str
  */
 export const taggedGeneratorError = (errorType: string, libraryType: string) =>
   generatorErrors.pipe(
-    Metric.tagged('error_type', errorType),
-    Metric.tagged('library_type', libraryType)
+    Metric.tagged("error_type", errorType),
+    Metric.tagged("library_type", libraryType)
   )
 
 /**
  * Create tagged template duration for a specific template
  */
 export const taggedTemplateDuration = (templateId: string) =>
-  templateDuration.pipe(Metric.tagged('template_id', templateId))
+  templateDuration.pipe(Metric.tagged("template_id", templateId))
 
 /**
  * Create tagged files counter for a specific library type
  */
 export const taggedFilesGenerated = (libraryType: string) =>
-  filesGenerated.pipe(Metric.tagged('library_type', libraryType))
+  filesGenerated.pipe(Metric.tagged("library_type", libraryType))

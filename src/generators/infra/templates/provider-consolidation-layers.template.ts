@@ -7,11 +7,11 @@
  * @module monorepo-library-generator/infra/templates/provider-consolidation-layers
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { createNamingVariants } from '../../../utils/naming'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { createNamingVariants } from "../../../utils/naming"
 
 export interface ProviderConsolidationLayersOptions {
-  readonly providers: readonly string[]
+  readonly providers: ReadonlyArray<string>
   readonly packageName: string
 }
 
@@ -22,20 +22,20 @@ export interface ProviderConsolidationLayersOptions {
  * dependency injection across services.
  */
 export function generateProviderConsolidationLayersTemplate(options: ProviderConsolidationLayersOptions) {
-  const workspaceName = options.packageName.split('/')[0]
+  const workspaceName = options.packageName.split("/")[0]
 
   const builder = new TypeScriptBuilder()
 
   // File header
   builder.addFileHeader({
-    title: 'Consolidated Infrastructure Layers',
-    description: 'Combines all cluster providers into unified layer'
+    title: "Consolidated Infrastructure Layers",
+    description: "Combines all cluster providers into unified layer"
   })
 
   builder.addBlankLine()
 
   // Add imports
-  builder.addImport('effect', 'Layer')
+  builder.addImport("effect", "Layer")
 
   for (const provider of options.providers) {
     const { className } = createNamingVariants(provider)
@@ -47,7 +47,7 @@ export function generateProviderConsolidationLayersTemplate(options: ProviderCon
   // Generate layer merge
   const layerMergeEntries = options.providers
     .map((p) => `  ${createNamingVariants(p).className}Live`)
-    .join(',\n')
+    .join(",\n")
 
   builder.addRaw(`/**
  * Cluster infrastructure live layer

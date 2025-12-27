@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/feature/jobs/jobs-queue-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate server/jobs/queue.ts file
@@ -45,30 +45,30 @@ Job Types:
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Effect', 'Layer', 'Context', 'Schema', 'Duration', 'Data', 'Schedule']
+      from: "effect",
+      imports: ["Effect", "Layer", "Context", "Schema", "Duration", "Data", "Schedule"]
     },
-    { from: 'effect/ParseResult', imports: ['ParseError'], isTypeOnly: true }
+    { from: "effect/ParseResult", imports: ["ParseError"], isTypeOnly: true }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment('Infrastructure Services')
+  builder.addSectionComment("Infrastructure Services")
   builder.addImports([
-    { from: `${scope}/infra-queue`, imports: ['QueueService'] },
-    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] },
-    { from: `${scope}/infra-database`, imports: ['DatabaseService'] }
+    { from: `${scope}/infra-queue`, imports: ["QueueService"] },
+    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment('Service Dependencies')
-  builder.addImports([{ from: '../services', imports: [`${className}Service`] }])
+  builder.addSectionComment("Service Dependencies")
+  builder.addImports([{ from: "../services", imports: [`${className}Service`] }])
   builder.addBlankLine()
 
-  builder.addSectionComment('Auth Context for Job Processing')
-  builder.addImports([{ from: `${scope}/contract-auth`, imports: ['CurrentUser'] }])
+  builder.addSectionComment("Auth Context for Job Processing")
+  builder.addImports([{ from: `${scope}/contract-auth`, imports: ["CurrentUser"] }])
   builder.addBlankLine()
 
-  builder.addSectionComment('Job Error Types')
+  builder.addSectionComment("Job Error Types")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -110,7 +110,7 @@ export type ${className}JobError =
   | ${className}JobTimeoutError`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Job Processor Schemas')
+  builder.addSectionComment("Job Processor Schemas")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -149,7 +149,7 @@ export interface ${className}JobProcessorSchemas {
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment('Job Definitions')
+  builder.addSectionComment("Job Definitions")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -192,7 +192,7 @@ export const ${className}SystemUserLayer = Layer.succeed(
 )`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Job Types')
+  builder.addSectionComment("Job Types")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -392,7 +392,7 @@ export type ${className}Job =
   | Bulk${className}Job`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Job Queue Interface')
+  builder.addSectionComment("Job Queue Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -437,7 +437,7 @@ export interface ${className}JobQueueInterface {
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment('Job Processor Helpers')
+  builder.addSectionComment("Job Processor Helpers")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -623,7 +623,7 @@ const processBulkJob = (
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment('Job Processor Implementation')
+  builder.addSectionComment("Job Processor Implementation")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -673,7 +673,7 @@ const processJob = (
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment('Context.Tag')
+  builder.addSectionComment("Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**

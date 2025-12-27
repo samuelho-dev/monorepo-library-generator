@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/types-only
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Types-Only Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Conditionally include CQRS types
  */
 export const contractTypesOnlyTemplate: TemplateDefinition = {
-  id: 'contract/types-only',
+  id: "contract/types-only",
   meta: {
-    title: 'Type-Only Exports',
+    title: "Type-Only Exports",
     description: `This file provides type-only exports for zero runtime overhead.
 Use these imports when you only need types for TypeScript checking:
 
@@ -30,15 +30,15 @@ import type { {className} } from '{scope}/contract-{fileName}/types';
 
 These imports are completely erased at compile time and add
 zero bytes to your JavaScript bundle.`,
-    module: '{scope}/contract-{fileName}/types'
+    module: "{scope}/contract-{fileName}/types"
   },
   imports: [],
   sections: [
     // Entity Types
     {
-      title: 'Entity Types',
+      title: "Entity Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Entity types from database schema
 export type { {className}Insert, {className}Select, {className}Update } from "{entityTypeSource}"
 
@@ -48,33 +48,33 @@ export type { {className}Insert, {className}Select, {className}Update } from "{e
     },
     // Error Types
     {
-      title: 'Error Types',
+      title: "Error Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type * from "./lib/errors"`
       }
     },
     // Port Types
     {
-      title: 'Port Types',
+      title: "Port Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type * from "./lib/ports"`
       }
     },
     // Event Types
     {
-      title: 'Event Types',
+      title: "Event Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type * from "./lib/events"`
       }
     },
     // RPC Types
     {
-      title: 'RPC Types',
+      title: "RPC Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type * from "./lib/rpc-errors"
 export type * from "./lib/rpc-definitions"
 export type * from "./lib/rpc-group"`
@@ -86,9 +86,9 @@ export type * from "./lib/rpc-group"`
       imports: [],
       sections: [
         {
-          title: 'CQRS Types',
+          title: "CQRS Types",
           content: {
-            type: 'raw',
+            type: "raw",
             value: `export type * from "./lib/commands"
 export type * from "./lib/queries"
 export type * from "./lib/projections"`

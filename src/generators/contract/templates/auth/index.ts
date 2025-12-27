@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/auth
  */
 
-export { generateAuthErrorsFile } from './errors.template'
-export { generateAuthIndexFile } from './index.template'
-export { generateAuthMiddlewareFile } from './middleware.template'
-export { generateAuthPortsFile } from './ports.template'
-export { generateAuthSchemasFile } from './schemas.template'
-export { generateAuthTypesFile } from './types.template'
+export { generateAuthErrorsFile } from "./errors.template"
+export { generateAuthIndexFile } from "./index.template"
+export { generateAuthMiddlewareFile } from "./middleware.template"
+export { generateAuthPortsFile } from "./ports.template"
+export { generateAuthSchemasFile } from "./schemas.template"
+export { generateAuthTypesFile } from "./types.template"

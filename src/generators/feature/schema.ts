@@ -3,10 +3,10 @@ export interface FeatureGeneratorSchema {
   directory?: string
   description?: string
   scope?: string
-  platform?: 'node' | 'universal' | 'browser' | 'edge'
+  platform?: "node" | "universal" | "browser" | "edge"
   includeClientServer?: boolean
   includeCQRS?: boolean
-  testRunner?: 'vitest'
+  testRunner?: "vitest"
   tags?: string
 
   // Data access library

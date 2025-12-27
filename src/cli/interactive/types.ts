@@ -9,12 +9,12 @@
 /**
  * Single library types that can be generated
  */
-export type SingleLibraryType = 'contract' | 'data-access' | 'feature' | 'infra' | 'provider'
+export type SingleLibraryType = "contract" | "data-access" | "feature" | "infra" | "provider"
 
 /**
  * Special wizard actions (not single libraries)
  */
-export type WizardAction = 'init' | 'domain'
+export type WizardAction = "init" | "domain"
 
 /**
  * All wizard selection types (libraries + special actions)
@@ -24,7 +24,7 @@ export type WizardSelection = SingleLibraryType | WizardAction
 /**
  * Library type for backwards compatibility (includes domain for execution)
  */
-export type LibraryType = SingleLibraryType | 'domain'
+export type LibraryType = SingleLibraryType | "domain"
 
 /**
  * Library type metadata for display in wizard
@@ -51,29 +51,29 @@ export interface WizardActionInfo {
  */
 export const LIBRARY_TYPES: ReadonlyArray<LibraryTypeInfo> = Object.freeze([
   Object.freeze({
-    type: 'contract',
-    label: 'Contract',
-    description: 'Domain types, schemas, and interfaces'
+    type: "contract",
+    label: "Contract",
+    description: "Domain types, schemas, and interfaces"
   }),
   Object.freeze({
-    type: 'data-access',
-    label: 'Data-Access',
-    description: 'Repository with database operations'
+    type: "data-access",
+    label: "Data-Access",
+    description: "Repository with database operations"
   }),
   Object.freeze({
-    type: 'feature',
-    label: 'Feature',
-    description: 'Business logic with server/client support'
+    type: "feature",
+    label: "Feature",
+    description: "Business logic with server/client support"
   }),
   Object.freeze({
-    type: 'infra',
-    label: 'Infra',
-    description: 'Infrastructure services and implementations'
+    type: "infra",
+    label: "Infra",
+    description: "Infrastructure services and implementations"
   }),
   Object.freeze({
-    type: 'provider',
-    label: 'Provider',
-    description: 'External service integrations',
+    type: "provider",
+    label: "Provider",
+    description: "External service integrations",
     hasExternalService: true
   })
 ])
@@ -83,29 +83,29 @@ export const LIBRARY_TYPES: ReadonlyArray<LibraryTypeInfo> = Object.freeze([
  */
 export const WIZARD_ACTIONS: ReadonlyArray<WizardActionInfo> = Object.freeze([
   Object.freeze({
-    type: 'init',
-    label: 'Init',
-    description: 'Generate all built-in provider and infra libraries',
+    type: "init",
+    label: "Init",
+    description: "Generate all built-in provider and infra libraries",
     generatesTo: [
-      'libs/provider/kysely/',
-      'libs/provider/supabase/',
-      'libs/env/',
-      'libs/infra/cache/',
-      'libs/infra/database/',
-      'libs/infra/logging/',
-      'libs/infra/metrics/',
-      'libs/infra/queue/',
-      'libs/infra/pubsub/',
-      'libs/infra/auth/',
-      'libs/infra/storage/',
-      'libs/infra/rpc/'
+      "libs/provider/kysely/",
+      "libs/provider/supabase/",
+      "libs/env/",
+      "libs/infra/cache/",
+      "libs/infra/database/",
+      "libs/infra/logging/",
+      "libs/infra/metrics/",
+      "libs/infra/queue/",
+      "libs/infra/pubsub/",
+      "libs/infra/auth/",
+      "libs/infra/storage/",
+      "libs/infra/rpc/"
     ]
   }),
   Object.freeze({
-    type: 'domain',
-    label: 'Domain',
-    description: 'Complete domain with contract, data-access, and feature',
-    generatesTo: ['libs/contract/<name>/', 'libs/data-access/<name>/', 'libs/feature/<name>/']
+    type: "domain",
+    label: "Domain",
+    description: "Complete domain with contract, data-access, and feature",
+    generatesTo: ["libs/contract/<name>/", "libs/data-access/<name>/", "libs/feature/<name>/"]
   })
 ])
 
@@ -113,11 +113,11 @@ export const WIZARD_ACTIONS: ReadonlyArray<WizardActionInfo> = Object.freeze([
  * Wizard step identifiers
  */
 export type WizardStep =
-  | 'select-type'
-  | 'enter-name'
-  | 'enter-external-service'
-  | 'configure-options'
-  | 'review-confirm'
+  | "select-type"
+  | "enter-name"
+  | "enter-external-service"
+  | "configure-options"
+  | "review-confirm"
 
 /**
  * Wizard state at any point during flow
@@ -135,7 +135,7 @@ export interface WizardState {
 /**
  * Boolean option keys in WizardOptions
  */
-export type WizardBooleanKey = 'includeCQRS' | 'includeClientServer' | 'includeCache'
+export type WizardBooleanKey = "includeCQRS" | "includeClientServer" | "includeCache"
 
 /**
  * Configuration options gathered during wizard
@@ -146,7 +146,7 @@ export interface WizardOptions {
   /** Array-based tag selection (preferred over comma-separated tags string) */
   selectedTags?: ReadonlyArray<string>
   scope?: string
-  platform?: 'node' | 'browser' | 'universal' | 'edge'
+  platform?: "node" | "browser" | "universal" | "edge"
   includeCQRS?: boolean
   includeClientServer?: boolean
   includeCache?: boolean
@@ -161,7 +161,7 @@ export function getEffectiveTags(options: WizardOptions) {
   }
   if (options.tags) {
     return options.tags
-      .split(',')
+      .split(",")
       .map((t) => t.trim())
       .filter(Boolean)
   }

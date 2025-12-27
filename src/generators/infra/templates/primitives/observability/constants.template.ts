@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/observability
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate observability constants file
@@ -20,7 +20,7 @@ export function generateObservabilityConstantsFile(options: InfraTemplateOptions
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'Observability Constants',
+    title: "Observability Constants",
     description: `Common constants for metrics and logging configuration.
 
 Includes:
@@ -30,9 +30,9 @@ Includes:
     module: `${scope}/infra-${fileName}/constants`
   })
 
-  builder.addImports([{ from: 'effect', imports: ['Logger', 'LogLevel'] }])
+  builder.addImports([{ from: "effect", imports: ["Logger", "LogLevel"] }])
 
-  builder.addSectionComment('Histogram Boundaries')
+  builder.addSectionComment("Histogram Boundaries")
 
   builder.addRaw(`/**
  * Common histogram boundaries for different use cases
@@ -90,7 +90,7 @@ export const HistogramBoundaries = {
 } as const
 `)
 
-  builder.addSectionComment('Standard Metric Names')
+  builder.addSectionComment("Standard Metric Names")
 
   builder.addRaw(`/**
  * Standard metric names following OpenTelemetry semantic conventions
@@ -145,7 +145,7 @@ export const StandardMetricNames = {
 } as const
 `)
 
-  builder.addSectionComment('Log Level Configurations')
+  builder.addSectionComment("Log Level Configurations")
 
   builder.addRaw(`/**
  * Pre-configured log level layers for different environments
@@ -210,7 +210,7 @@ export const withMinLogLevel = (minLevel: LogLevel.LogLevel) =>
   Logger.minimumLogLevel(minLevel)
 `)
 
-  builder.addSectionComment('Semantic Span Attribute Names')
+  builder.addSectionComment("Semantic Span Attribute Names")
 
   builder.addRaw(`/**
  * Standard span attribute names following OpenTelemetry semantic conventions

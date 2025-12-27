@@ -13,7 +13,7 @@
  * @module monorepo-library-generator/shared/layers/static-layers
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
 
 /**
  * Configuration for static layer generation
@@ -28,7 +28,7 @@ export interface StaticLayerConfig {
    * - "effect": Effectful layer with dependencies (Layer.effect)
    * - "sync": Synchronous layer (Layer.sync)
    */
-  readonly layerType: 'succeed' | 'effect' | 'sync'
+  readonly layerType: "succeed" | "effect" | "sync"
 
   /**
    * Live layer implementation code
@@ -76,12 +76,12 @@ export interface StaticLayerConfig {
  */
 function getLayerMethod(layerType: string) {
   switch (layerType) {
-    case 'succeed':
-      return 'succeed'
-    case 'sync':
-      return 'sync'
+    case "succeed":
+      return "succeed"
+    case "sync":
+      return "sync"
     default:
-      return 'effect'
+      return "effect"
   }
 }
 
@@ -119,7 +119,7 @@ function buildTestLayerAlias(builder: TypeScriptBuilder) {
  * Generate Test layer with its own implementation using TypeScriptBuilder
  */
 function buildTestLayer(builder: TypeScriptBuilder, className: string, layerType: string, impl: string) {
-  const layerMethod = layerType === 'effect' ? 'sync' : layerType
+  const layerMethod = layerType === "effect" ? "sync" : layerType
 
   builder.addRaw(`  /**
    * Test layer - In-memory implementation for testing
@@ -221,7 +221,7 @@ export function generateStaticLayers(config: StaticLayerConfig) {
   const {
     className,
     devImpl,
-    envVar = 'NODE_ENV',
+    envVar = "NODE_ENV",
     layerType,
     liveImpl,
     testImpl,
@@ -259,7 +259,7 @@ export function generateStaticLayers(config: StaticLayerConfig) {
  */
 export function generateMinimalStaticLayers(config: {
   className: string
-  layerType: 'succeed' | 'effect' | 'sync'
+  layerType: "succeed" | "effect" | "sync"
   liveImpl: string
   testViaDependencies?: boolean
 }) {
@@ -285,32 +285,32 @@ export function generateMinimalStaticLayers(config: {
  * Useful for templates that need custom layer implementations
  * but want consistent documentation.
  */
-export function generateLayerDocs(layerName: 'Live' | 'Test' | 'Dev' | 'Auto') {
+export function generateLayerDocs(layerName: "Live" | "Test" | "Dev" | "Auto") {
   const builder = new TypeScriptBuilder()
 
   switch (layerName) {
-    case 'Live':
+    case "Live":
       builder.addRaw(`  /**
    * Live layer - Production implementation
    *
    * Use for production deployments with real external services.
    */`)
       break
-    case 'Test':
+    case "Test":
       builder.addRaw(`  /**
    * Test layer - In-memory implementation for testing
    *
    * Provides isolated, deterministic behavior for unit tests.
    */`)
       break
-    case 'Dev':
+    case "Dev":
       builder.addRaw(`  /**
    * Dev layer - Development with enhanced logging
    *
    * Wraps operations with detailed request/response logging.
    */`)
       break
-    case 'Auto':
+    case "Auto":
       builder.addRaw(`  /**
    * Auto layer - Environment-aware layer selection
    *

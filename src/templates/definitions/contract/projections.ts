@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/projections
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Projections Template Definition
@@ -18,9 +18,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Implementation notes about JOIN-based approach
  */
 export const contractProjectionsTemplate: TemplateDefinition = {
-  id: 'contract/projections',
+  id: "contract/projections",
   meta: {
-    title: '{className} Projections (CQRS Read Models)',
+    title: "{className} Projections (CQRS Read Models)",
     description: `IMPORTANT: These are TypeScript schemas for query results from JOINs,
 NOT separate database tables. Projections are denormalized views
 built by querying existing tables via JOINs and caching the results.
@@ -34,18 +34,18 @@ TODO: Customize for your domain:
 2. Add aggregated stats (counts, averages, etc.)
 3. Define which tables to JOIN for each projection
 4. Implement cache invalidation strategy`,
-    module: '{scope}/contract-{fileName}/projections'
+    module: "{scope}/contract-{fileName}/projections"
   },
   imports: [
-    { from: 'effect', items: ['Schema'] },
-    { from: './rpc-definitions', items: ['{className}Id'] }
+    { from: "effect", items: ["Schema"] },
+    { from: "./rpc-definitions", items: ["{className}Id"] }
   ],
   sections: [
     // List Projection
     {
-      title: 'Projection Schemas',
+      title: "Projection Schemas",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} List Projection
  *
@@ -84,7 +84,7 @@ export class {className}ListProjection extends Schema.Class<{className}ListProje
     // Detail Projection
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Detail Projection
  *
@@ -137,9 +137,9 @@ export class {className}DetailProjection extends Schema.Class<{className}DetailP
     },
     // Implementation Notes
     {
-      title: 'How Projections Work in This System',
+      title: "How Projections Work in This System",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Implementation Guide for {className} Projections
  *

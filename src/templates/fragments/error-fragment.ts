@@ -7,11 +7,11 @@
  * @module monorepo-library-generator/templates/fragments/error-fragment
  */
 
-import { Effect } from 'effect'
-import type { SourceFile } from 'ts-morph'
-import { interpolateSync } from '../core/resolver'
-import type { TemplateContext } from '../core/types'
-import type { ErrorField, ErrorStaticMethod, TaggedErrorFragmentConfig } from './types'
+import { Effect } from "effect"
+import type { SourceFile } from "ts-morph"
+import { interpolateSync } from "../core/resolver"
+import type { TemplateContext } from "../core/types"
+import type { ErrorField, ErrorStaticMethod, TaggedErrorFragmentConfig } from "./types"
 
 // ============================================================================
 // Error Fragment Renderer
@@ -48,10 +48,10 @@ export function renderTaggedErrorFragment(
 
     // Build class body
     const hasBody = staticMethods.length > 0
-    const bodyContent = hasBody ? ` {\n${staticMethods.join('\n\n')}\n}` : ' {}'
+    const bodyContent = hasBody ? ` {\n${staticMethods.join("\n\n")}\n}` : " {}"
 
     // Generate the class declaration
-    const exportKeyword = config.exported !== false ? 'export ' : ''
+    const exportKeyword = config.exported !== false ? "export " : ""
     const classDecl = `${exportKeyword}class ${className} extends Data.TaggedError(
   "${tagName}"
 )<{
@@ -61,7 +61,7 @@ ${fieldDefs}
     statements.push(classDecl)
 
     // Add to source file
-    sourceFile.addStatements(statements.join('\n'))
+    sourceFile.addStatements(statements.join("\n"))
   })
 }
 
@@ -74,7 +74,7 @@ function buildFieldDefinitions(fields: ReadonlyArray<ErrorField>, context: Templ
   for (const field of fields) {
     const fieldName = interpolateSync(field.name, context)
     const fieldType = interpolateSync(field.type, context)
-    const optional = field.optional ? '?' : ''
+    const optional = field.optional ? "?" : ""
 
     if (field.jsdoc) {
       lines.push(`  /** ${interpolateSync(field.jsdoc, context)} */`)
@@ -83,7 +83,7 @@ function buildFieldDefinitions(fields: ReadonlyArray<ErrorField>, context: Templ
     lines.push(`  readonly ${fieldName}${optional}: ${fieldType}`)
   }
 
-  return lines.join('\n')
+  return lines.join("\n")
 }
 
 /**
@@ -100,10 +100,10 @@ function buildStaticMethods(methods: ReadonlyArray<ErrorStaticMethod>, context: 
         // Only interpolate if the value contains {curlyBraces} pattern
         const pName = hasInterpolation(p.name) ? interpolateSync(p.name, context) : p.name
         const pType = hasInterpolation(p.type) ? interpolateSync(p.type, context) : p.type
-        const optional = p.optional ? '?' : ''
+        const optional = p.optional ? "?" : ""
         return `${pName}${optional}: ${pType}`
       })
-      .join(', ')
+      .join(", ")
 
     // Method body is NOT interpolated - it contains JS template literal syntax
     const body = method.body
@@ -126,17 +126,17 @@ function hasInterpolation(str: string) {
 /**
  * Create a not-found error fragment config
  */
-export function notFoundErrorFragment(className: string, idFieldName = 'id') {
+export function notFoundErrorFragment(className: string, idFieldName = "id") {
   return {
     className: `${className}NotFoundError`,
     fields: [
-      { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-      { name: `${idFieldName}`, type: 'string', jsdoc: 'Identifier that was not found' }
+      { name: "message", type: "string", jsdoc: "Human-readable error message" },
+      { name: `${idFieldName}`, type: "string", jsdoc: "Identifier that was not found" }
     ],
     staticMethods: [
       {
-        name: 'create',
-        params: [{ name: idFieldName, type: 'string' }],
+        name: "create",
+        params: [{ name: idFieldName, type: "string" }],
         body: `return new ${className}NotFoundError({
       message: \`${className} not found: \${${idFieldName}}\`,
       ${idFieldName}
@@ -154,18 +154,18 @@ export function validationErrorFragment(className: string) {
   return {
     className: `${className}ValidationError`,
     fields: [
-      { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-      { name: 'field', type: 'string', optional: true, jsdoc: 'Field that failed validation' },
-      { name: 'constraint', type: 'string', optional: true, jsdoc: 'Constraint that was violated' },
-      { name: 'value', type: 'unknown', optional: true, jsdoc: 'Invalid value' }
+      { name: "message", type: "string", jsdoc: "Human-readable error message" },
+      { name: "field", type: "string", optional: true, jsdoc: "Field that failed validation" },
+      { name: "constraint", type: "string", optional: true, jsdoc: "Constraint that was violated" },
+      { name: "value", type: "unknown", optional: true, jsdoc: "Invalid value" }
     ],
     staticMethods: [
       {
-        name: 'create',
+        name: "create",
         params: [
           {
-            name: 'params',
-            type: '{ message: string; field?: string; constraint?: string; value?: unknown }'
+            name: "params",
+            type: "{ message: string; field?: string; constraint?: string; value?: unknown }"
           }
         ],
         body: `return new ${className}ValidationError({
@@ -176,8 +176,8 @@ export function validationErrorFragment(className: string) {
     })`
       },
       {
-        name: 'fieldRequired',
-        params: [{ name: 'field', type: 'string' }],
+        name: "fieldRequired",
+        params: [{ name: "field", type: "string" }],
         body: `return new ${className}ValidationError({
       message: \`\${field} is required\`,
       field,
@@ -185,11 +185,11 @@ export function validationErrorFragment(className: string) {
     })`
       },
       {
-        name: 'fieldInvalid',
+        name: "fieldInvalid",
         params: [
-          { name: 'field', type: 'string' },
-          { name: 'constraint', type: 'string' },
-          { name: 'value', type: 'unknown', optional: true }
+          { name: "field", type: "string" },
+          { name: "constraint", type: "string" },
+          { name: "value", type: "unknown", optional: true }
         ],
         body: `return new ${className}ValidationError({
       message: \`\${field} is invalid: \${constraint}\`,
@@ -210,18 +210,18 @@ export function alreadyExistsErrorFragment(className: string) {
   return {
     className: `${className}AlreadyExistsError`,
     fields: [
-      { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
+      { name: "message", type: "string", jsdoc: "Human-readable error message" },
       {
-        name: 'identifier',
-        type: 'string',
+        name: "identifier",
+        type: "string",
         optional: true,
-        jsdoc: 'Identifier of existing resource'
+        jsdoc: "Identifier of existing resource"
       }
     ],
     staticMethods: [
       {
-        name: 'create',
-        params: [{ name: 'identifier', type: 'string', optional: true }],
+        name: "create",
+        params: [{ name: "identifier", type: "string", optional: true }],
         body: `return new ${className}AlreadyExistsError({
       message: identifier
         ? \`${className} already exists: \${identifier}\`
@@ -237,20 +237,20 @@ export function alreadyExistsErrorFragment(className: string) {
 /**
  * Create a permission error fragment config
  */
-export function permissionErrorFragment(className: string, idFieldName = 'id') {
+export function permissionErrorFragment(className: string, idFieldName = "id") {
   return {
     className: `${className}PermissionError`,
     fields: [
-      { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-      { name: 'operation', type: 'string', jsdoc: 'Operation that was denied' },
-      { name: `${idFieldName}`, type: 'string', jsdoc: 'Resource identifier' }
+      { name: "message", type: "string", jsdoc: "Human-readable error message" },
+      { name: "operation", type: "string", jsdoc: "Operation that was denied" },
+      { name: `${idFieldName}`, type: "string", jsdoc: "Resource identifier" }
     ],
     staticMethods: [
       {
-        name: 'create',
+        name: "create",
         params: [
           {
-            name: 'params',
+            name: "params",
             type: `{ operation: string; ${idFieldName}: string }`
           }
         ],
@@ -272,17 +272,17 @@ export function databaseErrorFragment(className: string) {
   return {
     className: `${className}DatabaseError`,
     fields: [
-      { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-      { name: 'operation', type: 'string', jsdoc: 'Database operation that failed' },
-      { name: 'cause', type: 'string', optional: true, jsdoc: 'Underlying error cause' }
+      { name: "message", type: "string", jsdoc: "Human-readable error message" },
+      { name: "operation", type: "string", jsdoc: "Database operation that failed" },
+      { name: "cause", type: "string", optional: true, jsdoc: "Underlying error cause" }
     ],
     staticMethods: [
       {
-        name: 'create',
+        name: "create",
         params: [
           {
-            name: 'params',
-            type: '{ message: string; operation: string; cause?: string }'
+            name: "params",
+            type: "{ message: string; operation: string; cause?: string }"
           }
         ],
         body: `return new ${className}DatabaseError({
@@ -299,7 +299,7 @@ export function databaseErrorFragment(className: string) {
 /**
  * Get all domain error fragments for a class
  */
-export function domainErrorFragments(className: string, idFieldName = 'id') {
+export function domainErrorFragments(className: string, idFieldName = "id") {
   return [
     notFoundErrorFragment(className, idFieldName),
     validationErrorFragment(className),
@@ -311,7 +311,7 @@ export function domainErrorFragments(className: string, idFieldName = 'id') {
 /**
  * Get all repository error fragments for a class
  */
-export function repositoryErrorFragments(className: string, idFieldName = 'id') {
+export function repositoryErrorFragments(className: string, idFieldName = "id") {
   return [
     {
       ...notFoundErrorFragment(className, idFieldName),
@@ -326,18 +326,18 @@ export function repositoryErrorFragments(className: string, idFieldName = 'id') 
     {
       className: `${className}ConflictRepositoryError`,
       fields: [
-        { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
+        { name: "message", type: "string", jsdoc: "Human-readable error message" },
         {
-          name: 'identifier',
-          type: 'string',
+          name: "identifier",
+          type: "string",
           optional: true,
-          jsdoc: 'Identifier of conflicting resource'
+          jsdoc: "Identifier of conflicting resource"
         }
       ],
       staticMethods: [
         {
-          name: 'create',
-          params: [{ name: 'identifier', type: 'string', optional: true }],
+          name: "create",
+          params: [{ name: "identifier", type: "string", optional: true }],
           body: `return new ${className}ConflictRepositoryError({
       message: identifier
         ? \`${className} conflict: \${identifier}\`

@@ -13,32 +13,32 @@
  * @module monorepo-library-generator/generators/core/contract-generator-core
  */
 
-import { Effect } from 'effect'
-import { TemplateCompiler } from '../../templates/core/compiler'
-import type { TemplateContext } from '../../templates/core/types'
+import { Effect } from "effect"
+import { TemplateCompiler } from "../../templates/core/compiler"
+import type { TemplateContext } from "../../templates/core/types"
 import {
   contractErrorsTemplate,
   contractEventsTemplate,
   contractPortsTemplate
-} from '../../templates/definitions/contract'
-import type { FileSystemAdapter } from '../../utils/filesystem'
-import { parseTags } from '../../utils/generators'
-import { createNamingVariants } from '../../utils/naming'
-import { generateTemplatesWithSpan, writeContentWithSpan } from '../../utils/template-spans'
-import type { ContractTemplateOptions } from '../../utils/types'
-import { generateCommandsFile } from '../contract/templates/commands.template'
-import { generateIndexFile } from '../contract/templates/index.template'
-import { generateProjectionsFile } from '../contract/templates/projections.template'
-import { generateQueriesFile } from '../contract/templates/queries.template'
-import { generateRpcErrorsFile } from '../contract/templates/rpc.template'
-import { generateRpcDefinitionsFile } from '../contract/templates/rpc-definitions.template'
-import { generateRpcGroupFile } from '../contract/templates/rpc-group.template'
-import { generateSubModuleEntitiesFile } from '../contract/templates/submodule-entities.template'
-import { generateSubModuleErrorsFile } from '../contract/templates/submodule-errors.template'
-import { generateSubModuleEventsFile } from '../contract/templates/submodule-events.template'
-import { generateSubModuleIndexFile } from '../contract/templates/submodule-index.template'
-import { generateSubModuleRpcDefinitionsFile } from '../contract/templates/submodule-rpc-definitions.template'
-import { generateTypesOnlyFile } from '../contract/templates/types-only.template'
+} from "../../templates/definitions/contract"
+import type { FileSystemAdapter } from "../../utils/filesystem"
+import { parseTags } from "../../utils/generators"
+import { createNamingVariants } from "../../utils/naming"
+import { generateTemplatesWithSpan, writeContentWithSpan } from "../../utils/template-spans"
+import type { ContractTemplateOptions } from "../../utils/types"
+import { generateCommandsFile } from "../contract/templates/commands.template"
+import { generateIndexFile } from "../contract/templates/index.template"
+import { generateProjectionsFile } from "../contract/templates/projections.template"
+import { generateQueriesFile } from "../contract/templates/queries.template"
+import { generateRpcDefinitionsFile } from "../contract/templates/rpc-definitions.template"
+import { generateRpcGroupFile } from "../contract/templates/rpc-group.template"
+import { generateRpcErrorsFile } from "../contract/templates/rpc.template"
+import { generateSubModuleEntitiesFile } from "../contract/templates/submodule-entities.template"
+import { generateSubModuleErrorsFile } from "../contract/templates/submodule-errors.template"
+import { generateSubModuleEventsFile } from "../contract/templates/submodule-events.template"
+import { generateSubModuleIndexFile } from "../contract/templates/submodule-index.template"
+import { generateSubModuleRpcDefinitionsFile } from "../contract/templates/submodule-rpc-definitions.template"
+import { generateTypesOnlyFile } from "../contract/templates/types-only.template"
 
 /**
  * Contract Generator Core Options
@@ -81,7 +81,7 @@ export interface ContractCoreOptions {
   readonly description?: string
   readonly tags?: string
   readonly includeCQRS?: boolean
-  readonly entities?: readonly string[]
+  readonly entities?: ReadonlyArray<string>
   readonly includeSubModules?: boolean
   readonly subModules?: string
   readonly typesDatabasePackage?: string
@@ -103,7 +103,7 @@ export interface GeneratorResult {
   readonly projectRoot: string
   readonly packageName: string
   readonly sourceRoot: string
-  readonly filesGenerated: readonly string[]
+  readonly filesGenerated: ReadonlyArray<string>
 }
 
 /**
@@ -122,10 +122,9 @@ export interface GeneratorResult {
  * @requires TemplateCompiler - Template compilation service for code generation
  */
 export function generateContractCore(adapter: FileSystemAdapter, options: ContractCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Prepare entities list (defaults to single entity based on library name)
-    const entities =
-      options.entities && options.entities.length > 0 ? options.entities : [options.className]
+    const entities = options.entities && options.entities.length > 0 ? options.entities : [options.className]
 
     // Parse tags from comma-separated string
     const parsedTags = parseTags(options.tags, [])
@@ -137,7 +136,7 @@ export function generateContractCore(adapter: FileSystemAdapter, options: Contra
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: 'contract',
+      libraryType: "contract",
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
@@ -150,9 +149,9 @@ export function generateContractCore(adapter: FileSystemAdapter, options: Contra
       includeSubModules: options.includeSubModules ?? false,
       subModules: options.subModules
         ? options.subModules
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
         : undefined,
       typesDatabasePackage: options.typesDatabasePackage
     }
@@ -189,10 +188,10 @@ function generateDomainFiles(
   sourceRoot: string,
   templateOptions: ContractTemplateOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const workspaceRoot = adapter.getWorkspaceRoot()
     const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`
-    const files: string[] = []
+    const files: Array<string> = []
 
     // Generate CLAUDE.md
     const claudeDoc = `# ${templateOptions.packageName}
@@ -215,10 +214,10 @@ This is a contract library defining domain types and interfaces.
 - **lib/ports.ts**: Repository/service interfaces (Context.Tag pattern)
 - **lib/rpc.ts**: RPC endpoint definitions
 ${
-  templateOptions.includeCQRS
-    ? `- **lib/commands.ts**: CQRS command schemas\n- **lib/queries.ts**: CQRS query schemas\n- **lib/projections.ts**: Read-model projections`
-    : ''
-}
+      templateOptions.includeCQRS
+        ? `- **lib/commands.ts**: CQRS command schemas\n- **lib/queries.ts**: CQRS query schemas\n- **lib/projections.ts**: Read-model projections`
+        : ""
+    }
 
 ### Integration with prisma-effect-kysely
 
@@ -262,7 +261,7 @@ Effect.gen(function*() {
     // Generate CLAUDE.md with observability
     yield* writeContentWithSpan(
       adapter,
-      'contract/claude-md',
+      "contract/claude-md",
       `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
       claudeDoc
     )
@@ -271,10 +270,10 @@ Effect.gen(function*() {
     yield* adapter.makeDirectory(sourceLibPath)
 
     // Build template context from options
-    const scope = templateOptions.packageName.split('/')[0] ?? '@scope'
+    const scope = templateOptions.packageName.split("/")[0] ?? "@scope"
     // entityTypeSource: where to import entity types from
     // Defaults to local ./types file, can be overridden with typesDatabasePackage
-    const entityTypeSource = templateOptions.typesDatabasePackage ?? './types'
+    const entityTypeSource = templateOptions.typesDatabasePackage ?? "./types"
     const templateContext: TemplateContext = {
       className: templateOptions.className,
       fileName: templateOptions.fileName,
@@ -283,7 +282,7 @@ Effect.gen(function*() {
       scope,
       packageName: templateOptions.packageName,
       projectName: templateOptions.projectName,
-      libraryType: 'contract',
+      libraryType: "contract",
       entityTypeSource,
       // Include CQRS flag for conditional template generation
       includeCQRS: templateOptions.includeCQRS
@@ -294,17 +293,17 @@ Effect.gen(function*() {
 
     // Generate core domain files using new template compiler
     const coreTemplateFiles = [
-      { template: contractErrorsTemplate, path: 'errors.ts' },
-      { template: contractPortsTemplate, path: 'ports.ts' },
-      { template: contractEventsTemplate, path: 'events.ts' }
+      { template: contractErrorsTemplate, path: "errors.ts" },
+      { template: contractPortsTemplate, path: "ports.ts" },
+      { template: contractEventsTemplate, path: "events.ts" }
     ]
 
     for (const { path, template } of coreTemplateFiles) {
       const content = yield* compiler.compile(template, templateContext).pipe(
         Effect.withSpan(`generate.contract.${template.id}`, {
           attributes: {
-            'template.id': template.id,
-            'context.className': templateContext.className
+            "template.id": template.id,
+            "context.className": templateContext.className
           }
         })
       )
@@ -323,15 +322,15 @@ Effect.gen(function*() {
       includeCQRS: templateOptions.includeCQRS,
       typesDatabasePackage: templateOptions.typesDatabasePackage
     })
-    yield* writeContentWithSpan(adapter, 'contract/types-only', typesOnlyPath, typesContent)
+    yield* writeContentWithSpan(adapter, "contract/types-only", typesOnlyPath, typesContent)
     files.push(typesOnlyPath)
 
     // Generate CQRS files (conditional) with spans
     if (templateOptions.includeCQRS) {
       const cqrsTemplates = [
-        { id: 'contract/commands', path: 'commands.ts', generator: generateCommandsFile },
-        { id: 'contract/queries', path: 'queries.ts', generator: generateQueriesFile },
-        { id: 'contract/projections', path: 'projections.ts', generator: generateProjectionsFile }
+        { id: "contract/commands", path: "commands.ts", generator: generateCommandsFile },
+        { id: "contract/queries", path: "queries.ts", generator: generateQueriesFile },
+        { id: "contract/projections", path: "projections.ts", generator: generateProjectionsFile }
       ]
 
       const cqrsFilePaths = yield* generateTemplatesWithSpan(
@@ -348,13 +347,13 @@ Effect.gen(function*() {
     // Generate RPC files (always - prewired integration) with spans
     // Contract-First: RPC definitions are the single source of truth
     const rpcTemplates = [
-      { id: 'contract/rpc-errors', path: 'rpc-errors.ts', generator: generateRpcErrorsFile },
+      { id: "contract/rpc-errors", path: "rpc-errors.ts", generator: generateRpcErrorsFile },
       {
-        id: 'contract/rpc-definitions',
-        path: 'rpc-definitions.ts',
+        id: "contract/rpc-definitions",
+        path: "rpc-definitions.ts",
         generator: generateRpcDefinitionsFile
       },
-      { id: 'contract/rpc-group', path: 'rpc-group.ts', generator: generateRpcGroupFile }
+      { id: "contract/rpc-group", path: "rpc-group.ts", generator: generateRpcGroupFile }
     ]
 
     const rpcFilePaths = yield* generateTemplatesWithSpan(
@@ -374,7 +373,7 @@ Effect.gen(function*() {
     // Generate index file (barrel exports) with span
     const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
     const indexContent = generateIndexFile(templateOptions)
-    yield* writeContentWithSpan(adapter, 'contract/index', indexPath, indexContent)
+    yield* writeContentWithSpan(adapter, "contract/index", indexPath, indexContent)
     files.push(indexPath)
 
     // Generate sub-module namespaces (Hybrid DDD pattern)
@@ -412,8 +411,8 @@ function generateSubModules(
   sourceRoot: string,
   templateOptions: ContractTemplateOptions
 ) {
-  return Effect.gen(function* () {
-    const files: string[] = []
+  return Effect.gen(function*() {
+    const files: Array<string> = []
     const subModuleNames = templateOptions.subModules ?? []
 
     if (subModuleNames.length === 0) {
@@ -602,9 +601,9 @@ function updateMainIndexWithSubModules(
   workspaceRoot: string,
   sourceRoot: string,
   templateOptions: ContractTemplateOptions,
-  subModuleNames: string[]
+  subModuleNames: Array<string>
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
 
     // Read existing index content
@@ -616,7 +615,7 @@ function updateMainIndexWithSubModules(
         const className = createNamingVariants(name).className
         return `import * as ${className}Module from "./${name}"`
       })
-      .join('\n')
+      .join("\n")
 
     // Generate named exports that re-export the imported namespaces
     const subModuleExports = subModuleNames
@@ -624,7 +623,7 @@ function updateMainIndexWithSubModules(
         const className = createNamingVariants(name).className
         return `export { ${className}Module as ${className} }`
       })
-      .join('\n')
+      .join("\n")
 
     const newContent = `${existingContent}
 

@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/config
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Config Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Configuration helpers and validation
  */
 export const infraConfigTemplate: TemplateDefinition = {
-  id: 'infra/config',
+  id: "infra/config",
   meta: {
-    title: '{className} Service Configuration',
+    title: "{className} Service Configuration",
     description: `Configuration constants and types for {className} service.
 Use Effect's Context.Tag pattern for dependency injection if configuration
 needs to vary by environment.
@@ -31,15 +31,15 @@ TODO: Customize this file for your service:
 2. Define {className}Config interface
 3. Add environment-specific defaults
 4. Document configuration requirements`,
-    module: '{scope}/infra-{fileName}/config'
+    module: "{scope}/infra-{fileName}/config"
   },
-  imports: [{ from: '{scope}/env', items: ['env'] }],
+  imports: [{ from: "{scope}/env", items: ["env"] }],
   sections: [
     // Configuration Types
     {
-      title: 'Configuration Types',
+      title: "Configuration Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service Configuration
  *
@@ -70,9 +70,9 @@ export interface {className}Config {
     },
     // Default Configuration
     {
-      title: 'Default Configuration',
+      title: "Default Configuration",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Default {className} configuration
  *
@@ -86,9 +86,9 @@ export const default{className}Config: {className}Config = {
     },
     // Environment-Specific Configuration
     {
-      title: 'Environment-Specific Configuration',
+      title: "Environment-Specific Configuration",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Development configuration
  *
@@ -124,9 +124,9 @@ export const production{className}Config: {className}Config = {
     },
     // Configuration Helpers
     {
-      title: 'Configuration Helpers',
+      title: "Configuration Helpers",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Get configuration for environment
  *
@@ -155,9 +155,9 @@ export function get{className}ConfigForEnvironment(
     },
     // Configuration Validation
     {
-      title: 'Configuration Validation',
+      title: "Configuration Validation",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validate configuration
  *

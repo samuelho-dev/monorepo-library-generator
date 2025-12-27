@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/observability
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate metrics service using Effect.Metric
@@ -47,19 +47,19 @@ Effect.Metric Features:
 - Composable metric operations
 - Pre-defined HistogramBoundaries and StandardMetricNames`,
     module: `${scope}/infra-${fileName}/metrics`,
-    see: ['https://effect.website/docs/observability/metrics']
+    see: ["https://effect.website/docs/observability/metrics"]
   })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Context', 'Effect', 'Layer', 'Metric', 'MetricBoundaries']
+      from: "effect",
+      imports: ["Context", "Effect", "Layer", "Metric", "MetricBoundaries"]
     },
-    { from: `${scope}/env`, imports: ['env'] },
-    { from: `${scope}/provider-opentelemetry`, imports: ['OpenTelemetryProvider'] }
+    { from: `${scope}/env`, imports: ["env"] },
+    { from: `${scope}/provider-opentelemetry`, imports: ["OpenTelemetryProvider"] }
   ])
 
-  builder.addSectionComment('Metrics Service Interface')
+  builder.addSectionComment("Metrics Service Interface")
 
   builder.addRaw(`/**
  * Counter handle for incrementing metrics

@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/memory-provider
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Memory Provider Template Definition
@@ -18,9 +18,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Memory provider layer
  */
 export const infraMemoryProviderTemplate: TemplateDefinition = {
-  id: 'infra/memory-provider',
+  id: "infra/memory-provider",
   meta: {
-    title: 'Memory Provider for {className}',
+    title: "Memory Provider for {className}",
     description: `In-memory provider implementation for testing and development.
 Provides a simple data store without external dependencies.
 
@@ -29,15 +29,15 @@ TODO: Customize this file for your service:
 2. Add helper methods for testing
 3. Consider state management (Map, Set, custom class)
 4. Add reset() method for test isolation`,
-    module: '{scope}/infra-{fileName}/providers'
+    module: "{scope}/infra-{fileName}/providers"
   },
-  imports: [{ from: 'effect', items: ['Context', 'Layer'] }],
+  imports: [{ from: "effect", items: ["Context", "Layer"] }],
   sections: [
     // Memory Provider Tag
     {
-      title: 'Memory Provider Tag',
+      title: "Memory Provider Tag",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Memory Provider Context Tag
  *
@@ -61,9 +61,9 @@ export class Memory{className}Provider extends Context.Tag(
     },
     // Memory Provider Implementation
     {
-      title: 'Memory Provider Implementation',
+      title: "Memory Provider Implementation",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Create memory provider
  *
@@ -83,9 +83,9 @@ function createMemory{className}Provider() {
     },
     // Memory Provider Layer
     {
-      title: 'Memory Provider Layer',
+      title: "Memory Provider Layer",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Memory Provider Layer
  *

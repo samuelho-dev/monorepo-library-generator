@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/provider-consolidation-layers
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Provider Consolidation Layers Template Definition
@@ -17,19 +17,19 @@ import type { TemplateDefinition } from '../../core/types'
  * - ClusterInfrastructureLive merged layer
  */
 export const infraProviderConsolidationLayersTemplate: TemplateDefinition = {
-  id: 'infra/provider-consolidation-layers',
+  id: "infra/provider-consolidation-layers",
   meta: {
-    title: 'Consolidated Infrastructure Layers',
-    description: 'Combines all cluster providers into unified layer',
-    module: '{packageName}/layers'
+    title: "Consolidated Infrastructure Layers",
+    description: "Combines all cluster providers into unified layer",
+    module: "{packageName}/layers"
   },
-  imports: [{ from: 'effect', items: ['Layer'] }],
+  imports: [{ from: "effect", items: ["Layer"] }],
   sections: [
     // Consolidated Layer
     {
-      title: 'Cluster Infrastructure Layer',
+      title: "Cluster Infrastructure Layer",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Provider layer imports are generated based on configuration
 // Example:
 // import { KubernetesLive } from "{scope}/provider-kubernetes"

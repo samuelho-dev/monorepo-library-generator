@@ -6,10 +6,10 @@
  * @module monorepo-library-generator/data-access/index-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { generateStandardErrorExports } from '../../../utils/templates'
-import type { DataAccessTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { generateStandardErrorExports } from "../../../utils/templates"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate index.ts file for data-access library
@@ -34,18 +34,18 @@ Repository implements contract from ${scope}/contract-${fileName}`,
   })
 
   // Error Types section
-  builder.addSectionComment('Error Types (from shared/)')
+  builder.addSectionComment("Error Types (from shared/)")
   builder.addRaw(
     generateStandardErrorExports({
       className,
-      importPath: './lib/shared/errors',
-      unionTypeSuffix: 'RepositoryError'
+      importPath: "./lib/shared/errors",
+      unionTypeSuffix: "RepositoryError"
     })
   )
   builder.addBlankLine()
 
   // Domain Types section
-  builder.addSectionComment('Domain Types (from shared/)')
+  builder.addSectionComment("Domain Types (from shared/)")
   builder.addRaw(`export type {
   ${className},
   ${className}CreateInput,
@@ -64,7 +64,7 @@ Repository implements contract from ${scope}/contract-${fileName}`,
   builder.addBlankLine()
 
   // Validation Functions section
-  builder.addSectionComment('Validation Functions (from shared/)')
+  builder.addSectionComment("Validation Functions (from shared/)")
   builder.addRaw(`export {
   is${className},
   isValid${className}CreateInput,
@@ -78,7 +78,7 @@ Repository implements contract from ${scope}/contract-${fileName}`,
   builder.addBlankLine()
 
   // Query Builders section
-  builder.addSectionComment('Query Builders (from queries.ts)')
+  builder.addSectionComment("Query Builders (from queries.ts)")
   builder.addRaw(`export {
   buildCountQuery,
   buildFindAllQuery,

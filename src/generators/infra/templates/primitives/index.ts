@@ -16,23 +16,23 @@
  */
 
 // Cache primitive templates
-export { generateCacheInterfaceFile } from './cache/interface.template'
-export { generateCacheRedisLayerFile } from './cache/redis-layer.template'
+export { generateCacheInterfaceFile } from "./cache/interface.template"
+export { generateCacheRedisLayerFile } from "./cache/redis-layer.template"
 // Observability primitive templates (LoggingService, MetricsService - consumes provider-opentelemetry)
-export { generateObservabilityConfigFile } from './observability/config.template'
-export { generateObservabilityConstantsFile } from './observability/constants.template'
-export { generateObservabilityErrorsFile } from './observability/errors.template'
-export { generateObservabilityIndexFile } from './observability/index.template'
-export { generateLoggingServiceFile } from './observability/logging-service.template'
-export { generateMetricsServiceFile } from './observability/metrics-service.template'
-export { generateObservabilityPresetsFile } from './observability/presets.template'
-export { generateObservabilitySupervisorFile } from './observability/supervisor.template'
+export { generateObservabilityConfigFile } from "./observability/config.template"
+export { generateObservabilityConstantsFile } from "./observability/constants.template"
+export { generateObservabilityErrorsFile } from "./observability/errors.template"
+export { generateObservabilityIndexFile } from "./observability/index.template"
+export { generateLoggingServiceFile } from "./observability/logging-service.template"
+export { generateMetricsServiceFile } from "./observability/metrics-service.template"
+export { generateObservabilityPresetsFile } from "./observability/presets.template"
+export { generateObservabilitySupervisorFile } from "./observability/supervisor.template"
 // PubSub primitive templates
-export { generatePubSubInterfaceFile } from './pubsub/interface.template'
-export { generatePubSubRedisLayerFile } from './pubsub/redis-layer.template'
+export { generatePubSubInterfaceFile } from "./pubsub/interface.template"
+export { generatePubSubRedisLayerFile } from "./pubsub/redis-layer.template"
 // Queue primitive templates
-export { generateQueueInterfaceFile } from './queue/interface.template'
-export { generateQueueRedisLayerFile } from './queue/redis-layer.template'
+export { generateQueueInterfaceFile } from "./queue/interface.template"
+export { generateQueueRedisLayerFile } from "./queue/redis-layer.template"
 // Shared utilities and templates
-export { generatePrimitiveErrorsFile } from './shared/errors.template'
-export { generatePrimitiveIndexFile } from './shared/index.template'
+export { generatePrimitiveErrorsFile } from "./shared/errors.template"
+export { generatePrimitiveIndexFile } from "./shared/index.template"

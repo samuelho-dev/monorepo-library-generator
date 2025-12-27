@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/submodule-rpc-definitions
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Sub-Module RPC Definitions Template Definition
@@ -22,9 +22,9 @@ import type { TemplateDefinition } from '../../core/types'
  * Example: "Cart.Get", "Cart.AddItem", etc.
  */
 export const contractSubmoduleRpcDefinitionsTemplate: TemplateDefinition = {
-  id: 'contract/submodule-rpc-definitions',
+  id: "contract/submodule-rpc-definitions",
   meta: {
-    title: '{subModuleClassName} RPC Definitions',
+    title: "{subModuleClassName} RPC Definitions",
     description: `Contract-first RPC definitions for the {subModuleName} sub-module.
 All operations are prefixed with "{subModuleClassName}." for unified router routing.
 
@@ -43,22 +43,22 @@ export const {subModuleClassName}Handlers = {subModuleClassName}Rpcs.toLayer({
     Effect.flatMap({subModuleClassName}Service, s => s.get(input.id)),
 })
 \`\`\``,
-    module: '{scope}/contract-{parentName}/{subModuleName}/rpc'
+    module: "{scope}/contract-{parentName}/{subModuleName}/rpc"
   },
   imports: [
-    { from: '@effect/rpc', items: ['Rpc', 'RpcGroup'] },
-    { from: 'effect', items: ['Schema'] },
-    { from: '../lib/rpc-definitions', items: ['RouteTag'] },
-    { from: '../lib/rpc-definitions', items: ['RouteType'], isTypeOnly: true },
-    { from: './entities', items: ['{subModuleClassName}', '{subModuleClassName}Id'] },
-    { from: './rpc-errors', items: ['{subModuleClassName}RpcError'] }
+    { from: "@effect/rpc", items: ["Rpc", "RpcGroup"] },
+    { from: "effect", items: ["Schema"] },
+    { from: "../lib/rpc-definitions", items: ["RouteTag"] },
+    { from: "../lib/rpc-definitions", items: ["RouteType"], isTypeOnly: true },
+    { from: "./entities", items: ["{subModuleClassName}", "{subModuleClassName}Id"] },
+    { from: "./rpc-errors", items: ["{subModuleClassName}RpcError"] }
   ],
   sections: [
     // Request/Response Schemas
     {
-      title: 'Request/Response Schemas',
+      title: "Request/Response Schemas",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Create input schema
  */
@@ -88,9 +88,9 @@ export type Update{subModuleClassName}Input = Schema.Schema.Type<typeof Update{s
     },
     // RPC Definitions
     {
-      title: 'RPC Definitions',
+      title: "RPC Definitions",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Get {subModuleClassName} by ID
  *
@@ -109,7 +109,7 @@ export class {subModuleClassName}Get extends Rpc.make("{subModuleClassName}.Get"
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * List {subModuleClassName}s with pagination
  *
@@ -138,7 +138,7 @@ export class {subModuleClassName}List extends Rpc.make("{subModuleClassName}.Lis
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Create {subModuleClassName}
  *
@@ -155,7 +155,7 @@ export class {subModuleClassName}Create extends Rpc.make("{subModuleClassName}.C
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Update {subModuleClassName}
  *
@@ -175,7 +175,7 @@ export class {subModuleClassName}Update extends Rpc.make("{subModuleClassName}.U
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Delete {subModuleClassName}
  *
@@ -197,9 +197,9 @@ export class {subModuleClassName}Delete extends Rpc.make("{subModuleClassName}.D
     },
     // RPC Group
     {
-      title: 'RPC Group',
+      title: "RPC Group",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {subModuleClassName} RPC Group
  *

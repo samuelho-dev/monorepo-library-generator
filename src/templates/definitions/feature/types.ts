@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/types
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Types Template Definition
@@ -18,23 +18,23 @@ import type { TemplateDefinition } from '../../core/types'
  * - Feature-specific type aliases
  */
 export const featureTypesTemplate: TemplateDefinition = {
-  id: 'feature/types',
+  id: "feature/types",
   meta: {
-    title: '{className} Feature Types',
+    title: "{className} Feature Types",
     description: `Shared types for {propertyName} feature.
 
 Re-exports entity types from contract library and adds feature-specific configuration.`,
-    module: '{scope}/feature-{fileName}/shared/types'
+    module: "{scope}/feature-{fileName}/shared/types"
   },
   imports: [
     {
-      from: '{scope}/contract-{fileName}',
+      from: "{scope}/contract-{fileName}",
       items: [
-        '{className}',
-        '{className}Id',
-        '{className}CreateInput',
-        '{className}UpdateInput',
-        '{className}Filter'
+        "{className}",
+        "{className}Id",
+        "{className}CreateInput",
+        "{className}UpdateInput",
+        "{className}Filter"
       ],
       isTypeOnly: true
     }
@@ -42,9 +42,9 @@ Re-exports entity types from contract library and adds feature-specific configur
   sections: [
     // Type Re-exports
     {
-      title: 'Contract Type Re-exports',
+      title: "Contract Type Re-exports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Re-export entity types from contract library
  *
@@ -62,9 +62,9 @@ export type {
     },
     // Service Configuration
     {
-      title: 'Service Configuration',
+      title: "Service Configuration",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service Configuration
  *
@@ -100,7 +100,7 @@ export interface {className}ServiceConfig {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Default service configuration
  */
@@ -114,9 +114,9 @@ export const DEFAULT_{constantName}_CONFIG: Required<{className}ServiceConfig> =
     },
     // Pagination Types
     {
-      title: 'Pagination Types',
+      title: "Pagination Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Paginated result wrapper
  */

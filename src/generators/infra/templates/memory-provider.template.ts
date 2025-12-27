@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate memory provider file for infrastructure service
@@ -21,15 +21,16 @@ export function generateMemoryProviderFile(options: InfraTemplateOptions) {
   // File header
   builder.addFileHeader({
     title: `Memory Provider for ${className}`,
-    description: `In-memory provider implementation for testing and development.\nProvides a simple data store without external dependencies.\n\nTODO: Customize this file for your service:\n1. Implement in-memory data structures for your domain\n2. Add helper methods for testing\n3. Consider state management (Map, Set, custom class)\n4. Add reset() method for test isolation`,
+    description:
+      `In-memory provider implementation for testing and development.\nProvides a simple data store without external dependencies.\n\nTODO: Customize this file for your service:\n1. Implement in-memory data structures for your domain\n2. Add helper methods for testing\n3. Consider state management (Map, Set, custom class)\n4. Add reset() method for test isolation`,
     module: `${scope}/infra-${fileName}/providers`
   })
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Context', 'Layer'] }])
+  builder.addImports([{ from: "effect", imports: ["Context", "Layer"] }])
 
   // Section: Memory Provider Tag
-  builder.addSectionComment('Memory Provider Tag')
+  builder.addSectionComment("Memory Provider Tag")
 
   builder.addRaw(`/**
  * Memory Provider Context Tag
@@ -53,7 +54,7 @@ export class Memory${className}Provider extends Context.Tag(
   builder.addBlankLine()
 
   // Section: Memory Provider Implementation
-  builder.addSectionComment('Memory Provider Implementation')
+  builder.addSectionComment("Memory Provider Implementation")
 
   builder.addFunction({
     name: `createMemory${className}Provider`,
@@ -71,7 +72,7 @@ return {
   })
 
   // Section: Memory Provider Layer
-  builder.addSectionComment('Memory Provider Layer')
+  builder.addSectionComment("Memory Provider Layer")
 
   builder.addConst(
     `Memory${className}ProviderLive`,

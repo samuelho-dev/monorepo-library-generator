@@ -19,7 +19,7 @@
  * ```
  */
 
-import { createNamingVariants } from './naming'
+import { createNamingVariants } from "./naming"
 
 /**
  * Parsed sub-module with all naming variants
@@ -76,12 +76,12 @@ export interface ParsedSubModule {
  * ```
  */
 export function parseSubModules(input?: string) {
-  if (!input || input.trim() === '') {
+  if (!input || input.trim() === "") {
     return []
   }
 
   return input
-    .split(',')
+    .split(",")
     .map((s) => s.trim())
     .filter(Boolean)
     .map((name) => {

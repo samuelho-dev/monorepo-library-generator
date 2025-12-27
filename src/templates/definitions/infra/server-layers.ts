@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/server-layers
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Server Layers Template Definition
@@ -19,27 +19,27 @@ import type { TemplateDefinition } from '../../core/types'
  * - Advanced pattern examples
  */
 export const infraServerLayersTemplate: TemplateDefinition = {
-  id: 'infra/server-layers',
+  id: "infra/server-layers",
   meta: {
-    title: '{className} Service Layers',
+    title: "{className} Service Layers",
     description: `Layer compositions for server-side dependency injection using Effect.
 Provides additional layer variants for different environments and use cases.
 
 NOTE: The primary Live and Test layers are now static members of {className}Service
 (see ../service/service.ts). This file provides optional additional layer variants.`,
-    module: '{scope}/infra-{fileName}/layers'
+    module: "{scope}/infra-{fileName}/layers"
   },
   imports: [
-    { from: 'effect', items: ['Layer', 'Effect', 'Option'] },
-    { from: './service', items: ['{className}Service'] },
-    { from: '{scope}/env', items: ['env'] }
+    { from: "effect", items: ["Layer", "Effect", "Option"] },
+    { from: "./service", items: ["{className}Service"] },
+    { from: "{scope}/env", items: ["env"] }
   ],
   sections: [
     // Primary Layers Comment
     {
-      title: 'Primary Layers (Available as Static Members)',
+      title: "Primary Layers (Available as Static Members)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `//
 // The primary Live and Test layers are defined as static members of {className}Service:
 //
@@ -59,9 +59,9 @@ NOTE: The primary Live and Test layers are now static members of {className}Serv
     },
     // Development Layer
     {
-      title: 'Development Layer (Optional)',
+      title: "Development Layer (Optional)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Development Layer
  *
@@ -128,9 +128,9 @@ export const {className}ServiceDev = Layer.effect(
     },
     // Auto Layer
     {
-      title: 'Auto Layer (Environment Detection)',
+      title: "Auto Layer (Environment Detection)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Automatic Layer Selection
  *
@@ -166,9 +166,9 @@ export const {className}ServiceAuto = Layer.suspend(() => {
     },
     // Custom Configuration Layer
     {
-      title: 'Advanced Pattern Examples',
+      title: "Advanced Pattern Examples",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Example: Layer with Custom Configuration
  *

@@ -13,9 +13,9 @@
  * @module monorepo-library-generator/infra-templates/rpc/middleware/route-selector
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate route selector middleware file
@@ -28,7 +28,7 @@ export function generateRouteSelectorMiddlewareFile(options: InfraTemplateOption
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'Route Selector Middleware',
+    title: "Route Selector Middleware",
     description: `Automatic middleware selection based on RouteTag from contract definitions.
 
 This implements the Contract-First security pattern where:
@@ -41,12 +41,12 @@ Route Types:
 - "protected": User authentication (CurrentUser)
 - "service": Service-to-service authentication (ServiceContext)`,
     module: `${scope}/infra-${fileName}/middleware/route-selector`,
-    see: ['RouteTag from contract libraries']
+    see: ["RouteTag from contract libraries"]
   })
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Option'] },
-    { from: '@effect/platform', imports: ['Headers'] }
+    { from: "effect", imports: ["Effect", "Layer", "Context", "Option"] },
+    { from: "@effect/platform", imports: ["Headers"] }
   ])
 
   builder.addBlankLine()
@@ -64,7 +64,7 @@ import {
 export { RouteTag, type RouteType, type RpcWithRouteTag };
 `)
 
-  builder.addSectionComment('Route Type Utilities')
+  builder.addSectionComment("Route Type Utilities")
 
   builder.addRaw(`/**
  * Get route type from an RPC definition
@@ -80,7 +80,7 @@ export function getRouteType<T extends RpcWithRouteTag>(rpc: T) {
 }
 `)
 
-  builder.addSectionComment('Route Detection from Request')
+  builder.addSectionComment("Route Detection from Request")
 
   builder.addRaw(`/**
  * Detect route type from request headers
@@ -115,7 +115,7 @@ export function detectRouteType(headers: Headers.Headers) {
 }
 `)
 
-  builder.addSectionComment('Middleware Selection')
+  builder.addSectionComment("Middleware Selection")
 
   builder.addRaw(`/**
  * Middleware selector configuration
@@ -180,7 +180,7 @@ export function createMiddlewareSelector(config: MiddlewareSelectorConfig) {
 }
 `)
 
-  builder.addSectionComment('Router Integration')
+  builder.addSectionComment("Router Integration")
 
   builder.addRaw(`/**
  * Apply middleware to RPC handler based on RouteTag
@@ -238,7 +238,7 @@ export function applyRouteMiddleware<Rpcs extends Record<string, RpcWithRouteTag
 }
 `)
 
-  builder.addSectionComment('Request Context')
+  builder.addSectionComment("Request Context")
 
   builder.addRaw(`/**
  * Request context provided to handlers
@@ -274,7 +274,7 @@ export function createRequestRouteContext(
 }
 `)
 
-  builder.addSectionComment('Development Helpers')
+  builder.addSectionComment("Development Helpers")
 
   builder.addRaw(`/**
  * Log route type for debugging

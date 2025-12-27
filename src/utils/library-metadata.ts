@@ -8,13 +8,13 @@
  * @module monorepo-library-generator/library-metadata
  */
 
-import type { Tree } from '@nx/devkit'
-import { offsetFromRoot as computeOffsetFromRoot, joinPathFragments } from '@nx/devkit'
-import { Effect } from 'effect'
-import { createTreeAdapter } from './filesystem'
-import { createNamingVariants } from './naming'
-import type { LibraryType } from './types'
-import { detectWorkspaceConfig } from './workspace-detection'
+import type { Tree } from "@nx/devkit"
+import { joinPathFragments, offsetFromRoot as computeOffsetFromRoot } from "@nx/devkit"
+import { Effect } from "effect"
+import { createTreeAdapter } from "./filesystem"
+import { createNamingVariants } from "./naming"
+import type { LibraryType } from "./types"
+import { detectWorkspaceConfig } from "./workspace-detection"
 
 /**
  * Input for computing library metadata
@@ -37,7 +37,7 @@ export interface LibraryMetadataInput {
  */
 export interface LibraryMetadata {
   // Required by BaseTemplateSubstitutions
-  readonly tmpl: ''
+  readonly tmpl: ""
   readonly name: string
   readonly offsetFromRoot: string
   readonly tags: string
@@ -68,7 +68,7 @@ export interface LibraryMetadata {
 function getDefaultDirectory(libraryType: LibraryType, librariesRoot: string) {
   const directories: Record<LibraryType, string> = {
     contract: `${librariesRoot}/contract`,
-    'data-access': `${librariesRoot}/data-access`,
+    "data-access": `${librariesRoot}/data-access`,
     feature: `${librariesRoot}/feature`,
     provider: `${librariesRoot}/provider`,
     infra: `${librariesRoot}/infra`,
@@ -82,9 +82,9 @@ function getDefaultDirectory(libraryType: LibraryType, librariesRoot: string) {
  */
 function createDomainName(fileName: string) {
   return fileName
-    .split('-')
+    .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+    .join(" ")
 }
 
 /**
@@ -99,7 +99,7 @@ function buildTags(libraryType: LibraryType, fileName: string, additionalTags?: 
     }
   }
 
-  return baseTags.join(',')
+  return baseTags.join(",")
 }
 
 /**
@@ -151,7 +151,7 @@ export const computeLibraryMetadata = (
   libraryType: LibraryType,
   additionalTags?: ReadonlyArray<string>
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Detect workspace configuration
     const adapter = createTreeAdapter(tree)
 
@@ -160,9 +160,9 @@ export const computeLibraryMetadata = (
     // Parse schema tags if provided
     const schemaTags = schema.tags
       ? schema.tags
-          .split(',')
-          .map((t) => t.trim())
-          .filter((t) => t.length > 0)
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
       : []
 
     // Combine schema tags with additional tags
@@ -172,13 +172,12 @@ export const computeLibraryMetadata = (
     const fileName = nameVariants.fileName // kebab-case
 
     // Get directory (use default if not provided)
-    const directory =
-      schema.directory || getDefaultDirectory(libraryType, workspaceConfig.librariesRoot)
+    const directory = schema.directory || getDefaultDirectory(libraryType, workspaceConfig.librariesRoot)
 
     // Compute paths
     const projectRoot = joinPathFragments(directory, fileName)
-    const sourceRoot = joinPathFragments(projectRoot, 'src')
-    const distRoot = joinPathFragments('dist', directory, fileName)
+    const sourceRoot = joinPathFragments(projectRoot, "src")
+    const distRoot = joinPathFragments("dist", directory, fileName)
 
     // Compute project identifiers
     const projectName = `${libraryType}-${fileName}`
@@ -196,7 +195,7 @@ export const computeLibraryMetadata = (
 
     return {
       // Required by BaseTemplateSubstitutions
-      tmpl: '' as const,
+      tmpl: "" as const,
       name: schema.name,
       offsetFromRoot: computeOffsetFromRoot(projectRoot),
       tags,

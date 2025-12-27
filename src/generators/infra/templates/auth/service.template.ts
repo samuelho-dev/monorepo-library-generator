@@ -12,9 +12,9 @@
  * @module monorepo-library-generator/infra-templates/auth/service
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate auth service.ts file
@@ -25,7 +25,7 @@ export function generateAuthServiceFile(options: InfraTemplateOptions) {
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'Auth Infrastructure Service',
+    title: "Auth Infrastructure Service",
     description: `Auth service that orchestrates authentication providers.
 
 Consumes SupabaseAuth from provider-supabase and provides:
@@ -49,27 +49,27 @@ Integration:
 
   // Imports - all files in lib/ as siblings
   builder.addImports([
-    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Option', 'Schema'] },
-    { from: '@effect/platform', imports: ['Headers'] },
-    { from: `${scope}/provider-supabase`, imports: ['SupabaseAuth'] },
-    { from: `${scope}/provider-supabase`, imports: ['AuthUser'], isTypeOnly: true }
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Option", "Schema"] },
+    { from: "@effect/platform", imports: ["Headers"] },
+    { from: `${scope}/provider-supabase`, imports: ["SupabaseAuth"] },
+    { from: `${scope}/provider-supabase`, imports: ["AuthUser"], isTypeOnly: true }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment('Contract-Auth Imports (Single Source of Truth)')
-  builder.addComment('Import canonical types from contract-auth')
+  builder.addSectionComment("Contract-Auth Imports (Single Source of Truth)")
+  builder.addComment("Import canonical types from contract-auth")
   builder.addImports([
     // Schemas and runtime values
     {
       from: `${scope}/contract-auth`,
       imports: [
-        { name: 'AuthError', alias: 'ContractAuthError' },
-        'AuthVerifier',
-        'CurrentUserDataSchema'
+        { name: "AuthError", alias: "ContractAuthError" },
+        "AuthVerifier",
+        "CurrentUserDataSchema"
       ]
     },
     // Type-only imports
-    { from: `${scope}/contract-auth`, imports: ['CurrentUserData'], isTypeOnly: true }
+    { from: `${scope}/contract-auth`, imports: ["CurrentUserData"], isTypeOnly: true }
   ])
   builder.addRaw(`
 // Re-export for convenience (consumers can import from infra-auth OR contract-auth)
@@ -77,13 +77,13 @@ export { AuthVerifier, type CurrentUserData }
 `)
 
   builder.addImports([
-    { from: './errors', imports: ['AuthError', 'InvalidTokenError', 'UnauthorizedError'] },
-    { from: './types', imports: ['AuthContext'], isTypeOnly: true }
+    { from: "./errors", imports: ["AuthError", "InvalidTokenError", "UnauthorizedError"] },
+    { from: "./types", imports: ["AuthContext"], isTypeOnly: true }
   ])
   builder.addBlankLine()
 
   // Service interface
-  builder.addSectionComment('Service Interface')
+  builder.addSectionComment("Service Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -123,7 +123,7 @@ export interface AuthServiceInterface {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment('Context.Tag')
+  builder.addSectionComment("Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -324,7 +324,7 @@ export class AuthService extends Context.Tag("AuthService")<
   builder.addBlankLine()
 
   // AuthVerifierLive layer for infra-rpc integration
-  builder.addSectionComment('AuthVerifier Implementation (for contract-auth)')
+  builder.addSectionComment("AuthVerifier Implementation (for contract-auth)")
   builder.addBlankLine()
 
   builder.addRaw(`/**

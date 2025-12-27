@@ -5,7 +5,7 @@
  *
  * @module monorepo-library-generator/integration/linter
  */
-import type { Tree } from '@nx/devkit'
+import type { Tree } from "@nx/devkit"
 
 export interface LintResult {
   readonly success: boolean
@@ -40,32 +40,31 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
   }> = []
 
   for (const filePath of files) {
-    const content = tree.read(filePath, 'utf-8')
+    const content = tree.read(filePath, "utf-8")
     if (content === null) continue
 
-    const lines = content.split('\n')
+    const lines = content.split("\n")
 
     lines.forEach((line, index) => {
       const lineNum = index + 1
 
       // Skip comment lines and lines that are part of JSDoc/docstrings
       const trimmed = line.trim()
-      const isCommentLine =
-        trimmed.startsWith('//') ||
-        trimmed.startsWith('*') ||
-        trimmed.startsWith('/*') ||
-        trimmed.startsWith('```')
+      const isCommentLine = trimmed.startsWith("//") ||
+        trimmed.startsWith("*") ||
+        trimmed.startsWith("/*") ||
+        trimmed.startsWith("```")
 
       // Check for type assertions (as Type) - but allow 'as const'
       // Only check non-comment lines and look for actual TypeScript assertions
       // Pattern: expression as TypeName (capital letter start indicates type)
-      if (!(isCommentLine || line.includes('// eslint-disable'))) {
+      if (!(isCommentLine || line.includes("// eslint-disable"))) {
         const asMatch = line.match(/\)\s+as\s+([A-Z]\w*)/)
         if (asMatch) {
           errors.push({
             file: filePath,
             line: lineNum,
-            rule: 'no-type-assertion',
+            rule: "no-type-assertion",
             message: `Type assertion 'as ${asMatch[1]}' found. Use type guards or refactor to avoid type coercion.`
           })
         }
@@ -76,33 +75,33 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
         errors.push({
           file: filePath,
           line: lineNum,
-          rule: 'no-file-extension',
-          message: 'Do not use .js, .mjs, or .cjs extensions in imports.'
+          rule: "no-file-extension",
+          message: "Do not use .js, .mjs, or .cjs extensions in imports."
         })
       }
 
       // Check for Effect.Do usage
-      if (line.includes('Effect.Do')) {
+      if (line.includes("Effect.Do")) {
         errors.push({
           file: filePath,
           line: lineNum,
-          rule: 'no-effect-do',
-          message: 'Effect.Do is deprecated. Use Effect.gen with yield* syntax instead.'
+          rule: "no-effect-do",
+          message: "Effect.Do is deprecated. Use Effect.gen with yield* syntax instead."
         })
       }
 
       // Check for yield without * in Effect.gen context
       // This is a simplified check - the real rule is more sophisticated
       // Skip comment lines to avoid false positives from documentation
-      if (!isCommentLine && line.match(/yield\s+(?!\*)/) && content.includes('Effect.gen')) {
+      if (!isCommentLine && line.match(/yield\s+(?!\*)/) && content.includes("Effect.gen")) {
         // Additional check to make sure we're in Effect.gen context
-        const contextLines = lines.slice(Math.max(0, index - 10), index + 1).join('\n')
-        if (contextLines.includes('Effect.gen(function*')) {
+        const contextLines = lines.slice(Math.max(0, index - 10), index + 1).join("\n")
+        if (contextLines.includes("Effect.gen(function*")) {
           errors.push({
             file: filePath,
             line: lineNum,
-            rule: 'yield-star-required',
-            message: 'Use yield* (not yield) for Effect operations in Effect.gen.'
+            rule: "yield-star-required",
+            message: "Use yield* (not yield) for Effect operations in Effect.gen."
           })
         }
       }
@@ -112,9 +111,8 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
         errors.push({
           file: filePath,
           line: lineNum,
-          rule: 'no-spread-in-push',
-          message:
-            'Do not use spread arguments in Array.push. Use arr = [...arr, ...items] instead.'
+          rule: "no-spread-in-push",
+          message: "Do not use spread arguments in Array.push. Use arr = [...arr, ...items] instead."
         })
       }
     })
@@ -124,29 +122,27 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
     // - Comments (// or *)
     // - Interface method signatures
     // - Type annotations in variable declarations
-    const functionReturnTypePattern =
-      /(?:^|\n)\s*(?:export\s+)?function\s+\w+\s*\([^)]*\)\s*:\s*[^{]+\s*\{/g
+    const functionReturnTypePattern = /(?:^|\n)\s*(?:export\s+)?function\s+\w+\s*\([^)]*\)\s*:\s*[^{]+\s*\{/g
     for (const match of content.matchAll(functionReturnTypePattern)) {
       // Skip if it's a type predicate (x is Type)
-      if (match[0].includes(' is ')) continue
+      if (match[0].includes(" is ")) continue
       // Skip if it's inside a comment block
       const matchIndex = match.index ?? 0
       const beforeMatch = content.substring(0, matchIndex)
-      const lastCommentStart = beforeMatch.lastIndexOf('/*')
-      const lastCommentEnd = beforeMatch.lastIndexOf('*/')
+      const lastCommentStart = beforeMatch.lastIndexOf("/*")
+      const lastCommentEnd = beforeMatch.lastIndexOf("*/")
       if (lastCommentStart > lastCommentEnd) continue
       // Skip if line starts with // or *
-      const lineStart = beforeMatch.lastIndexOf('\n')
+      const lineStart = beforeMatch.lastIndexOf("\n")
       const lineContent = content.substring(lineStart + 1, matchIndex + match[0].length)
-      if (lineContent.trim().startsWith('//') || lineContent.trim().startsWith('*')) continue
+      if (lineContent.trim().startsWith("//") || lineContent.trim().startsWith("*")) continue
 
-      const lineNum = content.substring(0, matchIndex).split('\n').length
+      const lineNum = content.substring(0, matchIndex).split("\n").length
       errors.push({
         file: filePath,
         line: lineNum,
-        rule: 'no-explicit-return-type',
-        message:
-          'Do not use explicit return type annotations. Let TypeScript infer the return type.'
+        rule: "no-explicit-return-type",
+        message: "Do not use explicit return type annotations. Let TypeScript infer the return type."
       })
     }
   }
@@ -159,11 +155,11 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
 }
 
 function collectTypeScriptFiles(tree: Tree, projectRoot: string) {
-  const files: string[] = []
+  const files: Array<string> = []
 
   const visit = (path: string) => {
     if (tree.isFile(path)) {
-      if (path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts')) {
+      if (path.endsWith(".ts") && !path.endsWith(".spec.ts") && !path.endsWith(".test.ts")) {
         files.push(path)
       }
     } else {

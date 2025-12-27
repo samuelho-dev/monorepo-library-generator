@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/provider/validation
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Provider Validation Template Definition
@@ -21,26 +21,26 @@ import type { TemplateDefinition } from '../../core/types'
  * All functions are client-safe (no secrets, no server logic).
  */
 export const providerValidationTemplate: TemplateDefinition = {
-  id: 'provider/validation',
+  id: "provider/validation",
   meta: {
-    title: '{name} - Validation Utilities',
+    title: "{name} - Validation Utilities",
     description: `Client-safe validation functions (no secrets, no server logic)
 Safe to export in client.ts`,
-    module: '{scope}/provider-{fileName}/lib/validation'
+    module: "{scope}/provider-{fileName}/lib/validation"
   },
   imports: [
     {
-      from: './types',
-      items: ['{className}Config'],
+      from: "./types",
+      items: ["{className}Config"],
       isTypeOnly: true
     }
   ],
   sections: [
     // Configuration Validation
     {
-      title: 'Configuration Validation',
+      title: "Configuration Validation",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validate {className} configuration
  *
@@ -84,9 +84,9 @@ export function validate{className}Config(config: unknown): config is {className
     },
     // Input Validation
     {
-      title: 'Input Validation',
+      title: "Input Validation",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validate {className} input
  *
@@ -107,9 +107,9 @@ export function validate{className}Input(input: unknown): boolean {
     },
     // Common Validators
     {
-      title: 'Common Validators',
+      title: "Common Validators",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validate API key format
  */
@@ -168,9 +168,9 @@ export function validateRequired<T>(value: T | null | undefined): value is T {
     },
     // Sanitization
     {
-      title: 'Sanitization Utilities',
+      title: "Sanitization Utilities",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Sanitize string input (client-safe)
  */

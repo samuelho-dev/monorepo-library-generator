@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/data-access/errors
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Data Access Errors Template Definition
@@ -21,29 +21,29 @@ import type { TemplateDefinition } from '../../core/types'
  * with JavaScript template literals that shouldn't be interpolated.
  */
 export const dataAccessErrorsTemplate: TemplateDefinition = {
-  id: 'data-access/errors',
+  id: "data-access/errors",
   meta: {
-    title: '{className} Data Access Infrastructure Errors',
+    title: "{className} Data Access Infrastructure Errors",
     description: `Infrastructure-specific errors for data-access layer operations.
 
 CONTRACT-FIRST ARCHITECTURE:
 Domain errors are defined in {scope}/contract-{fileName} - import directly from there.
 This file only contains infrastructure errors specific to data-access operations.`,
-    module: '{scope}/data-access-{fileName}/errors'
+    module: "{scope}/data-access-{fileName}/errors"
   },
   imports: [
     {
-      from: '{scope}/contract-{fileName}',
-      items: ['{className}RepositoryError'],
+      from: "{scope}/contract-{fileName}",
+      items: ["{className}RepositoryError"],
       isTypeOnly: true
     },
-    { from: 'effect', items: ['Data'] }
+    { from: "effect", items: ["Data"] }
   ],
   sections: [
     // Contract-first architecture documentation
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * CONTRACT-FIRST ARCHITECTURE:
  * ============================
@@ -65,9 +65,9 @@ This file only contains infrastructure errors specific to data-access operations
 
     // Connection Error
     {
-      title: 'Infrastructure Errors (Data-Access Specific)',
+      title: "Infrastructure Errors (Data-Access Specific)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when database connection fails
  */
@@ -94,7 +94,7 @@ export class {className}ConnectionError extends Data.TaggedError(
     // Timeout Error
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when database operation times out
  */
@@ -127,7 +127,7 @@ export class {className}TimeoutError extends Data.TaggedError(
     // Transaction Error
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when database transaction fails
  */
@@ -159,9 +159,9 @@ export class {className}TransactionError extends Data.TaggedError(
 
     // Infrastructure Error Union Type
     {
-      title: 'Infrastructure Error Union Type',
+      title: "Infrastructure Error Union Type",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Union of infrastructure-specific errors
  *
@@ -178,9 +178,9 @@ export type {className}InfrastructureError =
 
     // Combined Data Access Error Type
     {
-      title: 'Combined Data Access Error Type',
+      title: "Combined Data Access Error Type",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * All possible data-access layer errors
  *

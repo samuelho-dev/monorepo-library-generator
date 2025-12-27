@@ -13,15 +13,15 @@ export {
   generateAuthIndexFile,
   generateAuthServiceFile,
   generateAuthTypesFile
-} from './auth/index'
+} from "./auth/index"
 // Core infrastructure templates
-export { generateClientLayersFile } from './client-layers.template'
-export { generateConfigFile } from './config.template'
-export { generateDatabaseServiceFile } from './database-service.template'
-export { generateErrorsFile } from './errors.template'
-export { generateIndexFile } from './index.template'
-export { generateMemoryProviderFile } from './memory-provider.template'
-export { generateOrchestratorTemplate as generateOrchestratorFile } from './orchestrator.template'
+export { generateClientLayersFile } from "./client-layers.template"
+export { generateConfigFile } from "./config.template"
+export { generateDatabaseServiceFile } from "./database-service.template"
+export { generateErrorsFile } from "./errors.template"
+export { generateIndexFile } from "./index.template"
+export { generateMemoryProviderFile } from "./memory-provider.template"
+export { generateOrchestratorTemplate as generateOrchestratorFile } from "./orchestrator.template"
 // Primitive templates (cache, queue, pubsub, observability)
 export {
   // Cache
@@ -45,9 +45,9 @@ export {
   // Queue
   generateQueueInterfaceFile,
   generateQueueRedisLayerFile
-} from './primitives/index'
-export { generateProviderConsolidationIndexTemplate as generateProviderConsolidationIndexFile } from './provider-consolidation-index.template'
-export { generateProviderConsolidationLayersTemplate as generateProviderConsolidationLayersFile } from './provider-consolidation-layers.template'
+} from "./primitives/index"
+export { generateProviderConsolidationIndexTemplate as generateProviderConsolidationIndexFile } from "./provider-consolidation-index.template"
+export { generateProviderConsolidationLayersTemplate as generateProviderConsolidationLayersFile } from "./provider-consolidation-layers.template"
 // RPC templates
 export {
   generateAuthMiddlewareFile,
@@ -62,10 +62,10 @@ export {
   generateRpcRouterFile,
   generateRpcTransportFile,
   generateServiceAuthMiddlewareFile
-} from './rpc/index'
-export { generateServerLayersFile } from './server-layers.template'
-export { generateServiceFile } from './service.template'
-export { generateInfraServiceSpecFile } from './service-spec.template'
+} from "./rpc/index"
+export { generateServerLayersFile } from "./server-layers.template"
+export { generateInfraServiceSpecFile } from "./service-spec.template"
+export { generateServiceFile } from "./service.template"
 
 // Storage templates
 export {
@@ -73,5 +73,5 @@ export {
   generateStorageIndexFile,
   generateStorageServiceFile,
   generateStorageTypesFile
-} from './storage/index'
-export { generateUseHookFile } from './use-hook.template'
+} from "./storage/index"
+export { generateUseHookFile } from "./use-hook.template"

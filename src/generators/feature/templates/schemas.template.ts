@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/feature/schemas-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../utils/types'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../utils/types"
 
 /**
  * Generate shared/schemas.ts file for feature library
@@ -21,11 +21,11 @@ export function generateSchemasFile(options: FeatureTemplateOptions) {
   // Add file header
   builder.addFileHeader({
     title: `${className} Schemas`,
-    description: 'Shared schema definitions using Effect Schema.'
+    description: "Shared schema definitions using Effect Schema."
   })
 
   // Add imports
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
   builder.addBlankLine()
 
   // Add Config schema

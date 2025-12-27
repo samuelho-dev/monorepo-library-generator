@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository/operations-index-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/index.ts file
@@ -34,7 +34,7 @@ For convenience, import from this barrel:
   })
   builder.addBlankLine()
 
-  builder.addSectionComment('Re-export all operations')
+  builder.addSectionComment("Re-export all operations")
   builder.addBlankLine()
 
   builder.addRaw(`export { aggregateOperations, type Aggregate${className}Operations } from "./aggregate"

@@ -22,18 +22,18 @@
  */
 
 // Configuration schema
-export { generateObservabilityConfigFile } from './config.template'
+export { generateObservabilityConfigFile } from "./config.template"
 // Constants (HistogramBoundaries, StandardMetricNames, LogLevelConfigs, SpanAttributes)
-export { generateObservabilityConstantsFile } from './constants.template'
+export { generateObservabilityConstantsFile } from "./constants.template"
 // Error types
-export { generateObservabilityErrorsFile } from './errors.template'
+export { generateObservabilityErrorsFile } from "./errors.template"
 // Index file with barrel exports
-export { generateObservabilityIndexFile } from './index.template'
+export { generateObservabilityIndexFile } from "./index.template"
 // Logging service (Effect Logger wrapper - consumes OpenTelemetryProvider)
-export { generateLoggingServiceFile } from './logging-service.template'
+export { generateLoggingServiceFile } from "./logging-service.template"
 // Metrics service (Effect.Metric wrapper - consumes OpenTelemetryProvider)
-export { generateMetricsServiceFile } from './metrics-service.template'
+export { generateMetricsServiceFile } from "./metrics-service.template"
 // Preset configurations
-export { generateObservabilityPresetsFile } from './presets.template'
+export { generateObservabilityPresetsFile } from "./presets.template"
 // Fiber tracking Supervisor
-export { generateObservabilitySupervisorFile } from './supervisor.template'
+export { generateObservabilitySupervisorFile } from "./supervisor.template"

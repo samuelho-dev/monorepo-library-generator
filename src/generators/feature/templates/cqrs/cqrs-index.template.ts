@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/feature/cqrs/cqrs-index-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate server/cqrs/index.ts file
@@ -34,17 +34,17 @@ Structure:
   })
   builder.addBlankLine()
 
-  builder.addSectionComment('Commands')
+  builder.addSectionComment("Commands")
   builder.addRaw(`export { Command, ${className}CommandBus } from "./commands"
 export type { CommandBusInterface } from "./commands"`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Queries')
+  builder.addSectionComment("Queries")
   builder.addRaw(`export { Query, ${className}QueryBus } from "./queries"
 export type { QueryBusInterface } from "./queries"`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Operations')
+  builder.addSectionComment("Operations")
   builder.addRaw(`export {
   ${className}OperationExecutor,
   createValidationMiddleware,
@@ -58,7 +58,7 @@ export type {
 } from "./operations"`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Projections')
+  builder.addSectionComment("Projections")
   builder.addRaw(`export { ${className}ProjectionBuilder } from "./projections"
 
 export type {
@@ -72,7 +72,7 @@ export type {
 
   // Add unified bus export if sub-modules are present
   if (options.subModules && options.subModules.length > 0) {
-    builder.addSectionComment('Unified Sub-Module Bus')
+    builder.addSectionComment("Unified Sub-Module Bus")
     builder.addRaw(`// Unified command/query buses for sub-module delegation
 export {
   ${className}CommandBus as ${className}UnifiedCommandBus,

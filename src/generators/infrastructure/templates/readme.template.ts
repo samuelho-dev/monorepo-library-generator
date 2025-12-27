@@ -6,7 +6,7 @@
  * @module monorepo-library-generator/infrastructure/readme-template
  */
 
-import type { LibraryType } from '../../../utils/types'
+import type { LibraryType } from "../../../utils/types"
 
 export interface ReadmeOptions {
   readonly packageName: string
@@ -21,7 +21,7 @@ export interface ReadmeOptions {
 export function generateReadme(options: ReadmeOptions) {
   const generators: Record<LibraryType, (opts: ReadmeOptions) => string> = {
     contract: generateContractReadme,
-    'data-access': generateDataAccessReadme,
+    "data-access": generateDataAccessReadme,
     feature: generateFeatureReadme,
     infra: generateInfraReadme,
     provider: generateProviderReadme,

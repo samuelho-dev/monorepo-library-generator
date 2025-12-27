@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/infra-templates/storage/errors
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate storage errors.ts file
@@ -17,7 +17,7 @@ export function generateStorageErrorsFile(options: InfraTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: 'Storage Infrastructure Errors',
+    title: "Storage Infrastructure Errors",
     description: `Data.TaggedError-based error types for storage operations.
 
 All errors extend Data.TaggedError for structural equality and pattern matching.`,
@@ -26,11 +26,11 @@ All errors extend Data.TaggedError for structural equality and pattern matching.
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Data'] }])
+  builder.addImports([{ from: "effect", imports: ["Data"] }])
   builder.addBlankLine()
 
   // Error types
-  builder.addSectionComment('Error Types')
+  builder.addSectionComment("Error Types")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -102,7 +102,7 @@ export class InvalidFileTypeError extends Data.TaggedError("InvalidFileTypeError
   builder.addBlankLine()
 
   // Union type
-  builder.addSectionComment('Error Union Type')
+  builder.addSectionComment("Error Union Type")
   builder.addBlankLine()
 
   builder.addRaw(`/**

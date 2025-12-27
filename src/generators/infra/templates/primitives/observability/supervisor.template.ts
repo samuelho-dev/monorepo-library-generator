@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/observability
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate Supervisor layer for fiber tracking
@@ -32,16 +32,16 @@ Provides:
 IMPORTANT: Fiber tracking is OPT-IN. Adding it to every span can
 create excessive trace data. Use judiciously in production.`,
     module: `${scope}/infra-${fileName}/supervisor`,
-    see: ['Effect Supervisor documentation']
+    see: ["Effect Supervisor documentation"]
   })
 
   // Fiber, Option, Context are only used as types, Exit is used as both value and type
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Exit', 'FiberId', 'Layer', 'Supervisor', 'Ref'] },
-    { from: 'effect', imports: ['Context', 'Fiber', 'Option'], isTypeOnly: true }
+    { from: "effect", imports: ["Effect", "Exit", "FiberId", "Layer", "Supervisor", "Ref"] },
+    { from: "effect", imports: ["Context", "Fiber", "Option"], isTypeOnly: true }
   ])
 
-  builder.addSectionComment('Supervisor Configuration')
+  builder.addSectionComment("Supervisor Configuration")
 
   builder.addRaw(`/**
  * Configuration for fiber tracking
@@ -80,7 +80,7 @@ export interface SupervisorConfig {
 }
 `)
 
-  builder.addSectionComment('Supervisor Factory')
+  builder.addSectionComment("Supervisor Factory")
 
   builder.addRaw(`/**
  * Internal: track a fiber event in a queue for later logging
@@ -165,7 +165,7 @@ export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}): Effe
 
   // Note: Option and Fiber are already imported as type-only in line 39
 
-  builder.addSectionComment('Layer Factory')
+  builder.addSectionComment("Layer Factory")
 
   builder.addRaw(`/**
  * Create a layer that adds fiber tracking to the application
@@ -192,7 +192,7 @@ export const withFiberTracking = (config?: SupervisorConfig) =>
   )
 `)
 
-  builder.addSectionComment('Pre-configured Layers')
+  builder.addSectionComment("Pre-configured Layers")
 
   builder.addRaw(`/**
  * Minimal fiber tracking - only track failures

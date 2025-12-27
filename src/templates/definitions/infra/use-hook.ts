@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/use-hook
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure React Hook Template Definition
@@ -18,9 +18,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Hook implementation with loading/error states
  */
 export const infraUseHookTemplate: TemplateDefinition = {
-  id: 'infra/use-hook',
+  id: "infra/use-hook",
   meta: {
-    title: 'use{className} React Hook',
+    title: "use{className} React Hook",
     description: `React hook for using {className} service in components.
 Provides client-safe interface without exposing server secrets.
 
@@ -30,18 +30,18 @@ TODO: Customize this hook for your service:
 3. Add error handling and loading states
 4. Document hook usage and examples
 5. Add TypeScript generics if needed`,
-    module: '{scope}/infra-{fileName}/client'
+    module: "{scope}/infra-{fileName}/client"
   },
   imports: [
-    { from: 'react', items: ['useEffect', 'useState', 'useCallback'] },
-    { from: 'effect', items: ['Option', 'Schema'] }
+    { from: "react", items: ["useEffect", "useState", "useCallback"] },
+    { from: "effect", items: ["Option", "Schema"] }
   ],
   sections: [
     // Error Types
     {
-      title: 'Error Types',
+      title: "Error Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Schema for parsing RPC error responses
  *
@@ -71,9 +71,9 @@ function parseRpcError(error: unknown): RpcError | null {
     },
     // Hook State Types
     {
-      title: 'Hook State Types',
+      title: "Hook State Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Hook State
  *
@@ -96,9 +96,9 @@ export interface Use{className}State {
     },
     // Hook Implementation
     {
-      title: 'Hook Implementation',
+      title: "Hook Implementation",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * use{className} Hook
  *

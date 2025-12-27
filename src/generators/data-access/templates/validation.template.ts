@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/validation-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate validation.ts file for data-access library
@@ -40,7 +40,7 @@ Validates data before repository operations to ensure domain constraints.
   // Consumers should use those types for type checking after validation
 
   // Validation Helpers
-  builder.addSectionComment('Validation Helpers')
+  builder.addSectionComment("Validation Helpers")
   builder.addBlankLine()
 
   // Validate Create Input
@@ -134,7 +134,7 @@ export function validatePagination(skip: unknown, limit: unknown) {
   builder.addBlankLine()
 
   // Validation Utilities
-  builder.addSectionComment('Validation Utilities')
+  builder.addSectionComment("Validation Utilities")
   builder.addBlankLine()
 
   // is${className} type guard

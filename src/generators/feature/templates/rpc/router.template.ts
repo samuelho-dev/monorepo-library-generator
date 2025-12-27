@@ -12,9 +12,9 @@
  * @module monorepo-library-generator/feature/templates/rpc/router
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate router.ts file for feature library
@@ -46,19 +46,19 @@ Usage:
   export const POST = create${className}Handler()`
   })
 
-  builder.addImports([{ from: 'effect', imports: ['Layer'] }])
+  builder.addImports([{ from: "effect", imports: ["Layer"] }])
 
-  builder.addSectionComment('Handler Imports')
+  builder.addSectionComment("Handler Imports")
 
-  builder.addImports([{ from: './handlers', imports: [`${className}HandlersLayer`] }])
+  builder.addImports([{ from: "./handlers", imports: [`${className}HandlersLayer`] }])
 
-  builder.addSectionComment('Middleware Imports')
+  builder.addSectionComment("Middleware Imports")
 
   builder.addImports([
-    { from: `${scope}/infra-rpc`, imports: ['AllMiddlewareLive', 'AllMiddlewareTest'] }
+    { from: `${scope}/infra-rpc`, imports: ["AllMiddlewareLive", "AllMiddlewareTest"] }
   ])
 
-  builder.addSectionComment('Layer Composition')
+  builder.addSectionComment("Layer Composition")
 
   builder.addRaw(`/**
  * Combined layer for production
@@ -82,7 +82,7 @@ export const ${className}TestLayer = Layer.mergeAll(
 )
 `)
 
-  builder.addSectionComment('HTTP Handler (Next.js / Express)')
+  builder.addSectionComment("HTTP Handler (Next.js / Express)")
 
   builder.addRaw(`/**
  * Create Next.js App Router handler
@@ -128,7 +128,7 @@ export const ${className}TestLayer = Layer.mergeAll(
  */
 `)
 
-  builder.addSectionComment('Handler Import Notes')
+  builder.addSectionComment("Handler Import Notes")
 
   if (hasSubModules) {
     builder.addRaw(`// NOTE: For handler access, import directly from ./handlers:

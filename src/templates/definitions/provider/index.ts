@@ -8,10 +8,10 @@
  */
 
 // Core templates
-export { providerErrorsTemplate } from './errors'
+export { providerErrorsTemplate } from "./errors"
 // Main barrel export
-export { providerIndexTemplate } from './index-barrel'
-export { providerServiceTemplate } from './service'
-export { providerServiceSpecTemplate } from './service-spec'
-export { providerTypesTemplate } from './types'
-export { providerValidationTemplate } from './validation'
+export { providerIndexTemplate } from "./index-barrel"
+export { providerServiceTemplate } from "./service"
+export { providerServiceSpecTemplate } from "./service-spec"
+export { providerTypesTemplate } from "./types"
+export { providerValidationTemplate } from "./validation"

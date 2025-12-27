@@ -7,10 +7,10 @@
  * @module monorepo-library-generator/infra-templates/primitives/shared
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import { detectInfraConcern } from '../../../../../utils/infra-provider-mapping'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import { detectInfraConcern } from "../../../../../utils/infra-provider-mapping"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate index.ts file for primitive infrastructure services
@@ -30,17 +30,17 @@ Layers are available as static members on the service class.`,
     module: `${scope}/infra-${fileName}`
   })
 
-  builder.addSectionComment('Service and Types')
+  builder.addSectionComment("Service and Types")
 
   // Determine what to export from service based on concern type
   const typeExports = getServiceTypeExports(className, concern)
 
   builder.addRaw(`// Service with static layers (Memory, Test, Live)
 export { ${className}Service } from "./lib/service"
-${typeExports ? `export type { ${typeExports} } from "./lib/service"` : ''}
+${typeExports ? `export type { ${typeExports} } from "./lib/service"` : ""}
 `)
 
-  builder.addSectionComment('Error Types')
+  builder.addSectionComment("Error Types")
 
   builder.addRaw(`// Error types for error handling
 export {
@@ -52,7 +52,7 @@ export {
 export type { ${className}Error, ${className}ServiceError } from "./lib/errors"
 `)
 
-  builder.addSectionComment('Additional Layers')
+  builder.addSectionComment("Additional Layers")
 
   // Add concern-specific layer exports
   const layerExport = getLayerExport(className, concern)
@@ -69,26 +69,26 @@ export type { ${className}Error, ${className}ServiceError } from "./lib/errors"
  */
 function getServiceTypeExports(className: string, concern: string) {
   switch (concern) {
-    case 'cache':
-      return 'CacheHandle, SimpleCacheHandle'
+    case "cache":
+      return "CacheHandle, SimpleCacheHandle"
 
-    case 'database':
-      return 'Database'
+    case "database":
+      return "Database"
 
-    case 'queue':
-      return 'BoundedQueueHandle, QueueOptions, UnboundedQueueHandle'
+    case "queue":
+      return "BoundedQueueHandle, QueueOptions, UnboundedQueueHandle"
 
-    case 'pubsub':
-      return 'TopicHandle, TopicOptions'
+    case "pubsub":
+      return "TopicHandle, TopicOptions"
 
-    case 'logging':
+    case "logging":
       return `${className}Operations, LogContext`
 
-    case 'metrics':
-      return 'CounterHandle, GaugeHandle, HistogramHandle, MetricOptions'
+    case "metrics":
+      return "CounterHandle, GaugeHandle, HistogramHandle, MetricOptions"
 
     default:
-      return ''
+      return ""
   }
 }
 
@@ -98,12 +98,12 @@ function getServiceTypeExports(className: string, concern: string) {
  */
 function getLayerExport(className: string, concern: string) {
   switch (concern) {
-    case 'cache':
+    case "cache":
       return `// Redis-backed distributed layer
 export { ${className}RedisLayer } from "./lib/layers"
 `
 
-    case 'queue':
+    case "queue":
       return `// Redis-backed distributed layer
 export {
   ${className}RedisLayer,
@@ -111,7 +111,7 @@ export {
 } from "./lib/layers"
 `
 
-    case 'pubsub':
+    case "pubsub":
       return `// Redis-backed distributed layer
 export {
   ${className}RedisLayer,
@@ -119,7 +119,7 @@ export {
 } from "./lib/layers"
 `
 
-    case 'logging':
+    case "logging":
       return `// OpenTelemetry integration
 export {
   make${className}OtelLayer,
@@ -129,7 +129,7 @@ export {
 export type { OtelLoggingConfig } from "./lib/layers"
 `
 
-    case 'metrics':
+    case "metrics":
       return `// OpenTelemetry integration
 export {
   make${className}OtelLayer,

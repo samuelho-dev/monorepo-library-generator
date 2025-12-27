@@ -11,9 +11,9 @@
  * @module monorepo-library-generator/feature/hooks-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate client/hooks/use-{name}.ts file for feature library
@@ -48,9 +48,9 @@ Usage:
 
   // Add imports
   builder.addImports([
-    { from: '@effect-atom/atom-react', imports: ['useAtom', 'useAtomValue'] },
-    { from: 'effect', imports: ['Option', 'Schema'] },
-    { from: 'react', imports: ['useCallback', 'useMemo'] }
+    { from: "@effect-atom/atom-react", imports: ["useAtom", "useAtomValue"] },
+    { from: "effect", imports: ["Option", "Schema"] },
+    { from: "react", imports: ["useCallback", "useMemo"] }
   ])
 
   // Add RPC error schema for parsing error responses
@@ -113,7 +113,7 @@ function getErrorMessage(error: unknown, fallback: string) {
     { from: `../atoms/${fileName}-atoms`, imports: [`${className}State`], isTypeOnly: true }
   ])
 
-  builder.addSectionComment('Hook Return Type')
+  builder.addSectionComment("Hook Return Type")
 
   builder.addRaw(`/**
  * Return type for use${className} hook
@@ -140,7 +140,7 @@ export interface Use${className}Return {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Hook Implementation')
+  builder.addSectionComment("Hook Implementation")
 
   builder.addRaw(`/**
  * RPC endpoint URL - configured via environment

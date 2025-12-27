@@ -10,9 +10,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate RPC errors file
@@ -37,12 +37,12 @@ Error Boundaries:
 
 Note: AuthError is defined in middleware.ts for co-location with AuthMiddleware.`,
     module: `${scope}/infra-${fileName}/errors`,
-    see: ['EFFECT_PATTERNS.md for error patterns']
+    see: ["EFFECT_PATTERNS.md for error patterns"]
   })
 
-  builder.addImports([{ from: 'effect', imports: ['Schema', 'Data'] }])
+  builder.addImports([{ from: "effect", imports: ["Schema", "Data"] }])
 
-  builder.addSectionComment('RPC Infrastructure Errors (Schema.TaggedError)')
+  builder.addSectionComment("RPC Infrastructure Errors (Schema.TaggedError)")
 
   builder.addRaw(`/**
  * Base RPC infrastructure error
@@ -169,7 +169,7 @@ export type RpcError =
   | RpcInternalError
 `)
 
-  builder.addSectionComment('Domain-Level Errors (Data.TaggedError)')
+  builder.addSectionComment("Domain-Level Errors (Data.TaggedError)")
 
   builder.addRaw(`/**
  * Internal infrastructure error (domain-level, non-serializable)
@@ -207,9 +207,9 @@ export class ${className}ConnectionError extends Data.TaggedError(
 }> {}
 `)
 
-  builder.addImports([{ from: 'effect', imports: ['Effect'] }])
+  builder.addImports([{ from: "effect", imports: ["Effect"] }])
 
-  builder.addSectionComment('HTTP Status Mapping')
+  builder.addSectionComment("HTTP Status Mapping")
 
   builder.addRaw(`/**
  * HTTP status codes mapped to RPC error tags
@@ -239,7 +239,7 @@ export const getHttpStatus = (error: RpcError): number =>
   RpcHttpStatus[error._tag] ?? 500
 `)
 
-  builder.addSectionComment('Error Boundary (Effect-native)')
+  builder.addSectionComment("Error Boundary (Effect-native)")
 
   builder.addRaw(`/**
  * Wrap effect with RPC error boundary using Effect.catchTag

@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/shared/errors/tracing
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate tracing configuration and utilities
@@ -23,7 +23,7 @@ export function generateTracingConfig() {
   const builder = new TypeScriptBuilder()
   const scope = WORKSPACE_CONFIG.getScope()
 
-  builder.addImports([{ from: `${scope}/env`, imports: ['env'] }])
+  builder.addImports([{ from: `${scope}/env`, imports: ["env"] }])
 
   builder.addRaw(`/**
  * Error tracing configuration per environment
@@ -224,23 +224,23 @@ export function generateTracingModule() {
 
   // File header
   builder.addFileHeader({
-    title: 'Error Tracing Utilities',
+    title: "Error Tracing Utilities",
     description: `Environment-aware error tracing with smart defaults:
  * - Production: Log errors only, sample 1% of debug-level
  * - Development: Log all errors with full cause chains
  * - Test: Silent (no logging)
  *
  * Uses Effect.tapError pattern to log without modifying error channel.`,
-    module: 'tracing'
+    module: "tracing"
   })
 
   builder.addBlankLine()
 
   // Add imports
-  builder.addImport('effect', 'Effect')
-  builder.addImport('effect', 'Option')
-  builder.addImport('effect', 'Schema')
-  builder.addImport(`${scope}/env`, 'env')
+  builder.addImport("effect", "Effect")
+  builder.addImport("effect", "Option")
+  builder.addImport("effect", "Schema")
+  builder.addImport(`${scope}/env`, "env")
 
   builder.addBlankLine()
 

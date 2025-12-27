@@ -7,14 +7,10 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
-import {
-  type ErrorGeneratorConfig,
-  generateCommonErrors,
-  generateErrorUnion
-} from '../../shared/errors'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { type ErrorGeneratorConfig, generateCommonErrors, generateErrorUnion } from "../../shared/errors"
 
 /**
  * Generate errors file for infrastructure service
@@ -41,19 +37,19 @@ TODO: Customize this file for your service:
 3. Document error recovery strategies
 4. Add helper constructors for error creation`,
     module: `${scope}/infra-${fileName}/errors`,
-    see: ['https://effect.website/docs/api/Data/TaggedError for error patterns']
+    see: ["https://effect.website/docs/api/Data/TaggedError for error patterns"]
   })
 
   // Imports
-  builder.addImport('effect', 'Data')
+  builder.addImport("effect", "Data")
 
   // Section: Core Service Errors
-  builder.addSectionComment('Core Service Errors')
+  builder.addSectionComment("Core Service Errors")
 
   // Use shared error generators with 'data' style (Data.TaggedError)
   const errorConfig: ErrorGeneratorConfig = {
     className,
-    style: 'data',
+    style: "data",
     includeStaticCreate: true
   }
 
@@ -61,7 +57,7 @@ TODO: Customize this file for your service:
   generateCommonErrors(builder, errorConfig)
 
   // Section: Error Type Union
-  builder.addSectionComment('Error Type Union')
+  builder.addSectionComment("Error Type Union")
 
   // Generate error union
   generateErrorUnion(builder, className)

@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/provider/service
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Provider Service Template Definition
@@ -20,40 +20,40 @@ import type { TemplateDefinition } from '../../core/types'
  * - In-memory baseline implementation for testing
  */
 export const providerServiceTemplate: TemplateDefinition = {
-  id: 'provider/service',
+  id: "provider/service",
   meta: {
-    title: '{className} Service Interface',
+    title: "{className} Service Interface",
     description: `Context.Tag definition for {className} provider service.
 
 External Service: {externalService}
 
 Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.`,
-    module: '{scope}/provider-{fileName}/service'
+    module: "{scope}/provider-{fileName}/service"
   },
   imports: [
-    { from: 'effect', items: ['Context', 'Effect', 'Layer', 'Redacted'] },
+    { from: "effect", items: ["Context", "Effect", "Layer", "Redacted"] },
     {
-      from: './types',
+      from: "./types",
       items: [
-        '{className}Config',
-        'Resource',
-        'ListParams',
-        'PaginatedResult',
-        'HealthCheckResult'
+        "{className}Config",
+        "Resource",
+        "ListParams",
+        "PaginatedResult",
+        "HealthCheckResult"
       ],
       isTypeOnly: true
     },
-    { from: './errors', items: ['{className}ServiceError'], isTypeOnly: true },
-    { from: './errors', items: ['{className}NotFoundError'] },
-    { from: '{scope}/env', items: ['env'] }
+    { from: "./errors", items: ["{className}ServiceError"], isTypeOnly: true },
+    { from: "./errors", items: ["{className}NotFoundError"] },
+    { from: "{scope}/env", items: ["env"] }
   ],
   sections: [
     // Service Interface
     {
-      title: 'Service Interface',
+      title: "Service Interface",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service Interface
  *
@@ -120,9 +120,9 @@ export interface {className}ServiceInterface {
 
     // Context.Tag
     {
-      title: 'Context.Tag',
+      title: "Context.Tag",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service Tag
  *
@@ -143,7 +143,7 @@ export class {className} extends Context.Tag("{className}")<
     // Live Layer
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `  /**
    * Live Layer - Production implementation
    *
@@ -263,7 +263,7 @@ export class {className} extends Context.Tag("{className}")<
     // Test Layer
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `  /**
    * Test Layer - In-memory implementation for testing
    *
@@ -369,7 +369,7 @@ export class {className} extends Context.Tag("{className}")<
     // Dev Layer
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `  /**
    * Dev Layer - Development with enhanced logging
    *
@@ -442,7 +442,7 @@ export class {className} extends Context.Tag("{className}")<
     // Auto Layer
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `  /**
    * Auto Layer - Environment-aware layer selection
    *

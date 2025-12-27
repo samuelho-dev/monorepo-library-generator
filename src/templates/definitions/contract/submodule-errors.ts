@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/submodule-errors
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Sub-Module Errors Template Definition
@@ -22,9 +22,9 @@ import type { TemplateDefinition } from '../../core/types'
  * Data-access and feature layers should import these errors.
  */
 export const contractSubmoduleErrorsTemplate: TemplateDefinition = {
-  id: 'contract/submodule-errors',
+  id: "contract/submodule-errors",
   meta: {
-    title: '{parentClassName} {subModuleClassName} Errors',
+    title: "{parentClassName} {subModuleClassName} Errors",
     description: `Domain errors specific to the {subModuleName} sub-module.
 
 These errors use Data.TaggedError for proper Effect integration:
@@ -38,15 +38,15 @@ Data-access and feature layers should import and re-export these errors
 rather than defining their own.
 
 @see https://effect.website/docs/other/data/tagged-error`,
-    module: '{scope}/contract-{parentName}/{subModuleName}/errors'
+    module: "{scope}/contract-{parentName}/{subModuleName}/errors"
   },
-  imports: [{ from: 'effect', items: ['Data'] }],
+  imports: [{ from: "effect", items: ["Data"] }],
   sections: [
     // Domain Errors
     {
-      title: 'Domain Errors (Data.TaggedError)',
+      title: "Domain Errors (Data.TaggedError)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when {subModuleName} entity is not found
  */
@@ -65,7 +65,7 @@ export class {subModuleClassName}NotFoundError extends Data.TaggedError("{subMod
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when {subModuleName} validation fails
  */
@@ -93,7 +93,7 @@ export class {subModuleClassName}ValidationError extends Data.TaggedError("{subM
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when {subModuleName} operation fails (e.g., database, network)
  */
@@ -114,9 +114,9 @@ export class {subModuleClassName}OperationError extends Data.TaggedError("{subMo
     },
     // Error Union Types
     {
-      title: 'Error Union Types',
+      title: "Error Union Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Union of {subModuleName} domain errors (business logic)
  */

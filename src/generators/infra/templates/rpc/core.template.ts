@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate RPC core file
@@ -33,22 +33,22 @@ This module provides:
 Middleware is defined in middleware.ts.
 Router utilities are in router.ts.`,
     module: `${scope}/infra-${fileName}/core`,
-    see: ['@effect/rpc documentation']
+    see: ["@effect/rpc documentation"]
   })
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect'], isTypeOnly: true },
-    { from: 'effect', imports: ['Schema'] },
-    { from: '@effect/rpc', imports: ['Rpc', 'RpcGroup'] }
+    { from: "effect", imports: ["Effect"], isTypeOnly: true },
+    { from: "effect", imports: ["Schema"] },
+    { from: "@effect/rpc", imports: ["Rpc", "RpcGroup"] }
   ])
 
-  builder.addSectionComment('Re-exports from @effect/rpc')
+  builder.addSectionComment("Re-exports from @effect/rpc")
 
   builder.addRaw(`// Re-export Rpc and RpcGroup for convenience
 export { Rpc, RpcGroup }
 `)
 
-  builder.addSectionComment('RPC Definition Helpers')
+  builder.addSectionComment("RPC Definition Helpers")
 
   builder.addRaw(`/**
  * Helper to create an RPC definition with proper typing
@@ -94,7 +94,7 @@ export const defineRpc = Rpc.make
 export const defineRpcGroup = RpcGroup.make
 `)
 
-  builder.addSectionComment('Handler Creation Helpers')
+  builder.addSectionComment("Handler Creation Helpers")
 
   builder.addRaw(`/**
  * Create a handler layer from an RPC group
@@ -208,7 +208,7 @@ export type RpcFailure<R> = R extends Rpc.Rpc<string, Schema.Schema.Any, Schema.
   : never
 `)
 
-  builder.addSectionComment('Schema Helpers')
+  builder.addSectionComment("Schema Helpers")
 
   builder.addRaw(`/**
  * Create a paginated response schema
@@ -263,7 +263,7 @@ export const SuccessResponse = Schema.Struct({
 export const EmptyRequest = Schema.Struct({})
 `)
 
-  builder.addSectionComment('Error Helpers')
+  builder.addSectionComment("Error Helpers")
 
   builder.addRaw(`/**
  * Domain Error Pattern

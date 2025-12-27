@@ -20,14 +20,14 @@
  * @module monorepo-library-generator/cli/generators/env
  */
 
-import * as path from 'node:path'
-import { Console, Effect } from 'effect'
-import { generateCreateEnvFile } from '../../generators/env/templates/createEnv.template'
-import { generateEnvScaffoldFile } from '../../generators/env/templates/env-scaffold.template'
-import { generateIndexFile } from '../../generators/env/templates/index.template'
-import { findDotEnvFile, parseDotEnvFile } from '../../generators/env/utils/parse-dotenv'
-import { createEffectFsAdapter } from '../../utils/filesystem'
-import { getPackageName } from '../../utils/workspace-config'
+import { Console, Effect } from "effect"
+import * as path from "node:path"
+import { generateCreateEnvFile } from "../../generators/env/templates/createEnv.template"
+import { generateEnvScaffoldFile } from "../../generators/env/templates/env-scaffold.template"
+import { generateIndexFile } from "../../generators/env/templates/index.template"
+import { findDotEnvFile, parseDotEnvFile } from "../../generators/env/utils/parse-dotenv"
+import { createEffectFsAdapter } from "../../utils/filesystem"
+import { getPackageName } from "../../utils/workspace-config"
 
 /**
  * Environment Generator Options (CLI)
@@ -49,53 +49,53 @@ export interface EnvGeneratorOptions {
  * Uses Effect-native FileSystem operations for cross-platform compatibility.
  */
 export function generateEnv(options: EnvGeneratorOptions = {}) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const workspaceRoot = yield* Effect.sync(() => process.cwd())
     const adapter = yield* createEffectFsAdapter(workspaceRoot)
 
     // Determine project root (default to libs/env)
-    const projectRoot = options.projectRoot || 'libs/env'
-    const sourceRoot = path.join(projectRoot, 'src')
+    const projectRoot = options.projectRoot || "libs/env"
+    const sourceRoot = path.join(projectRoot, "src")
 
     yield* Console.log(`🔍 Searching for .env file in workspace root...`)
 
     // Phase 1: Parse .env file from workspace root
     const dotEnvPath = yield* Effect.sync(() => findDotEnvFile(workspaceRoot))
     const vars = yield* Effect.sync(
-      () => (dotEnvPath ? parseDotEnvFile(dotEnvPath) : parseDotEnvFile('')) // Will use defaults
+      () => (dotEnvPath ? parseDotEnvFile(dotEnvPath) : parseDotEnvFile("")) // Will use defaults
     )
 
     yield* Console.log(`📋 Parsed ${vars.length} environment variables`)
-    yield* Console.log(`   - Shared: ${vars.filter((v) => v.context === 'shared').length}`)
-    yield* Console.log(`   - Client: ${vars.filter((v) => v.context === 'client').length}`)
-    yield* Console.log(`   - Server: ${vars.filter((v) => v.context === 'server').length}`)
+    yield* Console.log(`   - Shared: ${vars.filter((v) => v.context === "shared").length}`)
+    yield* Console.log(`   - Client: ${vars.filter((v) => v.context === "client").length}`)
+    yield* Console.log(`   - Server: ${vars.filter((v) => v.context === "server").length}`)
 
     // Phase 2: Generate source files using new templates
     yield* Console.log(`📝 Generating type-safe environment files...`)
 
     // Generate createEnv.ts (runtime library)
     const createEnvContent = yield* Effect.sync(() => generateCreateEnvFile())
-    yield* adapter.writeFile(path.join(sourceRoot, 'createEnv.ts'), createEnvContent)
+    yield* adapter.writeFile(path.join(sourceRoot, "createEnv.ts"), createEnvContent)
     yield* Console.log(`   ✓ ${sourceRoot}/createEnv.ts (runtime library)`)
 
     // Generate env.ts (user's createEnv call)
     const envContent = yield* Effect.sync(() => generateEnvScaffoldFile(vars))
-    yield* adapter.writeFile(path.join(sourceRoot, 'env.ts'), envContent)
+    yield* adapter.writeFile(path.join(sourceRoot, "env.ts"), envContent)
     yield* Console.log(`   ✓ ${sourceRoot}/env.ts (environment definition)`)
 
     // Generate index.ts (single entry point)
     const indexContent = yield* Effect.sync(() => generateIndexFile())
-    yield* adapter.writeFile(path.join(sourceRoot, 'index.ts'), indexContent)
+    yield* adapter.writeFile(path.join(sourceRoot, "index.ts"), indexContent)
     yield* Console.log(`   ✓ ${sourceRoot}/index.ts (entry point)`)
 
     // Clean up old files that are no longer needed
     const obsoleteFiles = [
-      'types.ts',
-      'config.ts',
-      'schema.ts',
-      'parse.ts',
-      'client.ts',
-      'server.ts'
+      "types.ts",
+      "config.ts",
+      "schema.ts",
+      "parse.ts",
+      "client.ts",
+      "server.ts"
     ]
 
     for (const file of obsoleteFiles) {
@@ -110,30 +110,30 @@ export function generateEnv(options: EnvGeneratorOptions = {}) {
     // Phase 3: Generate configuration files
     yield* Console.log(`⚙️  Generating configuration files...`)
 
-    const packageName = getPackageName('env')
+    const packageName = getPackageName("env")
 
     // Generate package.json (simplified - single entry point)
     const packageJson = {
       name: packageName,
-      version: '0.0.1',
-      type: 'module',
+      version: "0.0.1",
+      type: "module",
       sideEffects: false,
-      description: 'Type-safe environment variable access with Effect Config',
+      description: "Type-safe environment variable access with Effect Config",
       exports: {
-        '.': {
-          import: './src/index.ts',
-          types: './src/index.ts'
+        ".": {
+          import: "./src/index.ts",
+          types: "./src/index.ts"
         }
       },
       peerDependencies: {
-        effect: '*',
-        '@effect/platform': '*',
-        '@effect/platform-node': '*'
+        effect: "*",
+        "@effect/platform": "*",
+        "@effect/platform-node": "*"
       }
     }
 
     yield* adapter.writeFile(
-      path.join(projectRoot, 'package.json'),
+      path.join(projectRoot, "package.json"),
       JSON.stringify(packageJson, null, 2)
     )
     yield* Console.log(`   ✓ ${projectRoot}/package.json`)
@@ -141,19 +141,19 @@ export function generateEnv(options: EnvGeneratorOptions = {}) {
     // Generate tsconfig.json
     // Note: rootDir is intentionally omitted to support workspace path mappings
     const tsconfig = {
-      extends: '../../tsconfig.base.json',
+      extends: "../../tsconfig.base.json",
       compilerOptions: {
-        outDir: './dist',
-        module: 'ESNext', // Required for verbatimModuleSyntax with ESM
-        moduleResolution: 'bundler', // Modern resolution for ESM packages
+        outDir: "./dist",
+        module: "ESNext", // Required for verbatimModuleSyntax with ESM
+        moduleResolution: "bundler", // Modern resolution for ESM packages
         verbatimModuleSyntax: true
       },
-      include: ['src/**/*.ts'],
-      exclude: ['node_modules', 'dist', '**/*.spec.ts']
+      include: ["src/**/*.ts"],
+      exclude: ["node_modules", "dist", "**/*.spec.ts"]
     }
 
     yield* adapter.writeFile(
-      path.join(projectRoot, 'tsconfig.json'),
+      path.join(projectRoot, "tsconfig.json"),
       JSON.stringify(tsconfig, null, 2)
     )
     yield* Console.log(`   ✓ ${projectRoot}/tsconfig.json`)
@@ -224,37 +224,37 @@ pnpm exec monorepo-library-generator env
 \`\`\`
 `
 
-    yield* adapter.writeFile(path.join(projectRoot, 'README.md'), readme)
+    yield* adapter.writeFile(path.join(projectRoot, "README.md"), readme)
     yield* Console.log(`   ✓ ${projectRoot}/README.md`)
 
     const dotEnvMessage = dotEnvPath
       ? `Parsed from: ${dotEnvPath}`
-      : 'No .env file found - using defaults'
+      : "No .env file found - using defaults"
 
-    yield* Console.log('')
+    yield* Console.log("")
     yield* Console.log(`✨ Environment library updated successfully!`)
     yield* Console.log(`  Location: ${projectRoot}`)
     yield* Console.log(`  Package: ${packageName}`)
     yield* Console.log(`  ${dotEnvMessage}`)
-    yield* Console.log('')
+    yield* Console.log("")
     yield* Console.log(`🎯 Usage (Single Import):`)
     yield* Console.log(``)
     yield* Console.log(`   import { env } from '${packageName}'`)
     yield* Console.log(``)
     yield* Console.log(`   // Server: All variables accessible`)
     yield* Console.log(`   // Client: Only client + shared vars (server vars throw)`)
-    yield* Console.log('')
+    yield* Console.log("")
     yield* Console.log(`🔒 Security:`)
     yield* Console.log(`   - ✅ Single source of truth (one createEnv call)`)
     yield* Console.log(`   - ✅ Eager validation on import (fail fast)`)
     yield* Console.log(`   - ✅ Runtime protection for server vars on client`)
     yield* Console.log(`   - ✅ Type inference via Config.Config.Success<>`)
     yield* Console.log(`   - ✅ Secrets protected with Config.redacted()`)
-    yield* Console.log('')
+    yield* Console.log("")
     yield* Console.log(`📝 Environment Variables (${vars.length}):`)
     for (const v of vars) {
-      const icon = v.context === 'client' ? '🌐' : v.context === 'shared' ? '🔄' : '🔒'
-      const secretLabel = v.isSecret ? ' (secret)' : ''
+      const icon = v.context === "client" ? "🌐" : v.context === "shared" ? "🔄" : "🔒"
+      const secretLabel = v.isSecret ? " (secret)" : ""
       yield* Console.log(`   ${icon} ${v.name}: ${v.type}${secretLabel}`)
     }
 
@@ -262,12 +262,12 @@ pnpm exec monorepo-library-generator env
       projectRoot,
       packageName,
       filesGenerated: [
-        'createEnv.ts',
-        'env.ts',
-        'index.ts',
-        'package.json',
-        'tsconfig.json',
-        'README.md'
+        "createEnv.ts",
+        "env.ts",
+        "index.ts",
+        "package.json",
+        "tsconfig.json",
+        "README.md"
       ],
       variablesCount: vars.length,
       dotEnvPath

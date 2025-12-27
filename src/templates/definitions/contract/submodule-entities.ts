@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/submodule-entities
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Sub-Module Entities Template Definition
@@ -25,9 +25,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - {subModuleName}: Sub-module name (e.g., "cart")
  */
 export const contractSubmoduleEntitiesTemplate: TemplateDefinition = {
-  id: 'contract/submodule-entities',
+  id: "contract/submodule-entities",
   meta: {
-    title: '{parentClassName} {subModuleClassName} Entities',
+    title: "{parentClassName} {subModuleClassName} Entities",
     description: `Domain entities specific to the {subModuleName} sub-module.
 
 These entities are scoped to {subModuleName} operations within the {parentName} domain.
@@ -38,15 +38,15 @@ TODO: Customize for your {subModuleName} sub-module:
 2. Import shared types from parent contract if needed
 3. Add validation rules with Schema.pipe()
 4. Add Schema.annotations() for documentation`,
-    module: '{scope}/contract-{parentName}/{subModuleName}/entities'
+    module: "{scope}/contract-{parentName}/{subModuleName}/entities"
   },
-  imports: [{ from: 'effect', items: ['Schema'] }],
+  imports: [{ from: "effect", items: ["Schema"] }],
   sections: [
     // ID Type
     {
-      title: '{subModuleClassName} ID Type',
+      title: "{subModuleClassName} ID Type",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {subModuleClassName} ID branded type
  */
@@ -64,9 +64,9 @@ export type {subModuleClassName}Id = Schema.Schema.Type<typeof {subModuleClassNa
     },
     // Entity Class
     {
-      title: '{subModuleClassName} Entity',
+      title: "{subModuleClassName} Entity",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {subModuleClassName} domain entity
  *
@@ -105,9 +105,9 @@ export class {subModuleClassName} extends Schema.Class<{subModuleClassName}>("{s
     },
     // Item Class
     {
-      title: '{subModuleClassName} Item (for collections)',
+      title: "{subModuleClassName} Item (for collections)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {subModuleClassName} item for list/collection operations
  *
@@ -130,9 +130,9 @@ export class {subModuleClassName}Item extends Schema.Class<{subModuleClassName}I
     },
     // Helper Functions
     {
-      title: 'Helper Functions',
+      title: "Helper Functions",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Parse {subModuleClassName} from unknown data
  */

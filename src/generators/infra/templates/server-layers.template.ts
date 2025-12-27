@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate server layers file for infrastructure service
@@ -21,23 +21,24 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
   // File header
   builder.addFileHeader({
     title: `${className} Service Layers`,
-    description: `Layer compositions for server-side dependency injection using Effect.\nProvides additional layer variants for different environments and use cases.\n\nNOTE: The primary Live and Test layers are now static members of ${className}Service\n(see ../service/service.ts). This file provides optional additional layer variants.`,
+    description:
+      `Layer compositions for server-side dependency injection using Effect.\nProvides additional layer variants for different environments and use cases.\n\nNOTE: The primary Live and Test layers are now static members of ${className}Service\n(see ../service/service.ts). This file provides optional additional layer variants.`,
     module: `${scope}/infra-${fileName}/layers`,
-    see: ['https://effect.website/docs/guides/context-management for layer patterns']
+    see: ["https://effect.website/docs/guides/context-management for layer patterns"]
   })
 
   // Imports - layers.ts is now at lib/layers.ts, service at lib/service.ts
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Layer', 'Effect', 'Option']
+      from: "effect",
+      imports: ["Layer", "Effect", "Option"]
     },
-    { from: './service', imports: [`${className}Service`] },
-    { from: `${scope}/env`, imports: ['env'] }
+    { from: "./service", imports: [`${className}Service`] },
+    { from: `${scope}/env`, imports: ["env"] }
   ])
 
   // Section: Primary Layers Comment
-  builder.addSectionComment('Primary Layers (Available as Static Members)')
+  builder.addSectionComment("Primary Layers (Available as Static Members)")
 
   builder.addRaw(`//
 // The primary Live and Test layers are defined as static members of ${className}Service:
@@ -57,7 +58,7 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
   builder.addBlankLine()
 
   // Section: Development Layer
-  builder.addSectionComment('Development Layer (Optional)')
+  builder.addSectionComment("Development Layer (Optional)")
 
   builder.addRaw(`/**
  * Development Layer
@@ -172,7 +173,7 @@ export const ${className}ServiceDev = Layer.effect(
   builder.addBlankLine()
 
   // Section: Auto Layer
-  builder.addSectionComment('Auto Layer (Environment Detection) - Optional')
+  builder.addSectionComment("Auto Layer (Environment Detection) - Optional")
 
   builder.addRaw(`/**
  * Automatic Layer Selection
@@ -214,7 +215,7 @@ export const ${className}ServiceAuto = Layer.suspend(() => {
   builder.addBlankLine()
 
   // Section: Advanced Pattern Examples
-  builder.addSectionComment('Advanced Pattern Examples (DELETE IF NOT NEEDED)')
+  builder.addSectionComment("Advanced Pattern Examples (DELETE IF NOT NEEDED)")
 
   builder.addRaw(`/**
  * Example: Layer with Custom Configuration
@@ -318,7 +319,7 @@ export const ${className}ServiceCustom = (customConfig: {
   builder.addBlankLine()
 
   // Section: Layer Composition Examples
-  builder.addSectionComment('Layer Composition Examples')
+  builder.addSectionComment("Layer Composition Examples")
 
   builder.addRaw(`/**
  * Example: Composed Layer with Dependencies

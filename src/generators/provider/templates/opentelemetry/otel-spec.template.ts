@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/opentelemetry
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate OpenTelemetry spec file
@@ -16,14 +16,14 @@ export function generateOtelSpecFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: 'OpenTelemetry Provider Tests',
-    description: 'Test suite for OpenTelemetry provider service.',
+    title: "OpenTelemetry Provider Tests",
+    description: "Test suite for OpenTelemetry provider service.",
     module: `${options.packageName}/spec`
   })
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect'] },
-    { from: './otel', imports: ['OpenTelemetryProvider'] }
+    { from: "effect", imports: ["Effect"] },
+    { from: "./otel", imports: ["OpenTelemetryProvider"] }
   ])
 
   builder.addRaw(`describe("OpenTelemetryProvider", () => {

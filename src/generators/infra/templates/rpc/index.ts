@@ -13,16 +13,16 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-export { generateRpcClientFile } from './client.template'
-export { generateRpcClientHooksFile } from './client-hook.template'
-export { generateRpcCoreFile } from './core.template'
-export { generateRpcErrorsFile } from './errors.template'
+export { generateRpcClientHooksFile } from "./client-hook.template"
+export { generateRpcClientFile } from "./client.template"
+export { generateRpcCoreFile } from "./core.template"
+export { generateRpcErrorsFile } from "./errors.template"
 // Middleware module (Contract-First architecture)
-export { generateAuthMiddlewareFile } from './middleware/auth.template'
-export { generateMiddlewareIndexFile } from './middleware/index.template'
-export { generateRequestMetaMiddlewareFile } from './middleware/request-meta.template'
-export { generateRouteSelectorMiddlewareFile } from './middleware/route-selector.template'
-export { generateServiceAuthMiddlewareFile } from './middleware/service-auth.template'
-export { generateRpcRouterFile } from './router.template'
-export { generateRpcIndexFile } from './rpc-index.template'
-export { generateRpcTransportFile } from './transport.template'
+export { generateAuthMiddlewareFile } from "./middleware/auth.template"
+export { generateMiddlewareIndexFile } from "./middleware/index.template"
+export { generateRequestMetaMiddlewareFile } from "./middleware/request-meta.template"
+export { generateRouteSelectorMiddlewareFile } from "./middleware/route-selector.template"
+export { generateServiceAuthMiddlewareFile } from "./middleware/service-auth.template"
+export { generateRpcRouterFile } from "./router.template"
+export { generateRpcIndexFile } from "./rpc-index.template"
+export { generateRpcTransportFile } from "./transport.template"

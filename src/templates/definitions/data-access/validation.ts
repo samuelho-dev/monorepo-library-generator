@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/data-access/validation
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Data Access Validation Template Definition
@@ -20,22 +20,22 @@ import type { TemplateDefinition } from '../../core/types'
  * - Type guards
  */
 export const dataAccessValidationTemplate: TemplateDefinition = {
-  id: 'data-access/validation',
+  id: "data-access/validation",
   meta: {
-    title: '{className} Validation Schemas',
+    title: "{className} Validation Schemas",
     description: `Input validation using schema validators.
 Validates data before repository operations to ensure domain constraints.
 
 @see https://zod.dev for Zod schema validation`,
-    module: '{scope}/data-access-{fileName}/server'
+    module: "{scope}/data-access-{fileName}/server"
   },
   imports: [],
   sections: [
     // Validation Helpers
     {
-      title: 'Validation Helpers',
+      title: "Validation Helpers",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validates {className} Creation Input
  *
@@ -54,7 +54,7 @@ export function validate{className}CreateInput(input: unknown) {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validates {className} Update Input
  *
@@ -73,7 +73,7 @@ export function validate{className}UpdateInput(input: unknown) {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validates {className} Filters
  *
@@ -92,7 +92,7 @@ export function validate{className}Filter(input: unknown) {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validates a single {className} ID
  *
@@ -110,7 +110,7 @@ export function validate{className}Id(id: unknown) {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Validates pagination parameters
  *
@@ -135,9 +135,9 @@ export function validatePagination(skip: unknown, limit: unknown) {
     },
     // Validation Utilities
     {
-      title: 'Validation Utilities',
+      title: "Validation Utilities",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Checks if an object is a valid {className} entity
  *
@@ -157,7 +157,7 @@ export function is{className}(obj: unknown) {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Checks if an object is valid for creation
  *
@@ -171,7 +171,7 @@ export function isValid{className}CreateInput(obj: unknown) {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Checks if an object is valid for updates
  *

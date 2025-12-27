@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/service
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Service Template Definition
@@ -20,28 +20,28 @@ import type { TemplateDefinition } from '../../core/types'
  * - In-memory baseline implementation
  */
 export const infraServiceTemplate: TemplateDefinition = {
-  id: 'infra/service',
+  id: "infra/service",
   meta: {
-    title: '{className} Service',
+    title: "{className} Service",
     description: `Infrastructure service using Effect 3.0+ Context.Tag pattern.
 
 Provides CRUD operations with dependency injection and resource management.
 Customize resource initialization, dependencies, and error handling as needed.`,
-    module: '{scope}/infra-{fileName}/service'
+    module: "{scope}/infra-{fileName}/service"
   },
   imports: [
-    { from: 'node:crypto', items: ['randomUUID'] },
-    { from: 'effect', items: ['Effect', 'Layer', 'Option', 'Context'] },
-    { from: './errors', items: ['{className}InternalError', '{className}NotFoundError'] },
-    { from: './errors', items: ['{className}ServiceError'], isTypeOnly: true },
-    { from: '{scope}/env', items: ['env'] }
+    { from: "node:crypto", items: ["randomUUID"] },
+    { from: "effect", items: ["Effect", "Layer", "Option", "Context"] },
+    { from: "./errors", items: ["{className}InternalError", "{className}NotFoundError"] },
+    { from: "./errors", items: ["{className}ServiceError"], isTypeOnly: true },
+    { from: "{scope}/env", items: ["env"] }
   ],
   sections: [
     // Service Context.Tag Definition
     {
-      title: 'Service Context.Tag Definition with Inline Interface (Effect 3.0+)',
+      title: "Service Context.Tag Definition with Inline Interface (Effect 3.0+)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service
  *
@@ -110,10 +110,10 @@ export class {className}Service extends Context.Tag(
     // Static Live Layer
     {
       content: {
-        type: 'raw',
-        value: `  // ${'='.repeat(74)}
+        type: "raw",
+        value: `  // ${"=".repeat(74)}
   // Static Live Layer (Effect 3.0+ Pattern)
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Live Layer - Production implementation
@@ -182,10 +182,10 @@ export class {className}Service extends Context.Tag(
     // Static Test Layer
     {
       content: {
-        type: 'raw',
-        value: `  // ${'='.repeat(74)}
+        type: "raw",
+        value: `  // ${"=".repeat(74)}
   // Static Test Layer
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Test Layer - In-memory implementation for testing
@@ -252,10 +252,10 @@ export class {className}Service extends Context.Tag(
     // Static Dev Layer
     {
       content: {
-        type: 'raw',
-        value: `  // ${'='.repeat(74)}
+        type: "raw",
+        value: `  // ${"=".repeat(74)}
   // Static Dev Layer
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Dev Layer - Development with enhanced logging
@@ -328,10 +328,10 @@ export class {className}Service extends Context.Tag(
     // Static Auto Layer
     {
       content: {
-        type: 'raw',
-        value: `  // ${'='.repeat(74)}
+        type: "raw",
+        value: `  // ${"=".repeat(74)}
   // Static Auto Layer
-  // ${'='.repeat(74)}
+  // ${"=".repeat(74)}
 
   /**
    * Auto Layer - Environment-aware layer selection

@@ -30,7 +30,7 @@
  * ```
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
 import type {
   ContractReExportConfig,
   DataFieldDef,
@@ -38,7 +38,7 @@ import type {
   ErrorFactoryConfig,
   ErrorStyle,
   SchemaFieldDef
-} from './types'
+} from "./types"
 
 // ============================================================================
 // Internal Helpers
@@ -50,7 +50,7 @@ import type {
 function generateSchemaError(
   className: string,
   tagName: string,
-  fields: readonly SchemaFieldDef[]
+  fields: ReadonlyArray<SchemaFieldDef>
 ) {
   // Build field definitions without trailing comma on last item
   const fieldLines = fields.map((f, i) => {
@@ -58,7 +58,7 @@ function generateSchemaError(
     // No trailing comma on last field
     return i < fields.length - 1 ? `${fieldDef},` : fieldDef
   })
-  const fieldDefs = fieldLines.join('\n')
+  const fieldDefs = fieldLines.join("\n")
 
   return `export class ${className} extends Schema.TaggedError<${className}>()(
   "${tagName}",
@@ -74,41 +74,41 @@ ${fieldDefs}
 function generateDataError(
   className: string,
   tagName: string,
-  fields: readonly DataFieldDef[],
+  fields: ReadonlyArray<DataFieldDef>,
   staticCreate?: string,
   additionalMethods?: ReadonlyArray<{
     name: string
-    params: readonly { name: string; type: string; optional?: boolean }[]
+    params: ReadonlyArray<{ name: string; type: string; optional?: boolean }>
     body: string
   }>
 ) {
   // Map fields to their string representations (without extra blank lines)
-  const fieldLines: string[] = []
+  const fieldLines: Array<string> = []
   for (const f of fields) {
     if (f.jsdoc) {
       fieldLines.push(`  /** ${f.jsdoc} */`)
     }
-    fieldLines.push(`  readonly ${f.name}${f.optional ? '?' : ''}: ${f.type}`)
+    fieldLines.push(`  readonly ${f.name}${f.optional ? "?" : ""}: ${f.type}`)
   }
-  const fieldDefs = fieldLines.join('\n')
+  const fieldDefs = fieldLines.join("\n")
 
   // Build static methods
-  const staticMethods: string[] = []
+  const staticMethods: Array<string> = []
   if (staticCreate) {
     staticMethods.push(staticCreate)
   }
   if (additionalMethods) {
     for (const method of additionalMethods) {
       const params = method.params
-        .map((p) => `${p.name}${p.optional ? '?' : ''}: ${p.type}`)
-        .join(', ')
+        .map((p) => `${p.name}${p.optional ? "?" : ""}: ${p.type}`)
+        .join(", ")
       staticMethods.push(`  static ${method.name}(${params}) {
     ${method.body}
   }`)
     }
   }
 
-  const body = staticMethods.length > 0 ? ` {\n${staticMethods.join('\n\n')}\n}` : ' {}'
+  const body = staticMethods.length > 0 ? ` {\n${staticMethods.join("\n\n")}\n}` : " {}"
 
   return `export class ${className} extends Data.TaggedError(
   "${tagName}"
@@ -134,7 +134,7 @@ function generateError(
  * ${errorDef.description}
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     // Schema.TaggedError style
     const fields = errorDef.schemaFields ?? []
     builder.addRaw(generateSchemaError(fullClassName, fullClassName, fields))
@@ -145,8 +145,8 @@ function generateError(
 
     if (includeStaticCreate && errorDef.staticCreate) {
       const params = errorDef.staticCreate.params
-        .map((p) => `${p.name}${p.optional ? '?' : ''}: ${p.type}`)
-        .join(', ')
+        .map((p) => `${p.name}${p.optional ? "?" : ""}: ${p.type}`)
+        .join(", ")
 
       staticCreate = `  static create(${params}) {
     ${errorDef.staticCreate.body}
@@ -213,8 +213,7 @@ export function createErrorFactory(config: ErrorFactoryConfig) {
       const typeName = unionTypeName ?? `${className}Error`
 
       // Format union type based on number of members
-      const unionType =
-        errorNames.length >= 3 ? `\n  | ${errorNames.join('\n  | ')}` : errorNames.join(' | ')
+      const unionType = errorNames.length >= 3 ? `\n  | ${errorNames.join("\n  | ")}` : errorNames.join(" | ")
 
       builder.addRaw(`/**
  * Union of all ${className} error types
@@ -275,8 +274,8 @@ export function createContractReExports(config: ContractReExportConfig) {
   return (builder: TypeScriptBuilder) => {
     builder.addSectionComment(`Domain Errors (Re-exported from Contract)`)
 
-    const exportKeyword = typeOnly ? 'export type' : 'export'
-    const exportList = errorsToExport.join(',\n  ')
+    const exportKeyword = typeOnly ? "export type" : "export"
+    const exportList = errorsToExport.join(",\n  ")
 
     builder.addRaw(`${exportKeyword} {
   ${exportList}
@@ -323,9 +322,9 @@ export function createDataAccessContractReExports(config: DataAccessContractReEx
   const importPath = `${scope}/contract-${fileName}`
 
   return (builder: TypeScriptBuilder) => {
-    builder.addSectionComment('Domain Errors (Re-exported from Contract)')
-    builder.addComment('Contract library is the SINGLE SOURCE OF TRUTH for domain errors.')
-    builder.addComment('Data-access and feature layers should import from contract.')
+    builder.addSectionComment("Domain Errors (Re-exported from Contract)")
+    builder.addComment("Contract library is the SINGLE SOURCE OF TRUTH for domain errors.")
+    builder.addComment("Data-access and feature layers should import from contract.")
     builder.addBlankLine()
 
     builder.addRaw(`/**
@@ -388,8 +387,8 @@ export function generateErrorFile(config: {
   readonly fileName: string
   readonly scope: string
   readonly style: ErrorStyle
-  readonly libraryType: 'contract' | 'data-access' | 'feature' | 'infra' | 'provider'
-  readonly errors: readonly ErrorDefinition[]
+  readonly libraryType: "contract" | "data-access" | "feature" | "infra" | "provider"
+  readonly errors: ReadonlyArray<ErrorDefinition>
   readonly contractReExports?: boolean
   readonly includeUnionType?: boolean
   readonly unionTypeName?: string
@@ -416,15 +415,15 @@ export function generateErrorFile(config: {
   builder.addBlankLine()
 
   // Imports
-  if (style === 'schema') {
-    builder.addImports([{ from: 'effect', imports: ['Schema'] }])
+  if (style === "schema") {
+    builder.addImports([{ from: "effect", imports: ["Schema"] }])
   } else {
-    builder.addImports([{ from: 'effect', imports: ['Data'] }])
+    builder.addImports([{ from: "effect", imports: ["Data"] }])
   }
   builder.addBlankLine()
 
   // Contract re-exports (if applicable)
-  if (contractReExports && libraryType !== 'contract') {
+  if (contractReExports && libraryType !== "contract") {
     createContractReExports({ className, scope, fileName })(builder)
   }
 
@@ -466,9 +465,9 @@ export function createContractDomainErrors(config: ContractDomainErrorConfig) {
   const { className, propertyName } = config
 
   return (builder: TypeScriptBuilder) => {
-    builder.addSectionComment('Domain Errors (Data.TaggedError)')
-    builder.addComment('Use Data.TaggedError for domain-level errors that occur in business logic.')
-    builder.addComment('These errors are NOT serializable over RPC by default.')
+    builder.addSectionComment("Domain Errors (Data.TaggedError)")
+    builder.addComment("Use Data.TaggedError for domain-level errors that occur in business logic.")
+    builder.addComment("These errors are NOT serializable over RPC by default.")
     builder.addBlankLine()
 
     // NotFoundError
@@ -570,14 +569,14 @@ export class ${className}AlreadyExistsError extends Data.TaggedError(
     builder.addBlankLine()
 
     // PermissionError (with conditional userId field based on entity type)
-    const hasUserId = propertyName !== 'user'
+    const hasUserId = propertyName !== "user"
     const userIdField = hasUserId
       ? `\n\n  /** User who attempted the operation */\n  readonly userId?: string`
-      : ''
-    const userIdParam = hasUserId ? `\n    userId?: string` : ''
+      : ""
+    const userIdParam = hasUserId ? `\n    userId?: string` : ""
     const userIdSpread = hasUserId
       ? `,\n    ...(params.userId !== undefined && { userId: params.userId })`
-      : ''
+      : ""
 
     builder.addRaw(`/**
  * Error thrown when ${propertyName} operation is not permitted
@@ -634,9 +633,9 @@ export function createContractRepositoryErrors(config: ContractDomainErrorConfig
   const { className, propertyName } = config
 
   return (builder: TypeScriptBuilder) => {
-    builder.addSectionComment('Repository Errors (Data.TaggedError)')
-    builder.addComment('Repository errors use Data.TaggedError for domain-level operations.')
-    builder.addComment('These errors do NOT cross RPC boundaries - use rpc.ts for network errors.')
+    builder.addSectionComment("Repository Errors (Data.TaggedError)")
+    builder.addComment("Repository errors use Data.TaggedError for domain-level operations.")
+    builder.addComment("These errors do NOT cross RPC boundaries - use rpc.ts for network errors.")
     builder.addBlankLine()
 
     // NotFoundRepositoryError
@@ -768,7 +767,7 @@ export type ${className}RepositoryError =
  */
 export function createContractCombinedErrorType(className: string) {
   return (builder: TypeScriptBuilder) => {
-    builder.addSectionComment('Error Union Types')
+    builder.addSectionComment("Error Union Types")
     builder.addBlankLine()
 
     builder.addRaw(`/**
@@ -798,36 +797,36 @@ export function getErrorNames(config: ErrorFactoryConfig) {
  * Returns validation errors if configuration is invalid.
  */
 export function validateErrorFactoryConfig(config: ErrorFactoryConfig) {
-  const errors: { field: string; message: string }[] = []
+  const errors: Array<{ field: string; message: string }> = []
 
-  if (!config.className || config.className.trim() === '') {
-    errors.push({ field: 'className', message: 'className is required' })
+  if (!config.className || config.className.trim() === "") {
+    errors.push({ field: "className", message: "className is required" })
   }
 
-  if (!config.style || (config.style !== 'data' && config.style !== 'schema')) {
-    errors.push({ field: 'style', message: 'style must be "data" or "schema"' })
+  if (!config.style || (config.style !== "data" && config.style !== "schema")) {
+    errors.push({ field: "style", message: "style must be \"data\" or \"schema\"" })
   }
 
   if (!config.errors || config.errors.length === 0) {
-    errors.push({ field: 'errors', message: 'at least one error definition is required' })
+    errors.push({ field: "errors", message: "at least one error definition is required" })
   }
 
   for (let i = 0; i < (config.errors?.length ?? 0); i++) {
     const error = config.errors?.[i]
     if (!error) continue
     if (!error.name) {
-      errors.push({ field: `errors[${i}].name`, message: 'error name is required' })
+      errors.push({ field: `errors[${i}].name`, message: "error name is required" })
     }
     if (!error.description) {
-      errors.push({ field: `errors[${i}].description`, message: 'error description is required' })
+      errors.push({ field: `errors[${i}].description`, message: "error description is required" })
     }
-    if (config.style === 'data' && (!error.fields || error.fields.length === 0)) {
-      errors.push({ field: `errors[${i}].fields`, message: 'fields required for data style' })
+    if (config.style === "data" && (!error.fields || error.fields.length === 0)) {
+      errors.push({ field: `errors[${i}].fields`, message: "fields required for data style" })
     }
-    if (config.style === 'schema' && (!error.schemaFields || error.schemaFields.length === 0)) {
+    if (config.style === "schema" && (!error.schemaFields || error.schemaFields.length === 0)) {
       errors.push({
         field: `errors[${i}].schemaFields`,
-        message: 'schemaFields required for schema style'
+        message: "schemaFields required for schema style"
       })
     }
   }

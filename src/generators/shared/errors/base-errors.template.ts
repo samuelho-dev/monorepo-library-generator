@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/shared/errors
  */
 
-import type { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { TypeScriptBuilder } from "../../../utils/code-builder"
 
 /**
  * Error style options
@@ -15,7 +15,7 @@ import type { TypeScriptBuilder } from '../../../utils/code-builder'
  * - 'data': Uses Data.TaggedError (simpler, for providers)
  * - 'schema': Uses Schema.TaggedError (serializable, for infra)
  */
-export type ErrorStyle = 'data' | 'schema'
+export type ErrorStyle = "data" | "schema"
 
 /**
  * Error generator configuration
@@ -35,7 +35,7 @@ export interface ErrorGeneratorConfig {
 function schemaError(
   className: string,
   tagName: string,
-  fields: readonly { name: string; schema: string; optional?: boolean }[]
+  fields: ReadonlyArray<{ name: string; schema: string; optional?: boolean }>
 ) {
   // Build field definitions without trailing comma on last item
   const fieldLines = fields.map((f, i) => {
@@ -43,7 +43,7 @@ function schemaError(
     // No trailing comma on last field
     return i < fields.length - 1 ? `${fieldDef},` : fieldDef
   })
-  const fieldDefs = fieldLines.join('\n')
+  const fieldDefs = fieldLines.join("\n")
 
   return `export class ${className} extends Schema.TaggedError<${className}>()(
   "${tagName}",
@@ -59,17 +59,17 @@ ${fieldDefs}
 function dataError(
   className: string,
   tagName: string,
-  fields: readonly { name: string; type: string; optional?: boolean; jsdoc?: string }[],
+  fields: ReadonlyArray<{ name: string; type: string; optional?: boolean; jsdoc?: string }>,
   staticCreate?: string
 ) {
   const fieldDefs = fields
     .map((f) => {
-      const docLine = f.jsdoc ? `  /** ${f.jsdoc} */\n` : ''
-      return `${docLine}  readonly ${f.name}${f.optional ? '?' : ''}: ${f.type}`
+      const docLine = f.jsdoc ? `  /** ${f.jsdoc} */\n` : ""
+      return `${docLine}  readonly ${f.name}${f.optional ? "?" : ""}: ${f.type}`
     })
-    .join('\n')
+    .join("\n")
 
-  const body = staticCreate ? ` {\n${staticCreate}\n}` : ' {}'
+  const body = staticCreate ? ` {\n${staticCreate}\n}` : " {}"
 
   return `export class ${className} extends Data.TaggedError(
   "${tagName}"
@@ -84,7 +84,7 @@ ${fieldDefs}
  * Creates the root tagged error class that all other errors extend.
  */
 export function generateBaseError(builder: TypeScriptBuilder, config: ErrorGeneratorConfig) {
-  const { className, includeStaticCreate = true, style = 'data' } = config
+  const { className, includeStaticCreate = true, style = "data" } = config
 
   builder.addRaw(`/**
  * Base ${className} error
@@ -93,11 +93,11 @@ export function generateBaseError(builder: TypeScriptBuilder, config: ErrorGener
  * Use domain-specific error types (NotFound, Validation, etc.) for precise handling.
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     builder.addRaw(
       schemaError(`${className}Error`, `${className}Error`, [
-        { name: 'message', schema: 'Schema.String' },
-        { name: 'cause', schema: 'Schema.Unknown', optional: true }
+        { name: "message", schema: "Schema.String" },
+        { name: "cause", schema: "Schema.Unknown", optional: true }
       ])
     )
   } else {
@@ -115,8 +115,8 @@ export function generateBaseError(builder: TypeScriptBuilder, config: ErrorGener
         `${className}Error`,
         `${className}Error`,
         [
-          { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-          { name: 'cause', type: 'unknown', optional: true, jsdoc: 'Optional underlying cause' }
+          { name: "message", type: "string", jsdoc: "Human-readable error message" },
+          { name: "cause", type: "unknown", optional: true, jsdoc: "Optional underlying cause" }
         ],
         staticCreate
       )
@@ -130,7 +130,7 @@ export function generateBaseError(builder: TypeScriptBuilder, config: ErrorGener
  * Generate NotFoundError class
  */
 export function generateNotFoundError(builder: TypeScriptBuilder, config: ErrorGeneratorConfig) {
-  const { className, includeStaticCreate = true, style = 'data' } = config
+  const { className, includeStaticCreate = true, style = "data" } = config
 
   builder.addRaw(`/**
  * Resource not found error
@@ -138,11 +138,11 @@ export function generateNotFoundError(builder: TypeScriptBuilder, config: ErrorG
  * Raised when requested resource doesn't exist.
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     builder.addRaw(
       schemaError(`${className}NotFoundError`, `${className}NotFoundError`, [
-        { name: 'message', schema: 'Schema.String' },
-        { name: 'id', schema: 'Schema.String' }
+        { name: "message", schema: "Schema.String" },
+        { name: "id", schema: "Schema.String" }
       ])
     )
   } else {
@@ -160,8 +160,8 @@ export function generateNotFoundError(builder: TypeScriptBuilder, config: ErrorG
         `${className}NotFoundError`,
         `${className}NotFoundError`,
         [
-          { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-          { name: 'id', type: 'string', jsdoc: 'Identifier that was not found' }
+          { name: "message", type: "string", jsdoc: "Human-readable error message" },
+          { name: "id", type: "string", jsdoc: "Identifier that was not found" }
         ],
         staticCreate
       )
@@ -175,7 +175,7 @@ export function generateNotFoundError(builder: TypeScriptBuilder, config: ErrorG
  * Generate ValidationError class
  */
 export function generateValidationError(builder: TypeScriptBuilder, config: ErrorGeneratorConfig) {
-  const { className, includeStaticCreate = true, style = 'data' } = config
+  const { className, includeStaticCreate = true, style = "data" } = config
 
   builder.addRaw(`/**
  * Validation error
@@ -183,11 +183,11 @@ export function generateValidationError(builder: TypeScriptBuilder, config: Erro
  * Raised when input data fails validation.
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     builder.addRaw(
       schemaError(`${className}ValidationError`, `${className}ValidationError`, [
-        { name: 'message', schema: 'Schema.String' },
-        { name: 'errors', schema: 'Schema.Array(Schema.String)' }
+        { name: "message", schema: "Schema.String" },
+        { name: "errors", schema: "Schema.Array(Schema.String)" }
       ])
     )
   } else {
@@ -205,8 +205,8 @@ export function generateValidationError(builder: TypeScriptBuilder, config: Erro
         `${className}ValidationError`,
         `${className}ValidationError`,
         [
-          { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-          { name: 'errors', type: 'readonly string[]', jsdoc: 'List of validation errors' }
+          { name: "message", type: "string", jsdoc: "Human-readable error message" },
+          { name: "errors", type: "readonly string[]", jsdoc: "List of validation errors" }
         ],
         staticCreate
       )
@@ -220,7 +220,7 @@ export function generateValidationError(builder: TypeScriptBuilder, config: Erro
  * Generate ConflictError class
  */
 export function generateConflictError(builder: TypeScriptBuilder, config: ErrorGeneratorConfig) {
-  const { className, includeStaticCreate = true, style = 'data' } = config
+  const { className, includeStaticCreate = true, style = "data" } = config
 
   builder.addRaw(`/**
  * Conflict error
@@ -228,11 +228,11 @@ export function generateConflictError(builder: TypeScriptBuilder, config: ErrorG
  * Raised when operation conflicts with existing state (e.g., duplicate).
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     builder.addRaw(
       schemaError(`${className}ConflictError`, `${className}ConflictError`, [
-        { name: 'message', schema: 'Schema.String' },
-        { name: 'conflictingId', schema: 'Schema.String', optional: true }
+        { name: "message", schema: "Schema.String" },
+        { name: "conflictingId", schema: "Schema.String", optional: true }
       ])
     )
   } else {
@@ -252,12 +252,12 @@ export function generateConflictError(builder: TypeScriptBuilder, config: ErrorG
         `${className}ConflictError`,
         `${className}ConflictError`,
         [
-          { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
+          { name: "message", type: "string", jsdoc: "Human-readable error message" },
           {
-            name: 'conflictingId',
-            type: 'string',
+            name: "conflictingId",
+            type: "string",
             optional: true,
-            jsdoc: 'Identifier of conflicting resource'
+            jsdoc: "Identifier of conflicting resource"
           }
         ],
         staticCreate
@@ -272,7 +272,7 @@ export function generateConflictError(builder: TypeScriptBuilder, config: ErrorG
  * Generate ConfigError class
  */
 export function generateConfigError(builder: TypeScriptBuilder, config: ErrorGeneratorConfig) {
-  const { className, includeStaticCreate = true, style = 'data' } = config
+  const { className, includeStaticCreate = true, style = "data" } = config
 
   builder.addRaw(`/**
  * Configuration error
@@ -280,11 +280,11 @@ export function generateConfigError(builder: TypeScriptBuilder, config: ErrorGen
  * Raised when service is misconfigured.
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     builder.addRaw(
       schemaError(`${className}ConfigError`, `${className}ConfigError`, [
-        { name: 'message', schema: 'Schema.String' },
-        { name: 'field', schema: 'Schema.String', optional: true }
+        { name: "message", schema: "Schema.String" },
+        { name: "field", schema: "Schema.String", optional: true }
       ])
     )
   } else {
@@ -302,8 +302,8 @@ export function generateConfigError(builder: TypeScriptBuilder, config: ErrorGen
         `${className}ConfigError`,
         `${className}ConfigError`,
         [
-          { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-          { name: 'property', type: 'string', jsdoc: 'Configuration property that is invalid' }
+          { name: "message", type: "string", jsdoc: "Human-readable error message" },
+          { name: "property", type: "string", jsdoc: "Configuration property that is invalid" }
         ],
         staticCreate
       )
@@ -317,7 +317,7 @@ export function generateConfigError(builder: TypeScriptBuilder, config: ErrorGen
  * Generate ConnectionError class
  */
 export function generateConnectionError(builder: TypeScriptBuilder, config: ErrorGeneratorConfig) {
-  const { className, includeStaticCreate = true, style = 'data' } = config
+  const { className, includeStaticCreate = true, style = "data" } = config
 
   builder.addRaw(`/**
  * Connection error
@@ -325,12 +325,12 @@ export function generateConnectionError(builder: TypeScriptBuilder, config: Erro
  * Raised when connection to external service fails.
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     builder.addRaw(
       schemaError(`${className}ConnectionError`, `${className}ConnectionError`, [
-        { name: 'message', schema: 'Schema.String' },
-        { name: 'endpoint', schema: 'Schema.String', optional: true },
-        { name: 'cause', schema: 'Schema.Unknown', optional: true }
+        { name: "message", schema: "Schema.String" },
+        { name: "endpoint", schema: "Schema.String", optional: true },
+        { name: "cause", schema: "Schema.Unknown", optional: true }
       ])
     )
   } else {
@@ -349,9 +349,9 @@ export function generateConnectionError(builder: TypeScriptBuilder, config: Erro
         `${className}ConnectionError`,
         `${className}ConnectionError`,
         [
-          { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-          { name: 'target', type: 'string', jsdoc: 'Connection target (service name, host, etc.)' },
-          { name: 'cause', type: 'unknown', jsdoc: 'Underlying connection error' }
+          { name: "message", type: "string", jsdoc: "Human-readable error message" },
+          { name: "target", type: "string", jsdoc: "Connection target (service name, host, etc.)" },
+          { name: "cause", type: "unknown", jsdoc: "Underlying connection error" }
         ],
         staticCreate
       )
@@ -365,7 +365,7 @@ export function generateConnectionError(builder: TypeScriptBuilder, config: Erro
  * Generate TimeoutError class
  */
 export function generateTimeoutError(builder: TypeScriptBuilder, config: ErrorGeneratorConfig) {
-  const { className, includeStaticCreate = true, style = 'data' } = config
+  const { className, includeStaticCreate = true, style = "data" } = config
 
   builder.addRaw(`/**
  * Timeout error
@@ -373,11 +373,11 @@ export function generateTimeoutError(builder: TypeScriptBuilder, config: ErrorGe
  * Raised when operation exceeds timeout.
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     builder.addRaw(
       schemaError(`${className}TimeoutError`, `${className}TimeoutError`, [
-        { name: 'message', schema: 'Schema.String' },
-        { name: 'timeoutMs', schema: 'Schema.Number', optional: true }
+        { name: "message", schema: "Schema.String" },
+        { name: "timeoutMs", schema: "Schema.Number", optional: true }
       ])
     )
   } else {
@@ -396,9 +396,9 @@ export function generateTimeoutError(builder: TypeScriptBuilder, config: ErrorGe
         `${className}TimeoutError`,
         `${className}TimeoutError`,
         [
-          { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-          { name: 'timeoutMs', type: 'number', jsdoc: 'Timeout duration in milliseconds' },
-          { name: 'operation', type: 'string', jsdoc: 'Operation that timed out' }
+          { name: "message", type: "string", jsdoc: "Human-readable error message" },
+          { name: "timeoutMs", type: "number", jsdoc: "Timeout duration in milliseconds" },
+          { name: "operation", type: "string", jsdoc: "Operation that timed out" }
         ],
         staticCreate
       )
@@ -412,7 +412,7 @@ export function generateTimeoutError(builder: TypeScriptBuilder, config: ErrorGe
  * Generate InternalError class
  */
 export function generateInternalError(builder: TypeScriptBuilder, config: ErrorGeneratorConfig) {
-  const { className, includeStaticCreate = true, style = 'data' } = config
+  const { className, includeStaticCreate = true, style = "data" } = config
 
   builder.addRaw(`/**
  * Internal error
@@ -420,11 +420,11 @@ export function generateInternalError(builder: TypeScriptBuilder, config: ErrorG
  * Raised when unexpected internal error occurs.
  */`)
 
-  if (style === 'schema') {
+  if (style === "schema") {
     builder.addRaw(
       schemaError(`${className}InternalError`, `${className}InternalError`, [
-        { name: 'message', schema: 'Schema.String' },
-        { name: 'cause', schema: 'Schema.Unknown', optional: true }
+        { name: "message", schema: "Schema.String" },
+        { name: "cause", schema: "Schema.Unknown", optional: true }
       ])
     )
   } else {
@@ -442,8 +442,8 @@ export function generateInternalError(builder: TypeScriptBuilder, config: ErrorG
         `${className}InternalError`,
         `${className}InternalError`,
         [
-          { name: 'message', type: 'string', jsdoc: 'Human-readable error message' },
-          { name: 'cause', type: 'unknown', jsdoc: 'Underlying error cause' }
+          { name: "message", type: "string", jsdoc: "Human-readable error message" },
+          { name: "cause", type: "unknown", jsdoc: "Underlying error cause" }
         ],
         staticCreate
       )
@@ -492,7 +492,7 @@ export function getCommonErrorNames(className: string) {
 export function generateErrorUnion(
   builder: TypeScriptBuilder,
   className: string,
-  additionalErrors: readonly string[] = []
+  additionalErrors: ReadonlyArray<string> = []
 ) {
   const allErrors = [...getCommonErrorNames(className), ...additionalErrors]
 
@@ -506,7 +506,7 @@ export function generateErrorUnion(
  * Effect.catchTag("${className}TimeoutError", (err) => ...)
  * \`\`\`
  */
-export type ${className}ServiceError = ${allErrors.join(' | ')}`)
+export type ${className}ServiceError = ${allErrors.join(" | ")}`)
 
   builder.addBlankLine()
 }

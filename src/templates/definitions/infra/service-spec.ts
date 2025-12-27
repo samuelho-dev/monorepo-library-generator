@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/service-spec
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Service Spec Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Layer isolation tests
  */
 export const infraServiceSpecTemplate: TemplateDefinition = {
-  id: 'infra/service-spec',
+  id: "infra/service-spec",
   meta: {
-    title: '{className} Service Tests',
+    title: "{className} Service Tests",
     description: `Tests verify Effect service interface and layer composition.
 Uses @effect/vitest with it.scoped for resource management.
 
@@ -30,18 +30,18 @@ Testing Guidelines:
 - Test layer composition (do layers provide the service correctly?)
 - Use it.scoped for layer tests (they need Scope)
 - Focus on service mechanics, not implementation details`,
-    module: '{scope}/infra-{fileName}'
+    module: "{scope}/infra-{fileName}"
   },
   imports: [
-    { from: '@effect/vitest', items: ['describe', 'expect', 'it'] },
-    { from: 'effect', items: ['Context', 'Effect', 'Layer'] }
+    { from: "@effect/vitest", items: ["describe", "expect", "it"] },
+    { from: "effect", items: ["Context", "Effect", "Layer"] }
   ],
   sections: [
     // Test Service Tag
     {
-      title: 'Test Service Tag',
+      title: "Test Service Tag",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Test service tag for layer composition tests
  */
@@ -57,7 +57,7 @@ class {className}TestService extends Context.Tag("{className}TestService")<
     // Test Layer Factory
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Creates a test layer with configurable behavior
  */
@@ -71,9 +71,9 @@ function create{className}TestLayer(config: Record<string, unknown> = {}) {
     },
     // Test Suite
     {
-      title: 'Test Suite',
+      title: "Test Suite",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `describe("{className} Service", () => {
   describe("Service Interface", () => {
     it.scoped("should provide service through layer", () =>

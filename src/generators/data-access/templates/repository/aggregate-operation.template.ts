@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository/aggregate-operation-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/aggregate.ts file
@@ -29,13 +29,13 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   builder.addImports([
-    { from: 'effect', imports: ['Duration', 'Effect'] },
-    { from: `${scope}/infra-database`, imports: ['DatabaseService'] },
-    { from: '../../shared/errors', imports: [`${className}TimeoutError`] },
-    { from: '../../shared/types', imports: [`${className}Filter`], isTypeOnly: true }
+    { from: "effect", imports: ["Duration", "Effect"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
+    { from: "../../shared/errors", imports: [`${className}TimeoutError`] },
+    { from: "../../shared/types", imports: [`${className}Filter`], isTypeOnly: true }
   ])
 
-  builder.addSectionComment('Aggregate Operations')
+  builder.addSectionComment("Aggregate Operations")
   builder.addBlankLine()
 
   builder.addRaw(`/**

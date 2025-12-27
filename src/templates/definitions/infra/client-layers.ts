@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/client-layers
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Client Layers Template Definition
@@ -18,9 +18,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Client-side data management
  */
 export const infraClientLayersTemplate: TemplateDefinition = {
-  id: 'infra/client-layers',
+  id: "infra/client-layers",
   meta: {
-    title: '{className} Client Layers',
+    title: "{className} Client Layers",
     description: `Layer compositions for client-side dependency injection using Effect.
 Browser-safe implementations without Node.js APIs or server secrets.
 
@@ -30,18 +30,18 @@ TODO: Customize this file for your service:
 3. Handle browser storage (localStorage, IndexedDB)
 4. Implement offline support if needed
 5. Add client-specific configuration`,
-    module: '{scope}/infra-{fileName}/client'
+    module: "{scope}/infra-{fileName}/client"
   },
   imports: [
-    { from: 'effect', items: ['Layer', 'Effect', 'Option'] },
-    { from: '../service', items: ['{className}Service'] }
+    { from: "effect", items: ["Layer", "Effect", "Option"] },
+    { from: "../service", items: ["{className}Service"] }
   ],
   sections: [
     // Client Layer
     {
-      title: 'Client Layer (Browser-Safe)',
+      title: "Client Layer (Browser-Safe)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// {className}Service static members for client platform
 // These extend the service tag with platform-specific layers
 
@@ -111,9 +111,9 @@ TODO: Customize this file for your service:
     },
     // Browser Storage Provider
     {
-      title: 'Browser Storage Provider (Optional)',
+      title: "Browser Storage Provider (Optional)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Browser Storage Provider
  *
@@ -136,7 +136,7 @@ export interface BrowserStorageProvider {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * LocalStorage Provider
  *

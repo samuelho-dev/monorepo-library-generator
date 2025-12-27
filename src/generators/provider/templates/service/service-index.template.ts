@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/provider/service/service-index-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate service/index.ts file
@@ -43,10 +43,10 @@ Import patterns:
   })
   builder.addBlankLine()
 
-  builder.addSectionComment('Re-export service internals')
+  builder.addSectionComment("Re-export service internals")
   builder.addBlankLine()
 
-  builder.addComment('Error types')
+  builder.addComment("Error types")
   builder.addRaw(`export {
   ${className}ConfigError,
   ${className}ConnectionError,
@@ -56,7 +56,7 @@ Import patterns:
 } from "./errors"`)
   builder.addBlankLine()
 
-  builder.addComment('Service types')
+  builder.addComment("Service types")
   builder.addRaw(`export type {
   ${className}Config,
   ${className}Options,
@@ -64,14 +64,14 @@ Import patterns:
 } from "./types"`)
   builder.addBlankLine()
 
-  builder.addComment('Validation helpers')
+  builder.addComment("Validation helpers")
   builder.addRaw(`export {
   validate${className}Config,
   validate${className}Input
 } from "./validation"`)
   builder.addBlankLine()
 
-  builder.addComment('Layer compositions')
+  builder.addComment("Layer compositions")
   builder.addRaw(`export {
   ${className}LiveLayer,
   ${className}TestLayer,

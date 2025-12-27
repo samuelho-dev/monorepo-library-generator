@@ -8,9 +8,9 @@
  * @see docs/NX_STANDARDS.md for export conventions
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { type ExportSection, generateExportSections } from '../../../utils/templates'
-import type { ProviderTemplateOptions } from '../../../utils/types'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { type ExportSection, generateExportSections } from "../../../utils/templates"
+import type { ProviderTemplateOptions } from "../../../utils/types"
 
 /**
  * Generate index.ts for provider library
@@ -48,7 +48,7 @@ Usage:
   builder.addBlankLine()
 
   // Error exports - provider-specific error types
-  builder.addSectionComment('Error Types')
+  builder.addSectionComment("Error Types")
   builder.addBlankLine()
   builder.addRaw(
     `export { ${className}Error, ${className}ApiError, ${className}ConnectionError, ${className}TimeoutError, ${className}ValidationError } from "./lib/errors"`
@@ -57,13 +57,13 @@ Usage:
   builder.addBlankLine()
 
   // Type exports - types are at lib/ level (flat structure)
-  const typeExports: ExportSection[] = [
+  const typeExports: Array<ExportSection> = [
     {
-      title: 'Type Definitions',
+      title: "Type Definitions",
       items: [
         {
-          comment: 'Service types and interfaces',
-          exports: 'export type * from "./lib/types"'
+          comment: "Service types and interfaces",
+          exports: "export type * from \"./lib/types\""
         }
       ]
     }
@@ -74,17 +74,17 @@ Usage:
   builder.addBlankLine()
 
   // Service and layers exports
-  builder.addSectionComment('Service Implementation')
+  builder.addSectionComment("Service Implementation")
   builder.addBlankLine()
 
   builder.addComment(`${className} - External service adapter`)
-  builder.addComment('')
-  builder.addComment('Effect 3.0+ Pattern: Context.Tag with static layer members')
-  builder.addComment('Access layers via static members:')
+  builder.addComment("")
+  builder.addComment("Effect 3.0+ Pattern: Context.Tag with static layer members")
+  builder.addComment("Access layers via static members:")
   builder.addComment(`  - ${className}.Live  (production - wraps real SDK)`)
   builder.addComment(`  - ${className}.Test  (testing - mock implementation)`)
-  builder.addComment('')
-  builder.addComment('Migration from pre-3.0 pattern:')
+  builder.addComment("")
+  builder.addComment("Migration from pre-3.0 pattern:")
   builder.addComment(`  OLD: import { ${className}Live } from '...';`)
   builder.addComment(`  NEW: import { ${className} } from '...';`)
   builder.addComment(`       const layer = ${className}.Live;`)
@@ -95,9 +95,9 @@ Usage:
   builder.addBlankLine()
 
   // Validation utilities - at lib/ level (flat structure)
-  builder.addSectionComment('Validation Utilities')
+  builder.addSectionComment("Validation Utilities")
   builder.addBlankLine()
-  builder.addComment('Input validation functions')
+  builder.addComment("Input validation functions")
   builder.addRaw(`export {
   validate${className}Config,
   validate${className}Input
@@ -106,22 +106,22 @@ Usage:
   builder.addBlankLine()
 
   // Usage example
-  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  builder.addComment('Usage Example')
-  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  builder.addComment('')
+  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  builder.addComment("Usage Example")
+  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  builder.addComment("")
   builder.addComment("import { Effect } from 'effect';")
   builder.addComment(`import { ${className} } from '${packageName}';`)
-  builder.addComment('')
-  builder.addComment('const program = Effect.gen(function*() {')
+  builder.addComment("")
+  builder.addComment("const program = Effect.gen(function*() {")
   builder.addComment(`  const service = yield* ${className}`)
-  builder.addComment('  // Use service methods...')
-  builder.addComment('})')
-  builder.addComment('')
-  builder.addComment('// Layers are static members on the service class:')
+  builder.addComment("  // Use service methods...")
+  builder.addComment("})")
+  builder.addComment("")
+  builder.addComment("// Layers are static members on the service class:")
   builder.addComment(`const runnable = program.pipe(Effect.provide(${className}.Live))`)
   builder.addComment(`// Also available: ${className}.Test, ${className}.Dev, ${className}.Auto`)
-  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   return builder.toString()
 }

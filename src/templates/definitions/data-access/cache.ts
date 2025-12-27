@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/data-access/cache
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Data Access Cache Template Definition
@@ -20,9 +20,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Cache-aware repository wrapper
  */
 export const dataAccessCacheTemplate: TemplateDefinition = {
-  id: 'data-access/cache',
+  id: "data-access/cache",
   meta: {
-    title: '{className} Cache',
+    title: "{className} Cache",
     description: `Read-through cache for {name} repository operations.
 
 Features:
@@ -34,28 +34,28 @@ Features:
 Usage:
 - Use {className}Cache instead of {className}Repository for cached reads
 - Write operations automatically invalidate relevant cache entries`,
-    module: '{scope}/data-access-{fileName}/cache'
+    module: "{scope}/data-access-{fileName}/cache"
   },
   imports: [
-    { from: 'effect', items: ['Effect', 'Layer', 'Context', 'Option', 'Duration'] },
-    { from: '{scope}/infra-cache', items: ['CacheService'] },
-    { from: '{scope}/infra-database', items: ['DatabaseError'], isTypeOnly: true },
-    { from: '{scope}/infra-observability', items: ['LoggingService', 'MetricsService'] },
-    { from: './repository', items: ['{className}Repository'] },
-    { from: './shared/errors', items: ['{className}TimeoutError'], isTypeOnly: true },
-    { from: '{scope}/contract-{fileName}', items: ['{className}Id'], isTypeOnly: true },
+    { from: "effect", items: ["Effect", "Layer", "Context", "Option", "Duration"] },
+    { from: "{scope}/infra-cache", items: ["CacheService"] },
+    { from: "{scope}/infra-database", items: ["DatabaseError"], isTypeOnly: true },
+    { from: "{scope}/infra-observability", items: ["LoggingService", "MetricsService"] },
+    { from: "./repository", items: ["{className}Repository"] },
+    { from: "./shared/errors", items: ["{className}TimeoutError"], isTypeOnly: true },
+    { from: "{scope}/contract-{fileName}", items: ["{className}Id"], isTypeOnly: true },
     {
-      from: '{scope}/types-database',
-      items: ['{className}Select as {className}'],
+      from: "{scope}/types-database",
+      items: ["{className}Select as {className}"],
       isTypeOnly: true
     }
   ],
   sections: [
     // Cache Configuration
     {
-      title: 'Cache Configuration',
+      title: "Cache Configuration",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Cache configuration options
  */
@@ -88,9 +88,9 @@ const DEFAULT_CONFIG: Required<{className}CacheConfig> = {
     },
     // Cache Interface
     {
-      title: 'Cache Interface',
+      title: "Cache Interface",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Cache lookup error type (from repository)
  *
@@ -143,9 +143,9 @@ export interface {className}CacheInterface {
     },
     // Context.Tag
     {
-      title: 'Context.Tag',
+      title: "Context.Tag",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Cache Context Tag
  *
@@ -253,9 +253,9 @@ export class {className}Cache extends Context.Tag("{className}Cache")<
     },
     // Cache-Aware Repository
     {
-      title: 'Cache-Aware Repository',
+      title: "Cache-Aware Repository",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Create a cache-aware repository wrapper
  *

@@ -6,22 +6,22 @@
  * @module monorepo-library-generator/cli/progress
  */
 
-import { Console, Effect, Ref } from 'effect'
+import { Console, Effect, Ref } from "effect"
 
 /**
  * Spinner frames for animated progress indicator
  */
 const SPINNER_FRAMES: ReadonlyArray<string> = Object.freeze([
-  '⠋',
-  '⠙',
-  '⠹',
-  '⠸',
-  '⠼',
-  '⠴',
-  '⠦',
-  '⠧',
-  '⠇',
-  '⠏'
+  "⠋",
+  "⠙",
+  "⠹",
+  "⠸",
+  "⠼",
+  "⠴",
+  "⠦",
+  "⠧",
+  "⠇",
+  "⠏"
 ])
 
 /**
@@ -40,23 +40,23 @@ const ANSI: Readonly<{
   dim: string
   reset: string
 }> = Object.freeze({
-  clearLine: '\x1b[2K',
-  cursorUp: '\x1b[1A',
-  cursorToStart: '\x1b[0G',
-  hideCursor: '\x1b[?25l',
-  showCursor: '\x1b[?25h',
-  cyan: '\x1b[36m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  dim: '\x1b[2m',
-  reset: '\x1b[0m'
+  clearLine: "\x1b[2K",
+  cursorUp: "\x1b[1A",
+  cursorToStart: "\x1b[0G",
+  hideCursor: "\x1b[?25l",
+  showCursor: "\x1b[?25h",
+  cyan: "\x1b[36m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  red: "\x1b[31m",
+  dim: "\x1b[2m",
+  reset: "\x1b[0m"
 })
 
 /**
  * Verbosity level for output
  */
-export type Verbosity = 'quiet' | 'normal' | 'verbose'
+export type Verbosity = "quiet" | "normal" | "verbose"
 
 /**
  * Progress context for tracking generation
@@ -85,14 +85,14 @@ export function formatPathDisplay(absolutePath: string, relativePath: string) {
   return [
     `${ANSI.cyan}📂${ANSI.reset} Generating to: ${absolutePath}`,
     `${ANSI.dim}📍 Relative: ${relativePath}/${ANSI.reset}`
-  ].join('\n')
+  ].join("\n")
 }
 
 /**
  * Simple spinner that shows message with animated indicator
  */
 export function spinner(message: string) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const frameRef = yield* Ref.make(0)
 
     // Start spinner
@@ -133,14 +133,14 @@ export function spinner(message: string) {
 export function withProgress<A, E, R>(
   message: string,
   effect: Effect.Effect<A, E, R>,
-  verbosity: Verbosity = 'normal'
+  verbosity: Verbosity = "normal"
 ) {
-  if (verbosity === 'quiet') {
+  if (verbosity === "quiet") {
     return effect
   }
 
-  return Effect.gen(function* () {
-    if (verbosity === 'verbose') {
+  return Effect.gen(function*() {
+    if (verbosity === "verbose") {
       yield* Console.log(`${ANSI.dim}${message}...${ANSI.reset}`)
       return yield* effect
     }
@@ -153,8 +153,7 @@ export function withProgress<A, E, R>(
     const result = yield* Effect.onExit(effect, () =>
       Effect.sync(() => {
         process.stdout.write(`${ANSI.clearLine}${ANSI.cursorToStart}${ANSI.showCursor}`)
-      })
-    )
+      }))
 
     return result
   })
@@ -164,7 +163,7 @@ export function withProgress<A, E, R>(
  * Log file creation (for verbose mode)
  */
 export function logFileCreation(filePath: string, verbosity: Verbosity) {
-  if (verbosity !== 'verbose') {
+  if (verbosity !== "verbose") {
     return Effect.void
   }
 
@@ -182,16 +181,16 @@ export function showSuccess(
 ) {
   const elapsed = (elapsedMs / 1000).toFixed(1)
 
-  if (verbosity === 'quiet') {
+  if (verbosity === "quiet") {
     return Console.log(`${ANSI.green}✓${ANSI.reset} ${libraryName}`)
   }
 
   return Console.log(
     [
-      '',
+      "",
       `${ANSI.green}✨${ANSI.reset} Created ${fileCount} files in ${elapsed}s`,
       `${ANSI.green}✅${ANSI.reset} Successfully generated library: ${ANSI.cyan}${libraryName}${ANSI.reset}`
-    ].join('\n')
+    ].join("\n")
   )
 }
 
@@ -199,7 +198,7 @@ export function showSuccess(
  * Show error message
  */
 export function showError(message: string, verbosity: Verbosity) {
-  if (verbosity === 'quiet') {
+  if (verbosity === "quiet") {
     return Console.error(`${ANSI.red}✗${ANSI.reset} Error`)
   }
 
@@ -216,15 +215,15 @@ export function showGenerationStart(
   relativePath: string,
   verbosity: Verbosity
 ) {
-  if (verbosity === 'quiet') {
+  if (verbosity === "quiet") {
     return Effect.void
   }
 
   return Console.log(
     [
       formatPathDisplay(absolutePath, relativePath),
-      '',
+      "",
       `${ANSI.cyan}⠋${ANSI.reset} Creating ${libraryType} library: ${libraryName}...`
-    ].join('\n')
+    ].join("\n")
   )
 }

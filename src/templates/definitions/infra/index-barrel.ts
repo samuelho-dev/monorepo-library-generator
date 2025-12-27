@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/index-barrel
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Index Barrel Template Definition
@@ -19,20 +19,20 @@ import type { TemplateDefinition } from '../../core/types'
  * - Error exports
  */
 export const infraIndexTemplate: TemplateDefinition = {
-  id: 'infra/index-barrel',
+  id: "infra/index-barrel",
   meta: {
-    title: '{scope}/infra-{fileName}',
+    title: "{scope}/infra-{fileName}",
     description: `{className} infrastructure service
 Provides {className} functionality for the application.`,
-    module: '{scope}/infra-{fileName}'
+    module: "{scope}/infra-{fileName}"
   },
   imports: [],
   sections: [
     // Server-Only Mode
     {
-      title: 'Server-Only Mode: Export Everything from Root',
+      title: "Server-Only Mode: Export Everything from Root",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Service interface and layers
 export { {className}Service } from "./lib/service"
 export type { {className}Config } from "./lib/config"
@@ -63,9 +63,9 @@ export type { {className}ServiceError } from "./lib/errors"`
     includeClientServer: [
       // Universal Mode
       {
-        title: 'Universal Mode: Export Only Types and Interfaces from Root',
+        title: "Universal Mode: Export Only Types and Interfaces from Root",
         content: {
-          type: 'raw',
+          type: "raw",
           value: `// Service interface (universal)
 export { {className}Service } from "./lib/service"
 export type { {className}Config } from "./lib/config"

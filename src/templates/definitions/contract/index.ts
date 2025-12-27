@@ -8,22 +8,22 @@
  */
 
 // CQRS templates
-export { contractCommandsTemplate } from './commands'
+export { contractCommandsTemplate } from "./commands"
 // Core templates (already wired)
-export { contractErrorsTemplate } from './errors'
-export { contractEventsTemplate } from './events'
+export { contractErrorsTemplate } from "./errors"
+export { contractEventsTemplate } from "./events"
 // Barrel/export templates
-export { contractIndexTemplate } from './index-barrel'
-export { contractPortsTemplate } from './ports'
-export { contractProjectionsTemplate } from './projections'
-export { contractQueriesTemplate } from './queries'
+export { contractIndexTemplate } from "./index-barrel"
+export { contractPortsTemplate } from "./ports"
+export { contractProjectionsTemplate } from "./projections"
+export { contractQueriesTemplate } from "./queries"
 // RPC templates
-export { contractRpcDefinitionsTemplate } from './rpc-definitions'
-export { contractRpcGroupTemplate } from './rpc-group'
+export { contractRpcDefinitionsTemplate } from "./rpc-definitions"
+export { contractRpcGroupTemplate } from "./rpc-group"
 // Sub-module templates
-export { contractSubmoduleEntitiesTemplate } from './submodule-entities'
-export { contractSubmoduleErrorsTemplate } from './submodule-errors'
-export { contractSubmoduleEventsTemplate } from './submodule-events'
-export { contractSubmoduleIndexTemplate } from './submodule-index'
-export { contractSubmoduleRpcDefinitionsTemplate } from './submodule-rpc-definitions'
-export { contractTypesOnlyTemplate } from './types-only'
+export { contractSubmoduleEntitiesTemplate } from "./submodule-entities"
+export { contractSubmoduleErrorsTemplate } from "./submodule-errors"
+export { contractSubmoduleEventsTemplate } from "./submodule-events"
+export { contractSubmoduleIndexTemplate } from "./submodule-index"
+export { contractSubmoduleRpcDefinitionsTemplate } from "./submodule-rpc-definitions"
+export { contractTypesOnlyTemplate } from "./types-only"

@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/redis/errors
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate Redis provider errors file
@@ -17,7 +17,7 @@ export function generateRedisErrorsFile(options: ProviderTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: 'Redis Provider - Error Types',
+    title: "Redis Provider - Error Types",
     description: `Error types for Redis operations using Data.TaggedError pattern.
 
 Includes:
@@ -30,11 +30,11 @@ Includes:
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: 'effect', imports: ['Data', 'Option', 'Schema'] }])
+  builder.addImports([{ from: "effect", imports: ["Data", "Option", "Schema"] }])
   builder.addBlankLine()
 
   // Base Error
-  builder.addSectionComment('Base Error')
+  builder.addSectionComment("Base Error")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -49,7 +49,7 @@ export class RedisError extends Data.TaggedError("RedisError")<{
   builder.addBlankLine()
 
   // Connection Error
-  builder.addSectionComment('Connection Errors')
+  builder.addSectionComment("Connection Errors")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -80,7 +80,7 @@ export class RedisTimeoutError extends Data.TaggedError("RedisTimeoutError")<{
   builder.addBlankLine()
 
   // Command Error
-  builder.addSectionComment('Command Errors')
+  builder.addSectionComment("Command Errors")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -111,7 +111,7 @@ export class RedisKeyError extends Data.TaggedError("RedisKeyError")<{
   builder.addBlankLine()
 
   // PubSub Error
-  builder.addSectionComment('PubSub Errors')
+  builder.addSectionComment("PubSub Errors")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -127,7 +127,7 @@ export class RedisPubSubError extends Data.TaggedError("RedisPubSubError")<{
   builder.addBlankLine()
 
   // Union Type
-  builder.addSectionComment('Error Union Type')
+  builder.addSectionComment("Error Union Type")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -143,7 +143,7 @@ export type RedisProviderError =
   builder.addBlankLine()
 
   // SDK Error Schema for parsing unknown errors
-  builder.addSectionComment('SDK Error Schema')
+  builder.addSectionComment("SDK Error Schema")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -166,7 +166,7 @@ function parseSdkError(error: unknown) {
   builder.addBlankLine()
 
   // Error Mapping Function
-  builder.addSectionComment('Error Mapping')
+  builder.addSectionComment("Error Mapping")
   builder.addBlankLine()
 
   builder.addRaw(`/**

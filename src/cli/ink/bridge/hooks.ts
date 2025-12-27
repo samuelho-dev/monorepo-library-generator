@@ -6,11 +6,11 @@
  * @module monorepo-library-generator/cli/ink/bridge/hooks
  */
 
-import type { Effect } from 'effect'
-import { Cause, Chunk, Exit, Option, Runtime } from 'effect'
-import { useCallback, useState } from 'react'
+import type { Effect } from "effect"
+import { Cause, Chunk, Exit, Option, Runtime } from "effect"
+import { useCallback, useState } from "react"
 
-import { useRuntime } from './context'
+import { useRuntime } from "./context"
 
 /**
  * State for Effect operation hook
@@ -95,7 +95,7 @@ export function useEffectOperation<A, E>(effectFn: () => Effect.Effect<A, E>) {
             if (Cause.isInterrupted(cause)) {
               setState({ result: null, error: null, isLoading: false })
             } else {
-              throw new Error('Unknown Effect failure')
+              throw new Error("Unknown Effect failure")
             }
           }
           return undefined

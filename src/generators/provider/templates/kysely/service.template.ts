@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/provider/templates/kysely/service
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate Kysely provider service file
@@ -37,31 +37,31 @@ Architecture:
   provider-kysely → wraps Kysely SDK (this library)
   infra-database → uses this provider, exposes DatabaseService`,
     module: `${packageName}/service`,
-    see: ['https://kysely.dev for Kysely documentation']
+    see: ["https://kysely.dev for Kysely documentation"]
   })
   builder.addBlankLine()
 
   // Imports
   builder.addImports([
-    { from: 'effect', imports: ['Context', 'Effect', 'Runtime'] },
+    { from: "effect", imports: ["Context", "Effect", "Runtime"] },
     {
-      from: 'kysely',
+      from: "kysely",
       imports: [
-        'DummyDriver',
-        'Kysely',
-        'PostgresAdapter',
-        'PostgresDialect',
-        'PostgresIntrospector',
-        'PostgresQueryCompiler',
-        'sql'
+        "DummyDriver",
+        "Kysely",
+        "PostgresAdapter",
+        "PostgresDialect",
+        "PostgresIntrospector",
+        "PostgresQueryCompiler",
+        "sql"
       ]
     },
-    { from: 'pg', imports: ['PoolConfig'], isTypeOnly: true },
+    { from: "pg", imports: ["PoolConfig"], isTypeOnly: true },
     {
-      from: './errors',
-      imports: ['DatabaseConnectionError', 'DatabaseQueryError', 'DatabaseTransactionError']
+      from: "./errors",
+      imports: ["DatabaseConnectionError", "DatabaseQueryError", "DatabaseTransactionError"]
     },
-    { from: './interface', imports: [`${className}ServiceInterface`], isTypeOnly: true }
+    { from: "./interface", imports: [`${className}ServiceInterface`], isTypeOnly: true }
   ])
 
   builder.addRaw(`
@@ -73,7 +73,7 @@ const createPool = async (config: PoolConfig) => {
 `)
 
   // Config interface
-  builder.addSectionComment('Configuration')
+  builder.addSectionComment("Configuration")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -124,7 +124,7 @@ const validateConnectionConfig = (config: ${className}Config) =>
   builder.addBlankLine()
 
   // Service factory
-  builder.addSectionComment('Service Factory')
+  builder.addSectionComment("Service Factory")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -339,7 +339,7 @@ export const make${className}Service = <DB = unknown>(config: ${className}Config
   builder.addBlankLine()
 
   // Mock service factory
-  builder.addSectionComment('Mock Service Factory')
+  builder.addSectionComment("Mock Service Factory")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -525,7 +525,7 @@ export const makeTest${className}Service = <DB = unknown>(
   builder.addBlankLine()
 
   // Context Tag
-  builder.addSectionComment('Context Tag')
+  builder.addSectionComment("Context Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**

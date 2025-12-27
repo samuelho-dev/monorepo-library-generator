@@ -14,22 +14,22 @@
  * @module monorepo-library-generator/generators/core/data-access-generator-core
  */
 
-import { Effect } from 'effect'
-import type { FileSystemAdapter } from '../../utils/filesystem'
-import { parseTags } from '../../utils/generators'
+import { Effect } from "effect"
+import type { FileSystemAdapter } from "../../utils/filesystem"
+import { parseTags } from "../../utils/generators"
 // Import type-only exports template
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates'
-import type { DataAccessTemplateOptions } from '../../utils/types'
-import { getPackageName } from '../../utils/workspace-config'
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates"
+import type { DataAccessTemplateOptions } from "../../utils/types"
+import { getPackageName } from "../../utils/workspace-config"
 // NOTE: Cache generation temporarily disabled due to architectural issues
 // with Effect type inference and exactOptionalPropertyTypes.
 // TODO: Redesign cache template to properly handle repository requirements
 // import { generateCacheFile } from '../data-access/templates/cache.template'
-import { generateErrorsFile } from '../data-access/templates/errors.template'
-import { generateIndexFile } from '../data-access/templates/index.template'
-import { generateLayersFile } from '../data-access/templates/layers.template'
-import { generateLayersSpecFile } from '../data-access/templates/layers-spec.template'
-import { generateQueriesFile } from '../data-access/templates/queries.template'
+import { generateErrorsFile } from "../data-access/templates/errors.template"
+import { generateIndexFile } from "../data-access/templates/index.template"
+import { generateLayersSpecFile } from "../data-access/templates/layers-spec.template"
+import { generateLayersFile } from "../data-access/templates/layers.template"
+import { generateQueriesFile } from "../data-access/templates/queries.template"
 // Import new granular repository templates
 import {
   generateRepositoryAggregateOperationFile,
@@ -40,11 +40,11 @@ import {
   generateRepositoryOperationsIndexFile,
   generateRepositoryReadOperationFile,
   generateRepositoryUpdateOperationFile
-} from '../data-access/templates/repository'
-import { generateRepositorySpecFile } from '../data-access/templates/repository-spec.template'
-import { generateTypesFile } from '../data-access/templates/types.template'
-import { generateValidationFile } from '../data-access/templates/validation.template'
-import type { GeneratorResult } from './contract'
+} from "../data-access/templates/repository"
+import { generateRepositorySpecFile } from "../data-access/templates/repository-spec.template"
+import { generateTypesFile } from "../data-access/templates/types.template"
+import { generateValidationFile } from "../data-access/templates/validation.template"
+import type { GeneratorResult } from "./contract"
 
 export type { GeneratorResult }
 
@@ -101,7 +101,7 @@ export interface DataAccessCoreOptions {
  * @returns Effect that succeeds with GeneratorResult or fails with FileSystemErrors
  */
 export function generateDataAccessCore(adapter: FileSystemAdapter, options: DataAccessCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Parse tags from comma-separated string
     const parsedTags = parseTags(options.tags, [])
 
@@ -112,7 +112,7 @@ export function generateDataAccessCore(adapter: FileSystemAdapter, options: Data
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: 'data-access',
+      libraryType: "data-access",
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
@@ -120,7 +120,7 @@ export function generateDataAccessCore(adapter: FileSystemAdapter, options: Data
       offsetFromRoot: options.offsetFromRoot,
       description: options.description ?? `Data access library for ${options.className}`,
       tags: parsedTags,
-      contractLibrary: options.contractLibrary ?? getPackageName('contract', options.fileName)
+      contractLibrary: options.contractLibrary ?? getPackageName("contract", options.fileName)
     }
 
     // Generate all domain files
@@ -152,12 +152,12 @@ function generateDomainFiles(
   sourceRoot: string,
   templateOptions: DataAccessTemplateOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const workspaceRoot = adapter.getWorkspaceRoot()
     const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`
     const sourceSharedPath = `${sourceLibPath}/shared`
     const sourceServerPath = `${sourceLibPath}/server`
-    const files: string[] = []
+    const files: Array<string> = []
 
     // Generate CLAUDE.md
     const claudeDoc = `# ${templateOptions.packageName}
@@ -315,7 +315,6 @@ import { ${templateOptions.className}Cache } from '${templateOptions.packageName
     yield* adapter.writeFile(`${sourceLibPath}/queries.ts`, queriesContent)
     files.push(`${sourceLibPath}/queries.ts`)
 
-
     // Generate server files
     yield* adapter.writeFile(`${sourceServerPath}/layers.ts`, generateLayersFile(templateOptions))
     files.push(`${sourceServerPath}/layers.ts`)
@@ -328,11 +327,11 @@ import { ${templateOptions.className}Cache } from '${templateOptions.packageName
 
     // Generate type-only exports file for zero-runtime imports
     const typesOnlyOptions: TypesOnlyExportOptions = {
-      libraryType: 'data-access',
+      libraryType: "data-access",
       className: templateOptions.className,
       fileName: templateOptions.fileName,
       packageName: templateOptions.packageName,
-      platform: 'server'
+      platform: "server"
     }
     const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
     const typesOnlyPath = `${workspaceRoot}/${sourceRoot}/types.ts`

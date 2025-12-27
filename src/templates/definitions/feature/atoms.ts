@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/atoms
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Atoms Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - State updater functions
  */
 export const featureAtomsTemplate: TemplateDefinition = {
-  id: 'feature/atoms',
+  id: "feature/atoms",
   meta: {
-    title: '{className} Atoms',
+    title: "{className} Atoms",
     description: `Centralized state management for {propertyName} using @effect-atom/atom.
 
 Features:
@@ -29,22 +29,22 @@ Features:
 - Loading/error state tracking
 - Derived atoms for common selectors
 - Type-safe state updaters`,
-    module: '{scope}/feature-{fileName}/client/atoms'
+    module: "{scope}/feature-{fileName}/client/atoms"
   },
   imports: [
-    { from: '@effect-atom/atom', items: ['Atom', 'atom'] },
+    { from: "@effect-atom/atom", items: ["Atom", "atom"] },
     {
-      from: '{scope}/contract-{fileName}',
-      items: ['{className}', '{className}Id'],
+      from: "{scope}/contract-{fileName}",
+      items: ["{className}", "{className}Id"],
       isTypeOnly: true
     }
   ],
   sections: [
     // State Types
     {
-      title: 'State Types',
+      title: "State Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Loading state for async operations
  */
@@ -66,7 +66,7 @@ export interface PaginationState {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Entity state for single {propertyName}
  */
@@ -92,7 +92,7 @@ export interface {className}OperationState extends LoadingState {
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Combined {className} state
  */
@@ -106,9 +106,9 @@ export interface {className}State {
     },
     // Initial State
     {
-      title: 'Initial State',
+      title: "Initial State",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `const INITIAL_ENTITY_STATE: {className}EntityState = {
   loading: false,
   error: null,
@@ -143,9 +143,9 @@ const INITIAL_STATE: {className}State = {
     },
     // Main Atom
     {
-      title: 'Atoms',
+      title: "Atoms",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Main {className} state atom
  */
@@ -173,9 +173,9 @@ export const get{className}Atom = (id: {className}Id) => {propertyName}EntityFam
     },
     // Derived Atoms
     {
-      title: 'Derived Atoms',
+      title: "Derived Atoms",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Loading state derived atom
  */
@@ -211,9 +211,9 @@ export const {propertyName}ListAtom = Atom.map(
     },
     // State Updaters
     {
-      title: 'State Updaters',
+      title: "State Updaters",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Update entity in state and cache
  */

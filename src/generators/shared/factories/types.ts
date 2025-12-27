@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/generators/shared/factories/types
  */
 
-import type { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { TypeScriptBuilder } from "../../../utils/code-builder"
 
 // ============================================================================
 // Common Types
@@ -19,17 +19,17 @@ import type { TypeScriptBuilder } from '../../../utils/code-builder'
  * - 'data': Uses Data.TaggedError (simpler, for providers and services)
  * - 'schema': Uses Schema.TaggedError (serializable, for RPC boundaries)
  */
-export type ErrorStyle = 'data' | 'schema'
+export type ErrorStyle = "data" | "schema"
 
 /**
  * Library type identifiers
  */
-export type LibraryType = 'contract' | 'data-access' | 'feature' | 'infra' | 'provider'
+export type LibraryType = "contract" | "data-access" | "feature" | "infra" | "provider"
 
 /**
  * Provider type for provider-specific error generation
  */
-export type ProviderType = 'sdk' | 'cli' | 'http' | 'graphql'
+export type ProviderType = "sdk" | "cli" | "http" | "graphql"
 
 // ============================================================================
 // Field Definitions
@@ -104,7 +104,7 @@ export interface AdditionalStaticMethod {
   /** Method name (e.g., 'dependency', 'internal') */
   readonly name: string
   /** Method parameters */
-  readonly params: readonly StaticMethodParam[]
+  readonly params: ReadonlyArray<StaticMethodParam>
   /** Method body (the code inside the function) */
   readonly body: string
 }
@@ -141,20 +141,20 @@ export interface ErrorDefinition {
    * Fields for Data.TaggedError style
    * Use this for 'data' style errors
    */
-  readonly fields?: readonly DataFieldDef[]
+  readonly fields?: ReadonlyArray<DataFieldDef>
 
   /**
    * Schema fields for Schema.TaggedError style
    * Use this for 'schema' style errors
    */
-  readonly schemaFields?: readonly SchemaFieldDef[]
+  readonly schemaFields?: ReadonlyArray<SchemaFieldDef>
 
   /**
    * Static create() helper method
    * Only applicable for 'data' style errors
    */
   readonly staticCreate?: {
-    params: readonly StaticMethodParam[]
+    params: ReadonlyArray<StaticMethodParam>
     body: string
   }
 
@@ -162,7 +162,7 @@ export interface ErrorDefinition {
    * Additional static methods (e.g., dependency(), orchestration(), internal())
    * Only applicable for 'data' style errors
    */
-  readonly additionalMethods?: readonly AdditionalStaticMethod[]
+  readonly additionalMethods?: ReadonlyArray<AdditionalStaticMethod>
 }
 
 /**
@@ -190,7 +190,7 @@ export interface ErrorFactoryConfig {
   readonly style: ErrorStyle
 
   /** Error definitions to generate */
-  readonly errors: readonly ErrorDefinition[]
+  readonly errors: ReadonlyArray<ErrorDefinition>
 
   /** Whether to include union type of all errors */
   readonly includeUnionType?: boolean
@@ -219,7 +219,7 @@ export interface ContractReExportConfig {
   readonly fileName: string
 
   /** Error types to re-export */
-  readonly errorTypes?: readonly string[]
+  readonly errorTypes?: ReadonlyArray<string>
 
   /** Whether to include 'type' keyword for re-exports */
   readonly typeOnly?: boolean
@@ -232,12 +232,12 @@ export interface ContractReExportConfig {
 /**
  * Layer type options
  */
-export type LayerType = 'sync' | 'effect' | 'scoped' | 'suspend' | 'succeed'
+export type LayerType = "sync" | "effect" | "scoped" | "suspend" | "succeed"
 
 /**
  * Layer name options
  */
-export type LayerName = 'Live' | 'Test' | 'Dev' | 'Auto'
+export type LayerName = "Live" | "Test" | "Dev" | "Auto"
 
 /**
  * Layer definition
@@ -271,10 +271,10 @@ export interface LayerDefinition {
  */
 export interface InfrastructureConfig {
   /** Service names to include in infrastructure layer */
-  readonly services: readonly string[]
+  readonly services: ReadonlyArray<string>
 
   /** Environments to generate (Live, Test, Dev) */
-  readonly environments: readonly Exclude<LayerName, 'Auto'[]>
+  readonly environments: readonly Exclude<LayerName, Array<"Auto">>
 }
 
 /**
@@ -284,10 +284,10 @@ export interface InfrastructureConfig {
  */
 export interface ComposedLayerConfig {
   /** Layer name (Live, Test, Dev) */
-  readonly name: Exclude<LayerName, 'Auto'>
+  readonly name: Exclude<LayerName, "Auto">
 
   /** Service layers to merge */
-  readonly serviceLayers: readonly string[]
+  readonly serviceLayers: ReadonlyArray<string>
 
   /** Infrastructure layer to provide */
   readonly infrastructureLayer: string
@@ -321,21 +321,21 @@ export interface LayerFactoryConfig {
   readonly scope: string
 
   /** Library type for naming conventions */
-  readonly libraryType: 'data-access' | 'feature'
+  readonly libraryType: "data-access" | "feature"
 
   /** Infrastructure services to include */
-  readonly infrastructureServices: readonly string[]
+  readonly infrastructureServices: ReadonlyArray<string>
 
   /** Domain services to include (e.g., ['UserRepository', 'UserCache']) */
-  readonly domainServices: readonly string[]
+  readonly domainServices: ReadonlyArray<string>
 
   /** Include Dev layer (default: true) */
   readonly includeDev?: boolean
 
   /** Sub-module layers for feature libraries */
   readonly subModuleLayers?: {
-    readonly live: readonly string[]
-    readonly test: readonly string[]
+    readonly live: ReadonlyArray<string>
+    readonly test: ReadonlyArray<string>
   }
 }
 
@@ -362,7 +362,7 @@ export interface ServiceMethodDef {
   readonly returnType: string
 
   /** Error types this method can throw */
-  readonly errorTypes?: readonly string[]
+  readonly errorTypes?: ReadonlyArray<string>
 
   /** JSDoc description */
   readonly jsdoc?: string
@@ -388,13 +388,13 @@ export interface ServiceFactoryConfig {
   readonly description: string
 
   /** Service methods */
-  readonly methods: readonly ServiceMethodDef[]
+  readonly methods: ReadonlyArray<ServiceMethodDef>
 
   /** Service style */
-  readonly style: 'interface-first' | 'inline'
+  readonly style: "interface-first" | "inline"
 
   /** Dependencies this service requires */
-  readonly dependencies?: readonly string[]
+  readonly dependencies?: ReadonlyArray<string>
 
   /** Whether to include layers */
   readonly includeLayers?: boolean
@@ -409,10 +409,10 @@ export interface ServiceFactoryConfig {
  */
 export interface ExportDefinition {
   /** Export type */
-  readonly type: 'named' | 'type' | 'typeAll' | 'all' | 'default'
+  readonly type: "named" | "type" | "typeAll" | "all" | "default"
 
   /** Items to export (for 'named' and 'type' exports) */
-  readonly items?: readonly string[]
+  readonly items?: ReadonlyArray<string>
 
   /** Source module path */
   readonly from: string
@@ -432,7 +432,7 @@ export interface ExportSection {
   readonly description?: string
 
   /** Exports in this section */
-  readonly exports: readonly ExportDefinition[]
+  readonly exports: ReadonlyArray<ExportDefinition>
 }
 
 /**
@@ -452,7 +452,7 @@ export interface IndexFactoryConfig {
   readonly scope: string
 
   /** Export sections */
-  readonly sections: readonly ExportSection[]
+  readonly sections: ReadonlyArray<ExportSection>
 }
 
 // ============================================================================
@@ -491,4 +491,4 @@ export interface FactoryValidationError {
  */
 export type ValidationResult<T> =
   | { readonly valid: true; readonly config: T }
-  | { readonly valid: false; readonly errors: readonly FactoryValidationError[] }
+  | { readonly valid: false; readonly errors: ReadonlyArray<FactoryValidationError> }

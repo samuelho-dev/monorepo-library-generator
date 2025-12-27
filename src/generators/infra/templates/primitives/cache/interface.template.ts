@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/cache
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate cache service interface using Effect.Cache primitive
@@ -34,23 +34,23 @@ Effect.Cache Features:
 - LRU eviction when capacity exceeded
 - Type-safe key/value pairs`,
     module: `${scope}/infra-${fileName}/service`,
-    see: ['EFFECT_PATTERNS.md for cache patterns']
+    see: ["EFFECT_PATTERNS.md for cache patterns"]
   })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Cache', 'Context', 'Duration', 'Effect', 'Layer']
+      from: "effect",
+      imports: ["Cache", "Context", "Duration", "Effect", "Layer"]
     },
     {
-      from: 'effect',
-      imports: ['Option'],
+      from: "effect",
+      imports: ["Option"],
       isTypeOnly: true
     },
-    { from: `${scope}/env`, imports: ['env'] }
+    { from: `${scope}/env`, imports: ["env"] }
   ])
 
-  builder.addSectionComment('Cache Service Interface (Effect.Cache Wrapper)')
+  builder.addSectionComment("Cache Service Interface (Effect.Cache Wrapper)")
 
   builder.addRaw(`/**
  *

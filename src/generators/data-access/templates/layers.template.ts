@@ -7,16 +7,16 @@
  * @module monorepo-library-generator/data-access/layers-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 import {
   createAutoLayer,
   createDomainLayers,
   createInfrastructureLayers,
   createLayerImports,
   INFRASTRUCTURE_SERVICES
-} from '../../shared/factories'
+} from "../../shared/factories"
 
 /**
  * Generate server/layers.ts file for data-access library
@@ -55,7 +55,7 @@ Infrastructure included:
     infrastructureServices: [...INFRASTRUCTURE_SERVICES.dataAccess],
     className,
     fileName,
-    libraryType: 'data-access'
+    libraryType: "data-access"
   })(builder)
 
   // Generate infrastructure layers using factory
@@ -69,14 +69,14 @@ Infrastructure included:
   createDomainLayers({
     className,
     domainServices: [`${className}Repository`],
-    libraryType: 'data-access',
+    libraryType: "data-access",
     includeDev: true
   })(builder)
 
   // Generate auto layer using factory
   createAutoLayer({
     className,
-    layerPrefix: 'DataAccess',
+    layerPrefix: "DataAccess",
     includeDev: true
   })(builder)
   builder.addBlankLine()

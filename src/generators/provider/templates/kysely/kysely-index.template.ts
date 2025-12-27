@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/provider/templates/kysely/kysely-index
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate Kysely provider index.ts file
@@ -32,7 +32,7 @@ Usage:
   builder.addBlankLine()
 
   // Error exports
-  builder.addSectionComment('Error Types')
+  builder.addSectionComment("Error Types")
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -46,7 +46,7 @@ Usage:
   builder.addBlankLine()
 
   // Interface export
-  builder.addSectionComment('Interface')
+  builder.addSectionComment("Interface")
   builder.addBlankLine()
 
   builder.addRaw(`export type { ${className}ServiceInterface } from "./lib/interface"
@@ -55,7 +55,7 @@ Usage:
   builder.addBlankLine()
 
   // Service exports
-  builder.addSectionComment('Service')
+  builder.addSectionComment("Service")
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -70,31 +70,31 @@ Usage:
   builder.addBlankLine()
 
   // Usage example
-  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  builder.addComment('Usage Example')
-  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  builder.addComment('')
+  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  builder.addComment("Usage Example")
+  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  builder.addComment("")
   builder.addComment(`import type { DB } from "${scope}/types-database";`)
   builder.addComment(
     `import { make${className}Service, ${className}Service } from "${packageName}";`
   )
-  builder.addComment('')
-  builder.addComment('const program = Effect.gen(function*() {')
+  builder.addComment("")
+  builder.addComment("const program = Effect.gen(function*() {")
   builder.addComment(`  const kysely = yield* make${className}Service<DB>({`)
-  builder.addComment('    connectionString: process.env.DATABASE_URL,')
-  builder.addComment('  })')
-  builder.addComment('')
-  builder.addComment('  const users = yield* kysely.query((db) =>')
+  builder.addComment("    connectionString: process.env.DATABASE_URL,")
+  builder.addComment("  })")
+  builder.addComment("")
+  builder.addComment("  const users = yield* kysely.query((db) =>")
   builder.addComment("    db.selectFrom('users').selectAll().execute()")
-  builder.addComment('  )')
-  builder.addComment('  return users;')
-  builder.addComment('})')
-  builder.addComment('')
-  builder.addComment('// For testing:')
+  builder.addComment("  )")
+  builder.addComment("  return users;")
+  builder.addComment("})")
+  builder.addComment("")
+  builder.addComment("// For testing:")
   builder.addComment(`const mockService = makeTest${className}Service<DB>({`)
   builder.addComment("  mockTables: ['users', 'posts']")
-  builder.addComment('})')
-  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  builder.addComment("})")
+  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   return builder.toString()
 }

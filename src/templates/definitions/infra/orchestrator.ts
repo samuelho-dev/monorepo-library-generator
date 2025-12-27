@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/orchestrator
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Orchestrator Template Definition
@@ -18,19 +18,19 @@ import type { TemplateDefinition } from '../../core/types'
  * - Bootstrap, healthCheck, teardown operations
  */
 export const infraOrchestratorTemplate: TemplateDefinition = {
-  id: 'infra/orchestrator',
+  id: "infra/orchestrator",
   meta: {
-    title: 'Cluster Orchestrator',
-    description: 'Coordinates multiple providers for complex cluster operations',
-    module: '{scope}/infra-{fileName}/orchestrator'
+    title: "Cluster Orchestrator",
+    description: "Coordinates multiple providers for complex cluster operations",
+    module: "{scope}/infra-{fileName}/orchestrator"
   },
-  imports: [{ from: 'effect', items: ['Context', 'Effect', 'Layer'] }],
+  imports: [{ from: "effect", items: ["Context", "Effect", "Layer"] }],
   sections: [
     // Orchestrator Service
     {
-      title: 'Cluster Orchestrator Service',
+      title: "Cluster Orchestrator Service",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * ClusterOrchestrator service
  *

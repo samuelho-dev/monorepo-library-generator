@@ -6,7 +6,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/errors
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Errors Template Definition
@@ -20,18 +20,18 @@ import type { TemplateDefinition } from '../../core/types'
  * with JavaScript template literals that shouldn't be interpolated.
  */
 export const contractErrorsTemplate: TemplateDefinition = {
-  id: 'contract/errors',
+  id: "contract/errors",
   meta: {
-    title: '{className} Domain Errors',
-    description: 'Defines all error types for {propertyName} domain operations.',
-    module: '{scope}/contract-{fileName}/errors'
+    title: "{className} Domain Errors",
+    description: "Defines all error types for {propertyName} domain operations.",
+    module: "{scope}/contract-{fileName}/errors"
   },
-  imports: [{ from: 'effect', items: ['Data'] }],
+  imports: [{ from: "effect", items: ["Data"] }],
   sections: [
     // File header documentation
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * ERROR TYPE SELECTION GUIDE:
  * ===========================
@@ -50,9 +50,9 @@ export const contractErrorsTemplate: TemplateDefinition = {
 
     // Domain Errors Section
     {
-      title: 'Domain Errors (Data.TaggedError)',
+      title: "Domain Errors (Data.TaggedError)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when {propertyName} is not found
  */
@@ -75,7 +75,7 @@ export class {className}NotFoundError extends Data.TaggedError(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when {propertyName} validation fails
  */
@@ -126,7 +126,7 @@ export class {className}ValidationError extends Data.TaggedError(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when {propertyName} already exists
  */
@@ -151,7 +151,7 @@ export class {className}AlreadyExistsError extends Data.TaggedError(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Error thrown when {propertyName} operation is not permitted
  */
@@ -182,7 +182,7 @@ export class {className}PermissionError extends Data.TaggedError(
     // Domain Error Union Type
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Union of all domain errors
  */
@@ -196,9 +196,9 @@ export type {className}DomainError =
 
     // Repository Errors Section
     {
-      title: 'Repository Errors (Data.TaggedError)',
+      title: "Repository Errors (Data.TaggedError)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Repository error for {propertyName} not found
  */
@@ -221,7 +221,7 @@ export class {className}NotFoundRepositoryError extends Data.TaggedError(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Repository error for {propertyName} validation failures
  */
@@ -251,7 +251,7 @@ export class {className}ValidationRepositoryError extends Data.TaggedError(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Repository error for {propertyName} conflicts
  */
@@ -276,7 +276,7 @@ export class {className}ConflictRepositoryError extends Data.TaggedError(
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Repository error for {propertyName} database failures
  */
@@ -308,7 +308,7 @@ export class {className}DatabaseRepositoryError extends Data.TaggedError(
     // Repository Error Union Type
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Union of all repository errors
  */
@@ -322,9 +322,9 @@ export type {className}RepositoryError =
 
     // Combined Error Type
     {
-      title: 'Error Union Types',
+      title: "Error Union Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * All possible {propertyName} errors
  */

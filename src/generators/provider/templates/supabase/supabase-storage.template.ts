@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/provider/templates/supabase/storage
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate SupabaseStorage service file
@@ -18,7 +18,7 @@ export function generateSupabaseStorageServiceFile(options: ProviderTemplateOpti
   const { packageName } = options
 
   builder.addFileHeader({
-    title: 'SupabaseStorage Service',
+    title: "SupabaseStorage Service",
     description: `Supabase storage provider with Effect integration.
 
 Wraps Supabase Storage API for:
@@ -28,32 +28,32 @@ Wraps Supabase Storage API for:
 
 This service is consumed by infra-storage for file operations.`,
     module: `${packageName}/service/storage`,
-    see: ['https://supabase.com/docs/reference/javascript/storage-api']
+    see: ["https://supabase.com/docs/reference/javascript/storage-api"]
   })
   builder.addBlankLine()
 
   // Imports - use native types from @supabase/storage-js
   builder.addImports([
     {
-      from: '@supabase/storage-js',
-      imports: ['Bucket', 'FileObject', 'FileOptions', 'SearchOptions', 'TransformOptions'],
+      from: "@supabase/storage-js",
+      imports: ["Bucket", "FileObject", "FileOptions", "SearchOptions", "TransformOptions"],
       isTypeOnly: true
     },
     {
-      from: '@supabase/supabase-js',
-      imports: [{ name: 'SupabaseClient', alias: 'SupabaseSDKClient' }],
+      from: "@supabase/supabase-js",
+      imports: [{ name: "SupabaseClient", alias: "SupabaseSDKClient" }],
       isTypeOnly: true
     },
-    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Option'] },
-    { from: './client', imports: ['SupabaseClient'] },
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Option"] },
+    { from: "./client", imports: ["SupabaseClient"] },
     {
-      from: './errors',
-      imports: ['SupabaseBucketNotFoundError', 'SupabaseFileNotFoundError', 'SupabaseStorageError']
+      from: "./errors",
+      imports: ["SupabaseBucketNotFoundError", "SupabaseFileNotFoundError", "SupabaseStorageError"]
     }
   ])
 
   // Result Types
-  builder.addSectionComment('Result Types')
+  builder.addSectionComment("Result Types")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -82,7 +82,7 @@ export interface StorageBucketResult {
   builder.addBlankLine()
 
   // Service interface
-  builder.addSectionComment('Service Interface')
+  builder.addSectionComment("Service Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -170,7 +170,7 @@ export interface SupabaseStorageServiceInterface {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment('Context.Tag')
+  builder.addSectionComment("Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**

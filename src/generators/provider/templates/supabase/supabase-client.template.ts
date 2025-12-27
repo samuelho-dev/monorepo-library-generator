@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/provider/templates/supabase/client
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate SupabaseClient service file
@@ -20,7 +20,7 @@ export function generateSupabaseClientServiceFile(options: ProviderTemplateOptio
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: 'SupabaseClient Service',
+    title: "SupabaseClient Service",
     description: `Core Supabase client provider with Effect integration.
 
 Wraps the @supabase/supabase-js SDK in Effect types.
@@ -31,15 +31,15 @@ Architecture:
   infra-auth → uses SupabaseAuth for authentication
   infra-storage → uses SupabaseStorage for file storage`,
     module: `${packageName}/service/client`,
-    see: ['https://supabase.com/docs for Supabase documentation']
+    see: ["https://supabase.com/docs for Supabase documentation"]
   })
   builder.addBlankLine()
 
   // Imports
   builder.addImports([
-    { from: './errors', imports: ['SupabaseError', 'SupabaseConnectionError'] },
-    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Redacted'] },
-    { from: `${scope}/env`, imports: ['env'] }
+    { from: "./errors", imports: ["SupabaseError", "SupabaseConnectionError"] },
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Redacted"] },
+    { from: `${scope}/env`, imports: ["env"] }
   ])
   builder.addRaw(
     `import type { SupabaseConfig } from "./types"
@@ -48,7 +48,7 @@ import { createClient, type SupabaseClient as SupabaseSDKClient } from "@supabas
   builder.addBlankLine()
 
   // Service interface
-  builder.addSectionComment('Service Interface')
+  builder.addSectionComment("Service Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -77,7 +77,7 @@ export interface SupabaseClientServiceInterface {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment('Context.Tag')
+  builder.addSectionComment("Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**

@@ -14,10 +14,5 @@ export {
   type PlatformOption,
   type SelectOptionConfig,
   type TextOptionConfig
-} from './options.config'
-export {
-  VALIDATION_PATTERNS,
-  type ValidationResult,
-  validateExternalService,
-  validateName
-} from './validation.config'
+} from "./options.config"
+export { validateExternalService, validateName, VALIDATION_PATTERNS, type ValidationResult } from "./validation.config"

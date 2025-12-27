@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/infra/database-service
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Infrastructure Database Service Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Live, Test, and Dev layers
  */
 export const infraDatabaseServiceTemplate: TemplateDefinition = {
-  id: 'infra/database-service',
+  id: "infra/database-service",
   meta: {
-    title: '{className} Service',
+    title: "{className} Service",
     description: `Database infrastructure service that delegates to the Kysely provider.
 
 This service wraps the Kysely provider to expose a simplified database API.
@@ -37,29 +37,29 @@ Usage:
   const users = yield* database.query((db) =>
     db.selectFrom("users").selectAll().execute()
   )`,
-    module: '{scope}/infra-{fileName}/service'
+    module: "{scope}/infra-{fileName}/service"
   },
   imports: [
-    { from: 'effect', items: ['Context', 'Effect', 'Layer'] },
-    { from: 'kysely', items: ['Kysely', 'Transaction'], isTypeOnly: true },
-    { from: '{scope}/provider-kysely', items: ['KyselyService', 'makeTestKyselyService'] },
+    { from: "effect", items: ["Context", "Effect", "Layer"] },
+    { from: "kysely", items: ["Kysely", "Transaction"], isTypeOnly: true },
+    { from: "{scope}/provider-kysely", items: ["KyselyService", "makeTestKyselyService"] },
     {
-      from: '{scope}/provider-kysely',
+      from: "{scope}/provider-kysely",
       items: [
-        'DatabaseConnectionError as ProviderConnectionError',
-        'DatabaseQueryError as ProviderQueryError'
+        "DatabaseConnectionError as ProviderConnectionError",
+        "DatabaseQueryError as ProviderQueryError"
       ],
       isTypeOnly: true
     },
-    { from: '{scope}/types-database', items: ['DB'], isTypeOnly: true },
-    { from: './errors', items: ['{className}ConnectionError', '{className}InternalError'] }
+    { from: "{scope}/types-database", items: ["DB"], isTypeOnly: true },
+    { from: "./errors", items: ["{className}ConnectionError", "{className}InternalError"] }
   ],
   sections: [
     // Re-export Database Types
     {
-      title: 'Re-export Database Types from types-database',
+      title: "Re-export Database Types from types-database",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Re-export Database type from types-database for convenience
  *
@@ -81,9 +81,9 @@ export type { DB as Database } from "{scope}/types-database"`
     },
     // Service Context.Tag Definition
     {
-      title: 'Service Context.Tag Definition',
+      title: "Service Context.Tag Definition",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {className} Service
  *

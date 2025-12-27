@@ -6,10 +6,10 @@
  * @module monorepo-library-generator/data-access/repository/repository-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
-import { generateStaticLayers } from '../../../shared/layers'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { generateStaticLayers } from "../../../shared/layers"
 
 /**
  * Generate repository/repository.ts file
@@ -37,15 +37,15 @@ ARCHITECTURE PATTERN:
   builder.addBlankLine()
 
   builder.addImports([
-    { from: 'effect', imports: ['Chunk', 'Context', 'Effect', 'Layer', 'Option', 'Stream'] },
-    { from: './operations/aggregate', imports: ['aggregateOperations'] },
-    { from: './operations/create', imports: ['createOperations'] },
-    { from: './operations/delete', imports: ['deleteOperations'] },
-    { from: './operations/read', imports: ['readOperations'] },
-    { from: './operations/update', imports: ['updateOperations'] }
+    { from: "effect", imports: ["Chunk", "Context", "Effect", "Layer", "Option", "Stream"] },
+    { from: "./operations/aggregate", imports: ["aggregateOperations"] },
+    { from: "./operations/create", imports: ["createOperations"] },
+    { from: "./operations/delete", imports: ["deleteOperations"] },
+    { from: "./operations/read", imports: ["readOperations"] },
+    { from: "./operations/update", imports: ["updateOperations"] }
   ])
 
-  builder.addSectionComment('Repository Context.Tag')
+  builder.addSectionComment("Repository Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -108,12 +108,14 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
   ${className}Repository,
   ${className}RepositoryInterface
 >() {
-${generateStaticLayers({
-  className: `${className}Repository`,
-  layerType: 'succeed',
-  liveImpl: 'repositoryImpl',
-  testViaDependencies: true
-})}
+${
+    generateStaticLayers({
+      className: `${className}Repository`,
+      layerType: "succeed",
+      liveImpl: "repositoryImpl",
+      testViaDependencies: true
+    })
+  }
 }
 `)
 

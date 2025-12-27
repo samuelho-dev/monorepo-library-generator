@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/rpc-errors
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature RPC Errors Template Definition
@@ -18,9 +18,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Error transformation from domain to RPC errors
  */
 export const featureRpcErrorsTemplate: TemplateDefinition = {
-  id: 'feature/rpc-errors',
+  id: "feature/rpc-errors",
   meta: {
-    title: '{className} RPC Errors',
+    title: "{className} RPC Errors",
     description: `RPC error exports and domain-specific error boundary.
 
 This file provides:
@@ -30,32 +30,32 @@ This file provides:
 
 Error Flow:
   Domain Error (Data.TaggedError) → with{className}RpcBoundary → RPC Error (Schema.TaggedError)`,
-    module: '{scope}/feature-{fileName}/rpc/errors'
+    module: "{scope}/feature-{fileName}/rpc/errors"
   },
   imports: [
-    { from: 'effect', items: ['Effect'] },
+    { from: "effect", items: ["Effect"] },
     {
-      from: '{scope}/infra-rpc',
+      from: "{scope}/infra-rpc",
       items: [
-        'RpcConflictError',
-        'RpcForbiddenError',
-        'RpcInternalError',
-        'RpcNotFoundError',
-        'RpcValidationError'
+        "RpcConflictError",
+        "RpcForbiddenError",
+        "RpcInternalError",
+        "RpcNotFoundError",
+        "RpcValidationError"
       ]
     },
     {
-      from: '../shared/errors',
-      items: ['{className}FeatureError'],
+      from: "../shared/errors",
+      items: ["{className}FeatureError"],
       isTypeOnly: true
     }
   ],
   sections: [
     // Import Notes
     {
-      title: 'Import Notes',
+      title: "Import Notes",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// NOTE: For RPC errors (Schema.TaggedError), import directly from {scope}/infra-rpc:
 // import { RpcNotFoundError, RpcValidationError, ... } from "{scope}/infra-rpc"
 //
@@ -65,9 +65,9 @@ Error Flow:
     },
     // Domain-Specific RPC Boundary
     {
-      title: 'Domain-Specific RPC Boundary',
+      title: "Domain-Specific RPC Boundary",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Transform {className} domain errors to RPC errors
  *

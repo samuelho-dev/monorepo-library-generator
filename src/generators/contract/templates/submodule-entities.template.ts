@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/submodule-entities-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 export interface SubModuleEntitiesOptions {
   /** Parent domain name (e.g., 'order') */
@@ -50,7 +50,7 @@ Import shared types from the parent contract when needed.`,
  */
 `)
 
-  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
+  builder.addImports([{ from: "effect", imports: ["Schema"] }])
 
   builder.addSectionComment(`${subModuleClassName} ID Type`)
 
@@ -113,7 +113,7 @@ export class ${subModuleClassName}Item extends Schema.Class<${subModuleClassName
   // TODO: Add ${subModuleName}-specific item fields
 }) {}`)
 
-  builder.addSectionComment('Helper Functions')
+  builder.addSectionComment("Helper Functions")
 
   builder.addRaw(`/**
  * Parse ${subModuleClassName} from unknown data
@@ -144,7 +144,7 @@ function getEntityExample(
   const name = subModuleName.toLowerCase()
 
   // Common sub-module patterns with appropriate fields
-  if (name === 'cart') {
+  if (name === "cart") {
     return `  /** Associated ${parentClassName.toLowerCase()} user ID */
   userId: Schema.UUID,
   /** Cart items */
@@ -159,7 +159,7 @@ function getEntityExample(
   totalAmount: Schema.optional(Schema.Number.pipe(Schema.positive()))`
   }
 
-  if (name === 'checkout') {
+  if (name === "checkout") {
     return `  /** Associated cart ID */
   cartId: Schema.UUID,
   /** Checkout session status */
@@ -175,7 +175,7 @@ function getEntityExample(
   shippingAddress: Schema.optional(Schema.Unknown)`
   }
 
-  if (name === 'management' || name === 'order-management') {
+  if (name === "management" || name === "order-management") {
     return `  /** Order reference number */
   orderNumber: Schema.String,
   /** Order status */
@@ -192,7 +192,7 @@ function getEntityExample(
   handlerId: Schema.optional(Schema.UUID)`
   }
 
-  if (name === 'catalog') {
+  if (name === "catalog") {
     return `  /** Product reference */
   productId: Schema.UUID,
   /** Catalog category */
@@ -205,7 +205,7 @@ function getEntityExample(
   isFeatured: Schema.Boolean`
   }
 
-  if (name === 'media') {
+  if (name === "media") {
     return `  /** Associated entity ID */
   entityId: Schema.UUID,
   /** Media type */
@@ -223,7 +223,7 @@ function getEntityExample(
   mimeType: Schema.optional(Schema.String)`
   }
 
-  if (name === 'metadata') {
+  if (name === "metadata") {
     return `  /** Associated entity ID */
   entityId: Schema.UUID,
   /** Metadata key */
@@ -234,7 +234,7 @@ function getEntityExample(
   namespace: Schema.optional(Schema.String)`
   }
 
-  if (name === 'fulfillment') {
+  if (name === "fulfillment") {
     return `  /** Order ID being fulfilled */
   orderId: Schema.UUID,
   /** Fulfillment status */

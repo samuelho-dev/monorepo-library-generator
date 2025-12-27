@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/utils/template-spans
  */
 
-import { Effect, Metric } from 'effect'
-import { taggedTemplateDuration, templateCompilations } from '../infrastructure/metrics'
-import type { FileSystemAdapter } from './filesystem'
+import { Effect, Metric } from "effect"
+import { taggedTemplateDuration, templateCompilations } from "../infrastructure/metrics"
+import type { FileSystemAdapter } from "./filesystem"
 
 /**
  * Template generator function type
@@ -38,11 +38,11 @@ export function generateTemplateWithSpan<TOptions>(
   generator: TemplateGeneratorFn<TOptions>,
   options: TOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const startTime = Date.now()
 
     // Track template compilation
-    yield* templateCompilations.pipe(Metric.tagged('template_id', templateId), Metric.increment)
+    yield* templateCompilations.pipe(Metric.tagged("template_id", templateId), Metric.increment)
 
     // Generate content
     const content = generator(options)
@@ -58,8 +58,8 @@ export function generateTemplateWithSpan<TOptions>(
   }).pipe(
     Effect.withSpan(`template.${templateId}`, {
       attributes: {
-        'template.id': templateId,
-        'template.file_path': filePath
+        "template.id": templateId,
+        "template.file_path": filePath
       }
     })
   )
@@ -86,7 +86,7 @@ export function generateTemplatesWithSpan<TOptions>(
   basePath: string,
   options: TOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const files: Array<string> = []
 
     for (const template of templates) {
@@ -97,10 +97,10 @@ export function generateTemplatesWithSpan<TOptions>(
 
     return files
   }).pipe(
-    Effect.withSpan('template.batch', {
+    Effect.withSpan("template.batch", {
       attributes: {
-        'template.batch_size': templates.length,
-        'template.base_path': basePath
+        "template.batch_size": templates.length,
+        "template.base_path": basePath
       }
     })
   )
@@ -124,15 +124,15 @@ export function writeContentWithSpan(
   filePath: string,
   content: string
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     yield* adapter.writeFile(filePath, content)
     return filePath
   }).pipe(
     Effect.withSpan(`template.${templateId}`, {
       attributes: {
-        'template.id': templateId,
-        'template.file_path': filePath,
-        'template.content_length': content.length
+        "template.id": templateId,
+        "template.file_path": filePath,
+        "template.content_length": content.length
       }
     })
   )

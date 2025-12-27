@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository/read-operation-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/read.ts file
@@ -32,18 +32,18 @@ Bundle optimization: Import this file directly for smallest bundle size:
 
   // Add imports
   builder.addImports([
-    { from: 'effect', imports: ['Duration', 'Effect', 'Option'] },
-    { from: `${scope}/infra-database`, imports: ['DatabaseService'] },
-    { from: '../../shared/errors', imports: [`${className}TimeoutError`] },
+    { from: "effect", imports: ["Duration", "Effect", "Option"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
+    { from: "../../shared/errors", imports: [`${className}TimeoutError`] },
     {
-      from: '../../shared/types',
-      imports: [`${className}Filter`, 'PaginationOptions'],
+      from: "../../shared/types",
+      imports: [`${className}Filter`, "PaginationOptions"],
       isTypeOnly: true
     }
   ])
 
   // Live implementation
-  builder.addSectionComment('Read Operations')
+  builder.addSectionComment("Read Operations")
   builder.addBlankLine()
 
   builder.addRaw(`/**

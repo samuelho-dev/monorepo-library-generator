@@ -10,8 +10,8 @@
  * @module monorepo-library-generator/feature/sub-module/service-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 export interface SubModuleServiceOptions {
   /** Parent domain name (e.g., 'order') */
@@ -46,13 +46,13 @@ Integrates with infrastructure services (Logging, Metrics) and data-access layer
   })
 
   builder.addImports([
-    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Option'], isTypeOnly: false }
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Option"], isTypeOnly: false }
   ])
 
-  builder.addSectionComment('Contract Imports (Contract-First Architecture)')
-  builder.addComment('Sub-module entity schema for transforming repository data')
+  builder.addSectionComment("Contract Imports (Contract-First Architecture)")
+  builder.addComment("Sub-module entity schema for transforming repository data")
   builder.addComment(
-    'Schema class is type-only (for typeof), parse function and error class are runtime'
+    "Schema class is type-only (for typeof), parse function and error class are runtime"
   )
   builder.addImports([
     {
@@ -73,7 +73,7 @@ Integrates with infrastructure services (Logging, Metrics) and data-access layer
     }
   ])
 
-  builder.addSectionComment('Type Definitions')
+  builder.addSectionComment("Type Definitions")
   builder.addRaw(`/**
  * Sub-module entity type (from contract schema)
  * Service transforms repository data to this shape for RPC responses
@@ -81,7 +81,7 @@ Integrates with infrastructure services (Logging, Metrics) and data-access layer
 type ${subModuleClassName}Entity = typeof ${subModuleClassName}.Type
 `)
 
-  builder.addSectionComment('Data Access Imports')
+  builder.addSectionComment("Data Access Imports")
   // Data-access libraries don't have sub-modules - use parent repository
   // Import filter type for type-safe query parameters
   builder.addImports([
@@ -93,16 +93,16 @@ type ${subModuleClassName}Entity = typeof ${subModuleClassName}.Type
     }
   ])
 
-  builder.addSectionComment('Infrastructure Imports')
+  builder.addSectionComment("Infrastructure Imports")
   builder.addImports([
-    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] }
+    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] }
   ])
-  builder.addComment('DatabaseService requirement flows from repository operations')
+  builder.addComment("DatabaseService requirement flows from repository operations")
   builder.addImports([
-    { from: `${scope}/infra-database`, imports: ['DatabaseService'], isTypeOnly: true }
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"], isTypeOnly: true }
   ])
 
-  builder.addSectionComment('Service Interface')
+  builder.addSectionComment("Service Interface")
 
   // Generate interface based on common sub-module patterns
   const serviceInterface = getServiceInterfaceForSubModule(
@@ -121,7 +121,7 @@ export interface ${subModuleClassName}ServiceInterface {
 ${serviceInterface}
 }`)
 
-  builder.addSectionComment('Context.Tag Definition (Class Pattern)')
+  builder.addSectionComment("Context.Tag Definition (Class Pattern)")
 
   builder.addRaw(`/**
  * ${subModuleClassName}Service Context.Tag
@@ -134,7 +134,7 @@ export class ${subModuleClassName}Service extends Context.Tag("${subModuleClassN
   ${subModuleClassName}ServiceInterface
 >() {}`)
 
-  builder.addSectionComment('Live Layer Implementation')
+  builder.addSectionComment("Live Layer Implementation")
 
   const implementation = getServiceImplementationForSubModule(subModuleName, subModuleClassName)
 
@@ -188,7 +188,7 @@ function getServiceInterfaceForSubModule(
   // Common sub-module patterns with appropriate interface methods
   // Use ${subModuleClassName}Error which is the union of all domain and repository errors
   // Include DatabaseService in R channel - flows from repository operations
-  if (name === 'cart') {
+  if (name === "cart") {
     return `  /** Get cart by ID */
   readonly getById: (id: string) => Effect.Effect<Option.Option<${entityType}>, ${subModuleClassName}Error, DatabaseService>
 
@@ -211,7 +211,7 @@ function getServiceInterfaceForSubModule(
   readonly create: (userId: string) => Effect.Effect<${entityType}, ${subModuleClassName}Error, DatabaseService>`
   }
 
-  if (name === 'checkout') {
+  if (name === "checkout") {
     return `  /** Get checkout session by ID */
   readonly getById: (id: string) => Effect.Effect<Option.Option<${entityType}>, ${subModuleClassName}Error, DatabaseService>
 
@@ -228,7 +228,7 @@ function getServiceInterfaceForSubModule(
   readonly cancel: (checkoutId: string, reason: string) => Effect.Effect<void, ${subModuleClassName}Error, DatabaseService>`
   }
 
-  if (name === 'management' || name === 'order-management') {
+  if (name === "management" || name === "order-management") {
     return `  /** Get order by ID */
   readonly getById: (id: string) => Effect.Effect<Option.Option<${entityType}>, ${subModuleClassName}Error, DatabaseService>
 

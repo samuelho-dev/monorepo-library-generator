@@ -7,21 +7,21 @@
  * @module monorepo-library-generator/infrastructure/package-json-template
  */
 
-import type { ExportConfig, ExportMap } from '../../../utils/build'
-import { generateGranularExports } from '../../../utils/build'
-import { getPackageName } from '../../../utils/workspace-config'
-import { getProviderForInfra, hasProviderMapping } from '../../../utils/infra-provider-mapping'
-import type { LibraryType } from '../../../utils/types'
+import type { ExportConfig } from "../../../utils/build"
+import { generateGranularExports } from "../../../utils/build"
+import { getProviderForInfra, hasProviderMapping } from "../../../utils/infra-provider-mapping"
+import type { LibraryType } from "../../../utils/types"
+import { getPackageName } from "../../../utils/workspace-config"
 
 export interface PackageJsonOptions {
   readonly packageName: string
   readonly projectName: string
   readonly description: string
   readonly libraryType: LibraryType
-  readonly platform: 'node' | 'browser' | 'edge' | 'universal'
+  readonly platform: "node" | "browser" | "edge" | "universal"
   readonly includeClientServer?: boolean
-  readonly entities?: readonly string[]
-  readonly subModules?: readonly string[]
+  readonly entities?: ReadonlyArray<string>
+  readonly subModules?: ReadonlyArray<string>
 }
 
 /**
@@ -37,12 +37,12 @@ export function generatePackageJson(options: PackageJsonOptions) {
     hasEntities: Boolean(options.entities && options.entities.length > 0),
     ...(options.entities &&
       options.entities.length > 0 && {
-        entityNames: Array.from(options.entities)
-      }),
+      entityNames: Array.from(options.entities)
+    }),
     ...(options.subModules &&
       options.subModules.length > 0 && {
-        subModuleNames: Array.from(options.subModules)
-      })
+      subModuleNames: Array.from(options.subModules)
+    })
   }
 
   const exports = generateGranularExports(exportConfig)
@@ -51,8 +51,8 @@ export function generatePackageJson(options: PackageJsonOptions) {
 
   return {
     name: options.packageName,
-    version: '0.0.1',
-    type: 'module',
+    version: "0.0.1",
+    type: "module",
     sideEffects: false,
     description: options.description,
     exports,
@@ -65,8 +65,8 @@ export function generatePackageJson(options: PackageJsonOptions) {
  * Compute workspace dependencies based on library type
  */
 function computeDependencies(options: PackageJsonOptions) {
-  if (options.libraryType === 'infra') {
-    const infraName = options.projectName.startsWith('infra-')
+  if (options.libraryType === "infra") {
+    const infraName = options.projectName.startsWith("infra-")
       ? options.projectName.substring(6)
       : options.projectName
 
@@ -74,7 +74,7 @@ function computeDependencies(options: PackageJsonOptions) {
       const providerName = getProviderForInfra(infraName)
       if (providerName) {
         return {
-          [getPackageName('provider', providerName)]: 'workspace:*'
+          [getPackageName("provider", providerName)]: "workspace:*"
         }
       }
     }
@@ -87,25 +87,25 @@ function computeDependencies(options: PackageJsonOptions) {
  * Compute peer dependencies based on library type
  */
 function computePeerDependencies(options: PackageJsonOptions) {
-  const base = { effect: '*' }
+  const base = { effect: "*" }
 
-  if (options.libraryType === 'provider' && options.projectName.includes('kysely')) {
-    return { ...base, kysely: '*', pg: '*' }
+  if (options.libraryType === "provider" && options.projectName.includes("kysely")) {
+    return { ...base, kysely: "*", pg: "*" }
   }
 
-  if (options.libraryType === 'provider' && options.projectName.includes('supabase')) {
-    return { ...base, '@supabase/supabase-js': '^2' }
+  if (options.libraryType === "provider" && options.projectName.includes("supabase")) {
+    return { ...base, "@supabase/supabase-js": "^2" }
   }
 
-  if (options.libraryType === 'data-access') {
-    return { ...base, kysely: '*' }
+  if (options.libraryType === "data-access") {
+    return { ...base, kysely: "*" }
   }
 
-  if (options.libraryType === 'feature') {
+  if (options.libraryType === "feature") {
     return {
       ...base,
-      '@effect-atom/atom': '*',
-      '@effect-atom/atom-react': '*'
+      "@effect-atom/atom": "*",
+      "@effect-atom/atom-react": "*"
     }
   }
 

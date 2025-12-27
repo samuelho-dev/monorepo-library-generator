@@ -6,13 +6,13 @@
  * @module monorepo-library-generator/data-access/templates
  */
 
-export { generateCacheFile } from './cache.template'
-export { generateErrorsFile } from './errors.template'
-export { generateIndexFile } from './index.template'
-export { generateLayersFile } from './layers.template'
-export { generateLayersSpecFile } from './layers-spec.template'
-export { generateQueriesFile } from './queries.template'
-export { generateRepositoryFile } from './repository/repository.template'
-export { generateRepositorySpecFile } from './repository-spec.template'
-export { generateTypesFile } from './types.template'
-export { generateValidationFile } from './validation.template'
+export { generateCacheFile } from "./cache.template"
+export { generateErrorsFile } from "./errors.template"
+export { generateIndexFile } from "./index.template"
+export { generateLayersSpecFile } from "./layers-spec.template"
+export { generateLayersFile } from "./layers.template"
+export { generateQueriesFile } from "./queries.template"
+export { generateRepositorySpecFile } from "./repository-spec.template"
+export { generateRepositoryFile } from "./repository/repository.template"
+export { generateTypesFile } from "./types.template"
+export { generateValidationFile } from "./validation.template"

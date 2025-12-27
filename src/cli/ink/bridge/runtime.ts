@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/cli/ink/bridge/runtime
  */
 
-import { NodeContext } from '@effect/platform-node'
-import type { Runtime } from 'effect'
-import { Effect, Layer } from 'effect'
+import { NodeContext } from "@effect/platform-node"
+import type { Runtime } from "effect"
+import { Effect, Layer } from "effect"
 
 /**
  * Application layer combining all required services
@@ -34,7 +34,7 @@ export function withRuntime<A, E>(
   f: (runtime: Runtime.Runtime<AppLayerContext>) => Effect.Effect<A, E, never>
 ) {
   return Effect.scoped(
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const runtime = yield* Layer.toRuntime(AppLayer)
       return yield* f(runtime)
     })

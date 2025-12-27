@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/index-barrel
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Index Barrel Template Definition
@@ -18,9 +18,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Platform-specific import guidance
  */
 export const featureIndexTemplate: TemplateDefinition = {
-  id: 'feature/index-barrel',
+  id: "feature/index-barrel",
   meta: {
-    title: '{className} Feature Library',
+    title: "{className} Feature Library",
     description: `{className} feature library entry point.
 
 PLATFORM-SPECIFIC IMPORTS:
@@ -29,15 +29,15 @@ PLATFORM-SPECIFIC IMPORTS:
 - Edge: import { ... } from "{scope}/feature-{fileName}/edge"
 
 This root export only includes shared types and errors.`,
-    module: '{scope}/feature-{fileName}'
+    module: "{scope}/feature-{fileName}"
   },
   imports: [],
   sections: [
     // Shared Types
     {
-      title: 'Shared Types (from shared/)',
+      title: "Shared Types (from shared/)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type {
   {className}ServiceConfig,
   {className}PaginatedResult
@@ -47,7 +47,7 @@ This root export only includes shared types and errors.`,
     // Shared Schemas
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   {className}ResultSchema,
   {className}BulkResultSchema,
@@ -65,9 +65,9 @@ This root export only includes shared types and errors.`,
     },
     // Error Types
     {
-      title: 'Error Types (from shared/)',
+      title: "Error Types (from shared/)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   // Domain errors (re-exported from contract)
   {className}NotFoundError,
@@ -88,9 +88,9 @@ This root export only includes shared types and errors.`,
     },
     // Platform Guidance
     {
-      title: 'Platform-Specific Imports',
+      title: "Platform-Specific Imports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * PLATFORM-SPECIFIC IMPORTS
  *

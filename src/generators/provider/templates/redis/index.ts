@@ -11,13 +11,13 @@
  * @module monorepo-library-generator/provider/templates/redis
  */
 
-export { generateRedisCacheServiceFile } from './redis-cache.template'
-export { generateRedisErrorsFile } from './redis-errors.template'
-export { generateRedisIndexFile } from './redis-index.template'
-export { generateRedisPubSubServiceFile } from './redis-pubsub.template'
-export { generateRedisQueueServiceFile } from './redis-queue.template'
-export { generateRedisServiceFile } from './redis-service.template'
-export { generateRedisServiceIndexFile } from './redis-service-index.template'
-export { generateRedisSpecFile } from './redis-spec.template'
-export { generateRedisTypesFile } from './redis-types.template'
-export { generateRedisTypesOnlyFile } from './redis-types-only.template'
+export { generateRedisCacheServiceFile } from "./redis-cache.template"
+export { generateRedisErrorsFile } from "./redis-errors.template"
+export { generateRedisIndexFile } from "./redis-index.template"
+export { generateRedisPubSubServiceFile } from "./redis-pubsub.template"
+export { generateRedisQueueServiceFile } from "./redis-queue.template"
+export { generateRedisServiceIndexFile } from "./redis-service-index.template"
+export { generateRedisServiceFile } from "./redis-service.template"
+export { generateRedisSpecFile } from "./redis-spec.template"
+export { generateRedisTypesOnlyFile } from "./redis-types-only.template"
+export { generateRedisTypesFile } from "./redis-types.template"

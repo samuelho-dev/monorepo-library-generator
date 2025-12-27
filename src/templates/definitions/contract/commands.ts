@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/commands
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Commands Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Schema union for validation
  */
 export const contractCommandsTemplate: TemplateDefinition = {
-  id: 'contract/commands',
+  id: "contract/commands",
   meta: {
-    title: '{className} Commands (CQRS Write Operations)',
+    title: "{className} Commands (CQRS Write Operations)",
     description: `Commands represent write intentions with validation rules.
 Each command should be validated and immutable.
 
@@ -33,18 +33,18 @@ TODO: Customize for your domain:
 5. Add Schema.transform() for data normalization
 6. Create custom commands for domain-specific operations
 7. Add factory methods for command creation`,
-    module: '{scope}/contract-{fileName}/commands'
+    module: "{scope}/contract-{fileName}/commands"
   },
   imports: [
-    { from: 'effect', items: ['Schema'] },
-    { from: './rpc-definitions', items: ['{className}Id'] }
+    { from: "effect", items: ["Schema"] },
+    { from: "./rpc-definitions", items: ["{className}Id"] }
   ],
   sections: [
     // CRUD Commands Section
     {
-      title: 'CRUD Commands',
+      title: "CRUD Commands",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Command to create a new {className}
  *
@@ -83,7 +83,7 @@ export class Create{className}Command extends Schema.Class<Create{className}Comm
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Command to update an existing {className}
  *
@@ -129,7 +129,7 @@ export class Update{className}Command extends Schema.Class<Update{className}Comm
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Command to delete a {className}
  *
@@ -168,7 +168,7 @@ export class Delete{className}Command extends Schema.Class<Delete{className}Comm
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// TODO: Add domain-specific commands here
 // Example - Status change command (if domain has state machine):
 //
@@ -184,9 +184,9 @@ export class Delete{className}Command extends Schema.Class<Delete{className}Comm
 
     // Command Union Type Section
     {
-      title: 'Command Union Type',
+      title: "Command Union Type",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Union of all {propertyName} commands
  */
@@ -200,7 +200,7 @@ export type {className}Command =
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Schema for {className}Command union
  */

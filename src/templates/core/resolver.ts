@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/templates/core/resolver
  */
 
-import { Data, Effect, Option } from 'effect'
-import type { TemplateContext } from './types'
+import { Data, Effect, Option } from "effect"
+import type { TemplateContext } from "./types"
 
 // ============================================================================
 // Error Types
@@ -19,7 +19,7 @@ import type { TemplateContext } from './types'
  *
  * Thrown when a variable cannot be resolved.
  */
-export class InterpolationError extends Data.TaggedError('InterpolationError')<{
+export class InterpolationError extends Data.TaggedError("InterpolationError")<{
   readonly variable: string
   readonly message: string
 }> {}
@@ -53,7 +53,7 @@ const VARIABLE_PATTERN = /(?<!\$)\{([a-zA-Z_][a-zA-Z0-9_.]*)\}/g
  * ```
  */
 export function interpolate(template: string, context: TemplateContext) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const errors: Array<string> = []
 
     const result = template.replace(VARIABLE_PATTERN, (match, variable: string) => {
@@ -69,7 +69,7 @@ export function interpolate(template: string, context: TemplateContext) {
       return yield* Effect.fail(
         new InterpolationError({
           variable: errors[0],
-          message: `Unknown variable(s): ${errors.join(', ')}`
+          message: `Unknown variable(s): ${errors.join(", ")}`
         })
       )
     }
@@ -146,7 +146,7 @@ export function extractVariables(template: string) {
  */
 function resolveVariable(variable: string, context: TemplateContext) {
   // Handle nested paths
-  const parts = variable.split('.')
+  const parts = variable.split(".")
   let current: unknown = context
 
   for (const part of parts) {
@@ -154,7 +154,7 @@ function resolveVariable(variable: string, context: TemplateContext) {
       return Option.none()
     }
 
-    if (typeof current === 'object' && part in current) {
+    if (typeof current === "object" && part in current) {
       const obj: Record<string, unknown> = current
       current = obj[part]
     } else {
@@ -178,9 +178,9 @@ function resolveVariable(variable: string, context: TemplateContext) {
 function interpolateDeepInternal(
   value: unknown,
   context: TemplateContext
-): Effect.Effect<unknown, InterpolationError> {
-  return Effect.gen(function* () {
-    if (typeof value === 'string') {
+) {
+  return Effect.gen(function*() {
+    if (typeof value === "string") {
       return yield* interpolate(value, context)
     }
 
@@ -192,7 +192,7 @@ function interpolateDeepInternal(
       return results
     }
 
-    if (value !== null && typeof value === 'object') {
+    if (value !== null && typeof value === "object") {
       const result: Record<string, unknown> = {}
       for (const [key, val] of Object.entries(value)) {
         result[key] = yield* interpolateDeepInternal(val, context)
@@ -218,10 +218,13 @@ function interpolateDeepInternal(
 export function interpolateDeep<T>(
   value: T,
   context: TemplateContext
-): Effect.Effect<T, InterpolationError> {
-  // Type assertion is safe: interpolateDeepInternal preserves structure
-  // The internal function returns unknown, but the structure matches T
-  return interpolateDeepInternal(value, context) as Effect.Effect<T, InterpolationError>
+) {
+  // The internal function preserves structure through recursion
+  // TypeScript cannot prove this statically, so we use a type predicate
+  const isT = (_: unknown): _ is T => true
+  return interpolateDeepInternal(value, context).pipe(
+    Effect.flatMap((result) => (isT(result) ? Effect.succeed(result) : Effect.succeed(value)))
+  )
 }
 
 /**
@@ -245,10 +248,10 @@ export function createContextFromName(name: string, options: Partial<TemplateCon
     fileName,
     propertyName,
     constantName,
-    scope: options.scope ?? '@app',
+    scope: options.scope ?? "@app",
     packageName: options.packageName ?? `@app/${fileName}`,
     projectName: options.projectName ?? fileName,
-    libraryType: options.libraryType ?? 'library',
+    libraryType: options.libraryType ?? "library",
     ...options
   }
 }
@@ -261,7 +264,7 @@ function toPascalCase(str: string) {
   return str
     .split(/[-_\s]/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('')
+    .join("")
 }
 
 function toCamelCase(str: string) {
@@ -271,14 +274,14 @@ function toCamelCase(str: string) {
 
 function toKebabCase(str: string) {
   return str
-    .replace(/([a-z])([A-Z])/g, '$1-$2')
-    .replace(/[\s_]+/g, '-')
+    .replace(/([a-z])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, "-")
     .toLowerCase()
 }
 
 function toUpperSnakeCase(str: string) {
   return str
-    .replace(/([a-z])([A-Z])/g, '$1_$2')
-    .replace(/[\s-]+/g, '_')
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
+    .replace(/[\s-]+/g, "_")
     .toUpperCase()
 }

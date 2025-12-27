@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository-spec-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate repository.spec.ts file for data-access library
@@ -38,8 +38,8 @@ Testing Guidelines:
   })
 
   builder.addImports([
-    { from: '@effect/vitest', imports: ['describe', 'expect', 'it'] },
-    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Option'] }
+    { from: "@effect/vitest", imports: ["describe", "expect", "it"] },
+    { from: "effect", imports: ["Context", "Effect", "Layer", "Option"] }
   ])
 
   builder.addRaw(`

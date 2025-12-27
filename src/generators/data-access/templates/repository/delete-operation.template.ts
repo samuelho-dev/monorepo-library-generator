@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository/delete-operation-template
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
 
 /**
  * Generate repository/operations/delete.ts file
@@ -29,14 +29,14 @@ Bundle optimization: Import this file directly for smallest bundle size:
   builder.addBlankLine()
 
   builder.addImports([
-    { from: 'effect', imports: ['Duration', 'Effect'] },
-    { from: `${scope}/infra-database`, imports: ['DatabaseService'] },
+    { from: "effect", imports: ["Duration", "Effect"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
     // Domain errors from contract, infrastructure errors from shared
     { from: `${scope}/contract-${fileName}`, imports: [`${className}NotFoundError`] },
-    { from: '../../shared/errors', imports: [`${className}TimeoutError`] }
+    { from: "../../shared/errors", imports: [`${className}TimeoutError`] }
   ])
 
-  builder.addSectionComment('Delete Operations')
+  builder.addSectionComment("Delete Operations")
   builder.addBlankLine()
 
   builder.addRaw(`/**

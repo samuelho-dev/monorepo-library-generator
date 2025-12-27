@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/redis/service-index
  */
 
-import { TypeScriptBuilder } from '../../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import type { ProviderTemplateOptions } from "../../../../utils/types"
 
 /**
  * Generate Redis service index.ts file
@@ -17,7 +17,7 @@ export function generateRedisServiceIndexFile(options: ProviderTemplateOptions) 
   const { packageName } = options
 
   builder.addFileHeader({
-    title: 'Redis Service - Barrel Export',
+    title: "Redis Service - Barrel Export",
     description: `Service directory exports for Redis provider.
 
 Exports:
@@ -31,7 +31,7 @@ Exports:
   builder.addBlankLine()
 
   // Main service export
-  builder.addSectionComment('Main Service')
+  builder.addSectionComment("Main Service")
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -42,7 +42,7 @@ Exports:
   builder.addBlankLine()
 
   // Sub-service factories
-  builder.addSectionComment('Sub-Service Factories')
+  builder.addSectionComment("Sub-Service Factories")
   builder.addBlankLine()
 
   builder.addRaw(`export { makeCacheClient } from "./cache"
@@ -51,7 +51,7 @@ export { makeQueueClient } from "./queue"`)
   builder.addBlankLine()
 
   // Error exports
-  builder.addSectionComment('Errors')
+  builder.addSectionComment("Errors")
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -67,7 +67,7 @@ export type { RedisProviderError } from "./errors"`)
   builder.addBlankLine()
 
   // Type exports
-  builder.addSectionComment('Types')
+  builder.addSectionComment("Types")
   builder.addBlankLine()
 
   builder.addRaw(`export type {

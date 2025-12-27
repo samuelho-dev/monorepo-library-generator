@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/submodule-events
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Sub-Module Events Template Definition
@@ -19,22 +19,22 @@ import type { TemplateDefinition } from '../../core/types'
  * - Event registry for registration
  */
 export const contractSubmoduleEventsTemplate: TemplateDefinition = {
-  id: 'contract/submodule-events',
+  id: "contract/submodule-events",
   meta: {
-    title: '{parentClassName} {subModuleClassName} Domain Events',
+    title: "{parentClassName} {subModuleClassName} Domain Events",
     description: `Domain events for the {subModuleName} sub-module.
 
 Events are prefixed with "{subModuleClassName}." for routing in the parent domain's event bus.
 These events can be published via PubsubService and consumed by other features.`,
-    module: '{scope}/contract-{parentName}/{subModuleName}/events'
+    module: "{scope}/contract-{parentName}/{subModuleName}/events"
   },
-  imports: [{ from: 'effect', items: ['Schema'] }],
+  imports: [{ from: "effect", items: ["Schema"] }],
   sections: [
     // Event Base Schema
     {
-      title: 'Event Base Schema',
+      title: "Event Base Schema",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Base event metadata for {subModuleName} events
  */
@@ -55,9 +55,9 @@ const {subModuleClassName}EventBase = Schema.Struct({
     },
     // Domain Events
     {
-      title: '{subModuleClassName} Domain Events',
+      title: "{subModuleClassName} Domain Events",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {subModuleClassName} created event
  */
@@ -75,7 +75,7 @@ export const {subModuleClassName}Created = Schema.Struct({
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {subModuleClassName} updated event
  */
@@ -96,7 +96,7 @@ export const {subModuleClassName}Updated = Schema.Struct({
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * {subModuleClassName} deleted event
  */
@@ -113,9 +113,9 @@ export const {subModuleClassName}Deleted = Schema.Struct({
     },
     // Event Union Type
     {
-      title: 'Event Union Type',
+      title: "Event Union Type",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Union of all {subModuleName} domain events
  *

@@ -6,7 +6,7 @@
  * @module monorepo-library-generator/templates/definitions/data-access/index-barrel
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Data Access Index Template Definition
@@ -19,23 +19,23 @@ import type { TemplateDefinition } from '../../core/types'
  * - Repository (Effect 3.0+ pattern)
  */
 export const dataAccessIndexTemplate: TemplateDefinition = {
-  id: 'data-access/index',
+  id: "data-access/index",
   meta: {
-    title: '{className} Data Access Library',
+    title: "{className} Data Access Library",
     description: `Type-safe data access layer for {propertyName} domain.
 Provides repository pattern with Effect-based dependency injection.
 
 ARCHITECTURE: Server-only exports (no client/edge variants)
 Repository implements contract from {scope}/contract-{fileName}`,
-    module: '{scope}/data-access-{fileName}'
+    module: "{scope}/data-access-{fileName}"
   },
   imports: [],
   sections: [
     // Error Types
     {
-      title: 'Error Types (from shared/)',
+      title: "Error Types (from shared/)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   {className}ConnectionError,
   {className}TimeoutError,
@@ -47,9 +47,9 @@ Repository implements contract from {scope}/contract-{fileName}`,
     },
     // Domain Types
     {
-      title: 'Domain Types (from shared/)',
+      title: "Domain Types (from shared/)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type {
   {className},
   {className}CreateInput,
@@ -61,7 +61,7 @@ Repository implements contract from {scope}/contract-{fileName}`,
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type {
   PaginatedResponse,
   PaginationOptions,
@@ -72,9 +72,9 @@ Repository implements contract from {scope}/contract-{fileName}`,
     },
     // Validation Functions
     {
-      title: 'Validation Functions (from shared/)',
+      title: "Validation Functions (from shared/)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   is{className},
   isValid{className}CreateInput,
@@ -89,9 +89,9 @@ Repository implements contract from {scope}/contract-{fileName}`,
     },
     // Query Builders
     {
-      title: 'Query Builders (from queries.ts)',
+      title: "Query Builders (from queries.ts)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   buildCountQuery,
   buildFindAllQuery,
@@ -101,7 +101,7 @@ Repository implements contract from {scope}/contract-{fileName}`,
     },
     {
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export type { {className}QueryFilters } from "./lib/queries"
 
 export type { PaginationOptions as QueryPaginationOptions } from "./lib/queries"`
@@ -109,9 +109,9 @@ export type { PaginationOptions as QueryPaginationOptions } from "./lib/queries"
     },
     // Repository
     {
-      title: 'Repository (Effect 3.0+ Pattern)',
+      title: "Repository (Effect 3.0+ Pattern)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Repository (Effect 3.0+ Pattern: Static Members)
 // Export the {className}Repository Context.Tag class.
 // Layers are accessed via static members:

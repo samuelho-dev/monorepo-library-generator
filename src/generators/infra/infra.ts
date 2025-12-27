@@ -2,12 +2,12 @@
  * Infra Library Generator (Nx Wrapper - Refactored)
  */
 
-import type { Tree } from '@nx/devkit'
-import { formatFiles } from '@nx/devkit'
-import { Effect } from 'effect'
-import { createExecutor, formatOutput } from '../../infrastructure'
-import { generateInfraCore, type InfraCoreOptions } from '../core/infra'
-import type { InfraGeneratorSchema } from './schema'
+import type { Tree } from "@nx/devkit"
+import { formatFiles } from "@nx/devkit"
+import { Effect } from "effect"
+import { createExecutor, formatOutput } from "../../infrastructure"
+import { generateInfraCore, type InfraCoreOptions } from "../core/infra"
+import type { InfraGeneratorSchema } from "./schema"
 
 /**
  * Nx-specific input type for the executor
@@ -16,7 +16,7 @@ interface NxInfraInput {
   readonly name: string
   readonly description?: string
   readonly tags?: string
-  readonly platform?: 'node' | 'browser' | 'universal' | 'edge'
+  readonly platform?: "node" | "browser" | "universal" | "edge"
   readonly includeClient?: boolean
   readonly includeServer?: boolean
   readonly includeClientServer?: boolean
@@ -28,12 +28,11 @@ interface NxInfraInput {
  * Create infra executor with explicit type parameters
  */
 const infraExecutor = createExecutor<NxInfraInput, InfraCoreOptions>(
-  'infra',
+  "infra",
   generateInfraCore,
   (validated, metadata) => {
     // Support both old (includeClient+includeServer) and new (includeClientServer) patterns
-    const includeClientServer =
-      validated.includeClientServer ??
+    const includeClientServer = validated.includeClientServer ??
       (validated.includeClient && validated.includeServer ? true : undefined)
     return {
       ...metadata,
@@ -46,13 +45,13 @@ const infraExecutor = createExecutor<NxInfraInput, InfraCoreOptions>(
 )
 
 export async function infraGenerator(tree: Tree, schema: InfraGeneratorSchema) {
-  if (!schema.name || schema.name.trim() === '') {
-    throw new Error('Infra name is required and cannot be empty')
+  if (!schema.name || schema.name.trim() === "") {
+    throw new Error("Infra name is required and cannot be empty")
   }
 
   const executorInput: Parameters<typeof infraExecutor.execute>[0] = {
     name: schema.name,
-    __interfaceType: 'nx',
+    __interfaceType: "nx",
     __nxTree: tree,
     description: schema.description,
     tags: schema.tags,
@@ -68,5 +67,5 @@ export async function infraGenerator(tree: Tree, schema: InfraGeneratorSchema) {
 
   await formatFiles(tree)
 
-  return formatOutput(result, 'nx')
+  return formatOutput(result, "nx")
 }

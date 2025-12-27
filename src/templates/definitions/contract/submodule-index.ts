@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/submodule-index
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Contract Sub-Module Index Template Definition
@@ -20,9 +20,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - RPC exports
  */
 export const contractSubmoduleIndexTemplate: TemplateDefinition = {
-  id: 'contract/submodule-index',
+  id: "contract/submodule-index",
   meta: {
-    title: '{parentClassName} {subModuleClassName} Sub-Module',
+    title: "{parentClassName} {subModuleClassName} Sub-Module",
     description: `Contract definitions for the {subModuleName} sub-module of the {parentName} domain.
 
 This sub-module contains:
@@ -43,24 +43,24 @@ import {
   {subModuleClassName}AddItem
 } from "{scope}/contract-{parentName}/{subModuleName}";
 \`\`\``,
-    module: '{scope}/contract-{parentName}/{subModuleName}'
+    module: "{scope}/contract-{parentName}/{subModuleName}"
   },
   imports: [],
   sections: [
     // Parent Entity Re-Export
     {
-      title: 'Parent Entity Re-Export',
+      title: "Parent Entity Re-Export",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Sub-modules use parent entity type - re-export for convenience
 export type { {parentClassName}Entity } from "../lib/rpc-definitions"`
       }
     },
     // Error Exports
     {
-      title: 'Error Exports (Contract-First)',
+      title: "Error Exports (Contract-First)",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these
 export {
   {subModuleClassName}NotFoundError,
@@ -74,9 +74,9 @@ export {
     },
     // Entity Exports
     {
-      title: 'Entity Exports',
+      title: "Entity Exports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   {subModuleClassName}Id,
   {subModuleClassName},
@@ -89,9 +89,9 @@ export {
     },
     // Event Exports
     {
-      title: 'Event Exports',
+      title: "Event Exports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   {subModuleClassName}Created,
   {subModuleClassName}Updated,
@@ -103,9 +103,9 @@ export {
     },
     // RPC Exports
     {
-      title: 'RPC Exports',
+      title: "RPC Exports",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Note: RouteTag/RouteType are NOT re-exported to avoid duplicates
 // Import them from the parent contract: @scope/contract-{parentName}
 export {

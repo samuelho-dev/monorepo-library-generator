@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/observability
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate observability preset configurations
@@ -35,21 +35,21 @@ Each preset is ready to use with minimal configuration.`,
   })
 
   builder.addImports([
-    { from: 'effect', imports: ['Layer'] },
-    { from: '@effect/opentelemetry', imports: ['NodeSdk'] },
+    { from: "effect", imports: ["Layer"] },
+    { from: "@effect/opentelemetry", imports: ["NodeSdk"] },
     {
-      from: '@opentelemetry/sdk-trace-node',
-      imports: ['BatchSpanProcessor', 'SimpleSpanProcessor', 'ConsoleSpanExporter']
+      from: "@opentelemetry/sdk-trace-node",
+      imports: ["BatchSpanProcessor", "SimpleSpanProcessor", "ConsoleSpanExporter"]
     },
-    { from: '@opentelemetry/exporter-trace-otlp-http', imports: ['OTLPTraceExporter'] },
-    { from: '@opentelemetry/exporter-metrics-otlp-http', imports: ['OTLPMetricExporter'] },
+    { from: "@opentelemetry/exporter-trace-otlp-http", imports: ["OTLPTraceExporter"] },
+    { from: "@opentelemetry/exporter-metrics-otlp-http", imports: ["OTLPMetricExporter"] },
     {
-      from: '@opentelemetry/sdk-metrics',
-      imports: ['PeriodicExportingMetricReader', 'ConsoleMetricExporter']
+      from: "@opentelemetry/sdk-metrics",
+      imports: ["PeriodicExportingMetricReader", "ConsoleMetricExporter"]
     }
   ])
 
-  builder.addSectionComment('OTLP HTTP Preset')
+  builder.addSectionComment("OTLP HTTP Preset")
 
   builder.addRaw(`/**
  * Configuration for OTLP preset
@@ -140,7 +140,7 @@ export const OtlpPreset = (config: OtlpPresetConfig) => {
 }
 `)
 
-  builder.addSectionComment('Jaeger Preset')
+  builder.addSectionComment("Jaeger Preset")
 
   builder.addRaw(`/**
  * Configuration for Jaeger preset
@@ -208,7 +208,7 @@ export const JaegerPreset = (config: JaegerPresetConfig) => {
 }
 `)
 
-  builder.addSectionComment('Console Preset')
+  builder.addSectionComment("Console Preset")
 
   builder.addRaw(`/**
  * Configuration for Console preset
@@ -255,7 +255,7 @@ export const ConsolePreset = (config: ConsolePresetConfig) =>
   }))
 `)
 
-  builder.addSectionComment('Noop Preset')
+  builder.addSectionComment("Noop Preset")
 
   builder.addRaw(`/**
  * Noop Preset
@@ -281,7 +281,7 @@ export const ConsolePreset = (config: ConsolePresetConfig) =>
 export const NoopPreset = Layer.empty
 `)
 
-  builder.addSectionComment('Grafana Cloud Preset')
+  builder.addSectionComment("Grafana Cloud Preset")
 
   builder.addRaw(`/**
  * Configuration for Grafana Cloud preset

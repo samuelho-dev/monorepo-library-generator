@@ -8,10 +8,10 @@
  */
 
 // Core templates
-export { dataAccessCacheTemplate } from './cache'
-export { dataAccessErrorsTemplate } from './errors'
-export { dataAccessIndexTemplate } from './index-barrel'
-export { dataAccessLayersTemplate } from './layers'
-export { dataAccessQueriesTemplate } from './queries'
-export { dataAccessTypesTemplate } from './types'
-export { dataAccessValidationTemplate } from './validation'
+export { dataAccessCacheTemplate } from "./cache"
+export { dataAccessErrorsTemplate } from "./errors"
+export { dataAccessIndexTemplate } from "./index-barrel"
+export { dataAccessLayersTemplate } from "./layers"
+export { dataAccessQueriesTemplate } from "./queries"
+export { dataAccessTypesTemplate } from "./types"
+export { dataAccessValidationTemplate } from "./validation"

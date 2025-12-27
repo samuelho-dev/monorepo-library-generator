@@ -7,16 +7,16 @@
  * @module monorepo-library-generator/feature/layers-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import { createNamingVariants } from '../../../utils/naming'
-import type { FeatureTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { createNamingVariants } from "../../../utils/naming"
+import type { FeatureTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 import {
   createAutoLayer,
   createInfrastructureLayers,
   getInfraPackageName,
   INFRASTRUCTURE_SERVICES
-} from '../../shared/factories'
+} from "../../shared/factories"
 
 /**
  * Generate server/layers.ts file for feature library
@@ -59,8 +59,8 @@ Event publishing is done IN the service implementation using helpers:
 
   // Imports
   builder.addImports([
-    { from: 'effect', imports: ['Layer'] },
-    { from: './service', imports: [`${className}Service`] }
+    { from: "effect", imports: ["Layer"] },
+    { from: "./service", imports: [`${className}Service`] }
   ])
 
   // Add sub-module service imports if subModules are provided
@@ -81,7 +81,7 @@ Event publishing is done IN the service implementation using helpers:
   ])
 
   // Infrastructure imports (grouped by package to avoid duplicate imports)
-  const packageToServices = new Map<string, string[]>()
+  const packageToServices = new Map<string, Array<string>>()
   for (const service of INFRASTRUCTURE_SERVICES.feature) {
     const packageName = getInfraPackageName(service)
     const existing = packageToServices.get(packageName) ?? []
@@ -93,10 +93,10 @@ Event publishing is done IN the service implementation using helpers:
   }
 
   // Environment config import
-  builder.addImports([{ from: `${scope}/env`, imports: ['env'] }])
+  builder.addImports([{ from: `${scope}/env`, imports: ["env"] }])
 
   // Service layer notes
-  builder.addSectionComment('Service Layer Notes')
+  builder.addSectionComment("Service Layer Notes")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -111,7 +111,7 @@ Event publishing is done IN the service implementation using helpers:
   builder.addBlankLine()
 
   // Generate infrastructure layers using factory
-  builder.addSectionComment('Composed Infrastructure Layers')
+  builder.addSectionComment("Composed Infrastructure Layers")
   builder.addBlankLine()
 
   createInfrastructureLayers({
@@ -121,12 +121,12 @@ Event publishing is done IN the service implementation using helpers:
   })(builder)
 
   // Generate feature layers with sub-module support
-  builder.addSectionComment('Full Feature Layers')
+  builder.addSectionComment("Full Feature Layers")
   builder.addBlankLine()
 
   const subModuleComment = options.subModules
-    ? `\n * - Sub-module services: ${options.subModules.map((s) => createNamingVariants(s).className).join(', ')}`
-    : ''
+    ? `\n * - Sub-module services: ${options.subModules.map((s) => createNamingVariants(s).className).join(", ")}`
+    : ""
 
   // Live layer with sub-modules
   const liveServices = [
@@ -154,7 +154,7 @@ Event publishing is done IN the service implementation using helpers:
  * \`\`\`
  */
 export const ${className}FeatureLive = Layer.mergeAll(
-  ${liveServices.join(',\n  ')}
+  ${liveServices.join(",\n  ")}
 ).pipe(Layer.provide(InfrastructureLive))`)
   builder.addBlankLine()
 
@@ -186,7 +186,7 @@ export const ${className}FeatureLive = Layer.mergeAll(
  * \`\`\`
  */
 export const ${className}FeatureTest = Layer.mergeAll(
-  ${testServices.join(',\n  ')}
+  ${testServices.join(",\n  ")}
 ).pipe(Layer.provide(InfrastructureTest))`)
   builder.addBlankLine()
 
@@ -197,14 +197,14 @@ export const ${className}FeatureTest = Layer.mergeAll(
  * Uses local services with verbose logging and debugging enabled.
  */
 export const ${className}FeatureDev = Layer.mergeAll(
-  ${liveServices.join(',\n  ')}
+  ${liveServices.join(",\n  ")}
 ).pipe(Layer.provide(InfrastructureDev))`)
   builder.addBlankLine()
 
   // Auto layer using factory
   createAutoLayer({
     className,
-    layerPrefix: 'Feature',
+    layerPrefix: "Feature",
     includeDev: true
   })(builder)
 

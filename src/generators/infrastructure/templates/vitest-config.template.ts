@@ -6,10 +6,10 @@
  * @module monorepo-library-generator/infrastructure/vitest-config-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
 
 export interface VitestConfigOptions {
-  readonly environment?: 'node' | 'jsdom' | 'happy-dom'
+  readonly environment?: "node" | "jsdom" | "happy-dom"
   readonly globals?: boolean
 }
 
@@ -17,7 +17,7 @@ export interface VitestConfigOptions {
  * Generate vitest.config.ts content
  */
 export function generateVitestConfig(options: VitestConfigOptions = {}) {
-  const { environment = 'node', globals = true } = options
+  const { environment = "node", globals = true } = options
 
   const builder = new TypeScriptBuilder()
 

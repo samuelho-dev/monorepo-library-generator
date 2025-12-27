@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/provider/templates/validation
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { ProviderTemplateOptions } from '../../../utils/types'
-import { names } from '../../../utils/naming'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import { names } from "../../../utils/naming"
+import type { ProviderTemplateOptions } from "../../../utils/types"
 
 /**
  * Generate validation.ts file for provider library
@@ -25,24 +25,25 @@ export function generateValidationFile(options: ProviderTemplateOptions) {
   const className = names(externalService).className
 
   // File header
-  builder.addRaw('/**')
+  builder.addRaw("/**")
   builder.addRaw(` * ${projectClassName} - Validation Utilities`)
-  builder.addRaw(' *')
-  builder.addRaw(' * Client-safe validation functions (no secrets, no server logic)')
-  builder.addRaw(' * Safe to export in client.ts')
-  builder.addRaw(' */')
+  builder.addRaw(" *")
+  builder.addRaw(" * Client-safe validation functions (no secrets, no server logic)")
+  builder.addRaw(" * Safe to export in client.ts")
+  builder.addRaw(" */")
   builder.addBlankLine()
 
   // Type imports
-  builder.addImport('./types', `${className}Config`, true)
+  builder.addImport("./types", `${className}Config`, true)
   builder.addBlankLine()
 
   // Validate config function (type guard)
   builder.addFunction({
     name: `validate${className}Config`,
     exported: true,
-    jsdoc: `Validate ${className} configuration\n\n@param config - Configuration to validate\n@returns true if configuration is valid`,
-    params: [{ name: 'config', type: 'unknown' }],
+    jsdoc:
+      `Validate ${className} configuration\n\n@param config - Configuration to validate\n@returns true if configuration is valid`,
+    params: [{ name: "config", type: "unknown" }],
     returnType: `config is ${className}Config`,
     body: `if (!config || typeof config !== "object") {
   return false;
@@ -81,9 +82,10 @@ return true;`
   builder.addFunction({
     name: `validate${className}Input`,
     exported: true,
-    jsdoc: `Validate ${className} input\n\nGeneric input validation for API calls.\n\n@param input - Input to validate\n@returns true if input is valid`,
-    params: [{ name: 'input', type: 'unknown' }],
-    returnType: 'boolean',
+    jsdoc:
+      `Validate ${className} input\n\nGeneric input validation for API calls.\n\n@param input - Input to validate\n@returns true if input is valid`,
+    params: [{ name: "input", type: "unknown" }],
+    returnType: "boolean",
     body: `if (!input || typeof input !== "object") {
   return false;
 }
@@ -94,10 +96,10 @@ return true;`
 
   // Validate API key format
   builder.addFunction({
-    name: 'validateApiKey',
+    name: "validateApiKey",
     exported: true,
-    jsdoc: 'Validate API key format',
-    params: [{ name: 'apiKey', type: 'string' }],
+    jsdoc: "Validate API key format",
+    params: [{ name: "apiKey", type: "string" }],
     body: `if (!apiKey || typeof apiKey !== "string") {
   return false;
 }
@@ -109,10 +111,10 @@ return apiKey.length >= 10;`
 
   // Validate timeout value
   builder.addFunction({
-    name: 'validateTimeout',
+    name: "validateTimeout",
     exported: true,
-    jsdoc: 'Validate timeout value',
-    params: [{ name: 'timeout', type: 'number' }],
+    jsdoc: "Validate timeout value",
+    params: [{ name: "timeout", type: "number" }],
     body: `return (
   typeof timeout === "number" && timeout > 0 && timeout <= 300000 // Max 5 minutes
 )`
@@ -120,10 +122,10 @@ return apiKey.length >= 10;`
 
   // Validate email format
   builder.addFunction({
-    name: 'validateEmail',
+    name: "validateEmail",
     exported: true,
-    jsdoc: 'Validate email format (client-safe)',
-    params: [{ name: 'email', type: 'string' }],
+    jsdoc: "Validate email format (client-safe)",
+    params: [{ name: "email", type: "string" }],
     body: `if (!email || typeof email !== "string") {
   return false;
 }
@@ -134,10 +136,10 @@ return emailRegex.test(email)`
 
   // Validate URL format
   builder.addFunction({
-    name: 'validateUrl',
+    name: "validateUrl",
     exported: true,
-    jsdoc: 'Validate URL format (client-safe)',
-    params: [{ name: 'url', type: 'string' }],
+    jsdoc: "Validate URL format (client-safe)",
+    params: [{ name: "url", type: "string" }],
     body: `if (!url || typeof url !== "string") {
   return false;
 }
@@ -152,20 +154,20 @@ try {
 
   // Validate required field
   builder.addFunction({
-    name: 'validateRequired',
+    name: "validateRequired",
     exported: true,
-    jsdoc: 'Validate required field',
-    typeParams: ['T'],
-    params: [{ name: 'value', type: 'T | null | undefined' }],
+    jsdoc: "Validate required field",
+    typeParams: ["T"],
+    params: [{ name: "value", type: "T | null | undefined" }],
     body: `return value !== null && value !== undefined && value !== "";`
   })
 
   // Sanitize string input
   builder.addFunction({
-    name: 'sanitizeString',
+    name: "sanitizeString",
     exported: true,
-    jsdoc: 'Sanitize string input (client-safe)',
-    params: [{ name: 'input', type: 'string' }],
+    jsdoc: "Sanitize string input (client-safe)",
+    params: [{ name: "input", type: "string" }],
     body: `if (!input || typeof input !== "string") {
   return "";
 }

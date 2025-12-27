@@ -7,8 +7,8 @@
  *
  * @module monorepo-library-generator/integration/compiler
  */
-import type { Tree } from '@nx/devkit'
-import * as ts from 'typescript'
+import type { Tree } from "@nx/devkit"
+import * as ts from "typescript"
 
 /**
  * Safely extract parse diagnostics from a TypeScript source file.
@@ -21,7 +21,7 @@ function getParseDiagnostics(sourceFile: ts.SourceFile) {
   // TypeScript internal API: parseDiagnostics contains syntax errors from parsing
   // We need to access this internal property via type guard since it's not in the public API
   const sf: unknown = sourceFile
-  if (sf && typeof sf === 'object' && 'parseDiagnostics' in sf) {
+  if (sf && typeof sf === "object" && "parseDiagnostics" in sf) {
     type SourceFileWithDiagnostics = { parseDiagnostics?: unknown }
     const sfWithDiags: SourceFileWithDiagnostics = sf
     const diags = sfWithDiags.parseDiagnostics
@@ -57,11 +57,11 @@ export function compileTreeFiles(tree: Tree, projectRoot: string) {
     }
   }
 
-  const errors: { file: string; line: number; message: string }[] = []
+  const errors: Array<{ file: string; line: number; message: string }> = []
 
   // Parse each file to check for syntax errors
   for (const filePath of files) {
-    const content = tree.read(filePath, 'utf-8')
+    const content = tree.read(filePath, "utf-8")
     if (content === null) continue
 
     const sourceFile = ts.createSourceFile(
@@ -75,14 +75,13 @@ export function compileTreeFiles(tree: Tree, projectRoot: string) {
     // Get syntax diagnostics (parse errors)
     const syntaxDiags = getParseDiagnostics(sourceFile)
     for (const diag of syntaxDiags) {
-      const pos =
-        diag.start !== undefined
-          ? ts.getLineAndCharacterOfPosition(sourceFile, diag.start)
-          : { line: 0, character: 0 }
+      const pos = diag.start !== undefined
+        ? ts.getLineAndCharacterOfPosition(sourceFile, diag.start)
+        : { line: 0, character: 0 }
       errors.push({
         file: filePath,
         line: pos.line + 1,
-        message: ts.flattenDiagnosticMessageText(diag.messageText, '\n')
+        message: ts.flattenDiagnosticMessageText(diag.messageText, "\n")
       })
     }
   }
@@ -95,11 +94,11 @@ export function compileTreeFiles(tree: Tree, projectRoot: string) {
 }
 
 function collectTypeScriptFiles(tree: Tree, projectRoot: string) {
-  const files: string[] = []
+  const files: Array<string> = []
 
   const visit = (path: string) => {
     if (tree.isFile(path)) {
-      if (path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts')) {
+      if (path.endsWith(".ts") && !path.endsWith(".spec.ts") && !path.endsWith(".test.ts")) {
         files.push(path)
       }
     } else {

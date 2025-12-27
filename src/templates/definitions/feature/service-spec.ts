@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/feature/service-spec
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Feature Service Spec Template Definition
@@ -18,28 +18,28 @@ import type { TemplateDefinition } from '../../core/types'
  * - Service method validation tests
  */
 export const featureServiceSpecTemplate: TemplateDefinition = {
-  id: 'feature/service-spec',
+  id: "feature/service-spec",
   meta: {
-    title: '{className}Service Tests',
+    title: "{className}Service Tests",
     description: `Uses @effect/vitest for Effect-based testing.
 
 Uses {className}Service.TestLayer which composes:
 - {className}Service.Live
 - {className}Repository.Live
 - DatabaseService.Test (in-memory)`,
-    module: '{scope}/feature-{fileName}/server/service.spec'
+    module: "{scope}/feature-{fileName}/server/service.spec"
   },
   imports: [
-    { from: 'effect', items: ['Effect', 'Layer', 'Option'] },
-    { from: '@effect/vitest', items: ['describe', 'expect', 'it'] },
-    { from: './service', items: ['{className}Service'] }
+    { from: "effect", items: ["Effect", "Layer", "Option"] },
+    { from: "@effect/vitest", items: ["describe", "expect", "it"] },
+    { from: "./service", items: ["{className}Service"] }
   ],
   sections: [
     // Test Entity Interface
     {
-      title: 'Test Types',
+      title: "Test Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `/**
  * Test entity interface for {className}
  * Matches the structure returned by service.create()
@@ -52,9 +52,9 @@ interface {className}TestEntity {
     },
     // Test Suite
     {
-      title: 'Test Suite',
+      title: "Test Suite",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `describe("{className}Service", () => {
   it.scoped("should create and retrieve {propertyName}", () =>
     Effect.gen(function*() {

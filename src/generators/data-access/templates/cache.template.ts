@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/data-access/cache-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { DataAccessTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { DataAccessTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate cache/cache.ts file for data-access library
@@ -43,12 +43,12 @@ Usage:
   builder.addBlankLine()
 
   builder.addImports([
-    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Option', 'Duration'] },
-    { from: `${scope}/infra-cache`, imports: ['CacheService'] },
-    { from: `${scope}/infra-database`, imports: ['DatabaseError'], isTypeOnly: true },
-    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] },
-    { from: './repository', imports: [`${className}Repository`] },
-    { from: './shared/errors', imports: [`${className}TimeoutError`], isTypeOnly: true },
+    { from: "effect", imports: ["Effect", "Layer", "Context", "Option", "Duration"] },
+    { from: `${scope}/infra-cache`, imports: ["CacheService"] },
+    { from: `${scope}/infra-database`, imports: ["DatabaseError"], isTypeOnly: true },
+    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] },
+    { from: "./repository", imports: [`${className}Repository`] },
+    { from: "./shared/errors", imports: [`${className}TimeoutError`], isTypeOnly: true },
     {
       from: `${scope}/contract-${fileName}`,
       imports: [`${className}Id`],
@@ -62,7 +62,7 @@ Usage:
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment('Cache Configuration')
+  builder.addSectionComment("Cache Configuration")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -91,7 +91,7 @@ const DEFAULT_CONFIG: Required<${className}CacheConfig> = {
 };
 `)
 
-  builder.addSectionComment('Cache Interface')
+  builder.addSectionComment("Cache Interface")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -142,7 +142,7 @@ export interface ${className}CacheInterface {
 }
 `)
 
-  builder.addSectionComment('Context.Tag')
+  builder.addSectionComment("Context.Tag")
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -326,7 +326,7 @@ export class ${className}Cache extends Context.Tag("${className}Cache")<
 }
 `)
 
-  builder.addSectionComment('Cache-Aware Repository')
+  builder.addSectionComment("Cache-Aware Repository")
   builder.addBlankLine()
 
   builder.addRaw(`/**

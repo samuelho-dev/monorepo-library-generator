@@ -7,11 +7,11 @@
  * @module monorepo-library-generator/templates/fragments/schema-fragment
  */
 
-import { Effect } from 'effect'
-import type { SourceFile } from 'ts-morph'
-import { interpolateSync } from '../core/resolver'
-import type { TemplateContext } from '../core/types'
-import type { SchemaAnnotations, SchemaField, SchemaFragmentConfig } from './types'
+import { Effect } from "effect"
+import type { SourceFile } from "ts-morph"
+import { interpolateSync } from "../core/resolver"
+import type { TemplateContext } from "../core/types"
+import type { SchemaAnnotations, SchemaField, SchemaFragmentConfig } from "./types"
 
 // ============================================================================
 // Schema Fragment Renderer
@@ -41,7 +41,7 @@ export function renderSchemaFragment(
     const schemaExpr = buildSchemaExpression(config, context)
 
     // Add export
-    const exportKeyword = config.exported !== false ? 'export ' : ''
+    const exportKeyword = config.exported !== false ? "export " : ""
     statements.push(`${exportKeyword}const ${name} = ${schemaExpr}`)
 
     // Add type alias if requested
@@ -52,7 +52,7 @@ export function renderSchemaFragment(
     }
 
     // Add to source file
-    sourceFile.addStatements(statements.join('\n'))
+    sourceFile.addStatements(statements.join("\n"))
   })
 }
 
@@ -63,34 +63,34 @@ function buildSchemaExpression(config: SchemaFragmentConfig, context: TemplateCo
   let expr: string
 
   switch (config.schemaType) {
-    case 'Struct':
+    case "Struct":
       expr = buildStructSchema(config.fields ?? [], context)
       break
-    case 'String':
-      expr = 'Schema.String'
+    case "String":
+      expr = "Schema.String"
       break
-    case 'Number':
-      expr = 'Schema.Number'
+    case "Number":
+      expr = "Schema.Number"
       break
-    case 'Boolean':
-      expr = 'Schema.Boolean'
+    case "Boolean":
+      expr = "Schema.Boolean"
       break
-    case 'Array': {
+    case "Array": {
       // For array, first field's schema is the item type
-      const itemSchema = config.fields?.[0]?.schema ?? 'Schema.Unknown'
+      const itemSchema = config.fields?.[0]?.schema ?? "Schema.Unknown"
       expr = `Schema.Array(${interpolateSync(itemSchema, context)})`
       break
     }
-    case 'Union': {
+    case "Union": {
       // For union, each field is a variant
       const variants = (config.fields ?? [])
         .map((f) => interpolateSync(f.schema, context))
-        .join(', ')
+        .join(", ")
       expr = `Schema.Union(${variants})`
       break
     }
     default:
-      expr = 'Schema.Unknown'
+      expr = "Schema.Unknown"
   }
 
   // Add brand if specified
@@ -113,7 +113,7 @@ function buildSchemaExpression(config: SchemaFragmentConfig, context: TemplateCo
  */
 function buildStructSchema(fields: ReadonlyArray<SchemaField>, context: TemplateContext) {
   if (fields.length === 0) {
-    return 'Schema.Struct({})'
+    return "Schema.Struct({})"
   }
 
   const fieldLines = fields.map((field) => {
@@ -125,7 +125,7 @@ function buildStructSchema(fields: ReadonlyArray<SchemaField>, context: Template
   })
 
   return `Schema.Struct({
-${fieldLines.join(',\n')}
+${fieldLines.join(",\n")}
 })`
 }
 
@@ -147,7 +147,7 @@ function buildAnnotations(annotations: SchemaAnnotations, context: TemplateConte
     parts.push(`description: "${interpolateSync(annotations.description, context)}"`)
   }
 
-  return `{ ${parts.join(', ')} }`
+  return `{ ${parts.join(", ")} }`
 }
 
 // ============================================================================
@@ -169,7 +169,7 @@ export function brandedIdFragment(
 
   return {
     name,
-    schemaType: 'String',
+    schemaType: "String",
     brand,
     annotations: {
       identifier: name,
@@ -196,7 +196,7 @@ export function entitySchemaFragment(
 
   return {
     name,
-    schemaType: 'Struct',
+    schemaType: "Struct",
     fields,
     typeAlias,
     jsdoc: `${className} entity schema`
@@ -209,7 +209,7 @@ export function entitySchemaFragment(
 export function createInputSchemaFragment(className: string, fields: ReadonlyArray<SchemaField>) {
   return {
     name: `Create${className}Input`,
-    schemaType: 'Struct',
+    schemaType: "Struct",
     fields,
     typeAlias: `Create${className}Input`,
     jsdoc: `Input schema for creating a ${className.toLowerCase()}`
@@ -225,7 +225,7 @@ export function updateInputSchemaFragment(className: string, fields: ReadonlyArr
 
   return {
     name: `Update${className}Input`,
-    schemaType: 'Struct',
+    schemaType: "Struct",
     fields: optionalFields,
     typeAlias: `Update${className}Input`,
     jsdoc: `Input schema for updating a ${className.toLowerCase()}`
@@ -236,40 +236,40 @@ export function updateInputSchemaFragment(className: string, fields: ReadonlyArr
  * Create common schema field definitions
  */
 export const commonSchemaFields = {
-  id: (name = 'id') => ({
+  id: (name = "id") => ({
     name,
-    schema: 'Schema.String',
-    jsdoc: 'Unique identifier'
+    schema: "Schema.String",
+    jsdoc: "Unique identifier"
   }),
 
   createdAt: () => ({
-    name: 'createdAt',
-    schema: 'Schema.Date',
-    jsdoc: 'Creation timestamp'
+    name: "createdAt",
+    schema: "Schema.Date",
+    jsdoc: "Creation timestamp"
   }),
 
   updatedAt: () => ({
-    name: 'updatedAt',
-    schema: 'Schema.Date',
-    jsdoc: 'Last update timestamp'
+    name: "updatedAt",
+    schema: "Schema.Date",
+    jsdoc: "Last update timestamp"
   }),
 
   name: () => ({
-    name: 'name',
-    schema: 'Schema.String',
-    jsdoc: 'Display name'
+    name: "name",
+    schema: "Schema.String",
+    jsdoc: "Display name"
   }),
 
   email: () => ({
-    name: 'email',
-    schema: 'Schema.String',
-    jsdoc: 'Email address'
+    name: "email",
+    schema: "Schema.String",
+    jsdoc: "Email address"
   }),
 
   status: (variants: ReadonlyArray<string>) => ({
-    name: 'status',
-    schema: `Schema.Literal(${variants.map((v) => `"${v}"`).join(', ')})`,
-    jsdoc: 'Current status'
+    name: "status",
+    schema: `Schema.Literal(${variants.map((v) => `"${v}"`).join(", ")})`,
+    jsdoc: "Current status"
   }),
 
   optional: (field: SchemaField) => ({

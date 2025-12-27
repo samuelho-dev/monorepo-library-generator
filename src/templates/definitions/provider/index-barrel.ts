@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/provider/index-barrel
  */
 
-import type { TemplateDefinition } from '../../core/types'
+import type { TemplateDefinition } from "../../core/types"
 
 /**
  * Provider Index Barrel Template Definition
@@ -19,9 +19,9 @@ import type { TemplateDefinition } from '../../core/types'
  * - Validation utility exports
  */
 export const providerIndexTemplate: TemplateDefinition = {
-  id: 'provider/index-barrel',
+  id: "provider/index-barrel",
   meta: {
-    title: '{className} Provider Library',
+    title: "{className} Provider Library",
     description: `External service adapter for {className}.
 
 This library provides an Effect-based adapter for the {className} external service.
@@ -34,15 +34,15 @@ Effect 3.0+ Pattern:
 Usage:
   import { {className} } from '{packageName}';
   const layer = {className}.Live;`,
-    module: '{packageName}'
+    module: "{packageName}"
   },
   imports: [],
   sections: [
     // Error Types
     {
-      title: 'Error Types',
+      title: "Error Types",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `export {
   {className}Error,
   {className}NotFoundError,
@@ -56,18 +56,18 @@ Usage:
     },
     // Type Definitions
     {
-      title: 'Type Definitions',
+      title: "Type Definitions",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Service types and interfaces
 export type * from "./lib/types"`
       }
     },
     // Service Implementation
     {
-      title: 'Service Implementation',
+      title: "Service Implementation",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// {className} - External service adapter
 //
 // Effect 3.0+ Pattern: Context.Tag with static layer members
@@ -85,9 +85,9 @@ export { {className} } from "./lib/service"`
     },
     // Validation Utilities
     {
-      title: 'Validation Utilities',
+      title: "Validation Utilities",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// Input validation functions
 export {
   validate{className}Config,
@@ -97,9 +97,9 @@ export {
     },
     // Usage Example
     {
-      title: 'Usage Example',
+      title: "Usage Example",
       content: {
-        type: 'raw',
+        type: "raw",
         value: `// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Usage Example
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

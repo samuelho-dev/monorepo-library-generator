@@ -11,9 +11,9 @@
  * @module monorepo-library-generator/feature/atoms-template
  */
 
-import { TypeScriptBuilder } from '../../../utils/code-builder'
-import type { FeatureTemplateOptions } from '../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../utils/code-builder"
+import type { FeatureTemplateOptions } from "../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
 
 /**
  * Generate client/atoms/{name}-atoms.ts file for feature library
@@ -51,7 +51,7 @@ Usage:
 
   // Add imports
   builder.addImports([
-    { from: '@effect-atom/atom', imports: ['Atom'] },
+    { from: "@effect-atom/atom", imports: ["Atom"] },
     {
       from: `${scope}/contract-${fileName}`,
       imports: [{ name: `${className}Select`, alias: className }],
@@ -59,7 +59,7 @@ Usage:
     }
   ])
 
-  builder.addSectionComment('State Types')
+  builder.addSectionComment("State Types")
 
   // Add state interfaces
   builder.addRaw(`/**
@@ -124,7 +124,7 @@ export interface ${className}State {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Initial States')
+  builder.addSectionComment("Initial States")
 
   builder.addRaw(`const initial${className}EntityState: ${className}EntityState = {
   data: null,
@@ -159,7 +159,7 @@ const initial${className}State: ${className}State = {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Atoms')
+  builder.addSectionComment("Atoms")
 
   // Main combined atom
   builder.addRaw(`/**
@@ -219,7 +219,7 @@ export function get${className}Atom(id: string) {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment('Derived Atoms')
+  builder.addSectionComment("Derived Atoms")
 
   // Derived atoms for common access patterns
   builder.addRaw(`/**
@@ -249,7 +249,7 @@ export const ${propertyName}DataAtom = Atom.map(${propertyName}Atom, (state) => 
 export const ${propertyName}ListAtom = Atom.map(${propertyName}Atom, (state) => state.list.items)`)
   builder.addBlankLine()
 
-  builder.addSectionComment('State Updaters')
+  builder.addSectionComment("State Updaters")
 
   // State update functions
   builder.addRaw(`/**

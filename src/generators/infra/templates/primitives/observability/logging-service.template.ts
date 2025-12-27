@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/observability
  */
 
-import { TypeScriptBuilder } from '../../../../../utils/code-builder'
-import type { InfraTemplateOptions } from '../../../../../utils/types'
-import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
+import { TypeScriptBuilder } from "../../../../../utils/code-builder"
+import type { InfraTemplateOptions } from "../../../../../utils/types"
+import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
 
 /**
  * Generate logging service using Effect Logger
@@ -47,19 +47,19 @@ Effect Logger Features:
 - Configurable log levels via LogLevelConfigs
 - OpenTelemetry integration via infra-observability`,
     module: `${scope}/infra-${fileName}/logging`,
-    see: ['https://effect.website/docs/observability/logging']
+    see: ["https://effect.website/docs/observability/logging"]
   })
 
   builder.addImports([
     {
-      from: 'effect',
-      imports: ['Context', 'Effect', 'Layer']
+      from: "effect",
+      imports: ["Context", "Effect", "Layer"]
     },
-    { from: `${scope}/env`, imports: ['env'] },
-    { from: `${scope}/provider-opentelemetry`, imports: ['OpenTelemetryProvider'] }
+    { from: `${scope}/env`, imports: ["env"] },
+    { from: `${scope}/provider-opentelemetry`, imports: ["OpenTelemetryProvider"] }
   ])
 
-  builder.addSectionComment('Logging Service Interface')
+  builder.addSectionComment("Logging Service Interface")
 
   builder.addRaw(`/**
  * Log context for structured logging
