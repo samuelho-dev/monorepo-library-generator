@@ -9,5 +9,5 @@
  * @module monorepo-library-generator/feature/service-templates
  */
 
-export { generateFeatureServiceIndexFile } from "./service-index.template"
-export { generateFeatureServiceFile } from "./service.template"
+export { generateFeatureServiceFile } from './service.template'
+export { generateFeatureServiceIndexFile } from './service-index.template'

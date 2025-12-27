@@ -7,7 +7,8 @@
  * @module monorepo-library-generator/provider/templates/redis/types-only
  */
 
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Redis provider types-only export file
@@ -21,38 +22,46 @@ import type { ProviderTemplateOptions } from "../../../../utils/types"
 export function generateRedisTypesOnlyFile(options: ProviderTemplateOptions) {
   const { packageName } = options
 
-  return `/**
- * Type-Only Exports
- *
- * This file provides type-only exports for zero runtime overhead.
+  const builder = new TypeScriptBuilder()
+
+  // File header
+  builder.addFileHeader({
+    title: 'Type-Only Exports',
+    description: `This file provides type-only exports for zero runtime overhead.
  * Use these imports when you only need types for TypeScript checking:
  *
  * @example
  * import type { RedisConfig, RedisCacheClient } from '${packageName}/types';
  *
  * These imports are completely erased at compile time and add
- * zero bytes to your JavaScript bundle.
- */
+ * zero bytes to your JavaScript bundle.`
+  })
 
-// ============================================================================
-// Service Types
-// ============================================================================
+  builder.addBlankLine()
 
-// Main Redis service interface and sub-service interfaces
-export type * from "./lib/redis"
+  // Service Types Section
+  builder.addSectionComment('Service Types')
+  builder.addBlankLine()
+  builder.addComment('Main Redis service interface and sub-service interfaces')
+  builder.addRaw('export type * from "./lib/redis"')
 
-// ============================================================================
-// Configuration Types
-// ============================================================================
+  builder.addBlankLine()
 
-// RedisConfig, ScanOptions, ScanResult, sub-service interfaces
-export type * from "./lib/types"
+  // Configuration Types Section
+  builder.addSectionComment('Configuration Types')
+  builder.addBlankLine()
+  builder.addComment('RedisConfig, ScanOptions, ScanResult, sub-service interfaces')
+  builder.addRaw('export type * from "./lib/types"')
 
-// ============================================================================
-// Error Types
-// ============================================================================
+  builder.addBlankLine()
 
-// RedisError, RedisConnectionError, RedisTimeoutError, etc.
-export type * from "./lib/errors"
-`
+  // Error Types Section
+  builder.addSectionComment('Error Types')
+  builder.addBlankLine()
+  builder.addComment('RedisError, RedisConnectionError, RedisTimeoutError, etc.')
+  builder.addRaw('export type * from "./lib/errors"')
+
+  builder.addBlankLine()
+
+  return builder.toString()
 }

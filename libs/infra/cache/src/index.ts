@@ -19,12 +19,7 @@ export type { CacheHandle, SimpleCacheHandle } from "./lib/service"
 // Error Types
 // ============================================================================
 // Error types for error handling
-export {
-  CacheInternalError,
-  CacheConfigError,
-  CacheConnectionError,
-  CacheTimeoutError,
-} from "./lib/errors"
+export { CacheConfigError, CacheConnectionError, CacheInternalError, CacheTimeoutError } from "./lib/errors"
 export type { CacheError, CacheServiceError } from "./lib/errors"
 
 // ============================================================================

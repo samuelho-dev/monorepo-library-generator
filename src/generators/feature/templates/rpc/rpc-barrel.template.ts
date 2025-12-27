@@ -12,9 +12,9 @@
  * @module monorepo-library-generator/feature/templates/rpc/barrel
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate RPC barrel export file
@@ -43,7 +43,7 @@ Usage:
   import { ${className}Rpcs, Get${className}, Create${className} } from "${scope}/feature-${fileName}/rpc";`
   })
 
-  builder.addSectionComment("Contract Re-exports (Single Source of Truth)")
+  builder.addSectionComment('Contract Re-exports (Single Source of Truth)')
 
   builder.addRaw(`// Re-export all RPC definitions from contract
 // This includes: Rpc classes, RpcGroup, RouteTag, errors, types
@@ -84,7 +84,7 @@ export {
 } from "${scope}/contract-${fileName}"
 `)
 
-  builder.addSectionComment("Handler Exports")
+  builder.addSectionComment('Handler Exports')
 
   if (hasSubModules) {
     builder.addRaw(`export {
@@ -101,7 +101,7 @@ export {
 `)
   }
 
-  builder.addSectionComment("Middleware Re-exports (from infra-rpc)")
+  builder.addSectionComment('Middleware Re-exports (from infra-rpc)')
 
   builder.addRaw(`// Re-export commonly used middleware for convenience
 export {
@@ -137,7 +137,7 @@ export {
 } from "${scope}/infra-rpc"
 `)
 
-  builder.addSectionComment("Router Exports")
+  builder.addSectionComment('Router Exports')
 
   builder.addRaw(`export {
   // Layer compositions for @effect/rpc integration
@@ -147,11 +147,13 @@ export {
 `)
 
   if (hasSubModules) {
-    builder.addSectionComment("Sub-Module Handler Exports")
+    builder.addSectionComment('Sub-Module Handler Exports')
 
     for (const subModule of subModulesList!) {
       const subClassName = subModule.charAt(0).toUpperCase() + subModule.slice(1)
-      builder.addRaw(`export { ${subClassName}Handlers } from "../server/services/${subModule}/handlers"`)
+      builder.addRaw(
+        `export { ${subClassName}Handlers } from "../server/services/${subModule}/handlers"`
+      )
     }
   }
 

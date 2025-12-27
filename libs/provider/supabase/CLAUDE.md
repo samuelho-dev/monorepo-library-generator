@@ -1,3 +1,13 @@
+---
+scope: libs/provider/supabase/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/PROVIDER.md
+  - ../../../docs/EFFECT_PATTERNS.md
+  - ../../contract/auth/CLAUDE.md
+---
+
 # @samuelho-dev/provider-supabase
 
 Supabase provider for auth, storage, and client operations
@@ -205,3 +215,11 @@ list: (params) =>
 4. **Use Auto layer for environment-aware selection** (NODE_ENV)
 
 The baseline implementation remains useful for unit tests and demonstrations.
+
+## For Future Claude Code Instances
+
+- [ ] Wraps @supabase/supabase-js with Effect patterns
+- [ ] Provides auth, storage, and client operations
+- [ ] Maps to CurrentUserData from contract-auth
+- [ ] Use Layer.scoped with Effect.addFinalizer for cleanup
+- [ ] Static layers: Live, Test, Dev, Auto on Supabase class

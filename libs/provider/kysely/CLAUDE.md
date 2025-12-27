@@ -1,3 +1,13 @@
+---
+scope: libs/provider/kysely/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/PROVIDER.md
+  - ../../../docs/EFFECT_PATTERNS.md
+  - ../../types/database/CLAUDE.md
+---
+
 # @samuelho-dev/provider-kysely
 
 Kysely provider for type-safe database queries with migrations
@@ -205,3 +215,11 @@ list: (params) =>
 4. **Use Auto layer for environment-aware selection** (NODE_ENV)
 
 The baseline implementation remains useful for unit tests and demonstrations.
+
+## For Future Claude Code Instances
+
+- [ ] Wraps Kysely with Effect patterns
+- [ ] Uses types from types-database for type-safe queries
+- [ ] Use Layer.scoped with Effect.addFinalizer for cleanup
+- [ ] Static layers: Live, Test, Dev, Auto on Kysely class
+- [ ] Consumed by infra-database and data-access libraries

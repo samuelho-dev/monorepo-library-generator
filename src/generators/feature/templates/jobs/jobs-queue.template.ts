@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/feature/jobs/jobs-queue-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate server/jobs/queue.ts file
@@ -44,32 +44,31 @@ Job Types:
   builder.addBlankLine()
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer", "Context", "Schema", "Duration", "Data", "Schedule"] },
-    { from: "effect/ParseResult", imports: ["ParseError"], isTypeOnly: true }
+    {
+      from: 'effect',
+      imports: ['Effect', 'Layer', 'Context', 'Schema', 'Duration', 'Data', 'Schedule']
+    },
+    { from: 'effect/ParseResult', imports: ['ParseError'], isTypeOnly: true }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Infrastructure Services")
+  builder.addSectionComment('Infrastructure Services')
   builder.addImports([
-    { from: `${scope}/infra-queue`, imports: ["QueueService"] },
-    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] },
-    { from: `${scope}/infra-database`, imports: ["DatabaseService"] }
+    { from: `${scope}/infra-queue`, imports: ['QueueService'] },
+    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] },
+    { from: `${scope}/infra-database`, imports: ['DatabaseService'] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Service Dependencies")
-  builder.addImports([
-    { from: "../services", imports: [`${className}Service`] }
-  ])
+  builder.addSectionComment('Service Dependencies')
+  builder.addImports([{ from: '../services', imports: [`${className}Service`] }])
   builder.addBlankLine()
 
-  builder.addSectionComment("Auth Context for Job Processing")
-  builder.addImports([
-    { from: `${scope}/contract-auth`, imports: ["CurrentUser"] }
-  ])
+  builder.addSectionComment('Auth Context for Job Processing')
+  builder.addImports([{ from: `${scope}/contract-auth`, imports: ['CurrentUser'] }])
   builder.addBlankLine()
 
-  builder.addSectionComment("Job Error Types")
+  builder.addSectionComment('Job Error Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -111,7 +110,7 @@ export type ${className}JobError =
   | ${className}JobTimeoutError`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Job Processor Schemas")
+  builder.addSectionComment('Job Processor Schemas')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -150,7 +149,7 @@ export interface ${className}JobProcessorSchemas {
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Job Definitions")
+  builder.addSectionComment('Job Definitions')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -193,7 +192,7 @@ export const ${className}SystemUserLayer = Layer.succeed(
 )`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Job Types")
+  builder.addSectionComment('Job Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -361,7 +360,7 @@ export class Bulk${className}Job extends Schema.Class<Bulk${className}Job>(
 }) {
   static create(params: {
     operation: "create" | "update" | "delete";
-    items: Array<Record<string, unknown>>
+    items: ReadonlyArray<{ readonly [x: string]: unknown }>
     initiatedBy?: string;
     correlationId?: string;
     priority?: number;
@@ -393,7 +392,7 @@ export type ${className}Job =
   | Bulk${className}Job`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Job Queue Interface")
+  builder.addSectionComment('Job Queue Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -438,7 +437,7 @@ export interface ${className}JobQueueInterface {
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Job Processor Helpers")
+  builder.addSectionComment('Job Processor Helpers')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -523,8 +522,7 @@ const processBulkItem = (
   validatedUpdateItem: Parameters<${className}ServiceType["update"]>[1] | null
 ) =>
   Effect.gen(function*() {
-    // Use bracket notation for index signature access (not dot notation)
-    const itemId = item["id"]
+    const itemId = item.id
     const hasValidId = typeof itemId === "string" && itemId.length > 0
 
     if (operation === "create" && validatedCreateItem !== null) {
@@ -533,6 +531,62 @@ const processBulkItem = (
       yield* service.update(itemId, validatedUpdateItem)
     } else if (operation === "delete" && hasValidId) {
       yield* service.delete(itemId)
+    }
+  })
+
+/**
+ * Handle validation error in bulk processing
+ */
+const handleBulkValidationError = (
+  continueOnError: boolean,
+  logger: Context.Tag.Service<typeof LoggingService>,
+  item: Record<string, unknown>
+) => (error: ${className}JobError) =>
+  continueOnError
+    ? Effect.gen(function*() {
+        yield* logger.warn("Bulk job item validation failed, skipping", {
+          item,
+          error: error.message
+        })
+        return null
+      })
+    : Effect.fail(error)
+
+/**
+ * Process bulk create operation
+ */
+const processBulkCreate = (
+  item: Record<string, unknown>,
+  job: Bulk${className}Job,
+  service: ${className}ServiceType,
+  logger: Context.Tag.Service<typeof LoggingService>,
+  schemas: { createData: Schema.Schema<Parameters<${className}ServiceType["create"]>[0], unknown> }
+) =>
+  Effect.gen(function*() {
+    const validatedItem = yield* validateJobData(item, schemas.createData, job.jobId, "bulk").pipe(
+      Effect.catchAll(handleBulkValidationError(job.continueOnError, logger, item))
+    )
+    if (validatedItem !== null) {
+      yield* processBulkItem(item, "create", service, validatedItem, null)
+    }
+  })
+
+/**
+ * Process bulk update operation
+ */
+const processBulkUpdate = (
+  item: Record<string, unknown>,
+  job: Bulk${className}Job,
+  service: ${className}ServiceType,
+  logger: Context.Tag.Service<typeof LoggingService>,
+  schemas: { updateData: Schema.Schema<Parameters<${className}ServiceType["update"]>[1], unknown> }
+) =>
+  Effect.gen(function*() {
+    const validatedItem = yield* validateJobData(item, schemas.updateData, job.jobId, "bulk").pipe(
+      Effect.catchAll(handleBulkValidationError(job.continueOnError, logger, item))
+    )
+    if (validatedItem !== null) {
+      yield* processBulkItem(item, "update", service, null, validatedItem)
     }
   })
 
@@ -553,50 +607,23 @@ const processBulkJob = (
 ) =>
   Effect.gen(function*() {
     for (const item of job.items) {
-      // Validate based on operation type
-      if (job.operation === "create") {
-        const validatedItem = yield* validateJobData(item, schemas.createData, job.jobId, "bulk").pipe(
-          Effect.catchAll((error) =>
-            job.continueOnError
-              ? Effect.gen(function*() {
-                  yield* logger.warn("Bulk job item validation failed, skipping", {
-                    item,
-                    error: error.message
-                  })
-                  return null
-                })
-              : Effect.fail(error)
-          )
-        )
-        if (validatedItem !== null) {
-          yield* processBulkItem(item, job.operation, service, validatedItem, null)
-        }
-      } else if (job.operation === "update") {
-        const validatedItem = yield* validateJobData(item, schemas.updateData, job.jobId, "bulk").pipe(
-          Effect.catchAll((error) =>
-            job.continueOnError
-              ? Effect.gen(function*() {
-                  yield* logger.warn("Bulk job item validation failed, skipping", {
-                    item,
-                    error: error.message
-                  })
-                  return null
-                })
-              : Effect.fail(error)
-          )
-        )
-        if (validatedItem !== null) {
-          yield* processBulkItem(item, job.operation, service, null, validatedItem)
-        }
-      } else if (job.operation === "delete") {
-        yield* processBulkItem(item, job.operation, service, null, null)
+      switch (job.operation) {
+        case "create":
+          yield* processBulkCreate(item, job, service, logger, schemas)
+          break
+        case "update":
+          yield* processBulkUpdate(item, job, service, logger, schemas)
+          break
+        case "delete":
+          yield* processBulkItem(item, "delete", service, null, null)
+          break
       }
     }
   })
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Job Processor Implementation")
+  builder.addSectionComment('Job Processor Implementation')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -646,7 +673,7 @@ const processJob = (
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**

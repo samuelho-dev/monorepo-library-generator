@@ -31,7 +31,6 @@ Integration:
  * @module @samuelho-dev/infra-auth/service
  */
 
-
 // ============================================================================
 // Contract-Auth Imports (Single Source of Truth)
 // ============================================================================
@@ -39,7 +38,6 @@ Integration:
 
 // Re-export for convenience (consumers can import from infra-auth OR contract-auth)
 export { AuthVerifier, type CurrentUserData }
-
 
 // ============================================================================
 // Service Interface
@@ -109,15 +107,18 @@ export class AuthService extends Context.Tag("AuthService")<
         verifyToken: (token) =>
           supabaseAuth.verifyToken(token).pipe(
             Effect.catchTag("SupabaseTokenError", (error) =>
-              Effect.fail(new InvalidTokenError({
-                message: error.message,
-                tokenType: "access"
-              }))
-            ),
+              Effect.fail(
+                new InvalidTokenError({
+                  message: error.message,
+                  tokenType: "access"
+                })
+              )),
             Effect.catchAll((error) =>
-              Effect.fail(new UnauthorizedError({
-                message: `Token verification failed: ${error.message}`
-              }))
+              Effect.fail(
+                new UnauthorizedError({
+                  message: `Token verification failed: ${error.message}`
+                })
+              )
             ),
             Effect.withSpan("AuthService.verifyToken")
           ),
@@ -134,9 +135,11 @@ export class AuthService extends Context.Tag("AuthService")<
               }))
             ),
             Effect.catchAll((error) =>
-              Effect.fail(new AuthError({
-                message: `Failed to get current user: ${error.message}`
-              }))
+              Effect.fail(
+                new AuthError({
+                  message: `Failed to get current user: ${error.message}`
+                })
+              )
             ),
             Effect.withSpan("AuthService.getCurrentUser")
           ),
@@ -326,18 +329,14 @@ export const AuthVerifierLive = Layer.effect(
         // Validate at boundary using Schema.decode
         Effect.flatMap((data) =>
           Schema.decode(CurrentUserDataSchema)(data).pipe(
-            Effect.mapError((parseError) =>
-              ContractAuthError.tokenInvalid(`Invalid user data: ${parseError.message}`)
-            )
+            Effect.mapError((parseError) => ContractAuthError.tokenInvalid(`Invalid user data: ${parseError.message}`))
           )
         ),
         // Map infra errors to contract errors using Effect.catchTags
         Effect.catchTags({
           AuthError: (error) => Effect.fail(error),
-          InvalidTokenError: (error) =>
-            Effect.fail(ContractAuthError.tokenInvalid(error.message)),
-          UnauthorizedError: (error) =>
-            Effect.fail(ContractAuthError.unauthenticated(error.message))
+          InvalidTokenError: (error) => Effect.fail(ContractAuthError.tokenInvalid(error.message)),
+          UnauthorizedError: (error) => Effect.fail(ContractAuthError.unauthenticated(error.message))
         }),
         Effect.catchAll((error) =>
           Effect.fail(ContractAuthError.unauthenticated("message" in error ? error.message : "Authentication failed"))
@@ -351,9 +350,9 @@ export const AuthVerifierLive = Layer.effect(
       verifyOptional: (token: string | undefined) =>
         token
           ? verifyToken(token).pipe(
-              Effect.map(Option.some),
-              Effect.catchAll(() => Effect.succeed(Option.none()))
-            )
+            Effect.map(Option.some),
+            Effect.catchAll(() => Effect.succeed(Option.none()))
+          )
           : Effect.succeed(Option.none())
     }
   })
@@ -376,9 +375,9 @@ export const AuthVerifierTest = Layer.succeed(AuthVerifier, {
   verifyOptional: (token: string | undefined) =>
     token
       ? Effect.succeed(Option.some<CurrentUserData>({
-          id: "test-user-id",
-          email: "test@example.com",
-          roles: ["user"]
-        }))
+        id: "test-user-id",
+        email: "test@example.com",
+        roles: ["user"]
+      }))
       : Effect.succeed(Option.none())
 })

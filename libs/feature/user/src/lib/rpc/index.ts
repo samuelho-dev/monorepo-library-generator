@@ -59,7 +59,6 @@ export {
 // ============================================================================
 export {
   UserHandlers,
-  AllUserHandlers,
   UserHandlersLayer
 } from "./handlers"
 
@@ -107,9 +106,3 @@ export {
   UserProductionLayer,
   UserTestLayer
 } from "./router"
-
-// ============================================================================
-// Sub-Module Handler Exports
-// ============================================================================
-export { AuthenticationHandlers } from "../server/services/authentication/handlers"
-export { ProfileHandlers } from "../server/services/profile/handlers"

@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/opentelemetry
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate OpenTelemetry types-only file

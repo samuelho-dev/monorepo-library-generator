@@ -20,7 +20,6 @@ Total: 24 tests covering Effect layer patterns.
  * @module @samuelho-dev/provider-supabase/tests
  */
 
-
 // ============================================================================
 // SupabaseClient Tests
 // ============================================================================
@@ -84,7 +83,7 @@ describe("SupabaseClient", () => {
         Effect.succeed({
           config: { url: "https://async.supabase.co", anonKey: "async-key" },
           getClient: () => Effect.fail(new SupabaseError({ message: "Not implemented" })),
-          healthCheck: () => Effect.succeed(true),
+          healthCheck: () => Effect.succeed(true)
         })
       )
 
@@ -110,12 +109,12 @@ describe("SupabaseClient", () => {
             return {
               config: { url: "https://scoped.supabase.co", anonKey: "scoped-key" },
               getClient: () => Effect.fail(new SupabaseError({ message: "Not implemented" })),
-              healthCheck: () => Effect.succeed(true),
+              healthCheck: () => Effect.succeed(true)
             }
           }),
           () =>
             Effect.sync(() => {
-              finalized = true;
+              finalized = true
             })
         )
       )
@@ -146,7 +145,7 @@ describe("SupabaseClient", () => {
           return {
             config: { url: `https://call-${callCount}.supabase.co`, anonKey: "key" },
             getClient: () => Effect.fail(new SupabaseError({ message: "Not implemented" })),
-            healthCheck: () => Effect.succeed(true),
+            healthCheck: () => Effect.succeed(true)
           }
         })
       )
@@ -184,7 +183,7 @@ describe("SupabaseClient", () => {
     it("should accept custom config via make()", async () => {
       const customConfig = {
         url: "https://my-project.supabase.co",
-        anonKey: "my-anon-key",
+        anonKey: "my-anon-key"
       }
 
       const layer = SupabaseClient.make(customConfig)
@@ -234,7 +233,7 @@ describe("SupabaseAuth", () => {
         const auth = yield* SupabaseAuth
         const result = yield* auth.signInWithPassword({
           email: "test@example.com",
-          password: "password123",
+          password: "password123"
         })
         return result
       })
@@ -252,7 +251,7 @@ describe("SupabaseAuth", () => {
         const auth = yield* SupabaseAuth
         const result = yield* auth.signUp({
           email: "new@example.com",
-          password: "password123",
+          password: "password123"
         })
         return result
       })
@@ -446,7 +445,7 @@ describe("SupabaseStorage", () => {
       const program = Effect.gen(function*() {
         const storage = yield* SupabaseStorage
         const url = yield* storage.createSignedUrl("test-bucket", "file.txt", {
-          expiresIn: 3600,
+          expiresIn: 3600
         })
         return url
       })

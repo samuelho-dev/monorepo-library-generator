@@ -1,6 +1,6 @@
 import { Effect } from "effect"
 import { describe, expect, it } from "vitest"
-import { Redis, mapRedisError } from "../index"
+import { mapRedisError, Redis } from "../index"
 
 /**
  * Redis Provider - Tests
@@ -20,8 +20,7 @@ Tests cover:
 // Test Helpers
 // ============================================================================
 
-const runTest = <A, E>(effect: Effect.Effect<A, E, Redis>) =>
-  Effect.runPromise(effect.pipe(Effect.provide(Redis.Test)))
+const runTest = <A, E>(effect: Effect.Effect<A, E, Redis>) => Effect.runPromise(effect.pipe(Effect.provide(Redis.Test)))
 
 // ============================================================================
 // Tests
@@ -119,7 +118,7 @@ describe("Redis", () => {
     it("should complete subscribe operation", async () => {
       const program = Effect.gen(function*() {
         const redis = yield* Redis
-        yield* redis.pubsub.subscribe("test-channel", () => { /* test handler */ })
+        yield* redis.pubsub.subscribe("test-channel", () => {/* test handler */})
         return "subscribed"
       })
 

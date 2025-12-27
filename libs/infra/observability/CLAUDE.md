@@ -1,3 +1,13 @@
+---
+scope: libs/infra/observability/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/INFRA.md
+  - ../../../docs/EFFECT_PATTERNS.md
+  - ../../provider/opentelemetry/CLAUDE.md
+---
+
 # @samuelho-dev/infra-observability
 
 Unified observability infrastructure with LoggingService and MetricsService (consumes provider-opentelemetry)
@@ -77,3 +87,11 @@ import { useObservability } from '@samuelho-dev/infra-observability/client/hooks
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
+
+## For Future Claude Code Instances
+
+- [ ] Provides LoggingService and MetricsService
+- [ ] Consumes provider-opentelemetry for tracing
+- [ ] Uses Effect.withSpan for distributed tracing
+- [ ] Memory provider included for testing
+- [ ] Static layers: Live, Test, Dev, Auto

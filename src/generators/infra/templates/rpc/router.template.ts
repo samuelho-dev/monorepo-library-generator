@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate RPC router utilities file
@@ -33,15 +33,15 @@ Features:
 Middleware is applied per-RPC, not per-router.
 See middleware.ts for AuthMiddleware usage.`,
     module: `${scope}/infra-${fileName}/router`,
-    see: ["@effect/rpc documentation", "middleware.ts for auth patterns"]
+    see: ['@effect/rpc documentation', 'middleware.ts for auth patterns']
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Option", "Cause", "Exit", "Schema"] },
-    { from: "effect", imports: ["Layer"], isTypeOnly: true }
+    { from: 'effect', imports: ['Effect', 'Option', 'Cause', 'Exit', 'Schema'] },
+    { from: 'effect', imports: ['Layer'], isTypeOnly: true }
   ])
 
-  builder.addSectionComment("Router Composition")
+  builder.addSectionComment('Router Composition')
 
   builder.addRaw(`/**
  * Compose multiple RpcGroups into a single router
@@ -97,7 +97,7 @@ export const defaultRouterConfig: Required<RouterConfig> = {
 }
 `)
 
-  builder.addSectionComment("HTTP Integration")
+  builder.addSectionComment('HTTP Integration')
 
   builder.addRaw(`/**
  * Create HTTP routes from an RPC router
@@ -148,7 +148,7 @@ export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps>
   : never
 `)
 
-  builder.addSectionComment("App Router Integration (Next.js)")
+  builder.addSectionComment('App Router Integration (Next.js)')
 
   builder.addRaw(`/**
  * Create a Next.js App Router handler
@@ -209,7 +209,7 @@ export type RpcHandlerMap<R = unknown> = Record<string, (payload: unknown) => Ef
  * \`\`\`
  */
 export const combineHandlers = <R>(
-  ...handlers: ReadonlyArray<RpcHandlerMap<R>>
+  ...handlers: readonly RpcHandlerMap<R[]>
 ) => {
   const result: RpcHandlerMap<R> = {}
   for (const handler of handlers) {
@@ -351,7 +351,7 @@ export const createNextRpcHandler = <R, E>(
 }
 `)
 
-  builder.addSectionComment("Server Actions Integration")
+  builder.addSectionComment('Server Actions Integration')
 
   builder.addRaw(`/**
  * Create a Server Action from an Effect handler
@@ -430,7 +430,7 @@ export const createServerActionSafe = <Payload, Success, Failure, R>(
 }
 `)
 
-  builder.addSectionComment("Health Check")
+  builder.addSectionComment('Health Check')
 
   builder.addRaw(`/**
  * Standard health check response

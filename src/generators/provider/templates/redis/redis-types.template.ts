@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/redis/types
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Redis provider types file
@@ -17,7 +17,7 @@ export function generateRedisTypesFile(options: ProviderTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "Redis Provider - Types",
+    title: 'Redis Provider - Types',
     description: `Configuration and interface types for Redis provider.
 
 Includes:
@@ -30,12 +30,12 @@ Includes:
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Effect"], isTypeOnly: true },
-    { from: "./errors", imports: ["RedisCommandError", "RedisPubSubError"], isTypeOnly: true }
+    { from: 'effect', imports: ['Effect'], isTypeOnly: true },
+    { from: './errors', imports: ['RedisCommandError', 'RedisPubSubError'], isTypeOnly: true }
   ])
 
   // Configuration - re-export from native SDK
-  builder.addSectionComment("Configuration")
+  builder.addSectionComment('Configuration')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -67,7 +67,7 @@ export interface RedisConfig {
   builder.addBlankLine()
 
   // Scan types
-  builder.addSectionComment("Scan Types")
+  builder.addSectionComment('Scan Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -89,12 +89,12 @@ export interface ScanResult {
   /** Cursor for next iteration (0 = iteration complete) */
   readonly cursor: number
   /** Keys found in this iteration */
-  readonly keys: ReadonlyArray<string>
+  readonly keys: readonly string[]
 }`)
   builder.addBlankLine()
 
   // Cache sub-service interface
-  builder.addSectionComment("Cache Sub-Service Interface")
+  builder.addSectionComment('Cache Sub-Service Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -137,7 +137,7 @@ export interface RedisCacheClient {
   builder.addBlankLine()
 
   // PubSub sub-service interface
-  builder.addSectionComment("PubSub Sub-Service Interface")
+  builder.addSectionComment('PubSub Sub-Service Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -177,7 +177,7 @@ export interface RedisPubSubClient {
   builder.addBlankLine()
 
   // Queue sub-service interface
-  builder.addSectionComment("Queue Sub-Service Interface")
+  builder.addSectionComment('Queue Sub-Service Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -212,7 +212,7 @@ export interface RedisQueueClient {
   /**
    * Get range of list items (LRANGE)
    */
-  readonly lrange: (key: string, start: number, stop: number) => Effect.Effect<Array<string>, RedisCommandError>
+  readonly lrange: (key: string, start: number, stop: number) => Effect.Effect<string[], RedisCommandError>
 
   /**
    * Trim list to specified range (LTRIM)

@@ -6,8 +6,6 @@ import { LoggingService, MetricsService } from "@samuelho-dev/infra-observabilit
 import { PubsubService } from "@samuelho-dev/infra-pubsub"
 import { QueueService } from "@samuelho-dev/infra-queue"
 import { Layer } from "effect"
-import { AuthenticationLive, AuthenticationTest } from "./authentication/layer"
-import { ProfileLive, ProfileTest } from "./profile/layer"
 import { UserService } from "./service"
 
 /**
@@ -101,7 +99,6 @@ export const InfrastructureDev = Layer.mergeAll(
  * Includes all user feature layers with live infrastructure:
  * - UserService.Live (event publishing in service implementation)
  * - UserRepository.Live
- * - Sub-module services: Authentication, Profile
  * - All infrastructure services
  *
  * @example
@@ -116,9 +113,7 @@ export const InfrastructureDev = Layer.mergeAll(
  */
 export const UserFeatureLive = Layer.mergeAll(
   UserService.Live,
-  UserRepository.Live,
-  AuthenticationLive,
-  ProfileLive
+  UserRepository.Live
 ).pipe(Layer.provide(InfrastructureLive))
 
 /**
@@ -143,9 +138,7 @@ export const UserFeatureLive = Layer.mergeAll(
  */
 export const UserFeatureTest = Layer.mergeAll(
   UserService.Live,
-  UserRepository.Live,
-  AuthenticationTest,
-  ProfileTest
+  UserRepository.Live
 ).pipe(Layer.provide(InfrastructureTest))
 
 /**
@@ -155,9 +148,7 @@ export const UserFeatureTest = Layer.mergeAll(
  */
 export const UserFeatureDev = Layer.mergeAll(
   UserService.Live,
-  UserRepository.Live,
-  AuthenticationLive,
-  ProfileLive
+  UserRepository.Live
 ).pipe(Layer.provide(InfrastructureDev))
 
 // ============================================================================

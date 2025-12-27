@@ -1,7 +1,12 @@
 import type { SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js"
 import { Context, Effect, Layer, Option, Schema } from "effect"
 import { SupabaseClient } from "./client"
-import { SupabaseAuthError, SupabaseInvalidCredentialsError, SupabaseSessionExpiredError, SupabaseTokenError } from "./errors"
+import {
+  SupabaseAuthError,
+  SupabaseInvalidCredentialsError,
+  SupabaseSessionExpiredError,
+  SupabaseTokenError
+} from "./errors"
 import { SupabaseSessionSchema, SupabaseUserSchema } from "./types"
 import type { AuthResult, AuthUser, SignInCredentials, SignUpCredentials, SupabaseSession, SupabaseUser } from "./types"
 
@@ -487,7 +492,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           }
 
           return toAuthUser(userOption.value)
-        }).pipe(Effect.withSpan("SupabaseAuth.getUserFromToken")),
+        }).pipe(Effect.withSpan("SupabaseAuth.getUserFromToken"))
     }
   }
 
@@ -497,7 +502,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
   static readonly Live = Layer.effect(
     SupabaseAuth,
     Effect.gen(function*() {
-      const supabaseClient = yield* SupabaseClient;
+      const supabaseClient = yield* SupabaseClient
       const client = yield* supabaseClient.getClient()
       return SupabaseAuth.createService(client)
     })
@@ -512,7 +517,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
         user: {
           id: "test-user-id",
           email: "test@example.com",
-          created_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
         },
         session: {
           access_token: "test-access-token",
@@ -522,9 +527,9 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           user: {
             id: "test-user-id",
             email: "test@example.com",
-            created_at: new Date().toISOString(),
-          },
-        },
+            created_at: new Date().toISOString()
+          }
+        }
       }),
 
     signUp: () =>
@@ -532,9 +537,9 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
         user: {
           id: "new-user-id",
           email: "new@example.com",
-          created_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
         },
-        session: null,
+        session: null
       }),
 
     signOut: () => Effect.void,
@@ -544,7 +549,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
         id: "test-user-id",
         email: "test@example.com",
         name: "Test User",
-        role: "authenticated",
+        role: "authenticated"
       }),
 
     getSession: () =>
@@ -557,8 +562,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           user: {
             id: "test-user-id",
             email: "test@example.com",
-            created_at: new Date().toISOString(),
-          },
+            created_at: new Date().toISOString()
+          }
         })
       ),
 
@@ -567,7 +572,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
         Option.some({
           id: "test-user-id",
           email: "test@example.com",
-          created_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
         })
       ),
 
@@ -580,8 +585,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
         user: {
           id: "test-user-id",
           email: "test@example.com",
-          created_at: new Date().toISOString(),
-        },
+          created_at: new Date().toISOString()
+        }
       }),
 
     getUserFromToken: () =>
@@ -589,7 +594,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
         id: "test-user-id",
         email: "test@example.com",
         name: "Test User",
-        role: "authenticated",
+        role: "authenticated"
       })
   })
 
@@ -620,10 +625,10 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 user: {
                   id: "dev-user-id",
                   email: credentials.email,
-                  created_at: new Date().toISOString(),
+                  created_at: new Date().toISOString()
                 }
-              },
-            };
+              }
+            }
           }),
 
         signUp: (credentials: SignUpCredentials) =>
@@ -635,8 +640,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 email: credentials.email,
                 created_at: new Date().toISOString()
               },
-              session: null,
-            };
+              session: null
+            }
           }),
 
         signOut: () =>
@@ -651,8 +656,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
               id: "dev-user-id",
               email: "dev@example.com",
               name: "Dev User",
-              role: "authenticated",
-            };
+              role: "authenticated"
+            }
           }),
 
         getSession: () =>
@@ -667,7 +672,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 id: "dev-user-id",
                 email: "dev@example.com",
                 created_at: new Date().toISOString()
-              },
+              }
             })
           }),
 
@@ -677,7 +682,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
             return Option.some({
               id: "dev-user-id",
               email: "dev@example.com",
-              created_at: new Date().toISOString(),
+              created_at: new Date().toISOString()
             })
           }),
 
@@ -693,8 +698,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
                 id: "dev-user-id",
                 email: "dev@example.com",
                 created_at: new Date().toISOString()
-              },
-            };
+              }
+            }
           }),
 
         getUserFromToken: (accessToken: string) =>
@@ -704,10 +709,10 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
               id: "dev-user-id",
               email: "dev@example.com",
               name: "Dev User",
-              role: "authenticated",
-            };
+              role: "authenticated"
+            }
           })
-      } ;
+      }
     })
   )
 }

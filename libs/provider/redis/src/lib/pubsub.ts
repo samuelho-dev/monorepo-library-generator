@@ -45,15 +45,13 @@ Used by infra-pubsub's Redis layer.
 export function makePubSubClient(pubClient: IORedis, subClient: IORedis) {
   // Track active subscriptions and handlers for proper lifecycle management
   const channelHandlers = new Map<string, (message: string) => void>()
-  let messageListenerRegistered = false  // Centralized message handler that routes to channel-specific handlers
+  let messageListenerRegistered = false // Centralized message handler that routes to channel-specific handlers
   const onMessage = (channel: string, message: string) => {
     const handler = channelHandlers.get(channel)
     if (handler) {
       // Effect-idiomatic error handling with logging instead of silent swallowing
       Effect.try(() => handler(message)).pipe(
-        Effect.catchAll((error) =>
-          Effect.logWarning("PubSub handler error", { channel, error })
-        ),
+        Effect.catchAll((error) => Effect.logWarning("PubSub handler error", { channel, error })),
         Effect.runPromise
       )
     }

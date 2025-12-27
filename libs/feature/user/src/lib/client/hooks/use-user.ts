@@ -1,5 +1,6 @@
 import { useAtom, useAtomValue } from "@effect-atom/atom-react"
-import type { CreateUserInput, UpdateUserInput, UserSelect as User } from "@samuelho-dev/contract-user"
+import { UserSchema } from "@samuelho-dev/contract-user"
+import type { CreateUserInput, UpdateUserInput, UserEntity as User } from "@samuelho-dev/contract-user"
 import { Option, Schema } from "effect"
 import { useCallback, useMemo } from "react"
 import { resetUserState, updateUserEntity, updateUserList, updateUserOperation, userAtom, userDataAtom, userErrorAtom, userIsLoadingAtom, userListAtom } from "../atoms/user-atoms"
@@ -38,15 +39,13 @@ const RpcErrorSchema = Schema.Struct({
   message: Schema.String
 })
 
-type RpcErrorMessage = Schema.Schema.Type<typeof RpcErrorSchema>
-
 /**
  * Extract error message from RPC error response using Schema
  *
  * Uses Schema.decodeUnknownOption for type-safe parsing without coercion.
  */
-function getErrorMessage(error: unknown, fallback: string): string {
-  const result: Option.Option<RpcErrorMessage> = Schema.decodeUnknownOption(RpcErrorSchema)(error)
+function getErrorMessage(error: unknown, fallback: string) {
+  const result = Schema.decodeUnknownOption(RpcErrorSchema)(error)
   return Option.isSome(result) ? result.value.message : fallback
 }
 
@@ -87,15 +86,18 @@ export interface UseUserReturn {
  * Uses process.env for client-side configuration.
  * Falls back to "/api/rpc" if PUBLIC_API_URL is not configured.
  */
-const RPC_ENDPOINT = process.env["PUBLIC_API_URL"] ?? process.env["NEXT_PUBLIC_API_URL"] ?? "/api/rpc"
+// biome-ignore lint/style/noProcessEnv: Client-side RPC endpoint configured via environment
+const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "/api/rpc"
 
 /**
  * Make an RPC call to the server
  *
- * Uses typed response - caller should cast result to expected type.
- * Server-side validation ensures type safety.
+ * Returns raw JSON response. Caller should validate with Schema.
+ *
+ * @param operation - RPC operation name (e.g., "GetUser")
+ * @param payload - Request payload
  */
-async function rpcCall<T>(operation: string, payload: unknown): Promise<T> {
+async function rpcCall(operation: string, payload: unknown): Promise<unknown> {
   const response = await fetch(RPC_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -108,16 +110,39 @@ async function rpcCall<T>(operation: string, payload: unknown): Promise<T> {
     throw body
   }
 
-  return body as T
+  return body
 }
+
+/**
+ * Decode response with schema and throw on validation error
+ */
+function decodeResponse<T>(schema: Schema.Schema<T>, data: unknown): T {
+  return Schema.decodeUnknownSync(schema)(data)
+}
+
+/**
+ * List response schema for pagination
+ */
+const ListResponseSchema = Schema.Struct({
+  items: Schema.Array(UserSchema),
+  total: Schema.Number,
+  hasMore: Schema.Boolean
+})
+
+/**
+ * Delete response schema
+ */
+const DeleteResponseSchema = Schema.Struct({
+  success: Schema.Boolean
+})
 
 /**
  * List response type from server
  */
-interface ListResponse<T> {
-  readonly items: ReadonlyArray<T>
-  readonly total: number;
-  readonly hasMore: boolean;
+interface ListResponse {
+  readonly items: ReadonlyArray<User>
+  readonly total: number
+  readonly hasMore: boolean
 }
 
 /**
@@ -155,7 +180,8 @@ export function useUser(): UseUserReturn {
   const fetchById = useCallback(async (id: string) => {
     setState(updateUserEntity({ loadingState: "loading", error: null }))
     try {
-      const result = await rpcCall<User>("GetUser", { id })
+      const response = await rpcCall("GetUser", { id })
+      const result = decodeResponse(UserSchema, response)
       setState(updateUserEntity({
         data: result,
         loadingState: "idle",
@@ -176,7 +202,8 @@ export function useUser(): UseUserReturn {
 
     setState(updateUserList({ loadingState: "loading", error: null }))
     try {
-      const result = await rpcCall<ListResponse<User>>("ListUsers", { page, pageSize })
+      const response = await rpcCall("ListUsers", { page, pageSize })
+      const result = decodeResponse(ListResponseSchema, response)
       setState(updateUserList({
         items: result.items,
         loadingState: "idle",
@@ -204,7 +231,8 @@ export function useUser(): UseUserReturn {
   const create = useCallback(async (input: CreateUserInput) => {
     setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "create" }))
     try {
-      const result = await rpcCall<User>("CreateUser", input)
+      const response = await rpcCall("CreateUser", input)
+      const result = decodeResponse(UserSchema, response)
       setState(updateUserOperation({ isSubmitting: false }))
       // Refresh list after creation
       await refreshList()
@@ -220,7 +248,8 @@ export function useUser(): UseUserReturn {
   const update = useCallback(async (id: string, input: UpdateUserInput) => {
     setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "update" }))
     try {
-      const result = await rpcCall<User>("UpdateUser", { id, ...input })
+      const response = await rpcCall("UpdateUser", { id, data: input })
+      const result = decodeResponse(UserSchema, response)
       setState(updateUserOperation({ isSubmitting: false }))
       // Update entity if it's the current one
       if (state.entity.data?.id === id) {
@@ -240,7 +269,8 @@ export function useUser(): UseUserReturn {
   const remove = useCallback(async (id: string) => {
     setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "delete" }))
     try {
-      await rpcCall<{ success: boolean }>("DeleteUser", { id })
+      const response = await rpcCall("DeleteUser", { id })
+      decodeResponse(DeleteResponseSchema, response)
       setState(updateUserOperation({ isSubmitting: false }))
       // Clear entity if it's the deleted one
       if (state.entity.data?.id === id) {

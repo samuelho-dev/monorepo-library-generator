@@ -1,3 +1,12 @@
+---
+scope: libs/contract/auth/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/CONTRACT.md
+  - ../../../docs/EFFECT_PATTERNS.md
+---
+
 # @samuelho-dev/contract-auth
 
 Auth contract - single source of truth for auth types
@@ -46,3 +55,11 @@ export const AuthVerifierLive = Layer.effect(AuthVerifier, Effect.gen(function*(
   // Implement verification...
 }))
 ```
+
+## For Future Claude Code Instances
+
+- [ ] This is the SINGLE SOURCE OF TRUTH for auth types
+- [ ] Other libraries MUST import from here, never redefine
+- [ ] Use Schema.TaggedError for RPC-serializable errors
+- [ ] Use Data.TaggedError for domain errors
+- [ ] Check `infra-rpc` and `infra-auth` for integration patterns

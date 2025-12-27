@@ -12,15 +12,15 @@
  * @module monorepo-library-generator/templates
  */
 
-import type { Tree } from "@nx/devkit"
-import { generateFiles } from "@nx/devkit"
-import * as path from "node:path"
-import type { TypeScriptBuilder } from "./code-builder"
-import { createNamingVariants } from "./naming"
-import type { LibraryType, NamingVariants } from "./types"
+import * as path from 'node:path'
+import type { Tree } from '@nx/devkit'
+import { generateFiles } from '@nx/devkit'
+import type { TypeScriptBuilder } from './code-builder'
+import { createNamingVariants } from './naming'
+import type { LibraryType, NamingVariants } from './types'
 
 // Re-export TypeScriptBuilder from code-builder for convenience
-export { TypeScriptBuilder } from "./code-builder"
+export { TypeScriptBuilder } from './code-builder'
 
 // ============================================================================
 // Nx Template File Generation
@@ -31,7 +31,7 @@ export { TypeScriptBuilder } from "./code-builder"
  * Following Nx EJS template best practices
  */
 export interface BaseTemplateSubstitutions extends NamingVariants {
-  tmpl: "" // Standard Nx pattern for __tmpl__ removal
+  tmpl: '' // Standard Nx pattern for __tmpl__ removal
   name: string
   projectName: string
   projectRoot: string
@@ -50,9 +50,9 @@ export function generateTemplateFiles<T extends BaseTemplateSubstitutions>(
   substitutions: T
 ) {
   // Ensure tmpl is always empty string for __tmpl__ removal
-  const finalSubstitutions: T & { tmpl: "" } = {
+  const finalSubstitutions: T & { tmpl: '' } = {
     ...substitutions,
-    tmpl: ""
+    tmpl: ''
   }
 
   generateFiles(tree, templatePath, targetPath, finalSubstitutions)
@@ -72,7 +72,7 @@ export function createBaseSubstitutions(
 
   const result: BaseTemplateSubstitutions = {
     ...nameVariations,
-    tmpl: "",
+    tmpl: '',
     name,
     projectName,
     projectRoot,
@@ -104,30 +104,31 @@ export function cleanupConditionalFiles(
  */
 export function getConditionalFilesToRemove(options: {
   includeClientServer?: boolean
-  platform?: "node" | "browser" | "universal" | "edge"
+  platform?: 'node' | 'browser' | 'universal' | 'edge'
   includePooling?: boolean
   [key: string]: unknown
 }) {
   const filesToRemove = []
 
   // Only remove server.ts if not needed based on platform
-  const shouldGenerateServer = options.includeClientServer || options.platform === "node" ||
-    options.platform === "universal"
-  const shouldGenerateClient = options.includeClientServer ||
-    options.platform === "browser" ||
-    options.platform === "universal"
+  const shouldGenerateServer =
+    options.includeClientServer || options.platform === 'node' || options.platform === 'universal'
+  const shouldGenerateClient =
+    options.includeClientServer ||
+    options.platform === 'browser' ||
+    options.platform === 'universal'
 
   if (!shouldGenerateServer) {
-    filesToRemove.push("src/server.ts")
+    filesToRemove.push('src/server.ts')
   }
 
   if (!shouldGenerateClient) {
-    filesToRemove.push("src/client.ts")
+    filesToRemove.push('src/client.ts')
   }
 
   // Remove pool-related files when pooling is disabled
   if (options.includePooling === false) {
-    filesToRemove.push("src/lib/__tests__/pool.test.ts")
+    filesToRemove.push('src/lib/__tests__/pool.test.ts')
   }
 
   return filesToRemove
@@ -264,41 +265,41 @@ export function createTaggedErrorClass(config: ErrorClassConfig) {
   // Generate field definitions
   const fieldDefs = fields
     .map((f) => {
-      const readonly = f.readonly !== false ? "readonly " : ""
-      const optional = f.optional ? "?" : ""
+      const readonly = f.readonly !== false ? 'readonly ' : ''
+      const optional = f.optional ? '?' : ''
       return `  ${readonly}${f.name}${optional}: ${f.type}`
     })
-    .join("\n")
+    .join('\n')
 
   // Generate static methods
   const methodDefs = staticMethods?.length
-    ? "\n  " +
+    ? '\n  ' +
       staticMethods
         .map((method) => {
           const params = method.params
-            .map((p) => `${p.name}${p.optional ? "?" : ""}: ${p.type}`)
-            .join(", ")
+            .map((p) => `${p.name}${p.optional ? '?' : ''}: ${p.type}`)
+            .join(', ')
 
           // Indent method body lines
           const indentedBody = method.body
-            .split("\n")
+            .split('\n')
             .map((line) => `    ${line}`)
-            .join("\n")
+            .join('\n')
 
           return `static ${method.name}(${params}) {\n${indentedBody}\n  }`
         })
-        .join("\n\n  ")
-    : ""
+        .join('\n\n  ')
+    : ''
 
   // Generate JSDoc
-  const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
+  const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ''
 
   // Build complete class
   return `${jsdocComment}export class ${className} extends Data.TaggedError(
   "${tagName}"
 )<{
 ${fieldDefs}
-}>${methodDefs ? ` {${methodDefs}\n}` : " {}"}`
+}>${methodDefs ? ` {${methodDefs}\n}` : ' {}'}`
 }
 
 /**
@@ -339,7 +340,7 @@ export function createTypeGuardFunctions(config: TypeGuardConfig) {
   )
 }`
     })
-    .join("\n\n")
+    .join('\n\n')
 }
 
 /**
@@ -382,12 +383,12 @@ export interface ErrorUnionTypeConfig {
 export function createErrorUnionType(config: ErrorUnionTypeConfig) {
   const { baseError, errorTypes, exported = true, jsdoc, typeName } = config
 
-  const exportKeyword = exported ? "export " : ""
-  const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
+  const exportKeyword = exported ? 'export ' : ''
+  const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ''
 
   const allErrors = [baseError, ...errorTypes]
 
-  return `${jsdocComment}${exportKeyword}type ${typeName} = ${allErrors.join(" | ")}`
+  return `${jsdocComment}${exportKeyword}type ${typeName} = ${allErrors.join(' | ')}`
 }
 
 /**
@@ -398,13 +399,13 @@ export function createNotFoundError(className: string) {
     className: `${className}NotFoundError`,
     tagName: `${className}NotFoundError`,
     fields: [
-      { name: "message", type: "string" },
-      { name: "id", type: "string" }
+      { name: 'message', type: 'string' },
+      { name: 'id', type: 'string' }
     ],
     staticMethods: [
       {
-        name: "create",
-        params: [{ name: "id", type: "string" }],
+        name: 'create',
+        params: [{ name: 'id', type: 'string' }],
         returnType: `${className}NotFoundError`,
         body: `return new ${className}NotFoundError({
   message: \`${className} not found: \${id}\`,
@@ -424,17 +425,17 @@ export function createValidationError(className: string) {
     className: `${className}ValidationError`,
     tagName: `${className}ValidationError`,
     fields: [
-      { name: "message", type: "string" },
-      { name: "field", type: "string", optional: true },
-      { name: "constraint", type: "string", optional: true },
-      { name: "value", type: "unknown", optional: true }
+      { name: 'message', type: 'string' },
+      { name: 'field', type: 'string', optional: true },
+      { name: 'constraint', type: 'string', optional: true },
+      { name: 'value', type: 'unknown', optional: true }
     ],
     staticMethods: [
       {
-        name: "create",
+        name: 'create',
         params: [
           {
-            name: "params",
+            name: 'params',
             type: `{
     message: string
     field?: string
@@ -464,13 +465,13 @@ export function createConflictError(className: string) {
     className: `${className}ConflictError`,
     tagName: `${className}ConflictError`,
     fields: [
-      { name: "message", type: "string" },
-      { name: "conflictingId", type: "string", optional: true }
+      { name: 'message', type: 'string' },
+      { name: 'conflictingId', type: 'string', optional: true }
     ],
     staticMethods: [
       {
-        name: "create",
-        params: [{ name: "conflictingId", type: "string", optional: true }],
+        name: 'create',
+        params: [{ name: 'conflictingId', type: 'string', optional: true }],
         returnType: `${className}ConflictError`,
         body: `return new ${className}ConflictError({
   message: conflictingId
@@ -492,16 +493,16 @@ export function createConnectionError(className: string) {
     className: `${className}ConnectionError`,
     tagName: `${className}ConnectionError`,
     fields: [
-      { name: "message", type: "string" },
-      { name: "target", type: "string" },
-      { name: "cause", type: "unknown" }
+      { name: 'message', type: 'string' },
+      { name: 'target', type: 'string' },
+      { name: 'cause', type: 'unknown' }
     ],
     staticMethods: [
       {
-        name: "create",
+        name: 'create',
         params: [
-          { name: "target", type: "string" },
-          { name: "cause", type: "unknown" }
+          { name: 'target', type: 'string' },
+          { name: 'cause', type: 'unknown' }
         ],
         returnType: `${className}ConnectionError`,
         body: `return new ${className}ConnectionError({
@@ -523,16 +524,16 @@ export function createTimeoutError(className: string) {
     className: `${className}TimeoutError`,
     tagName: `${className}TimeoutError`,
     fields: [
-      { name: "message", type: "string" },
-      { name: "operation", type: "string" },
-      { name: "timeoutMs", type: "number" }
+      { name: 'message', type: 'string' },
+      { name: 'operation', type: 'string' },
+      { name: 'timeoutMs', type: 'number' }
     ],
     staticMethods: [
       {
-        name: "create",
+        name: 'create',
         params: [
-          { name: "operation", type: "string" },
-          { name: "timeoutMs", type: "number" }
+          { name: 'operation', type: 'string' },
+          { name: 'timeoutMs', type: 'number' }
         ],
         returnType: `${className}TimeoutError`,
         body: `return new ${className}TimeoutError({
@@ -554,15 +555,15 @@ export function createConfigError(className: string) {
     className: `${className}ConfigError`,
     tagName: `${className}ConfigError`,
     fields: [
-      { name: "message", type: "string" },
-      { name: "configKey", type: "string", optional: true }
+      { name: 'message', type: 'string' },
+      { name: 'configKey', type: 'string', optional: true }
     ],
     staticMethods: [
       {
-        name: "create",
+        name: 'create',
         params: [
-          { name: "message", type: "string" },
-          { name: "configKey", type: "string", optional: true }
+          { name: 'message', type: 'string' },
+          { name: 'configKey', type: 'string', optional: true }
         ],
         returnType: `${className}ConfigError`,
         body: `return new ${className}ConfigError({
@@ -583,15 +584,15 @@ export function createInternalError(className: string) {
     className: `${className}InternalError`,
     tagName: `${className}InternalError`,
     fields: [
-      { name: "message", type: "string" },
-      { name: "cause", type: "unknown", optional: true }
+      { name: 'message', type: 'string' },
+      { name: 'cause', type: 'unknown', optional: true }
     ],
     staticMethods: [
       {
-        name: "create",
+        name: 'create',
         params: [
-          { name: "message", type: "string" },
-          { name: "cause", type: "unknown", optional: true }
+          { name: 'message', type: 'string' },
+          { name: 'cause', type: 'unknown', optional: true }
         ],
         returnType: `${className}InternalError`,
         body: `return new ${className}InternalError({
@@ -636,69 +637,69 @@ export function addPaginationOptions(
 
   if (offsetBased && !cursorBased) {
     builder.addInterface({
-      name: "PaginationOptions",
+      name: 'PaginationOptions',
       exported: true,
       properties: [
-        { name: "skip", type: "number", readonly: true, jsdoc: "Number of records to skip" },
+        { name: 'skip', type: 'number', readonly: true, jsdoc: 'Number of records to skip' },
         {
-          name: "limit",
-          type: "number",
+          name: 'limit',
+          type: 'number',
           readonly: true,
-          jsdoc: "Maximum number of records to return"
+          jsdoc: 'Maximum number of records to return'
         }
       ],
-      jsdoc: "Pagination options for queries"
+      jsdoc: 'Pagination options for queries'
     })
   } else if (cursorBased && !offsetBased) {
     builder.addInterface({
-      name: "PaginationOptions",
+      name: 'PaginationOptions',
       exported: true,
       properties: [
         {
-          name: "limit",
-          type: "number",
+          name: 'limit',
+          type: 'number',
           readonly: true,
           optional: true,
-          jsdoc: "Maximum number of records to return"
+          jsdoc: 'Maximum number of records to return'
         },
         {
-          name: "cursor",
-          type: "string",
+          name: 'cursor',
+          type: 'string',
           readonly: true,
           optional: true,
-          jsdoc: "Cursor for pagination"
+          jsdoc: 'Cursor for pagination'
         }
       ],
-      jsdoc: "Pagination options for queries (cursor-based)"
+      jsdoc: 'Pagination options for queries (cursor-based)'
     })
   } else if (offsetBased && cursorBased) {
     builder.addInterface({
-      name: "PaginationOptions",
+      name: 'PaginationOptions',
       exported: true,
       properties: [
         {
-          name: "skip",
-          type: "number",
+          name: 'skip',
+          type: 'number',
           readonly: true,
           optional: true,
-          jsdoc: "Number of records to skip (offset-based)"
+          jsdoc: 'Number of records to skip (offset-based)'
         },
         {
-          name: "limit",
-          type: "number",
+          name: 'limit',
+          type: 'number',
           readonly: true,
           optional: true,
-          jsdoc: "Maximum number of records to return"
+          jsdoc: 'Maximum number of records to return'
         },
         {
-          name: "cursor",
-          type: "string",
+          name: 'cursor',
+          type: 'string',
           readonly: true,
           optional: true,
-          jsdoc: "Cursor for pagination (cursor-based)"
+          jsdoc: 'Cursor for pagination (cursor-based)'
         }
       ],
-      jsdoc: "Pagination options for queries (offset or cursor-based)"
+      jsdoc: 'Pagination options for queries (offset or cursor-based)'
     })
   }
 }
@@ -707,7 +708,7 @@ export function addPaginationOptions(
  * Paginated response configuration
  */
 export interface PaginatedResponseConfig {
-  readonly itemsFieldName?: "items" | "data"
+  readonly itemsFieldName?: 'items' | 'data'
   readonly includeHasMore?: boolean
   readonly includeNextCursor?: boolean
 }
@@ -719,7 +720,7 @@ export function addPaginatedResponse(
   builder: TypeScriptBuilder,
   config: PaginatedResponseConfig = {}
 ) {
-  const { includeHasMore = true, includeNextCursor = false, itemsFieldName = "items" } = config
+  const { includeHasMore = true, includeNextCursor = false, itemsFieldName = 'items' } = config
 
   const properties: Array<{
     name: string
@@ -728,42 +729,47 @@ export function addPaginatedResponse(
     optional?: boolean
     jsdoc: string
   }> = [
-    { name: itemsFieldName, type: "ReadonlyArray<T>", readonly: true, jsdoc: "Array of items/records" },
-    { name: "total", type: "number", readonly: true, jsdoc: "Total number of records available" }
+    {
+      name: itemsFieldName,
+      type: 'readonly T[]',
+      readonly: true,
+      jsdoc: 'Array of items/records'
+    },
+    { name: 'total', type: 'number', readonly: true, jsdoc: 'Total number of records available' }
   ]
 
   if (!(includeHasMore || includeNextCursor)) {
     properties.push(
-      { name: "skip", type: "number", readonly: true, jsdoc: "Number of records skipped" },
+      { name: 'skip', type: 'number', readonly: true, jsdoc: 'Number of records skipped' },
       {
-        name: "limit",
-        type: "number",
+        name: 'limit',
+        type: 'number',
         readonly: true,
-        jsdoc: "Maximum number of records returned"
+        jsdoc: 'Maximum number of records returned'
       }
     )
   }
 
   if (includeHasMore) {
     properties.push({
-      name: "hasMore",
-      type: "boolean",
+      name: 'hasMore',
+      type: 'boolean',
       readonly: true,
-      jsdoc: "Whether more records are available"
+      jsdoc: 'Whether more records are available'
     })
   }
 
   if (includeNextCursor) {
     properties.push({
-      name: "nextCursor",
-      type: "string",
+      name: 'nextCursor',
+      type: 'string',
       readonly: true,
       optional: true,
-      jsdoc: "Cursor for fetching next page"
+      jsdoc: 'Cursor for fetching next page'
     })
   }
 
-  builder.addJSDoc("Paginated response wrapper")
+  builder.addJSDoc('Paginated response wrapper')
   builder.addRaw(`export interface PaginatedResponse<T> {`)
   for (let i = 0; i < properties.length; i++) {
     const prop = properties[i]
@@ -774,8 +780,8 @@ export function addPaginatedResponse(
       builder.addRaw(`   * ${prop.jsdoc}`)
       builder.addRaw(`   */`)
     }
-    const readonlyModifier = prop.readonly ? "readonly " : ""
-    const optionalModifier = prop.optional ? "?" : ""
+    const readonlyModifier = prop.readonly ? 'readonly ' : ''
+    const optionalModifier = prop.optional ? '?' : ''
 
     // No semicolon at end of interface properties (dprint/ESLint requirement)
     builder.addRaw(`  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type}`)
@@ -816,14 +822,14 @@ export interface SortInterfaceConfig {
 export function addSortInterface(builder: TypeScriptBuilder, config: SortInterfaceConfig) {
   const { className, includeDirection = true } = config
 
-  const properties = [{ name: "field", type: "string", readonly: true, jsdoc: "Field to sort by" }]
+  const properties = [{ name: 'field', type: 'string', readonly: true, jsdoc: 'Field to sort by' }]
 
   if (includeDirection) {
     properties.push({
-      name: "direction",
-      type: "SortDirection",
+      name: 'direction',
+      type: 'SortDirection',
       readonly: true,
-      jsdoc: "Sort direction"
+      jsdoc: 'Sort direction'
     })
   }
 
@@ -854,11 +860,11 @@ export function addFilterInterface(builder: TypeScriptBuilder, config: FilterInt
 
   if (includeSearch) {
     properties.push({
-      name: "search",
-      type: "string",
+      name: 'search',
+      type: 'string',
       readonly: true,
       optional: true,
-      jsdoc: "Search term for filtering"
+      jsdoc: 'Search term for filtering'
     })
   }
 
@@ -869,12 +875,12 @@ export function addFilterInterface(builder: TypeScriptBuilder, config: FilterInt
  * ${jsdoc}
  */
 export interface ${className}Filter {
-${properties.map((f) => `  readonly ${f.name}?: ${f.type}`).join("\n")}
+${properties.map((f) => `  readonly ${f.name}?: ${f.type}`).join('\n')}
   readonly [key: string]: unknown
 }`)
   } else {
     builder.addInterface({ name: `${className}Filter`, exported: true, properties, jsdoc })
-    builder.addComment("// Add domain-specific filter fields")
+    builder.addComment('// Add domain-specific filter fields')
   }
 }
 
@@ -896,12 +902,12 @@ export function addQueryOptionsType(builder: TypeScriptBuilder, config: QueryOpt
 
   const fields = []
 
-  if (includeFilter) fields.push({ name: "filter", type: `${className}Filter` })
-  if (includeSort) fields.push({ name: "sort", type: `${className}Sort` })
-  if (includePagination) fields.push({ name: "pagination", type: "PaginationOptions" })
+  if (includeFilter) fields.push({ name: 'filter', type: `${className}Filter` })
+  if (includeSort) fields.push({ name: 'sort', type: `${className}Sort` })
+  if (includePagination) fields.push({ name: 'pagination', type: 'PaginationOptions' })
 
   builder.addRaw(`export type ${className}QueryOptions = {
-${fields.map((f) => `  readonly ${f.name}?: ${f.type}`).join("\n")}
+${fields.map((f) => `  readonly ${f.name}?: ${f.type}`).join('\n')}
 }`)
 }
 
@@ -954,10 +960,9 @@ export function generateStandardErrorExports(config: StandardErrorExportConfig) 
     `${className}TransactionError`
   ]
 
-  let output = `export { ${infraErrors.join(", ")} } from "${importPath}"\n`
+  let output = `export { ${infraErrors.join(', ')} } from "${importPath}"\n`
   // Type exports - only data-access specific types
-  output +=
-    `export type { ${className}DataAccessError, ${className}InfrastructureError } from "${importPath}"`
+  output += `export type { ${className}DataAccessError, ${className}InfrastructureError } from "${importPath}"`
 
   return output
 }
@@ -1045,7 +1050,7 @@ export function addConditionalExports(
  */
 export interface PlatformExportConfig {
   readonly packageName: string
-  readonly exportType: "server" | "client" | "edge" | "main"
+  readonly exportType: 'server' | 'client' | 'edge' | 'main'
   readonly title?: string
   readonly module?: string
 }
@@ -1055,12 +1060,9 @@ export interface PlatformExportConfig {
  */
 export function addPlatformExportHeader(builder: TypeScriptBuilder, config: PlatformExportConfig) {
   const descriptions = {
-    server:
-      `Server-side exports for ${config.packageName}.\nContains service implementations, layers, and server-specific functionality.`,
-    client:
-      `Client-side exports for ${config.packageName}.\nContains React hooks, client-specific layers, and browser-safe functionality.`,
-    edge:
-      `Edge runtime exports for ${config.packageName}.\nContains edge-specific layers and functionality for edge runtime environments.`,
+    server: `Server-side exports for ${config.packageName}.\nContains service implementations, layers, and server-specific functionality.`,
+    client: `Client-side exports for ${config.packageName}.\nContains React hooks, client-specific layers, and browser-safe functionality.`,
+    edge: `Edge runtime exports for ${config.packageName}.\nContains edge-specific layers and functionality for edge runtime environments.`,
     main: `Main entry point for ${config.packageName}.`
   }
 
@@ -1085,7 +1087,7 @@ export interface TypesOnlyExportOptions {
   packageName: string
   includeCQRS?: boolean
   includeClientServer?: boolean
-  platform?: "server" | "client" | "universal"
+  platform?: 'server' | 'client' | 'universal'
 }
 
 /**
@@ -1140,8 +1142,8 @@ export type * from "./lib/shared/validation"
  */
 export function generateFeatureTypesOnly(options: TypesOnlyExportOptions) {
   const { includeClientServer, packageName, platform } = options
-  const hasServer = platform === "server" || includeClientServer
-  const hasClient = platform === "client" || includeClientServer
+  const hasServer = platform === 'server' || includeClientServer
+  const hasClient = platform === 'client' || includeClientServer
 
   return `/**
  * Type-Only Exports
@@ -1168,8 +1170,8 @@ export type * from "./lib/shared/types"
 
 export type * from "./lib/shared/errors"
 ${
-    hasServer
-      ? `
+  hasServer
+    ? `
 // ============================================================================
 // Server Types
 // ============================================================================
@@ -1177,8 +1179,8 @@ ${
 // Service interface types
 export type * from "./lib/server/services/service"
 `
-      : ""
-  }
+    : ''
+}
 // ============================================================================
 // RPC Types (Always Prewired)
 // ============================================================================
@@ -1186,8 +1188,8 @@ export type * from "./lib/server/services/service"
 export type * from "./lib/rpc"
 export type * from "./lib/rpc/errors"
 ${
-    hasClient
-      ? `
+  hasClient
+    ? `
 // ============================================================================
 // Client Types
 // ============================================================================
@@ -1198,8 +1200,8 @@ export type * from "./lib/client/hooks/index"
 // Atom types (state shapes)
 export type * from "./lib/client/atoms/index"
 `
-      : ""
-  }
+    : ''
+}
 `
 }
 
@@ -1275,16 +1277,16 @@ export type * from "./lib/errors"
  */
 export function generateTypesOnlyFile(options: TypesOnlyExportOptions) {
   switch (options.libraryType) {
-    case "data-access":
+    case 'data-access':
       return generateDataAccessTypesOnly(options)
-    case "feature":
+    case 'feature':
       return generateFeatureTypesOnly(options)
-    case "provider":
+    case 'provider':
       return generateProviderTypesOnly(options)
-    case "infra":
+    case 'infra':
       return generateInfraTypesOnly(options)
-    case "contract":
-      throw new Error("Contract libraries should use contract/templates/types-only.template.ts")
+    case 'contract':
+      throw new Error('Contract libraries should use contract/templates/types-only.template.ts')
     default:
       throw new Error(`Unsupported library type: ${options.libraryType}`)
   }
@@ -1301,5 +1303,5 @@ export function getTypesOnlyFilePath(projectRoot: string) {
  * Check if a library type should have a types-only export file
  */
 export function shouldGenerateTypesOnly(libraryType: LibraryType) {
-  return ["contract", "data-access", "feature", "infra", "provider"].includes(libraryType)
+  return ['contract', 'data-access', 'feature', 'infra', 'provider'].includes(libraryType)
 }

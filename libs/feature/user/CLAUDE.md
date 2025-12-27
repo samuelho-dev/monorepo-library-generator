@@ -1,6 +1,15 @@
+---
+scope: libs/feature/user/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/FEATURE.md
+  - ../../../docs/EFFECT_PATTERNS.md
+---
+
 # @samuelho-dev/feature-user
 
-User feature with CurrentUser integration
+User
 
 ## Quick Reference
 
@@ -93,3 +102,11 @@ const server = userHandlers.pipe(
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
+
+## For Future Claude Code Instances
+
+- [ ] Service uses Context.Tag with static layers (Live, Test, Dev, Auto)
+- [ ] RPC handlers are in `lib/handlers.ts`, routes in `lib/rpc.ts`
+- [ ] Keep handlers lightweight - delegate to service methods
+- [ ] Use `yield*` in Effect.gen (not `yield`)
+- [ ] Client hooks/atoms are in `lib/client/`

@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/ports-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate ports.ts file for contract library
@@ -32,9 +32,10 @@ export function generatePortsFile(options: ContractTemplateOptions) {
   // Add imports
   // Import entity type from external package if specified, otherwise from local types
   // Note: prisma-effect-kysely generates UserSelect as the type (User is the schema object)
+  // When using local path, ports.ts is in lib/, so use ./types (sibling file)
   const entityTypeSource = options.typesDatabasePackage
     ? options.typesDatabasePackage
-    : "./types/database"
+    : './types'
 
   // External package imports must come before effect package
   builder.addImports([
@@ -44,13 +45,13 @@ export function generatePortsFile(options: ContractTemplateOptions) {
       isTypeOnly: true
     },
     // Context is a runtime value (used in extends Context.Tag()), Effect and Option are type-only
-    { from: "effect", imports: ["Context"] },
-    { from: "effect", imports: ["Effect", "Option"], isTypeOnly: true }
+    { from: 'effect', imports: ['Context'] },
+    { from: 'effect', imports: ['Effect', 'Option'], isTypeOnly: true }
   ])
 
   builder.addImports([
     {
-      from: "./errors",
+      from: './errors',
       imports: [`${className}RepositoryError`],
       isTypeOnly: true
     }
@@ -60,7 +61,7 @@ export function generatePortsFile(options: ContractTemplateOptions) {
   // SECTION 1: Supporting Types
   // ============================================================================
 
-  builder.addSectionComment("Supporting Types")
+  builder.addSectionComment('Supporting Types')
   builder.addBlankLine()
 
   // Filters interface
@@ -70,21 +71,21 @@ export function generatePortsFile(options: ContractTemplateOptions) {
     jsdoc: `Filter options for querying ${domainName}s`,
     properties: [
       {
-        name: "createdAfter",
-        type: "Date",
+        name: 'createdAfter',
+        type: 'Date',
         optional: true,
         readonly: true,
-        jsdoc: "Filter by creation date range"
+        jsdoc: 'Filter by creation date range'
       },
-      { name: "createdBefore", type: "Date", optional: true, readonly: true },
+      { name: 'createdBefore', type: 'Date', optional: true, readonly: true },
       {
-        name: "updatedAfter",
-        type: "Date",
+        name: 'updatedAfter',
+        type: 'Date',
         optional: true,
         readonly: true,
-        jsdoc: "Filter by update date range"
+        jsdoc: 'Filter by update date range'
       },
-      { name: "updatedBefore", type: "Date", optional: true, readonly: true }
+      { name: 'updatedBefore', type: 'Date', optional: true, readonly: true }
     ]
   })
 
@@ -93,23 +94,23 @@ export function generatePortsFile(options: ContractTemplateOptions) {
   // OffsetPaginationParams interface (for repository-level pagination)
   // Note: RPC uses page-based PaginationParams, repository uses offset-based
   builder.addInterface({
-    name: "OffsetPaginationParams",
+    name: 'OffsetPaginationParams',
     exported: true,
-    jsdoc: "Offset-based pagination parameters (for repository layer)",
+    jsdoc: 'Offset-based pagination parameters (for repository layer)',
     properties: [
-      { name: "limit", type: "number", readonly: true },
-      { name: "offset", type: "number", readonly: true }
+      { name: 'limit', type: 'number', readonly: true },
+      { name: 'offset', type: 'number', readonly: true }
     ]
   })
 
   // SortOptions interface
   builder.addInterface({
-    name: "SortOptions",
+    name: 'SortOptions',
     exported: true,
-    jsdoc: "Sort options",
+    jsdoc: 'Sort options',
     properties: [
-      { name: "field", type: "string", readonly: true },
-      { name: "direction", type: "\"asc\" | \"desc\"", readonly: true }
+      { name: 'field', type: 'string', readonly: true },
+      { name: 'direction', type: '"asc" | "desc"', readonly: true }
     ]
   })
 
@@ -119,7 +120,7 @@ export function generatePortsFile(options: ContractTemplateOptions) {
  * Paginated result with generic item type
  */
 export interface PaginatedResult<T> {
-  readonly items: ReadonlyArray<T>
+  readonly items: readonly T[]
   readonly total: number
   readonly limit: number
   readonly offset: number
@@ -131,7 +132,7 @@ export interface PaginatedResult<T> {
   // SECTION 2: Repository Port
   // ============================================================================
 
-  builder.addSectionComment("Repository Port")
+  builder.addSectionComment('Repository Port')
   builder.addBlankLine()
 
   // Create repository Context.Tag with inline interface
@@ -142,7 +143,7 @@ export interface PaginatedResult<T> {
   // SECTION 3: Service Port
   // ============================================================================
 
-  builder.addSectionComment("Service Port")
+  builder.addSectionComment('Service Port')
   builder.addBlankLine()
 
   // Create service Context.Tag with inline interface
@@ -154,7 +155,7 @@ export interface PaginatedResult<T> {
   // ============================================================================
 
   if (includeCQRS) {
-    builder.addSectionComment("Projection Repository Port (CQRS)")
+    builder.addSectionComment('Projection Repository Port (CQRS)')
     builder.addBlankLine()
 
     const projectionRepositoryTag = createProjectionRepositoryTag(className, fileName, scope)

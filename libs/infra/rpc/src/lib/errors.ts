@@ -200,7 +200,7 @@ export const RpcHttpStatus = {
   RpcRateLimitError: 429,
   RpcServiceError: 503,
   RpcInfraError: 500,
-  RpcInternalError: 500,
+  RpcInternalError: 500
 } as const
 
 /**
@@ -209,8 +209,7 @@ export const RpcHttpStatus = {
  * Uses the error's _tag to determine HTTP status code.
  * All RPC errors extend Schema.TaggedError so _tag is always present.
  */
-export const getHttpStatus = (error: RpcError): number =>
-  RpcHttpStatus[error._tag] ?? 500
+export const getHttpStatus = (error: RpcError): number => RpcHttpStatus[error._tag] ?? 500
 
 // ============================================================================
 // Error Boundary (Effect-native)
@@ -255,7 +254,5 @@ export const withRpcErrorBoundary = <A, E, R>(
   effect: Effect.Effect<A, E, R>
 ) =>
   effect.pipe(
-    Effect.catchAll(() =>
-      Effect.fail(new RpcInternalError({ message: "An unexpected error occurred" }))
-    )
+    Effect.catchAll(() => Effect.fail(new RpcInternalError({ message: "An unexpected error occurred" })))
   )

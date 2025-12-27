@@ -22,12 +22,3 @@ Import options:
 export { UserService } from "./service"
 export type { UserServiceInterface } from "./service"
 
-
-// ============================================================================
-// Sub-Module Services
-// ============================================================================
-export { AuthenticationService, type AuthenticationServiceInterface } from "./authentication/service"
-export { AuthenticationLive, AuthenticationTest, AuthenticationDependencies } from "./authentication/layer"
-
-export { ProfileService, type ProfileServiceInterface } from "./profile/service"
-export { ProfileLive, ProfileTest, ProfileDependencies } from "./profile/layer"

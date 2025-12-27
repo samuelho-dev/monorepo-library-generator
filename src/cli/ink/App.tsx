@@ -6,19 +6,19 @@
  * @module monorepo-library-generator/cli/ink/App
  */
 
-import { Box } from 'ink';
+import { Box } from 'ink'
 import { useCallback, useReducer } from 'react'
-import { getTargetDirectory } from '../interactive/file-preview';
-import type { WizardResult } from '../interactive/types';
-import { OperationsProvider } from './bridge/operations-context';
-import { Header } from './components/Header';
-import { WizardContainer } from './components/WizardContainer';
+import { getTargetDirectory } from '../interactive/file-preview'
+import type { WizardResult } from '../interactive/types'
+import { OperationsProvider } from './bridge/operations-context'
+import { Header } from './components/Header'
+import { WizardContainer } from './components/WizardContainer'
 import { createInitialState, wizardReducer } from './state/types'
 
 interface AppProps {
-  readonly librariesRoot: string;
-  readonly workspaceRoot: string;
-  readonly onComplete: (result: WizardResult | null) => void;
+  readonly librariesRoot: string
+  readonly workspaceRoot: string
+  readonly onComplete: (result: WizardResult | null) => void
 }
 
 export function App({ librariesRoot, workspaceRoot, onComplete }: AppProps) {
@@ -31,7 +31,7 @@ export function App({ librariesRoot, workspaceRoot, onComplete }: AppProps) {
       const targetDirectory = getTargetDirectory(
         state.librariesRoot,
         state.libraryType,
-        state.libraryName,
+        state.libraryName
       )
 
       const result: WizardResult = {

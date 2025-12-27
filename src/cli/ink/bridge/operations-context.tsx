@@ -7,17 +7,21 @@
  * @module monorepo-library-generator/cli/ink/bridge/operations-context
  */
 
-import type React from 'react';
+import type React from 'react'
 import { createContext, useContext, useMemo } from 'react'
-import { getOptionsForType, type OptionConfig } from '../../interactive/config/options.config';
+import { getOptionsForType, type OptionConfig } from '../../interactive/config/options.config'
 import {
-  validateExternalService,
-  validateName,
   type ValidationResult,
-} from '../../interactive/config/validation.config';
-import { executeWizardResult } from '../../interactive/execution';
-import { getCreationDescription, getFilePreview, getTargetDirectory } from '../../interactive/file-preview';
-import type { FilePreview, LibraryType, WizardOptions, } from '../../interactive/types'
+  validateExternalService,
+  validateName
+} from '../../interactive/config/validation.config'
+import { executeWizardResult } from '../../interactive/execution'
+import {
+  getCreationDescription,
+  getFilePreview,
+  getTargetDirectory
+} from '../../interactive/file-preview'
+import type { FilePreview, LibraryType, WizardOptions } from '../../interactive/types'
 
 /**
  * Operations interface - thin wrapper around existing functions
@@ -28,30 +32,26 @@ import type { FilePreview, LibraryType, WizardOptions, } from '../../interactive
 export interface WizardOperations {
   readonly validation: {
     /** Validate a library name */
-    validateName: (name: string) => ValidationResult;
+    validateName: (name: string) => ValidationResult
     /** Validate an external service name */
     validateExternalService: (name: string) => ValidationResult
-  };
+  }
   readonly preview: {
     /** Get file preview for a library configuration */
     getFilePreview: (
       type: LibraryType,
       name: string,
       options: WizardOptions
-    ) => readonly FilePreview[];
+    ) => readonly FilePreview[]
     /** Get target directory for a library type */
-    getTargetDirectory: (
-      librariesRoot: string,
-      type: LibraryType,
-      name: string
-    ) => string;
+    getTargetDirectory: (librariesRoot: string, type: LibraryType, name: string) => string
     /** Get description of what will be created */
     getCreationDescription: (type: LibraryType, name: string) => string
-  };
+  }
   readonly config: {
     /** Get available options for a library type */
     getOptionsForType: (type: LibraryType) => readonly OptionConfig[]
-  };
+  }
   readonly generation: {
     /** Execute library generation from wizard result */
     execute: typeof executeWizardResult
@@ -61,7 +61,7 @@ export interface WizardOperations {
 const OperationsContext = createContext<WizardOperations | null>(null)
 
 interface OperationsProviderProps {
-  readonly children: React.ReactNode;
+  readonly children: React.ReactNode
 }
 
 /**
@@ -79,19 +79,19 @@ export function OperationsProvider({ children }: OperationsProviderProps) {
     () => ({
       validation: {
         validateName,
-        validateExternalService,
+        validateExternalService
       },
       preview: {
         getFilePreview,
         getTargetDirectory,
-        getCreationDescription,
+        getCreationDescription
       },
       config: {
-        getOptionsForType,
+        getOptionsForType
       },
       generation: {
-        execute: executeWizardResult,
-      },
+        execute: executeWizardResult
+      }
     }),
     []
   )
@@ -118,5 +118,5 @@ export function useOperations(): WizardOperations {
   if (!ops) {
     throw new Error('useOperations must be used within OperationsProvider')
   }
-  return ops;
+  return ops
 }

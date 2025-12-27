@@ -10,7 +10,6 @@ Re-exports types from provider-supabase and adds storage-specific types.
  * @module @samuelho-dev/infra-storage/types
  */
 
-
 // ============================================================================
 // Provider Types
 // ============================================================================
@@ -91,8 +90,8 @@ export interface ListFilesOptions {
   readonly offset?: number
   readonly prefix?: string
   readonly sortBy?: {
-    readonly column: 'name' | 'created_at' | 'updated_at'
-    readonly order: 'asc' | 'desc'
+    readonly column: "name" | "created_at" | "updated_at"
+    readonly order: "asc" | "desc"
   }
 }
 

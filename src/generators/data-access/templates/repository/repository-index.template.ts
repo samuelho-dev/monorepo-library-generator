@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository/repository-index-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { DataAccessTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate repository/index.ts file
@@ -41,13 +41,15 @@ Import options (from most optimal to most convenient):
   })
   builder.addBlankLine()
 
-  builder.addSectionComment("Re-export repository interface and tag")
+  builder.addSectionComment('Re-export repository interface and tag')
   builder.addBlankLine()
 
-  builder.addRaw(`export { ${className}Repository, type ${className}RepositoryInterface } from "./repository"`)
+  builder.addRaw(
+    `export { ${className}Repository, type ${className}RepositoryInterface } from "./repository"`
+  )
   builder.addBlankLine()
 
-  builder.addSectionComment("Re-export all operations")
+  builder.addSectionComment('Re-export all operations')
   builder.addBlankLine()
 
   builder.addRaw(`export type {

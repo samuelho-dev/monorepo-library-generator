@@ -7,25 +7,25 @@
  * @module monorepo-library-generator/cli/ink/components/TagsSelector
  */
 
-import { Box, Text } from 'ink';
+import { Box, Text } from 'ink'
 import TextInput from 'ink-text-input'
 import { colors, statusIcons } from '../theme/colors'
 
 interface TagsSelectorProps {
   /** Available tags from workspace */
-  readonly availableTags: readonly string[];
+  readonly availableTags: readonly string[]
   /** Currently selected tags */
-  readonly selectedTags: readonly string[];
+  readonly selectedTags: readonly string[]
   /** Index of focused tag in list */
-  readonly focusedIndex: number;
+  readonly focusedIndex: number
   /** Current interaction mode */
-  readonly mode: 'navigation' | 'adding-tag';
+  readonly mode: 'navigation' | 'adding-tag'
   /** Value of new tag input */
-  readonly newTagValue: string;
+  readonly newTagValue: string
   /** Callback when new tag value changes */
-  readonly onNewTagValueChange: (value: string) => void;
+  readonly onNewTagValueChange: (value: string) => void
   /** Whether this component is active (has focus) */
-  readonly isActive: boolean;
+  readonly isActive: boolean
 }
 
 /**
@@ -38,7 +38,7 @@ export function TagsSelector({
   mode,
   newTagValue,
   onNewTagValueChange,
-  isActive,
+  isActive
 }: TagsSelectorProps) {
   // Empty state - no existing tags in workspace
   if (availableTags.length === 0) {
@@ -76,9 +76,7 @@ export function TagsSelector({
         {isActive && (
           <Box marginTop={1}>
             <Text color={colors.muted}>
-              {mode === 'adding-tag'
-                ? 'Enter confirm \u2022 Esc cancel'
-                : 'Enter add custom tag'}
+              {mode === 'adding-tag' ? 'Enter confirm \u2022 Esc cancel' : 'Enter add custom tag'}
             </Text>
           </Box>
         )}
@@ -90,7 +88,7 @@ export function TagsSelector({
     <Box flexDirection="column">
       {/* Tag list with checkboxes */}
       {availableTags.map((tag, index) => {
-        const isFocused = isActive && mode === 'navigation' && focusedIndex === index;
+        const isFocused = isActive && mode === 'navigation' && focusedIndex === index
         const isSelected = selectedTags.includes(tag)
         const checkbox = isSelected ? statusIcons.completed : statusIcons.pending
 
@@ -108,13 +106,9 @@ export function TagsSelector({
       {/* Add new tag option */}
       <Box>
         <Text
-          color={
-            isActive && focusedIndex === availableTags.length ? colors.primary : undefined
-          }
+          color={isActive && focusedIndex === availableTags.length ? colors.primary : undefined}
         >
-          {isActive && focusedIndex === availableTags.length
-            ? statusIcons.chevronRight
-            : ' '}
+          {isActive && focusedIndex === availableTags.length ? statusIcons.chevronRight : ' '}
         </Text>
         <Text color={colors.info}>+ Add custom tag: </Text>
         {mode === 'adding-tag' ? (

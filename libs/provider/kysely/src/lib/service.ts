@@ -1,5 +1,13 @@
 import { Context, Effect, Runtime } from "effect"
-import { DummyDriver, Kysely, PostgresAdapter, PostgresDialect, PostgresIntrospector, PostgresQueryCompiler, sql } from "kysely"
+import {
+  DummyDriver,
+  Kysely,
+  PostgresAdapter,
+  PostgresDialect,
+  PostgresIntrospector,
+  PostgresQueryCompiler,
+  sql
+} from "kysely"
 import type { PoolConfig } from "pg"
 import { DatabaseConnectionError, DatabaseQueryError, DatabaseTransactionError } from "./errors"
 import type { KyselyServiceInterface } from "./interface"
@@ -20,7 +28,6 @@ Architecture:
  * @module @samuelho-dev/provider-kysely/service
  * @see https://kysely.dev for Kysely documentation
  */
-
 
 // Dynamic import of pg to avoid bundling issues
 const createPool = async (config: PoolConfig) => {
@@ -198,10 +205,7 @@ export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
           // Get runtime to preserve fiber context inside transaction
           const runtime = yield* Effect.runtime()
           return yield* Effect.tryPromise({
-            try: () =>
-              db.transaction().execute((tx) =>
-                Runtime.runPromise(runtime)(fn(tx))
-              ),
+            try: () => db.transaction().execute((tx) => Runtime.runPromise(runtime)(fn(tx))),
             catch: (error) =>
               new DatabaseTransactionError({
                 message: `Transaction failed: ${error}`,
@@ -338,10 +342,10 @@ export const makeTestKyselyService = <DB = unknown>(
   options: MockServiceOptions = {}
 ) => {
   const {
-    simulateErrors = false,
     latency = 0,
     mockData = {},
-    mockTables = []
+    mockTables = [],
+    simulateErrors = false
   } = options
 
   // Create Kysely with DummyDriver - Kysely's native testing approach
@@ -355,8 +359,7 @@ export const makeTestKyselyService = <DB = unknown>(
     }
   })
 
-  const withLatency = <T, E>(effect: Effect.Effect<T, E>) =>
-    latency > 0 ? Effect.delay(effect, latency) : effect
+  const withLatency = <T, E>(effect: Effect.Effect<T, E>) => latency > 0 ? Effect.delay(effect, latency) : effect
 
   const service: KyselyServiceInterface<DB> = {
     // Returns real Kysely instance with DummyDriver
@@ -368,35 +371,35 @@ export const makeTestKyselyService = <DB = unknown>(
       withLatency(
         simulateErrors && Math.random() > 0.5
           ? Effect.fail(
+            new DatabaseQueryError({
+              operation: "query",
+              message: "Mock query error for testing",
+              cause: new Error("Simulated query failure")
+            })
+          )
+          : Effect.tryPromise({
+            try: () => fn(db),
+            catch: (error) =>
               new DatabaseQueryError({
                 operation: "query",
-                message: "Mock query error for testing",
-                cause: new Error("Simulated query failure")
+                message: `Mock query execution failed: ${error}`,
+                cause: error
               })
-            )
-          : Effect.tryPromise({
-              try: () => fn(db),
-              catch: (error) =>
-                new DatabaseQueryError({
-                  operation: "query",
-                  message: `Mock query execution failed: ${error}`,
-                  cause: error
-                })
-            })
+          })
       ),
 
     execute: (query) =>
       withLatency(
         simulateErrors && Math.random() > 0.5
           ? Effect.fail(
-              new DatabaseQueryError({
-                operation: "execute",
-                message: "Mock execute error for testing",
-                query: query.sql,
-                cause: new Error("Simulated execution failure")
-              })
-            )
-          : Effect.succeed(mockData[query.sql] ?? mockData["execute"] ?? [])
+            new DatabaseQueryError({
+              operation: "execute",
+              message: "Mock execute error for testing",
+              query: query.sql,
+              cause: new Error("Simulated execution failure")
+            })
+          )
+          : Effect.succeed(mockData[query.sql] ?? mockData.execute ?? [])
       ),
 
     // Transaction uses DummyDriver's transaction support
@@ -404,57 +407,57 @@ export const makeTestKyselyService = <DB = unknown>(
       withLatency(
         simulateErrors && Math.random() > 0.7
           ? Effect.fail(
-              new DatabaseTransactionError({
-                message: "Mock transaction error for testing",
-                cause: new Error("Simulated transaction failure")
-              })
-            )
-          : Effect.gen(function*() {
-              const runtime = yield* Effect.runtime()
-              return yield* Effect.tryPromise({
-                try: () => db.transaction().execute((tx) => Runtime.runPromise(runtime)(fn(tx))),
-                catch: (error) =>
-                  new DatabaseTransactionError({
-                    message: `Transaction failed: ${error}`,
-                    cause: error
-                  })
-              })
+            new DatabaseTransactionError({
+              message: "Mock transaction error for testing",
+              cause: new Error("Simulated transaction failure")
             })
+          )
+          : Effect.gen(function*() {
+            const runtime = yield* Effect.runtime()
+            return yield* Effect.tryPromise({
+              try: () => db.transaction().execute((tx) => Runtime.runPromise(runtime)(fn(tx))),
+              catch: (error) =>
+                new DatabaseTransactionError({
+                  message: `Transaction failed: ${error}`,
+                  cause: error
+                })
+            })
+          })
       ),
 
     sql: (sqlQuery) =>
       withLatency(
         simulateErrors && Math.random() > 0.5
           ? Effect.fail(
+            new DatabaseQueryError({
+              operation: "sql",
+              message: "Mock SQL error for testing",
+              cause: new Error("Simulated SQL failure")
+            })
+          )
+          : Effect.tryPromise({
+            try: async () => {
+              const result = await sqlQuery.execute(db)
+              return result.rows
+            },
+            catch: (error) =>
               new DatabaseQueryError({
                 operation: "sql",
-                message: "Mock SQL error for testing",
-                cause: new Error("Simulated SQL failure")
+                message: `Mock SQL failed: ${error}`,
+                cause: error
               })
-            )
-          : Effect.tryPromise({
-              try: async () => {
-                const result = await sqlQuery.execute(db)
-                return result.rows
-              },
-              catch: (error) =>
-                new DatabaseQueryError({
-                  operation: "sql",
-                  message: `Mock SQL failed: ${error}`,
-                  cause: error
-                })
-            })
+          })
       ),
 
     ping: () =>
       withLatency(
         simulateErrors && Math.random() > 0.8
           ? Effect.fail(
-              new DatabaseConnectionError({
-                message: "Mock connection error for testing",
-                cause: new Error("Simulated connection failure")
-              })
-            )
+            new DatabaseConnectionError({
+              message: "Mock connection error for testing",
+              cause: new Error("Simulated connection failure")
+            })
+          )
           : Effect.succeed(undefined)
       ),
 
@@ -462,12 +465,12 @@ export const makeTestKyselyService = <DB = unknown>(
       withLatency(
         simulateErrors && Math.random() > 0.9
           ? Effect.fail(
-              new DatabaseQueryError({
-                operation: "introspection",
-                message: "Mock introspection error for testing",
-                cause: new Error("Simulated introspection failure")
-              })
-            )
+            new DatabaseQueryError({
+              operation: "introspection",
+              message: "Mock introspection error for testing",
+              cause: new Error("Simulated introspection failure")
+            })
+          )
           : Effect.succeed({ tables: mockTables, dialect: "postgresql" })
       ),
 
@@ -500,5 +503,4 @@ export const makeTestKyselyService = <DB = unknown>(
  * })
  * ```
  */
-export const KyselyService = <DB = unknown>() =>
-  Context.GenericTag<KyselyServiceInterface<DB>>("KyselyService")
+export const KyselyService = <DB = unknown>() => Context.GenericTag<KyselyServiceInterface<DB>>("KyselyService")

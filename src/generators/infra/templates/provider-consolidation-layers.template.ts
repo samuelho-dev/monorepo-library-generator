@@ -1,29 +1,55 @@
-import { createNamingVariants } from "../../../utils/naming"
-
-export const generateProviderConsolidationLayersTemplate = (options: {
-  providers: Array<string>
-  packageName: string
-}) => {
-  const workspaceName = options.packageName.split("/")[0]
-  const imports = options.providers
-    .map((p) => {
-      const className = createNamingVariants(p).className
-      return `import { ${className}Live } from "${workspaceName}/provider-${p}"`
-    })
-    .join("\n")
-
-  const layerMerge = options.providers.map((p) => `  ${createNamingVariants(p).className}Live`).join(",\n")
-
-  return `/**
- * Consolidated Infrastructure Layers
+/**
+ * Provider Consolidation Layers Template
  *
- * Combines all cluster providers into unified layer
+ * Generates consolidated infrastructure layers that combine
+ * multiple cluster providers into a unified layer.
+ *
+ * @module monorepo-library-generator/infra/templates/provider-consolidation-layers
  */
 
-import { Layer } from "effect"
-${imports}
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import { createNamingVariants } from '../../../utils/naming'
+
+export interface ProviderConsolidationLayersOptions {
+  readonly providers: readonly string[]
+  readonly packageName: string
+}
 
 /**
+ * Generate consolidated infrastructure layers file
+ *
+ * Combines all cluster providers into a unified layer for simplified
+ * dependency injection across services.
+ */
+export function generateProviderConsolidationLayersTemplate(options: ProviderConsolidationLayersOptions) {
+  const workspaceName = options.packageName.split('/')[0]
+
+  const builder = new TypeScriptBuilder()
+
+  // File header
+  builder.addFileHeader({
+    title: 'Consolidated Infrastructure Layers',
+    description: 'Combines all cluster providers into unified layer'
+  })
+
+  builder.addBlankLine()
+
+  // Add imports
+  builder.addImport('effect', 'Layer')
+
+  for (const provider of options.providers) {
+    const { className } = createNamingVariants(provider)
+    builder.addImport(`${workspaceName}/provider-${provider}`, `${className}Live`)
+  }
+
+  builder.addBlankLine()
+
+  // Generate layer merge
+  const layerMergeEntries = options.providers
+    .map((p) => `  ${createNamingVariants(p).className}Live`)
+    .join(',\n')
+
+  builder.addRaw(`/**
  * Cluster infrastructure live layer
  *
  * Provides all cluster-related providers in a single layer
@@ -38,7 +64,10 @@ ${imports}
  * \`\`\`
  */
 export const ClusterInfrastructureLive = Layer.mergeAll(
-${layerMerge}
-)
-`
+${layerMergeEntries}
+)`)
+
+  builder.addBlankLine()
+
+  return builder.toString()
 }

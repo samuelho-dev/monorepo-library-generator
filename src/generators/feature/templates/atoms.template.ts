@@ -11,9 +11,9 @@
  * @module monorepo-library-generator/feature/atoms-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate client/atoms/{name}-atoms.ts file for feature library
@@ -51,7 +51,7 @@ Usage:
 
   // Add imports
   builder.addImports([
-    { from: "@effect-atom/atom", imports: ["Atom"] },
+    { from: '@effect-atom/atom', imports: ['Atom'] },
     {
       from: `${scope}/contract-${fileName}`,
       imports: [{ name: `${className}Select`, alias: className }],
@@ -59,7 +59,7 @@ Usage:
     }
   ])
 
-  builder.addSectionComment("State Types")
+  builder.addSectionComment('State Types')
 
   // Add state interfaces
   builder.addRaw(`/**
@@ -88,10 +88,17 @@ export interface ${className}EntityState {
 }
 
 /**
+ * ${className} entity state with ID (for Atom.family cache)
+ */
+export interface ${className}EntityFamilyState extends ${className}EntityState {
+  readonly entityId: string
+}
+
+/**
  * ${className} list state (collection)
  */
 export interface ${className}ListState {
-  readonly items: ReadonlyArray<${className}>
+  readonly items: readonly ${className}[]
   readonly loadingState: LoadingState
   readonly error: string | null
   readonly pagination: PaginationState
@@ -117,7 +124,7 @@ export interface ${className}State {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Initial States")
+  builder.addSectionComment('Initial States')
 
   builder.addRaw(`const initial${className}EntityState: ${className}EntityState = {
   data: null,
@@ -152,7 +159,7 @@ const initial${className}State: ${className}State = {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Atoms")
+  builder.addSectionComment('Atoms')
 
   // Main combined atom
   builder.addRaw(`/**
@@ -188,11 +195,13 @@ export const ${propertyName}Atom = Atom.make<${className}State>(initial${classNa
  * - Automatic deduplication (same ID = same atom instance)
  * - Independent loading/error states per entity
  */
-export const ${propertyName}EntityFamily = Atom.family((id: string) => {
-  // The id parameter is used internally by Atom.family as the cache key
-  // Each unique id gets a separate atom instance
-  return Atom.make<${className}EntityState>(initial${className}EntityState)
-})
+export const ${propertyName}EntityFamily = Atom.family((id: string) =>
+  Atom.make<${className}EntityFamilyState>({
+    ...initial${className}EntityState,
+    // Store the entity ID for reference
+    entityId: id
+  })
+)
 
 /**
  * Helper to fetch and cache a single ${className} entity by ID
@@ -210,7 +219,7 @@ export function get${className}Atom(id: string) {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Derived Atoms")
+  builder.addSectionComment('Derived Atoms')
 
   // Derived atoms for common access patterns
   builder.addRaw(`/**
@@ -240,16 +249,14 @@ export const ${propertyName}DataAtom = Atom.map(${propertyName}Atom, (state) => 
 export const ${propertyName}ListAtom = Atom.map(${propertyName}Atom, (state) => state.list.items)`)
   builder.addBlankLine()
 
-  builder.addSectionComment("State Updaters")
+  builder.addSectionComment('State Updaters')
 
   // State update functions
   builder.addRaw(`/**
  * Update entity state
  */
-export function update${className}Entity(
-  update: Partial<${className}EntityState>
-): (state: ${className}State) => ${className}State {
-  return (state) => ({
+export function update${className}Entity(update: Partial<${className}EntityState>) {
+  return (state: ${className}State) => ({
     ...state,
     entity: { ...state.entity, ...update }
   })
@@ -258,10 +265,8 @@ export function update${className}Entity(
 /**
  * Update list state
  */
-export function update${className}List(
-  update: Partial<${className}ListState>
-): (state: ${className}State) => ${className}State {
-  return (state) => ({
+export function update${className}List(update: Partial<${className}ListState>) {
+  return (state: ${className}State) => ({
     ...state,
     list: { ...state.list, ...update }
   })
@@ -270,10 +275,8 @@ export function update${className}List(
 /**
  * Update operation state
  */
-export function update${className}Operation(
-  update: Partial<${className}OperationState>
-): (state: ${className}State) => ${className}State {
-  return (state) => ({
+export function update${className}Operation(update: Partial<${className}OperationState>) {
+  return (state: ${className}State) => ({
     ...state,
     operation: { ...state.operation, ...update }
   })
@@ -282,7 +285,7 @@ export function update${className}Operation(
 /**
  * Reset all state to initial
  */
-export function reset${className}State(): ${className}State {
+export function reset${className}State() {
   return initial${className}State
 }`)
   builder.addBlankLine()

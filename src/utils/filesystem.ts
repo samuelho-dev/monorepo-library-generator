@@ -10,13 +10,13 @@
  * @module monorepo-library-generator/filesystem
  */
 
-import { FileSystem, Path } from "@effect/platform"
-import { NodeFileSystem, NodePath } from "@effect/platform-node"
-import type { Tree } from "@nx/devkit"
-import { Context, Data, Effect } from "effect"
-import * as nodeFs from "node:fs"
-import * as nodePath from "node:path"
-import type { WorkspaceContext } from "../infrastructure"
+import * as nodeFs from 'node:fs'
+import * as nodePath from 'node:path'
+import { FileSystem, Path } from '@effect/platform'
+import { NodeFileSystem, NodePath } from '@effect/platform-node'
+import type { Tree } from '@nx/devkit'
+import { Context, Data, Effect } from 'effect'
+import type { WorkspaceContext } from '../infrastructure'
 
 // ============================================================================
 // Error Types
@@ -25,7 +25,7 @@ import type { WorkspaceContext } from "../infrastructure"
 /**
  * Base file system error
  */
-export class FileSystemError extends Data.TaggedError("FileSystemError")<{
+export class FileSystemError extends Data.TaggedError('FileSystemError')<{
   readonly message: string
   readonly path?: string
   readonly cause?: unknown
@@ -34,7 +34,7 @@ export class FileSystemError extends Data.TaggedError("FileSystemError")<{
 /**
  * File not found error
  */
-export class FileNotFoundError extends Data.TaggedError("FileNotFoundError")<{
+export class FileNotFoundError extends Data.TaggedError('FileNotFoundError')<{
   readonly path: string
   readonly cause?: unknown
 }> {}
@@ -42,7 +42,7 @@ export class FileNotFoundError extends Data.TaggedError("FileNotFoundError")<{
 /**
  * Directory creation error
  */
-export class DirectoryCreationError extends Data.TaggedError("DirectoryCreationError")<{
+export class DirectoryCreationError extends Data.TaggedError('DirectoryCreationError')<{
   readonly path: string
   readonly cause?: unknown
 }> {}
@@ -50,7 +50,7 @@ export class DirectoryCreationError extends Data.TaggedError("DirectoryCreationE
 /**
  * File write error
  */
-export class FileWriteError extends Data.TaggedError("FileWriteError")<{
+export class FileWriteError extends Data.TaggedError('FileWriteError')<{
   readonly path: string
   readonly content?: string
   readonly cause?: unknown
@@ -59,7 +59,7 @@ export class FileWriteError extends Data.TaggedError("FileWriteError")<{
 /**
  * File read error
  */
-export class FileReadError extends Data.TaggedError("FileReadError")<{
+export class FileReadError extends Data.TaggedError('FileReadError')<{
   readonly path: string
   readonly cause?: unknown
 }> {}
@@ -152,13 +152,13 @@ export interface FileSystemAdapter {
    *
    * @returns 'nx' or 'effect'
    */
-  getMode(): "nx" | "effect"
+  getMode(): 'nx' | 'effect'
 }
 
 /**
  * FileSystemService context tag for dependency injection
  */
-export class FileSystemService extends Context.Tag("FileSystemService")<
+export class FileSystemService extends Context.Tag('FileSystemService')<
   FileSystemService,
   FileSystemAdapter
 >() {}
@@ -178,7 +178,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
     private readonly workspaceRoot: string,
     private readonly fs: FileSystem.FileSystem,
     private readonly pathService: Path.Path,
-    private readonly mode: "nx" | "effect" = "effect"
+    private readonly mode: 'nx' | 'effect' = 'effect'
   ) {}
 
   /**
@@ -213,7 +213,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
       )
     )
 
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       yield* createDir
       yield* writeFile
     })
@@ -332,7 +332,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
  * @returns Effect that provides FileSystemAdapter
  */
 export function createEffectFsAdapter(workspaceRoot: string) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
     const pathService = yield* Path.Path
 
@@ -348,7 +348,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   constructor(private readonly workspaceRoot: string) {}
 
   writeFile(path: string, content: string) {
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem
       const dir = nodePath.dirname(path)
 
@@ -378,7 +378,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   readFile(path: string) {
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem
       return yield* fs.readFileString(path).pipe(
         Effect.catchAll((error) =>
@@ -394,7 +394,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   exists(path: string) {
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem
       return yield* fs.exists(path).pipe(
         Effect.catchAll((error) =>
@@ -411,7 +411,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   makeDirectory(path: string) {
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem
       yield* fs.makeDirectory(path, { recursive: true }).pipe(
         Effect.catchAll((error) =>
@@ -427,7 +427,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   listDirectory(path: string) {
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem
       return yield* fs.readDirectory(path).pipe(
         Effect.catchAll((error) =>
@@ -444,7 +444,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   remove(path: string, options?: { recursive?: boolean }) {
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem
       yield* fs.remove(path, options).pipe(
         Effect.catchAll((error) =>
@@ -465,7 +465,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   getMode() {
-    return "effect" as const
+    return 'effect' as const
   }
 }
 
@@ -485,7 +485,7 @@ export function createMCPAdapter(workspaceRoot: string) {
 export class TreeAdapter implements FileSystemAdapter {
   constructor(
     private readonly tree: Tree,
-    private readonly mode: "nx" | "effect" = "nx"
+    private readonly mode: 'nx' | 'effect' = 'nx'
   ) {}
 
   /**
@@ -530,14 +530,14 @@ export class TreeAdapter implements FileSystemAdapter {
           // This allows tests to work with template files outside virtual tree
           // (e.g., dotfile templates in src/dotfiles/)
           if (nodeFs.existsSync(path)) {
-            return nodeFs.readFileSync(path, "utf-8")
+            return nodeFs.readFileSync(path, 'utf-8')
           }
 
           throw new Error(`File not found: ${path}`)
         }
 
         // Convert Buffer to string
-        return content.toString("utf-8")
+        return content.toString('utf-8')
       },
       catch: (error) =>
         new FileReadError({
@@ -678,13 +678,13 @@ export interface AdapterOptions {
 export function createAdapter(options: AdapterOptions) {
   const { context, nxTree } = options
 
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     switch (context.interfaceType) {
-      case "nx": {
+      case 'nx': {
         if (!nxTree) {
           return yield* Effect.fail(
             new FileSystemError({
-              message: "Nx Tree required for Nx interface but not provided",
+              message: 'Nx Tree required for Nx interface but not provided',
               path: context.root
             })
           )
@@ -692,11 +692,11 @@ export function createAdapter(options: AdapterOptions) {
         return createTreeAdapter(nxTree)
       }
 
-      case "cli": {
+      case 'cli': {
         return yield* createEffectFsAdapter(context.root)
       }
 
-      case "mcp": {
+      case 'mcp': {
         return createMCPAdapter(context.root)
       }
 
@@ -726,8 +726,8 @@ export function createAdapterFromContext(context: WorkspaceContext, nxTree?: Tre
  */
 export interface EnvVarToInject {
   readonly name: string
-  readonly type: "string" | "number" | "redacted"
-  readonly context?: "server" | "client" | "shared"
+  readonly type: 'string' | 'number' | 'redacted'
+  readonly context?: 'server' | 'client' | 'shared'
 }
 
 /**
@@ -741,7 +741,7 @@ export interface EnvVarToInject {
  * @returns Effect that succeeds with void or fails with file system errors
  */
 export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<EnvVarToInject>) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const workspaceRoot = adapter.getWorkspaceRoot()
     const envFilePath = `${workspaceRoot}/libs/env/src/env.ts`
 
@@ -749,7 +749,7 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<En
     const envFileExists = yield* adapter.exists(envFilePath)
     if (!envFileExists) {
       yield* Effect.logWarning(
-        `libs/env/src/env.ts not found. Environment variables not injected: ${vars.map((v) => v.name).join(", ")}`
+        `libs/env/src/env.ts not found. Environment variables not injected: ${vars.map((v) => v.name).join(', ')}`
       )
       return
     }
@@ -758,18 +758,18 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<En
     const content = yield* adapter.readFile(envFilePath)
 
     // Group vars by context
-    const serverVars = vars.filter((v) => v.context === "server" || !v.context)
-    const clientVars = vars.filter((v) => v.context === "client")
-    const sharedVars = vars.filter((v) => v.context === "shared")
+    const serverVars = vars.filter((v) => v.context === 'server' || !v.context)
+    const clientVars = vars.filter((v) => v.context === 'client')
+    const sharedVars = vars.filter((v) => v.context === 'shared')
 
     let updatedContent = content
 
     // Helper to create config line
     const makeConfigLine = (v: EnvVarToInject) => {
       switch (v.type) {
-        case "redacted":
+        case 'redacted':
           return `    ${v.name}: Config.redacted("${v.name}"),`
-        case "number":
+        case 'number':
           return `    ${v.name}: Config.number("${v.name}"),`
         default:
           return `    ${v.name}: Config.string("${v.name}"),`
@@ -788,13 +788,13 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<En
         const serverMatch = updatedContent.match(/server:\s*\{([^}]*)\}/s)
         if (serverMatch) {
           const serverSection = serverMatch[0]
-          const closingBrace = serverSection.lastIndexOf("}")
+          const closingBrace = serverSection.lastIndexOf('}')
           const beforeBrace = serverSection.slice(0, closingBrace)
           const afterBrace = serverSection.slice(closingBrace)
 
           // Trim trailing whitespace and ensure no double comma
           const trimmed = beforeBrace.trimEnd()
-          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
+          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`
           const newServerSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
 
           updatedContent = updatedContent.replace(serverSection, newServerSection)
@@ -812,12 +812,12 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<En
         const clientMatch = updatedContent.match(/client:\s*\{([^}]*)\}/s)
         if (clientMatch) {
           const clientSection = clientMatch[0]
-          const closingBrace = clientSection.lastIndexOf("}")
+          const closingBrace = clientSection.lastIndexOf('}')
           const beforeBrace = clientSection.slice(0, closingBrace)
           const afterBrace = clientSection.slice(closingBrace)
 
           const trimmed = beforeBrace.trimEnd()
-          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
+          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`
           const newClientSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
 
           updatedContent = updatedContent.replace(clientSection, newClientSection)
@@ -835,12 +835,12 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<En
         const sharedMatch = updatedContent.match(/shared:\s*\{([^}]*)\}/s)
         if (sharedMatch) {
           const sharedSection = sharedMatch[0]
-          const closingBrace = sharedSection.lastIndexOf("}")
+          const closingBrace = sharedSection.lastIndexOf('}')
           const beforeBrace = sharedSection.slice(0, closingBrace)
           const afterBrace = sharedSection.slice(closingBrace)
 
           const trimmed = beforeBrace.trimEnd()
-          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
+          const withComma = trimmed.endsWith(',') ? trimmed : `${trimmed},`
           const newSharedSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
 
           updatedContent = updatedContent.replace(sharedSection, newSharedSection)
@@ -852,7 +852,7 @@ export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<En
     if (updatedContent !== content) {
       yield* adapter.writeFile(envFilePath, updatedContent)
       yield* Effect.logInfo(
-        `Injected environment variables into libs/env/src/env.ts: ${vars.map((v) => v.name).join(", ")}`
+        `Injected environment variables into libs/env/src/env.ts: ${vars.map((v) => v.name).join(', ')}`
       )
     }
   })

@@ -103,8 +103,9 @@ export const env = createEnv({
 
   // Client-safe variables (must start with PUBLIC_)
   client: {
-    // Add client-safe env vars here
-    // PUBLIC_API_URL: Config.string("PUBLIC_API_URL")
+    PUBLIC_API_URL: Config.string("PUBLIC_API_URL").pipe(
+      Config.withDefault("/api/rpc")
+    )
   },
 
   // Shared variables (available in both contexts)

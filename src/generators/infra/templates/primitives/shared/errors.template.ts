@@ -11,9 +11,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/shared
  */
 
-import { TypeScriptBuilder } from "../../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
 import {
   type ErrorGeneratorConfig,
   generateBaseError,
@@ -21,7 +21,7 @@ import {
   generateConnectionError,
   generateInternalError,
   generateTimeoutError
-} from "../../../../shared/errors"
+} from '../../../../shared/errors'
 
 /**
  * Generate errors.ts file for primitive infrastructure services
@@ -43,22 +43,22 @@ Uses Data.TaggedError for internal infrastructure errors:
 - Non-serializable (stays within service boundaries)
 - Transformed to RPC errors at handler boundaries`,
     module: `${scope}/infra-${fileName}/errors`,
-    see: ["Effect documentation for Data.TaggedError patterns"]
+    see: ['Effect documentation for Data.TaggedError patterns']
   })
 
   builder.addImports([
     {
-      from: "effect",
-      imports: ["Data"]
+      from: 'effect',
+      imports: ['Data']
     }
   ])
 
-  builder.addSectionComment("Error Types")
+  builder.addSectionComment('Error Types')
 
   // Use shared error generators with 'data' style (internal services)
   const errorConfig: ErrorGeneratorConfig = {
     className,
-    style: "data",
+    style: 'data',
     includeStaticCreate: false // Keep consistent with other infra errors
   }
 
@@ -69,7 +69,7 @@ Uses Data.TaggedError for internal infrastructure errors:
   generateConnectionError(builder, errorConfig)
   generateTimeoutError(builder, errorConfig)
 
-  builder.addSectionComment("Error Type Union")
+  builder.addSectionComment('Error Type Union')
 
   // Generate error union
   // Note: Uses ServiceError suffix for base error to avoid conflict with union type

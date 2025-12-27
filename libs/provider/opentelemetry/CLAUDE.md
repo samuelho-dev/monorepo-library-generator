@@ -1,3 +1,13 @@
+---
+scope: libs/provider/opentelemetry/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/PROVIDER.md
+  - ../../../docs/EFFECT_PATTERNS.md
+  - ../../infra/observability/CLAUDE.md
+---
+
 # @samuelho-dev/provider-opentelemetry
 
 OpenTelemetry SDK provider for Effect tracing and metrics export
@@ -205,3 +215,11 @@ list: (params) =>
 4. **Use Auto layer for environment-aware selection** (NODE_ENV)
 
 The baseline implementation remains useful for unit tests and demonstrations.
+
+## For Future Claude Code Instances
+
+- [ ] Wraps @opentelemetry/* SDKs with Effect patterns
+- [ ] Provides tracing and metrics export capabilities
+- [ ] Consumed by infra-observability
+- [ ] Use Layer.scoped with Effect.addFinalizer for cleanup
+- [ ] Static layers: Live, Test, Dev, Auto on Telemetry class

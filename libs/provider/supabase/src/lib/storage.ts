@@ -379,7 +379,12 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
           }
         }).pipe(Effect.withSpan("SupabaseStorage.copy")),
 
-      createSignedUrl: (bucket: string, path: string, expiresIn: number, options?: { download?: string | boolean; transform?: TransformOptions }) =>
+      createSignedUrl: (
+        bucket: string,
+        path: string,
+        expiresIn: number,
+        options?: { download?: string | boolean; transform?: TransformOptions }
+      ) =>
         Effect.gen(function*() {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.storage.from(bucket).createSignedUrl(path, expiresIn, options),
@@ -480,12 +485,15 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
           return Option.some(data)
         }).pipe(Effect.withSpan("SupabaseStorage.getBucket")),
 
-      createBucket: (name: string, options?: { public?: boolean; fileSizeLimit?: number; allowedMimeTypes?: Array<string> }) =>
+      createBucket: (
+        name: string,
+        options?: { public?: boolean; fileSizeLimit?: number; allowedMimeTypes?: Array<string> }
+      ) =>
         Effect.gen(function*() {
           const bucketOptions = {
             public: options?.public ?? false,
             ...(options?.fileSizeLimit !== undefined && { fileSizeLimit: options.fileSizeLimit }),
-            ...(options?.allowedMimeTypes !== undefined && { allowedMimeTypes: options.allowedMimeTypes }),
+            ...(options?.allowedMimeTypes !== undefined && { allowedMimeTypes: options.allowedMimeTypes })
           }
 
           const { data, error } = yield* Effect.tryPromise({
@@ -569,7 +577,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
               })
             )
           }
-        }).pipe(Effect.withSpan("SupabaseStorage.deleteBucket")),
+        }).pipe(Effect.withSpan("SupabaseStorage.deleteBucket"))
     }
   }
 
@@ -579,7 +587,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
   static readonly Live = Layer.effect(
     SupabaseStorage,
     Effect.gen(function*() {
-      const supabaseClient = yield* SupabaseClient;
+      const supabaseClient = yield* SupabaseClient
       const client = yield* supabaseClient.getClient()
       return SupabaseStorage.createService(client)
     })
@@ -716,7 +724,11 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
         }),
 
       createSignedUrl: (bucket, path, expiresIn, options) =>
-        Effect.succeed(`https://test.supabase.co/storage/v1/object/sign/${bucket}/${path}?expiresIn=${expiresIn}${options?.download ? "&download=true" : ""}`),
+        Effect.succeed(
+          `https://test.supabase.co/storage/v1/object/sign/${bucket}/${path}?expiresIn=${expiresIn}${
+            options?.download ? "&download=true" : ""
+          }`
+        ),
 
       getPublicUrl: (bucket, path) =>
         Effect.succeed(`https://test.supabase.co/storage/v1/object/public/${bucket}/${path}`),
@@ -737,13 +749,13 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
         Effect.succeed(
           buckets.has(name)
             ? Option.some({
-                id: name,
-                name,
-                owner: "test-owner",
-                public: buckets.get(name)?.public ?? false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              })
+              id: name,
+              name,
+              owner: "test-owner",
+              public: buckets.get(name)?.public ?? false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
             : Option.none()
         ),
 
@@ -755,7 +767,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
             name,
             public: options?.public ?? false,
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         }),
 
@@ -770,7 +782,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
             )
           }
           buckets.delete(name)
-        }),
+        })
     }
   })
 
@@ -859,7 +871,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
             yield* Effect.logDebug("[SupabaseStorage] deleteBucket", { name })
             return yield* testService.deleteBucket(name)
           })
-      } ;
+      }
     })
   )
 }

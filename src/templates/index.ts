@@ -6,6 +6,33 @@
  * @module monorepo-library-generator/templates
  */
 
+// AST Builders
+export {
+  addConstExport,
+  addContextTagClass,
+  addEffectImports,
+  addImport,
+  addJsDocComment,
+  addSchemaDefinition,
+  addSectionComment,
+  addTaggedErrorClass,
+  addTypeAlias,
+  addTypeImport
+} from './ast/effect-builders'
+
+// Compiler (Effect Service Pattern)
+export { CompilationError, TemplateCompiler } from './core/compiler'
+
+// Resolver
+export {
+  createContextFromName,
+  extractVariables,
+  hasInterpolation,
+  InterpolationError,
+  interpolate,
+  interpolateDeep,
+  interpolateSync
+} from './core/resolver'
 // Core types
 export type {
   ClassConfig,
@@ -44,71 +71,7 @@ export type {
   TemplateContext,
   TemplateDefinition,
   TemplateMeta
-} from "./core/types"
-
-// Compiler (Effect Service Pattern)
-export { CompilationError, TemplateCompiler } from "./core/compiler"
-
-// Resolver
-export {
-  createContextFromName,
-  extractVariables,
-  hasInterpolation,
-  interpolate,
-  interpolateDeep,
-  InterpolationError,
-  interpolateSync
-} from "./core/resolver"
-
-// AST Builders
-export {
-  addConstExport,
-  addContextTagClass,
-  addEffectImports,
-  addImport,
-  addJsDocComment,
-  addSchemaDefinition,
-  addSectionComment,
-  addTaggedErrorClass,
-  addTypeAlias,
-  addTypeImport
-} from "./ast/effect-builders"
-
-// Fragments (Effect Service Pattern)
-export {
-  // Registry
-  FragmentNotFoundError,
-  FragmentRegistry,
-  // Error fragments
-  alreadyExistsErrorFragment,
-  databaseErrorFragment,
-  domainErrorFragments,
-  notFoundErrorFragment,
-  permissionErrorFragment,
-  renderTaggedErrorFragment,
-  repositoryErrorFragments,
-  validationErrorFragment,
-  // Service fragments
-  projectionRepositoryFragment,
-  renderContextTagFragment,
-  repositoryFragment,
-  serviceFragment,
-  // Schema fragments
-  brandedIdFragment,
-  commonSchemaFields,
-  createInputSchemaFragment,
-  entitySchemaFragment,
-  renderSchemaFragment,
-  updateInputSchemaFragment,
-  // Layer fragments
-  composedLayerFragment,
-  infrastructureLayerFragment,
-  liveRepositoryLayerFragment,
-  liveServiceLayerFragment,
-  renderLayerFragment,
-  testRepositoryLayerFragment
-} from "./fragments"
-
+} from './core/types'
 // Fragment types
 export type {
   AnyFragmentConfig,
@@ -130,28 +93,41 @@ export type {
   ServiceMethod,
   StaticLayer,
   TaggedErrorFragmentConfig
-} from "./fragments"
-
-// Registry
+} from './fragments'
+// Fragments (Effect Service Pattern)
 export {
-  // Registry functions
-  createTemplateRegistry,
-  getAvailableFileTypes,
-  getRegisteredLibraryTypes,
-  getTemplate,
-  getTemplateRegistry,
-  hasTemplate,
-  validateContext,
-  // Generator functions
-  ContextValidationError,
-  generate,
-  generateDomain,
-  generateFile,
-  generateLibrary,
-  GenerationError,
-  TemplateNotFoundError
-} from "./registry"
-
+  // Error fragments
+  alreadyExistsErrorFragment,
+  // Schema fragments
+  brandedIdFragment,
+  commonSchemaFields,
+  // Layer fragments
+  composedLayerFragment,
+  createInputSchemaFragment,
+  databaseErrorFragment,
+  domainErrorFragments,
+  entitySchemaFragment,
+  // Registry
+  FragmentNotFoundError,
+  FragmentRegistry,
+  infrastructureLayerFragment,
+  liveRepositoryLayerFragment,
+  liveServiceLayerFragment,
+  notFoundErrorFragment,
+  permissionErrorFragment,
+  // Service fragments
+  projectionRepositoryFragment,
+  renderContextTagFragment,
+  renderLayerFragment,
+  renderSchemaFragment,
+  renderTaggedErrorFragment,
+  repositoryErrorFragments,
+  repositoryFragment,
+  serviceFragment,
+  testRepositoryLayerFragment,
+  updateInputSchemaFragment,
+  validationErrorFragment
+} from './fragments'
 // Registry types
 export type {
   FileType,
@@ -164,4 +140,23 @@ export type {
   TemplateMetadata,
   TemplateRegistry,
   TemplateRegistryEntry
-} from "./registry"
+} from './registry'
+// Registry
+export {
+  // Generator functions
+  ContextValidationError,
+  // Registry functions
+  createTemplateRegistry,
+  GenerationError,
+  generate,
+  generateDomain,
+  generateFile,
+  generateLibrary,
+  getAvailableFileTypes,
+  getRegisteredLibraryTypes,
+  getTemplate,
+  getTemplateRegistry,
+  hasTemplate,
+  TemplateNotFoundError,
+  validateContext
+} from './registry'

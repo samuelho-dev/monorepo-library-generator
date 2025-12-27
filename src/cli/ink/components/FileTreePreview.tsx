@@ -7,18 +7,18 @@
  */
 
 import { Box, Text } from 'ink'
-import type { FilePreview } from '../../interactive/types';
-import { boxChars, colors, } from '../theme/colors'
+import type { FilePreview } from '../../interactive/types'
+import { boxChars, colors } from '../theme/colors'
 
 interface FileTreePreviewProps {
-  readonly targetDirectory: string;
-  readonly files: readonly FilePreview[];
+  readonly targetDirectory: string
+  readonly files: readonly FilePreview[]
 }
 
 export function FileTreePreview({ targetDirectory, files }: FileTreePreviewProps) {
   // Count files
-  const requiredCount = files.filter((f) => !f.isOptional).length;
-  const optionalCount = files.filter((f) => f.isOptional).length;
+  const requiredCount = files.filter((f) => !f.isOptional).length
+  const optionalCount = files.filter((f) => f.isOptional).length
   const totalCount = files.length
 
   return (
@@ -32,12 +32,15 @@ export function FileTreePreview({ targetDirectory, files }: FileTreePreviewProps
       </Box>
 
       {files.map((file, index) => {
-        const isLast = index === files.length - 1;
+        const isLast = index === files.length - 1
         const prefix = isLast ? boxChars.bottomLeft : boxChars.teeRight
 
         return (
           <Box key={file.path}>
-            <Text color={colors.muted}>{prefix}{boxChars.horizontal} </Text>
+            <Text color={colors.muted}>
+              {prefix}
+              {boxChars.horizontal}{' '}
+            </Text>
             <Text color={file.isOptional ? colors.muted : colors.file}>{file.path}</Text>
             {file.isOptional && <Text color={colors.muted}> (optional)</Text>}
           </Box>

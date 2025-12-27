@@ -10,8 +10,8 @@
  * @module monorepo-library-generator/contract/index-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
 
 /**
  * Generate index.ts file for contract library
@@ -31,12 +31,11 @@ export function generateIndexFile(options: ContractTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   // File header - RPC is always included
-  let headerDesc =
-    `Domain interfaces, ports, entities, errors, and events for ${className}.\n\nThis library defines the contract between layers:\n- Entities: Domain models with runtime validation\n- Errors: Domain and repository errors\n- Ports: Repository and service interfaces\n- Events: Domain events for event-driven architecture\n- RPC: Request/Response schemas for network boundaries`
+  let headerDesc = `Domain interfaces, ports, entities, errors, and events for ${className}.\n\nThis library defines the contract between layers:\n- Entities: Domain models with runtime validation\n- Errors: Domain and repository errors\n- Ports: Repository and service interfaces\n- Events: Domain events for event-driven architecture\n- RPC: Request/Response schemas for network boundaries`
 
   if (includeCQRS) {
     headerDesc +=
-      "\n- Commands: CQRS write operations\n- Queries: CQRS read operations\n- Projections: CQRS read models"
+      '\n- Commands: CQRS write operations\n- Queries: CQRS read operations\n- Projections: CQRS read models'
   }
 
   builder.addFileHeader({
@@ -44,11 +43,11 @@ export function generateIndexFile(options: ContractTemplateOptions) {
     description: headerDesc
   })
 
-  builder.addSectionComment("Core Exports")
+  builder.addSectionComment('Core Exports')
   builder.addBlankLine()
 
   // Errors - named exports
-  builder.addComment("Errors")
+  builder.addComment('Errors')
   builder.addRaw(`export {
   ${className}NotFoundError,
   ${className}ValidationError,
@@ -65,10 +64,10 @@ export function generateIndexFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Entity types - use type-only re-exports
-  const typeSource = typesDatabasePackage || "./lib/types/database"
+  const typeSource = typesDatabasePackage || './lib/types/database'
   const entityComment = typesDatabasePackage
     ? `Entity types re-exported from ${typesDatabasePackage}`
-    : "Entity types from database schema"
+    : 'Entity types from database schema'
   builder.addComment(entityComment)
   builder.addRaw(`export type {
   ${className}Table,
@@ -82,7 +81,7 @@ export function generateIndexFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Ports - named exports
-  builder.addComment("Ports (Repository and Service interfaces)")
+  builder.addComment('Ports (Repository and Service interfaces)')
   builder.addRaw(`export {
   ${className}Repository,
   ${className}Service,
@@ -94,23 +93,26 @@ export function generateIndexFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Events - named exports
-  builder.addComment("Events")
+  builder.addComment('Events')
   builder.addRaw(`export {
   EventMetadata,
-  AggregateMetadata,
+  ${className}AggregateMetadata,
   ${className}CreatedEvent,
   ${className}UpdatedEvent,
   ${className}DeletedEvent,
-  type ${className}DomainEvent
+  ${className}EventSchema,
+  createEventMetadata,
+  createAggregateMetadata,
+  type ${className}Event
 } from "./lib/events"`)
   builder.addBlankLine()
 
   // RPC Exports - named exports (directly from source files, no barrel)
-  builder.addSectionComment("RPC Exports (Contract-First - Always Prewired)")
+  builder.addSectionComment('RPC Exports (Contract-First - Always Prewired)')
   builder.addBlankLine()
 
   // RPC Errors from rpc-errors.ts
-  builder.addComment("RPC Errors (Schema.TaggedError for network serialization)")
+  builder.addComment('RPC Errors (Schema.TaggedError for network serialization)')
   builder.addRaw(`export {
   ${className}NotFoundRpcError,
   ${className}ValidationRpcError,
@@ -120,7 +122,7 @@ export function generateIndexFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // RPC Definitions from rpc-definitions.ts
-  builder.addComment("RPC Definitions (Rpc.make with RouteTag)")
+  builder.addComment('RPC Definitions (Rpc.make with RouteTag)')
   builder.addRaw(`export {
   ${className}Id,
   RouteTag,
@@ -145,7 +147,7 @@ export function generateIndexFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // RPC Group from rpc-group.ts
-  builder.addComment("RPC Group (RpcGroup.make composition)")
+  builder.addComment('RPC Group (RpcGroup.make composition)')
   builder.addRaw(`export {
   ${className}Rpcs,
   type ${className}RpcDefinitions,
@@ -159,10 +161,10 @@ export function generateIndexFile(options: ContractTemplateOptions) {
 
   // CQRS exports (conditional)
   if (includeCQRS) {
-    builder.addSectionComment("CQRS Exports")
+    builder.addSectionComment('CQRS Exports')
     builder.addBlankLine()
 
-    builder.addComment("Commands (Write operations)")
+    builder.addComment('Commands (Write operations)')
     builder.addRaw(`export {
   Create${className}Command,
   Update${className}Command,
@@ -171,7 +173,7 @@ export function generateIndexFile(options: ContractTemplateOptions) {
 } from "./lib/commands"`)
     builder.addBlankLine()
 
-    builder.addComment("Queries (Read operations)")
+    builder.addComment('Queries (Read operations)')
     builder.addRaw(`export {
   Get${className}Query,
   List${className}sQuery,
@@ -179,7 +181,7 @@ export function generateIndexFile(options: ContractTemplateOptions) {
 } from "./lib/queries"`)
     builder.addBlankLine()
 
-    builder.addComment("Projections (Read models)")
+    builder.addComment('Projections (Read models)')
     builder.addRaw(`export {
   ${className}Projection,
   ${className}ListProjection,
@@ -189,11 +191,11 @@ export function generateIndexFile(options: ContractTemplateOptions) {
   }
 
   // Sub-module namespace exports use namespace imports to avoid barrel issues
-  builder.addSectionComment("Sub-Module Namespace Exports (Hybrid DDD Pattern)")
+  builder.addSectionComment('Sub-Module Namespace Exports (Hybrid DDD Pattern)')
   builder.addBlankLine()
-  builder.addComment("Sub-modules are imported as namespaces to preserve module boundaries")
-  builder.addComment("Import specific items: import { Authentication } from \"@scope/contract-name\"")
-  builder.addComment("Then use: Authentication.AuthenticationNotFoundError")
+  builder.addComment('Sub-modules are imported as namespaces to preserve module boundaries')
+  builder.addComment('Import specific items: import { Authentication } from "@scope/contract-name"')
+  builder.addComment('Then use: Authentication.AuthenticationNotFoundError')
   builder.addBlankLine()
 
   return builder.toString()

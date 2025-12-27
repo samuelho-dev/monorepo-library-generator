@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/auth/middleware
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { AuthTemplateOptions } from "./schemas.template"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { AuthTemplateOptions } from './schemas.template'
 
 /**
  * Generate lib/middleware.ts for contract-auth library
@@ -24,7 +24,7 @@ export function generateAuthMiddlewareFile(options: AuthTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "Auth Contract Middleware",
+    title: 'Auth Contract Middleware',
     description: `Middleware context tags and route types for RPC.
 
 Contract-First Architecture:
@@ -40,17 +40,19 @@ Route Types:
   })
   builder.addBlankLine()
 
-  builder.addImports([
-    { from: "effect", imports: ["Context"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Context'] }])
   builder.addBlankLine()
 
   builder.addImports([
-    { from: "./schemas", imports: ["AuthMethod", "CurrentUserData", "ServiceIdentity"], isTypeOnly: true }
+    {
+      from: './schemas',
+      imports: ['AuthMethod', 'CurrentUserData', 'ServiceIdentity'],
+      isTypeOnly: true
+    }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Route Types (Contract-First)")
+  builder.addSectionComment('Route Types (Contract-First)')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -86,7 +88,7 @@ export interface RpcWithRouteTag {
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("User Authentication Context")
+  builder.addSectionComment('User Authentication Context')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -129,7 +131,7 @@ export class AuthMethodContext extends Context.Tag("AuthMethodContext")<
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Service Authentication Context")
+  builder.addSectionComment('Service Authentication Context')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -153,7 +155,7 @@ export class ServiceContext extends Context.Tag("ServiceContext")<
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Request Metadata Context")
+  builder.addSectionComment('Request Metadata Context')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -195,7 +197,7 @@ export class RequestMeta extends Context.Tag("RequestMeta")<
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Handler Context Helpers")
+  builder.addSectionComment('Handler Context Helpers')
   builder.addBlankLine()
 
   builder.addRaw(`/**

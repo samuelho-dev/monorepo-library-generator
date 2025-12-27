@@ -117,7 +117,7 @@ export interface KyselyServiceInterface<DB> {
    * @returns Effect with tables and dialect info
    */
   readonly introspection: () => Effect.Effect<
-    { tables: Array<string>, dialect: string },
+    { tables: Array<string>; dialect: string },
     DatabaseQueryError
   >
 

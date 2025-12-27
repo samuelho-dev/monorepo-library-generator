@@ -1,4 +1,4 @@
-import { Config, ConfigProvider, Effect, Layer, ManagedRuntime } from "effect"
+import { Config, ConfigProvider, Layer, ManagedRuntime } from "effect"
 
 /**
  * Environment Configuration Runtime
@@ -78,8 +78,7 @@ interface CreateEnvOptions<
  * Server: Node.js environment with process.versions.node
  * Client: Browser environment without process or Node.js globals
  */
-const isServer =
-  typeof process !== "undefined" &&
+const isServer = typeof process !== "undefined" &&
   process.versions?.node != null
 
 // ============================================================================
@@ -113,6 +112,7 @@ function parseDotEnv(content: string) {
 function loadEnvSync(): Map<string, string> {
   const envMap = new Map<string, string>()
   // First, load from process.env
+  // biome-ignore lint/style/noProcessEnv: This is the env library - it wraps process.env for all other code
   for (const [key, value] of Object.entries(process.env)) {
     if (value !== undefined) {
       envMap.set(key, value)
@@ -195,7 +195,7 @@ export function createEnv<
 >(
   options: CreateEnvOptions<TServer, TClient, TShared>
 ) {
-  const { server, client, shared, clientPrefix } = options
+  const { client, clientPrefix, server, shared } = options
   // Validate client keys have correct prefix
   for (const key of Object.keys(client)) {
     if (!key.startsWith(clientPrefix)) {

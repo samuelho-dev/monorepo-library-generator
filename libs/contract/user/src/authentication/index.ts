@@ -36,23 +36,23 @@ export type { UserEntity } from "../lib/rpc-definitions"
 // ============================================================================
 // Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these
 export {
-  AuthenticationNotFoundError,
-  AuthenticationValidationError,
-  AuthenticationOperationError,
   type AuthenticationDomainError,
+  type AuthenticationError,
+  AuthenticationNotFoundError,
+  AuthenticationOperationError,
   type AuthenticationRepositoryError,
-  type AuthenticationError
+  AuthenticationValidationError
 } from "./errors"
 
 // ============================================================================
 // Entity Exports
 // ============================================================================
 export {
-  AuthenticationId,
   Authentication,
+  AuthenticationId,
   AuthenticationItem,
-  parseAuthentication,
   encodeAuthentication,
+  parseAuthentication,
   parseAuthenticationItem
 } from "./entities"
 
@@ -61,30 +61,30 @@ export {
 // ============================================================================
 export {
   AuthenticationCreated,
-  AuthenticationUpdated,
   AuthenticationDeleted,
+  type AuthenticationEvent,
   AuthenticationEvents,
-  type AuthenticationEvent
+  AuthenticationUpdated
 } from "./events"
 
 // ============================================================================
 // RPC Exports
 // ============================================================================
 export {
-  CreateAuthenticationInput,
-  UpdateAuthenticationInput,
+  AuthenticationCreate,
+  AuthenticationDelete,
   AuthenticationGet,
   AuthenticationList,
-  AuthenticationCreate,
-  AuthenticationUpdate,
-  AuthenticationDelete,
   AuthenticationRpcs,
-  AuthenticationRpcsByRoute
+  AuthenticationRpcsByRoute,
+  AuthenticationUpdate,
+  CreateAuthenticationInput,
+  UpdateAuthenticationInput
 } from "./rpc-definitions"
 
 export {
   AuthenticationNotFoundRpcError,
-  AuthenticationValidationRpcError,
   AuthenticationPermissionRpcError,
-  AuthenticationRpcError
+  AuthenticationRpcError,
+  AuthenticationValidationRpcError
 } from "./rpc-errors"

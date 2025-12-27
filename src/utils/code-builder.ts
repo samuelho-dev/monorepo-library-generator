@@ -49,7 +49,7 @@ export interface FieldConfig {
   type: string
   readonly?: boolean
   optional?: boolean
-  visibility?: "public" | "private" | "protected"
+  visibility?: 'public' | 'private' | 'protected'
   jsdoc?: string
 }
 
@@ -59,7 +59,7 @@ export interface MethodConfig {
   returnType?: string
   body: string
   isAsync?: boolean
-  visibility?: "public" | "private" | "protected"
+  visibility?: 'public' | 'private' | 'protected'
   jsdoc?: string
 }
 
@@ -155,7 +155,7 @@ export interface LayerConfig {
   layerName?: string
   implementation: string
   dependencies?: Array<string>
-  layerType: "sync" | "effect" | "scoped"
+  layerType: 'sync' | 'effect' | 'scoped'
   jsdoc?: string
 }
 
@@ -196,11 +196,11 @@ export class TypeScriptBuilder {
    * Add a file header with JSDoc documentation
    */
   addFileHeader(options: FileHeaderOptions) {
-    this.lines.push("/**")
+    this.lines.push('/**')
     this.lines.push(` * ${options.title}`)
-    this.lines.push(" *")
+    this.lines.push(' *')
     this.lines.push(` * ${options.description}`)
-    this.lines.push(" *")
+    this.lines.push(' *')
 
     if (options.module) {
       this.lines.push(` * @module ${options.module}`)
@@ -216,7 +216,7 @@ export class TypeScriptBuilder {
       }
     }
 
-    this.lines.push(" */")
+    this.lines.push(' */')
 
     return this
   }
@@ -239,7 +239,7 @@ export class TypeScriptBuilder {
           throw new Error(`Import set not found for ${from}`)
         }
         // Handle both string and { name, alias } formats
-        if (typeof nameSpec === "string") {
+        if (typeof nameSpec === 'string') {
           importSet.add(nameSpec)
         } else {
           // Aliased import: store as "Name as Alias" for proper sorting by original name
@@ -262,22 +262,22 @@ export class TypeScriptBuilder {
    * Add a blank line
    */
   addBlankLine() {
-    this.lines.push("")
+    this.lines.push('')
     return this
   }
 
   /**
    * Add a single-line or multi-line comment
    */
-  addComment(text: string, style: "line" | "section" | "block" = "line") {
-    if (style === "section") {
-      this.lines.push(`// ${"=".repeat(76)}`)
+  addComment(text: string, style: 'line' | 'section' | 'block' = 'line') {
+    if (style === 'section') {
+      this.lines.push(`// ${'='.repeat(76)}`)
       this.lines.push(`// ${text}`)
-      this.lines.push(`// ${"=".repeat(76)}`)
-    } else if (style === "block") {
-      this.lines.push("/**")
+      this.lines.push(`// ${'='.repeat(76)}`)
+    } else if (style === 'block') {
+      this.lines.push('/**')
       this.lines.push(` * ${text}`)
-      this.lines.push(" */")
+      this.lines.push(' */')
     } else {
       this.lines.push(`// ${text}`)
     }
@@ -289,19 +289,19 @@ export class TypeScriptBuilder {
    * Add a section comment (prominent separator)
    */
   addSectionComment(text: string) {
-    return this.addComment(text, "section")
+    return this.addComment(text, 'section')
   }
 
   /**
    * Add JSDoc comment
    */
   public addJSDoc(jsdoc: string) {
-    this.lines.push("/**")
-    const docLines = jsdoc.split("\n")
+    this.lines.push('/**')
+    const docLines = jsdoc.split('\n')
     for (const line of docLines) {
       this.lines.push(` * ${line}`.trimEnd())
     }
-    this.lines.push(" */")
+    this.lines.push(' */')
   }
 
   /**
@@ -312,11 +312,12 @@ export class TypeScriptBuilder {
       this.addJSDoc(config.jsdoc)
     }
 
-    const exported = config.exported !== false ? "export " : ""
-    const extendsClause = config.extends ? ` extends ${config.extends}` : ""
-    const implementsClause = config.implements && config.implements.length > 0
-      ? ` implements ${config.implements.join(", ")}`
-      : ""
+    const exported = config.exported !== false ? 'export ' : ''
+    const extendsClause = config.extends ? ` extends ${config.extends}` : ''
+    const implementsClause =
+      config.implements && config.implements.length > 0
+        ? ` implements ${config.implements.join(', ')}`
+        : ''
 
     this.lines.push(`${exported}class ${config.className}${extendsClause}${implementsClause} {`)
 
@@ -326,7 +327,7 @@ export class TypeScriptBuilder {
         if (prop.jsdoc) {
           this.addJSDoc(prop.jsdoc)
         }
-        const readonlyModifier = prop.readonly ? "readonly " : ""
+        const readonlyModifier = prop.readonly ? 'readonly ' : ''
         this.lines.push(`  static ${readonlyModifier}${prop.name}: ${prop.type} = ${prop.value}`)
       }
     }
@@ -337,9 +338,9 @@ export class TypeScriptBuilder {
         if (field.jsdoc) {
           this.addJSDoc(field.jsdoc)
         }
-        const visibility = field.visibility || "public"
-        const readonlyModifier = field.readonly ? "readonly " : ""
-        const optionalModifier = field.optional ? "?" : ""
+        const visibility = field.visibility || 'public'
+        const readonlyModifier = field.readonly ? 'readonly ' : ''
+        const optionalModifier = field.optional ? '?' : ''
         this.lines.push(
           `  ${visibility} ${readonlyModifier}${field.name}${optionalModifier}: ${field.type}`
         )
@@ -360,7 +361,7 @@ export class TypeScriptBuilder {
       }
     }
 
-    this.lines.push("}")
+    this.lines.push('}')
 
     return this
   }
@@ -373,18 +374,18 @@ export class TypeScriptBuilder {
       this.addJSDoc(method.jsdoc)
     }
 
-    const staticModifier = isStatic ? "static " : ""
-    const asyncModifier = method.isAsync ? "async " : ""
-    const visibility = method.visibility || "public"
-    const visibilityPrefix = visibility === "public" ? "" : `${visibility} `
+    const staticModifier = isStatic ? 'static ' : ''
+    const asyncModifier = method.isAsync ? 'async ' : ''
+    const visibility = method.visibility || 'public'
+    const visibilityPrefix = visibility === 'public' ? '' : `${visibility} `
 
     const params = method.params
       .map((p) => {
-        const optional = p.optional ? "?" : ""
-        const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : ""
+        const optional = p.optional ? '?' : ''
+        const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : ''
         return `${p.name}${optional}: ${p.type}${defaultVal}`
       })
-      .join(", ")
+      .join(', ')
 
     // Don't add explicit return type - let TypeScript infer it (linter requirement)
 
@@ -393,16 +394,16 @@ export class TypeScriptBuilder {
     )
 
     // Add method body (preserve indentation)
-    const bodyLines = method.body.trim().split("\n")
+    const bodyLines = method.body.trim().split('\n')
     for (const line of bodyLines) {
       if (line.trim()) {
         this.lines.push(`    ${line}`)
       } else {
-        this.lines.push("")
+        this.lines.push('')
       }
     }
 
-    this.lines.push("  }")
+    this.lines.push('  }')
   }
 
   /**
@@ -413,8 +414,9 @@ export class TypeScriptBuilder {
       this.addJSDoc(config.jsdoc)
     }
 
-    const exported = config.exported !== false ? "export " : ""
-    const extendsClause = config.extends && config.extends.length > 0 ? ` extends ${config.extends.join(", ")}` : ""
+    const exported = config.exported !== false ? 'export ' : ''
+    const extendsClause =
+      config.extends && config.extends.length > 0 ? ` extends ${config.extends.join(', ')}` : ''
 
     this.lines.push(`${exported}interface ${config.name}${extendsClause} {`)
 
@@ -423,18 +425,18 @@ export class TypeScriptBuilder {
       if (!prop) continue
 
       if (prop.jsdoc) {
-        this.lines.push("  /**")
+        this.lines.push('  /**')
         this.lines.push(`   * ${prop.jsdoc}`)
-        this.lines.push("   */")
+        this.lines.push('   */')
       }
-      const readonlyModifier = prop.readonly ? "readonly " : ""
-      const optionalModifier = prop.optional ? "?" : ""
+      const readonlyModifier = prop.readonly ? 'readonly ' : ''
+      const optionalModifier = prop.optional ? '?' : ''
 
       // No semicolon at end of interface properties (dprint/ESLint requirement)
       this.lines.push(`  ${readonlyModifier}${prop.name}${optionalModifier}: ${prop.type}`)
     }
 
-    this.lines.push("}")
+    this.lines.push('}')
 
     return this
   }
@@ -447,8 +449,9 @@ export class TypeScriptBuilder {
       this.addJSDoc(config.jsdoc)
     }
 
-    const exported = config.exported !== false ? "export " : ""
-    const typeParams = config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(", ")}>` : ""
+    const exported = config.exported !== false ? 'export ' : ''
+    const typeParams =
+      config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(', ')}>` : ''
 
     this.lines.push(`${exported}type ${config.name}${typeParams} = ${config.type}`)
 
@@ -463,35 +466,36 @@ export class TypeScriptBuilder {
       this.addJSDoc(config.jsdoc)
     }
 
-    const exported = config.exported !== false ? "export " : ""
-    const asyncModifier = config.isAsync ? "async " : ""
-    const typeParams = config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(", ")}>` : ""
+    const exported = config.exported !== false ? 'export ' : ''
+    const asyncModifier = config.isAsync ? 'async ' : ''
+    const typeParams =
+      config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(', ')}>` : ''
 
     const params = config.params
       .map((p) => {
-        const optional = p.optional ? "?" : ""
-        const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : ""
+        const optional = p.optional ? '?' : ''
+        const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : ''
         return `${p.name}${optional}: ${p.type}${defaultVal}`
       })
-      .join(", ")
+      .join(', ')
 
-    const returnType = config.returnType ? `: ${config.returnType}` : ""
+    const returnType = config.returnType ? `: ${config.returnType}` : ''
 
     this.lines.push(
       `${exported}${asyncModifier}function ${config.name}${typeParams}(${params})${returnType} {`
     )
 
     // Add function body
-    const bodyLines = config.body.trim().split("\n")
+    const bodyLines = config.body.trim().split('\n')
     for (const line of bodyLines) {
       if (line.trim()) {
         this.lines.push(`  ${line}`)
       } else {
-        this.lines.push("")
+        this.lines.push('')
       }
     }
 
-    this.lines.push("}")
+    this.lines.push('}')
 
     return this
   }
@@ -504,8 +508,8 @@ export class TypeScriptBuilder {
       this.addJSDoc(jsdoc)
     }
 
-    const exportKeyword = exported ? "export " : ""
-    const typeAnnotation = type ? `: ${type}` : ""
+    const exportKeyword = exported ? 'export ' : ''
+    const typeAnnotation = type ? `: ${type}` : ''
 
     this.lines.push(`${exportKeyword}const ${name}${typeAnnotation} = ${value}`)
 
@@ -533,18 +537,11 @@ export class TypeScriptBuilder {
     // 4. Other external packages (alphabetically)
     // 5. Relative imports "./" or "../" (last)
     const getImportPriority = (modulePath: string) => {
-      if (modulePath.startsWith("./") || modulePath.startsWith("../")) return 5
-      if (modulePath.startsWith("@effect/")) return 1
-      if (modulePath.startsWith("@")) return 2
-      if (modulePath === "effect") return 3
+      if (modulePath.startsWith('./') || modulePath.startsWith('../')) return 5
+      if (modulePath.startsWith('@effect/')) return 1
+      if (modulePath.startsWith('@')) return 2
+      if (modulePath === 'effect') return 3
       return 4
-    }
-
-    const sortImports = (a: [string, Set<string>], b: [string, Set<string>]) => {
-      const priorityA = getImportPriority(a[0])
-      const priorityB = getImportPriority(b[0])
-      if (priorityA !== priorityB) return priorityA - priorityB
-      return a[0].localeCompare(b[0])
     }
 
     // Merge regular and type imports, then sort by module path
@@ -574,18 +571,18 @@ export class TypeScriptBuilder {
     })
 
     // Generate import lines (no trailing semicolons - ASI style)
-    for (const { from, names, isTypeOnly } of allImports) {
+    for (const { from, isTypeOnly, names } of allImports) {
       const sortedNames = Array.from(names).sort()
-      const typeKeyword = isTypeOnly ? "type " : ""
-      importLines.push(`import ${typeKeyword}{ ${sortedNames.join(", ")} } from "${from}"`)
+      const typeKeyword = isTypeOnly ? 'type ' : ''
+      importLines.push(`import ${typeKeyword}{ ${sortedNames.join(', ')} } from "${from}"`)
     }
 
     // Combine imports and content with blank line separator
     if (importLines.length > 0) {
-      return [...importLines, "", ...this.lines].join("\n")
+      return [...importLines, '', ...this.lines].join('\n')
     }
 
-    return this.lines.join("\n")
+    return this.lines.join('\n')
   }
 
   /**
@@ -604,297 +601,296 @@ export class TypeScriptBuilder {
 // ============================================================================
 
 /**
- * Builder for Effect.ts-specific code patterns
+ * Create a Data.TaggedError class configuration
+ *
+ * Follows the pattern:
+ * ```typescript
+ * export class FooNotFoundError extends Data.TaggedError("FooNotFoundError")<{
+ *   readonly message: string;
+ *   readonly fooId: string;
+ * }> {
+ *   static create(fooId: string) {
+ *     return new FooNotFoundError({ message: `Foo not found: ${fooId}`, fooId })
+ *   }
+ * }
+ * ```
  */
-export class EffectPatterns {
-  /**
-   * Create a Data.TaggedError class configuration
-   *
-   * Follows the pattern:
-   * ```typescript
-   * export class FooNotFoundError extends Data.TaggedError("FooNotFoundError")<{
-   *   readonly message: string;
-   *   readonly fooId: string;
-   * }> {
-   *   static create(fooId: string) {
-   *     return new FooNotFoundError({ message: `Foo not found: ${fooId}`, fooId })
-   *   }
-   * }
-   * ```
-   */
-  static createTaggedError(config: TaggedErrorConfig) {
-    // Build the type literal for the error fields
-    const fieldTypes = config.fields
-      .map((field) => {
-        const readonlyModifier = field.readonly !== false ? "readonly " : ""
-        const optionalModifier = field.optional ? "?" : ""
-        return `  ${readonlyModifier}${field.name}${optionalModifier}: ${field.type}`
-      })
-      .join("\n")
+export function createTaggedErrorPattern(config: TaggedErrorConfig) {
+  // Build the type literal for the error fields
+  const fieldTypes = config.fields
+    .map((field) => {
+      const readonlyModifier = field.readonly !== false ? 'readonly ' : ''
+      const optionalModifier = field.optional ? '?' : ''
+      return `  ${readonlyModifier}${field.name}${optionalModifier}: ${field.type}`
+    })
+    .join('\n')
 
-    return {
-      className: config.className,
-      extends: `Data.TaggedError("${config.tagName}")<{\n${fieldTypes}\n}>`,
-      exported: true,
-      ...(config.jsdoc !== undefined && { jsdoc: config.jsdoc }),
-      staticMethods: config.staticMethods || []
-    }
+  return {
+    className: config.className,
+    extends: `Data.TaggedError("${config.tagName}")<{\n${fieldTypes}\n}>`,
+    exported: true,
+    ...(config.jsdoc !== undefined && { jsdoc: config.jsdoc }),
+    staticMethods: config.staticMethods || []
   }
+}
 
-  /**
-   * Create a Context.Tag service definition with inline interface
-   *
-   * Follows the pattern (PREFERRED):
-   * ```typescript
-   * export class FooService extends Context.Tag("FooService")<
-   *   FooService,
-   *   {
-   *     readonly create: (data: CreateFooData) => Effect.Effect<Foo, FooError>
-   *     readonly findById: (id: string) => Effect.Effect<Option.Option<Foo>>
-   *   }
-   * >() {}
-   * ```
-   */
-  static createContextTag(config: ContextTagConfig) {
-    const methods = config.serviceInterface.methods
-      .map((method) => {
-        const params = method.params
-          .map((p) => {
-            const optional = p.optional ? "?" : ""
-            return `${p.name}${optional}: ${p.type}`
-          })
-          .join(", ")
+/**
+ * Create a Context.Tag service definition with inline interface
+ *
+ * Follows the pattern (PREFERRED):
+ * ```typescript
+ * export class FooService extends Context.Tag("FooService")<
+ *   FooService,
+ *   {
+ *     readonly create: (data: CreateFooData) => Effect.Effect<Foo, FooError>
+ *     readonly findById: (id: string) => Effect.Effect<Option.Option<Foo>>
+ *   }
+ * >() {}
+ * ```
+ */
+export function createContextTagPattern(config: ContextTagConfig) {
+  const methods = config.serviceInterface.methods
+    .map((method) => {
+      const params = method.params
+        .map((p) => {
+          const optional = p.optional ? '?' : ''
+          return `${p.name}${optional}: ${p.type}`
+        })
+        .join(', ')
 
-        return `    readonly ${method.name}: (${params}) => ${method.returnType}`
-      })
-      .join("\n")
+      return `    readonly ${method.name}: (${params}) => ${method.returnType}`
+    })
+    .join('\n')
 
-    const jsdocComment = config.jsdoc ? `/**\n * ${config.jsdoc}\n */\n` : ""
+  const jsdocComment = config.jsdoc ? `/**\n * ${config.jsdoc}\n */\n` : ''
 
-    return `${jsdocComment}export class ${config.serviceName} extends Context.Tag("${config.tagName}")<
+  return `${jsdocComment}export class ${config.serviceName} extends Context.Tag("${config.tagName}")<
   ${config.serviceName},
   {
 ${methods}
   }
 >() {}`
-  }
+}
 
-  /**
-   * Create a static Live layer implementation
-   *
-   * Follows the pattern:
-   * ```typescript
-   * static readonly Live = Layer.effect(
-   *   FooService,
-   *   Effect.gen(function*() {
-   *     const db = yield* DatabaseService;
-   *     const cache = yield* CacheService;
-   *
-   *     return {
-   *       create: (data) => Effect.gen(function*() {
-   *         // implementation
-   *       }),
-   *       findById: (id) => Effect.gen(function*() {
-   *         // implementation
-   *       })
-   *     };
-   *   })
-   * )
-   * ```
-   */
-  static createLiveLayer(config: LayerConfig) {
-    const layerName = config.layerName || "Live"
-    const layerMethod = `Layer.${config.layerType}`
+/**
+ * Create a static Live layer implementation
+ *
+ * Follows the pattern:
+ * ```typescript
+ * static readonly Live = Layer.effect(
+ *   FooService,
+ *   Effect.gen(function*() {
+ *     const db = yield* DatabaseService;
+ *     const cache = yield* CacheService;
+ *
+ *     return {
+ *       create: (data) => Effect.gen(function*() {
+ *         // implementation
+ *       }),
+ *       findById: (id) => Effect.gen(function*() {
+ *         // implementation
+ *       })
+ *     };
+ *   })
+ * )
+ * ```
+ */
+export function createLiveLayerPattern(config: LayerConfig) {
+  const layerName = config.layerName || 'Live'
+  const layerMethod = `Layer.${config.layerType}`
 
-    const jsdocComment = config.jsdoc ? `  /**\n   * ${config.jsdoc}\n   */\n` : ""
+  const jsdocComment = config.jsdoc ? `  /**\n   * ${config.jsdoc}\n   */\n` : ''
 
-    // Generate dependency yields if specified
-    const dependencyYields = config.dependencies && config.dependencies.length > 0
-      ? `${
-        config.dependencies
-          .map(
-            (dep) => `    const ${dep.charAt(0).toLowerCase() + dep.slice(1)} = yield* ${dep};`
-          )
-          .join("\n")
-      }\n\n`
-      : ""
+  // Generate dependency yields if specified
+  const dependencyYields =
+    config.dependencies && config.dependencies.length > 0
+      ? `${config.dependencies
+          .map((dep) => `    const ${dep.charAt(0).toLowerCase() + dep.slice(1)} = yield* ${dep};`)
+          .join('\n')}\n\n`
+      : ''
 
-    const implementation = config.implementation.trim()
+  const implementation = config.implementation.trim()
 
-    return `${jsdocComment}  static readonly ${layerName} = ${layerMethod}(
+  return `${jsdocComment}  static readonly ${layerName} = ${layerMethod}(
     ${config.serviceName},
     Effect.gen(function*() {
-${dependencyYields}${
-      implementation
-        .split("\n")
-        .map((line) => `      ${line}`)
-        .join("\n")
-    }
+${dependencyYields}${implementation
+    .split('\n')
+    .map((line) => `      ${line}`)
+    .join('\n')}
     })
   )`
-  }
+}
 
-  /**
-   * Create a test layer as a static property
-   *
-   * Follows Pattern B (preferred):
-   * ```typescript
-   * static readonly Test = Layer.succeed(FooService, {
-   *   create: () => Effect.succeed(mockFoo),
-   *   findById: () => Effect.succeed(Option.none())
-   * })
-   * ```
-   */
-  static createTestLayer(serviceName: string, mockImplementation: string) {
-    return `  static readonly Test = Layer.succeed(${serviceName}, ${mockImplementation})`
-  }
+/**
+ * Create a test layer as a static property
+ *
+ * Follows Pattern B (preferred):
+ * ```typescript
+ * static readonly Test = Layer.succeed(FooService, {
+ *   create: () => Effect.succeed(mockFoo),
+ *   findById: () => Effect.succeed(Option.none())
+ * })
+ * ```
+ */
+export function createTestLayerPattern(serviceName: string, mockImplementation: string) {
+  return `  static readonly Test = Layer.succeed(${serviceName}, ${mockImplementation})`
+}
 
-  /**
-   * Create a Schema.Struct definition
-   *
-   * Follows the pattern:
-   * ```typescript
-   * export const FooSchema = Schema.Struct({
-   *   id: Schema.String,
-   *   name: Schema.String,
-   *   createdAt: Schema.DateTimeUtc,
-   *   metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
-   * })
-   * ```
-   */
-  static createSchemaStruct(config: SchemaStructConfig) {
-    const exported = config.exported !== false ? "export " : ""
+/**
+ * Create a Schema.Struct definition
+ *
+ * Follows the pattern:
+ * ```typescript
+ * export const FooSchema = Schema.Struct({
+ *   id: Schema.String,
+ *   name: Schema.String,
+ *   createdAt: Schema.DateTimeUtc,
+ *   metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+ * })
+ * ```
+ */
+export function createSchemaStructPattern(config: SchemaStructConfig) {
+  const exported = config.exported !== false ? 'export ' : ''
 
-    const fields = config.fields
-      .map((field) => {
-        const schema = field.optional ? `Schema.optional(${field.schema})` : field.schema
-        const jsdoc = field.jsdoc ? `  /** ${field.jsdoc} */\n` : ""
-        return `${jsdoc}  ${field.name}: ${schema}`
-      })
-      .join(",\n")
+  const fields = config.fields
+    .map((field) => {
+      const schema = field.optional ? `Schema.optional(${field.schema})` : field.schema
+      const jsdoc = field.jsdoc ? `  /** ${field.jsdoc} */\n` : ''
+      return `${jsdoc}  ${field.name}: ${schema}`
+    })
+    .join(',\n')
 
-    const jsdocComment = config.jsdoc ? `/**\n * ${config.jsdoc}\n */\n` : ""
+  const jsdocComment = config.jsdoc ? `/**\n * ${config.jsdoc}\n */\n` : ''
 
-    return `${jsdocComment}${exported}const ${config.name} = Schema.Struct({
+  return `${jsdocComment}${exported}const ${config.name} = Schema.Struct({
 ${fields}
 })`
-  }
+}
 
-  /**
-   * Create a Schema type inference
-   *
-   * ```typescript
-   * export type Foo = Schema.Schema.Type<typeof FooSchema>
-   * ```
-   */
-  static createSchemaType(typeName: string, schemaName: string, exported = true) {
-    const exportKeyword = exported ? "export " : ""
-    return `${exportKeyword}type ${typeName} = Schema.Schema.Type<typeof ${schemaName}>`
-  }
+/**
+ * Create a Schema type inference
+ *
+ * ```typescript
+ * export type Foo = Schema.Schema.Type<typeof FooSchema>
+ * ```
+ */
+export function createSchemaTypePattern(typeName: string, schemaName: string, exported = true) {
+  const exportKeyword = exported ? 'export ' : ''
+  return `${exportKeyword}type ${typeName} = Schema.Schema.Type<typeof ${schemaName}>`
+}
 
-  /**
-   * Create a Schema encoding type inference
-   *
-   * ```typescript
-   * export type FooEncoded = Schema.Schema.Encoded<typeof FooSchema>
-   * ```
-   */
-  static createSchemaEncodedType(typeName: string, schemaName: string, exported = true) {
-    const exportKeyword = exported ? "export " : ""
-    return `${exportKeyword}type ${typeName} = Schema.Schema.Encoded<typeof ${schemaName}>`
-  }
+/**
+ * Create a Schema encoding type inference
+ *
+ * ```typescript
+ * export type FooEncoded = Schema.Schema.Encoded<typeof FooSchema>
+ * ```
+ */
+export function createSchemaEncodedTypePattern(
+  typeName: string,
+  schemaName: string,
+  exported = true
+) {
+  const exportKeyword = exported ? 'export ' : ''
+  return `${exportKeyword}type ${typeName} = Schema.Schema.Encoded<typeof ${schemaName}>`
+}
 
-  /**
-   * Generate a service implementation stub
-   */
-  static createServiceImplementation(methods: Array<ServiceMethod>) {
-    const implementations = methods
-      .map((method) => {
-        const params = method.params.map((p) => p.name).join(", ")
-        return `      ${method.name}: (${params}) => Effect.gen(function*() {
+/**
+ * Generate a service implementation stub
+ */
+export function createServiceImplementationPattern(methods: Array<ServiceMethod>) {
+  const implementations = methods
+    .map((method) => {
+      const params = method.params.map((p) => p.name).join(', ')
+      return `      ${method.name}: (${params}) => Effect.gen(function*() {
         // TODO: Implement ${method.name}
         yield* Effect.logDebug(\`${method.name} called with: \${JSON.stringify({ ${params} })}\`)
         return yield* Effect.fail(new Error("Not implemented"))
       })`
-      })
-      .join(",\n")
+    })
+    .join(',\n')
 
-    return `return {
+  return `return {
 ${implementations}
     };`
-  }
+}
 
-  /**
-   * Create CQRS command pattern
-   *
-   * ```typescript
-   * export const CreateFooCommand = Schema.Struct({
-   *   _tag: Schema.Literal("CreateFoo"),
-   *   data: FooDataSchema
-   * })
-   * export type CreateFooCommand = Schema.Schema.Type<typeof CreateFooCommand>
-   * ```
-   */
-  static createCommand(commandName: string, dataSchema: string, jsdoc?: string) {
-    const tag = commandName.replace("Command", "")
+/**
+ * Create CQRS command pattern
+ *
+ * ```typescript
+ * export const CreateFooCommand = Schema.Struct({
+ *   _tag: Schema.Literal("CreateFoo"),
+ *   data: FooDataSchema
+ * })
+ * export type CreateFooCommand = Schema.Schema.Type<typeof CreateFooCommand>
+ * ```
+ */
+export function createCommandPattern(commandName: string, dataSchema: string, jsdoc?: string) {
+  const tag = commandName.replace('Command', '')
 
-    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
+  const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ''
 
-    return `${jsdocComment}export const ${commandName}Schema = Schema.Struct({
+  return `${jsdocComment}export const ${commandName}Schema = Schema.Struct({
   _tag: Schema.Literal("${tag}"),
   data: ${dataSchema}
 })
 
 export type ${commandName} = Schema.Schema.Type<typeof ${commandName}Schema>`
-  }
+}
 
-  /**
-   * Create CQRS query pattern
-   */
-  static createQuery(queryName: string, paramsSchema?: string, jsdoc?: string) {
-    const tag = queryName.replace("Query", "")
+/**
+ * Create CQRS query pattern
+ */
+export function createQueryPattern(queryName: string, paramsSchema?: string, jsdoc?: string) {
+  const tag = queryName.replace('Query', '')
 
-    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
+  const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ''
 
-    const fields = paramsSchema
-      ? `_tag: Schema.Literal("${tag}"),\n  params: ${paramsSchema}`
-      : `_tag: Schema.Literal("${tag}")`
+  const fields = paramsSchema
+    ? `_tag: Schema.Literal("${tag}"),\n  params: ${paramsSchema}`
+    : `_tag: Schema.Literal("${tag}")`
 
-    return `${jsdocComment}export const ${queryName}Schema = Schema.Struct({
+  return `${jsdocComment}export const ${queryName}Schema = Schema.Struct({
   ${fields}
 })
 
 export type ${queryName} = Schema.Schema.Type<typeof ${queryName}Schema>`
-  }
+}
 
-  /**
-   * Create an RPC schema definition
-   *
-   * ```typescript
-   * export const FooRpc = RpcSchema.make({
-   *   create: {
-   *     input: CreateFooSchema,
-   *     output: FooSchema,
-   *     error: FooDomainError
-   *   }
-   * })
-   * ```
-   */
-  static createRpcSchema(rpcName: string, endpoints: Array<RpcEndpoint>, jsdoc?: string) {
-    const endpointDefs = endpoints
-      .map((endpoint) => {
-        return `  ${endpoint.name}: {
+/**
+ * Create an RPC schema definition
+ *
+ * ```typescript
+ * export const FooRpc = RpcSchema.make({
+ *   create: {
+ *     input: CreateFooSchema,
+ *     output: FooSchema,
+ *     error: FooDomainError
+ *   }
+ * })
+ * ```
+ */
+export function createRpcSchemaPattern(
+  rpcName: string,
+  endpoints: Array<RpcEndpoint>,
+  jsdoc?: string
+) {
+  const endpointDefs = endpoints
+    .map((endpoint) => {
+      return `  ${endpoint.name}: {
     input: ${endpoint.inputSchema},
     output: ${endpoint.outputSchema},
     error: ${endpoint.errorType}
   }`
-      })
-      .join(",\n")
+    })
+    .join(',\n')
 
-    const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ""
+  const jsdocComment = jsdoc ? `/**\n * ${jsdoc}\n */\n` : ''
 
-    return `${jsdocComment}export const ${rpcName} = RpcSchema.make({
+  return `${jsdocComment}export const ${rpcName} = RpcSchema.make({
 ${endpointDefs}
 })`
-  }
 }
+

@@ -5,10 +5,11 @@
  * These imports are completely erased at compile time.
  */
 
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 export interface TypesOnlyOptions {
-  readonly entities: ReadonlyArray<string>
+  readonly entities: readonly string[]
   readonly includeCQRS?: boolean
   readonly typesDatabasePackage?: string
 }
@@ -23,80 +24,87 @@ export function generateTypesOnlyFile(options: TypesOnlyOptions) {
   const { entities, includeCQRS, typesDatabasePackage } = options
   const scope = WORKSPACE_CONFIG.getScope()
 
-  // Entity types come from external package (prisma-effect-kysely) or local types file
-  // Prisma generates: ${Entity}Select, ${Entity}Insert, ${Entity}Update
-  // ${Entity}Id is defined in rpc-definitions.ts and exported via ./lib/rpc
-  const entityTypeSource = typesDatabasePackage || "./lib/types/database"
-  const entitySourceComment = typesDatabasePackage
-    ? `Entity types from ${typesDatabasePackage} (prisma-effect-kysely generated)`
-    : "Entity types from database schema"
+  const builder = new TypeScriptBuilder()
 
-  // Export Prisma-generated types: Insert, Select, Update variants (alphabetical)
-  const insertTypes = entities.map((e) => `${e}Insert`).join(", ")
-  const selectTypes = entities.map((e) => `${e}Select`).join(", ")
-  const updateTypes = entities.map((e) => `${e}Update`).join(", ")
-
-  const entityExports = `// ${entitySourceComment}
-export type { ${insertTypes}, ${selectTypes}, ${updateTypes} } from "${entityTypeSource}"
-
-// ID types are defined in rpc-definitions.ts (branded Schema types)
-// They are re-exported via ./lib/rpc below`
-
-  return `/**
- * Type-Only Exports
- *
- * This file provides type-only exports for zero runtime overhead.
+  // File header
+  builder.addFileHeader({
+    title: 'Type-Only Exports',
+    description: `This file provides type-only exports for zero runtime overhead.
  * Use these imports when you only need types for TypeScript checking:
  *
  * @example
  * import type { Product } from '${scope}/contract-product/types';
  *
  * These imports are completely erased at compile time and add
- * zero bytes to your JavaScript bundle.
- */
+ * zero bytes to your JavaScript bundle.`
+  })
 
-// ============================================================================
-// Entity Types
-// ============================================================================
+  builder.addBlankLine()
 
-${entityExports}
+  // Entity Types Section
+  builder.addSectionComment('Entity Types')
+  builder.addBlankLine()
 
-// ============================================================================
-// Error Types
-// ============================================================================
+  // Entity types come from external package (prisma-effect-kysely) or local types file
+  const entityTypeSource = typesDatabasePackage || './lib/types/database'
+  const entitySourceComment = typesDatabasePackage
+    ? `Entity types from ${typesDatabasePackage} (prisma-effect-kysely generated)`
+    : 'Entity types from database schema'
 
-export type * from "./lib/errors"
+  builder.addComment(entitySourceComment)
 
-// ============================================================================
-// Port Types
-// ============================================================================
+  // Export Prisma-generated types: Insert, Select, Update variants (alphabetical)
+  const insertTypes = entities.map((e) => `${e}Insert`).join(', ')
+  const selectTypes = entities.map((e) => `${e}Select`).join(', ')
+  const updateTypes = entities.map((e) => `${e}Update`).join(', ')
 
-export type * from "./lib/ports"
+  builder.addRaw(`export type { ${insertTypes}, ${selectTypes}, ${updateTypes} } from "${entityTypeSource}"`)
+  builder.addBlankLine()
 
-// ============================================================================
-// Event Types
-// ============================================================================
+  builder.addComment('ID types are defined in rpc-definitions.ts (branded Schema types)')
+  builder.addComment('They are re-exported via ./lib/rpc below')
 
-export type * from "./lib/events"
+  builder.addBlankLine()
 
-// ============================================================================
-// RPC Types
-// ============================================================================
+  // Error Types Section
+  builder.addSectionComment('Error Types')
+  builder.addBlankLine()
+  builder.addRaw('export type * from "./lib/errors"')
 
-export type * from "./lib/rpc-errors"
-export type * from "./lib/rpc-definitions"
-export type * from "./lib/rpc-group"${
-    includeCQRS
-      ? `
+  builder.addBlankLine()
 
-// ============================================================================
-// CQRS Types
-// ============================================================================
+  // Port Types Section
+  builder.addSectionComment('Port Types')
+  builder.addBlankLine()
+  builder.addRaw('export type * from "./lib/ports"')
 
-export type * from "./lib/commands"
-export type * from "./lib/queries"
-export type * from "./lib/projections"`
-      : ""
+  builder.addBlankLine()
+
+  // Event Types Section
+  builder.addSectionComment('Event Types')
+  builder.addBlankLine()
+  builder.addRaw('export type * from "./lib/events"')
+
+  builder.addBlankLine()
+
+  // RPC Types Section
+  builder.addSectionComment('RPC Types')
+  builder.addBlankLine()
+  builder.addRaw('export type * from "./lib/rpc-errors"')
+  builder.addRaw('export type * from "./lib/rpc-definitions"')
+  builder.addRaw('export type * from "./lib/rpc-group"')
+
+  // CQRS Types Section (optional)
+  if (includeCQRS) {
+    builder.addBlankLine()
+    builder.addSectionComment('CQRS Types')
+    builder.addBlankLine()
+    builder.addRaw('export type * from "./lib/commands"')
+    builder.addRaw('export type * from "./lib/queries"')
+    builder.addRaw('export type * from "./lib/projections"')
   }
-`
+
+  builder.addBlankLine()
+
+  return builder.toString()
 }

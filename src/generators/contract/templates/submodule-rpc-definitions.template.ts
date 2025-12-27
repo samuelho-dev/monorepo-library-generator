@@ -9,8 +9,8 @@
  * @module monorepo-library-generator/contract/submodule-rpc-definitions-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 export interface SubModuleRpcDefinitionsOptions {
   /** Parent domain name (e.g., 'order') */
@@ -67,21 +67,21 @@ export function generateSubModuleRpcDefinitionsFile(options: SubModuleRpcDefinit
 
   // Imports - @effect/* packages first, then effect, then relative imports
   builder.addImports([
-    { from: "@effect/rpc", imports: ["Rpc", "RpcGroup"] },
-    { from: "effect", imports: ["Schema"] }
+    { from: '@effect/rpc', imports: ['Rpc', 'RpcGroup'] },
+    { from: 'effect', imports: ['Schema'] }
   ])
 
   // Note: submodule is at /src/{submodule}/, parent rpc-definitions is at /src/lib/
   builder.addImports([
-    { from: "../lib/rpc-definitions", imports: ["RouteTag"] },
-    { from: "../lib/rpc-definitions", imports: ["RouteType"], isTypeOnly: true }
+    { from: '../lib/rpc-definitions', imports: ['RouteTag'] },
+    { from: '../lib/rpc-definitions', imports: ['RouteType'], isTypeOnly: true }
   ])
 
-  builder.addSectionComment("Local Imports")
+  builder.addSectionComment('Local Imports')
   // Note: entities.ts exports the class as ${subModuleClassName} (not ${subModuleClassName}Entity)
   builder.addImports([
-    { from: "./entities", imports: [subModuleClassName, `${subModuleClassName}Id`] },
-    { from: "./rpc-errors", imports: [`${subModuleClassName}RpcError`] }
+    { from: './entities', imports: [subModuleClassName, `${subModuleClassName}Id`] },
+    { from: './rpc-errors', imports: [`${subModuleClassName}RpcError`] }
   ])
 
   // Note: RouteTag is imported from parent, not re-exported to avoid duplicates
@@ -97,25 +97,22 @@ export function generateSubModuleRpcDefinitionsFile(options: SubModuleRpcDefinit
 /**
  * Generate RPC definitions based on sub-module type
  */
-function generateSubModuleRpcs(
-  subModuleName: string,
-  subModuleClassName: string
-) {
+function generateSubModuleRpcs(subModuleName: string, subModuleClassName: string) {
   const name = subModuleName.toLowerCase()
   const prefix = subModuleClassName
 
   // Cart-specific RPCs
-  if (name === "cart") {
+  if (name === 'cart') {
     return generateCartRpcs(prefix)
   }
 
   // Checkout-specific RPCs
-  if (name === "checkout") {
+  if (name === 'checkout') {
     return generateCheckoutRpcs(prefix)
   }
 
   // Order management-specific RPCs
-  if (name === "management" || name === "order-management") {
+  if (name === 'management' || name === 'order-management') {
     return generateManagementRpcs(prefix)
   }
 

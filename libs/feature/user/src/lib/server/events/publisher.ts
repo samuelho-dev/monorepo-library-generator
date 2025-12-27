@@ -1,5 +1,5 @@
 import { UserCreatedEvent, UserDeletedEvent, UserUpdatedEvent } from "@samuelho-dev/contract-user"
-import type { UserDomainEvent } from "@samuelho-dev/contract-user"
+import type { UserEvent } from "@samuelho-dev/contract-user"
 import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
 import { PubsubService, type TopicHandle } from "@samuelho-dev/infra-pubsub"
 import { Context, Effect, Layer, Schema } from "effect"
@@ -29,7 +29,7 @@ Usage:
 // ============================================================================
 
 // Create Schema.Union for PubSub topic registration
-const UserDomainEventSchema = Schema.Union(
+const UserEventSchema = Schema.Union(
   UserCreatedEvent,
   UserUpdatedEvent,
   UserDeletedEvent
@@ -97,7 +97,7 @@ export interface UserEventPublisherInterface {
    * Publish any domain event (auto-routes to correct topic)
    */
   readonly publish: (
-    event: UserDomainEvent
+    event: UserEvent
   ) => Effect.Effect<void, ParseResult.ParseError>
 }
 
@@ -115,10 +115,10 @@ export interface UserEventPublisherInterface {
  * - E: error type (ParseError for Schema validation)
  */
 interface UserTopicHandles {
-  readonly all: TopicHandle<UserDomainEvent, ParseResult.ParseError>
-  readonly created: TopicHandle<UserDomainEvent, ParseResult.ParseError>
-  readonly updated: TopicHandle<UserDomainEvent, ParseResult.ParseError>
-  readonly deleted: TopicHandle<UserDomainEvent, ParseResult.ParseError>
+  readonly all: TopicHandle<UserEvent, ParseResult.ParseError>
+  readonly created: TopicHandle<UserEvent, ParseResult.ParseError>
+  readonly updated: TopicHandle<UserEvent, ParseResult.ParseError>
+  readonly deleted: TopicHandle<UserEvent, ParseResult.ParseError>
 }
 
 /**
@@ -130,17 +130,17 @@ const createPublisherImpl = (
   metrics: Context.Tag.Service<typeof MetricsService>
 ) => {
   const publishToTopic = (
-    topic: TopicHandle<UserDomainEvent, ParseResult.ParseError>,
+    topic: TopicHandle<UserEvent, ParseResult.ParseError>,
     topicName: string,
-    event: UserDomainEvent
+    event: UserEvent
   ) =>
     Effect.gen(function*() {
       const counter = yield* metrics.counter("user_events_published_total")
 
       yield* logger.debug("Publishing user event", {
-        eventType: event.eventType,
+        eventType: event.metadata.eventType,
         topic: topicName,
-        correlationId: event.correlationId
+        correlationId: event.metadata.correlationId
       })
 
       // Publish to specific topic
@@ -154,15 +154,15 @@ const createPublisherImpl = (
       yield* counter.increment
 
       yield* logger.info("User event published", {
-        eventType: event.eventType,
+        eventType: event.metadata.eventType,
         topic: topicName,
-        correlationId: event.correlationId
+        correlationId: event.metadata.correlationId
       })
     }).pipe(
       Effect.withSpan("UserEventPublisher.publish", {
         attributes: {
           topic: topicName,
-          eventType: event.eventType
+          eventType: event.metadata.eventType
         }
       })
     )
@@ -177,9 +177,9 @@ const createPublisherImpl = (
     publishDeleted: (event: UserDeletedEvent) =>
       publishToTopic(topics.deleted, UserEventTopics.DELETED, event),
 
-    publish: (event: UserDomainEvent) => {
+    publish: (event: UserEvent) => {
       // Use eventType field for discrimination (defined in EventMetadata schema)
-      switch (event.eventType) {
+      switch (event.metadata.eventType) {
         case "UserCreatedEvent":
           return publishToTopic(topics.created, UserEventTopics.CREATED, event)
         case "UserUpdatedEvent":
@@ -207,9 +207,20 @@ const createPublisherImpl = (
  *   const publisher = yield* UserEventPublisher;
  *
  *   // Publish a created event
- *   const event = UserCreatedEvent.create({
- *     userId: "uuid-123",
- *     createdBy: "user-456",
+ *   const event = new UserCreatedEvent({
+ *     metadata: {
+ *       eventType: "UserCreatedEvent",
+ *       eventVersion: "1.0",
+ *       occurredAt: new Date()
+ *     },
+ *     aggregate: {
+ *       aggregateId: "uuid-123" as any,
+ *       aggregateVersion: 1
+ *     },
+ *     payload: {
+ *       id: "uuid-123" as any,
+ *       createdAt: new Date()
+ *     }
  *   })
  *
  *   yield* publisher.publishCreated(event)
@@ -236,10 +247,10 @@ export class UserEventPublisher extends Context.Tag("UserEventPublisher")<
 
       // Create topic handles during layer initialization
       const topics: UserTopicHandles = {
-        all: yield* pubsub.topic(UserEventTopics.ALL, UserDomainEventSchema),
-        created: yield* pubsub.topic(UserEventTopics.CREATED, UserDomainEventSchema),
-        updated: yield* pubsub.topic(UserEventTopics.UPDATED, UserDomainEventSchema),
-        deleted: yield* pubsub.topic(UserEventTopics.DELETED, UserDomainEventSchema)
+        all: yield* pubsub.topic(UserEventTopics.ALL, UserEventSchema),
+        created: yield* pubsub.topic(UserEventTopics.CREATED, UserEventSchema),
+        updated: yield* pubsub.topic(UserEventTopics.UPDATED, UserEventSchema),
+        deleted: yield* pubsub.topic(UserEventTopics.DELETED, UserEventSchema)
       }
 
       return createPublisherImpl(topics, logger, metrics)
@@ -270,12 +281,12 @@ export class UserEventPublisher extends Context.Tag("UserEventPublisher")<
  *   // Create topic handle and subscribe to all events
  *   const topic = yield* pubsub.topic(
  *     UserEventTopics.ALL,
- *     UserDomainEventSchema
+ *     UserEventSchema
  *   )
  *
  *   yield* topic.subscribe((event) =>
  *     Effect.gen(function*() {
- *       console.log("Received event:", event.eventType)
+ *       console.log("Received event:", event.metadata.eventType)
  *     })
  *   )
  * })
@@ -285,5 +296,5 @@ export function createUserEventSubscription(
   pubsub: Context.Tag.Service<typeof PubsubService>,
   topicName: string = UserEventTopics.ALL
 ) {
-  return pubsub.topic(topicName, UserDomainEventSchema)
+  return pubsub.topic(topicName, UserEventSchema)
 }

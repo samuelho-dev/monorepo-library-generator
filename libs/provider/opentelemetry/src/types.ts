@@ -14,11 +14,7 @@ import type { OpenTelemetryConfig, TracesConfig } from "@samuelho-dev/provider-o
  * @module @samuelho-dev/provider-opentelemetry/types
  */
 // Re-export all types from lib/types
-export type {
-  OpenTelemetryConfig,
-  TracesConfig,
-  MetricsConfig,
-} from "./lib/types"
+export type { MetricsConfig, OpenTelemetryConfig, TracesConfig } from "./lib/types"
 
 // Re-export provider operations type
 export type { OpenTelemetryProviderOperations } from "./lib/otel"

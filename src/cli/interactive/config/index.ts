@@ -6,5 +6,18 @@
  * @module monorepo-library-generator/cli/interactive/config
  */
 
-export * from "./options.config"
-export * from "./validation.config"
+export {
+  type BooleanOptionConfig,
+  getOptionsForType,
+  type OptionConfig,
+  PLATFORM_OPTIONS,
+  type PlatformOption,
+  type SelectOptionConfig,
+  type TextOptionConfig
+} from './options.config'
+export {
+  VALIDATION_PATTERNS,
+  type ValidationResult,
+  validateExternalService,
+  validateName
+} from './validation.config'

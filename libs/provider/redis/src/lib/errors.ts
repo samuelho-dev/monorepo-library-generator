@@ -14,7 +14,6 @@ Includes:
  * @module @samuelho-dev/provider-redis/service/errors
  */
 
-
 // ============================================================================
 // Base Error
 // ============================================================================
@@ -147,7 +146,7 @@ function parseSdkError(error: unknown) {
  * Uses Schema.decodeUnknownOption for type-safe parsing
  */
 export function mapRedisError(error: unknown, command?: string) {
-  const { message, code } = parseSdkError(error)
+  const { code, message } = parseSdkError(error)
 
   // Connection errors
   if (code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "ECONNRESET") {

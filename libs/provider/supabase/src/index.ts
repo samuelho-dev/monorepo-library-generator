@@ -23,18 +23,18 @@ Usage:
 // ============================================================================
 
 export {
-  // Base error
-  SupabaseError,
-  SupabaseConnectionError,
   // Auth errors
   SupabaseAuthError,
+  SupabaseBucketNotFoundError,
+  SupabaseConnectionError,
+  // Base error
+  SupabaseError,
+  SupabaseFileNotFoundError,
   SupabaseInvalidCredentialsError,
   SupabaseSessionExpiredError,
-  SupabaseTokenError,
   // Storage errors
   SupabaseStorageError,
-  SupabaseFileNotFoundError,
-  SupabaseBucketNotFoundError,
+  SupabaseTokenError
 } from "./lib/errors"
 export type { SupabaseProviderError } from "./lib/errors"
 
@@ -43,38 +43,38 @@ export type { SupabaseProviderError } from "./lib/errors"
 // ============================================================================
 
 export type {
-  // Configuration
-  SupabaseConfig,
-  // User types
-  SupabaseUser,
-  AuthUser,
-  UserMetadata,
-  // Session types
-  SupabaseSession,
+  // Auth types
+  AuthMethod,
   AuthResult,
+  AuthUser,
+  DownloadOptions,
+  OAuthProvider,
+  SignedUrlOptions,
+  SignInCredentials,
+  SignUpCredentials,
   // Storage types
   StorageBucket,
   StorageFile,
+  // Configuration
+  SupabaseConfig,
+  // Session types
+  SupabaseSession,
+  // User types
+  SupabaseUser,
   UploadOptions,
-  DownloadOptions,
-  SignedUrlOptions,
-  // Auth types
-  AuthMethod,
-  SignInCredentials,
-  SignUpCredentials,
-  OAuthProvider,
+  UserMetadata
 } from "./lib/types"
 
 // Schema exports for runtime validation
 export {
-  SupabaseConfigSchema,
-  SupabaseUserSchema,
-  AuthUserSchema,
-  UserMetadataSchema,
-  SupabaseSessionSchema,
   AuthResultSchema,
+  AuthUserSchema,
   StorageBucketSchema,
   StorageFileSchema,
+  SupabaseConfigSchema,
+  SupabaseSessionSchema,
+  SupabaseUserSchema,
+  UserMetadataSchema
 } from "./lib/types"
 
 // ============================================================================
@@ -82,7 +82,7 @@ export {
 // ============================================================================
 
 // SupabaseClient - Core client for SDK initialization
-// 
+//
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 //   - SupabaseClient.Live (lazy env loading)
 //   - SupabaseClient.Test (mock client)
@@ -92,14 +92,14 @@ export {
 export { SupabaseClient, type SupabaseClientServiceInterface } from "./lib/client"
 
 // SupabaseAuth - Authentication operations
-// 
+//
 // Provides: signInWithPassword, signUp, signOut, verifyToken, getSession, getUser
 // Used by: infra-auth for auth middleware
 
 export { SupabaseAuth, type SupabaseAuthServiceInterface } from "./lib/auth"
 
 // SupabaseStorage - File storage operations
-// 
+//
 // Provides: upload, download, remove, list, createSignedUrl, getPublicUrl
 // Used by: infra-storage for file operations
 
@@ -108,10 +108,10 @@ export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./lib/sto
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Usage Examples
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 
+//
 // import { Effect, Layer } from 'effect';
 // import { SupabaseAuth, SupabaseClient, SupabaseStorage } from '@samuelho-dev/provider-supabase';
-// 
+//
 // // Authentication example
 // const authProgram = Effect.gen(function*() {
 //   const auth = yield* SupabaseAuth;
@@ -121,21 +121,21 @@ export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./lib/sto
 //   })
 //   return result.user;
 // })
-// 
+//
 // // Storage example
 // const storageProgram = Effect.gen(function*() {
 //   const storage = yield* SupabaseStorage;
 //   const files = yield* storage.list('my-bucket')
 //   return files;
 // })
-// 
+//
 // // Layer composition
 // const MainLayer = Layer.mergeAll(
 //   SupabaseClient.Live,
 //   SupabaseAuth.Live,
 //   SupabaseStorage.Live,
 // )
-// 
+//
 // // For testing
 // const TestLayer = Layer.mergeAll(
 //   SupabaseClient.Test,

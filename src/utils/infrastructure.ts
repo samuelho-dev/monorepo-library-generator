@@ -21,13 +21,18 @@
  * @module monorepo-library-generator/infrastructure
  */
 
-import type { TargetConfiguration } from "@nx/devkit"
-import { Effect } from "effect"
-import type { LibraryType, PlatformType } from "./build"
-import { type ExportConfig, generateGranularExports } from "./build"
-import type { FileSystemAdapter } from "./filesystem"
-import { getProviderForInfra, hasProviderMapping } from "./infra-provider-mapping"
-import { getPackageName } from "./workspace-config"
+import { Effect } from 'effect'
+import {
+  generatePackageJson,
+  generateProjectJson,
+  generateReadme,
+  generateBaseTsConfig,
+  generateLibTsConfig,
+  generateSpecTsConfig,
+  generateVitestConfig
+} from '../generators/infrastructure/templates'
+import type { LibraryType, PlatformType } from './build'
+import type { FileSystemAdapter } from './filesystem'
 
 /**
  * Unified Infrastructure Generation Options
@@ -116,7 +121,7 @@ export interface InfrastructureGenerationResult {
   readonly projectConfig?: {
     readonly name: string
     readonly root: string
-    readonly projectType: "library"
+    readonly projectType: 'library'
     readonly sourceRoot: string
     readonly tags: Array<string>
     readonly targets: Record<string, unknown>
@@ -146,7 +151,7 @@ export function generateLibraryInfrastructure(
   adapter: FileSystemAdapter,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const mode = adapter.getMode()
     const workspaceRoot = adapter.getWorkspaceRoot()
     const filesGenerated: Array<string> = []
@@ -155,23 +160,23 @@ export function generateLibraryInfrastructure(
     const sourceRoot = options.sourceRoot || `${options.projectRoot}/src`
 
     // 1. Generate package.json (all modes)
-    yield* generatePackageJsonFile(adapter, workspaceRoot, options)
+    yield* writePackageJson(adapter, workspaceRoot, options)
     filesGenerated.push(`${options.projectRoot}/package.json`)
 
     // 2. Generate TypeScript configuration files (all modes)
-    const tsConfigFiles = yield* generateTsConfigFiles(adapter, workspaceRoot, options)
+    const tsConfigFiles = yield* writeTsConfigFiles(adapter, workspaceRoot, options)
     for (const file of tsConfigFiles) {
       filesGenerated.push(file)
     }
 
     // 3. Generate vitest configuration (skip for contract libraries - types only)
-    if (options.libraryType !== "contract") {
-      yield* generateVitestConfigFile(adapter, workspaceRoot, options)
+    if (options.libraryType !== 'contract') {
+      yield* writeVitestConfig(adapter, workspaceRoot, options)
       filesGenerated.push(`${options.projectRoot}/vitest.config.ts`)
     }
 
     // 4. Generate documentation files (all modes)
-    const docFiles = yield* generateDocumentationFiles(adapter, workspaceRoot, options)
+    const docFiles = yield* writeDocumentationFiles(adapter, workspaceRoot, options)
     for (const file of docFiles) {
       filesGenerated.push(file)
     }
@@ -182,30 +187,35 @@ export function generateLibraryInfrastructure(
       filesGenerated.push(file)
     }
 
-    // 6. Generate project configuration
-    const projectConfig = createProjectConfiguration(options, sourceRoot)
+    // 6. Generate project configuration using template
+    const projectConfig = generateProjectJson({
+      projectName: options.projectName,
+      projectRoot: options.projectRoot,
+      sourceRoot,
+      tags: options.tags,
+      libraryType: options.libraryType,
+      includeClientServer: options.includeClientServer
+    })
 
-    if (mode === "nx") {
+    if (mode === 'nx') {
       // Nx mode: Return config for addProjectConfiguration() to handle via Nx devkit
       return {
         requiresNxRegistration: true,
-        projectConfig,
+        projectConfig: {
+          name: projectConfig.name,
+          root: options.projectRoot,
+          projectType: projectConfig.projectType,
+          sourceRoot: projectConfig.sourceRoot,
+          tags: projectConfig.tags,
+          targets: projectConfig.targets
+        },
         filesGenerated
       }
     }
 
     // CLI/Effect mode: Write project.json directly
     const projectJsonPath = `${workspaceRoot}/${options.projectRoot}/project.json`
-    const projectJsonContent = {
-      name: projectConfig.name,
-      $schema: "../../node_modules/nx/schemas/project-schema.json",
-      projectType: projectConfig.projectType,
-      sourceRoot: projectConfig.sourceRoot,
-      tags: projectConfig.tags,
-      targets: projectConfig.targets
-    }
-
-    yield* adapter.writeFile(projectJsonPath, `${JSON.stringify(projectJsonContent, null, 2)}\n`)
+    yield* adapter.writeFile(projectJsonPath, `${JSON.stringify(projectConfig, null, 2)}\n`)
     filesGenerated.push(`${options.projectRoot}/project.json`)
 
     return {
@@ -216,166 +226,45 @@ export function generateLibraryInfrastructure(
 }
 
 /**
- * Generate package.json file
- *
- * Creates package.json with:
- * - Proper scope extracted from workspace root package.json
- * - Granular exports based on library type and platform
- * - sideEffects: false for tree-shaking
- * - Effect peer dependency
+ * Write package.json file using template
  */
-function generatePackageJsonFile(
+function writePackageJson(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
-    // Build granular exports configuration
-    const exportConfig: ExportConfig = {
+  return Effect.gen(function* () {
+    const packageJson = generatePackageJson({
+      packageName: options.packageName,
+      projectName: options.projectName,
+      description: options.description,
       libraryType: options.libraryType,
       platform: options.platform,
-      ...(options.includeClientServer !== undefined && {
-        includeClientServer: options.includeClientServer
-      }),
-      hasEntities: Boolean(options.entities && options.entities.length > 0),
-      ...(options.entities &&
-        options.entities.length > 0 && {
-        entityNames: Array.from(options.entities)
-      }),
-      ...(options.subModules &&
-        options.subModules.length > 0 && {
-        subModuleNames: Array.from(options.subModules)
-      })
-    }
+      includeClientServer: options.includeClientServer,
+      entities: options.entities,
+      subModules: options.subModules
+    })
 
-    const exports = generateGranularExports(exportConfig)
-
-    // Build dependencies based on library type
-    // Note: Provider libraries use in-memory baseline implementation that doesn't require
-    // external dependencies. When users integrate real SDKs, they add dependencies then.
-    const dependencies = (() => {
-      // Infrastructure libraries depend on their matching provider
-      if (options.libraryType === "infra") {
-        // Extract infrastructure name from projectName
-        // e.g., "infra-cache" -> "cache", "env" -> "env"
-        const infraName = options.projectName.startsWith("infra-")
-          ? options.projectName.substring(6) // Remove "infra-" prefix
-          : options.projectName
-
-        // Check if this infrastructure has a provider mapping
-        if (hasProviderMapping(infraName)) {
-          const providerName = getProviderForInfra(infraName)
-          if (providerName) {
-            return {
-              [getPackageName("provider", providerName)]: "workspace:*"
-            }
-          }
-        }
-      }
-
-      // Provider, contract, and other library types have no workspace dependencies
-      // The baseline implementation is fully self-contained with in-memory storage
-      return undefined
-    })()
-
-    // Build peer dependencies based on library type
-    const peerDependencies = (() => {
-      const base = { effect: "*" }
-
-      // Kysely provider needs kysely for query builder and pg for PostgreSQL driver
-      if (options.libraryType === "provider" && options.projectName.includes("kysely")) {
-        return { ...base, kysely: "*", pg: "*" }
-      }
-
-      // Supabase provider needs @supabase/supabase-js for the SDK
-      if (options.libraryType === "provider" && options.projectName.includes("supabase")) {
-        return { ...base, "@supabase/supabase-js": "^2" }
-      }
-
-      // Data-access libraries need kysely for query building
-      if (options.libraryType === "data-access") {
-        return { ...base, kysely: "*" }
-      }
-
-      // Feature libraries need @effect-atom for client-side state
-      if (options.libraryType === "feature") {
-        return {
-          ...base,
-          "@effect-atom/atom": "*",
-          "@effect-atom/atom-react": "*"
-        }
-      }
-
-      // Other library types just need effect
-      return base
-    })()
-
-    // Create package.json content
-    const packageJson = {
-      name: options.packageName,
-      version: "0.0.1",
-      type: "module",
-      sideEffects: false, // Enable aggressive tree-shaking
-      description: options.description,
-      exports,
-      dependencies,
-      peerDependencies
-    }
-
-    // Write package.json
     const packageJsonPath = `${workspaceRoot}/${options.projectRoot}/package.json`
     yield* adapter.writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
   })
 }
 
 /**
- * Generate TypeScript configuration files
- *
- * Creates:
- * - tsconfig.json (base configuration)
- * - tsconfig.lib.json (library build configuration)
- * - tsconfig.spec.json (test configuration)
- *
- * In Nx mode: Includes project references from dependency graph
- * In Effect mode: No project references (standalone)
+ * Write TypeScript configuration files using templates
  */
-function generateTsConfigFiles(
+function writeTsConfigFiles(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const filesGenerated: Array<string> = []
 
-    // Project references (Nx mode only)
-    // In effect mode, we don't have a dependency graph, so no references
-    const references: Array<string> = []
-    // TODO: In Nx mode, compute references from project graph
-    // This requires access to Nx graph APIs which are only available in Tree context
-
-    // Normalize offsetFromRoot (remove trailing slashes and collapse multiple slashes)
-    const normalizedOffset = options.offsetFromRoot
-      .replace(/\/+$/, "") // Remove one or more trailing slashes
-      .replace(/\/+/g, "/") // Collapse multiple slashes to single slash
-
     // Generate tsconfig.json (base)
-    // Note: Explicitly specify types to include only what's needed
-    // This avoids issues with stub type packages like @types/minimatch
-    // Note: rootDir is omitted to allow type checking with workspace path mappings
-    // The include array controls what files are compiled
-    const baseTsConfig = {
-      extends: `${normalizedOffset}/tsconfig.base.json`,
-      compilerOptions: {
-        outDir: "./dist",
-        module: "ESNext", // Required for verbatimModuleSyntax with ESM
-        moduleResolution: "bundler", // Modern resolution for ESM packages
-        verbatimModuleSyntax: true, // Preserve import/export for optimal tree-shaking
-        types: ["node"] // Explicitly include only node types (for crypto, etc.)
-      },
-      include: ["src/**/*.ts"],
-      exclude: ["node_modules", "dist", "**/*.spec.ts"],
-      references: references.length > 0 ? references.map((ref) => ({ path: ref })) : undefined
-    }
+    const baseTsConfig = generateBaseTsConfig({
+      offsetFromRoot: options.offsetFromRoot
+    })
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${options.projectRoot}/tsconfig.json`,
@@ -384,21 +273,9 @@ function generateTsConfigFiles(
     filesGenerated.push(`${options.projectRoot}/tsconfig.json`)
 
     // Generate tsconfig.lib.json (library build)
-    // Note: composite is intentionally omitted to support workspace path mappings
-    // With composite:true, TypeScript defaults rootDir to the tsconfig directory,
-    // which breaks path mapping resolution across libraries.
-    // NX handles incremental builds at the Nx level, so composite is not needed.
-    const libTsConfig = {
-      extends: "./tsconfig.json",
-      compilerOptions: {
-        outDir: `../../dist/${options.projectRoot}`,
-        declaration: true,
-        declarationMap: true,
-        noEmit: false
-      },
-      include: ["src/**/*.ts"],
-      exclude: ["src/**/*.spec.ts", "src/**/*.test.ts", "**/*.spec.ts"]
-    }
+    const libTsConfig = generateLibTsConfig({
+      projectRoot: options.projectRoot
+    })
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${options.projectRoot}/tsconfig.lib.json`,
@@ -407,15 +284,8 @@ function generateTsConfigFiles(
     filesGenerated.push(`${options.projectRoot}/tsconfig.lib.json`)
 
     // Generate tsconfig.spec.json (test) - skip for contract libraries (types only)
-    if (options.libraryType !== "contract") {
-      const specTsConfig = {
-        extends: "./tsconfig.json",
-        compilerOptions: {
-          outDir: "./dist-test",
-          types: ["vitest/globals", "node"]
-        },
-        include: ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts", "vitest.config.ts"]
-      }
+    if (options.libraryType !== 'contract') {
+      const specTsConfig = generateSpecTsConfig()
 
       yield* adapter.writeFile(
         `${workspaceRoot}/${options.projectRoot}/tsconfig.spec.json`,
@@ -429,38 +299,15 @@ function generateTsConfigFiles(
 }
 
 /**
- * Generate vitest configuration file
- *
- * Creates vitest.config.ts with:
- * - TypeScript path resolution
- * - Coverage configuration
- * - Test environment setup
+ * Write vitest configuration file using template
  */
-function generateVitestConfigFile(
+function writeVitestConfig(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
-    const vitestConfig = `import { defineConfig } from "vitest/config"
-
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: "node",
-    include: ["src/**/*.{test,spec}.ts"],
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
-      exclude: [
-        "node_modules/",
-        "src/**/*.spec.ts",
-        "src/**/*.test.ts"
-      ]
-    }
-  }
-})
-`
+  return Effect.gen(function* () {
+    const vitestConfig = generateVitestConfig()
 
     yield* adapter.writeFile(
       `${workspaceRoot}/${options.projectRoot}/vitest.config.ts`,
@@ -470,22 +317,24 @@ export default defineConfig({
 }
 
 /**
- * Generate documentation files
- *
- * Creates:
- * - README.md (library-type specific template)
- * - CLAUDE.md (AI agent reference documentation)
+ * Write documentation files using templates
  */
-function generateDocumentationFiles(
+function writeDocumentationFiles(
   adapter: FileSystemAdapter,
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const filesGenerated: Array<string> = []
 
-    // Generate README.md
-    const readmeContent = generateReadmeContent(options)
+    // Generate README.md using template
+    const readmeContent = generateReadme({
+      packageName: options.packageName,
+      projectName: options.projectName,
+      description: options.description,
+      libraryType: options.libraryType
+    })
+
     yield* adapter.writeFile(`${workspaceRoot}/${options.projectRoot}/README.md`, readmeContent)
     filesGenerated.push(`${options.projectRoot}/README.md`)
 
@@ -507,7 +356,7 @@ function generateSourceFileScaffolds(
   workspaceRoot: string,
   sourceRoot: string
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const filesGenerated: Array<string> = []
 
     // Create src directory
@@ -518,277 +367,4 @@ function generateSourceFileScaffolds(
 
     return filesGenerated
   })
-}
-
-/**
- * Create project configuration for Nx
- *
- * Builds the project.json structure with standard targets.
- * This is also used for registration via addProjectConfiguration().
- */
-function createProjectConfiguration(options: InfrastructureOptions, sourceRoot: string) {
-  // Build additional entry points for client/server split
-  const additionalEntryPoints: Array<string> = []
-  if (options.includeClientServer) {
-    additionalEntryPoints.push(`${sourceRoot}/server.ts`)
-    additionalEntryPoints.push(`${sourceRoot}/client.ts`)
-  }
-
-  // Build targets object conditionally (exclude test for contract libraries)
-
-  const targets: Record<string, TargetConfiguration> = {
-    build: {
-      executor: "@nx/js:tsc",
-      outputs: ["{options.outputPath}"],
-      options: {
-        outputPath: `dist/${options.projectRoot}`,
-        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-        main: `${sourceRoot}/index.ts`,
-        batch: true,
-        ...(additionalEntryPoints.length > 0 && { additionalEntryPoints })
-      }
-    },
-    lint: {
-      executor: "@nx/eslint:lint",
-      outputs: ["{options.outputFile}"],
-      options: {
-        lintFilePatterns: [`${sourceRoot}/**/*.ts`]
-      }
-    }
-  }
-
-  // Only add test target for non-contract libraries (contracts are types-only)
-  if (options.libraryType !== "contract") {
-    targets["test"] = {
-      executor: "@nx/vite:test",
-      outputs: ["{options.reportsDirectory}"],
-      options: {
-        reportsDirectory: `coverage/${options.projectRoot}`,
-        config: `${options.projectRoot}/vitest.config.ts`
-      }
-    }
-  }
-
-  return {
-    name: options.projectName,
-    root: options.projectRoot,
-    projectType: "library",
-    sourceRoot,
-    tags: options.tags,
-    targets
-  }
-}
-
-/**
- * Generate README content based on library type
- */
-function generateReadmeContent(options: InfrastructureOptions) {
-  const templates: Record<LibraryType, (opts: InfrastructureOptions) => string> = {
-    contract: (opts) =>
-      `# ${opts.packageName}
-
-${opts.description}
-
-## Overview
-
-This contract library defines the core domain model and interfaces.
-
-## Contents
-
-- **Entities**: Domain entities with business logic
-- **Events**: Domain events for event sourcing
-- **Ports**: Service interfaces and contracts
-- **Types**: Shared type definitions
-
-## Usage
-
-\`\`\`typescript
-import { /* types */ } from '${opts.packageName}';
-\`\`\`
-
-## Development
-
-\`\`\`bash
-# Build
-nx build ${opts.projectName}
-
-# Test
-nx test ${opts.projectName}
-\`\`\`
-`,
-
-    "data-access": (opts) =>
-      `# ${opts.packageName}
-
-${opts.description}
-
-## Overview
-
-This data-access library provides repository patterns for data persistence.
-
-## Contents
-
-- **Repository**: Data access layer with CRUD operations
-- **Queries**: Pre-built database queries
-- **Validation**: Data validation schemas
-
-## Usage
-
-\`\`\`typescript
-import { /* repository */ } from '${opts.packageName}';
-\`\`\`
-
-## Development
-
-\`\`\`bash
-# Build
-nx build ${opts.projectName}
-
-# Test
-nx test ${opts.projectName}
-\`\`\`
-`,
-
-    feature: (opts) =>
-      `# ${opts.packageName}
-
-${opts.description}
-
-## Overview
-
-This feature library implements business logic with Effect-based patterns.
-
-## Installation
-
-\`\`\`bash
-pnpm install ${opts.packageName}
-\`\`\`
-
-## Contents
-
-- **Server**: Server-side business logic and services
-- **Client**: Client-side hooks and state management (if applicable)
-- **Types**: Shared type definitions
-
-## Usage
-
-\`\`\`typescript
-import { /* service */ } from '${opts.packageName}/server';
-\`\`\`
-
-## Development
-
-\`\`\`bash
-# Build
-nx build ${opts.projectName}
-
-# Test
-nx test ${opts.projectName}
-\`\`\`
-`,
-
-    infra: (opts) =>
-      `# ${opts.packageName}
-
-${opts.description}
-
-## Overview
-
-This infrastructure library provides service implementations.
-
-## Contents
-
-- **Service**: Core service implementation
-- **Providers**: Service providers and adapters
-- **Configuration**: Service configuration
-
-## Usage
-
-\`\`\`typescript
-import { /* service */ } from '${opts.packageName}';
-\`\`\`
-
-## Development
-
-\`\`\`bash
-# Build
-nx build ${opts.projectName}
-
-# Test
-nx test ${opts.projectName}
-\`\`\`
-`,
-
-    provider: (opts) =>
-      `# ${opts.packageName}
-
-${opts.description}
-
-## Overview
-
-This provider library integrates with external services.
-
-## Installation
-
-\`\`\`bash
-pnpm install ${opts.packageName}
-\`\`\`
-
-## Contents
-
-- **Service**: External service client
-- **Types**: API types and schemas
-- **Validation**: Request/response validation
-
-## Usage
-
-\`\`\`typescript
-import { /* service */ } from '${opts.packageName}';
-\`\`\`
-
-## Development
-
-\`\`\`bash
-# Build
-nx build ${opts.projectName}
-
-# Test
-nx test ${opts.projectName}
-\`\`\`
-`,
-
-    util: (opts) =>
-      `# ${opts.packageName}
-
-${opts.description}
-
-## Overview
-
-This utility library provides shared helper functions and utilities.
-
-## Contents
-
-- **Utilities**: Reusable helper functions
-- **Types**: Shared type definitions
-- **Constants**: Common constants
-
-## Usage
-
-\`\`\`typescript
-import { /* utilities */ } from '${opts.packageName}';
-\`\`\`
-
-## Development
-
-\`\`\`bash
-# Build
-nx build ${opts.projectName}
-
-# Test
-nx test ${opts.projectName}
-\`\`\`
-`
-  }
-
-  return templates[options.libraryType](options)
 }

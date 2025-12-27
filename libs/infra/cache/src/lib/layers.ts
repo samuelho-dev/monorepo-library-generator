@@ -119,7 +119,7 @@ export const CacheRedisLayer = Layer.effect(
             refresh: (key: K) => memoryCache.refresh(key),
 
             size: memoryCache.size
-          // TS infers CacheHandle<K, V, E> via Context.Tag
+            // TS infers CacheHandle<K, V, E> via Context.Tag
           }
         }),
 

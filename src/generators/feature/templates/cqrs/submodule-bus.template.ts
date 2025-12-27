@@ -12,10 +12,10 @@
  * @module monorepo-library-generator/feature/cqrs/submodule-bus-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import { createNamingVariants } from "../../../../utils/naming"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import { createNamingVariants } from '../../../../utils/naming'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate unified CQRS bus file
@@ -25,7 +25,7 @@ import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
  */
 export function generateSubModuleCqrsBusFile(options: FeatureTemplateOptions) {
   if (!options.subModules || options.subModules.length === 0) {
-    return "" // No bus needed without sub-modules
+    return '' // No bus needed without sub-modules
   }
 
   const builder = new TypeScriptBuilder()
@@ -41,39 +41,35 @@ export function generateSubModuleCqrsBusFile(options: FeatureTemplateOptions) {
     description: `Unified command/query bus for ${name} domain with sub-module delegation.
 
 Sub-modules:
-${subModules.map((s) => `- ${s.className}: ${s.name} commands/queries`).join("\n")}
+${subModules.map((s) => `- ${s.className}: ${s.name} commands/queries`).join('\n')}
 
 All commands/queries are prefixed with their sub-module name:
-${subModules.map((s) => `- ${s.className}.*: ${s.name} operations`).join("\n")}
+${subModules.map((s) => `- ${s.className}.*: ${s.name} operations`).join('\n')}
 
 This bus provides a single entry point while maintaining separation of concerns.`,
     module: `${scope}/feature-${fileName}/server/cqrs/bus`
   })
   builder.addBlankLine()
 
+  builder.addImports([{ from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Match'] }])
+  builder.addBlankLine()
+
+  builder.addSectionComment('Infrastructure Services')
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer", "Match"] }
+    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Infrastructure Services")
-  builder.addImports([
-    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] }
-  ])
-  builder.addBlankLine()
-
-  builder.addSectionComment("Sub-Module Service Imports")
+  builder.addSectionComment('Sub-Module Service Imports')
   builder.addBlankLine()
 
   // Generate imports for each sub-module's service
   for (const subModule of subModules) {
-    builder.addRaw(
-      `import { ${subModule.className}Service } from "../services/${subModule.name}"`
-    )
+    builder.addRaw(`import { ${subModule.className}Service } from "../services/${subModule.name}"`)
   }
   builder.addBlankLine()
 
-  builder.addSectionComment("Command/Query Types")
+  builder.addSectionComment('Command/Query Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -107,7 +103,7 @@ export type QueryHandler<TPayload, TResult, E, R> = (
 ) => Effect.Effect<TResult, E, R>`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Unified Command Bus")
+  builder.addSectionComment('Unified Command Bus')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -141,10 +137,10 @@ export class ${className}CommandBus extends Context.Tag("${className}CommandBus"
     this,
     Effect.gen(function*() {
       const logger = yield* LoggingService;
-${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield* ${s.className}Service`).join("\n")}
+${subModules.map((s) => `      const ${s.name.replace(/-/g, '')}Service = yield* ${s.className}Service`).join('\n')}
 
       yield* logger.debug("${className}CommandBus initialized", {
-        subModules: [${subModules.map((s) => `"${s.name}"`).join(", ")}]
+        subModules: [${subModules.map((s) => `"${s.name}"`).join(', ')}]
       })
 
       return {
@@ -170,7 +166,7 @@ ${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield*
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Unified Query Bus")
+  builder.addSectionComment('Unified Query Bus')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -204,10 +200,10 @@ export class ${className}QueryBus extends Context.Tag("${className}QueryBus")<
     this,
     Effect.gen(function*() {
       const logger = yield* LoggingService;
-${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield* ${s.className}Service`).join("\n")}
+${subModules.map((s) => `      const ${s.name.replace(/-/g, '')}Service = yield* ${s.className}Service`).join('\n')}
 
       yield* logger.debug("${className}QueryBus initialized", {
-        subModules: [${subModules.map((s) => `"${s.name}"`).join(", ")}]
+        subModules: [${subModules.map((s) => `"${s.name}"`).join(', ')}]
       })
 
       return {
@@ -233,7 +229,7 @@ ${subModules.map((s) => `      const ${s.name.replace(/-/g, "")}Service = yield*
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Composed Bus Layers")
+  builder.addSectionComment('Composed Bus Layers')
   builder.addBlankLine()
 
   builder.addRaw(`/**

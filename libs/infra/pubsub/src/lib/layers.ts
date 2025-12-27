@@ -92,9 +92,7 @@ export const PubsubRedisLayer = Layer.scoped(
               // Effect-idiomatic decode with error logging
               Effect.try(() => decode(message)).pipe(
                 Effect.flatMap((decoded) => PubSub.publish(localPubSub, decoded)),
-                Effect.catchAll((error) =>
-                  Effect.logWarning("PubSub decode error", { channelName, error })
-                ),
+                Effect.catchAll((error) => Effect.logWarning("PubSub decode error", { channelName, error })),
                 Effect.runFork
               )
             })
@@ -160,9 +158,7 @@ export const PubsubRedisLayer = Layer.scoped(
               // Effect-idiomatic decode with error logging
               Effect.try(() => decode(message)).pipe(
                 Effect.flatMap((decoded) => PubSub.publish(localPubSub, decoded)),
-                Effect.catchAll((error) =>
-                  Effect.logWarning("PubSub decode error", { channel: name, error })
-                ),
+                Effect.catchAll((error) => Effect.logWarning("PubSub decode error", { channel: name, error })),
                 Effect.runFork
               )
             })
@@ -171,9 +167,7 @@ export const PubsubRedisLayer = Layer.scoped(
           // Cleanup on scope close
           yield* Effect.addFinalizer(() =>
             pubsubClient.unsubscribe(name).pipe(
-              Effect.catchAll((error) =>
-                Effect.logWarning(`Failed to unsubscribe from ${name}: ${String(error)}`)
-              )
+              Effect.catchAll((error) => Effect.logWarning(`Failed to unsubscribe from ${name}: ${String(error)}`))
             )
           )
 
@@ -328,9 +322,7 @@ export const withEventPublishing = <A, E, R, Event, TopicE>(
   effect.pipe(
     Effect.tap((result) =>
       topic.publish(buildEvent(result)).pipe(
-        Effect.catchAll((error) =>
-          Effect.logWarning("Event publishing failed", { error })
-        )
+        Effect.catchAll((error) => Effect.logWarning("Event publishing failed", { error }))
       )
     )
   )

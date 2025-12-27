@@ -253,8 +253,7 @@ export class PubsubService extends Context.Tag(
                     })
                   })
                 )
-              )
-            )
+              ))
 
             // Publish all validated messages
             const published = yield* PubSub.publishAll(pubsub, validated)
@@ -432,8 +431,7 @@ export class PubsubService extends Context.Tag(
                     })
                   })
                 )
-              )
-            )
+              ))
 
             const published = yield* PubSub.publishAll(pubsub, validated)
 

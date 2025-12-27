@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/rpc/middleware/request-meta
  */
 
-import { TypeScriptBuilder } from "../../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
 
 /**
  * Generate request metadata middleware file
@@ -22,7 +22,7 @@ export function generateRequestMetaMiddlewareFile(options: InfraTemplateOptions)
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: "Request Metadata Middleware",
+    title: 'Request Metadata Middleware',
     description: `Request metadata middleware applied to ALL RPC routes.
 
 Provides:
@@ -36,11 +36,11 @@ This middleware is applied globally and is always available.`,
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer", "Context", "Option"] },
-    { from: "@effect/rpc", imports: ["RpcMiddleware"] }
+    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Option'] },
+    { from: '@effect/rpc', imports: ['RpcMiddleware'] }
   ])
 
-  builder.addSectionComment("Request Metadata Types")
+  builder.addSectionComment('Request Metadata Types')
 
   builder.addRaw(`/**
  * Request metadata provided to all handlers
@@ -85,7 +85,7 @@ export class RequestMeta extends Context.Tag("@${fileName}/RequestMeta")<
 >() {}
 `)
 
-  builder.addSectionComment("Request Meta Middleware")
+  builder.addSectionComment('Request Meta Middleware')
 
   builder.addRaw(`/**
  * RequestMetaMiddleware using native RpcMiddleware.Tag
@@ -152,7 +152,7 @@ export const RequestMetaMiddlewareLive = Layer.succeed(
     })
 )`)
 
-  builder.addSectionComment("Handler Context Helpers")
+  builder.addSectionComment('Handler Context Helpers')
 
   builder.addRaw(`/**
  * Combined handler context type
@@ -163,7 +163,7 @@ export interface HandlerContext {
   readonly user: {
     readonly id: string
     readonly email: string
-    readonly roles: ReadonlyArray<string>
+    readonly roles: readonly string[]
   }
   readonly meta: RequestMetadata
 }
@@ -198,7 +198,7 @@ export const getHandlerContext = Effect.all({
     Context.GenericTag<{
       readonly id: string
       readonly email: string
-      readonly roles: ReadonlyArray<string>
+      readonly roles: readonly string[]
     }>("@${fileName}/CurrentUser")
   ).pipe(Effect.map(Option.getOrNull)),
   meta: RequestMeta
@@ -219,7 +219,7 @@ export const getHandlerContextOptional = Effect.all({
     Context.GenericTag<{
       readonly id: string
       readonly email: string
-      readonly roles: ReadonlyArray<string>
+      readonly roles: readonly string[]
     }>("@${fileName}/CurrentUser")
   ),
   meta: Effect.serviceOption(RequestMeta)
@@ -231,7 +231,7 @@ export const getHandlerContextOptional = Effect.all({
 )
 `)
 
-  builder.addSectionComment("Observability Helpers")
+  builder.addSectionComment('Observability Helpers')
 
   builder.addRaw(`/**
  * Log request start with metadata

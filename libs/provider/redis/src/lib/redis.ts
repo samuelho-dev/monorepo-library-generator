@@ -5,7 +5,14 @@ import { makeCacheClient } from "./cache"
 import { RedisCommandError, RedisConnectionError } from "./errors"
 import { makePubSubClient } from "./pubsub"
 import { makeQueueClient } from "./queue"
-import type { RedisCacheClient, RedisConfig, RedisPubSubClient, RedisQueueClient, ScanOptions, ScanResult } from "./types"
+import type {
+  RedisCacheClient,
+  RedisConfig,
+  RedisPubSubClient,
+  RedisQueueClient,
+  ScanOptions,
+  ScanResult
+} from "./types"
 
 /**
  * Redis Service
@@ -47,9 +54,10 @@ export interface RedisServiceInterface {
   /**
    * Configuration used to initialize the client
    */
-  readonly config: RedisConfig  /**
+  readonly config: RedisConfig /**
    * Health check - verifies Redis connectivity
    */
+
   readonly healthCheck: Effect.Effect<boolean, RedisConnectionError>
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -60,15 +68,17 @@ export interface RedisServiceInterface {
    * Cache operations (used by infra-cache)
    * Provides: get, set, setex, del, flushdb, ping
    */
-  readonly cache: RedisCacheClient  /**
+  readonly cache: RedisCacheClient /**
    * PubSub operations (used by infra-pubsub)
    * Provides: publish, subscribe, unsubscribe, ping
    */
-  readonly pubsub: RedisPubSubClient  /**
+
+  readonly pubsub: RedisPubSubClient /**
    * Queue operations (used by infra-queue)
    * Provides: lpush, brpop, rpop, llen, lrange, ltrim, del, ping
    */
-  readonly queue: RedisQueueClient  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  readonly queue: RedisQueueClient // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // Extended Operations
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -199,118 +209,137 @@ export class RedisService extends Context.Tag("Redis")<
 
       cache: {
         get: (key: string) => Effect.succeed(store.get(key) ?? null),
-        set: (key: string, value: string) => Effect.sync(() => { store.set(key, value) }),
-        setex: (key: string, seconds: number, value: string) => Effect.sync(() => {
-          store.set(key, value)
-          ttls.set(key, Date.now() + seconds * 1000)
-        }),
-        del: (key: string) => Effect.sync(() => {
-          const existed = store.has(key) ? 1 : 0
-          store.delete(key)
-          ttls.delete(key)
-          return existed
-        }),
-        flushdb: () => Effect.sync(() => {
-          store.clear()
-          ttls.clear()
-          lists.clear()
-        }),
+        set: (key: string, value: string) =>
+          Effect.sync(() => {
+            store.set(key, value)
+          }),
+        setex: (key: string, seconds: number, value: string) =>
+          Effect.sync(() => {
+            store.set(key, value)
+            ttls.set(key, Date.now() + seconds * 1000)
+          }),
+        del: (key: string) =>
+          Effect.sync(() => {
+            const existed = store.has(key) ? 1 : 0
+            store.delete(key)
+            ttls.delete(key)
+            return existed
+          }),
+        flushdb: () =>
+          Effect.sync(() => {
+            store.clear()
+            ttls.clear()
+            lists.clear()
+          }),
         ping: () => Effect.succeed("PONG")
       },
 
       pubsub: {
-        publish: (channel: string, message: string) => Effect.sync(() => {
-          const handlers = subscribers.get(channel) ?? []
-          for (const handler of handlers) {
-            handler(message)
-          }
-          return handlers.length
-        }),
-        subscribe: (channel: string, handler: (message: string) => void) => Effect.sync(() => {
-          const handlers = subscribers.get(channel) ?? []
-          handlers.push(handler)
-          subscribers.set(channel, handlers)
-        }),
-        unsubscribe: (channel: string) => Effect.sync(() => {
-          subscribers.delete(channel)
-        }),
+        publish: (channel: string, message: string) =>
+          Effect.sync(() => {
+            const handlers = subscribers.get(channel) ?? []
+            for (const handler of handlers) {
+              handler(message)
+            }
+            return handlers.length
+          }),
+        subscribe: (channel: string, handler: (message: string) => void) =>
+          Effect.sync(() => {
+            const handlers = subscribers.get(channel) ?? []
+            handlers.push(handler)
+            subscribers.set(channel, handlers)
+          }),
+        unsubscribe: (channel: string) =>
+          Effect.sync(() => {
+            subscribers.delete(channel)
+          }),
         ping: () => Effect.succeed("PONG")
       },
 
       queue: {
-        lpush: (key: string, value: string) => Effect.sync(() => {
-          const list = lists.get(key) ?? []
-          list.unshift(value)
-          lists.set(key, list)
-          return list.length
-        }),
-        brpop: (key: string) => Effect.sync(() => {
-          const list = lists.get(key) ?? []
-          const value = list.pop()
-          if (value === undefined) return null
-          lists.set(key, list)
-          return [key, value]
-        }),
-        rpop: (key: string) => Effect.sync(() => {
-          const list = lists.get(key) ?? []
-          const value = list.pop()
-          if (value === undefined) return null
-          lists.set(key, list)
-          return value
-        }),
+        lpush: (key: string, value: string) =>
+          Effect.sync(() => {
+            const list = lists.get(key) ?? []
+            list.unshift(value)
+            lists.set(key, list)
+            return list.length
+          }),
+        brpop: (key: string) =>
+          Effect.sync(() => {
+            const list = lists.get(key) ?? []
+            const value = list.pop()
+            if (value === undefined) return null
+            lists.set(key, list)
+            return [key, value]
+          }),
+        rpop: (key: string) =>
+          Effect.sync(() => {
+            const list = lists.get(key) ?? []
+            const value = list.pop()
+            if (value === undefined) return null
+            lists.set(key, list)
+            return value
+          }),
         llen: (key: string) => Effect.succeed(lists.get(key)?.length ?? 0),
-        lrange: (key: string, start: number, stop: number) => Effect.sync(() => {
-          const list = lists.get(key) ?? []
-          const end = stop < 0 ? list.length + stop + 1 : stop + 1
-          return list.slice(start, end)
-        }),
-        ltrim: (key: string, start: number, stop: number) => Effect.sync(() => {
-          const list = lists.get(key) ?? []
-          const end = stop < 0 ? list.length + stop + 1 : stop + 1
-          lists.set(key, list.slice(start, end))
-        }),
-        del: (key: string) => Effect.sync(() => {
-          const existed = lists.has(key) ? 1 : 0
-          lists.delete(key)
-          return existed
-        }),
+        lrange: (key: string, start: number, stop: number) =>
+          Effect.sync(() => {
+            const list = lists.get(key) ?? []
+            const end = stop < 0 ? list.length + stop + 1 : stop + 1
+            return list.slice(start, end)
+          }),
+        ltrim: (key: string, start: number, stop: number) =>
+          Effect.sync(() => {
+            const list = lists.get(key) ?? []
+            const end = stop < 0 ? list.length + stop + 1 : stop + 1
+            lists.set(key, list.slice(start, end))
+          }),
+        del: (key: string) =>
+          Effect.sync(() => {
+            const existed = lists.has(key) ? 1 : 0
+            lists.delete(key)
+            return existed
+          }),
         ping: () => Effect.succeed("PONG")
       },
 
       exists: (key: string) => Effect.succeed(store.has(key) || lists.has(key)),
-      expire: (key: string, seconds: number) => Effect.sync(() => {
-        if (store.has(key) || lists.has(key)) {
-          ttls.set(key, Date.now() + seconds * 1000)
-          return true
-        }
-        return false
-      }),
-      ttl: (key: string) => Effect.sync(() => {
-        const expiry = ttls.get(key)
-        if (expiry === undefined) {
-          return store.has(key) || lists.has(key) ? -1 : -2
-        }
-        return Math.max(0, Math.floor((expiry - Date.now()) / 1000))
-      }),
-      keys: (pattern: string) => Effect.sync(() => {
-        const regex = new RegExp(`^${pattern.replace(/\*/g, ".*").replace(/\?/g, ".")}$`)
-        const allKeys = [...store.keys(), ...lists.keys()]
-        return allKeys.filter((k) => regex.test(k))
-      }),
-      scan: (cursor: number, options?: ScanOptions) => Effect.sync(() => {
-        const allKeys = [...store.keys(), ...lists.keys()]
-        const count = options?.count ?? 10
-        const match = options?.match
-        let filtered = allKeys
-        if (match) {
-          const regex = new RegExp(`^${match.replace(/\*/g, ".*").replace(/\?/g, ".")}$`)
-          filtered = allKeys.filter((k) => regex.test(k))
-        }
-        const start = cursor
-        const end = Math.min(start + count, filtered.length)
-        const nextCursor = end >= filtered.length ? 0 : end
-        return { cursor: nextCursor, keys: filtered.slice(start, end) }
-      }),
+      expire: (key: string, seconds: number) =>
+        Effect.sync(() => {
+          if (store.has(key) || lists.has(key)) {
+            ttls.set(key, Date.now() + seconds * 1000)
+            return true
+          }
+          return false
+        }),
+      ttl: (key: string) =>
+        Effect.sync(() => {
+          const expiry = ttls.get(key)
+          if (expiry === undefined) {
+            return store.has(key) || lists.has(key) ? -1 : -2
+          }
+          return Math.max(0, Math.floor((expiry - Date.now()) / 1000))
+        }),
+      keys: (pattern: string) =>
+        Effect.sync(() => {
+          const regex = new RegExp(`^${pattern.replace(/\*/g, ".*").replace(/\?/g, ".")}$`)
+          const allKeys = [...store.keys(), ...lists.keys()]
+          return allKeys.filter((k) => regex.test(k))
+        }),
+      scan: (cursor: number, options?: ScanOptions) =>
+        Effect.sync(() => {
+          const allKeys = [...store.keys(), ...lists.keys()]
+          const count = options?.count ?? 10
+          const match = options?.match
+          let filtered = allKeys
+          if (match) {
+            const regex = new RegExp(`^${match.replace(/\*/g, ".*").replace(/\?/g, ".")}$`)
+            filtered = allKeys.filter((k) => regex.test(k))
+          }
+          const start = cursor
+          const end = Math.min(start + count, filtered.length)
+          const nextCursor = end >= filtered.length ? 0 : end
+          return { cursor: nextCursor, keys: filtered.slice(start, end) }
+        }),
 
       executeCommand: <A>(fn: (client: IORedis) => Promise<A>, commandName: string) =>
         Effect.tryPromise({
@@ -321,7 +350,7 @@ export class RedisService extends Context.Tag("Redis")<
               command: commandName,
               cause: error
             })
-        }).pipe(Effect.withSpan(`Redis.${commandName}`)),
+        }).pipe(Effect.withSpan(`Redis.${commandName}`))
     }
   })
 
@@ -345,20 +374,24 @@ export class RedisService extends Context.Tag("Redis")<
       yield* Effect.logDebug("[Redis] Config loaded", { host: config.host, port: config.port })
 
       const mainClient = yield* Effect.acquireRelease(
-        Effect.sync(() => new Redis({
-          host: config.host ?? "localhost",
-          port: config.port ?? 6379,
-          db: config.db ?? 0,
-        })),
+        Effect.sync(() =>
+          new Redis({
+            host: config.host ?? "localhost",
+            port: config.port ?? 6379,
+            db: config.db ?? 0
+          })
+        ),
         (client) => Effect.sync(() => client.disconnect())
       )
 
       const subClient = yield* Effect.acquireRelease(
-        Effect.sync(() => new Redis({
-          host: config.host ?? "localhost",
-          port: config.port ?? 6379,
-          db: config.db ?? 0,
-        })),
+        Effect.sync(() =>
+          new Redis({
+            host: config.host ?? "localhost",
+            port: config.port ?? 6379,
+            db: config.db ?? 0
+          })
+        ),
         (client) => Effect.sync(() => client.disconnect())
       )
 
@@ -380,12 +413,12 @@ export class RedisService extends Context.Tag("Redis")<
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
       case "production":
-        return RedisService.Live;
+        return RedisService.Live
       case "test":
-        return RedisService.Test;
+        return RedisService.Test
       default:
         // development and other environments use Dev layer
-        return RedisService.Dev;
+        return RedisService.Dev
     }
   })
 }
@@ -470,11 +503,12 @@ function executeScan(client: IORedis, cursor: number, options?: ScanOptions) {
     // ioredis scan takes cursor first, then options as variadic args
     const rawResult = yield* Effect.tryPromise({
       try: () => client.call("SCAN", ...args),
-      catch: (error) => new RedisCommandError({
-        message: "SCAN command failed",
-        command: "SCAN",
-        cause: error
-      })
+      catch: (error) =>
+        new RedisCommandError({
+          message: "SCAN command failed",
+          command: "SCAN",
+          cause: error
+        })
     })
     // Decode with Schema for type safety
     const [nextCursor, keys] = yield* Schema.decodeUnknown(RedisScanResponse)(rawResult)
@@ -503,8 +537,8 @@ function makeRedisService(
           message: "Health check failed",
           ...(config.host !== undefined ? { host: config.host } : {}),
           ...(config.port !== undefined ? { port: config.port } : {}),
-          cause: error,
-        }),
+          cause: error
+        })
     }).pipe(
       Effect.map(() => true),
       Effect.withSpan("Redis.healthCheck")
@@ -565,13 +599,14 @@ function makeRedisService(
     scan: (cursor: number, options?: ScanOptions) =>
       executeScan(mainClient, cursor, options).pipe(
         Effect.catchTag("ParseError", (error) =>
-          Effect.fail(new RedisCommandError({
-            message: `SCAN response parsing failed at cursor: ${cursor}`,
-            command: "SCAN",
-            args: [cursor, options],
-            cause: error
-          }))
-        ),
+          Effect.fail(
+            new RedisCommandError({
+              message: `SCAN response parsing failed at cursor: ${cursor}`,
+              command: "SCAN",
+              args: [cursor, options],
+              cause: error
+            })
+          )),
         Effect.withSpan("Redis.scan", { attributes: { cursor } })
       ),
 
@@ -600,4 +635,4 @@ function makeRedisService(
  * const redis = yield* Redis;
  * ```
  */
-export { RedisService as Redis };
+export { RedisService as Redis }

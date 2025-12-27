@@ -11,8 +11,8 @@
  * @module monorepo-library-generator/contract/submodule-errors-template
  */
 
-import { EffectPatterns, TypeScriptBuilder } from "../../../utils/code-builder"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { createTaggedErrorPattern, TypeScriptBuilder } from '../../../utils/code-builder'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 export interface SubModuleErrorsOptions {
   /** Parent domain name (e.g., 'order') */
@@ -54,23 +54,23 @@ rather than defining their own.
     module: `${scope}/contract-${parentName}/${subModuleName}/errors`
   })
 
-  builder.addImports([{ from: "effect", imports: ["Data"] }])
+  builder.addImports([{ from: 'effect', imports: ['Data'] }])
 
-  builder.addSectionComment("Domain Errors (Data.TaggedError)")
+  builder.addSectionComment('Domain Errors (Data.TaggedError)')
 
   // NotFoundError
   builder.addClass(
-    EffectPatterns.createTaggedError({
+    createTaggedErrorPattern({
       className: `${subModuleClassName}NotFoundError`,
       tagName: `${subModuleClassName}NotFoundError`,
       fields: [
-        { name: "message", type: "string", readonly: true },
-        { name: "id", type: "string", readonly: true }
+        { name: 'message', type: 'string', readonly: true },
+        { name: 'id', type: 'string', readonly: true }
       ],
       staticMethods: [
         {
-          name: "create",
-          params: [{ name: "id", type: "string" }],
+          name: 'create',
+          params: [{ name: 'id', type: 'string' }],
           returnType: `${subModuleClassName}NotFoundError`,
           body: `return new ${subModuleClassName}NotFoundError({
   message: \`${subModuleClassName} not found: \${id}\`,
@@ -84,21 +84,21 @@ rather than defining their own.
 
   // ValidationError
   builder.addClass(
-    EffectPatterns.createTaggedError({
+    createTaggedErrorPattern({
       className: `${subModuleClassName}ValidationError`,
       tagName: `${subModuleClassName}ValidationError`,
       fields: [
-        { name: "message", type: "string", readonly: true },
-        { name: "field", type: "string", readonly: true },
-        { name: "value", type: "unknown", readonly: true, optional: true }
+        { name: 'message', type: 'string', readonly: true },
+        { name: 'field', type: 'string', readonly: true },
+        { name: 'value', type: 'unknown', readonly: true, optional: true }
       ],
       staticMethods: [
         {
-          name: "create",
+          name: 'create',
           params: [
-            { name: "field", type: "string" },
-            { name: "message", type: "string" },
-            { name: "value", type: "unknown", optional: true }
+            { name: 'field', type: 'string' },
+            { name: 'message', type: 'string' },
+            { name: 'value', type: 'unknown', optional: true }
           ],
           returnType: `${subModuleClassName}ValidationError`,
           body: `return new ${subModuleClassName}ValidationError({
@@ -108,8 +108,8 @@ rather than defining their own.
 })`
         },
         {
-          name: "required",
-          params: [{ name: "field", type: "string" }],
+          name: 'required',
+          params: [{ name: 'field', type: 'string' }],
           returnType: `${subModuleClassName}ValidationError`,
           body: `return new ${subModuleClassName}ValidationError({
   message: \`\${field} is required\`,
@@ -123,21 +123,21 @@ rather than defining their own.
 
   // OperationError - for infrastructure/operation failures
   builder.addClass(
-    EffectPatterns.createTaggedError({
+    createTaggedErrorPattern({
       className: `${subModuleClassName}OperationError`,
       tagName: `${subModuleClassName}OperationError`,
       fields: [
-        { name: "message", type: "string", readonly: true },
-        { name: "operation", type: "string", readonly: true },
-        { name: "cause", type: "unknown", readonly: true, optional: true }
+        { name: 'message', type: 'string', readonly: true },
+        { name: 'operation', type: 'string', readonly: true },
+        { name: 'cause', type: 'unknown', readonly: true, optional: true }
       ],
       staticMethods: [
         {
-          name: "create",
+          name: 'create',
           params: [
-            { name: "operation", type: "string" },
-            { name: "message", type: "string" },
-            { name: "cause", type: "unknown", optional: true }
+            { name: 'operation', type: 'string' },
+            { name: 'message', type: 'string' },
+            { name: 'cause', type: 'unknown', optional: true }
           ],
           returnType: `${subModuleClassName}OperationError`,
           body: `return new ${subModuleClassName}OperationError({
@@ -154,11 +154,11 @@ rather than defining their own.
   // Add sub-module specific errors based on common patterns
   const additionalErrors = getSubModuleSpecificErrors(subModuleName, subModuleClassName)
   if (additionalErrors) {
-    builder.addSectionComment("Sub-Module Specific Errors")
+    builder.addSectionComment('Sub-Module Specific Errors')
     builder.addRaw(additionalErrors)
   }
 
-  builder.addSectionComment("Error Union Types")
+  builder.addSectionComment('Error Union Types')
 
   // Domain error union type
   builder.addTypeAlias({
@@ -188,10 +188,10 @@ rather than defining their own.
     jsdoc: `All possible ${subModuleName} errors`
   })
 
-  builder.addComment("TODO: Add domain-specific errors here")
+  builder.addComment('TODO: Add domain-specific errors here')
   builder.addComment(
     `Example: ${subModuleClassName}InsufficientFundsError, ` +
-    `${subModuleClassName}ExpiredError, etc.`
+      `${subModuleClassName}ExpiredError, etc.`
   )
 
   return builder.toString()
@@ -203,7 +203,7 @@ rather than defining their own.
 function getSubModuleSpecificErrors(subModuleName: string, subModuleClassName: string) {
   const name = subModuleName.toLowerCase()
 
-  if (name === "cart") {
+  if (name === 'cart') {
     return `/**
  * Error thrown when cart item limit is exceeded
  */
@@ -237,7 +237,7 @@ export class ${subModuleClassName}EmptyError extends Data.TaggedError("${subModu
 }`
   }
 
-  if (name === "checkout") {
+  if (name === 'checkout') {
     return `/**
  * Error thrown when checkout session expires
  */
@@ -275,7 +275,7 @@ export class ${subModuleClassName}PaymentError extends Data.TaggedError("${subMo
 }`
   }
 
-  if (name === "management" || name === "order-management") {
+  if (name === 'management' || name === 'order-management') {
     return `/**
  * Error thrown when order state transition is invalid
  */

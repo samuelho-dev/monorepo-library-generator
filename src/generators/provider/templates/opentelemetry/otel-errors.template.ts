@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/opentelemetry
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate OpenTelemetry errors file
@@ -16,7 +16,7 @@ export function generateOtelErrorsFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "OpenTelemetry Provider Errors",
+    title: 'OpenTelemetry Provider Errors',
     description: `Error types for OpenTelemetry SDK operations.
 
 Provides:
@@ -26,11 +26,9 @@ Provides:
     module: `${options.packageName}/errors`
   })
 
-  builder.addImports([
-    { from: "effect", imports: ["Data"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Data'] }])
 
-  builder.addSectionComment("Error Types")
+  builder.addSectionComment('Error Types')
 
   builder.addRaw(`/**
  * Base error for OpenTelemetry operations

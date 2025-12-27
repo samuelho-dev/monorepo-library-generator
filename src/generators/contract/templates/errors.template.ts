@@ -9,14 +9,14 @@
  * @module monorepo-library-generator/contract/errors-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 import {
   createContractCombinedErrorType,
   createContractDomainErrors,
   createContractRepositoryErrors
-} from "../../shared/factories"
+} from '../../shared/factories'
 
 /**
  * Generate errors.ts file for contract library
@@ -37,35 +37,35 @@ export function generateErrorsFile(options: ContractTemplateOptions) {
   builder.addRaw(createFileHeader(className, domainName, fileName, scope))
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Data"] }])
+  builder.addImports([{ from: 'effect', imports: ['Data'] }])
 
   // Generate domain errors using factory
   createContractDomainErrors({ className, propertyName })(builder)
 
   // Add TODO comment for custom domain errors
-  builder.addComment("TODO: Add domain-specific errors here")
-  builder.addComment("Example - State transition error (if domain has status/state machine):")
+  builder.addComment('TODO: Add domain-specific errors here')
+  builder.addComment('Example - State transition error (if domain has status/state machine):')
   builder.addComment(
     `export class ${className}InvalidStateError extends Data.TaggedError("${className}InvalidStateError")<{`
   )
-  builder.addComment("  readonly message: string")
-  builder.addComment("  readonly currentState: string")
-  builder.addComment("  readonly targetState: string")
+  builder.addComment('  readonly message: string')
+  builder.addComment('  readonly currentState: string')
+  builder.addComment('  readonly targetState: string')
   builder.addComment(`  readonly ${propertyName}Id: string`)
-  builder.addComment("}> {")
+  builder.addComment('}> {')
   builder.addComment(`  static create(params: {`)
-  builder.addComment("    currentState: string")
-  builder.addComment("    targetState: string")
+  builder.addComment('    currentState: string')
+  builder.addComment('    targetState: string')
   builder.addComment(`    ${propertyName}Id: string`)
-  builder.addComment("  }) {")
+  builder.addComment('  }) {')
   builder.addComment(`    return new ${className}InvalidStateError({`)
   builder.addComment(
     `      message: \`Cannot transition ${domainName} from \${params.currentState} to \${params.targetState}\`,`
   )
-  builder.addComment("      ...params")
-  builder.addComment("    })")
-  builder.addComment("  }")
-  builder.addComment("}")
+  builder.addComment('      ...params')
+  builder.addComment('    })')
+  builder.addComment('  }')
+  builder.addComment('}')
 
   // Generate repository errors using factory
   createContractRepositoryErrors({ className, propertyName })(builder)

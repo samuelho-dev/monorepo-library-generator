@@ -6,10 +6,9 @@
  * @module monorepo-library-generator/feature/service/service-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import { createNamingVariants } from "../../../../utils/naming"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate server/services/service.ts file
@@ -37,49 +36,51 @@ Import only the operations you need for smallest bundle size.`,
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer", "Context", "Option", "Schema"] },
-    { from: "effect/ParseResult", imports: ["ParseError"], isTypeOnly: true },
-    { from: `${scope}/env`, imports: ["env"] }
+    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Option', 'Schema'] },
+    { from: 'effect/ParseResult', imports: ['ParseError'], isTypeOnly: true },
+    { from: `${scope}/env`, imports: ['env'] }
   ])
 
-  builder.addSectionComment("Error Imports (Contract-First)")
-  builder.addComment("Domain errors from contract - only import errors that are thrown by service methods")
+  builder.addSectionComment('Error Imports (Contract-First)')
+  builder.addComment(
+    'Domain errors from contract - only import errors that are thrown by service methods'
+  )
 
   // Domain errors from contract (only NotFoundError is actually thrown by service)
   builder.addImports([
     {
       from: `${scope}/contract-${fileName}`,
-      imports: [
-        `${className}NotFoundError`
-      ]
+      imports: [`${className}NotFoundError`]
     }
   ])
 
-  builder.addSectionComment("Repository Integration")
+  builder.addSectionComment('Repository Integration')
   builder.addImports([
     { from: `${scope}/data-access-${fileName}`, imports: [`${className}Repository`] },
-    { from: `${scope}/infra-database`, imports: ["DatabaseService"] }
+    { from: `${scope}/infra-database`, imports: ['DatabaseService'] }
   ])
 
-  builder.addSectionComment("Infrastructure Services")
+  builder.addSectionComment('Infrastructure Services')
   builder.addImports([
-    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] },
-    { from: `${scope}/infra-pubsub`, imports: ["PubsubService"] },
-    { from: `${scope}/infra-pubsub`, imports: ["TopicHandle"], isTypeOnly: true }
+    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] },
+    { from: `${scope}/infra-pubsub`, imports: ['PubsubService'] },
+    { from: `${scope}/infra-pubsub`, imports: ['TopicHandle'], isTypeOnly: true }
   ])
 
-  builder.addSectionComment("Authentication Context")
-  builder.addComment("CurrentUser is request-scoped - yield inside methods, NOT at layer construction")
-  builder.addComment("Service methods that need auth will have CurrentUser in their Effect requirements")
-  builder.addComment("RPC middleware provides CurrentUser for protected routes (per-request)")
-  builder.addComment("Job processors must provide SystemUserLayer for background processing")
-  builder.addImports([
-    { from: `${scope}/contract-auth`, imports: ["CurrentUser"] }
-  ])
+  builder.addSectionComment('Authentication Context')
+  builder.addComment(
+    'CurrentUser is request-scoped - yield inside methods, NOT at layer construction'
+  )
+  builder.addComment(
+    'Service methods that need auth will have CurrentUser in their Effect requirements'
+  )
+  builder.addComment('RPC middleware provides CurrentUser for protected routes (per-request)')
+  builder.addComment('Job processors must provide SystemUserLayer for background processing')
+  builder.addImports([{ from: `${scope}/contract-auth`, imports: ['CurrentUser'] }])
 
   // Note: Environment checking uses process.env directly for Auto layer
 
-  builder.addSectionComment("Repository Type Re-exports")
+  builder.addSectionComment('Repository Type Re-exports')
 
   builder.addImports([
     {
@@ -97,7 +98,7 @@ Import only the operations you need for smallest bundle size.`,
 export type { ${className}, ${className}CreateInput, ${className}UpdateInput, ${className}Filter }
 `)
 
-  builder.addSectionComment("Event Schema")
+  builder.addSectionComment('Event Schema')
 
   builder.addRaw(`/**
  * ${className} Event Schema
@@ -124,7 +125,7 @@ const ${className}EventSchema = Schema.Union(
 
 type ${className}Event = Schema.Schema.Type<typeof ${className}EventSchema>`)
 
-  builder.addSectionComment("Service Implementation")
+  builder.addSectionComment('Service Implementation')
 
   builder.addRaw(`/**
  * Create service implementation
@@ -347,7 +348,7 @@ const createServiceImpl = (
     }).pipe(Effect.withSpan("${className}Service.exists", { attributes: { id } }))
 })`)
 
-  builder.addSectionComment("Service Interface (Inferred from Implementation)")
+  builder.addSectionComment('Service Interface (Inferred from Implementation)')
 
   builder.addRaw(`/**
  * ${className} Service Interface
@@ -358,7 +359,7 @@ const createServiceImpl = (
  */
 export type ${className}ServiceInterface = ReturnType<typeof createServiceImpl>`)
 
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
 
   builder.addRaw(`/**
  * ${className} Service Context.Tag
@@ -430,7 +431,7 @@ export class ${className}Service extends Context.Tag("${className}Service")<
   /**
    * Auto layer - Environment-aware layer selection
    *
-   * Automatically selects the appropriate layer based on process.env.NODE_ENV:
+   * Automatically selects the appropriate layer based on env.NODE_ENV:
    * - "production" → Live layer
    * - "development" → Dev layer (with logging)
    * - "test" → Test layer

@@ -11,4 +11,4 @@ export {
   generateMinimalStaticLayers,
   generateStaticLayers,
   type StaticLayerConfig
-} from "./static-layers.template"
+} from './static-layers.template'

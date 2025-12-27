@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/auth/types
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { AuthTemplateOptions } from "./schemas.template"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { AuthTemplateOptions } from './schemas.template'
 
 /**
  * Generate types.ts for contract-auth library
@@ -19,7 +19,7 @@ export function generateAuthTypesFile(options: AuthTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "Auth Contract Types",
+    title: 'Auth Contract Types',
     description: `Type-only exports for zero runtime overhead.
 
 Import from this file when you only need types:
@@ -30,7 +30,7 @@ import type { CurrentUserData, AuthError } from "${options.packageName}/types"
   })
   builder.addBlankLine()
 
-  builder.addSectionComment("Schema Types")
+  builder.addSectionComment('Schema Types')
   builder.addBlankLine()
 
   builder.addRaw(`export type {
@@ -44,7 +44,7 @@ import type { CurrentUserData, AuthError } from "${options.packageName}/types"
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Error Types")
+  builder.addSectionComment('Error Types')
   builder.addBlankLine()
 
   builder.addRaw(`export type {
@@ -58,7 +58,7 @@ import type { CurrentUserData, AuthError } from "${options.packageName}/types"
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Port Types")
+  builder.addSectionComment('Port Types')
   builder.addBlankLine()
 
   builder.addRaw(`export type {
@@ -69,7 +69,7 @@ import type { CurrentUserData, AuthError } from "${options.packageName}/types"
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Middleware Types")
+  builder.addSectionComment('Middleware Types')
   builder.addBlankLine()
 
   builder.addRaw(`export type {

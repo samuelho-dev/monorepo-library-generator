@@ -8,35 +8,34 @@
  * @module monorepo-library-generator/cli/ink/components/OptionsForm
  */
 
-import { Box, Text, useInput } from 'ink';
-import TextInput from 'ink-text-input';
+import { Box, Text, useInput } from 'ink'
+import TextInput from 'ink-text-input'
 import { useState } from 'react'
+import { tagExists } from '../../../utils/workspace-tags'
 import {
-  getOptionsForType,
   type BooleanOptionConfig,
+  getOptionsForType,
   type OptionConfig,
-  type SelectOptionConfig,
-  type TextOptionConfig,
-} from '../../interactive/config';
-import type { LibraryType, WizardOptions } from '../../interactive/types';
-import { tagExists } from '../../../utils/workspace-tags';
-import { useWorkspaceTags } from '../hooks/useWorkspaceTags';
-import { colors, statusIcons } from '../theme/colors';
+  type TextOptionConfig
+} from '../../interactive/config'
+import type { LibraryType, WizardOptions } from '../../interactive/types'
+import { useWorkspaceTags } from '../hooks/useWorkspaceTags'
+import { colors, statusIcons } from '../theme/colors'
 import { TagsSelector } from './TagsSelector'
 
 interface OptionsFormProps {
-  readonly libraryType?: LibraryType;
-  readonly options: WizardOptions;
-  readonly onOptionsChange: (options: WizardOptions) => void;
-  readonly onSubmit: () => void;
-  readonly workspaceRoot: string;
+  readonly libraryType?: LibraryType
+  readonly options: WizardOptions
+  readonly onOptionsChange: (options: WizardOptions) => void
+  readonly onSubmit: () => void
+  readonly workspaceRoot: string
 }
 
 /** Tags component state */
 interface TagsState {
-  mode: 'navigation' | 'adding-tag';
-  focusedIndex: number;
-  newTagValue: string;
+  mode: 'navigation' | 'adding-tag'
+  focusedIndex: number
+  newTagValue: string
 }
 
 export function OptionsForm({
@@ -44,9 +43,9 @@ export function OptionsForm({
   options,
   onOptionsChange,
   onSubmit,
-  workspaceRoot,
+  workspaceRoot
 }: OptionsFormProps) {
-  const availableOptions = libraryType ? getOptionsForType(libraryType) : [];
+  const availableOptions = libraryType ? getOptionsForType(libraryType) : []
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [description, setDescription] = useState(options.description ?? '')
   const [editingField, setEditingField] = useState<string | null>(null)
@@ -63,8 +62,8 @@ export function OptionsForm({
   const { customTags } = useWorkspaceTags(workspaceRoot)
 
   // Field indices
-  const DESCRIPTION_INDEX = availableOptions.length;
-  const TAGS_INDEX = availableOptions.length + 1;
+  const DESCRIPTION_INDEX = availableOptions.length
+  const TAGS_INDEX = availableOptions.length + 1
   const SUBMIT_INDEX = availableOptions.length + 2
 
   // Total items: options + description + tags + submit
@@ -94,7 +93,7 @@ export function OptionsForm({
         setEditingField(null)
         setTextInputValue('')
       }
-      return;
+      return
     }
 
     // Handle tags field input (centralized handling)
@@ -107,36 +106,36 @@ export function OptionsForm({
           if (!tagExists(newTag, allExisting)) {
             onOptionsChange({
               ...options,
-              selectedTags: [...(options.selectedTags ?? []), newTag],
+              selectedTags: [...(options.selectedTags ?? []), newTag]
             })
           }
           setTagsState({ mode: 'navigation', focusedIndex: 0, newTagValue: '' })
         } else if (key.escape) {
           setTagsState((s) => ({ ...s, mode: 'navigation', newTagValue: '' }))
         }
-        return; // TextInput handles typing
+        return // TextInput handles typing
       }
 
       // Tags navigation mode
       if (key.upArrow) {
         setTagsState((s) => ({ ...s, focusedIndex: Math.max(0, s.focusedIndex - 1) }))
-        return;
+        return
       } else if (key.downArrow) {
-        const maxIdx = customTags.length; // Including "Add new tag" option
+        const maxIdx = customTags.length // Including "Add new tag" option
         setTagsState((s) => ({ ...s, focusedIndex: Math.min(maxIdx, s.focusedIndex + 1) }))
-        return;
+        return
       } else if (input === ' ' && tagsState.focusedIndex < customTags.length) {
         // Toggle tag selection
-        const tag = customTags[tagsState.focusedIndex];
+        const tag = customTags[tagsState.focusedIndex]
         if (tag) {
-          const current = options.selectedTags ?? [];
+          const current = options.selectedTags ?? []
           if (current.includes(tag)) {
             onOptionsChange({ ...options, selectedTags: current.filter((t) => t !== tag) })
           } else {
             onOptionsChange({ ...options, selectedTags: [...current, tag] })
           }
         }
-        return;
+        return
       } else if (key.return) {
         if (tagsState.focusedIndex === customTags.length) {
           // Enter "Add new tag" mode
@@ -145,7 +144,7 @@ export function OptionsForm({
           // Move to next field when pressing Enter on a tag (not adding)
           setSelectedIndex(SUBMIT_INDEX)
         }
-        return;
+        return
       }
     }
 
@@ -165,10 +164,10 @@ export function OptionsForm({
     } else if (key.leftArrow || key.rightArrow) {
       // Handle select option cycling
       if (currentOption?.type === 'select') {
-        const selectOpt = currentOption;
-        const currentValue = options[selectOpt.key];
-        const valueStr = typeof currentValue === 'string' ? currentValue : '';
-        const currentIdx = valueStr ? selectOpt.options.indexOf(valueStr) : -1;
+        const selectOpt = currentOption
+        const currentValue = options[selectOpt.key]
+        const valueStr = typeof currentValue === 'string' ? currentValue : ''
+        const currentIdx = valueStr ? selectOpt.options.indexOf(valueStr) : -1
         let newIdx: number
 
         if (key.rightArrow) {
@@ -183,19 +182,19 @@ export function OptionsForm({
       if (selectedIndex < availableOptions.length && currentOption) {
         // Handle option based on type
         if (currentOption.type === 'boolean') {
-          const currentValue = options[currentOption.key];
+          const currentValue = options[currentOption.key]
           onOptionsChange({ ...options, [currentOption.key]: !currentValue })
         } else if (currentOption.type === 'text') {
-          const textValue = options[currentOption.key];
+          const textValue = options[currentOption.key]
           setTextInputValue(typeof textValue === 'string' ? textValue : '')
           setEditingField(currentOption.key)
         } else if (currentOption.type === 'select') {
           // Cycle to next option on Enter
-          const selectOpt = currentOption;
-          const currentValue = options[selectOpt.key];
-          const valueStr = typeof currentValue === 'string' ? currentValue : '';
-          const currentIdx = valueStr ? selectOpt.options.indexOf(valueStr) : -1;
-          const newIdx = currentIdx < selectOpt.options.length - 1 ? currentIdx + 1 : 0;
+          const selectOpt = currentOption
+          const currentValue = options[selectOpt.key]
+          const valueStr = typeof currentValue === 'string' ? currentValue : ''
+          const currentIdx = valueStr ? selectOpt.options.indexOf(valueStr) : -1
+          const newIdx = currentIdx < selectOpt.options.length - 1 ? currentIdx + 1 : 0
           onOptionsChange({ ...options, [selectOpt.key]: selectOpt.options[newIdx] })
         }
       } else if (selectedIndex === DESCRIPTION_INDEX) {
@@ -209,12 +208,12 @@ export function OptionsForm({
 
   // Render a single option based on its type
   const renderOption = (opt: OptionConfig, index: number) => {
-    const isSelected = selectedIndex === index;
+    const isSelected = selectedIndex === index
     const prefix = isSelected ? statusIcons.chevronRight : ' '
 
     if (opt.type === 'boolean') {
-      const boolOpt = opt as BooleanOptionConfig;
-      const isEnabled = options[boolOpt.key];
+      const boolOpt = opt as BooleanOptionConfig
+      const isEnabled = options[boolOpt.key]
       return (
         <Box key={boolOpt.key}>
           <Text color={isSelected ? colors.primary : undefined}>{prefix} </Text>
@@ -228,9 +227,9 @@ export function OptionsForm({
     }
 
     if (opt.type === 'text') {
-      const textOpt = opt as TextOptionConfig;
-      const value = options[textOpt.key];
-      const isEditing = editingField === textOpt.key;
+      const textOpt = opt as TextOptionConfig
+      const value = options[textOpt.key]
+      const isEditing = editingField === textOpt.key
       return (
         <Box key={textOpt.key}>
           <Text color={isSelected ? colors.primary : undefined}>{prefix} </Text>
@@ -251,8 +250,8 @@ export function OptionsForm({
     }
 
     if (opt.type === 'select') {
-      const selectOpt = opt;
-      const value = options[selectOpt.key];
+      const selectOpt = opt
+      const value = options[selectOpt.key]
       return (
         <Box key={selectOpt.key}>
           <Text color={isSelected ? colors.primary : undefined}>{prefix} </Text>
@@ -260,7 +259,10 @@ export function OptionsForm({
           <Text color={colors.muted}>{statusIcons.arrow} </Text>
           {selectOpt.options.map((optValue, i) => (
             <Text key={optValue}>
-              <Text color={value === optValue ? colors.info : colors.muted} bold={value === optValue}>
+              <Text
+                color={value === optValue ? colors.info : colors.muted}
+                bold={value === optValue}
+              >
                 {optValue}
               </Text>
               {i < selectOpt.options.length - 1 && <Text color={colors.muted}> | </Text>}
@@ -292,7 +294,11 @@ export function OptionsForm({
         </Text>
         <Text>Description: </Text>
         {editingField === 'description' ? (
-          <TextInput value={description} onChange={setDescription} placeholder="Optional description" />
+          <TextInput
+            value={description}
+            onChange={setDescription}
+            placeholder="Optional description"
+          />
         ) : (
           <Text color={description ? colors.info : colors.muted}>
             {description || '(press Enter to edit)'}

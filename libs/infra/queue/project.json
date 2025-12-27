@@ -6,9 +6,7 @@
   "tags": [
     "type:infra",
     "scope:queue",
-    "infra",
-    "orchestration",
-    "builtin"
+    ""
   ],
   "targets": {
     "build": {

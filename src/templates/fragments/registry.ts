@@ -16,7 +16,8 @@ import type {
   FragmentConfig,
   FragmentDefinition,
   FragmentRegistryEntry,
-  FragmentRenderer
+  FragmentRenderer,
+  InternalFragmentEntry
 } from './types'
 
 // ============================================================================
@@ -128,14 +129,16 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
    */
   static readonly Live: Layer.Layer<FragmentRegistry> = Layer.sync(FragmentRegistry, () => {
     // Capture entries Map at layer construction
-    const entries = new Map<string, FragmentRegistryEntry<FragmentConfig>>()
+    // Use InternalFragmentEntry to avoid generic variance issues
+    const entries = new Map<string, InternalFragmentEntry>()
 
     return {
       register: (type, renderer, requiredImports = []) =>
         Effect.sync(() => {
+          // Store with broader type - type safety ensured by fragment type string
           entries.set(type, {
             type,
-            renderer: renderer as FragmentRenderer<FragmentConfig>,
+            renderer,
             requiredImports
           })
         }),
@@ -205,14 +208,16 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
    */
   static readonly Test: Layer.Layer<FragmentRegistry> = Layer.sync(FragmentRegistry, () => {
     // Fresh Map per test - isolated from Live
-    const entries = new Map<string, FragmentRegistryEntry<FragmentConfig>>()
+    // Use InternalFragmentEntry to avoid generic variance issues
+    const entries = new Map<string, InternalFragmentEntry>()
 
     return {
       register: (type, renderer, requiredImports = []) =>
         Effect.sync(() => {
+          // Store with broader type - type safety ensured by fragment type string
           entries.set(type, {
             type,
-            renderer: renderer as FragmentRenderer<FragmentConfig>,
+            renderer,
             requiredImports
           })
         }),

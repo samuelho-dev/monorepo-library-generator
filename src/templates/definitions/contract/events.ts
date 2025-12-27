@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/contract/events
  */
 
-import type { TemplateDefinition } from "../../core/types"
+import type { TemplateDefinition } from '../../core/types'
 
 /**
  * Contract Events Template Definition
@@ -19,22 +19,21 @@ import type { TemplateDefinition } from "../../core/types"
  * - Event union types
  */
 export const contractEventsTemplate: TemplateDefinition = {
-  id: "contract/events",
+  id: 'contract/events',
   meta: {
-    title: "{className} Domain Events",
-    description: "Defines all domain events for {propertyName} domain operations.",
-    module: "{scope}/contract-{fileName}/events"
+    title: '{className} Domain Events',
+    description: 'Defines all domain events for {propertyName} domain operations.',
+    module: '{scope}/contract-{fileName}/events'
   },
   imports: [
-    { from: "effect", items: ["Schema"] },
-    { from: "./rpc-definitions", items: ["{className}Id"], isTypeOnly: true }
+    { from: 'effect', items: ['Schema'] }
   ],
   sections: [
     // Base Event Metadata Section
     {
-      title: "Base Event Metadata",
+      title: 'Base Event Metadata',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Standard metadata for all events
  */
@@ -82,9 +81,9 @@ export type EventMetadata = typeof EventMetadata.Type`
 
     // Aggregate Metadata Section
     {
-      title: "Aggregate Metadata",
+      title: 'Aggregate Metadata',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * {className} aggregate metadata for event sourcing
  *
@@ -114,9 +113,9 @@ export type {className}AggregateMetadata = typeof {className}AggregateMetadata.T
 
     // Domain Events Section
     {
-      title: "{className} Domain Events",
+      title: '{className} Domain Events',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Event emitted when a new {propertyName} is created
  */
@@ -169,9 +168,9 @@ export class {className}DeletedEvent extends Schema.Class<{className}DeletedEven
 
     // Event Union Types Section
     {
-      title: "Event Union Types",
+      title: 'Event Union Types',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Union of all {className} domain events
  */
@@ -193,9 +192,9 @@ export const {className}EventSchema = Schema.Union(
 
     // Event Factory Helpers Section
     {
-      title: "Event Factory Helpers",
+      title: 'Event Factory Helpers',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Create event metadata with defaults
  */
@@ -205,27 +204,29 @@ export function createEventMetadata(
     correlationId?: string
     causationId?: string
   }
-): EventMetadata {
+) {
   return {
     eventType,
     eventVersion: "1.0",
     occurredAt: new Date(),
     ...(options?.correlationId && { correlationId: options.correlationId }),
     ...(options?.causationId && { causationId: options.causationId })
-  }
+  } satisfies EventMetadata
 }
 
 /**
  * Create aggregate metadata
+ *
+ * Note: aggregateId is branded at the call site via Schema validation
  */
 export function createAggregateMetadata(
-  aggregateId: string,
+  aggregateId: {className}AggregateMetadata["aggregateId"],
   aggregateVersion: number
-): {className}AggregateMetadata {
+) {
   return {
-    aggregateId: aggregateId as {className}AggregateMetadata["aggregateId"],
+    aggregateId,
     aggregateVersion
-  }
+  } satisfies {className}AggregateMetadata
 }`
       }
     }

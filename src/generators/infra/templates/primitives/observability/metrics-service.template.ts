@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/observability
  */
 
-import { TypeScriptBuilder } from "../../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
 
 /**
  * Generate metrics service using Effect.Metric
@@ -47,19 +47,19 @@ Effect.Metric Features:
 - Composable metric operations
 - Pre-defined HistogramBoundaries and StandardMetricNames`,
     module: `${scope}/infra-${fileName}/metrics`,
-    see: ["https://effect.website/docs/observability/metrics"]
+    see: ['https://effect.website/docs/observability/metrics']
   })
 
   builder.addImports([
     {
-      from: "effect",
-      imports: ["Context", "Effect", "Layer", "Metric", "MetricBoundaries"]
+      from: 'effect',
+      imports: ['Context', 'Effect', 'Layer', 'Metric', 'MetricBoundaries']
     },
-    { from: `${scope}/env`, imports: ["env"] },
-    { from: `${scope}/provider-opentelemetry`, imports: ["OpenTelemetryProvider"] }
+    { from: `${scope}/env`, imports: ['env'] },
+    { from: `${scope}/provider-opentelemetry`, imports: ['OpenTelemetryProvider'] }
   ])
 
-  builder.addSectionComment("Metrics Service Interface")
+  builder.addSectionComment('Metrics Service Interface')
 
   builder.addRaw(`/**
  * Counter handle for incrementing metrics
@@ -159,7 +159,7 @@ export interface HistogramOptions extends MetricOptions {
    * Custom bucket boundaries
    * @default [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
    */
-  readonly boundaries?: ReadonlyArray<number>
+  readonly boundaries?: readonly number[]
 }
 
 /**
@@ -312,7 +312,7 @@ export class MetricsService extends Context.Tag(
     // Store metrics by name for test assertions
     const counters = new Map<string, { count: number }>()
     const gauges = new Map<string, { value: number }>()
-    const histograms = new Map<string, { values: Array<number> }>()
+    const histograms = new Map<string, { values: number[] }>()
 
     return {
       counter: (name: string) =>

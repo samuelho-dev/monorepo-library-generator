@@ -9,9 +9,6 @@ catalogs:
     effect:
       specifier: ^3.12.5
       version: 3.19.13
-    ioredis:
-      specifier: ^5.8.2
-      version: 5.8.2
     kysely:
       specifier: ^0.27.5
       version: 0.27.6
@@ -81,7 +78,7 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0(ink@5.2.1(@types/react@18.3.27)(react@18.3.1))(react@18.3.1)
       ioredis:
-        specifier: 'catalog:'
+        specifier: ^5.4.1
         version: 5.8.2
       ioredis-mock:
         specifier: ^8.13.1

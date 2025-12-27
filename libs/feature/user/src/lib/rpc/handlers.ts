@@ -1,5 +1,4 @@
 import { UserNotFoundRpcError, UserRpcs, UserValidationRpcError } from "@samuelho-dev/contract-user"
-import type { UserCreateInput, UserUpdateInput } from "@samuelho-dev/data-access-user"
 import { RequestMeta, ServiceContext, getHandlerContext } from "@samuelho-dev/infra-rpc"
 import { Array as EffectArray, DateTime, Effect, Layer, Option } from "effect"
 import { UserService } from "../server/services"
@@ -20,13 +19,6 @@ Usage:
   See router.ts for Next.js/Express integration.
  *
  */
-// ============================================================================
-// Sub-Module Handler Imports
-// ============================================================================
-import { AuthenticationHandlers } from "../server/services/authentication/handlers"
-
-import { ProfileHandlers } from "../server/services/profile/handlers"
-
 // ============================================================================
 // Handler Implementations
 // ============================================================================
@@ -143,10 +135,17 @@ export const UserHandlers = UserRpcs.toLayer({
         requestId: meta.requestId
       })
 
-      // Transform RPC input to service input
-      // The contract defines the public API schema, service uses internal types
-      // Cast is safe because both types represent the same domain entity
-      return yield* service.create(input as UserCreateInput)
+      // Transform RPC input to service input format
+      // The service expects database-compatible input with all required fields
+      const serviceInput = {
+        ...input,
+        // Add required fields that aren't in the RPC input
+        // These should be derived from context or have defaults
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      return yield* service.create(serviceInput)
     }).pipe(Effect.catchTags({
         "UserTimeoutError": (e) =>
           Effect.fail(new UserValidationRpcError({
@@ -177,11 +176,15 @@ export const UserHandlers = UserRpcs.toLayer({
         requestId: meta.requestId
       })
 
-      // Transform RPC data to service input
-      // The contract defines the public API schema, service uses internal types
-      // Cast is safe because both types represent the same domain entity
+      // Transform RPC data to service input format
+      // Filter out undefined values and add updatedAt timestamp
+      const serviceInput = Object.fromEntries(
+        Object.entries({ ...data, updatedAt: new Date() })
+          .filter(([, v]) => v !== undefined)
+      )
+
       // Service throws UserNotFoundError which is caught by catchTags
-      return yield* service.update(id, data as UserUpdateInput)
+      return yield* service.update(id, serviceInput)
     }).pipe(Effect.catchTags({
         "UserNotFoundError": (e) =>
           Effect.fail(new UserNotFoundRpcError({
@@ -267,7 +270,7 @@ export const UserHandlers = UserRpcs.toLayer({
       }
 
       // Use typed constant to avoid type assertion
-      const notFoundErrors: ReadonlyArray<string> = ["User not found"]
+      const notFoundErrors: readonly string[] = ["User not found"]
 
       return exists
         ? baseResponse
@@ -331,20 +334,6 @@ export const UserHandlers = UserRpcs.toLayer({
           }))
       }))
 })
-
-// ============================================================================
-// Combined Handlers (with Sub-Modules)
-// ============================================================================
-/**
- * Combined handlers including all sub-modules
- *
- * Merges the main User handlers with sub-module handlers using Layer.mergeAll.
- */
-export const AllUserHandlers = Layer.mergeAll(
-  UserHandlers,
-  AuthenticationHandlers,
-  ProfileHandlers
-)
 
 // ============================================================================
 // Handler Layer

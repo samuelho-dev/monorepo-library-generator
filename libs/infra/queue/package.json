@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Queue orchestration infrastructure with Supervisor for background workers",
+  "description": "Queue",
   "exports": {
     ".": {
       "import": "./src/index.ts",

@@ -12,9 +12,9 @@
  * @module monorepo-library-generator/feature/templates/rpc/handlers
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate handlers.ts file for feature library
@@ -46,7 +46,10 @@ Usage:
   })
 
   builder.addImports([
-    { from: "effect", imports: [{ name: "Array", alias: "EffectArray" }, "DateTime", "Effect", "Layer", "Option"] },
+    {
+      from: 'effect',
+      imports: [{ name: 'Array', alias: 'EffectArray' }, 'DateTime', 'Effect', 'Layer', 'Option']
+    },
     // RPC errors for response mapping
     {
       from: `${scope}/contract-${fileName}`,
@@ -56,20 +59,14 @@ Usage:
         `${className}ValidationRpcError`
       ]
     },
-    // Service input types for handler transformations
-    {
-      from: `${scope}/data-access-${fileName}`,
-      imports: [`${className}CreateInput`, `${className}UpdateInput`],
-      isTypeOnly: true
-    },
     // Note: Domain errors (${className}NotFoundError, ${className}TimeoutError) are NOT imported
     // because catchTags uses string literals to match error tags, not runtime types
-    { from: `${scope}/infra-rpc`, imports: ["getHandlerContext", "RequestMeta", "ServiceContext"] },
-    { from: "../server/services", imports: [`${className}Service`] }
+    { from: `${scope}/infra-rpc`, imports: ['getHandlerContext', 'RequestMeta', 'ServiceContext'] },
+    { from: '../server/services', imports: [`${className}Service`] }
   ])
 
   if (hasSubModules) {
-    builder.addSectionComment("Sub-Module Handler Imports")
+    builder.addSectionComment('Sub-Module Handler Imports')
     for (const subModule of subModulesList!) {
       const subClassName = subModule.charAt(0).toUpperCase() + subModule.slice(1)
       builder.addRaw(
@@ -113,7 +110,7 @@ Usage:
           }))
       })`
 
-  builder.addSectionComment("Handler Implementations")
+  builder.addSectionComment('Handler Implementations')
 
   builder.addRaw(`/**
  * ${className} RPC Handler Implementations
@@ -201,10 +198,17 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         requestId: meta.requestId
       })
 
-      // Transform RPC input to service input
-      // The contract defines the public API schema, service uses internal types
-      // Cast is safe because both types represent the same domain entity
-      return yield* service.create(input as ${className}CreateInput)
+      // Transform RPC input to service input format
+      // The service expects database-compatible input with all required fields
+      const serviceInput = {
+        ...input,
+        // Add required fields that aren't in the RPC input
+        // These should be derived from context or have defaults
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      return yield* service.create(serviceInput)
     }).pipe(${infraOnlyCatchTags}),
 
   /**
@@ -224,11 +228,15 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
         requestId: meta.requestId
       })
 
-      // Transform RPC data to service input
-      // The contract defines the public API schema, service uses internal types
-      // Cast is safe because both types represent the same domain entity
+      // Transform RPC data to service input format
+      // Filter out undefined values and add updatedAt timestamp
+      const serviceInput = Object.fromEntries(
+        Object.entries({ ...data, updatedAt: new Date() })
+          .filter(([, v]) => v !== undefined)
+      )
+
       // Service throws ${className}NotFoundError which is caught by catchTags
-      return yield* service.update(id, data as ${className}UpdateInput)
+      return yield* service.update(id, serviceInput)
     }).pipe(${notFoundAndInfraCatchTags}),
 
   /**
@@ -282,7 +290,7 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
       }
 
       // Use typed constant to avoid type assertion
-      const notFoundErrors: ReadonlyArray<string> = ["${className} not found"]
+      const notFoundErrors: readonly string[] = ["${className} not found"]
 
       return exists
         ? baseResponse
@@ -327,7 +335,7 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
 `)
 
   if (hasSubModules) {
-    builder.addSectionComment("Combined Handlers (with Sub-Modules)")
+    builder.addSectionComment('Combined Handlers (with Sub-Modules)')
 
     builder.addRaw(`/**
  * Combined handlers including all sub-modules
@@ -336,17 +344,17 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
  */
 export const All${className}Handlers = Layer.mergeAll(
   ${className}Handlers,
-${
-      subModulesList.map((sub: string) => {
-        const subClassName = sub.charAt(0).toUpperCase() + sub.slice(1)
-        return `  ${subClassName}Handlers`
-      }).join(",\n")
-    }
+${subModulesList
+  .map((sub: string) => {
+    const subClassName = sub.charAt(0).toUpperCase() + sub.slice(1)
+    return `  ${subClassName}Handlers`
+  })
+  .join(',\n')}
 )
 `)
   }
 
-  builder.addSectionComment("Handler Layer")
+  builder.addSectionComment('Handler Layer')
 
   builder.addRaw(`/**
  * Handler dependencies layer

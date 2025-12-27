@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/auth/ports
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { AuthTemplateOptions } from "./schemas.template"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { AuthTemplateOptions } from './schemas.template'
 
 /**
  * Generate lib/ports.ts for contract-auth library
@@ -22,7 +22,7 @@ export function generateAuthPortsFile(options: AuthTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "Auth Contract Ports",
+    title: 'Auth Contract Ports',
     description: `Service interfaces for authentication.
 
 These are the ports (interfaces) that auth implementations must satisfy.
@@ -36,18 +36,20 @@ Ports:
   })
   builder.addBlankLine()
 
-  builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Option"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Context', 'Effect', 'Option'] }])
   builder.addBlankLine()
 
   builder.addImports([
-    { from: "./schemas", imports: ["AuthSession", "CurrentUserData", "ServiceIdentity"], isTypeOnly: true },
-    { from: "./errors", imports: ["AuthError", "ServiceAuthError"], isTypeOnly: true }
+    {
+      from: './schemas',
+      imports: ['AuthSession', 'CurrentUserData', 'ServiceIdentity'],
+      isTypeOnly: true
+    },
+    { from: './errors', imports: ['AuthError', 'ServiceAuthError'], isTypeOnly: true }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("User Authentication Ports")
+  builder.addSectionComment('User Authentication Ports')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -131,7 +133,7 @@ export class AuthProvider extends Context.Tag("AuthProvider")<
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Service-to-Service Authentication Ports")
+  builder.addSectionComment('Service-to-Service Authentication Ports')
   builder.addBlankLine()
 
   builder.addRaw(`/**

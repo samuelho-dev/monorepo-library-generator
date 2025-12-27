@@ -80,7 +80,7 @@ export class AuthenticationOperationError extends Data.TaggedError("Authenticati
 /**
  * Union of authentication domain errors (business logic)
  */
-export type AuthenticationDomainError = 
+export type AuthenticationDomainError =
   | AuthenticationNotFoundError
   | AuthenticationValidationError
 /**
@@ -90,7 +90,7 @@ export type AuthenticationRepositoryError = AuthenticationOperationError
 /**
  * All possible authentication errors
  */
-export type AuthenticationError = 
+export type AuthenticationError =
   | AuthenticationDomainError
   | AuthenticationRepositoryError
 // TODO: Add domain-specific errors here

@@ -11,7 +11,6 @@ Schema.TaggedError is reserved for RPC boundary errors only.
  * @module @samuelho-dev/provider-kysely/errors
  */
 
-
 // ============================================================================
 // Error Types
 // ============================================================================

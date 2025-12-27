@@ -13,7 +13,6 @@ All errors extend Data.TaggedError for:
  * @module @samuelho-dev/provider-supabase/errors
  */
 
-
 // ============================================================================
 // Base Error Type
 // ============================================================================
@@ -100,7 +99,19 @@ export class SupabaseTokenError extends Data.TaggedError("SupabaseTokenError")<{
  */
 export class SupabaseStorageError extends Data.TaggedError("SupabaseStorageError")<{
   readonly message: string
-  readonly operation: "upload" | "download" | "delete" | "list" | "move" | "copy" | "createBucket" | "deleteBucket" | "getBucket" | "listBuckets" | "createSignedUrl" | "getPublicUrl"
+  readonly operation:
+    | "upload"
+    | "download"
+    | "delete"
+    | "list"
+    | "move"
+    | "copy"
+    | "createBucket"
+    | "deleteBucket"
+    | "getBucket"
+    | "listBuckets"
+    | "createSignedUrl"
+    | "getPublicUrl"
   readonly bucket?: string
   readonly path?: string
   readonly cause?: unknown

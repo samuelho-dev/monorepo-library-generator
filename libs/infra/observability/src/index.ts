@@ -25,12 +25,12 @@ Key exports:
 // ============================================================================
 // Optional fiber lifecycle tracking
 export {
-  makeFiberTrackingSupervisor,
-  withFiberTracking,
-  FiberTrackingMinimal,
-  FiberTrackingFull,
   FiberTrackingFiltered,
+  FiberTrackingFull,
+  FiberTrackingMinimal,
+  makeFiberTrackingSupervisor,
   type SupervisorConfig,
+  withFiberTracking
 } from "./lib/supervisor"
 
 // ============================================================================
@@ -38,17 +38,17 @@ export {
 // ============================================================================
 // Configuration schema and types
 export {
-  ObservabilityConfigSchema,
-  TracesConfigSchema,
-  MetricsConfigSchema,
-  LogsConfigSchema,
-  ProductionConfig,
   DevelopmentConfig,
-  TestConfig,
-  type ObservabilityConfig,
-  type TracesConfig,
-  type MetricsConfig,
   type LogsConfig,
+  LogsConfigSchema,
+  type MetricsConfig,
+  MetricsConfigSchema,
+  type ObservabilityConfig,
+  ObservabilityConfigSchema,
+  ProductionConfig,
+  TestConfig,
+  type TracesConfig,
+  TracesConfigSchema
 } from "./lib/config"
 
 // ============================================================================
@@ -56,15 +56,15 @@ export {
 // ============================================================================
 // Pre-configured OTEL SDK layers for common backends
 export {
-  OtlpPreset,
-  JaegerPreset,
   ConsolePreset,
-  NoopPreset,
-  GrafanaCloudPreset,
-  type OtlpPresetConfig,
-  type JaegerPresetConfig,
   type ConsolePresetConfig,
+  GrafanaCloudPreset,
   type GrafanaCloudPresetConfig,
+  JaegerPreset,
+  type JaegerPresetConfig,
+  NoopPreset,
+  OtlpPreset,
+  type OtlpPresetConfig
 } from "./lib/presets"
 
 // ============================================================================
@@ -72,12 +72,12 @@ export {
 // ============================================================================
 // Error types for observability operations
 export {
-  ObservabilityError,
   ObservabilityConfigError,
-  ObservabilityExportError,
   ObservabilityConnectionError,
-  ObservabilityInitError,
+  ObservabilityError,
   type ObservabilityErrorType,
+  ObservabilityExportError,
+  ObservabilityInitError
 } from "./lib/errors"
 
 // ============================================================================
@@ -86,31 +86,27 @@ export {
 // Common constants for metrics, logging, and tracing
 export {
   HistogramBoundaries,
-  StandardMetricNames,
   LogLevelConfigs,
-  withMinLogLevel,
   SpanAttributes,
+  StandardMetricNames,
+  withMinLogLevel
 } from "./lib/constants"
 
 // ============================================================================
 // Logging Service
 // ============================================================================
 // Effect Logger wrapper with structured logging
-export {
-  LoggingService,
-  type LogContext,
-  type LoggingOperations,
-} from "./lib/logging"
+export { type LogContext, type LoggingOperations, LoggingService } from "./lib/logging"
 
 // ============================================================================
 // Metrics Service
 // ============================================================================
 // Effect.Metric wrapper with counters, gauges, histograms
 export {
-  MetricsService,
   type CounterHandle,
   type GaugeHandle,
   type HistogramHandle,
-  type MetricOptions,
   type HistogramOptions,
+  type MetricOptions,
+  MetricsService
 } from "./lib/metrics"

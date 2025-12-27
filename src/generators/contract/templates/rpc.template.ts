@@ -10,9 +10,9 @@
  * @module monorepo-library-generator/contract/rpc-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate rpc-errors.ts file for contract library
@@ -29,11 +29,11 @@ export function generateRpcErrorsFile(options: ContractTemplateOptions) {
   builder.addRaw(createRpcErrorsHeader(className, fileName, scope))
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
   builder.addBlankLine()
 
   // RPC Errors
-  builder.addSectionComment("RPC Errors (Schema.TaggedError for serialization)")
+  builder.addSectionComment('RPC Errors (Schema.TaggedError for serialization)')
   builder.addBlankLine()
 
   builder.addRaw(createRpcErrors(className, propertyName))

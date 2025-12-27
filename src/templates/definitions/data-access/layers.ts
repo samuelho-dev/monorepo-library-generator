@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/data-access/layers
  */
 
-import type { TemplateDefinition } from "../../core/types"
+import type { TemplateDefinition } from '../../core/types'
 
 /**
  * Data Access Layers Template Definition
@@ -20,9 +20,9 @@ import type { TemplateDefinition } from "../../core/types"
  * Uses raw content for complex Layer.mergeAll expressions.
  */
 export const dataAccessLayersTemplate: TemplateDefinition = {
-  id: "data-access/layers",
+  id: 'data-access/layers',
   meta: {
-    title: "{className} Data Access Layers",
+    title: '{className} Data Access Layers',
     description: `Effect layer compositions for {propertyName} data access.
 
 Provides different layer implementations for different environments:
@@ -30,22 +30,22 @@ Provides different layer implementations for different environments:
 - Dev: Development with local infrastructure
 - Test: Testing with in-memory/mock infrastructure
 - Auto: Automatically selects based on NODE_ENV`,
-    module: "{scope}/data-access-{fileName}/server"
+    module: '{scope}/data-access-{fileName}/server'
   },
   imports: [
-    { from: "effect", items: ["Layer"] },
-    { from: "{scope}/env", items: ["env"] },
-    { from: "{scope}/infra-database", items: ["DatabaseService"] },
-    { from: "{scope}/infra-observability", items: ["LoggingService", "MetricsService"] },
-    { from: "{scope}/infra-cache", items: ["CacheService"] },
-    { from: "./{fileName}-repository", items: ["{className}Repository"] }
+    { from: 'effect', items: ['Layer'] },
+    { from: '{scope}/env', items: ['env'] },
+    { from: '{scope}/infra-database', items: ['DatabaseService'] },
+    { from: '{scope}/infra-observability', items: ['LoggingService', 'MetricsService'] },
+    { from: '{scope}/infra-cache', items: ['CacheService'] },
+    { from: './{fileName}-repository', items: ['{className}Repository'] }
   ],
   sections: [
     // Infrastructure Layers Section
     {
-      title: "Infrastructure Layers",
+      title: 'Infrastructure Layers',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Live infrastructure layer
  *
@@ -65,7 +65,7 @@ export const InfrastructureLive = Layer.mergeAll(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Development infrastructure layer
  *
@@ -85,7 +85,7 @@ export const InfrastructureDev = Layer.mergeAll(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Test infrastructure layer
  *
@@ -106,9 +106,9 @@ export const InfrastructureTest = Layer.mergeAll(
 
     // Domain Layers Section
     {
-      title: "Domain Layers",
+      title: 'Domain Layers',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Live data access layer
  *
@@ -131,7 +131,7 @@ export const {className}DataAccessLive = Layer.mergeAll(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Development data access layer
  *
@@ -144,7 +144,7 @@ export const {className}DataAccessDev = Layer.mergeAll(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Test data access layer
  *
@@ -171,9 +171,9 @@ export const {className}DataAccessTest = Layer.mergeAll(
 
     // Auto Layer Section
     {
-      title: "Environment-Aware Layer",
+      title: 'Environment-Aware Layer',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Auto-selecting layer based on NODE_ENV
  *

@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/provider/templates/redis/cache
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Redis cache sub-service file
@@ -18,7 +18,7 @@ export function generateRedisCacheServiceFile(options: ProviderTemplateOptions) 
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "Redis Cache Sub-Service",
+    title: 'Redis Cache Sub-Service',
     description: `Cache operations sub-service for the Redis provider.
 
 Implements the RedisCacheClient interface for:
@@ -35,14 +35,14 @@ Used by infra-cache's Redis layer.`,
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] },
-    { from: "ioredis", imports: [{ name: "Redis", alias: "IORedis" }], isTypeOnly: true },
-    { from: "./errors", imports: ["RedisCommandError"] },
-    { from: "./types", imports: ["RedisCacheClient"], isTypeOnly: true }
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer'] },
+    { from: 'ioredis', imports: [{ name: 'Redis', alias: 'IORedis' }], isTypeOnly: true },
+    { from: './errors', imports: ['RedisCommandError'] },
+    { from: './types', imports: ['RedisCacheClient'], isTypeOnly: true }
   ])
 
   // Factory function
-  builder.addSectionComment("Cache Sub-Service Factory")
+  builder.addSectionComment('Cache Sub-Service Factory')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -135,7 +135,7 @@ export function makeCacheClient(client: IORedis) {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**

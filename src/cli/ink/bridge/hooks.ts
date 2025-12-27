@@ -6,11 +6,11 @@
  * @module monorepo-library-generator/cli/ink/bridge/hooks
  */
 
-import type { Effect } from "effect"
-import { Cause, Chunk, Exit, Option, Runtime } from "effect"
-import { useCallback, useState } from "react"
+import type { Effect } from 'effect'
+import { Cause, Chunk, Exit, Option, Runtime } from 'effect'
+import { useCallback, useState } from 'react'
 
-import { useRuntime } from "./context"
+import { useRuntime } from './context'
 
 /**
  * State for Effect operation hook
@@ -54,9 +54,7 @@ export interface UseEffectOperationResult<A, E> extends EffectOperationState<A, 
  * }
  * ```
  */
-export function useEffectOperation<A, E>(
-  effectFn: () => Effect.Effect<A, E>
-) {
+export function useEffectOperation<A, E>(effectFn: () => Effect.Effect<A, E>) {
   const runtime = useRuntime()
 
   const [state, setState] = useState<EffectOperationState<A, E>>({
@@ -97,7 +95,7 @@ export function useEffectOperation<A, E>(
             if (Cause.isInterrupted(cause)) {
               setState({ result: null, error: null, isLoading: false })
             } else {
-              throw new Error("Unknown Effect failure")
+              throw new Error('Unknown Effect failure')
             }
           }
           return undefined
@@ -135,9 +133,7 @@ export function useEffectOperation<A, E>(
  * }
  * ```
  */
-export function useEffectOnMount<A, E>(
-  effectFn: () => Effect.Effect<A, E>
-) {
+export function useEffectOnMount<A, E>(effectFn: () => Effect.Effect<A, E>) {
   const { execute, ...rest } = useEffectOperation(effectFn)
 
   // Execute on mount

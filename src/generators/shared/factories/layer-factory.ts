@@ -26,8 +26,8 @@
  * ```
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { LayerFactoryConfig } from "./types"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { LayerFactoryConfig } from './types'
 
 // ============================================================================
 // Service to Package Mapping
@@ -45,11 +45,11 @@ import type { LayerFactoryConfig } from "./types"
  */
 export function getInfraPackageName(serviceName: string) {
   // Observability consolidation: logging and metrics are in infra-observability
-  if (serviceName === "LoggingService" || serviceName === "MetricsService") {
-    return "observability"
+  if (serviceName === 'LoggingService' || serviceName === 'MetricsService') {
+    return 'observability'
   }
   // Default: extract from service name (e.g., 'DatabaseService' -> 'database')
-  return serviceName.replace("Service", "").toLowerCase()
+  return serviceName.replace('Service', '').toLowerCase()
 }
 
 // ============================================================================
@@ -61,20 +61,20 @@ export function getInfraPackageName(serviceName: string) {
  */
 export const INFRASTRUCTURE_SERVICES = {
   /** Data-access uses core infrastructure */
-  dataAccess: ["DatabaseService", "LoggingService", "MetricsService", "CacheService"] as const,
+  dataAccess: ['DatabaseService', 'LoggingService', 'MetricsService', 'CacheService'] as const,
 
   /** Feature uses core infrastructure plus messaging */
   feature: [
-    "DatabaseService",
-    "LoggingService",
-    "MetricsService",
-    "CacheService",
-    "PubsubService",
-    "QueueService"
+    'DatabaseService',
+    'LoggingService',
+    'MetricsService',
+    'CacheService',
+    'PubsubService',
+    'QueueService'
   ] as const,
 
   /** Minimal infrastructure for providers */
-  provider: ["LoggingService"] as const
+  provider: ['LoggingService'] as const
 } as const
 
 /**
@@ -85,10 +85,7 @@ export const DOMAIN_SERVICES = {
   dataAccess: (className: string) => [`${className}Repository`],
 
   /** Feature has Service and Repository */
-  feature: (className: string) => [
-    `${className}Service`,
-    `${className}Repository`
-  ]
+  feature: (className: string) => [`${className}Service`, `${className}Repository`]
 } as const
 
 // ============================================================================
@@ -100,7 +97,7 @@ export const DOMAIN_SERVICES = {
  */
 export interface InfrastructureLayerConfig {
   /** Infrastructure service names (e.g., 'DatabaseService', 'LoggingService') */
-  readonly services: ReadonlyArray<string>
+  readonly services: readonly string[]
   /** NPM scope for imports (e.g., '@myorg') */
   readonly scope: string
   /** Include Dev layer (default: true) */
@@ -128,12 +125,14 @@ export function createInfrastructureLayers(config: InfrastructureLayerConfig) {
   const { includeDev = true, services } = config
 
   return (builder: TypeScriptBuilder) => {
-    builder.addSectionComment("Infrastructure Layer Compositions")
+    builder.addSectionComment('Infrastructure Layer Compositions')
     builder.addBlankLine()
 
     // Generate Live layer (no trailing comma on last service)
-    const liveServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Live,` : `${s}.Live`)
-    const liveServices = liveServicesList.join("\n  ")
+    const liveServicesList = services.map((s, i) =>
+      i < services.length - 1 ? `${s}.Live,` : `${s}.Live`
+    )
+    const liveServices = liveServicesList.join('\n  ')
     builder.addRaw(`/**
  * Live Infrastructure Layer
  *
@@ -145,8 +144,10 @@ export const InfrastructureLive = Layer.mergeAll(
     builder.addBlankLine()
 
     // Generate Test layer (no trailing comma on last service)
-    const testServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Test,` : `${s}.Test`)
-    const testServices = testServicesList.join("\n  ")
+    const testServicesList = services.map((s, i) =>
+      i < services.length - 1 ? `${s}.Test,` : `${s}.Test`
+    )
+    const testServices = testServicesList.join('\n  ')
     builder.addRaw(`/**
  * Test Infrastructure Layer
  *
@@ -159,8 +160,10 @@ export const InfrastructureTest = Layer.mergeAll(
 
     // Generate Dev layer if requested (no trailing comma on last service)
     if (includeDev) {
-      const devServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Dev,` : `${s}.Dev`)
-      const devServices = devServicesList.join("\n  ")
+      const devServicesList = services.map((s, i) =>
+        i < services.length - 1 ? `${s}.Dev,` : `${s}.Dev`
+      )
+      const devServices = devServicesList.join('\n  ')
       builder.addRaw(`/**
  * Dev Infrastructure Layer
  *
@@ -185,15 +188,15 @@ export interface DomainLayerConfig {
   /** Class name (e.g., 'User') */
   readonly className: string
   /** Domain service names (e.g., ['UserRepository', 'UserCache']) */
-  readonly domainServices: ReadonlyArray<string>
+  readonly domainServices: readonly string[]
   /** Library type for naming convention */
-  readonly libraryType: "data-access" | "feature"
+  readonly libraryType: 'data-access' | 'feature'
   /** Include Dev layer (default: true) */
   readonly includeDev?: boolean
   /** Sub-module layers to include */
   readonly subModuleLayers?: {
-    readonly live: ReadonlyArray<string>
-    readonly test: ReadonlyArray<string>
+    readonly live: readonly string[]
+    readonly test: readonly string[]
   }
 }
 
@@ -218,10 +221,12 @@ export interface DomainLayerConfig {
 export function createDomainLayers(config: DomainLayerConfig) {
   const { className, domainServices, includeDev = true, libraryType, subModuleLayers } = config
 
-  const layerPrefix = libraryType === "data-access" ? "DataAccess" : "Feature"
+  const layerPrefix = libraryType === 'data-access' ? 'DataAccess' : 'Feature'
 
   return (builder: TypeScriptBuilder) => {
-    builder.addSectionComment(`${libraryType === "data-access" ? "Data Access" : "Full Feature"} Layer Compositions`)
+    builder.addSectionComment(
+      `${libraryType === 'data-access' ? 'Data Access' : 'Full Feature'} Layer Compositions`
+    )
     builder.addBlankLine()
 
     // Build domain service list for Live (no trailing comma on last service)
@@ -231,7 +236,9 @@ export function createDomainLayers(config: DomainLayerConfig) {
         liveServices.push(layer)
       }
     }
-    const liveServiceList = liveServices.map((s, i) => i < liveServices.length - 1 ? `${s},` : s).join("\n  ")
+    const liveServiceList = liveServices
+      .map((s, i) => (i < liveServices.length - 1 ? `${s},` : s))
+      .join('\n  ')
 
     // Build domain service list for Test (no trailing comma on last service)
     const testServices = domainServices.map((s) => `${s}.Live`) // Note: Usually use .Live for test too
@@ -240,7 +247,9 @@ export function createDomainLayers(config: DomainLayerConfig) {
         testServices.push(layer)
       }
     }
-    const testServiceList = testServices.map((s, i) => i < testServices.length - 1 ? `${s},` : s).join("\n  ")
+    const testServiceList = testServices
+      .map((s, i) => (i < testServices.length - 1 ? `${s},` : s))
+      .join('\n  ')
 
     // Generate Live layer
     builder.addRaw(`/**
@@ -290,7 +299,9 @@ export const ${className}${layerPrefix}Test = Layer.mergeAll(
 
     // Generate Dev layer if requested (reuse liveServices array)
     if (includeDev) {
-      const devServiceList = liveServices.map((s, i) => i < liveServices.length - 1 ? `${s},` : s).join("\n  ")
+      const devServiceList = liveServices
+        .map((s, i) => (i < liveServices.length - 1 ? `${s},` : s))
+        .join('\n  ')
       builder.addRaw(`/**
  * ${className} ${layerPrefix} Dev Layer
  *
@@ -342,19 +353,19 @@ export function createAutoLayer(config: AutoLayerConfig) {
   const baseName = `${className}${layerPrefix}`
 
   return (builder: TypeScriptBuilder) => {
-    builder.addSectionComment("Auto-selecting Layer")
+    builder.addSectionComment('Auto-selecting Layer')
     builder.addBlankLine()
 
     const devCase = includeDev
       ? `case "development":
       return ${baseName}Dev`
-      : ""
+      : ''
 
     builder.addRaw(`/**
  * Auto layer - automatically selects based on NODE_ENV
  *
  * - "test": Uses ${baseName}Test
- * ${includeDev ? `- "development": Uses ${baseName}Dev\n * ` : ""}- "production": Uses ${baseName}Live
+ * ${includeDev ? `- "development": Uses ${baseName}Dev\n * ` : ''}- "production": Uses ${baseName}Live
  */
 export const ${baseName}Auto = Layer.suspend(() => {
   switch (env.NODE_ENV) {
@@ -379,15 +390,15 @@ export interface LayerImportsConfig {
   /** NPM scope for imports (e.g., '@myorg') */
   readonly scope: string
   /** Infrastructure services to import */
-  readonly infrastructureServices: ReadonlyArray<string>
+  readonly infrastructureServices: readonly string[]
   /** Class name (e.g., 'User') */
   readonly className: string
   /** File name (e.g., 'user') */
   readonly fileName: string
   /** Library type */
-  readonly libraryType: "data-access" | "feature"
+  readonly libraryType: 'data-access' | 'feature'
   /** Additional local imports */
-  readonly localImports?: ReadonlyArray<{ path: string; imports: ReadonlyArray<string> }>
+  readonly localImports?: readonly { path: string; imports: Readonlystring[] }[]
 }
 
 /**
@@ -399,27 +410,30 @@ export interface LayerImportsConfig {
  * @returns Factory function that generates imports
  */
 export function createLayerImports(config: LayerImportsConfig) {
-  const { className, fileName, infrastructureServices, libraryType, localImports = [], scope } = config
+  const {
+    className,
+    fileName,
+    infrastructureServices,
+    libraryType,
+    localImports = [],
+    scope
+  } = config
 
   return (builder: TypeScriptBuilder) => {
     // Effect import
-    builder.addImports([{ from: "effect", imports: ["Layer"] }])
+    builder.addImports([{ from: 'effect', imports: ['Layer'] }])
     builder.addBlankLine()
 
     // Local imports (repository, service)
-    if (libraryType === "data-access") {
-      builder.addSectionComment("Repository")
-      builder.addImports([
-        { from: "../repository", imports: [`${className}Repository`] }
-      ])
+    if (libraryType === 'data-access') {
+      builder.addSectionComment('Repository')
+      builder.addImports([{ from: '../repository', imports: [`${className}Repository`] }])
     } else {
-      builder.addSectionComment("Service Layer")
-      builder.addImports([
-        { from: "./service", imports: [`${className}Service`] }
-      ])
+      builder.addSectionComment('Service Layer')
+      builder.addImports([{ from: './service', imports: [`${className}Service`] }])
       builder.addBlankLine()
 
-      builder.addSectionComment("Data Access Layer")
+      builder.addSectionComment('Data Access Layer')
       builder.addImports([
         { from: `${scope}/data-access-${fileName}`, imports: [`${className}Repository`] }
       ])
@@ -427,8 +441,8 @@ export function createLayerImports(config: LayerImportsConfig) {
     builder.addBlankLine()
 
     // Infrastructure imports (group by package to avoid duplicate imports)
-    builder.addSectionComment("Infrastructure Layers")
-    const packageToServices = new Map<string, Array<string>>()
+    builder.addSectionComment('Infrastructure Layers')
+    const packageToServices = new Map<string, string[]>()
     for (const service of infrastructureServices) {
       const packageName = getInfraPackageName(service)
       const existing = packageToServices.get(packageName) ?? []
@@ -436,24 +450,18 @@ export function createLayerImports(config: LayerImportsConfig) {
       packageToServices.set(packageName, existing)
     }
     for (const [packageName, services] of packageToServices.entries()) {
-      builder.addImports([
-        { from: `${scope}/infra-${packageName}`, imports: services.sort() }
-      ])
+      builder.addImports([{ from: `${scope}/infra-${packageName}`, imports: services.sort() }])
     }
     builder.addBlankLine()
 
     // Environment config import
-    builder.addSectionComment("Environment Configuration")
-    builder.addImports([
-      { from: `${scope}/env`, imports: ["env"] }
-    ])
+    builder.addSectionComment('Environment Configuration')
+    builder.addImports([{ from: `${scope}/env`, imports: ['env'] }])
     builder.addBlankLine()
 
     // Additional local imports
     for (const localImport of localImports) {
-      builder.addImports([
-        { from: localImport.path, imports: [...localImport.imports] }
-      ])
+      builder.addImports([{ from: localImport.path, imports: [...localImport.imports] }])
     }
     if (localImports.length > 0) {
       builder.addBlankLine()
@@ -491,14 +499,14 @@ export function generateLayersFile(config: LayerFactoryConfig) {
     subModuleLayers
   } = config
 
-  const layerPrefix = libraryType === "data-access" ? "DataAccess" : "Feature"
-  const propertyName = fileName.replace(/-/g, "")
+  const layerPrefix = libraryType === 'data-access' ? 'DataAccess' : 'Feature'
+  const propertyName = fileName.replace(/-/g, '')
 
   // File header
   builder.addFileHeader({
     title: `${className} ${layerPrefix} Layers`,
     description: `Effect layer compositions for ${propertyName} ${
-      libraryType === "data-access" ? "data access" : "feature"
+      libraryType === 'data-access' ? 'data access' : 'feature'
     }.
 
 Provides different layer implementations for different environments:
@@ -508,7 +516,7 @@ Provides different layer implementations for different environments:
 - Auto: Automatically selects based on NODE_ENV
 
 Infrastructure included:
-${infrastructureServices.map((s) => `- ${s}`).join("\n")}`,
+${infrastructureServices.map((s) => `- ${s}`).join('\n')}`,
     module: `${scope}/${libraryType}-${fileName}/server`
   })
   builder.addBlankLine()

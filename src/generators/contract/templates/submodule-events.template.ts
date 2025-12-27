@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/submodule-events-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 export interface SubModuleEventsOptions {
   /** Parent domain name (e.g., 'order') */
@@ -40,9 +40,9 @@ These events can be published via PubsubService and consumed by other features.`
     module: `${scope}/contract-${parentName}/${subModuleName}/events`
   })
 
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
 
-  builder.addSectionComment("Event Base Schema")
+  builder.addSectionComment('Event Base Schema')
 
   builder.addRaw(`/**
  * Base event metadata for ${subModuleName} events
@@ -68,14 +68,15 @@ const ${subModuleClassName}EventBase = Schema.Struct({
 
   builder.addRaw(events)
 
-  builder.addSectionComment("Event Union Type")
+  builder.addSectionComment('Event Union Type')
 
   const eventNames = getEventNamesForSubModule(subModuleName, subModuleClassName)
 
   // Format union type with leading | for multiple events
-  const unionType = eventNames.length > 1
-    ? `\n  | ${eventNames.map((e) => `Schema.Schema.Type<typeof ${e}>`).join("\n  | ")}`
-    : `Schema.Schema.Type<typeof ${eventNames[0]}>`
+  const unionType =
+    eventNames.length > 1
+      ? `\n  | ${eventNames.map((e) => `Schema.Schema.Type<typeof ${e}>`).join('\n  | ')}`
+      : `Schema.Schema.Type<typeof ${eventNames[0]}>`
 
   builder.addRaw(`/**
  * Union of all ${subModuleName} domain events
@@ -96,7 +97,7 @@ export type ${subModuleClassName}Event =${unionType}
  * All ${subModuleName} event schemas for registration
  */
 export const ${subModuleClassName}Events = {
-  ${eventNames.join(",\n  ")}
+  ${eventNames.join(',\n  ')}
 }`)
 
   return builder.toString()
@@ -105,12 +106,16 @@ export const ${subModuleClassName}Events = {
 /**
  * Get event definitions based on common sub-module patterns
  */
-function getEventsForSubModule(subModuleName: string, subModuleClassName: string, parentClassName: string) {
+function getEventsForSubModule(
+  subModuleName: string,
+  subModuleClassName: string,
+  parentClassName: string
+) {
   const name = subModuleName.toLowerCase()
   const prefix = `${subModuleClassName}.`
 
   // Common sub-module patterns with appropriate events
-  if (name === "cart") {
+  if (name === 'cart') {
     return `/**
  * Cart item added event
  */
@@ -154,7 +159,7 @@ export const ${subModuleClassName}Cleared = Schema.Struct({
 }))`
   }
 
-  if (name === "checkout") {
+  if (name === 'checkout') {
     return `/**
  * Checkout initiated event
  */
@@ -199,7 +204,7 @@ export const ${subModuleClassName}Completed = Schema.Struct({
 }))`
   }
 
-  if (name === "management" || name === "order-management") {
+  if (name === 'management' || name === 'order-management') {
     return `/**
  * Order created event
  */
@@ -297,7 +302,7 @@ export const ${subModuleClassName}Deleted = Schema.Struct({
 function getEventNamesForSubModule(subModuleName: string, subModuleClassName: string) {
   const name = subModuleName.toLowerCase()
 
-  if (name === "cart") {
+  if (name === 'cart') {
     return [
       `${subModuleClassName}ItemAdded`,
       `${subModuleClassName}ItemRemoved`,
@@ -305,7 +310,7 @@ function getEventNamesForSubModule(subModuleName: string, subModuleClassName: st
     ]
   }
 
-  if (name === "checkout") {
+  if (name === 'checkout') {
     return [
       `${subModuleClassName}Initiated`,
       `${subModuleClassName}PaymentProcessed`,
@@ -313,7 +318,7 @@ function getEventNamesForSubModule(subModuleName: string, subModuleClassName: st
     ]
   }
 
-  if (name === "management" || name === "order-management") {
+  if (name === 'management' || name === 'order-management') {
     return [
       `${subModuleClassName}OrderCreated`,
       `${subModuleClassName}StatusChanged`,

@@ -29,17 +29,17 @@ Usage:
 // ============================================================================
 
 export {
-  // Base error
-  RedisError,
-  // Connection/timeout errors
-  RedisConnectionError,
-  RedisTimeoutError,
-  // Operation errors
-  RedisCommandError,
-  RedisKeyError,
-  RedisPubSubError,
   // Error mapping utility
   mapRedisError,
+  // Operation errors
+  RedisCommandError,
+  // Connection/timeout errors
+  RedisConnectionError,
+  // Base error
+  RedisError,
+  RedisKeyError,
+  RedisPubSubError,
+  RedisTimeoutError
 } from "./lib/errors"
 export type { RedisProviderError } from "./lib/errors"
 
@@ -48,15 +48,15 @@ export type { RedisProviderError } from "./lib/errors"
 // ============================================================================
 
 export type {
+  // Sub-service interfaces
+  RedisCacheClient,
   // Configuration
   RedisConfig,
   RedisOptions,
-  ScanOptions,
-  ScanResult,
-  // Sub-service interfaces
-  RedisCacheClient,
   RedisPubSubClient,
   RedisQueueClient,
+  ScanOptions,
+  ScanResult
 } from "./lib/types"
 
 // ============================================================================
@@ -64,23 +64,19 @@ export type {
 // ============================================================================
 
 // Redis - Main service with sub-services
-// 
+//
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 //   - Redis.Live (ioredis with env config)
 //   - Redis.Test (in-memory mock)
 //   - Redis.Dev (debug logging)
 //   - Redis.make(config) (custom configuration)
-// 
+//
 // Sub-services (matching infra library interfaces):
 //   - redis.cache: RedisCacheClient (for infra-cache)
 //   - redis.pubsub: RedisPubSubClient (for infra-pubsub)
 //   - redis.queue: RedisQueueClient (for infra-queue)
 
-export {
-  Redis,
-  RedisService,
-  type RedisServiceInterface,
-} from "./lib/redis"
+export { Redis, RedisService, type RedisServiceInterface } from "./lib/redis"
 
 // ============================================================================
 // Sub-Service Context.Tags
@@ -107,10 +103,10 @@ export { makeQueueClient } from "./lib/queue"
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Usage Examples
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 
+//
 // import { Effect, Layer } from 'effect';
 // import { Redis } from '@samuelho-dev/provider-redis';
-// 
+//
 // // Cache operations
 // const cacheProgram = Effect.gen(function*() {
 //   const redis = yield* Redis;
@@ -118,14 +114,14 @@ export { makeQueueClient } from "./lib/queue"
 //   const user = yield* redis.cache.get("user:1")
 //   return user;
 // })
-// 
+//
 // // PubSub operations
 // const pubsubProgram = Effect.gen(function*() {
 //   const redis = yield* Redis;
 //   yield* redis.pubsub.subscribe("events", (msg) => console.log(msg))
 //   yield* redis.pubsub.publish("events", "Hello!")
 // })
-// 
+//
 // // Queue operations
 // const queueProgram = Effect.gen(function*() {
 //   const redis = yield* Redis;
@@ -133,7 +129,7 @@ export { makeQueueClient } from "./lib/queue"
 //   const [key, value] = yield* redis.queue.brpop("jobs", 0)
 //   return value;
 // })
-// 
+//
 // // Extended operations
 // const extendedProgram = Effect.gen(function*() {
 //   const redis = yield* Redis;
@@ -142,12 +138,12 @@ export { makeQueueClient } from "./lib/queue"
 //   const exists = yield* redis.exists("user:1")
 //   return { ttl, exists };
 // })
-// 
+//
 // // Run with layer
 // const result = Effect.runPromise(
 //   cacheProgram.pipe(Effect.provide(Redis.Live))
 // )
-// 
+//
 // // Testing
 // const testResult = Effect.runSync(
 //   cacheProgram.pipe(Effect.provide(Redis.Test))

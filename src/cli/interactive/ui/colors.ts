@@ -30,29 +30,29 @@ const ANSI: Readonly<{
   brightCyan: string
   brightWhite: string
 }> = Object.freeze({
-  reset: "\x1b[0m",
-  bold: "\x1b[1m",
-  dim: "\x1b[2m",
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
 
   // Foreground colors
-  black: "\x1b[30m",
-  red: "\x1b[31m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
-  blue: "\x1b[34m",
-  magenta: "\x1b[35m",
-  cyan: "\x1b[36m",
-  white: "\x1b[37m",
+  black: '\x1b[30m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  white: '\x1b[37m',
 
   // Bright foreground colors
-  brightBlack: "\x1b[90m",
-  brightRed: "\x1b[91m",
-  brightGreen: "\x1b[92m",
-  brightYellow: "\x1b[93m",
-  brightBlue: "\x1b[94m",
-  brightMagenta: "\x1b[95m",
-  brightCyan: "\x1b[96m",
-  brightWhite: "\x1b[97m"
+  brightBlack: '\x1b[90m',
+  brightRed: '\x1b[91m',
+  brightGreen: '\x1b[92m',
+  brightYellow: '\x1b[93m',
+  brightBlue: '\x1b[94m',
+  brightMagenta: '\x1b[95m',
+  brightCyan: '\x1b[96m',
+  brightWhite: '\x1b[97m'
 })
 
 /**
@@ -155,15 +155,15 @@ export const box: Readonly<{
   teeLeft: string
   cross: string
 }> = Object.freeze({
-  horizontal: "─",
-  vertical: "│",
-  topLeft: "┌",
-  topRight: "┐",
-  bottomLeft: "└",
-  bottomRight: "┘",
-  teeRight: "├",
-  teeLeft: "┤",
-  cross: "┼"
+  horizontal: '─',
+  vertical: '│',
+  topLeft: '┌',
+  topRight: '┐',
+  bottomLeft: '└',
+  bottomRight: '┘',
+  teeRight: '├',
+  teeLeft: '┤',
+  cross: '┼'
 })
 
 /**
@@ -177,10 +177,10 @@ export const status: Readonly<{
   arrow: string
   bullet: string
 }> = Object.freeze({
-  pending: colors.muted("○"),
-  inProgress: colors.yellow("◐"),
-  completed: colors.green("✓"),
-  error: colors.red("✗"),
-  arrow: colors.cyan("→"),
-  bullet: colors.muted("•")
+  pending: colors.muted('○'),
+  inProgress: colors.yellow('◐'),
+  completed: colors.green('✓'),
+  error: colors.red('✗'),
+  arrow: colors.cyan('→'),
+  bullet: colors.muted('•')
 })

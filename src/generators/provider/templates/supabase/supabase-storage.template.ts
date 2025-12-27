@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/provider/templates/supabase/storage
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate SupabaseStorage service file
@@ -18,7 +18,7 @@ export function generateSupabaseStorageServiceFile(options: ProviderTemplateOpti
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "SupabaseStorage Service",
+    title: 'SupabaseStorage Service',
     description: `Supabase storage provider with Effect integration.
 
 Wraps Supabase Storage API for:
@@ -28,29 +28,32 @@ Wraps Supabase Storage API for:
 
 This service is consumed by infra-storage for file operations.`,
     module: `${packageName}/service/storage`,
-    see: ["https://supabase.com/docs/reference/javascript/storage-api"]
+    see: ['https://supabase.com/docs/reference/javascript/storage-api']
   })
   builder.addBlankLine()
 
   // Imports - use native types from @supabase/storage-js
   builder.addImports([
     {
-      from: "@supabase/storage-js",
-      imports: ["Bucket", "FileObject", "FileOptions", "SearchOptions", "TransformOptions"],
+      from: '@supabase/storage-js',
+      imports: ['Bucket', 'FileObject', 'FileOptions', 'SearchOptions', 'TransformOptions'],
       isTypeOnly: true
     },
     {
-      from: "@supabase/supabase-js",
-      imports: [{ name: "SupabaseClient", alias: "SupabaseSDKClient" }],
+      from: '@supabase/supabase-js',
+      imports: [{ name: 'SupabaseClient', alias: 'SupabaseSDKClient' }],
       isTypeOnly: true
     },
-    { from: "effect", imports: ["Context", "Effect", "Layer", "Option"] },
-    { from: "./client", imports: ["SupabaseClient"] },
-    { from: "./errors", imports: ["SupabaseBucketNotFoundError", "SupabaseFileNotFoundError", "SupabaseStorageError"] }
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Option'] },
+    { from: './client', imports: ['SupabaseClient'] },
+    {
+      from: './errors',
+      imports: ['SupabaseBucketNotFoundError', 'SupabaseFileNotFoundError', 'SupabaseStorageError']
+    }
   ])
 
   // Result Types
-  builder.addSectionComment("Result Types")
+  builder.addSectionComment('Result Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -79,7 +82,7 @@ export interface StorageBucketResult {
   builder.addBlankLine()
 
   // Service interface
-  builder.addSectionComment("Service Interface")
+  builder.addSectionComment('Service Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -107,7 +110,7 @@ export interface SupabaseStorageServiceInterface {
   /** Delete files from storage */
   readonly remove: (
     bucket: string,
-    paths: Array<string>
+    paths: string[]
   ) => Effect.Effect<void, SupabaseStorageError>
 
   /** List files in a bucket */
@@ -115,7 +118,7 @@ export interface SupabaseStorageServiceInterface {
     bucket: string,
     path?: string,
     options?: SearchOptions
-  ) => Effect.Effect<Array<FileObject>, SupabaseStorageError | SupabaseBucketNotFoundError>
+  ) => Effect.Effect<FileObject[], SupabaseStorageError | SupabaseBucketNotFoundError>
 
   /** Move a file to a new location */
   readonly move: (
@@ -146,7 +149,7 @@ export interface SupabaseStorageServiceInterface {
   ) => Effect.Effect<string, never>
 
   /** List all buckets */
-  readonly listBuckets: () => Effect.Effect<Array<Bucket>, SupabaseStorageError>
+  readonly listBuckets: () => Effect.Effect<Bucket[], SupabaseStorageError>
 
   /** Get bucket details */
   readonly getBucket: (
@@ -156,7 +159,7 @@ export interface SupabaseStorageServiceInterface {
   /** Create a new bucket */
   readonly createBucket: (
     name: string,
-    options?: { public?: boolean; fileSizeLimit?: number; allowedMimeTypes?: Array<string> }
+    options?: { public?: boolean; fileSizeLimit?: number; allowedMimeTypes?: string[] }
   ) => Effect.Effect<StorageBucketResult, SupabaseStorageError>
 
   /** Delete a bucket (must be empty) */
@@ -167,7 +170,7 @@ export interface SupabaseStorageServiceInterface {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -273,7 +276,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
           return data
         }).pipe(Effect.withSpan("SupabaseStorage.download")),
 
-      remove: (bucket: string, paths: Array<string>) =>
+      remove: (bucket: string, paths: string[]) =>
         Effect.gen(function*() {
           const { error } = yield* Effect.tryPromise({
             try: () => client.storage.from(bucket).remove(paths),
@@ -511,7 +514,7 @@ export class SupabaseStorage extends Context.Tag("SupabaseStorage")<
           return Option.some(data)
         }).pipe(Effect.withSpan("SupabaseStorage.getBucket")),
 
-      createBucket: (name: string, options?: { public?: boolean; fileSizeLimit?: number; allowedMimeTypes?: Array<string> }) =>
+      createBucket: (name: string, options?: { public?: boolean; fileSizeLimit?: number; allowedMimeTypes?: string[] }) =>
         Effect.gen(function*() {
           const bucketOptions = {
             public: options?.public ?? false,

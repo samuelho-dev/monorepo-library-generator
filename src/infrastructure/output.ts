@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/infrastructure/output
  */
 
-import type { GeneratorResult } from "./execution"
-import type { InterfaceType } from "./workspace"
+import type { GeneratorResult } from './execution'
+import type { InterfaceType } from './workspace'
 
 // ============================================================================
 // Types
@@ -56,8 +56,8 @@ function createSummary(result: GeneratorResult) {
  * Creates formatted list of generated files
  */
 function formatFilesList(files: ReadonlyArray<string>) {
-  const header = "Files created:"
-  const filesList = files.map((f) => `  - ${f}`).join("\n")
+  const header = 'Files created:'
+  const filesList = files.map((f) => `  - ${f}`).join('\n')
 
   return `${header}\n${filesList}`
 }
@@ -71,42 +71,42 @@ function createNextSteps(result: GeneratorResult) {
   const steps: Array<string> = []
 
   // Determine library type from project name
-  const libraryType = result.projectName.split("-")[0]
+  const libraryType = result.projectName.split('-')[0]
 
   switch (libraryType) {
-    case "contract":
-      steps.push("Update entity schemas in lib/entities.ts")
-      steps.push("Define repository interfaces in lib/ports.ts")
-      steps.push("Add domain-specific error types in lib/errors.ts")
+    case 'contract':
+      steps.push('Update entity schemas in lib/entities.ts')
+      steps.push('Define repository interfaces in lib/ports.ts')
+      steps.push('Add domain-specific error types in lib/errors.ts')
       break
 
-    case "data-access":
-      steps.push("Implement repository operations in lib/repository/operations/")
-      steps.push("Configure database connection in lib/server/layers.ts")
-      steps.push("Add Kysely query builders in lib/queries.ts")
+    case 'data-access':
+      steps.push('Implement repository operations in lib/repository/operations/')
+      steps.push('Configure database connection in lib/server/layers.ts')
+      steps.push('Add Kysely query builders in lib/queries.ts')
       break
 
-    case "feature":
-      steps.push("Implement business logic in lib/service/")
-      steps.push("Add client-side state management if needed")
-      steps.push("Wire up dependencies in lib/layers.ts")
+    case 'feature':
+      steps.push('Implement business logic in lib/service/')
+      steps.push('Add client-side state management if needed')
+      steps.push('Wire up dependencies in lib/layers.ts')
       break
 
-    case "provider":
-      steps.push("Implement service operations in lib/service/operations/")
-      steps.push("Configure external API client")
-      steps.push("Add error handling and retry logic")
+    case 'provider':
+      steps.push('Implement service operations in lib/service/operations/')
+      steps.push('Configure external API client')
+      steps.push('Add error handling and retry logic')
       break
 
-    case "infra":
-      steps.push("Implement client interface")
-      steps.push("Add server-side implementation")
-      steps.push("Configure infrastructure-specific options")
+    case 'infra':
+      steps.push('Implement client interface')
+      steps.push('Add server-side implementation')
+      steps.push('Configure infrastructure-specific options')
       break
 
     default:
-      steps.push("Review generated files")
-      steps.push("Customize to your needs")
+      steps.push('Review generated files')
+      steps.push('Customize to your needs')
   }
 
   // Common steps for all library types
@@ -123,8 +123,8 @@ function createNextSteps(result: GeneratorResult) {
  * Creates formatted next steps list
  */
 function formatNextSteps(steps: ReadonlyArray<string>) {
-  const header = "Next steps:"
-  const stepsList = steps.map((step, i) => `  ${i + 1}. ${step}`).join("\n")
+  const header = 'Next steps:'
+  const stepsList = steps.map((step, i) => `  ${i + 1}. ${step}`).join('\n')
 
   return `${header}\n${stepsList}`
 }
@@ -207,18 +207,15 @@ function formatNxCallback() {
  * // => () => console.log("...")
  * ```
  */
-export function formatOutput(
-  result: GeneratorResult,
-  interfaceType: InterfaceType
-) {
+export function formatOutput(result: GeneratorResult, interfaceType: InterfaceType) {
   switch (interfaceType) {
-    case "mcp":
+    case 'mcp':
       return formatMcpResponse(result)
 
-    case "cli":
+    case 'cli':
       return formatCliOutput(result)
 
-    case "nx":
+    case 'nx':
       return formatNxCallback()
 
     default: {

@@ -1,4 +1,3 @@
-import { env } from "@samuelho-dev/env"
 import { Chunk, Context, Effect, Layer, Option, Stream } from "effect"
 import { aggregateOperations } from "./operations/aggregate"
 import { createOperations } from "./operations/create"
@@ -133,7 +132,9 @@ export class UserRepository extends Context.Tag("UserRepository")<
    * - "production" or other → Live layer (default)
    */
   static readonly Auto = Layer.suspend(() => {
-    switch (process.env["NODE_ENV"]) {
+    // biome-ignore lint/style/noProcessEnv: Environment-aware layer selection requires runtime env check
+    const env = process.env.NODE_ENV
+    switch (env) {
       case "test":
         return UserRepository.Test
       case "development":

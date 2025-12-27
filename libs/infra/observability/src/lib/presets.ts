@@ -100,14 +100,14 @@ export const OtlpPreset = (config: OtlpPresetConfig) => {
   return NodeSdk.layer(() => ({
     resource: {
       serviceName: config.serviceName,
-      serviceVersion: config.serviceVersion ?? "0.0.0",
+      serviceVersion: config.serviceVersion ?? "0.0.0"
     },
     spanProcessor: new BatchSpanProcessor(
       new OTLPTraceExporter(traceExporterConfig)
     ),
     metricReader: new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter(metricExporterConfig),
-      exportIntervalMillis: config.metricsIntervalMs ?? 60000,
+      exportIntervalMillis: config.metricsIntervalMs ?? 60000
     })
   }))
 }
@@ -168,13 +168,13 @@ export const JaegerPreset = (config: JaegerPresetConfig) => {
     resource: {
       serviceName: config.serviceName,
       serviceVersion: config.serviceVersion ?? "0.0.0",
-      "deployment.environment": config.environment ?? "development",
+      "deployment.environment": config.environment ?? "development"
     },
     spanProcessor: new BatchSpanProcessor(
       new OTLPTraceExporter({
-        url: `${baseUrl}/v1/traces`,
+        url: `${baseUrl}/v1/traces`
       })
-    ),
+    )
     // Jaeger focuses on traces, so metrics are optional
     // Use a separate metrics backend if needed
   }))
@@ -217,13 +217,13 @@ export const ConsolePreset = (config: ConsolePresetConfig) =>
   NodeSdk.layer(() => ({
     resource: {
       serviceName: config.serviceName,
-      serviceVersion: config.serviceVersion ?? "0.0.0-dev",
+      serviceVersion: config.serviceVersion ?? "0.0.0-dev"
     },
     // Use SimpleSpanProcessor for immediate console output
     spanProcessor: new SimpleSpanProcessor(new ConsoleSpanExporter()),
     metricReader: new PeriodicExportingMetricReader({
       exporter: new ConsoleMetricExporter(),
-      exportIntervalMillis: 10000, // Export every 10 seconds
+      exportIntervalMillis: 10000 // Export every 10 seconds
     })
   }))
 
@@ -319,20 +319,20 @@ export const GrafanaCloudPreset = (config: GrafanaCloudPresetConfig) => {
     resource: {
       serviceName: config.serviceName,
       serviceVersion: config.serviceVersion ?? "0.0.0",
-      "deployment.environment": config.environment ?? "production",
+      "deployment.environment": config.environment ?? "production"
     },
     spanProcessor: new BatchSpanProcessor(
       new OTLPTraceExporter({
         url: `${endpoint}/v1/traces`,
-        headers: { Authorization: authorization },
+        headers: { Authorization: authorization }
       })
     ),
     metricReader: new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({
         url: `${endpoint}/v1/metrics`,
-        headers: { Authorization: authorization },
+        headers: { Authorization: authorization }
       }),
-      exportIntervalMillis: 60000,
+      exportIntervalMillis: 60000
     })
   }))
 }

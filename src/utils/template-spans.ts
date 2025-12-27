@@ -7,13 +7,9 @@
  * @module monorepo-library-generator/utils/template-spans
  */
 
-import { Effect, Metric } from "effect"
-import {
-  taggedTemplateDuration,
-  templateCompilations
-} from "../infrastructure/metrics"
-import type { FileSystemAdapter } from "./filesystem"
-import type { DirectoryCreationError, FileWriteError } from "./filesystem"
+import { Effect, Metric } from 'effect'
+import { taggedTemplateDuration, templateCompilations } from '../infrastructure/metrics'
+import type { FileSystemAdapter } from './filesystem'
 
 /**
  * Template generator function type
@@ -41,15 +37,12 @@ export function generateTemplateWithSpan<TOptions>(
   filePath: string,
   generator: TemplateGeneratorFn<TOptions>,
   options: TOptions
-): Effect.Effect<string, FileWriteError | DirectoryCreationError> {
-  return Effect.gen(function*() {
+) {
+  return Effect.gen(function* () {
     const startTime = Date.now()
 
     // Track template compilation
-    yield* templateCompilations.pipe(
-      Metric.tagged("template_id", templateId),
-      Metric.increment
-    )
+    yield* templateCompilations.pipe(Metric.tagged('template_id', templateId), Metric.increment)
 
     // Generate content
     const content = generator(options)
@@ -59,16 +52,14 @@ export function generateTemplateWithSpan<TOptions>(
 
     // Track duration
     const duration = Date.now() - startTime
-    yield* taggedTemplateDuration(templateId).pipe(
-      Metric.update(duration)
-    )
+    yield* taggedTemplateDuration(templateId).pipe(Metric.update(duration))
 
     return filePath
   }).pipe(
     Effect.withSpan(`template.${templateId}`, {
       attributes: {
-        "template.id": templateId,
-        "template.file_path": filePath
+        'template.id': templateId,
+        'template.file_path': filePath
       }
     })
   )
@@ -94,28 +85,22 @@ export function generateTemplatesWithSpan<TOptions>(
   }>,
   basePath: string,
   options: TOptions
-): Effect.Effect<ReadonlyArray<string>, FileWriteError | DirectoryCreationError> {
-  return Effect.gen(function*() {
-    const files: string[] = []
+) {
+  return Effect.gen(function* () {
+    const files: Array<string> = []
 
     for (const template of templates) {
       const filePath = `${basePath}/${template.path}`
-      yield* generateTemplateWithSpan(
-        adapter,
-        template.id,
-        filePath,
-        template.generator,
-        options
-      )
+      yield* generateTemplateWithSpan(adapter, template.id, filePath, template.generator, options)
       files.push(filePath)
     }
 
     return files
   }).pipe(
-    Effect.withSpan("template.batch", {
+    Effect.withSpan('template.batch', {
       attributes: {
-        "template.batch_size": templates.length,
-        "template.base_path": basePath
+        'template.batch_size': templates.length,
+        'template.base_path': basePath
       }
     })
   )
@@ -138,16 +123,16 @@ export function writeContentWithSpan(
   templateId: string,
   filePath: string,
   content: string
-): Effect.Effect<string, FileWriteError | DirectoryCreationError> {
-  return Effect.gen(function*() {
+) {
+  return Effect.gen(function* () {
     yield* adapter.writeFile(filePath, content)
     return filePath
   }).pipe(
     Effect.withSpan(`template.${templateId}`, {
       attributes: {
-        "template.id": templateId,
-        "template.file_path": filePath,
-        "template.content_length": content.length
+        'template.id': templateId,
+        'template.file_path': filePath,
+        'template.content_length': content.length
       }
     })
   )

@@ -65,7 +65,7 @@ export const createOperations = {
   /**
    * Create multiple User entities in batch
    */
-  createMany: (inputs: ReadonlyArray<UserCreateInput>) =>
+  createMany: (inputs: readonly UserCreateInput[]) =>
     Effect.gen(function*() {
       const database = yield* DatabaseService
 

@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect"
+import { Effect } from "effect"
 import { OpenTelemetryProvider } from "./otel"
 
 /**
@@ -16,7 +16,7 @@ describe("OpenTelemetryProvider", () => {
         return {
           tracesEnabled: otel.tracesEnabled,
           metricsEnabled: otel.metricsEnabled,
-          serviceName: otel.serviceName,
+          serviceName: otel.serviceName
         }
       })
 
@@ -31,22 +31,12 @@ describe("OpenTelemetryProvider", () => {
   })
 
   describe("make factory", () => {
-    it("creates layer with custom configuration", async () => {
+    it("creates layer with custom configuration", () => {
       const customLayer = OpenTelemetryProvider.make({
         serviceName: "custom-service",
         serviceVersion: "1.2.3",
         traces: { enabled: true },
-        metrics: { enabled: false },
-      })
-
-      const program = Effect.gen(function*() {
-        const otel = yield* OpenTelemetryProvider
-        return {
-          tracesEnabled: otel.tracesEnabled,
-          metricsEnabled: otel.metricsEnabled,
-          serviceName: otel.serviceName,
-          serviceVersion: otel.serviceVersion,
-        }
+        metrics: { enabled: false }
       })
 
       // Note: This test would need OTEL SDK which may not be available in test env

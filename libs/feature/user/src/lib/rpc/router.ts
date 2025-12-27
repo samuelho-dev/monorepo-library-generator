@@ -98,4 +98,4 @@ export const UserTestLayer = Layer.mergeAll(
 // Handler Import Notes
 // ============================================================================
 // NOTE: For handler access, import directly from ./handlers:
-// import { UserHandlers, AllUserHandlers, UserHandlersLayer } from "./handlers"
+// import { UserHandlers, UserHandlersLayer } from "./handlers"

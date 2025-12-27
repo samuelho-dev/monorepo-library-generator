@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/provider/templates/opentelemetry
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate OpenTelemetry service file
@@ -18,7 +18,7 @@ export function generateOtelServiceFile(options: ProviderTemplateOptions) {
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: "OpenTelemetry Provider Service",
+    title: 'OpenTelemetry Provider Service',
     description: `OpenTelemetry SDK provider for Effect integration.
 
 Provides:
@@ -30,21 +30,21 @@ This provider is consumed by infra-observability's LoggingService and MetricsSer
 When this layer is composed in the application, Effect's built-in tracing and
 metrics automatically export to OpenTelemetry.`,
     module: `${options.packageName}/service`,
-    see: ["https://effect.website/docs/observability/otel-tracing"]
+    see: ['https://effect.website/docs/observability/otel-tracing']
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Context", "Layer"] },
-    { from: "@effect/opentelemetry", imports: ["NodeSdk"] },
-    { from: "@opentelemetry/sdk-trace-node", imports: ["BatchSpanProcessor"] },
-    { from: "@opentelemetry/exporter-trace-otlp-http", imports: ["OTLPTraceExporter"] },
-    { from: "@opentelemetry/exporter-metrics-otlp-http", imports: ["OTLPMetricExporter"] },
-    { from: "@opentelemetry/sdk-metrics", imports: ["PeriodicExportingMetricReader"] },
-    { from: `${scope}/env`, imports: ["env"] },
-    { from: "./types", imports: ["OpenTelemetryConfig"], isTypeOnly: true }
+    { from: 'effect', imports: ['Context', 'Layer'] },
+    { from: '@effect/opentelemetry', imports: ['NodeSdk'] },
+    { from: '@opentelemetry/sdk-trace-node', imports: ['BatchSpanProcessor'] },
+    { from: '@opentelemetry/exporter-trace-otlp-http', imports: ['OTLPTraceExporter'] },
+    { from: '@opentelemetry/exporter-metrics-otlp-http', imports: ['OTLPMetricExporter'] },
+    { from: '@opentelemetry/sdk-metrics', imports: ['PeriodicExportingMetricReader'] },
+    { from: `${scope}/env`, imports: ['env'] },
+    { from: './types', imports: ['OpenTelemetryConfig'], isTypeOnly: true }
   ])
 
-  builder.addSectionComment("Service Interface")
+  builder.addSectionComment('Service Interface')
 
   builder.addRaw(`/**
  * OpenTelemetry provider operations interface
@@ -75,7 +75,7 @@ export interface OpenTelemetryProviderOperations {
 }
 `)
 
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
 
   builder.addRaw(`/**
  * OpenTelemetry Provider Service
@@ -289,7 +289,7 @@ export class OpenTelemetryProvider extends Context.Tag(
 }
 `)
 
-  builder.addSectionComment("Export Alias")
+  builder.addSectionComment('Export Alias')
 
   builder.addRaw(`/**
  * OpenTelemetry alias (shorthand for OpenTelemetryProvider)

@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/feature/cqrs/operations-executor-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate server/cqrs/operations/executor.ts file
@@ -40,18 +40,16 @@ Usage:
   })
   builder.addBlankLine()
 
+  builder.addImports([{ from: 'effect', imports: ['Context', 'Effect', 'Layer'] }])
+  builder.addBlankLine()
+
+  builder.addSectionComment('Infrastructure Services')
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Infrastructure Services")
-  builder.addImports([
-    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] }
-  ])
-  builder.addBlankLine()
-
-  builder.addSectionComment("Operation Types")
+  builder.addSectionComment('Operation Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -75,7 +73,7 @@ export interface OperationMetadata {
   builder.addRaw(`/**
  * Middleware function type
  *
- * @typeParam A - Input type
+ * @typeParam A - Success type
  * @typeParam E - Error type
  * @typeParam R - Dependencies
  */
@@ -84,7 +82,7 @@ export type Middleware<A, E, R> = (
 ) => Effect.Effect<A, E, R>`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Operation Executor Interface")
+  builder.addSectionComment('Operation Executor Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -108,7 +106,7 @@ export interface OperationExecutorInterface {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Operation Executor Implementation")
+  builder.addSectionComment('Operation Executor Implementation')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -117,10 +115,14 @@ export interface OperationExecutorInterface {
 const createExecutorImpl = (
   logger: Context.Tag.Service<typeof LoggingService>,
   metrics: Context.Tag.Service<typeof MetricsService>
-) => ({
-  execute: (metadata, operation, middlewares = []) => {
+): OperationExecutorInterface => ({
+  execute: <A, E, R>(
+    metadata: OperationMetadata,
+    operation: Effect.Effect<A, E, R>,
+    middlewares: ReadonlyArray<Middleware<A, E, R>> = []
+  ) => {
     // Build middleware pipeline
-    const pipeline = middlewares.reduce(
+    const pipeline = middlewares.reduce<Effect.Effect<A, E, R>>(
       (acc, middleware) => middleware(acc),
       operation
     )
@@ -172,7 +174,7 @@ const createExecutorImpl = (
 })`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Operation Executor Context.Tag")
+  builder.addSectionComment('Operation Executor Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -223,16 +225,23 @@ export class ${className}OperationExecutor extends Context.Tag("${className}Oper
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Common Middlewares")
+  builder.addSectionComment('Common Middlewares')
   builder.addBlankLine()
 
   builder.addRaw(`/**
  * Create a validation middleware
  *
+ * Validates input before executing the operation. If validation fails,
+ * the error from errorFactory is used to fail the effect.
+ *
+ * @param validate - Function that returns true if input is valid
+ * @param errorFactory - Function that creates error when validation fails
+ *
  * @example
  * \`\`\`typescript
  * const validateMiddleware = createValidationMiddleware(
- *   (input) => input.name.length > 0
+ *   (input) => typeof input === "object" && input !== null,
+ *   () => new ValidationError({ message: "Invalid input" })
  * )
  * \`\`\`
  */
@@ -242,7 +251,10 @@ export function createValidationMiddleware<A, E, R>(
 ): Middleware<A, E, R> {
   return (next) =>
     Effect.gen(function*() {
-      // Validation would happen before dispatch
+      // Run validation check - fail immediately if invalid
+      if (!validate(null)) {
+        return yield* Effect.fail(errorFactory())
+      }
       return yield* next
     })
 }
@@ -276,7 +288,7 @@ export function generateOperationsIndexFile(options: FeatureTemplateOptions) {
 
   builder.addFileHeader({
     title: `${className} CQRS Operations Index`,
-    description: "Barrel export for CQRS operations.",
+    description: 'Barrel export for CQRS operations.',
     module: `${options.packageName}/server/cqrs/operations`
   })
   builder.addBlankLine()

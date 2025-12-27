@@ -7,26 +7,22 @@
  * @module monorepo-library-generator/cli/ink/components/TypeSelect
  */
 
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
-import {
-  LIBRARY_TYPES,
-  WIZARD_ACTIONS,
-  type WizardSelection,
-} from '../../interactive/types';
+import { LIBRARY_TYPES, WIZARD_ACTIONS, type WizardSelection } from '../../interactive/types'
 import { colors, statusIcons } from '../theme/colors'
 
 interface TypeSelectProps {
-  readonly librariesRoot: string;
-  readonly onSelect: (type: WizardSelection) => void;
+  readonly librariesRoot: string
+  readonly onSelect: (type: WizardSelection) => void
 }
 
 interface SelectItem {
-  readonly label: string;
-  readonly value: WizardSelection;
-  readonly description: string;
-  readonly generatesTo?: readonly string[];
-  readonly isSeparator?: boolean;
+  readonly label: string
+  readonly value: WizardSelection
+  readonly description: string
+  readonly generatesTo?: readonly string[]
+  readonly isSeparator?: boolean
 }
 
 export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
@@ -37,16 +33,21 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
       label: action.label,
       value: action.type as WizardSelection,
       description: action.description,
-      generatesTo: action.generatesTo,
+      generatesTo: action.generatesTo
     })),
     // Separator
-    { label: '───────────────────────────────────────', value: 'separator' as WizardSelection, description: '', isSeparator: true },
+    {
+      label: '───────────────────────────────────────',
+      value: 'separator' as WizardSelection,
+      description: '',
+      isSeparator: true
+    },
     // Library types
     ...LIBRARY_TYPES.map((info) => ({
       label: info.label,
       value: info.type as WizardSelection,
-      description: info.description,
-    })),
+      description: info.description
+    }))
   ]
 
   // Filter out separator for navigation (but keep it for display)
@@ -57,7 +58,7 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
   const selectedItem = selectableItems[selectedIndex]
 
   useInput((input, key) => {
-    if (!selectedItem) return;
+    if (!selectedItem) return
     if (key.upArrow) {
       setSelectedIndex((i) => Math.max(0, i - 1))
     } else if (key.downArrow) {
@@ -71,7 +72,7 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
   const getDisplayIndex = (selectableIdx: number) => {
     // Special actions are at index 0-1, separator at 2, libraries at 3+
     if (selectableIdx < WIZARD_ACTIONS.length) {
-      return selectableIdx;
+      return selectableIdx
     }
     // After separator
     return selectableIdx + 1
@@ -95,12 +96,12 @@ export function TypeSelect({ librariesRoot, onSelect }: TypeSelectProps) {
         if (item.isSeparator) {
           return (
             <Box key="separator">
-              <Text color={colors.muted}>  {item.label}</Text>
+              <Text color={colors.muted}> {item.label}</Text>
             </Box>
           )
         }
 
-        const isSelected = displayIdx === displaySelectedIndex;
+        const isSelected = displayIdx === displaySelectedIndex
         const prefix = isSelected ? statusIcons.chevronRight : ' '
 
         return (

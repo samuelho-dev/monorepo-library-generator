@@ -34,7 +34,7 @@ class UserRepository extends Context.Tag("UserRepository")<
   UserRepository,
   {
     readonly findById: (id: string) => Effect.Effect<Option.Option<UserEntity>>
-    readonly findAll: () => Effect.Effect<ReadonlyArray<UserEntity>>
+    readonly findAll: () => Effect.Effect<readonly UserEntity[]>
     readonly create: (
       data: Omit<UserEntity, "id" | "createdAt" | "updatedAt">
     ) => Effect.Effect<UserEntity>

@@ -1,3 +1,12 @@
+---
+scope: libs/infra/pubsub/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/INFRA.md
+  - ../../../docs/EFFECT_PATTERNS.md
+---
+
 # @samuelho-dev/infra-pubsub
 
 PubSub orchestration infrastructure (coordinates pubsub providers)
@@ -77,3 +86,11 @@ import { usePubsub } from '@samuelho-dev/infra-pubsub/client/hooks'function MyCo
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
+
+## For Future Claude Code Instances
+
+- [ ] Uses Context.Tag with static layers (Live, Test, Dev, Auto)
+- [ ] Coordinates with provider-redis for pubsub backing
+- [ ] Memory provider is included for testing
+- [ ] Use Effect.Schema for message serialization
+- [ ] Config is in `lib/config.ts`

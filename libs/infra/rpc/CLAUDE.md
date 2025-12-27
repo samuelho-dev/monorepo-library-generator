@@ -1,3 +1,13 @@
+---
+scope: libs/infra/rpc/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/INFRA.md
+  - ../../../docs/EFFECT_PATTERNS.md
+  - ../../contract/auth/CLAUDE.md
+---
+
 # @samuelho-dev/infra-rpc
 
 RPC infrastructure with @effect/rpc middleware, transport, and router
@@ -77,3 +87,11 @@ import { useRpc } from '@samuelho-dev/infra-rpc/client/hooks'function MyComponen
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
+
+## For Future Claude Code Instances
+
+- [ ] Uses @effect/rpc for type-safe RPC
+- [ ] Imports auth types from contract-auth (CurrentUser, RouteTag)
+- [ ] Middleware applies auth based on RouteTag
+- [ ] Use Schema.TaggedError for RPC errors (serializable)
+- [ ] Feature libraries define handlers, this provides infrastructure

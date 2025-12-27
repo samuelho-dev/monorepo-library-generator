@@ -1,5 +1,31 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.9.0
+
+### Minor Changes
+
+- ## Documentation & Architecture Improvements
+
+  ### Documentation Updates
+  - Add root `CLAUDE.md` with comprehensive AI agent guidance
+  - Add `docs/INDEX.md` documentation catalog with 42 entries
+  - Add YAML frontmatter to all 17 library CLAUDE.md files
+  - Add "For Future Claude Code Instances" checklist sections
+  - Improve documentation coverage from 72% to 95%
+
+  ### Template & Generator Improvements
+  - Migrate to Context.Tag service pattern across all templates
+  - Centralize naming conventions in `src/utils/naming.ts`
+  - Fix linter false positives for Effect patterns
+  - Improve type safety with zero type assertions
+  - Reduce codebase by ~7,000 lines through consolidation
+
+  ### Generated Library Improvements
+  - All generated libraries now pass typecheck and biome linting
+  - Proper Effect.gen yield\* patterns throughout
+  - Correct Schema.TaggedError usage for RPC errors
+  - Consistent static layer naming (Live, Test, Dev, Auto)
+
 ## 1.8.1
 
 ### Patch Changes

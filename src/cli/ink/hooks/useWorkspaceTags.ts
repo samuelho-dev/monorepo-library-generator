@@ -7,10 +7,10 @@
  * @module monorepo-library-generator/cli/ink/hooks/useWorkspaceTags
  */
 
-import { Effect } from "effect"
-import { useEffect, useState } from "react"
+import { Effect } from 'effect'
+import { useEffect, useState } from 'react'
 
-import { scanWorkspaceTags, type WorkspaceTagsResult } from "../../../utils/workspace-tags"
+import { scanWorkspaceTags, type WorkspaceTagsResult } from '../../../utils/workspace-tags'
 
 /**
  * Hook to scan workspace for existing tags

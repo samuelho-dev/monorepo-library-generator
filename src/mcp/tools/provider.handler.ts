@@ -4,8 +4,8 @@
  * Handles provider library generation via MCP protocol using unified infrastructure.
  */
 
-import { Effect, ParseResult } from "effect"
-import { generateProviderCore, type ProviderCoreOptions } from "../../generators/core/provider"
+import { Effect, ParseResult } from 'effect'
+import { generateProviderCore, type ProviderCoreOptions } from '../../generators/core/provider'
 import {
   createExecutor,
   decodeProviderInput,
@@ -13,8 +13,8 @@ import {
   formatOutput,
   formatValidationError,
   type ProviderInput
-} from "../../infrastructure"
-import { ValidationError } from "../utils/validation"
+} from '../../infrastructure'
+import { ValidationError } from '../utils/validation'
 
 /**
  * Create provider executor using unified infrastructure
@@ -23,12 +23,12 @@ import { ValidationError } from "../utils/validation"
  * No type assertions needed - TypeScript infers all types correctly.
  */
 const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
-  "provider",
+  'provider',
   generateProviderCore,
   (validated, metadata) => ({
     ...metadata,
     externalService: validated.externalService,
-    platform: validated.platform ?? "node",
+    platform: validated.platform ?? 'node',
     ...(validated.operations !== undefined && { operations: validated.operations })
   })
 )
@@ -37,7 +37,7 @@ const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
  * Handle provider generation with unified infrastructure
  */
 export const handleGenerateProvider = (input: unknown) =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     // 1. Validate input using proper error channel
     const validated = yield* decodeProviderInput(input).pipe(
       Effect.mapError(
@@ -54,16 +54,16 @@ export const handleGenerateProvider = (input: unknown) =>
       return {
         success: true,
         message: [
-          "🔍 DRY RUN MODE",
-          "",
+          '🔍 DRY RUN MODE',
+          '',
           `Would generate provider library: provider-${validated.name}`,
-          "",
-          "📦 Configuration:",
+          '',
+          '📦 Configuration:',
           `  - Name: ${validated.name}`,
-          `  - Operations: ${validated.operations?.join(", ") || "all"}`,
-          "",
-          "To actually generate files, set dryRun: false"
-        ].join("\n")
+          `  - Operations: ${validated.operations?.join(', ') || 'all'}`,
+          '',
+          'To actually generate files, set dryRun: false'
+        ].join('\n')
       }
     }
 
@@ -71,17 +71,20 @@ export const handleGenerateProvider = (input: unknown) =>
     return yield* providerExecutor
       .execute({
         ...validated,
-        __interfaceType: "mcp"
+        __interfaceType: 'mcp'
       })
       .pipe(
-        Effect.map((result) => formatOutput(result, "mcp")),
-        Effect.catchTag("GeneratorExecutionError", (error) => Effect.succeed(formatErrorResponse(error)))
+        Effect.map((result) => formatOutput(result, 'mcp')),
+        Effect.catchTag('GeneratorExecutionError', (error) =>
+          Effect.succeed(formatErrorResponse(error))
+        )
       )
   }).pipe(
     // Handle validation errors at top level
-    Effect.catchTag("ValidationError", (error) =>
+    Effect.catchTag('ValidationError', (error) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      }))
+      })
+    )
   )

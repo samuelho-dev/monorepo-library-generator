@@ -7,6 +7,9 @@
  * @module monorepo-library-generator/shared/errors/tracing
  */
 
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
+
 /**
  * Generate tracing configuration and utilities
  *
@@ -17,8 +20,12 @@
  * - Smart defaults to minimize noise
  */
 export function generateTracingConfig() {
-  return `
-/**
+  const builder = new TypeScriptBuilder()
+  const scope = WORKSPACE_CONFIG.getScope()
+
+  builder.addImports([{ from: `${scope}/env`, imports: ['env'] }])
+
+  builder.addRaw(`/**
  * Error tracing configuration per environment
  *
  * Configuration options:
@@ -53,10 +60,10 @@ export interface TraceConfig {
 }
 
 /**
- * Get current trace config based on NODE_ENV
+ * Get current trace config based on env.NODE_ENV
  */
 export const getTraceConfig = (): TraceConfig => {
-  switch (process.env.NODE_ENV) {
+  switch (env.NODE_ENV) {
     case "production":
       return ErrorTraceConfig.production
     case "test":
@@ -65,8 +72,9 @@ export const getTraceConfig = (): TraceConfig => {
     default:
       return ErrorTraceConfig.development
   }
-}
-`
+}`)
+
+  return builder.toString()
 }
 
 /**
@@ -76,8 +84,9 @@ export const getTraceConfig = (): TraceConfig => {
  * and sampling rates.
  */
 export function generateTraceErrorUtility() {
-  return `
-/**
+  const builder = new TypeScriptBuilder()
+
+  builder.addRaw(`/**
  * Trace an error with environment-aware logging
  *
  * Uses Effect.tapError pattern - logs error without modifying error channel.
@@ -201,34 +210,52 @@ const extractErrorInfo = (
   }
 
   return info
-}
-`
+}`)
+
+  return builder.toString()
 }
 
 /**
  * Generate the complete tracing module
  */
 export function generateTracingModule() {
-  return `/**
- * Error Tracing Utilities
- *
- * Environment-aware error tracing with smart defaults:
+  const builder = new TypeScriptBuilder()
+  const scope = WORKSPACE_CONFIG.getScope()
+
+  // File header
+  builder.addFileHeader({
+    title: 'Error Tracing Utilities',
+    description: `Environment-aware error tracing with smart defaults:
  * - Production: Log errors only, sample 1% of debug-level
  * - Development: Log all errors with full cause chains
  * - Test: Silent (no logging)
  *
- * Uses Effect.tapError pattern to log without modifying error channel.
- *
- * @module tracing
- */
+ * Uses Effect.tapError pattern to log without modifying error channel.`,
+    module: 'tracing'
+  })
 
-import { Effect, Option, Schema } from "effect"
+  builder.addBlankLine()
 
-${generateTracingConfig()}
+  // Add imports
+  builder.addImport('effect', 'Effect')
+  builder.addImport('effect', 'Option')
+  builder.addImport('effect', 'Schema')
+  builder.addImport(`${scope}/env`, 'env')
 
-${generateTraceErrorUtility()}
+  builder.addBlankLine()
 
-/**
+  // Add tracing config
+  builder.addRaw(generateTracingConfig())
+
+  builder.addBlankLine()
+
+  // Add trace error utility
+  builder.addRaw(generateTraceErrorUtility())
+
+  builder.addBlankLine()
+
+  // Add createTracer utility
+  builder.addRaw(`/**
  * Create operation-scoped tracer
  *
  * Returns a function that traces errors with the operation name pre-filled.
@@ -243,6 +270,9 @@ ${generateTraceErrorUtility()}
  */
 export const createTracer = (serviceName: string) => ({
   error: (operation: string) => traceError(\`\${serviceName}.\${operation}\`)
-})
-`
+})`)
+
+  builder.addBlankLine()
+
+  return builder.toString()
 }

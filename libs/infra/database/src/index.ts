@@ -19,12 +19,7 @@ export type { Database } from "./lib/service"
 // Error Types
 // ============================================================================
 // Error types for error handling
-export {
-  DatabaseInternalError,
-  DatabaseConfigError,
-  DatabaseConnectionError,
-  DatabaseTimeoutError,
-} from "./lib/errors"
+export { DatabaseConfigError, DatabaseConnectionError, DatabaseInternalError, DatabaseTimeoutError } from "./lib/errors"
 export type { DatabaseError, DatabaseServiceError } from "./lib/errors"
 
 // ============================================================================

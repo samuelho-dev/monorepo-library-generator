@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/feature/cqrs/commands-base-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate server/cqrs/commands/base.ts file
@@ -38,12 +38,10 @@ Usage:
   })
   builder.addBlankLine()
 
-  builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer", "Schema"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Schema'] }])
   builder.addBlankLine()
 
-  builder.addSectionComment("Command Base Class")
+  builder.addSectionComment('Command Base Class')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -106,7 +104,7 @@ export abstract class Command<
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("CommandBus Interface")
+  builder.addSectionComment('CommandBus Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -145,7 +143,7 @@ export interface CommandBusInterface {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("CommandBus Context.Tag")
+  builder.addSectionComment('CommandBus Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -203,7 +201,7 @@ export function generateCommandsIndexFile(options: FeatureTemplateOptions) {
 
   builder.addFileHeader({
     title: `${className} CQRS Commands Index`,
-    description: "Barrel export for CQRS commands.",
+    description: 'Barrel export for CQRS commands.',
     module: `${options.packageName}/server/cqrs/commands`
   })
   builder.addBlankLine()

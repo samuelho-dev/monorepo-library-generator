@@ -128,23 +128,23 @@ export class OpenTelemetryProvider extends Context.Tag(
       resource: {
         serviceName: config.serviceName,
         serviceVersion,
-        ...config.resourceAttributes,
+        ...config.resourceAttributes
       },
       spanProcessor: tracesEnabled
         ? new BatchSpanProcessor(
-            new OTLPTraceExporter({
-              url: config.traces?.endpoint ?? "http://localhost:4318/v1/traces",
-            })
-          )
+          new OTLPTraceExporter({
+            url: config.traces?.endpoint ?? "http://localhost:4318/v1/traces"
+          })
+        )
         : undefined,
       metricReader: metricsEnabled
         ? new PeriodicExportingMetricReader({
-            exporter: new OTLPMetricExporter({
-              url: config.metrics?.endpoint ?? "http://localhost:4318/v1/metrics"
-            }),
-            exportIntervalMillis: config.metrics?.exportIntervalMs ?? 60000
-          })
-        : undefined,
+          exporter: new OTLPMetricExporter({
+            url: config.metrics?.endpoint ?? "http://localhost:4318/v1/metrics"
+          }),
+          exportIntervalMillis: config.metrics?.exportIntervalMs ?? 60000
+        })
+        : undefined
     }))
 
     // Create the OpenTelemetryProvider service layer
@@ -152,7 +152,7 @@ export class OpenTelemetryProvider extends Context.Tag(
       tracesEnabled,
       metricsEnabled,
       serviceName: config.serviceName,
-      serviceVersion,
+      serviceVersion
     })
 
     // Merge: first initialize SDK, then provide the service
@@ -181,24 +181,22 @@ export class OpenTelemetryProvider extends Context.Tag(
     serviceVersion: env.OTEL_SERVICE_VERSION ?? "0.0.0",
     traces: {
       enabled: env.OTEL_TRACES_ENABLED !== "false",
-      endpoint:
-        env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ??
+      endpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ??
         env.OTEL_EXPORTER_OTLP_ENDPOINT ??
         "http://localhost:4318/v1/traces",
       samplingRatio: env.OTEL_TRACES_SAMPLER_ARG
         ? Number.parseFloat(env.OTEL_TRACES_SAMPLER_ARG)
-        : 1.0,
+        : 1.0
     },
     metrics: {
       enabled: env.OTEL_METRICS_ENABLED !== "false",
-      endpoint:
-        env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ??
+      endpoint: env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ??
         env.OTEL_EXPORTER_OTLP_ENDPOINT ??
         "http://localhost:4318/v1/metrics",
       exportIntervalMs: env.OTEL_METRICS_EXPORT_INTERVAL_MS
         ? Number.parseInt(env.OTEL_METRICS_EXPORT_INTERVAL_MS, 10)
-        : 60000,
-    },
+        : 60000
+    }
   })
 
   // ===========================================================================
@@ -234,13 +232,13 @@ export class OpenTelemetryProvider extends Context.Tag(
     traces: {
       enabled: true,
       endpoint: "http://localhost:4318/v1/traces",
-      samplingRatio: 1.0,
+      samplingRatio: 1.0
     },
     metrics: {
       enabled: true,
       endpoint: "http://localhost:4318/v1/metrics",
-      exportIntervalMs: 30000, // Faster export in dev
-    },
+      exportIntervalMs: 30000 // Faster export in dev
+    }
   })
 
   // ===========================================================================

@@ -10,17 +10,17 @@ export interface ProviderGeneratorSchema {
   directory?: string
   externalService: string
   description?: string
-  platform?: "node" | "browser" | "universal" | "edge"
+  platform?: 'node' | 'browser' | 'universal' | 'edge'
   includeClientServer?: boolean
 
   // Provider type configuration
-  providerType?: "sdk" | "cli" | "http" | "graphql"
+  providerType?: 'sdk' | 'cli' | 'http' | 'graphql'
   cliCommand?: string
   baseUrl?: string
-  authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
+  authType?: 'bearer' | 'apikey' | 'oauth' | 'basic' | 'none'
 
   // Operations to generate
-  operations?: ReadonlyArray<"create" | "read" | "update" | "delete" | "query">
+  operations?: readonly 'create' | 'read' | 'update' | 'delete' | 'query'[]
 
   tags?: string
 

@@ -1,6 +1,15 @@
+---
+scope: libs/infra/queue/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/INFRA.md
+  - ../../../docs/EFFECT_PATTERNS.md
+---
+
 # @samuelho-dev/infra-queue
 
-Queue orchestration infrastructure with Supervisor for background workers
+Queue
 
 ## AI Agent Reference
 
@@ -13,7 +22,7 @@ This is an infrastructure library following Effect-based service patterns.
 - **lib/errors.ts**: Data.TaggedError-based error types
 - **lib/config.ts**: Service configuration types
 - **lib/memory.ts**: In-memory provider implementation
-- **lib/client/hooks/use-queue.ts**: React hook
+
 
 ### Import Patterns
 
@@ -62,18 +71,17 @@ const result = program.pipe(
 )
 ```
 
-### Client Usage
-
-```typescript
-import { useQueue } from '@samuelho-dev/infra-queue/client/hooks'function MyComponent() {
-  const queue = useQueue()
-  // Use service in React component
-}
-```
-
 ### Testing Strategy
 
 1. **Use Test layer** - pure mock implementation for unit tests
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
+
+## For Future Claude Code Instances
+
+- [ ] Uses Context.Tag with static layers (Live, Test, Dev, Auto)
+- [ ] Redis layer available via `QueueRedisLayer`
+- [ ] Memory provider is included for testing
+- [ ] Use Effect.Schema for queue message serialization
+- [ ] `withJobEnqueuing` helper for type-safe job enqueuing

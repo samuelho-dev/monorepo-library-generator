@@ -18,6 +18,8 @@ import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
  * - Base event metadata schemas
  * - Aggregate metadata for event sourcing
  * - CRUD domain events (Created, Updated, Deleted)
+ * - Event union types and schema
+ * - Factory helper functions
  */
 export function generateEventsFile(options: ContractTemplateOptions) {
   const builder = new TypeScriptBuilder()
@@ -30,10 +32,7 @@ export function generateEventsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
-
-  // Import ID type from rpc-definitions (single source of truth for ID schema)
-  builder.addImports([{ from: "./rpc-definitions", imports: [`${className}Id`], isTypeOnly: true }])
+  builder.addImports([{ from: "effect", imports: ["Brand", "Schema"] }])
 
   // ============================================================================
   // SECTION 1: Base Event Metadata
@@ -79,72 +78,161 @@ export const EventMetadata = Schema.Struct({
 }).pipe(
   Schema.annotations({
     identifier: "EventMetadata",
-    title: "Event Metadata",
-    description: "Standard metadata included in all domain events"
+    title: "Event Metadata"
   })
-)`)
+)
 
-  // AggregateMetadata schema
+export type EventMetadata = typeof EventMetadata.Type`)
+
+  // ============================================================================
+  // SECTION 2: Aggregate Metadata
+  // ============================================================================
+
+  builder.addSectionComment("Aggregate Metadata")
+
+  // AggregateMetadata schema (prefixed with className)
   builder.addRaw(`/**
- * Aggregate metadata for events tied to an aggregate root
+ * ${className} aggregate metadata for event sourcing
+ *
+ * Includes aggregate root ID and version for optimistic concurrency.
  */
-export const AggregateMetadata = Schema.Struct({
+export const ${className}AggregateMetadata = Schema.Struct({
   /** Aggregate root identifier */
-  aggregateId: Schema.UUID.annotations({
-    title: "Aggregate ID",
-    description: "Identifier of the aggregate root this event belongs to"
-  }),
-  /** Aggregate type */
-  aggregateType: Schema.Literal("${className}").annotations({
-    title: "Aggregate Type",
-    description: "Type name of the aggregate root"
+  aggregateId: Schema.String.pipe(Schema.brand("${className}Id")).annotations({
+    title: "${className} ID",
+    description: "ID of the ${propertyName} aggregate root"
   }),
   /** Aggregate version for optimistic concurrency */
-  aggregateVersion: Schema.Number.pipe(
-    Schema.int(),
-    Schema.positive()
-  ).annotations({
+  aggregateVersion: Schema.Number.annotations({
     title: "Aggregate Version",
-    description: "Version number for optimistic concurrency control",
-    jsonSchema: { minimum: 1 }
+    description: "Version number for optimistic locking"
   })
 }).pipe(
   Schema.annotations({
-    identifier: "AggregateMetadata",
-    title: "Aggregate Metadata",
-    description: "Metadata for event sourcing and aggregate tracking"
+    identifier: "${className}AggregateMetadata",
+    title: "${className} Aggregate Metadata"
   })
-)`)
+)
+
+export type ${className}AggregateMetadata = typeof ${className}AggregateMetadata.Type`)
 
   // ============================================================================
-  // SECTION 2: CRUD Domain Events
+  // SECTION 3: CRUD Domain Events
   // ============================================================================
 
-  builder.addSectionComment("CRUD Domain Events")
+  builder.addSectionComment("${className} Domain Events")
 
-  // CreatedEvent
-  builder.addRaw(createCreatedEvent(className, propertyName))
+  // CreatedEvent with nested metadata/aggregate structure
+  builder.addRaw(`/**
+ * Event emitted when a new ${propertyName} is created
+ */
+export class ${className}CreatedEvent extends Schema.Class<${className}CreatedEvent>("${className}CreatedEvent")({
+  /** Event metadata */
+  metadata: EventMetadata,
+  /** Aggregate metadata */
+  aggregate: ${className}AggregateMetadata,
+  /** Event payload - the created ${propertyName} data */
+  payload: Schema.Struct({
+    // TODO: Add fields for the created ${propertyName}
+    id: Schema.String.pipe(Schema.brand("${className}Id")),
+    createdAt: Schema.Date
+  })
+}) { }`)
 
-  // UpdatedEvent
-  builder.addRaw(createUpdatedEvent(className, propertyName))
+  // UpdatedEvent with nested metadata/aggregate structure
+  builder.addRaw(`/**
+ * Event emitted when a ${propertyName} is updated
+ */
+export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEvent>("${className}UpdatedEvent")({
+  /** Event metadata */
+  metadata: EventMetadata,
+  /** Aggregate metadata */
+  aggregate: ${className}AggregateMetadata,
+  /** Event payload - the changes made */
+  payload: Schema.Struct({
+    // TODO: Add fields that were updated
+    id: Schema.String.pipe(Schema.brand("${className}Id")),
+    updatedAt: Schema.Date,
+    changes: Schema.Record({ key: Schema.String, value: Schema.Unknown })
+  })
+}) { }`)
 
-  // DeletedEvent
-  builder.addRaw(createDeletedEvent(className, propertyName))
+  // DeletedEvent with nested metadata/aggregate structure
+  builder.addRaw(`/**
+ * Event emitted when a ${propertyName} is deleted
+ */
+export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEvent>("${className}DeletedEvent")({
+  /** Event metadata */
+  metadata: EventMetadata,
+  /** Aggregate metadata */
+  aggregate: ${className}AggregateMetadata,
+  /** Event payload */
+  payload: Schema.Struct({
+    id: Schema.String.pipe(Schema.brand("${className}Id")),
+    deletedAt: Schema.Date
+  })
+}) { }`)
 
   // ============================================================================
-  // SECTION 3: Event Union Types
+  // SECTION 4: Event Union Types
   // ============================================================================
 
   builder.addSectionComment("Event Union Types")
 
   builder.addRaw(`/**
- * Union of all ${domainName} domain events
+ * Union of all ${className} domain events
  */
-export type ${className}DomainEvent =
+export type ${className}Event =
   | ${className}CreatedEvent
   | ${className}UpdatedEvent
   | ${className}DeletedEvent
-`)
+
+/**
+ * Schema for all ${className} events (for serialization)
+ */
+export const ${className}EventSchema = Schema.Union(
+  ${className}CreatedEvent,
+  ${className}UpdatedEvent,
+  ${className}DeletedEvent
+)`)
+
+  // ============================================================================
+  // SECTION 5: Event Factory Helpers
+  // ============================================================================
+
+  builder.addSectionComment("Event Factory Helpers")
+
+  builder.addRaw(`/**
+ * Create event metadata with defaults
+ */
+export function createEventMetadata(
+  eventType: string,
+  options?: {
+    correlationId?: string
+    causationId?: string
+  }
+) {
+  return {
+    eventType,
+    eventVersion: "1.0",
+    occurredAt: new Date(),
+    ...(options?.correlationId && { correlationId: options.correlationId }),
+    ...(options?.causationId && { causationId: options.causationId })
+  } satisfies EventMetadata
+}
+
+/**
+ * Create aggregate metadata
+ */
+export function createAggregateMetadata(
+  aggregateId: string,
+  aggregateVersion: number
+) {
+  return {
+    aggregateId: aggregateId as Brand.Branded<string, "${className}Id">,
+    aggregateVersion
+  } satisfies ${className}AggregateMetadata
+}`)
 
   return builder.toString()
 }
@@ -156,170 +244,8 @@ function createFileHeader(className: string, domainName: string, fileName: strin
   return `/**
  * ${className} Domain Events
  *
- * Defines domain events for ${domainName} operations.
- * Events are used for event-driven architecture and messaging.
+ * Defines all domain events for ${domainName} domain operations.
  *
- * @see https://effect.website/docs/schema/schema for Schema patterns
- * @module ${scope}/contract-${fileName}/events
+ * @generated This file was generated by monorepo-library-generator
  */`
-}
-
-/**
- * Create CreatedEvent class
- */
-function createCreatedEvent(className: string, propertyName: string) {
-  return `/**
- * Event emitted when a ${propertyName} is created
- */
-export class ${className}CreatedEvent extends Schema.Class<${className}CreatedEvent>(
-  "${className}CreatedEvent"
-)({
-  ...EventMetadata.fields,
-  ...AggregateMetadata.fields,
-  /** ${className} identifier */
-  ${propertyName}Id: Schema.UUID.annotations({
-    title: "${className} ID",
-    description: "ID of the ${propertyName} that was created"
-  }),
-  /** User who created the ${propertyName} */
-  createdBy: Schema.optional(Schema.UUID).annotations({
-    title: "Created By",
-    description: "UUID of the user who created this ${propertyName}"
-  })
-}) {
-  /**
-   * Create a new ${className}CreatedEvent
-   *
-   * Note: eventId and occurredAt are auto-generated if not provided
-   */
-  static create(params: {
-    ${propertyName}Id: ${className}Id
-    aggregateId?: string
-    createdBy?: string
-    correlationId?: string
-  }) {
-    return new ${className}CreatedEvent({
-      eventType: "${className}CreatedEvent",
-      eventVersion: "1.0",
-      aggregateId: params.aggregateId ?? params.${propertyName}Id,
-      aggregateType: "${className}",
-      aggregateVersion: 1,
-      ${propertyName}Id: params.${propertyName}Id,
-      ...(params.createdBy && { createdBy: params.createdBy }),
-      ...(params.correlationId && { correlationId: params.correlationId })
-    })
-  }
-}`
-}
-
-/**
- * Create UpdatedEvent class
- */
-function createUpdatedEvent(className: string, propertyName: string) {
-  return `/**
- * Event emitted when a ${propertyName} is updated
- */
-export class ${className}UpdatedEvent extends Schema.Class<${className}UpdatedEvent>(
-  "${className}UpdatedEvent"
-)({
-  ...EventMetadata.fields,
-  ...AggregateMetadata.fields,
-  /** ${className} identifier */
-  ${propertyName}Id: Schema.UUID.annotations({
-    title: "${className} ID",
-    description: "ID of the ${propertyName} that was updated"
-  }),
-  /** User who updated the ${propertyName} */
-  updatedBy: Schema.optional(Schema.UUID).annotations({
-    title: "Updated By",
-    description: "UUID of the user who updated this ${propertyName}"
-  }),
-  /** Fields that were changed (optional) */
-  changedFields: Schema.optional(Schema.Array(Schema.String)).annotations({
-    title: "Changed Fields",
-    description: "List of field names that were modified"
-  })
-}) {
-  /**
-   * Create a new ${className}UpdatedEvent
-   *
-   * Note: eventId and occurredAt are auto-generated if not provided
-   */
-  static create(params: {
-    ${propertyName}Id: ${className}Id
-    aggregateVersion: number
-    aggregateId?: string
-    updatedBy?: string
-    changedFields?: Array<string>
-    correlationId?: string
-  }) {
-    return new ${className}UpdatedEvent({
-      eventType: "${className}UpdatedEvent",
-      eventVersion: "1.0",
-      aggregateId: params.aggregateId ?? params.${propertyName}Id,
-      aggregateType: "${className}",
-      aggregateVersion: params.aggregateVersion,
-      ${propertyName}Id: params.${propertyName}Id,
-      ...(params.updatedBy && { updatedBy: params.updatedBy }),
-      ...(params.changedFields && { changedFields: params.changedFields }),
-      ...(params.correlationId && { correlationId: params.correlationId })
-    })
-  }
-}`
-}
-
-/**
- * Create DeletedEvent class
- */
-function createDeletedEvent(className: string, propertyName: string) {
-  return `/**
- * Event emitted when a ${propertyName} is deleted
- */
-export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEvent>(
-  "${className}DeletedEvent"
-)({
-  ...EventMetadata.fields,
-  ...AggregateMetadata.fields,
-  /** ${className} identifier */
-  ${propertyName}Id: Schema.UUID.annotations({
-    title: "${className} ID",
-    description: "ID of the ${propertyName} that was deleted"
-  }),
-  /** User who deleted the ${propertyName} */
-  deletedBy: Schema.optional(Schema.UUID).annotations({
-    title: "Deleted By",
-    description: "UUID of the user who deleted this ${propertyName}"
-  }),
-  /** Whether this was a soft delete */
-  isSoftDelete: Schema.optional(Schema.Boolean).annotations({
-    title: "Soft Delete",
-    description: "True if this was a soft delete (marked as deleted but not removed)"
-  })
-}) {
-  /**
-   * Create a new ${className}DeletedEvent
-   *
-   * Note: eventId and occurredAt are auto-generated if not provided
-   */
-  static create(params: {
-    ${propertyName}Id: ${className}Id
-    aggregateVersion: number
-    aggregateId?: string
-    deletedBy?: string
-    isSoftDelete?: boolean
-    correlationId?: string
-  }) {
-    return new ${className}DeletedEvent({
-      eventType: "${className}DeletedEvent",
-      eventVersion: "1.0",
-      aggregateId: params.aggregateId ?? params.${propertyName}Id,
-      aggregateType: "${className}",
-      aggregateVersion: params.aggregateVersion,
-      ${propertyName}Id: params.${propertyName}Id,
-      ...(params.deletedBy && { deletedBy: params.deletedBy }),
-      ...(params.isSoftDelete !== undefined && { isSoftDelete: params.isSoftDelete }),
-      ...(params.correlationId && { correlationId: params.correlationId })
-    })
-  }
-}`
 }

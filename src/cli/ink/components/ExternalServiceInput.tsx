@@ -7,14 +7,14 @@
  * @module monorepo-library-generator/cli/ink/components/ExternalServiceInput
  */
 
-import { Box, Text, useInput } from 'ink';
-import TextInput from 'ink-text-input';
+import { Box, Text, useInput } from 'ink'
+import TextInput from 'ink-text-input'
 import { useState } from 'react'
-import { useOperations } from '../bridge/operations-context';
+import { useOperations } from '../bridge/operations-context'
 import { colors } from '../theme/colors'
 
 interface ExternalServiceInputProps {
-  readonly onSubmit: (service: string) => void;
+  readonly onSubmit: (service: string) => void
 }
 
 export function ExternalServiceInput({ onSubmit }: ExternalServiceInputProps) {

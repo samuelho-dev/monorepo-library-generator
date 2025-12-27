@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/provider/templates/redis/pubsub
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Redis pubsub sub-service file
@@ -18,7 +18,7 @@ export function generateRedisPubSubServiceFile(options: ProviderTemplateOptions)
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "Redis PubSub Sub-Service",
+    title: 'Redis PubSub Sub-Service',
     description: `PubSub operations sub-service for the Redis provider.
 
 Implements the RedisPubSubClient interface for:
@@ -36,14 +36,14 @@ Used by infra-pubsub's Redis layer.`,
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] },
-    { from: "ioredis", imports: [{ name: "Redis", alias: "IORedis" }], isTypeOnly: true },
-    { from: "./errors", imports: ["RedisPubSubError"] },
-    { from: "./types", imports: ["RedisPubSubClient"], isTypeOnly: true }
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer'] },
+    { from: 'ioredis', imports: [{ name: 'Redis', alias: 'IORedis' }], isTypeOnly: true },
+    { from: './errors', imports: ['RedisPubSubError'] },
+    { from: './types', imports: ['RedisPubSubClient'], isTypeOnly: true }
   ])
 
   // Factory function
-  builder.addSectionComment("PubSub Sub-Service Factory")
+  builder.addSectionComment('PubSub Sub-Service Factory')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -152,7 +152,7 @@ export function makePubSubClient(pubClient: IORedis, subClient: IORedis) {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**

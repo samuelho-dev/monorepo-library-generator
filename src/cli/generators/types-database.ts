@@ -11,10 +11,10 @@
  * @module cli/generators/types-database
  */
 
-import { Console, Effect } from "effect"
-import { execSync } from "node:child_process"
-import { createEffectFsAdapter } from "../../utils/filesystem"
-import { WORKSPACE_CONFIG } from "../../utils/workspace-config"
+import { execSync } from 'node:child_process'
+import { Console, Effect } from 'effect'
+import { createEffectFsAdapter } from '../../utils/filesystem'
+import { WORKSPACE_CONFIG } from '../../utils/workspace-config'
 
 /**
  * Types Database Generator Options
@@ -39,10 +39,10 @@ export interface TypesDatabaseOptions {
  * Then runs prisma generate to populate src/lib/types.ts and src/lib/enums.ts
  */
 export function generateTypesDatabase(options: TypesDatabaseOptions = {}) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const scope = WORKSPACE_CONFIG.getScope()
     const packageName = `${scope}/types-database`
-    const projectRoot = "libs/types/database"
+    const projectRoot = 'libs/types/database'
     const sourceRoot = `${projectRoot}/src`
     const skipGenerate = options.skipGenerate ?? false
 
@@ -58,21 +58,21 @@ export function generateTypesDatabase(options: TypesDatabaseOptions = {}) {
     // 1. Generate package.json
     const packageJson = {
       name: packageName,
-      version: "0.0.1",
-      type: "module",
-      main: "./src/index.ts",
-      types: "./src/index.ts",
+      version: '0.0.1',
+      type: 'module',
+      main: './src/index.ts',
+      types: './src/index.ts',
       exports: {
-        ".": {
-          import: "./src/index.ts",
-          types: "./src/index.ts"
+        '.': {
+          import: './src/index.ts',
+          types: './src/index.ts'
         }
       },
       dependencies: {
-        kysely: "catalog:"
+        kysely: 'catalog:'
       },
       peerDependencies: {
-        kysely: "^0.27.0"
+        kysely: '^0.27.0'
       }
     }
     yield* adapter.writeFile(
@@ -82,16 +82,16 @@ export function generateTypesDatabase(options: TypesDatabaseOptions = {}) {
 
     // 2. Generate tsconfig.json
     const tsconfig = {
-      extends: "../../../tsconfig.base.json",
+      extends: '../../../tsconfig.base.json',
       compilerOptions: {
-        outDir: "./dist",
-        rootDir: "./src",
+        outDir: './dist',
+        rootDir: './src',
         declaration: true,
         declarationMap: true,
         composite: true
       },
-      include: ["src/**/*.ts"],
-      exclude: ["node_modules", "dist"]
+      include: ['src/**/*.ts'],
+      exclude: ['node_modules', 'dist']
     }
     yield* adapter.writeFile(
       `${workspaceRoot}/${projectRoot}/tsconfig.json`,
@@ -123,10 +123,7 @@ export type {
 // Re-export enums (placeholder - add enum types here after prisma generate)
 export {} from "./lib/enums"
 `
-    yield* adapter.writeFile(
-      `${workspaceRoot}/${sourceRoot}/index.ts`,
-      indexContent
-    )
+    yield* adapter.writeFile(`${workspaceRoot}/${sourceRoot}/index.ts`, indexContent)
 
     // 4. Generate placeholder types.ts (will be overwritten by prisma generate)
     // Include User types for downstream libraries (contract, data-access, feature)
@@ -187,10 +184,7 @@ export interface DB {
  */
 export type Json = ColumnType<unknown, string, string>
 `
-    yield* adapter.writeFile(
-      `${workspaceRoot}/${sourceRoot}/lib/types.ts`,
-      placeholderTypes
-    )
+    yield* adapter.writeFile(`${workspaceRoot}/${sourceRoot}/lib/types.ts`, placeholderTypes)
 
     // 5. Generate placeholder enums.ts
     const placeholderEnums = `/**
@@ -203,10 +197,7 @@ export type Json = ColumnType<unknown, string, string>
 // Enums will be generated here by prisma-effect-kysely
 export {};
 `
-    yield* adapter.writeFile(
-      `${workspaceRoot}/${sourceRoot}/lib/enums.ts`,
-      placeholderEnums
-    )
+    yield* adapter.writeFile(`${workspaceRoot}/${sourceRoot}/lib/enums.ts`, placeholderEnums)
 
     // 6. Generate CLAUDE.md
     const claudeDoc = `# ${packageName}
@@ -264,7 +255,7 @@ generator prisma_effect_kysely {
 
       yield* Effect.try(() => {
         execSync(`pnpm prisma generate --schema=prisma`, {
-          stdio: "inherit",
+          stdio: 'inherit',
           cwd: process.cwd()
         })
       }).pipe(
@@ -279,17 +270,19 @@ generator prisma_effect_kysely {
     // 8. Format generated code
     yield* Effect.try(() => {
       execSync(`pnpm exec eslint ${projectRoot}/src --ext .ts --fix`, {
-        stdio: "ignore",
+        stdio: 'ignore',
         cwd: process.cwd()
       })
     }).pipe(
       Effect.catchAll((error) =>
-        Effect.logWarning(`Formatting skipped: ${error instanceof Error ? error.message : String(error)}`)
+        Effect.logWarning(
+          `Formatting skipped: ${error instanceof Error ? error.message : String(error)}`
+        )
       )
     )
 
     return {
-      projectName: "types-database",
+      projectName: 'types-database',
       projectRoot,
       packageName,
       sourceRoot,

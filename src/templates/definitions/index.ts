@@ -7,32 +7,16 @@
  */
 
 // Contract templates
-export {
-  contractErrorsTemplate,
-  contractEventsTemplate,
-  contractPortsTemplate
-} from "./contract"
+export { contractErrorsTemplate, contractEventsTemplate, contractPortsTemplate } from './contract'
 
 // Data-access templates
-export {
-  dataAccessErrorsTemplate,
-  dataAccessLayersTemplate
-} from "./data-access"
+export { dataAccessErrorsTemplate, dataAccessLayersTemplate } from './data-access'
 
 // Feature templates
-export {
-  featureLayersTemplate,
-  featureServiceTemplate
-} from "./feature"
+export { featureLayersTemplate, featureServiceTemplate } from './feature'
 
 // Infra templates
-export {
-  infraErrorsTemplate,
-  infraServiceTemplate
-} from "./infra"
+export { infraErrorsTemplate, infraServiceTemplate } from './infra'
 
 // Provider templates
-export {
-  providerErrorsTemplate,
-  providerServiceTemplate
-} from "./provider"
+export { providerErrorsTemplate, providerServiceTemplate } from './provider'

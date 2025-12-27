@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/templates/ast/effect-builders
  */
 
-import { VariableDeclarationKind } from "ts-morph"
-import type { ClassDeclaration, SourceFile } from "ts-morph"
+import type { ClassDeclaration, SourceFile } from 'ts-morph'
+import { VariableDeclarationKind } from 'ts-morph'
 import type {
   ContextTagConfig,
   LayerConfig,
@@ -16,7 +16,7 @@ import type {
   SchemaConfig,
   SchemaFieldDefinition,
   TaggedErrorConfig
-} from "../core/types"
+} from '../core/types'
 
 // ============================================================================
 // Context.Tag Builder
@@ -41,14 +41,9 @@ import type {
  * }
  * ```
  */
-export function addContextTagClass(
-  sourceFile: SourceFile,
-  config: ContextTagConfig
-): ClassDeclaration {
+export function addContextTagClass(sourceFile: SourceFile, config: ContextTagConfig) {
   // Build interface body
-  const interfaceBody = config.methods
-    .map((m) => formatMethodSignature(m))
-    .join("\n    ")
+  const interfaceBody = config.methods.map((m) => formatMethodSignature(m)).join('\n    ')
 
   // Build extends clause
   const extendsClause = `Context.Tag("${config.tagIdentifier}")<
@@ -85,12 +80,10 @@ export function addContextTagClass(
 /**
  * Format a method signature for interface body
  */
-function formatMethodSignature(method: MethodSignature): string {
-  const params = method.params
-    .map((p) => `${p.name}${p.optional ? "?" : ""}: ${p.type}`)
-    .join(", ")
+function formatMethodSignature(method: MethodSignature) {
+  const params = method.params.map((p) => `${p.name}${p.optional ? '?' : ''}: ${p.type}`).join(', ')
 
-  const jsdocComment = method.jsdoc ? `/** ${method.jsdoc} */\n    ` : ""
+  const jsdocComment = method.jsdoc ? `/** ${method.jsdoc} */\n    ` : ''
 
   return `${jsdocComment}readonly ${method.name}: (${params}) => ${method.returnType}`
 }
@@ -98,11 +91,9 @@ function formatMethodSignature(method: MethodSignature): string {
 /**
  * Add a static layer to a class
  */
-function addStaticLayer(classDecl: ClassDeclaration, layer: LayerConfig): void {
-  const hasEscape = layer.implementation.includes("${")
-  const implementation = hasEscape
-    ? layer.implementation
-    : layer.implementation
+function addStaticLayer(classDecl: ClassDeclaration, layer: LayerConfig) {
+  const hasEscape = layer.implementation.includes('${')
+  const implementation = hasEscape ? layer.implementation : layer.implementation
 
   classDecl.addProperty({
     name: layer.name,
@@ -128,14 +119,11 @@ function addStaticLayer(classDecl: ClassDeclaration, layer: LayerConfig): void {
  * }>() {}
  * ```
  */
-export function addTaggedErrorClass(
-  sourceFile: SourceFile,
-  config: TaggedErrorConfig
-): ClassDeclaration {
+export function addTaggedErrorClass(sourceFile: SourceFile, config: TaggedErrorConfig) {
   // Build fields type
   const fieldsType = config.fields
-    .map((f) => `readonly ${f.name}${f.optional ? "?" : ""}: ${f.type}`)
-    .join("\n  ")
+    .map((f) => `readonly ${f.name}${f.optional ? '?' : ''}: ${f.type}`)
+    .join('\n  ')
 
   // Build extends clause
   const extendsClause = `Data.TaggedError("${config.tagName}")<{
@@ -175,36 +163,33 @@ export function addTaggedErrorClass(
  * })
  * ```
  */
-export function addSchemaDefinition(
-  sourceFile: SourceFile,
-  config: SchemaConfig
-): void {
+export function addSchemaDefinition(sourceFile: SourceFile, config: SchemaConfig) {
   let initializer: string
 
   switch (config.schemaType) {
-    case "Struct":
+    case 'Struct':
       initializer = buildStructSchema(config)
       break
-    case "Class":
+    case 'Class':
       initializer = buildClassSchema(config)
       break
-    case "String":
-      initializer = buildBrandedSchema("String", config)
+    case 'String':
+      initializer = buildBrandedSchema('String', config)
       break
-    case "Number":
-      initializer = buildBrandedSchema("Number", config)
+    case 'Number':
+      initializer = buildBrandedSchema('Number', config)
       break
-    case "Boolean":
-      initializer = "Schema.Boolean"
+    case 'Boolean':
+      initializer = 'Schema.Boolean'
       break
-    case "Union":
+    case 'Union':
       initializer = buildUnionSchema(config)
       break
-    case "TaggedUnion":
+    case 'TaggedUnion':
       initializer = buildTaggedUnionSchema(config)
       break
     default:
-      initializer = "Schema.Unknown"
+      initializer = 'Schema.Unknown'
   }
 
   const statement = sourceFile.addVariableStatement({
@@ -226,35 +211,31 @@ export function addSchemaDefinition(
   }
 }
 
-function buildStructSchema(config: SchemaConfig): string {
+function buildStructSchema(config: SchemaConfig) {
   if (!config.fields || config.fields.length === 0) {
-    return "Schema.Struct({})"
+    return 'Schema.Struct({})'
   }
 
-  const fields = config.fields
-    .map((f) => formatSchemaField(f))
-    .join(",\n  ")
+  const fields = config.fields.map((f) => formatSchemaField(f)).join(',\n  ')
 
   return `Schema.Struct({
   ${fields}
 })`
 }
 
-function buildClassSchema(config: SchemaConfig): string {
+function buildClassSchema(config: SchemaConfig) {
   if (!config.fields || config.fields.length === 0) {
     return `Schema.Class<${config.name}>("${config.name}")({})`
   }
 
-  const fields = config.fields
-    .map((f) => formatSchemaField(f))
-    .join(",\n  ")
+  const fields = config.fields.map((f) => formatSchemaField(f)).join(',\n  ')
 
   return `Schema.Class<${config.name}>("${config.name}")({
   ${fields}
 })`
 }
 
-function buildBrandedSchema(baseType: string, config: SchemaConfig): string {
+function buildBrandedSchema(baseType: string, config: SchemaConfig) {
   let schema = `Schema.${baseType}`
 
   if (config.brand) {
@@ -264,35 +245,33 @@ function buildBrandedSchema(baseType: string, config: SchemaConfig): string {
   if (config.annotations) {
     const annotationEntries = Object.entries(config.annotations)
       .map(([key, value]) => `${key}: "${value}"`)
-      .join(", ")
+      .join(', ')
     schema = `${schema}.pipe(Schema.annotations({ ${annotationEntries} }))`
   }
 
   return schema
 }
 
-function buildUnionSchema(config: SchemaConfig): string {
+function buildUnionSchema(config: SchemaConfig) {
   if (!config.fields || config.fields.length === 0) {
-    return "Schema.Never"
+    return 'Schema.Never'
   }
 
-  const members = config.fields.map((f) => f.schema).join(", ")
+  const members = config.fields.map((f) => f.schema).join(', ')
   return `Schema.Union(${members})`
 }
 
-function buildTaggedUnionSchema(config: SchemaConfig): string {
+function buildTaggedUnionSchema(config: SchemaConfig) {
   if (!config.fields || config.fields.length === 0) {
-    return "Schema.Never"
+    return 'Schema.Never'
   }
 
-  const members = config.fields.map((f) => f.schema).join(", ")
+  const members = config.fields.map((f) => f.schema).join(', ')
   return `Schema.Union(${members})`
 }
 
-function formatSchemaField(field: SchemaFieldDefinition): string {
-  const schema = field.optional
-    ? `Schema.optional(${field.schema})`
-    : field.schema
+function formatSchemaField(field: SchemaFieldDefinition) {
+  const schema = field.optional ? `Schema.optional(${field.schema})` : field.schema
 
   return `${field.name}: ${schema}`
 }
@@ -304,11 +283,8 @@ function formatSchemaField(field: SchemaFieldDefinition): string {
 /**
  * Add Effect imports to source file
  */
-export function addEffectImports(
-  sourceFile: SourceFile,
-  items: ReadonlyArray<string>
-): void {
-  const existingImport = sourceFile.getImportDeclaration("effect")
+export function addEffectImports(sourceFile: SourceFile, items: ReadonlyArray<string>) {
+  const existingImport = sourceFile.getImportDeclaration('effect')
 
   if (existingImport) {
     // Add to existing import
@@ -323,7 +299,7 @@ export function addEffectImports(
   } else {
     // Create new import
     sourceFile.addImportDeclaration({
-      moduleSpecifier: "effect",
+      moduleSpecifier: 'effect',
       namedImports: [...items]
     })
   }
@@ -332,11 +308,7 @@ export function addEffectImports(
 /**
  * Add a type-only import to source file
  */
-export function addTypeImport(
-  sourceFile: SourceFile,
-  from: string,
-  items: ReadonlyArray<string>
-): void {
+export function addTypeImport(sourceFile: SourceFile, from: string, items: ReadonlyArray<string>) {
   sourceFile.addImportDeclaration({
     moduleSpecifier: from,
     namedImports: items.map((name) => ({ name })),
@@ -347,11 +319,7 @@ export function addTypeImport(
 /**
  * Add a regular import to source file
  */
-export function addImport(
-  sourceFile: SourceFile,
-  from: string,
-  items: ReadonlyArray<string>
-): void {
+export function addImport(sourceFile: SourceFile, from: string, items: ReadonlyArray<string>) {
   sourceFile.addImportDeclaration({
     moduleSpecifier: from,
     namedImports: [...items]
@@ -365,10 +333,7 @@ export function addImport(
 /**
  * Add a section comment to source file
  */
-export function addSectionComment(
-  sourceFile: SourceFile,
-  title: string
-): void {
+export function addSectionComment(sourceFile: SourceFile, title: string) {
   const comment = `// ============================================================================
 // ${title}
 // ============================================================================`
@@ -379,10 +344,7 @@ export function addSectionComment(
 /**
  * Add a JSDoc comment block
  */
-export function addJsDocComment(
-  sourceFile: SourceFile,
-  description: string
-): void {
+export function addJsDocComment(sourceFile: SourceFile, description: string) {
   sourceFile.addStatements(`/**\n * ${description}\n */`)
 }
 
@@ -395,7 +357,7 @@ export function addConstExport(
   type: string | undefined,
   value: string,
   jsdoc?: string
-): void {
+) {
   const statement = sourceFile.addVariableStatement({
     isExported: true,
     declarationKind: VariableDeclarationKind.Const,
@@ -416,12 +378,7 @@ export function addConstExport(
 /**
  * Add a type alias export
  */
-export function addTypeAlias(
-  sourceFile: SourceFile,
-  name: string,
-  type: string,
-  jsdoc?: string
-): void {
+export function addTypeAlias(sourceFile: SourceFile, name: string, type: string, jsdoc?: string) {
   const typeAlias = sourceFile.addTypeAlias({
     name,
     isExported: true,

@@ -1,3 +1,4 @@
+import type { Bucket, FileObject, FileOptions, TransformOptions } from "@supabase/storage-js"
 import { Schema } from "effect"
 
 /**
@@ -10,7 +11,6 @@ All schemas are composable and can be extended for domain-specific needs.
  *
  * @module @samuelho-dev/provider-supabase/types
  */
-
 
 // ============================================================================
 // Configuration
@@ -120,7 +120,6 @@ export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>
  * with aliases for consistent naming across the provider.
  */
 export type { Bucket, FileObject, FileOptions, SearchOptions, TransformOptions } from "@supabase/storage-js"
-import type { Bucket, FileObject, FileOptions, TransformOptions } from "@supabase/storage-js"
 
 /**
  * Type alias for storage bucket (matches Bucket from SDK)

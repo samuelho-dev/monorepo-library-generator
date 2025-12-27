@@ -7,12 +7,12 @@
  */
 
 import { Box, Text } from 'ink'
-import type { WizardState, WizardStep } from '../state/types';
+import type { WizardState, WizardStep } from '../state/types'
 import { colors } from '../theme/colors'
 
 interface StepInfo {
-  readonly step: WizardStep;
-  readonly label: string;
+  readonly step: WizardStep
+  readonly label: string
 }
 
 /**
@@ -22,7 +22,7 @@ const STANDARD_STEPS: readonly StepInfo[] = [
   { step: 'select-type', label: 'Select library type' },
   { step: 'enter-name', label: 'Enter library name' },
   { step: 'configure-options', label: 'Configure options' },
-  { step: 'preview', label: 'Review & confirm' },
+  { step: 'preview', label: 'Review & confirm' }
 ]
 
 /**
@@ -33,31 +33,31 @@ const PROVIDER_STEPS: readonly StepInfo[] = [
   { step: 'enter-name', label: 'Enter library name' },
   { step: 'enter-external-service', label: 'Enter external service' },
   { step: 'configure-options', label: 'Configure options' },
-  { step: 'preview', label: 'Review & confirm' },
+  { step: 'preview', label: 'Review & confirm' }
 ]
 
 interface StepIndicatorProps {
-  readonly state: WizardState;
+  readonly state: WizardState
 }
 
 export function StepIndicator({ state }: StepIndicatorProps) {
-  const steps = state.libraryType === 'provider' ? PROVIDER_STEPS : STANDARD_STEPS;
+  const steps = state.libraryType === 'provider' ? PROVIDER_STEPS : STANDARD_STEPS
   const currentIndex = steps.findIndex((s) => s.step === state.currentStep)
-  const totalSteps = steps.length;
+  const totalSteps = steps.length
   const displayStep = currentIndex >= 0 ? currentIndex + 1 : 1
 
   // Create progress bar
-  const barWidth = 10;
+  const barWidth = 10
   const filled = Math.round((displayStep / totalSteps) * barWidth)
   const empty = barWidth - filled
 
   const filledBar = '='.repeat(Math.max(0, filled - 1))
-  const pointer = filled > 0 ? '>' : '';
+  const pointer = filled > 0 ? '>' : ''
   const emptyBar = ' '.repeat(Math.max(0, empty))
   const progressBar = `[${filledBar}${pointer}${emptyBar}]`
 
   // Get current step label
-  const currentStepInfo = steps[currentIndex];
+  const currentStepInfo = steps[currentIndex]
   const stepLabel = currentStepInfo?.label ?? state.currentStep
 
   return (

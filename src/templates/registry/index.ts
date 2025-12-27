@@ -6,6 +6,27 @@
  * @module monorepo-library-generator/templates/registry
  */
 
+export type { GeneratorError } from './generator'
+// Generator
+export {
+  ContextValidationError,
+  GenerationError,
+  generate,
+  generateDomain,
+  generateFile,
+  generateLibrary,
+  TemplateNotFoundError
+} from './generator'
+// Registry
+export {
+  createTemplateRegistry,
+  getAvailableFileTypes,
+  getRegisteredLibraryTypes,
+  getTemplate,
+  getTemplateRegistry,
+  hasTemplate,
+  validateContext
+} from './registry'
 // Types
 export type {
   FileType,
@@ -17,27 +38,4 @@ export type {
   TemplateMetadata,
   TemplateRegistry,
   TemplateRegistryEntry
-} from "./types"
-
-// Registry
-export {
-  createTemplateRegistry,
-  getAvailableFileTypes,
-  getRegisteredLibraryTypes,
-  getTemplate,
-  getTemplateRegistry,
-  hasTemplate,
-  validateContext
-} from "./registry"
-
-// Generator
-export {
-  ContextValidationError,
-  generate,
-  generateDomain,
-  generateFile,
-  generateLibrary,
-  GenerationError,
-  TemplateNotFoundError
-} from "./generator"
-export type { GeneratorError } from "./generator"
+} from './types'

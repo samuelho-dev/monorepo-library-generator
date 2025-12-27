@@ -13,6 +13,26 @@
  * @module monorepo-library-generator/infrastructure
  */
 
+// Code Validation - Pattern-based validation for generated code
+export {
+  aggregateResults,
+  CodeValidationError,
+  type CodeValidationResult,
+  type CodeValidationRule,
+  type CodeViolation,
+  classNamingRule,
+  contextImportRule,
+  createCodeRule,
+  dataImportRule,
+  defaultCodeRules,
+  effectImportRule,
+  layerOrderRule,
+  schemaImportRule,
+  taggedErrorReadonlyRule,
+  validateGeneratedCode,
+  validateGeneratedFiles,
+  yieldStarRequiredRule
+} from './code-validation'
 // Execution - Generator execution pipeline
 export {
   type CoreGeneratorFn,
@@ -21,8 +41,7 @@ export {
   GeneratorExecutionError,
   type GeneratorExecutor,
   type GeneratorResult
-} from "./execution"
-
+} from './execution'
 // Metadata - Library metadata computation
 export {
   computeMetadata,
@@ -30,8 +49,22 @@ export {
   type LibraryMetadata,
   type LibraryType,
   type MetadataInput
-} from "./metadata"
-
+} from './metadata'
+// Metrics - Generator observability
+export {
+  filesGenerated,
+  generatorDuration,
+  generatorErrors,
+  generatorExecutions,
+  infrastructureDuration,
+  taggedFilesGenerated,
+  taggedGeneratorDuration,
+  taggedGeneratorError,
+  taggedGeneratorExecution,
+  taggedTemplateDuration,
+  templateCompilations,
+  templateDuration
+} from './metrics'
 // Output - Result formatting for different interfaces
 export {
   formatErrorResponse,
@@ -39,8 +72,7 @@ export {
   formatValidationError,
   type McpResponse,
   type NxGeneratorCallback
-} from "./output"
-
+} from './output'
 // Validation - Input validation schemas
 export {
   type ContractInput,
@@ -58,8 +90,7 @@ export {
   InfraInputSchema,
   type ProviderInput,
   ProviderInputSchema
-} from "./validation"
-
+} from './validation'
 // Workspace - Workspace context detection
 export {
   createWorkspaceContext,
@@ -70,41 +101,4 @@ export {
   WorkspaceContextSchema,
   WorkspaceDetectionError,
   type WorkspaceType
-} from "./workspace"
-
-// Metrics - Generator observability
-export {
-  filesGenerated,
-  generatorDuration,
-  generatorErrors,
-  generatorExecutions,
-  infrastructureDuration,
-  taggedFilesGenerated,
-  taggedGeneratorDuration,
-  taggedGeneratorError,
-  taggedGeneratorExecution,
-  taggedTemplateDuration,
-  templateCompilations,
-  templateDuration
-} from "./metrics"
-
-// Code Validation - Pattern-based validation for generated code
-export {
-  aggregateResults,
-  classNamingRule,
-  CodeValidationError,
-  type CodeValidationResult,
-  type CodeValidationRule,
-  type CodeViolation,
-  contextImportRule,
-  createCodeRule,
-  dataImportRule,
-  defaultCodeRules,
-  effectImportRule,
-  layerOrderRule,
-  schemaImportRule,
-  taggedErrorReadonlyRule,
-  validateGeneratedCode,
-  validateGeneratedFiles,
-  yieldStarRequiredRule
-} from "./code-validation"
+} from './workspace'

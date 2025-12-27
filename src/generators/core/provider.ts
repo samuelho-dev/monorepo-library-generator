@@ -13,24 +13,32 @@
  * @module monorepo-library-generator/generators/core/provider-generator-core
  */
 
-import { Effect } from "effect"
-import type { PlatformType } from "../../utils/build"
-import { type FileSystemAdapter, injectEnvVars } from "../../utils/filesystem"
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates"
-import type { Platform, ProviderTemplateOptions } from "../../utils/types"
+import { Effect } from 'effect'
+import type { PlatformType } from '../../utils/build'
+import { type FileSystemAdapter, injectEnvVars } from '../../utils/filesystem'
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates'
+import type { Platform, ProviderTemplateOptions } from '../../utils/types'
 import {
   generateErrorsFile,
   generateIndexFile,
   generateServiceSpecFile,
   generateTypesFile,
   generateValidationFile
-} from "../provider/templates/index"
+} from '../provider/templates/index'
 import {
   generateKyselyErrorsFile,
   generateKyselyIndexFile,
   generateKyselyInterfaceFile,
   generateKyselyProviderServiceFile
-} from "../provider/templates/kysely"
+} from '../provider/templates/kysely'
+import {
+  generateOtelErrorsFile,
+  generateOtelIndexFile,
+  generateOtelServiceFile,
+  generateOtelSpecFile,
+  generateOtelTypesFile,
+  generateOtelTypesOnlyFile
+} from '../provider/templates/opentelemetry/index'
 import {
   generateRedisCacheServiceFile,
   generateRedisErrorsFile,
@@ -41,8 +49,8 @@ import {
   generateRedisSpecFile,
   generateRedisTypesFile,
   generateRedisTypesOnlyFile
-} from "../provider/templates/redis/index"
-import { generateProviderServiceFile } from "../provider/templates/service/index"
+} from '../provider/templates/redis/index'
+import { generateProviderServiceFile } from '../provider/templates/service/index'
 import {
   generateSupabaseAuthServiceFile,
   generateSupabaseClientServiceFile,
@@ -51,15 +59,7 @@ import {
   generateSupabaseSpecFile,
   generateSupabaseStorageServiceFile,
   generateSupabaseTypesFile
-} from "../provider/templates/supabase/index"
-import {
-  generateOtelErrorsFile,
-  generateOtelIndexFile,
-  generateOtelServiceFile,
-  generateOtelSpecFile,
-  generateOtelTypesFile,
-  generateOtelTypesOnlyFile
-} from "../provider/templates/opentelemetry/index"
+} from '../provider/templates/supabase/index'
 
 /**
  * Provider Generator Core Options
@@ -89,10 +89,10 @@ export interface ProviderCoreOptions {
   readonly workspaceRoot?: string
   readonly externalService: string
   readonly platform: PlatformType
-  readonly providerType?: "sdk" | "cli" | "http" | "graphql"
+  readonly providerType?: 'sdk' | 'cli' | 'http' | 'graphql'
   readonly cliCommand?: string
   readonly baseUrl?: string
-  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
+  readonly authType?: 'bearer' | 'apikey' | 'oauth' | 'basic' | 'none'
 }
 
 /**
@@ -105,7 +105,7 @@ export interface GeneratorResult {
   readonly projectRoot: string
   readonly sourceRoot: string
   readonly packageName: string
-  readonly filesGenerated: Array<string>
+  readonly filesGenerated: string[]
 }
 
 /**
@@ -122,13 +122,13 @@ export interface GeneratorResult {
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
 export function generateProviderCore(adapter: FileSystemAdapter, options: ProviderCoreOptions) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     // Map PlatformType to Platform for template options (internal mapping)
     const platformMapping: Record<PlatformType, Platform> = {
-      node: "server",
-      browser: "client",
-      edge: "edge",
-      universal: "universal"
+      node: 'server',
+      browser: 'client',
+      edge: 'edge',
+      universal: 'universal'
     }
 
     // Assemble template options from pre-computed metadata
@@ -138,31 +138,32 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: "provider",
+      libraryType: 'provider',
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       offsetFromRoot: options.offsetFromRoot,
       description: options.description,
-      tags: options.tags.split(","),
+      tags: options.tags.split(','),
       externalService: options.externalService,
       platforms: [platformMapping[options.platform]],
-      providerType: options.providerType || "sdk",
+      providerType: options.providerType || 'sdk',
       ...(options.cliCommand && { cliCommand: options.cliCommand }),
       ...(options.baseUrl && { baseUrl: options.baseUrl }),
       ...(options.authType && { authType: options.authType })
     }
 
     // Generate all domain files
-    const filesGenerated: Array<string> = []
+    const filesGenerated: string[] = []
     const sourceLibPath = `${options.sourceRoot}/lib`
 
     // Detect if this is a special provider with dedicated templates
-    const isKyselyProvider = options.name === "kysely" || options.externalService === "Kysely"
-    const isSupabaseProvider = options.name === "supabase" || options.externalService === "Supabase"
-    const isRedisProvider = options.name === "redis" || options.externalService === "Redis"
-    const isOpenTelemetryProvider = options.name === "opentelemetry" || options.externalService === "OpenTelemetry"
+    const isKyselyProvider = options.name === 'kysely' || options.externalService === 'Kysely'
+    const isSupabaseProvider = options.name === 'supabase' || options.externalService === 'Supabase'
+    const isRedisProvider = options.name === 'redis' || options.externalService === 'Redis'
+    const isOpenTelemetryProvider =
+      options.name === 'opentelemetry' || options.externalService === 'OpenTelemetry'
 
     // Generate barrel exports - special providers use specialized templates
     yield* adapter.writeFile(
@@ -170,12 +171,12 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
       isKyselyProvider
         ? generateKyselyIndexFile(templateOptions)
         : isSupabaseProvider
-        ? generateSupabaseIndexFile(templateOptions)
-        : isRedisProvider
-        ? generateRedisIndexFile(templateOptions)
-        : isOpenTelemetryProvider
-        ? generateOtelIndexFile(templateOptions)
-        : generateIndexFile(templateOptions)
+          ? generateSupabaseIndexFile(templateOptions)
+          : isRedisProvider
+            ? generateRedisIndexFile(templateOptions)
+            : isOpenTelemetryProvider
+              ? generateOtelIndexFile(templateOptions)
+              : generateIndexFile(templateOptions)
     )
     filesGenerated.push(`${options.sourceRoot}/index.ts`)
 
@@ -184,21 +185,28 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
     const workspaceRoot = adapter.getWorkspaceRoot()
     if (isRedisProvider) {
       const redisTypesOnlyContent = generateRedisTypesOnlyFile(templateOptions)
-      yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, redisTypesOnlyContent)
+      yield* adapter.writeFile(
+        `${workspaceRoot}/${options.sourceRoot}/types.ts`,
+        redisTypesOnlyContent
+      )
     } else if (isOpenTelemetryProvider) {
       const otelTypesOnlyContent = generateOtelTypesOnlyFile(templateOptions)
-      yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, otelTypesOnlyContent)
+      yield* adapter.writeFile(
+        `${workspaceRoot}/${options.sourceRoot}/types.ts`,
+        otelTypesOnlyContent
+      )
     } else {
       const typesOnlyOptions: TypesOnlyExportOptions = {
-        libraryType: "provider",
+        libraryType: 'provider',
         className: options.className,
         fileName: options.fileName,
         packageName: options.packageName,
-        platform: options.platform === "node"
-          ? "server"
-          : options.platform === "browser"
-          ? "client"
-          : "universal"
+        platform:
+          options.platform === 'node'
+            ? 'server'
+            : options.platform === 'browser'
+              ? 'client'
+              : 'universal'
       }
       const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
       yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, typesOnlyContent)
@@ -206,12 +214,12 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
     filesGenerated.push(`${options.sourceRoot}/types.ts`)
 
     // Generate CLAUDE.md with bundle optimization guidance
-    const providerType = options.providerType || "sdk"
+    const providerType = options.providerType || 'sdk'
 
     // Generate provider-type-specific documentation
-    let claudeDoc = ""
+    let claudeDoc = ''
 
-    if (providerType === "cli") {
+    if (providerType === 'cli') {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -222,7 +230,7 @@ This is an AI-optimized reference for ${templateOptions.externalService}, a CLI 
 
 ## Provider Type: CLI Wrapper
 
-This provider wraps the \`${options.cliCommand || "cli-command"}\` command-line tool using Effect's Command API.
+This provider wraps the \`${options.cliCommand || 'cli-command'}\` command-line tool using Effect's Command API.
 
 ## Architecture
 
@@ -263,7 +271,7 @@ import { ${templateOptions.className} } from '${templateOptions.packageName}'Eff
    - Static Auto layer auto-selects Test/Dev/Live based on NODE_ENV
    - No actual CLI execution in tests
 `
-    } else if (providerType === "http") {
+    } else if (providerType === 'http') {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -302,7 +310,7 @@ import { ${templateOptions.className} } from '${templateOptions.packageName}'Eff
 
 1. **Configure HTTP Client** (\`lib/service.ts\`):
    - Base URL configured via ${templateOptions.className}Config
-   - Authentication via ${options.authType || "bearer"} token
+   - Authentication via ${options.authType || 'bearer'} token
    - Retry policies and timeouts configurable
 
 2. **Define Resource Schema** (\`lib/types.ts\`):
@@ -319,7 +327,7 @@ import { ${templateOptions.className} } from '${templateOptions.packageName}'Eff
    - NetworkError: Connection failures
    - RateLimitError: Rate limiting with retry-after
 `
-    } else if (providerType === "graphql") {
+    } else if (providerType === 'graphql') {
       claudeDoc = `# ${templateOptions.packageName}
 
 ${templateOptions.description}
@@ -370,7 +378,7 @@ import { ${templateOptions.className} } from '${templateOptions.packageName}'Eff
 
 1. **Configure GraphQL Client** (\`lib/service.ts\`):
    - GraphQL endpoint configured via ${templateOptions.className}Config
-   - Authentication via ${options.authType || "bearer"} token
+   - Authentication via ${options.authType || 'bearer'} token
    - Retry policies and timeouts configurable
 
 2. **Define Schema Types** (\`lib/types.ts\`):
@@ -599,10 +607,7 @@ The baseline implementation remains useful for unit tests and demonstrations.
 `
     }
 
-    yield* adapter.writeFile(
-      `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
-      claudeDoc
-    )
+    yield* adapter.writeFile(`${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`, claudeDoc)
     filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`)
 
     // Generate service support files directly in lib/ directory (flat structure)
@@ -612,12 +617,12 @@ The baseline implementation remains useful for unit tests and demonstrations.
       isKyselyProvider
         ? generateKyselyErrorsFile(templateOptions)
         : isSupabaseProvider
-        ? generateSupabaseErrorsFile(templateOptions)
-        : isRedisProvider
-        ? generateRedisErrorsFile(templateOptions)
-        : isOpenTelemetryProvider
-        ? generateOtelErrorsFile(templateOptions)
-        : generateErrorsFile(templateOptions)
+          ? generateSupabaseErrorsFile(templateOptions)
+          : isRedisProvider
+            ? generateRedisErrorsFile(templateOptions)
+            : isOpenTelemetryProvider
+              ? generateOtelErrorsFile(templateOptions)
+              : generateErrorsFile(templateOptions)
     )
     filesGenerated.push(`${sourceLibPath}/errors.ts`)
 
@@ -635,10 +640,10 @@ The baseline implementation remains useful for unit tests and demonstrations.
       isSupabaseProvider
         ? generateSupabaseTypesFile(templateOptions)
         : isRedisProvider
-        ? generateRedisTypesFile(templateOptions)
-        : isOpenTelemetryProvider
-        ? generateOtelTypesFile(templateOptions)
-        : generateTypesFile(templateOptions)
+          ? generateRedisTypesFile(templateOptions)
+          : isOpenTelemetryProvider
+            ? generateOtelTypesFile(templateOptions)
+            : generateTypesFile(templateOptions)
     )
     filesGenerated.push(`${sourceLibPath}/types.ts`)
 
@@ -672,10 +677,7 @@ The baseline implementation remains useful for unit tests and demonstrations.
       filesGenerated.push(`${sourceLibPath}/storage.ts`)
     } else if (isOpenTelemetryProvider) {
       // OpenTelemetry has a single service file (otel.ts)
-      yield* adapter.writeFile(
-        `${sourceLibPath}/otel.ts`,
-        generateOtelServiceFile(templateOptions)
-      )
+      yield* adapter.writeFile(`${sourceLibPath}/otel.ts`, generateOtelServiceFile(templateOptions))
       filesGenerated.push(`${sourceLibPath}/otel.ts`)
     } else if (isRedisProvider) {
       // Redis has multiple service files (service, cache, pubsub, queue)
@@ -739,8 +741,8 @@ The baseline implementation remains useful for unit tests and demonstrations.
         isSupabaseProvider
           ? generateSupabaseSpecFile(templateOptions)
           : isRedisProvider
-          ? generateRedisSpecFile()
-          : generateServiceSpecFile(templateOptions)
+            ? generateRedisSpecFile()
+            : generateServiceSpecFile(templateOptions)
       )
       filesGenerated.push(`${sourceLibPath}/service.spec.ts`)
     }
@@ -750,11 +752,11 @@ The baseline implementation remains useful for unit tests and demonstrations.
 
     // Inject environment variables for this provider (except for built-in providers)
     // Built-in providers (kysely, supabase, redis, opentelemetry) are handled by init command
-    const builtInProviders = ["kysely", "supabase", "redis", "opentelemetry"]
+    const builtInProviders = ['kysely', 'supabase', 'redis', 'opentelemetry']
     if (!builtInProviders.includes(options.name)) {
       yield* injectEnvVars(adapter, [
-        { name: `${options.constantName}_API_KEY`, type: "redacted", context: "server" },
-        { name: `${options.constantName}_TIMEOUT`, type: "number", context: "server" }
+        { name: `${options.constantName}_API_KEY`, type: 'redacted', context: 'server' },
+        { name: `${options.constantName}_TIMEOUT`, type: 'number', context: 'server' }
       ])
     }
 

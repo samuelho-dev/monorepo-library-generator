@@ -14,9 +14,9 @@
  * @module monorepo-library-generator/contract/rpc-definitions-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate RPC definitions file for contract library
@@ -58,20 +58,14 @@ export function generateRpcDefinitionsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([
-    { from: "@effect/rpc", imports: ["Rpc"] }
-  ])
-  builder.addImports([
-    { from: "effect", imports: ["Schema"] }
-  ])
+  builder.addImports([{ from: '@effect/rpc', imports: ['Rpc'] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
 
-  builder.addSectionComment("Local Imports")
-  builder.addImports([
-    { from: "./rpc-errors", imports: [`${className}RpcError`] }
-  ])
+  builder.addSectionComment('Local Imports')
+  builder.addImports([{ from: './rpc-errors', imports: [`${className}RpcError`] }])
 
   // Define branded ID type (extracted from database schema)
-  builder.addSectionComment("Branded ID Type")
+  builder.addSectionComment('Branded ID Type')
   builder.addRaw(`/**
  * ${className} ID Schema
  *
@@ -102,7 +96,7 @@ export type ${className}Id = Schema.Schema.Type<typeof ${className}Id>`)
   builder.addBlankLine()
 
   // RouteTag system
-  builder.addSectionComment("Route Tag System")
+  builder.addSectionComment('Route Tag System')
   builder.addRaw(`/**
  * Route types for middleware selection
  *
@@ -124,7 +118,7 @@ export const RouteTag = Symbol.for("@contract/RouteTag")`)
   builder.addBlankLine()
 
   // Entity Schema (from imported type)
-  builder.addSectionComment("Entity Schema")
+  builder.addSectionComment('Entity Schema')
   builder.addRaw(`/**
  * ${className} Entity Schema
  *
@@ -149,7 +143,7 @@ export type ${className}Entity = Schema.Schema.Type<typeof ${className}Schema>`)
   builder.addBlankLine()
 
   // Request/Response schemas for reuse
-  builder.addSectionComment("Request/Response Schemas")
+  builder.addSectionComment('Request/Response Schemas')
   builder.addRaw(`/**
  * Pagination parameters for list operations
  */
@@ -177,10 +171,13 @@ export const PaginatedResponse = <T extends Schema.Schema.Any>(itemSchema: T) =>
 
 /**
  * Create ${className} input schema
+ *
+ * NOTE: This is a generated stub. Update to match your Prisma model's required fields.
+ * The handler will add createdAt/updatedAt automatically.
  */
 export const Create${className}Input = Schema.Struct({
-  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))
-  // TODO: Add domain-specific creation fields
+  email: Schema.String.pipe(Schema.pattern(/^[^@]+@[^@]+$/)),
+  name: Schema.NullOr(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
 }).pipe(
   Schema.annotations({
     identifier: "Create${className}Input",
@@ -193,10 +190,13 @@ export type Create${className}Input = Schema.Schema.Type<typeof Create${classNam
 
 /**
  * Update ${className} input schema
+ *
+ * NOTE: This is a generated stub. Update to match your Prisma model's updateable fields.
+ * The handler will set updatedAt automatically.
  */
 export const Update${className}Input = Schema.Struct({
-  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
-  // TODO: Add domain-specific update fields
+  email: Schema.optional(Schema.String.pipe(Schema.pattern(/^[^@]+@[^@]+$/))),
+  name: Schema.optional(Schema.NullOr(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))))
 }).pipe(
   Schema.annotations({
     identifier: "Update${className}Input",
@@ -258,7 +258,7 @@ export type BulkGet${className}Input = Schema.Schema.Type<typeof BulkGet${classN
   builder.addBlankLine()
 
   // RPC Definitions
-  builder.addSectionComment("RPC Definitions (Contract-First)")
+  builder.addSectionComment('RPC Definitions (Contract-First)')
 
   // Get RPC (public)
   builder.addRaw(`/**
@@ -346,7 +346,7 @@ export class Delete${className} extends Rpc.make("Delete${className}", {
   builder.addBlankLine()
 
   // Service-to-service RPCs
-  builder.addSectionComment("Service-to-Service RPC Definitions")
+  builder.addSectionComment('Service-to-Service RPC Definitions')
 
   // Validate RPC (service)
   builder.addRaw(`/**

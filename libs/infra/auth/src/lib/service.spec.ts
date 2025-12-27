@@ -16,7 +16,6 @@ Testing Guidelines:
  * @module @samuelho-dev/infra-auth
  */
 
-
 /**
  * Test service tag for layer composition tests
  */

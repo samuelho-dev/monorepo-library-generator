@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/auth/errors
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { AuthTemplateOptions } from "./schemas.template"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { AuthTemplateOptions } from './schemas.template'
 
 /**
  * Generate lib/errors.ts for contract-auth library
@@ -21,7 +21,7 @@ export function generateAuthErrorsFile(options: AuthTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "Auth Contract Errors",
+    title: 'Auth Contract Errors',
     description: `Authentication error types for RPC boundaries.
 
 Uses Schema.TaggedError for serialization across RPC boundaries.
@@ -34,12 +34,10 @@ Error Categories:
   })
   builder.addBlankLine()
 
-  builder.addImports([
-    { from: "effect", imports: ["Schema"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
   builder.addBlankLine()
 
-  builder.addSectionComment("User Authentication Errors")
+  builder.addSectionComment('User Authentication Errors')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -108,7 +106,7 @@ export class AuthError extends Schema.TaggedError<AuthError>()(
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Service-to-Service Authentication Errors")
+  builder.addSectionComment('Service-to-Service Authentication Errors')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -177,7 +175,7 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()(
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Combined Error Types")
+  builder.addSectionComment('Combined Error Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**

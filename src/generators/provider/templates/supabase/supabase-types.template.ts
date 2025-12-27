@@ -9,8 +9,8 @@
  * @module monorepo-library-generator/provider/templates/supabase/types
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Supabase provider types.ts file
@@ -19,7 +19,7 @@ export function generateSupabaseTypesFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "Supabase Provider Types",
+    title: 'Supabase Provider Types',
     description: `Type definitions and Effect Schemas for Supabase services.
 
 Uses Effect Schema for runtime validation and type-safe serialization.
@@ -29,11 +29,11 @@ All schemas are composable and can be extended for domain-specific needs.`,
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
   builder.addBlankLine()
 
   // Configuration
-  builder.addSectionComment("Configuration")
+  builder.addSectionComment('Configuration')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -58,7 +58,7 @@ export const SupabaseConfigSchema = Schema.Struct({
   builder.addBlankLine()
 
   // User types
-  builder.addSectionComment("User Types")
+  builder.addSectionComment('User Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -106,7 +106,7 @@ export type AuthUser = Schema.Schema.Type<typeof AuthUserSchema>`)
   builder.addBlankLine()
 
   // Session types
-  builder.addSectionComment("Session Types")
+  builder.addSectionComment('Session Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -135,7 +135,7 @@ export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>`)
   builder.addBlankLine()
 
   // Storage types - re-exported from native SDK
-  builder.addSectionComment("Storage Types")
+  builder.addSectionComment('Storage Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -205,7 +205,7 @@ export const StorageFileSchema = Schema.Struct({
   builder.addBlankLine()
 
   // Auth method types
-  builder.addSectionComment("Auth Method Types")
+  builder.addSectionComment('Auth Method Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**

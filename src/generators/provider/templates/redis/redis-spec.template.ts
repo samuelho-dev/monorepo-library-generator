@@ -6,7 +6,7 @@
  * @module monorepo-library-generator/provider/templates/redis/spec
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
 
 /**
  * Generate Redis provider spec file
@@ -15,7 +15,7 @@ export function generateRedisSpecFile() {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "Redis Provider - Tests",
+    title: 'Redis Provider - Tests',
     description: `Unit tests for Redis provider using Effect patterns.
 
 Tests cover:
@@ -29,13 +29,13 @@ Tests cover:
 
   // Imports - use ../index since spec is in lib/ folder
   builder.addImports([
-    { from: "effect", imports: ["Effect"] },
-    { from: "vitest", imports: ["describe", "expect", "it"] },
-    { from: "../index", imports: ["mapRedisError", "Redis"] }
+    { from: 'effect', imports: ['Effect'] },
+    { from: 'vitest', imports: ['describe', 'expect', 'it'] },
+    { from: '../index', imports: ['mapRedisError', 'Redis'] }
   ])
 
   // Test helpers
-  builder.addSectionComment("Test Helpers")
+  builder.addSectionComment('Test Helpers')
   builder.addBlankLine()
 
   builder.addRaw(`const runTest = <A, E>(effect: Effect.Effect<A, E, Redis>) =>
@@ -43,7 +43,7 @@ Tests cover:
   builder.addBlankLine()
 
   // Tests
-  builder.addSectionComment("Tests")
+  builder.addSectionComment('Tests')
   builder.addBlankLine()
 
   builder.addRaw(`describe("Redis", () => {

@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/redis/index
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Redis provider index.ts file
@@ -17,7 +17,7 @@ export function generateRedisIndexFile(options: ProviderTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "Redis Provider Library",
+    title: 'Redis Provider Library',
     description: `Redis SDK provider with Effect integration.
 
 This library wraps the ioredis SDK in Effect types for:
@@ -42,7 +42,7 @@ Usage:
   builder.addBlankLine()
 
   // Error exports
-  builder.addSectionComment("Error Types")
+  builder.addSectionComment('Error Types')
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -62,7 +62,7 @@ export type { RedisProviderError } from "./lib/errors"`)
   builder.addBlankLine()
 
   // Type exports
-  builder.addSectionComment("Types")
+  builder.addSectionComment('Types')
   builder.addBlankLine()
 
   builder.addRaw(`export type {
@@ -79,21 +79,21 @@ export type { RedisProviderError } from "./lib/errors"`)
   builder.addBlankLine()
 
   // Service exports
-  builder.addSectionComment("Service")
+  builder.addSectionComment('Service')
   builder.addBlankLine()
 
-  builder.addComment("Redis - Main service with sub-services")
-  builder.addComment("")
-  builder.addComment("Effect 3.0+ Pattern: Context.Tag with static layer members")
-  builder.addComment("  - Redis.Live (ioredis with env config)")
-  builder.addComment("  - Redis.Test (in-memory mock)")
-  builder.addComment("  - Redis.Dev (debug logging)")
-  builder.addComment("  - Redis.make(config) (custom configuration)")
-  builder.addComment("")
-  builder.addComment("Sub-services (matching infra library interfaces):")
-  builder.addComment("  - redis.cache: RedisCacheClient (for infra-cache)")
-  builder.addComment("  - redis.pubsub: RedisPubSubClient (for infra-pubsub)")
-  builder.addComment("  - redis.queue: RedisQueueClient (for infra-queue)")
+  builder.addComment('Redis - Main service with sub-services')
+  builder.addComment('')
+  builder.addComment('Effect 3.0+ Pattern: Context.Tag with static layer members')
+  builder.addComment('  - Redis.Live (ioredis with env config)')
+  builder.addComment('  - Redis.Test (in-memory mock)')
+  builder.addComment('  - Redis.Dev (debug logging)')
+  builder.addComment('  - Redis.make(config) (custom configuration)')
+  builder.addComment('')
+  builder.addComment('Sub-services (matching infra library interfaces):')
+  builder.addComment('  - redis.cache: RedisCacheClient (for infra-cache)')
+  builder.addComment('  - redis.pubsub: RedisPubSubClient (for infra-pubsub)')
+  builder.addComment('  - redis.queue: RedisQueueClient (for infra-queue)')
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -104,11 +104,11 @@ export type { RedisProviderError } from "./lib/errors"`)
   builder.addBlankLine()
 
   // Sub-service Context.Tags
-  builder.addSectionComment("Sub-Service Context.Tags")
+  builder.addSectionComment('Sub-Service Context.Tags')
   builder.addBlankLine()
 
-  builder.addComment("Independent access to Redis sub-services")
-  builder.addComment("Each can be used separately for fine-grained dependency injection")
+  builder.addComment('Independent access to Redis sub-services')
+  builder.addComment('Each can be used separately for fine-grained dependency injection')
   builder.addBlankLine()
 
   builder.addRaw(`export { RedisCacheService } from "./lib/cache"
@@ -117,11 +117,11 @@ export { RedisQueueService } from "./lib/queue"`)
   builder.addBlankLine()
 
   // Sub-service factory exports
-  builder.addSectionComment("Sub-Service Factories")
+  builder.addSectionComment('Sub-Service Factories')
   builder.addBlankLine()
 
-  builder.addComment("These are exported for advanced use cases where you need")
-  builder.addComment("to create sub-services with custom ioredis instances.")
+  builder.addComment('These are exported for advanced use cases where you need')
+  builder.addComment('to create sub-services with custom ioredis instances.')
   builder.addBlankLine()
 
   builder.addRaw(`export { makeCacheClient } from "./lib/cache"
@@ -130,55 +130,55 @@ export { makeQueueClient } from "./lib/queue"`)
   builder.addBlankLine()
 
   // Usage examples
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  builder.addComment("Usage Examples")
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  builder.addComment("")
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  builder.addComment('Usage Examples')
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  builder.addComment('')
   builder.addComment("import { Effect, Layer } from 'effect';")
   builder.addComment(`import { Redis } from '${packageName}';`)
-  builder.addComment("")
-  builder.addComment("// Cache operations")
-  builder.addComment("const cacheProgram = Effect.gen(function*() {")
-  builder.addComment("  const redis = yield* Redis;")
-  builder.addComment("  yield* redis.cache.set(\"user:1\", JSON.stringify({ name: \"Alice\" }))")
-  builder.addComment("  const user = yield* redis.cache.get(\"user:1\")")
-  builder.addComment("  return user;")
-  builder.addComment("})")
-  builder.addComment("")
-  builder.addComment("// PubSub operations")
-  builder.addComment("const pubsubProgram = Effect.gen(function*() {")
-  builder.addComment("  const redis = yield* Redis;")
-  builder.addComment("  yield* redis.pubsub.subscribe(\"events\", (msg) => console.log(msg))")
-  builder.addComment("  yield* redis.pubsub.publish(\"events\", \"Hello!\")")
-  builder.addComment("})")
-  builder.addComment("")
-  builder.addComment("// Queue operations")
-  builder.addComment("const queueProgram = Effect.gen(function*() {")
-  builder.addComment("  const redis = yield* Redis;")
-  builder.addComment("  yield* redis.queue.lpush(\"jobs\", JSON.stringify({ task: \"process\" }))")
-  builder.addComment("  const [key, value] = yield* redis.queue.brpop(\"jobs\", 0)")
-  builder.addComment("  return value;")
-  builder.addComment("})")
-  builder.addComment("")
-  builder.addComment("// Extended operations")
-  builder.addComment("const extendedProgram = Effect.gen(function*() {")
-  builder.addComment("  const redis = yield* Redis;")
-  builder.addComment("  yield* redis.expire(\"user:1\", 3600)")
-  builder.addComment("  const ttl = yield* redis.ttl(\"user:1\")")
-  builder.addComment("  const exists = yield* redis.exists(\"user:1\")")
-  builder.addComment("  return { ttl, exists };")
-  builder.addComment("})")
-  builder.addComment("")
-  builder.addComment("// Run with layer")
-  builder.addComment("const result = Effect.runPromise(")
-  builder.addComment("  cacheProgram.pipe(Effect.provide(Redis.Live))")
-  builder.addComment(")")
-  builder.addComment("")
-  builder.addComment("// Testing")
-  builder.addComment("const testResult = Effect.runSync(")
-  builder.addComment("  cacheProgram.pipe(Effect.provide(Redis.Test))")
-  builder.addComment(")")
-  builder.addComment("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  builder.addComment('')
+  builder.addComment('// Cache operations')
+  builder.addComment('const cacheProgram = Effect.gen(function*() {')
+  builder.addComment('  const redis = yield* Redis;')
+  builder.addComment('  yield* redis.cache.set("user:1", JSON.stringify({ name: "Alice" }))')
+  builder.addComment('  const user = yield* redis.cache.get("user:1")')
+  builder.addComment('  return user;')
+  builder.addComment('})')
+  builder.addComment('')
+  builder.addComment('// PubSub operations')
+  builder.addComment('const pubsubProgram = Effect.gen(function*() {')
+  builder.addComment('  const redis = yield* Redis;')
+  builder.addComment('  yield* redis.pubsub.subscribe("events", (msg) => console.log(msg))')
+  builder.addComment('  yield* redis.pubsub.publish("events", "Hello!")')
+  builder.addComment('})')
+  builder.addComment('')
+  builder.addComment('// Queue operations')
+  builder.addComment('const queueProgram = Effect.gen(function*() {')
+  builder.addComment('  const redis = yield* Redis;')
+  builder.addComment('  yield* redis.queue.lpush("jobs", JSON.stringify({ task: "process" }))')
+  builder.addComment('  const [key, value] = yield* redis.queue.brpop("jobs", 0)')
+  builder.addComment('  return value;')
+  builder.addComment('})')
+  builder.addComment('')
+  builder.addComment('// Extended operations')
+  builder.addComment('const extendedProgram = Effect.gen(function*() {')
+  builder.addComment('  const redis = yield* Redis;')
+  builder.addComment('  yield* redis.expire("user:1", 3600)')
+  builder.addComment('  const ttl = yield* redis.ttl("user:1")')
+  builder.addComment('  const exists = yield* redis.exists("user:1")')
+  builder.addComment('  return { ttl, exists };')
+  builder.addComment('})')
+  builder.addComment('')
+  builder.addComment('// Run with layer')
+  builder.addComment('const result = Effect.runPromise(')
+  builder.addComment('  cacheProgram.pipe(Effect.provide(Redis.Live))')
+  builder.addComment(')')
+  builder.addComment('')
+  builder.addComment('// Testing')
+  builder.addComment('const testResult = Effect.runSync(')
+  builder.addComment('  cacheProgram.pipe(Effect.provide(Redis.Test))')
+  builder.addComment(')')
+  builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
   return builder.toString()
 }

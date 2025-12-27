@@ -258,7 +258,11 @@ export class MetricsService extends Context.Tag(
         Effect.sync(() => {
           // Use exponential boundaries by default (good for HTTP latency)
           const boundaries = options?.boundaries
-            ? MetricBoundaries.linear({ start: options.boundaries[0] ?? 0.005, width: 0.05, count: options.boundaries.length })
+            ? MetricBoundaries.linear({
+              start: options.boundaries[0] ?? 0.005,
+              width: 0.05,
+              count: options.boundaries.length
+            })
             : MetricBoundaries.exponential({ start: 0.005, factor: 2, count: 11 })
           const histogram = Metric.histogram(name, boundaries)
 
@@ -293,8 +297,13 @@ export class MetricsService extends Context.Tag(
           counters.set(name, state)
 
           return {
-            increment: Effect.sync(() => { state.count++ }),
-            incrementBy: (value: number) => Effect.sync(() => { state.count += value }),
+            increment: Effect.sync(() => {
+              state.count++
+            }),
+            incrementBy: (value: number) =>
+              Effect.sync(() => {
+                state.count += value
+              }),
             get: Effect.sync(() => state.count)
           }
         }),
@@ -305,11 +314,24 @@ export class MetricsService extends Context.Tag(
           gauges.set(name, state)
 
           return {
-            set: (v: number) => Effect.sync(() => { state.value = v }),
-            increment: Effect.sync(() => { state.value++ }),
-            incrementBy: (v: number) => Effect.sync(() => { state.value += v }),
-            decrement: Effect.sync(() => { state.value-- }),
-            decrementBy: (v: number) => Effect.sync(() => { state.value -= v }),
+            set: (v: number) =>
+              Effect.sync(() => {
+                state.value = v
+              }),
+            increment: Effect.sync(() => {
+              state.value++
+            }),
+            incrementBy: (v: number) =>
+              Effect.sync(() => {
+                state.value += v
+              }),
+            decrement: Effect.sync(() => {
+              state.value--
+            }),
+            decrementBy: (v: number) =>
+              Effect.sync(() => {
+                state.value -= v
+              }),
             get: Effect.sync(() => state.value)
           }
         }),
@@ -320,7 +342,10 @@ export class MetricsService extends Context.Tag(
           histograms.set(name, state)
 
           return {
-            record: (value: number) => Effect.sync(() => { state.values.push(value) }),
+            record: (value: number) =>
+              Effect.sync(() => {
+                state.values.push(value)
+              }),
             timer: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
               Effect.gen(function*() {
                 const start = Date.now()

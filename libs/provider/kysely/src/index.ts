@@ -15,13 +15,7 @@ Usage:
 // Error Types
 // ============================================================================
 
-export {
-  DatabaseConnectionError,
-  DatabaseQueryError,
-  DatabaseTransactionError,
-  type DatabaseError,
-} from "./lib/errors"
-
+export { DatabaseConnectionError, type DatabaseError, DatabaseQueryError, DatabaseTransactionError } from "./lib/errors"
 
 // ============================================================================
 // Interface
@@ -29,38 +23,36 @@ export {
 
 export type { KyselyServiceInterface } from "./lib/interface"
 
-
 // ============================================================================
 // Service
 // ============================================================================
 
 export {
+  type KyselyConfig,
   KyselyService,
   makeKyselyService,
   makeTestKyselyService,
-  type KyselyConfig,
-  type MockServiceOptions,
+  type MockServiceOptions
 } from "./lib/service"
-
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Usage Example
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 
+//
 // import type { DB } from "@samuelho-dev/types-database";
 // import { makeKyselyService, KyselyService } from "@samuelho-dev/provider-kysely";
-// 
+//
 // const program = Effect.gen(function*() {
 //   const kysely = yield* makeKyselyService<DB>({
 //     connectionString: process.env.DATABASE_URL,
 //   })
-// 
+//
 //   const users = yield* kysely.query((db) =>
 //     db.selectFrom('users').selectAll().execute()
 //   )
 //   return users;
 // })
-// 
+//
 // // For testing:
 // const mockService = makeTestKyselyService<DB>({
 //   mockTables: ['users', 'posts']

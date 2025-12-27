@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/cli/ink/bridge/context
  */
 
-import { Effect, Layer, type Runtime } from 'effect';
-import type React from 'react';
+import { Effect, Layer, type Runtime } from 'effect'
+import type React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { AppLayer, type AppLayerContext } from './runtime'
 
@@ -17,7 +17,7 @@ import { AppLayer, type AppLayerContext } from './runtime'
 const RuntimeContext = createContext<Runtime.Runtime<AppLayerContext> | null>(null)
 
 interface EffectRuntimeProviderProps {
-  readonly children: React.ReactNode;
+  readonly children: React.ReactNode
 }
 
 /**
@@ -28,7 +28,7 @@ export function EffectRuntimeProvider({ children }: EffectRuntimeProviderProps) 
   const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
-    let disposed = false    // Create the runtime using AppLayer for proper type inference
+    let disposed = false // Create the runtime using AppLayer for proper type inference
     const createRuntimeEffect = Effect.scoped(Layer.toRuntime(AppLayer))
 
     Effect.runPromise(createRuntimeEffect)
@@ -44,7 +44,7 @@ export function EffectRuntimeProvider({ children }: EffectRuntimeProviderProps) 
       })
 
     return () => {
-      disposed = true;
+      disposed = true
     }
   }, [])
 
@@ -53,7 +53,7 @@ export function EffectRuntimeProvider({ children }: EffectRuntimeProviderProps) 
   }
 
   if (!runtime) {
-    return null; // Loading state
+    return null // Loading state
   }
 
   return <RuntimeContext.Provider value={runtime}>{children}</RuntimeContext.Provider>
@@ -71,5 +71,5 @@ export function useRuntime(): Runtime.Runtime<AppLayerContext> {
     throw new Error('useRuntime must be used within an EffectRuntimeProvider')
   }
 
-  return runtime;
+  return runtime
 }

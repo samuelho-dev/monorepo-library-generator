@@ -117,7 +117,7 @@ export const QueueRedisLayer = Layer.effect(
 
             takeUpTo: (n: number) =>
               Effect.gen(function*() {
-                const items: Array<T> = []
+                const items: T[] = []
                 for (let i = 0; i < n; i++) {
                   const item = yield* queueClient.rpop(key).pipe(Effect.orDie)
                   if (!item) break
@@ -129,7 +129,7 @@ export const QueueRedisLayer = Layer.effect(
             takeAll: Effect.gen(function*() {
               const items = yield* queueClient.lrange(key, 0, -1).pipe(Effect.orDie)
               yield* queueClient.del(key).pipe(Effect.orDie)
-              const deserialized: Array<T> = []
+              const deserialized: T[] = []
               for (const item of items) {
                 deserialized.push(yield* deserialize(item, schema))
               }
@@ -181,7 +181,7 @@ export const QueueRedisLayer = Layer.effect(
 
             takeUpTo: (n: number) =>
               Effect.gen(function*() {
-                const items: Array<T> = []
+                const items: T[] = []
                 for (let i = 0; i < n; i++) {
                   const item = yield* queueClient.rpop(key).pipe(Effect.orDie)
                   if (!item) break
@@ -193,7 +193,7 @@ export const QueueRedisLayer = Layer.effect(
             takeAll: Effect.gen(function*() {
               const items = yield* queueClient.lrange(key, 0, -1).pipe(Effect.orDie)
               yield* queueClient.del(key).pipe(Effect.orDie)
-              const deserialized: Array<T> = []
+              const deserialized: T[] = []
               for (const item of items) {
                 deserialized.push(yield* deserialize(item, schema))
               }
@@ -238,7 +238,7 @@ export const QueueRedisLayer = Layer.effect(
 
             takeUpTo: (n: number) =>
               Effect.gen(function*() {
-                const items: Array<T> = []
+                const items: T[] = []
                 for (let i = 0; i < n; i++) {
                   const item = yield* queueClient.rpop(key).pipe(Effect.orDie)
                   if (!item) break
@@ -250,7 +250,7 @@ export const QueueRedisLayer = Layer.effect(
             takeAll: Effect.gen(function*() {
               const items = yield* queueClient.lrange(key, 0, -1).pipe(Effect.orDie)
               yield* queueClient.del(key).pipe(Effect.orDie)
-              const deserialized: Array<T> = []
+              const deserialized: T[] = []
               for (const item of items) {
                 deserialized.push(yield* deserialize(item, schema))
               }
@@ -299,7 +299,7 @@ export const QueueRedisLayer = Layer.effect(
 
             takeUpTo: (n: number) =>
               Effect.gen(function*() {
-                const items: Array<T> = []
+                const items: T[] = []
                 for (let i = 0; i < n; i++) {
                   const item = yield* queueClient.rpop(key).pipe(Effect.orDie)
                   if (!item) break
@@ -311,7 +311,7 @@ export const QueueRedisLayer = Layer.effect(
             takeAll: Effect.gen(function*() {
               const items = yield* queueClient.lrange(key, 0, -1).pipe(Effect.orDie)
               yield* queueClient.del(key).pipe(Effect.orDie)
-              const deserialized: Array<T> = []
+              const deserialized: T[] = []
               for (const item of items) {
                 deserialized.push(yield* deserialize(item, schema))
               }

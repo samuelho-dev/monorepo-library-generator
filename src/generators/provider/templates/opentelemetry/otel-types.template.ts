@@ -6,19 +6,17 @@
  * @module monorepo-library-generator/provider/templates/opentelemetry
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate OpenTelemetry types file
  */
 export function generateOtelTypesFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: "OpenTelemetry Provider Types",
+    title: 'OpenTelemetry Provider Types',
     description: `Type definitions for OpenTelemetry SDK configuration.
 
 Provides:
@@ -29,11 +27,9 @@ Provides:
     module: `${options.packageName}/types`
   })
 
-  builder.addImports([
-    { from: "effect", imports: ["Schema"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
 
-  builder.addSectionComment("Traces Configuration")
+  builder.addSectionComment('Traces Configuration')
 
   builder.addRaw(`/**
  * Tracing configuration schema
@@ -72,7 +68,7 @@ export const TracesConfigSchema = Schema.Struct({
 export type TracesConfig = typeof TracesConfigSchema.Type
 `)
 
-  builder.addSectionComment("Metrics Configuration")
+  builder.addSectionComment('Metrics Configuration')
 
   builder.addRaw(`/**
  * Metrics configuration schema
@@ -109,7 +105,7 @@ export const MetricsConfigSchema = Schema.Struct({
 export type MetricsConfig = typeof MetricsConfigSchema.Type
 `)
 
-  builder.addSectionComment("Full Configuration")
+  builder.addSectionComment('Full Configuration')
 
   builder.addRaw(`/**
  * Complete OpenTelemetry configuration schema

@@ -7,11 +7,11 @@
  * @module monorepo-library-generator/templates/fragments/service-fragment
  */
 
-import { Effect } from "effect"
-import type { SourceFile } from "ts-morph"
-import { interpolateSync } from "../core/resolver"
-import type { TemplateContext } from "../core/types"
-import type { ContextTagFragmentConfig, MethodParam, ServiceMethod, StaticLayer } from "./types"
+import { Effect } from 'effect'
+import type { SourceFile } from 'ts-morph'
+import { interpolateSync } from '../core/resolver'
+import type { TemplateContext } from '../core/types'
+import type { ContextTagFragmentConfig, MethodParam, ServiceMethod, StaticLayer } from './types'
 
 // ============================================================================
 // Service Fragment Renderer
@@ -26,7 +26,7 @@ export function renderContextTagFragment(
   sourceFile: SourceFile,
   config: ContextTagFragmentConfig,
   context: TemplateContext
-): Effect.Effect<void, never> {
+) {
   return Effect.sync(() => {
     const serviceName = interpolateSync(config.serviceName, context)
     const tagIdentifier = config.tagIdentifier
@@ -37,21 +37,17 @@ export function renderContextTagFragment(
     const methodDefs = buildMethodDefinitions(config.methods, context)
 
     // Build static layers
-    const staticLayers = config.staticLayers
-      ? buildStaticLayers(config.staticLayers, context)
-      : []
+    const staticLayers = config.staticLayers ? buildStaticLayers(config.staticLayers, context) : []
 
     // Build class declaration
-    const statements: string[] = []
+    const statements: Array<string> = []
 
     if (config.jsdoc) {
       statements.push(`/**\n * ${interpolateSync(config.jsdoc, context)}\n */`)
     }
 
-    const exportKeyword = config.exported !== false ? "export " : ""
-    const bodyContent = staticLayers.length > 0
-      ? ` {\n${staticLayers.join("\n\n")}\n}`
-      : " {}"
+    const exportKeyword = config.exported !== false ? 'export ' : ''
+    const bodyContent = staticLayers.length > 0 ? ` {\n${staticLayers.join('\n\n')}\n}` : ' {}'
 
     const classDecl = `${exportKeyword}class ${serviceName} extends Context.Tag(
   "${tagIdentifier}"
@@ -65,18 +61,15 @@ ${methodDefs}
     statements.push(classDecl)
 
     // Add to source file
-    sourceFile.addStatements(statements.join("\n"))
+    sourceFile.addStatements(statements.join('\n'))
   })
 }
 
 /**
  * Build method definitions for the service interface
  */
-function buildMethodDefinitions(
-  methods: ReadonlyArray<ServiceMethod>,
-  context: TemplateContext
-): string {
-  const lines: string[] = []
+function buildMethodDefinitions(methods: ReadonlyArray<ServiceMethod>, context: TemplateContext) {
+  const lines: Array<string> = []
 
   for (const method of methods) {
     const methodName = interpolateSync(method.name, context)
@@ -90,36 +83,30 @@ function buildMethodDefinitions(
     lines.push(`    readonly ${methodName}: (${params}) => ${returnType}`)
   }
 
-  return lines.join("\n\n")
+  return lines.join('\n\n')
 }
 
 /**
  * Build parameter list for a method
  */
-function buildParams(
-  params: ReadonlyArray<MethodParam>,
-  context: TemplateContext
-): string {
+function buildParams(params: ReadonlyArray<MethodParam>, context: TemplateContext) {
   return params
     .map((p) => {
       const pName = interpolateSync(p.name, context)
       const pType = interpolateSync(p.type, context)
-      const optional = p.optional ? "?" : ""
+      const optional = p.optional ? '?' : ''
       return `${pName}${optional}: ${pType}`
     })
-    .join(", ")
+    .join(', ')
 }
 
 /**
  * Build static layer definitions
  */
-function buildStaticLayers(
-  layers: ReadonlyArray<StaticLayer>,
-  context: TemplateContext
-): string[] {
+function buildStaticLayers(layers: ReadonlyArray<StaticLayer>, context: TemplateContext) {
   return layers.map((layer) => {
     const impl = interpolateSync(layer.implementation, context)
-    const lines: string[] = []
+    const lines: Array<string> = []
 
     if (layer.jsdoc) {
       lines.push(`  /**\n   * ${interpolateSync(layer.jsdoc, context)}\n   */`)
@@ -127,7 +114,7 @@ function buildStaticLayers(
 
     lines.push(`  static ${layer.name} = ${impl}`)
 
-    return lines.join("\n")
+    return lines.join('\n')
   })
 }
 
@@ -149,13 +136,13 @@ export function repositoryFragment(
     readonly idFieldName?: string
     readonly errorType?: string
   } = {}
-): ContextTagFragmentConfig {
+) {
   const {
-    scope = "{scope}",
-    fileName = "{fileName}",
     entityType = className,
-    idFieldName = "id",
-    errorType = `${className}RepositoryError`
+    errorType = `${className}RepositoryError`,
+    fileName = '{fileName}',
+    idFieldName = 'id',
+    scope = '{scope}'
   } = options
 
   return {
@@ -164,51 +151,51 @@ export function repositoryFragment(
     jsdoc: `${className}Repository Context Tag for dependency injection`,
     methods: [
       {
-        name: "findById",
-        params: [{ name: idFieldName, type: "string" }],
+        name: 'findById',
+        params: [{ name: idFieldName, type: 'string' }],
         returnType: `Effect.Effect<Option.Option<${entityType}>, ${errorType}>`,
         jsdoc: `Find ${className.toLowerCase()} by ID`
       },
       {
-        name: "findAll",
+        name: 'findAll',
         params: [
-          { name: "filters", type: `${className}Filters`, optional: true },
-          { name: "pagination", type: "OffsetPaginationParams", optional: true },
-          { name: "sort", type: "SortOptions", optional: true }
+          { name: 'filters', type: `${className}Filters`, optional: true },
+          { name: 'pagination', type: 'OffsetPaginationParams', optional: true },
+          { name: 'sort', type: 'SortOptions', optional: true }
         ],
         returnType: `Effect.Effect<PaginatedResult<${entityType}>, ${errorType}>`,
         jsdoc: `Find all ${className.toLowerCase()}s matching filters`
       },
       {
-        name: "count",
-        params: [{ name: "filters", type: `${className}Filters`, optional: true }],
+        name: 'count',
+        params: [{ name: 'filters', type: `${className}Filters`, optional: true }],
         returnType: `Effect.Effect<number, ${errorType}>`,
         jsdoc: `Count ${className.toLowerCase()}s matching filters`
       },
       {
-        name: "create",
-        params: [{ name: "input", type: `Partial<${entityType}>` }],
+        name: 'create',
+        params: [{ name: 'input', type: `Partial<${entityType}>` }],
         returnType: `Effect.Effect<${entityType}, ${errorType}>`,
         jsdoc: `Create a new ${className.toLowerCase()}`
       },
       {
-        name: "update",
+        name: 'update',
         params: [
-          { name: idFieldName, type: "string" },
-          { name: "input", type: `Partial<${entityType}>` }
+          { name: idFieldName, type: 'string' },
+          { name: 'input', type: `Partial<${entityType}>` }
         ],
         returnType: `Effect.Effect<${entityType}, ${errorType}>`,
         jsdoc: `Update an existing ${className.toLowerCase()}`
       },
       {
-        name: "delete",
-        params: [{ name: idFieldName, type: "string" }],
+        name: 'delete',
+        params: [{ name: idFieldName, type: 'string' }],
         returnType: `Effect.Effect<void, ${errorType}>`,
         jsdoc: `Delete a ${className.toLowerCase()} permanently`
       },
       {
-        name: "exists",
-        params: [{ name: idFieldName, type: "string" }],
+        name: 'exists',
+        params: [{ name: idFieldName, type: 'string' }],
         returnType: `Effect.Effect<boolean, ${errorType}>`,
         jsdoc: `Check if ${className.toLowerCase()} exists by ID`
       }
@@ -229,12 +216,12 @@ export function serviceFragment(
     readonly entityType?: string
     readonly errorType?: string
   } = {}
-): ContextTagFragmentConfig {
+) {
   const {
-    scope = "{scope}",
-    fileName = "{fileName}",
     entityType = className,
-    errorType = `${className}RepositoryError`
+    errorType = `${className}RepositoryError`,
+    fileName = '{fileName}',
+    scope = '{scope}'
   } = options
 
   return {
@@ -243,39 +230,39 @@ export function serviceFragment(
     jsdoc: `${className}Service Context Tag for dependency injection`,
     methods: [
       {
-        name: "get",
-        params: [{ name: "id", type: "string" }],
+        name: 'get',
+        params: [{ name: 'id', type: 'string' }],
         returnType: `Effect.Effect<${entityType}, ${errorType}>`,
         jsdoc: `Get ${className.toLowerCase()} by ID`
       },
       {
-        name: "list",
+        name: 'list',
         params: [
-          { name: "filters", type: `${className}Filters`, optional: true },
-          { name: "pagination", type: "OffsetPaginationParams", optional: true },
-          { name: "sort", type: "SortOptions", optional: true }
+          { name: 'filters', type: `${className}Filters`, optional: true },
+          { name: 'pagination', type: 'OffsetPaginationParams', optional: true },
+          { name: 'sort', type: 'SortOptions', optional: true }
         ],
         returnType: `Effect.Effect<PaginatedResult<${entityType}>, ${errorType}>`,
         jsdoc: `List ${className.toLowerCase()}s with filters and pagination`
       },
       {
-        name: "create",
-        params: [{ name: "input", type: `Partial<${entityType}>` }],
+        name: 'create',
+        params: [{ name: 'input', type: `Partial<${entityType}>` }],
         returnType: `Effect.Effect<${entityType}, ${errorType}>`,
         jsdoc: `Create a new ${className.toLowerCase()}`
       },
       {
-        name: "update",
+        name: 'update',
         params: [
-          { name: "id", type: "string" },
-          { name: "input", type: `Partial<${entityType}>` }
+          { name: 'id', type: 'string' },
+          { name: 'input', type: `Partial<${entityType}>` }
         ],
         returnType: `Effect.Effect<${entityType}, ${errorType}>`,
         jsdoc: `Update an existing ${className.toLowerCase()}`
       },
       {
-        name: "delete",
-        params: [{ name: "id", type: "string" }],
+        name: 'delete',
+        params: [{ name: 'id', type: 'string' }],
         returnType: `Effect.Effect<void, ${errorType}>`,
         jsdoc: `Delete a ${className.toLowerCase()}`
       }
@@ -293,11 +280,11 @@ export function projectionRepositoryFragment(
     readonly fileName?: string
     readonly errorType?: string
   } = {}
-): ContextTagFragmentConfig {
+) {
   const {
-    scope = "{scope}",
-    fileName = "{fileName}",
-    errorType = `${className}RepositoryError`
+    errorType = `${className}RepositoryError`,
+    fileName = '{fileName}',
+    scope = '{scope}'
   } = options
 
   return {
@@ -306,34 +293,34 @@ export function projectionRepositoryFragment(
     jsdoc: `${className}ProjectionRepository Context Tag for CQRS read models`,
     methods: [
       {
-        name: "findProjection",
-        params: [{ name: "id", type: "string" }],
+        name: 'findProjection',
+        params: [{ name: 'id', type: 'string' }],
         returnType: `Effect.Effect<Option.Option<unknown>, ${errorType}>`,
-        jsdoc: "Find projection by ID"
+        jsdoc: 'Find projection by ID'
       },
       {
-        name: "listProjections",
+        name: 'listProjections',
         params: [
-          { name: "filters", type: "Record<string, unknown>", optional: true },
-          { name: "pagination", type: "PaginationParams", optional: true }
+          { name: 'filters', type: 'Record<string, unknown>', optional: true },
+          { name: 'pagination', type: 'PaginationParams', optional: true }
         ],
         returnType: `Effect.Effect<PaginatedResult<unknown>, ${errorType}>`,
-        jsdoc: "List projections with filters"
+        jsdoc: 'List projections with filters'
       },
       {
-        name: "updateProjection",
+        name: 'updateProjection',
         params: [
-          { name: "id", type: "string" },
-          { name: "data", type: "unknown" }
+          { name: 'id', type: 'string' },
+          { name: 'data', type: 'unknown' }
         ],
         returnType: `Effect.Effect<void, ${errorType}>`,
-        jsdoc: "Update projection (called by event handlers)"
+        jsdoc: 'Update projection (called by event handlers)'
       },
       {
-        name: "rebuildProjection",
-        params: [{ name: "id", type: "string" }],
+        name: 'rebuildProjection',
+        params: [{ name: 'id', type: 'string' }],
         returnType: `Effect.Effect<void, ${errorType}>`,
-        jsdoc: "Rebuild projection from event stream"
+        jsdoc: 'Rebuild projection from event stream'
       }
     ]
   }

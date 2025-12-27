@@ -40,9 +40,7 @@ Usage:
   })
   builder.addBlankLine()
 
-  builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer", "Stream"] }
-  ])
+  builder.addImports([{ from: "effect", imports: ["Context", "Effect", "Layer", "Queue", "Schema"] }])
   builder.addBlankLine()
 
   builder.addSectionComment("Domain Events")
@@ -51,7 +49,11 @@ Usage:
       from: `${scope}/contract-${fileName}`,
       imports: [`${className}CreatedEvent`, `${className}DeletedEvent`, `${className}UpdatedEvent`]
     },
-    { from: `${scope}/contract-${fileName}`, imports: [`${className}DomainEvent`], isTypeOnly: true }
+    {
+      from: `${scope}/contract-${fileName}`,
+      imports: [`${className}Event`],
+      isTypeOnly: true
+    }
   ])
   builder.addBlankLine()
 
@@ -112,7 +114,7 @@ export interface ProjectionBuilderInterface<TModel> {
   /**
    * Process a domain event and update projections
    */
-  readonly processEvent: (event: ${className}DomainEvent) => Effect.Effect<void>
+  readonly processEvent: (event: ${className}Event) => Effect.Effect<void>
 
   /**
    * Start consuming events from the message broker
@@ -122,7 +124,7 @@ export interface ProjectionBuilderInterface<TModel> {
   /**
    * Rebuild all projections from event history
    */
-  readonly rebuild: (events: ReadonlyArray<${className}DomainEvent>) => Effect.Effect<void>
+  readonly rebuild: (events: ReadonlyArray<${className}Event>) => Effect.Effect<void>
 
   /**
    * Get current projection state
@@ -160,33 +162,28 @@ const createProjectionBuilderImpl = (
   metrics: Context.Tag.Service<typeof MetricsService>,
   store: ReadModelStore<${className}ReadModel>
 ) => {
-  const processEvent = (event: ${className}DomainEvent) =>
+  const processEvent = (event: ${className}Event) =>
     Effect.gen(function*() {
       const counter = yield* metrics.counter("${name.toLowerCase()}_projections_processed_total")
 
       yield* logger.debug("Processing projection event", {
-        eventType: event.eventType,
-        correlationId: event.correlationId,
+        eventType: event.metadata.eventType,
+        correlationId: event.metadata.correlationId,
       })
 
-      // Extract ID from event
-      const getId = (e: ${className}DomainEvent): string => {
-        if ("${propertyName}Id" in e) return e.${propertyName}Id;
-        if ("id" in e) return e.id;
-        return event.correlationId || "";
-      }
-
-      const id = getId(event)
+      // Extract ID from event payload - branded string is assignable to string
+      const id = String(event.payload.id)
       const current = yield* store.get(id)
+      const occurredAt = event.metadata.occurredAt ?? new Date()
 
-      // Use _tag discriminated union instead of instanceof
-      switch (event._tag) {
+      // Use eventType for discrimination
+      switch (event.metadata.eventType) {
         case "${className}CreatedEvent":
           yield* store.save(id, {
             id,
-            createdAt: new Date(event.occurredAt),
-            updatedAt: new Date(event.occurredAt),
-            version: 1,
+            createdAt: occurredAt,
+            updatedAt: occurredAt,
+            version: event.aggregate.aggregateVersion,
             data: {}
           })
           break;
@@ -194,8 +191,8 @@ const createProjectionBuilderImpl = (
           if (current) {
             yield* store.save(id, {
               ...current,
-              updatedAt: new Date(event.occurredAt),
-              version: current.version + 1,
+              updatedAt: occurredAt,
+              version: event.aggregate.aggregateVersion,
             })
           }
           break;
@@ -206,16 +203,23 @@ const createProjectionBuilderImpl = (
 
       yield* counter.increment
       yield* logger.info("Projection updated", {
-        eventType: event.eventType,
+        eventType: event.metadata.eventType,
         entityId: id,
       })
     }).pipe(
       Effect.withSpan("${className}Projection.processEvent", {
         attributes: {
-          eventType: event.eventType,
+          eventType: event.metadata.eventType,
         },
       })
     )
+
+  // Create event schema for topic subscription
+  const ${className}EventSchema = Schema.Union(
+    ${className}CreatedEvent,
+    ${className}UpdatedEvent,
+    ${className}DeletedEvent
+  )
 
   return {
     processEvent,
@@ -224,13 +228,28 @@ const createProjectionBuilderImpl = (
       Effect.gen(function*() {
         yield* logger.info("Starting ${className} projection consumer")
 
-        // Subscribe to all events
-        yield* pubsub.subscribe("${propertyName}.events", (event) =>
-          processEvent(event as ${className}DomainEvent)
+        // Create topic and subscribe to events with scoped subscription
+        const topic = yield* pubsub.topic("${propertyName}.events", ${className}EventSchema)
+
+        // Use Effect.scoped to handle the Scope requirement internally
+        yield* Effect.scoped(
+          Effect.gen(function*() {
+            const subscription = yield* topic.subscribe
+
+            // Process events in background
+            yield* Effect.forkDaemon(
+              Effect.forever(
+                Effect.gen(function*() {
+                  const event = yield* Queue.take(subscription)
+                  yield* processEvent(event)
+                })
+              )
+            )
+          })
         )
       }),
 
-    rebuild: (events) =>
+    rebuild: (events: ReadonlyArray<${className}Event>) =>
       Effect.gen(function*() {
         yield* logger.info(\`Rebuilding projections from \${events.length} events\`)
 
@@ -241,7 +260,7 @@ const createProjectionBuilderImpl = (
         yield* logger.info("Projection rebuild complete")
       }),
 
-    getProjection: (id) => store.get(id)
+    getProjection: (id: string) => store.get(id)
   }
 };`)
   builder.addBlankLine()

@@ -80,7 +80,7 @@ export class ProfileOperationError extends Data.TaggedError("ProfileOperationErr
 /**
  * Union of profile domain errors (business logic)
  */
-export type ProfileDomainError = 
+export type ProfileDomainError =
   | ProfileNotFoundError
   | ProfileValidationError
 /**
@@ -90,7 +90,7 @@ export type ProfileRepositoryError = ProfileOperationError
 /**
  * All possible profile errors
  */
-export type ProfileError = 
+export type ProfileError =
   | ProfileDomainError
   | ProfileRepositoryError
 // TODO: Add domain-specific errors here

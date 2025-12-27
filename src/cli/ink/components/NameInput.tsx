@@ -7,17 +7,17 @@
  * @module monorepo-library-generator/cli/ink/components/NameInput
  */
 
-import { Box, Text, useInput } from 'ink';
-import TextInput from 'ink-text-input';
+import { Box, Text, useInput } from 'ink'
+import TextInput from 'ink-text-input'
 import { useState } from 'react'
-import type { LibraryType } from '../../interactive/types';
-import { useOperations } from '../bridge/operations-context';
+import type { LibraryType } from '../../interactive/types'
+import { useOperations } from '../bridge/operations-context'
 import { colors } from '../theme/colors'
 
 interface NameInputProps {
-  readonly librariesRoot: string;
-  readonly libraryType?: LibraryType;
-  readonly onSubmit: (name: string) => void;
+  readonly librariesRoot: string
+  readonly libraryType?: LibraryType
+  readonly onSubmit: (name: string) => void
 }
 
 export function NameInput({ librariesRoot, libraryType, onSubmit }: NameInputProps) {
@@ -48,9 +48,12 @@ export function NameInput({ librariesRoot, libraryType, onSubmit }: NameInputPro
       </Box>
       <Box marginBottom={1}>
         <Text color={colors.muted}>
-          Will generate to: {librariesRoot}/
-          <Text color={colors.libraryType}>{libraryType}</Text>/
-          {name ? <Text color={colors.libraryName}>{name}</Text> : <Text color={colors.muted}>&lt;name&gt;</Text>}
+          Will generate to: {librariesRoot}/<Text color={colors.libraryType}>{libraryType}</Text>/
+          {name ? (
+            <Text color={colors.libraryName}>{name}</Text>
+          ) : (
+            <Text color={colors.muted}>&lt;name&gt;</Text>
+          )}
         </Text>
       </Box>
       <Box>

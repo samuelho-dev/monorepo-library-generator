@@ -1,6 +1,6 @@
 import { env } from "@samuelho-dev/env"
-import { Chunk, Context, Effect, Layer, Option, Queue, Schema } from "effect"
-import type { Scope } from "effect"
+import { Context, Effect, Layer, Queue, Schema } from "effect"
+import type { Chunk, Option, Scope } from "effect"
 import type { ParseError } from "effect/ParseResult"
 
 /**

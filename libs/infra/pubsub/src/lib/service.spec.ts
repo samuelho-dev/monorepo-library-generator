@@ -16,7 +16,6 @@ Testing Guidelines:
  * @module @samuelho-dev/infra-pubsub
  */
 
-
 /**
  * Test service tag for layer composition tests
  */

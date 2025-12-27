@@ -33,6 +33,39 @@
  * ```
  */
 
+export type { ContractDomainErrorConfig, DataAccessContractReExportConfig } from './error-factory'
+
+// Error factory
+export {
+  createContractCombinedErrorType,
+  createContractDomainErrors,
+  createContractReExports,
+  createContractRepositoryErrors,
+  createDataAccessContractReExports,
+  createErrorFactory,
+  generateErrorFile,
+  getErrorNames,
+  validateErrorFactoryConfig
+} from './error-factory'
+export type {
+  AutoLayerConfig,
+  DomainLayerConfig,
+  InfrastructureLayerConfig,
+  LayerImportsConfig
+} from './layer-factory'
+// Layer factory
+export {
+  createAutoLayer,
+  createDomainLayers,
+  createInfrastructureLayers,
+  createLayerImports,
+  DOMAIN_SERVICES,
+  generateLayersFile,
+  getInfraPackageName,
+  INFRASTRUCTURE_SERVICES
+} from './layer-factory'
+// Presets
+export { ERROR_DEFINITIONS, ERROR_SETS, getInfrastructureErrorNames } from './presets'
 // Types
 export type {
   ComposedLayerConfig,
@@ -67,36 +100,4 @@ export type {
   StaticMethodDef,
   StringFactory,
   ValidationResult
-} from "./types"
-
-// Error factory
-export {
-  createContractCombinedErrorType,
-  createContractDomainErrors,
-  createContractReExports,
-  createContractRepositoryErrors,
-  createDataAccessContractReExports,
-  createErrorFactory,
-  generateErrorFile,
-  getErrorNames,
-  validateErrorFactoryConfig
-} from "./error-factory"
-
-export type { ContractDomainErrorConfig, DataAccessContractReExportConfig } from "./error-factory"
-
-// Presets
-export { ERROR_DEFINITIONS, ERROR_SETS, getInfrastructureErrorNames } from "./presets"
-
-// Layer factory
-export {
-  createAutoLayer,
-  createDomainLayers,
-  createInfrastructureLayers,
-  createLayerImports,
-  DOMAIN_SERVICES,
-  generateLayersFile,
-  getInfraPackageName,
-  INFRASTRUCTURE_SERVICES
-} from "./layer-factory"
-
-export type { AutoLayerConfig, DomainLayerConfig, InfrastructureLayerConfig, LayerImportsConfig } from "./layer-factory"
+} from './types'

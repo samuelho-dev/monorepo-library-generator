@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/contract/auth/schemas
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
 
 export interface AuthTemplateOptions {
   readonly packageName: string
@@ -26,7 +26,7 @@ export function generateAuthSchemasFile(options: AuthTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "Auth Contract Schemas",
+    title: 'Auth Contract Schemas',
     description: `Schema definitions for authentication across the monorepo.
 
 SINGLE SOURCE OF TRUTH:
@@ -42,12 +42,10 @@ Schemas:
   })
   builder.addBlankLine()
 
-  builder.addImports([
-    { from: "effect", imports: ["Schema"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
   builder.addBlankLine()
 
-  builder.addSectionComment("User Authentication Schemas")
+  builder.addSectionComment('User Authentication Schemas')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -118,7 +116,7 @@ export type AuthSession = Schema.Schema.Type<typeof AuthSessionSchema>
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Service-to-Service Authentication Schemas")
+  builder.addSectionComment('Service-to-Service Authentication Schemas')
   builder.addBlankLine()
 
   builder.addRaw(`/**

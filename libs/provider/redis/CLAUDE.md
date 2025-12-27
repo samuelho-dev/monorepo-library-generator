@@ -1,3 +1,12 @@
+---
+scope: libs/provider/redis/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/PROVIDER.md
+  - ../../../docs/EFFECT_PATTERNS.md
+---
+
 # @samuelho-dev/provider-redis
 
 Redis provider for cache, queue, and pubsub backing with ioredis
@@ -205,3 +214,11 @@ list: (params) =>
 4. **Use Auto layer for environment-aware selection** (NODE_ENV)
 
 The baseline implementation remains useful for unit tests and demonstrations.
+
+## For Future Claude Code Instances
+
+- [ ] Wraps ioredis with Effect patterns
+- [ ] Provides `.queue`, `.cache`, `.pubsub` accessors
+- [ ] Use Layer.scoped with Effect.addFinalizer for cleanup
+- [ ] Static layers: Live, Test, Dev, Auto on Redis class
+- [ ] Consumed by infra-cache, infra-queue, infra-pubsub

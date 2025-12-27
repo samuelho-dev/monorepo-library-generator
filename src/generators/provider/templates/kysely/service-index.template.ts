@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/provider/templates/kysely/service-index
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate Kysely service/index.ts file
@@ -41,11 +41,11 @@ Import patterns:
   })
   builder.addBlankLine()
 
-  builder.addSectionComment("Re-export service internals")
+  builder.addSectionComment('Re-export service internals')
   builder.addBlankLine()
 
   // Kysely only has errors in service/ - no types, validation, or layers
-  builder.addComment("Kysely-specific error types")
+  builder.addComment('Kysely-specific error types')
   builder.addRaw(`export {
   ${className}ConfigError,
   ${className}ConnectionError,

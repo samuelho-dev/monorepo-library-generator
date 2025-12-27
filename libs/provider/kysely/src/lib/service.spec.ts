@@ -16,7 +16,6 @@ Testing Guidelines:
  * @module @myorg/provider-kysely
  */
 
-
 /**
  * Test service tag for layer composition tests
  */

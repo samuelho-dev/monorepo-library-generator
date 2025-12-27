@@ -10,8 +10,8 @@
  * @module monorepo-library-generator/feature/templates/sub-module/hooks
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 export interface SubModuleHooksOptions {
   readonly parentName: string
@@ -45,11 +45,11 @@ Usage:
   })
 
   builder.addImports([
-    { from: "react", imports: ["useCallback", "useState"] },
-    { from: "effect", imports: ["Option", "Schema"] }
+    { from: 'react', imports: ['useCallback', 'useState'] },
+    { from: 'effect', imports: ['Option', 'Schema'] }
   ])
 
-  builder.addSectionComment("RPC Utilities")
+  builder.addSectionComment('RPC Utilities')
 
   builder.addRaw(`/**
  * Schema for RPC error responses
@@ -80,7 +80,8 @@ function parseRpcError(error: unknown): RpcError {
 /**
  * RPC endpoint URL - configure via environment
  */
-const RPC_ENDPOINT = process.env["NEXT_PUBLIC_RPC_ENDPOINT"] ?? "/api/rpc"
+// biome-ignore lint/style/noProcessEnv: Client-side RPC endpoint configured via environment
+const RPC_ENDPOINT = process.env.NEXT_PUBLIC_RPC_ENDPOINT ?? "/api/rpc"
 
 /**
  * Make an RPC call to the server
@@ -102,7 +103,7 @@ async function rpcCall<T>(operation: string, payload: unknown): Promise<T> {
 }
 `)
 
-  builder.addSectionComment("RPC Hook")
+  builder.addSectionComment('RPC Hook')
 
   builder.addRaw(`/**
  * ${subModuleClassName} RPC hook

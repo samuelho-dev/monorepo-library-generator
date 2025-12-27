@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate RPC client file
@@ -31,17 +31,17 @@ Provides:
 
 Works in browser and Node.js environments.`,
     module: `${scope}/infra-${fileName}/client`,
-    see: ["EFFECT_PATTERNS.md for client patterns"]
+    see: ['EFFECT_PATTERNS.md for client patterns']
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer", "Context", "Duration", "Option", "Schema"] },
-    { from: "@effect/platform", imports: ["HttpClient", "HttpClientRequest"] },
-    { from: "@effect/platform", imports: ["HttpClientResponse"], isTypeOnly: true },
-    { from: "./errors", imports: ["RpcInfraError"] }
+    { from: 'effect', imports: ['Effect', 'Layer', 'Context', 'Duration', 'Option', 'Schema'] },
+    { from: '@effect/platform', imports: ['HttpClient', 'HttpClientRequest'] },
+    { from: '@effect/platform', imports: ['HttpClientResponse'], isTypeOnly: true },
+    { from: './errors', imports: ['RpcInfraError'] }
   ])
 
-  builder.addSectionComment("Client Configuration")
+  builder.addSectionComment('Client Configuration')
 
   builder.addRaw(`/**
  * RPC client configuration
@@ -85,7 +85,7 @@ export interface RpcClientConfig {
      * Retryable error codes
      * @default ["NETWORK_ERROR", "TIMEOUT", "SERVICE_UNAVAILABLE"]
      */
-    readonly retryableCodes?: ReadonlyArray<string>
+    readonly retryableCodes?: readonly string[]
   }
 
   /**
@@ -108,7 +108,7 @@ export class RpcClientConfigTag extends Context.Tag("RpcClientConfig")<
 >() {}
 `)
 
-  builder.addSectionComment("RPC Client Service")
+  builder.addSectionComment('RPC Client Service')
 
   builder.addRaw(`/**
  * ${className} Client Service
@@ -443,7 +443,7 @@ export class ${className}Client extends Context.Tag(
 }
 `)
 
-  builder.addSectionComment("Client Factory")
+  builder.addSectionComment('Client Factory')
 
   builder.addRaw(`/**
  * Create RPC client layer with configuration

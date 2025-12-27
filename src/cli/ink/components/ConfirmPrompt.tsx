@@ -6,17 +6,17 @@
  * @module monorepo-library-generator/cli/ink/components/ConfirmPrompt
  */
 
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 import { colors, statusIcons } from '../theme/colors'
 
 interface ConfirmPromptProps {
-  readonly targetDirectory: string;
-  readonly fileCount: number;
+  readonly targetDirectory: string
+  readonly fileCount: number
   /** Optional description for what will be created (e.g., for domain type) */
-  readonly description?: string;
-  readonly onConfirm: () => void;
-  readonly onCancel: () => void;
+  readonly description?: string
+  readonly onConfirm: () => void
+  readonly onCancel: () => void
 }
 
 export function ConfirmPrompt({
@@ -24,7 +24,7 @@ export function ConfirmPrompt({
   fileCount,
   description,
   onConfirm,
-  onCancel,
+  onCancel
 }: ConfirmPromptProps) {
   const [selected, setSelected] = useState<'yes' | 'no'>('yes')
 

@@ -18,14 +18,14 @@
  * - Simple API: import { env } from '@workspace/env'
  */
 
-import type { Tree } from "@nx/devkit"
-import { formatFiles, logger } from "@nx/devkit"
-import * as path from "node:path"
-import type { EnvGeneratorSchema } from "./schema"
-import { generateCreateEnvFile } from "./templates/createEnv.template"
-import { generateEnvScaffoldFile } from "./templates/env-scaffold.template"
-import { generateIndexFile } from "./templates/index.template"
-import { findDotEnvFile, parseDotEnvFile } from "./utils/parse-dotenv"
+import * as path from 'node:path'
+import type { Tree } from '@nx/devkit'
+import { formatFiles, logger } from '@nx/devkit'
+import type { EnvGeneratorSchema } from './schema'
+import { generateCreateEnvFile } from './templates/createEnv.template'
+import { generateEnvScaffoldFile } from './templates/env-scaffold.template'
+import { generateIndexFile } from './templates/index.template'
+import { findDotEnvFile, parseDotEnvFile } from './utils/parse-dotenv'
 
 /**
  * Environment Library Generator for Nx Workspaces
@@ -42,8 +42,8 @@ export async function envGenerator(tree: Tree, schema: EnvGeneratorSchema) {
   const workspaceRoot = tree.root || process.cwd()
 
   // Determine project root (default to libs/env)
-  const projectRoot = schema.projectRoot || "libs/env"
-  const sourceRoot = path.join(projectRoot, "src")
+  const projectRoot = schema.projectRoot || 'libs/env'
+  const sourceRoot = path.join(projectRoot, 'src')
 
   // Validate that the project exists (should be created by init command)
   if (!tree.exists(projectRoot)) {
@@ -57,40 +57,33 @@ export async function envGenerator(tree: Tree, schema: EnvGeneratorSchema) {
 
   // Phase 1: Parse .env file from workspace root
   const dotEnvPath = findDotEnvFile(workspaceRoot)
-  const vars = dotEnvPath ? parseDotEnvFile(dotEnvPath) : parseDotEnvFile("") // Will use defaults
+  const vars = dotEnvPath ? parseDotEnvFile(dotEnvPath) : parseDotEnvFile('') // Will use defaults
 
   logger.info(`📋 Parsed ${vars.length} environment variables`)
-  logger.info(`   - Shared: ${vars.filter((v) => v.context === "shared").length}`)
-  logger.info(`   - Client: ${vars.filter((v) => v.context === "client").length}`)
-  logger.info(`   - Server: ${vars.filter((v) => v.context === "server").length}`)
+  logger.info(`   - Shared: ${vars.filter((v) => v.context === 'shared').length}`)
+  logger.info(`   - Client: ${vars.filter((v) => v.context === 'client').length}`)
+  logger.info(`   - Server: ${vars.filter((v) => v.context === 'server').length}`)
 
   // Phase 2: Generate source files using new templates
   logger.info(`📝 Generating type-safe environment files...`)
 
   // Generate createEnv.ts (runtime library)
   const createEnvContent = generateCreateEnvFile()
-  tree.write(path.join(sourceRoot, "createEnv.ts"), createEnvContent)
+  tree.write(path.join(sourceRoot, 'createEnv.ts'), createEnvContent)
   logger.info(`   ✓ ${sourceRoot}/createEnv.ts (runtime library)`)
 
   // Generate env.ts (user's createEnv call)
   const envContent = generateEnvScaffoldFile(vars)
-  tree.write(path.join(sourceRoot, "env.ts"), envContent)
+  tree.write(path.join(sourceRoot, 'env.ts'), envContent)
   logger.info(`   ✓ ${sourceRoot}/env.ts (environment definition)`)
 
   // Generate index.ts (single entry point)
   const indexContent = generateIndexFile()
-  tree.write(path.join(sourceRoot, "index.ts"), indexContent)
+  tree.write(path.join(sourceRoot, 'index.ts'), indexContent)
   logger.info(`   ✓ ${sourceRoot}/index.ts (entry point)`)
 
   // Clean up old files that are no longer needed
-  const obsoleteFiles = [
-    "types.ts",
-    "config.ts",
-    "schema.ts",
-    "parse.ts",
-    "client.ts",
-    "server.ts"
-  ]
+  const obsoleteFiles = ['types.ts', 'config.ts', 'schema.ts', 'parse.ts', 'client.ts', 'server.ts']
 
   for (const file of obsoleteFiles) {
     const filePath = path.join(sourceRoot, file)

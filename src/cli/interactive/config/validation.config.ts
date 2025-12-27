@@ -21,13 +21,15 @@ export interface ValidationResult {
 export const VALIDATION_PATTERNS = {
   name: {
     pattern: /^[a-z][a-z0-9-]*$/,
-    requiredError: "Name is required",
-    formatError: "Name must start with lowercase letter, contain only lowercase letters, numbers, and hyphens"
+    requiredError: 'Name is required',
+    formatError:
+      'Name must start with lowercase letter, contain only lowercase letters, numbers, and hyphens'
   },
   externalService: {
     pattern: /^[a-zA-Z][a-zA-Z0-9-]*$/,
-    requiredError: "External service name is required for provider libraries",
-    formatError: "External service name must start with a letter, contain only letters, numbers, and hyphens"
+    requiredError: 'External service name is required for provider libraries',
+    formatError:
+      'External service name must start with a letter, contain only letters, numbers, and hyphens'
   }
 } as const
 

@@ -19,19 +19,11 @@ export type { TopicHandle, TopicOptions } from "./lib/service"
 // Error Types
 // ============================================================================
 // Error types for error handling
-export {
-  PubsubInternalError,
-  PubsubConfigError,
-  PubsubConnectionError,
-  PubsubTimeoutError,
-} from "./lib/errors"
+export { PubsubConfigError, PubsubConnectionError, PubsubInternalError, PubsubTimeoutError } from "./lib/errors"
 export type { PubsubError, PubsubServiceError } from "./lib/errors"
 
 // ============================================================================
 // Additional Layers
 // ============================================================================
 // Redis-backed distributed layer
-export {
-  PubsubRedisLayer,
-  withEventPublishing
-} from "./lib/layers"
+export { PubsubRedisLayer, withEventPublishing } from "./lib/layers"

@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/infra-templates/storage/service
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate storage service.ts file
@@ -20,7 +20,7 @@ export function generateStorageServiceFile(options: InfraTemplateOptions) {
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: "Storage Infrastructure Service",
+    title: 'Storage Infrastructure Service',
     description: `Storage service that orchestrates file storage providers.
 
 Consumes SupabaseStorage from provider-supabase and provides:
@@ -36,34 +36,34 @@ This service provides a unified storage API for the application.`,
 
   // Imports - all files in lib/ as siblings
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] },
-    { from: `${scope}/provider-supabase`, imports: ["SupabaseStorage"] },
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer'] },
+    { from: `${scope}/provider-supabase`, imports: ['SupabaseStorage'] },
     {
-      from: "./errors",
+      from: './errors',
       imports: [
-        "BucketNotFoundError",
-        "FileNotFoundError",
-        "FileSizeExceededError",
-        "InvalidFileTypeError",
-        "StorageError",
-        "UploadFailedError"
+        'BucketNotFoundError',
+        'FileNotFoundError',
+        'FileSizeExceededError',
+        'InvalidFileTypeError',
+        'StorageError',
+        'UploadFailedError'
       ]
     },
     {
-      from: "./types",
-      imports: ["ListFilesOptions", "ListFilesResult", "StorageConfig", "UploadResult"],
+      from: './types',
+      imports: ['ListFilesOptions', 'ListFilesResult', 'StorageConfig', 'UploadResult'],
       isTypeOnly: true
     },
     {
       from: `${scope}/provider-supabase`,
-      imports: ["DownloadOptions", "SignedUrlOptions", "StorageFile", "UploadOptions"],
+      imports: ['DownloadOptions', 'SignedUrlOptions', 'StorageFile', 'UploadOptions'],
       isTypeOnly: true
     }
   ])
   builder.addBlankLine()
 
   // Service interface
-  builder.addSectionComment("Service Interface")
+  builder.addSectionComment('Service Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -103,7 +103,7 @@ export interface StorageServiceInterface {
    */
   readonly remove: (
     bucket: string,
-    paths: ReadonlyArray<string>
+    paths: readonly string[]
   ) => Effect.Effect<void, StorageError>
 
   /**
@@ -160,7 +160,7 @@ export interface StorageServiceInterface {
   builder.addBlankLine()
 
   // Helper Functions
-  builder.addSectionComment("Helper Functions")
+  builder.addSectionComment('Helper Functions')
   builder.addBlankLine()
 
   builder.addRaw(`// ============================================================================
@@ -269,7 +269,7 @@ const buildListOptions = (options?: ListFilesOptions) => ({
  * Transform storage files to list result
  */
 const buildListResult = (
-  files: ReadonlyArray<StorageFile>,
+  files: readonly StorageFile[],
   options?: ListFilesOptions
 ): ListFilesResult => {
   const limit = options?.limit ?? 100
@@ -424,7 +424,7 @@ export class StorageService extends Context.Tag("StorageService")<
 
         exists: (bucket, path) =>
           Effect.gen(function*() {
-            const emptyFiles: ReadonlyArray<StorageFile> = []
+            const emptyFiles: readonly StorageFile[] = []
             const files = yield* storage.list(bucket, path).pipe(
               Effect.catchAll(() => Effect.succeed(emptyFiles))
             )

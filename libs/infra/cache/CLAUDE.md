@@ -1,3 +1,12 @@
+---
+scope: libs/infra/cache/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/INFRA.md
+  - ../../../docs/EFFECT_PATTERNS.md
+---
+
 # @samuelho-dev/infra-cache
 
 Cache orchestration infrastructure (coordinates cache providers)
@@ -77,3 +86,11 @@ import { useCache } from '@samuelho-dev/infra-cache/client/hooks'function MyComp
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
+
+## For Future Claude Code Instances
+
+- [ ] Uses Context.Tag with static layers (Live, Test, Dev, Auto)
+- [ ] Coordinates with provider-redis for cache backing
+- [ ] Memory provider is included for testing
+- [ ] Use Layer.scoped for connection lifecycle management
+- [ ] Config is in `lib/config.ts`

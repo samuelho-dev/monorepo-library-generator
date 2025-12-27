@@ -74,7 +74,7 @@ export const deleteOperations = {
    *
    * @returns The number of records that were actually deleted
    */
-  deleteMany: (ids: ReadonlyArray<string>) =>
+  deleteMany: (ids: readonly string[]) =>
     Effect.gen(function*() {
       const database = yield* DatabaseService
 

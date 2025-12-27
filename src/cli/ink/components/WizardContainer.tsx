@@ -7,29 +7,34 @@
  * @module monorepo-library-generator/cli/ink/components/WizardContainer
  */
 
-import { Box, useApp, useInput } from 'ink';
-import type React from 'react';
+import { Box, useApp, useInput } from 'ink'
+import type React from 'react'
 import { useCallback, useEffect } from 'react'
-import type { WizardOptions, WizardSelection } from '../../interactive/types';
-import { useOperations } from '../bridge/operations-context';
-import type { WizardAction, WizardState } from '../state/types';
-import { ConfirmPrompt } from './ConfirmPrompt';
-import { ExternalServiceInput } from './ExternalServiceInput';
-import { FileTreePreview } from './FileTreePreview';
-import { GenerationProgress } from './GenerationProgress';
-import { NameInput } from './NameInput';
-import { OptionsForm } from './OptionsForm';
-import { StepIndicator } from './StepIndicator';
+import type { WizardOptions, WizardSelection } from '../../interactive/types'
+import { useOperations } from '../bridge/operations-context'
+import type { WizardAction, WizardState } from '../state/types'
+import { ConfirmPrompt } from './ConfirmPrompt'
+import { ExternalServiceInput } from './ExternalServiceInput'
+import { FileTreePreview } from './FileTreePreview'
+import { GenerationProgress } from './GenerationProgress'
+import { NameInput } from './NameInput'
+import { OptionsForm } from './OptionsForm'
+import { StepIndicator } from './StepIndicator'
 import { TypeSelect } from './TypeSelect'
 
 interface WizardContainerProps {
-  readonly state: WizardState;
+  readonly state: WizardState
   readonly dispatch: React.Dispatch<WizardAction>
-  readonly onGenerate: () => void;
-  readonly workspaceRoot: string;
+  readonly onGenerate: () => void
+  readonly workspaceRoot: string
 }
 
-export function WizardContainer({ state, dispatch, onGenerate, workspaceRoot }: WizardContainerProps) {
+export function WizardContainer({
+  state,
+  dispatch,
+  onGenerate,
+  workspaceRoot
+}: WizardContainerProps) {
   const { exit } = useApp()
   const { preview } = useOperations()
 
@@ -94,12 +99,14 @@ export function WizardContainer({ state, dispatch, onGenerate, workspaceRoot }: 
   }, [exit])
 
   // Get target directory and description using operations context
-  const targetDirectory = state.libraryType && state.libraryName
-    ? preview.getTargetDirectory(state.librariesRoot, state.libraryType, state.libraryName)
-    : '';
-  const creationDescription = state.libraryType && state.libraryName
-    ? preview.getCreationDescription(state.libraryType, state.libraryName)
-    : undefined  // Render current step
+  const targetDirectory =
+    state.libraryType && state.libraryName
+      ? preview.getTargetDirectory(state.librariesRoot, state.libraryType, state.libraryName)
+      : ''
+  const creationDescription =
+    state.libraryType && state.libraryName
+      ? preview.getCreationDescription(state.libraryType, state.libraryName)
+      : undefined // Render current step
   const renderStep = () => {
     switch (state.currentStep) {
       case 'select-type':
@@ -161,7 +168,7 @@ export function WizardContainer({ state, dispatch, onGenerate, workspaceRoot }: 
         )
 
       default:
-        return null;
+        return null
     }
   }
 

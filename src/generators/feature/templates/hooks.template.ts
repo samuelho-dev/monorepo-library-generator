@@ -11,9 +11,9 @@
  * @module monorepo-library-generator/feature/hooks-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate client/hooks/use-{name}.ts file for feature library
@@ -48,9 +48,9 @@ Usage:
 
   // Add imports
   builder.addImports([
-    { from: "@effect-atom/atom-react", imports: ["useAtom", "useAtomValue"] },
-    { from: "effect", imports: ["Option", "Schema"] },
-    { from: "react", imports: ["useCallback", "useMemo"] }
+    { from: '@effect-atom/atom-react', imports: ['useAtom', 'useAtomValue'] },
+    { from: 'effect', imports: ['Option', 'Schema'] },
+    { from: 'react', imports: ['useCallback', 'useMemo'] }
   ])
 
   // Add RPC error schema for parsing error responses
@@ -66,15 +66,13 @@ const RpcErrorSchema = Schema.Struct({
   message: Schema.String
 })
 
-type RpcErrorMessage = Schema.Schema.Type<typeof RpcErrorSchema>
-
 /**
  * Extract error message from RPC error response using Schema
  *
  * Uses Schema.decodeUnknownOption for type-safe parsing without coercion.
  */
-function getErrorMessage(error: unknown, fallback: string): string {
-  const result: Option.Option<RpcErrorMessage> = Schema.decodeUnknownOption(RpcErrorSchema)(error)
+function getErrorMessage(error: unknown, fallback: string) {
+  const result = Schema.decodeUnknownOption(RpcErrorSchema)(error)
   return Option.isSome(result) ? result.value.message : fallback
 }
 `)
@@ -84,7 +82,18 @@ function getErrorMessage(error: unknown, fallback: string): string {
   builder.addImports([
     {
       from: `${scope}/contract-${fileName}`,
-      imports: [{ name: `${className}Select`, alias: className }, `Create${className}Input`, `Update${className}Input`],
+      imports: [
+        // Schema for runtime validation
+        `${className}Schema`
+      ]
+    },
+    {
+      from: `${scope}/contract-${fileName}`,
+      imports: [
+        { name: `${className}Entity`, alias: className },
+        `Create${className}Input`,
+        `Update${className}Input`
+      ],
       isTypeOnly: true
     },
     {
@@ -104,7 +113,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
     { from: `../atoms/${fileName}-atoms`, imports: [`${className}State`], isTypeOnly: true }
   ])
 
-  builder.addSectionComment("Hook Return Type")
+  builder.addSectionComment('Hook Return Type')
 
   builder.addRaw(`/**
  * Return type for use${className} hook
@@ -131,7 +140,7 @@ export interface Use${className}Return {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Hook Implementation")
+  builder.addSectionComment('Hook Implementation')
 
   builder.addRaw(`/**
  * RPC endpoint URL - configured via environment
@@ -139,15 +148,18 @@ export interface Use${className}Return {
  * Uses process.env for client-side configuration.
  * Falls back to "/api/rpc" if PUBLIC_API_URL is not configured.
  */
-const RPC_ENDPOINT = process.env["PUBLIC_API_URL"] ?? process.env["NEXT_PUBLIC_API_URL"] ?? "/api/rpc"
+// biome-ignore lint/style/noProcessEnv: Client-side RPC endpoint configured via environment
+const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "/api/rpc"
 
 /**
  * Make an RPC call to the server
  *
- * Uses typed response - caller should cast result to expected type.
- * Server-side validation ensures type safety.
+ * Returns raw JSON response. Caller should validate with Schema.
+ *
+ * @param operation - RPC operation name (e.g., "GetUser")
+ * @param payload - Request payload
  */
-async function rpcCall<T>(operation: string, payload: unknown): Promise<T> {
+async function rpcCall(operation: string, payload: unknown): Promise<unknown> {
   const response = await fetch(RPC_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -160,16 +172,39 @@ async function rpcCall<T>(operation: string, payload: unknown): Promise<T> {
     throw body
   }
 
-  return body as T
+  return body
 }
+
+/**
+ * Decode response with schema and throw on validation error
+ */
+function decodeResponse<T>(schema: Schema.Schema<T>, data: unknown): T {
+  return Schema.decodeUnknownSync(schema)(data)
+}
+
+/**
+ * List response schema for pagination
+ */
+const ListResponseSchema = Schema.Struct({
+  items: Schema.Array(${className}Schema),
+  total: Schema.Number,
+  hasMore: Schema.Boolean
+})
+
+/**
+ * Delete response schema
+ */
+const DeleteResponseSchema = Schema.Struct({
+  success: Schema.Boolean
+})
 
 /**
  * List response type from server
  */
-interface ListResponse<T> {
-  readonly items: ReadonlyArray<T>
-  readonly total: number;
-  readonly hasMore: boolean;
+interface ListResponse {
+  readonly items: ReadonlyArray<${className}>
+  readonly total: number
+  readonly hasMore: boolean
 }
 
 /**
@@ -207,7 +242,8 @@ export function use${className}(): Use${className}Return {
   const fetchById = useCallback(async (id: string) => {
     setState(update${className}Entity({ loadingState: "loading", error: null }))
     try {
-      const result = await rpcCall<${className}>("Get${className}", { id })
+      const response = await rpcCall("Get${className}", { id })
+      const result = decodeResponse(${className}Schema, response)
       setState(update${className}Entity({
         data: result,
         loadingState: "idle",
@@ -228,7 +264,8 @@ export function use${className}(): Use${className}Return {
 
     setState(update${className}List({ loadingState: "loading", error: null }))
     try {
-      const result = await rpcCall<ListResponse<${className}>>("List${className}s", { page, pageSize })
+      const response = await rpcCall("List${className}s", { page, pageSize })
+      const result = decodeResponse(ListResponseSchema, response)
       setState(update${className}List({
         items: result.items,
         loadingState: "idle",
@@ -256,7 +293,8 @@ export function use${className}(): Use${className}Return {
   const create = useCallback(async (input: Create${className}Input) => {
     setState(update${className}Operation({ isSubmitting: true, error: null, lastOperation: "create" }))
     try {
-      const result = await rpcCall<${className}>("Create${className}", input)
+      const response = await rpcCall("Create${className}", input)
+      const result = decodeResponse(${className}Schema, response)
       setState(update${className}Operation({ isSubmitting: false }))
       // Refresh list after creation
       await refreshList()
@@ -272,7 +310,8 @@ export function use${className}(): Use${className}Return {
   const update = useCallback(async (id: string, input: Update${className}Input) => {
     setState(update${className}Operation({ isSubmitting: true, error: null, lastOperation: "update" }))
     try {
-      const result = await rpcCall<${className}>("Update${className}", { id, ...input })
+      const response = await rpcCall("Update${className}", { id, data: input })
+      const result = decodeResponse(${className}Schema, response)
       setState(update${className}Operation({ isSubmitting: false }))
       // Update entity if it's the current one
       if (state.entity.data?.id === id) {
@@ -292,7 +331,8 @@ export function use${className}(): Use${className}Return {
   const remove = useCallback(async (id: string) => {
     setState(update${className}Operation({ isSubmitting: true, error: null, lastOperation: "delete" }))
     try {
-      await rpcCall<{ success: boolean }>("Delete${className}", { id })
+      const response = await rpcCall("Delete${className}", { id })
+      decodeResponse(DeleteResponseSchema, response)
       setState(update${className}Operation({ isSubmitting: false }))
       // Clear entity if it's the deleted one
       if (state.entity.data?.id === id) {

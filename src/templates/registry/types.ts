@@ -6,31 +6,25 @@
  * @module monorepo-library-generator/templates/registry/types
  */
 
-import type { TemplateDefinition } from "../core/types"
+import type { TemplateDefinition } from '../core/types'
 
 /**
  * Library types supported by the generator
  */
-export type LibraryType =
-  | "contract"
-  | "data-access"
-  | "feature"
-  | "infra"
-  | "provider"
-  | "env"
+export type LibraryType = 'contract' | 'data-access' | 'feature' | 'infra' | 'provider' | 'env'
 
 /**
  * File types that can be generated
  */
 export type FileType =
-  | "errors"
-  | "events"
-  | "ports"
-  | "layers"
-  | "service"
-  | "types"
-  | "index"
-  | "config"
+  | 'errors'
+  | 'events'
+  | 'ports'
+  | 'layers'
+  | 'service'
+  | 'types'
+  | 'index'
+  | 'config'
 
 /**
  * Template key combining library type and file type

@@ -16,7 +16,6 @@ Testing Guidelines:
  * @module @samuelho-dev/infra-database
  */
 
-
 /**
  * Test service tag for layer composition tests
  */

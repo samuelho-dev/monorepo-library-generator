@@ -117,7 +117,7 @@ export interface PaginatedResponse<T> {
   /**
    * Array of items/records
    */
-  readonly items: ReadonlyArray<T>
+  readonly items: readonly T[]
   /**
    * Total number of records available
    */

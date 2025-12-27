@@ -14,8 +14,8 @@
  * @module monorepo-library-generator/provider/templates/errors
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ProviderTemplateOptions, ProviderType } from "../../../utils/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ProviderTemplateOptions, ProviderType } from '../../../utils/types'
 
 /**
  * Generate provider-specific error classes based on provider type
@@ -37,7 +37,7 @@ export class ${className}Error extends Data.TaggedError("${className}Error")<{
 }> {}`)
   builder.addBlankLine()
 
-  if (providerType === "cli") {
+  if (providerType === 'cli') {
     // CLI-specific errors
     builder.addRaw(`/**
  * Command Error - for CLI command execution failures
@@ -69,7 +69,7 @@ export class ${className}TimeoutError extends Data.TaggedError("${className}Time
     builder.addBlankLine()
   }
 
-  if (providerType === "http" || providerType === "graphql") {
+  if (providerType === 'http' || providerType === 'graphql') {
     // HTTP-specific errors
     builder.addRaw(`/**
  * HTTP Error - for HTTP status code errors
@@ -110,7 +110,7 @@ export class ${className}TimeoutError extends Data.TaggedError("${className}Time
     builder.addBlankLine()
   }
 
-  if (providerType === "graphql") {
+  if (providerType === 'graphql') {
     // GraphQL-specific errors
     builder.addRaw(`/**
  * GraphQL Error - for GraphQL operation errors
@@ -132,68 +132,68 @@ export class ${className}ValidationError extends Data.TaggedError("${className}V
     builder.addBlankLine()
   }
 
-  if (providerType === "sdk") {
+  if (providerType === 'sdk') {
     // SDK-specific errors using factory pattern
     const sdkErrors = [
       {
-        name: "ApiError",
-        description: "API failures",
-        fields: ["statusCode?: number", "errorCode?: string", "cause?: unknown"]
+        name: 'ApiError',
+        description: 'API failures',
+        fields: ['statusCode?: number', 'errorCode?: string', 'cause?: unknown']
       },
       {
-        name: "ConnectionError",
-        description: "network/connectivity failures",
-        fields: ["cause?: unknown"]
+        name: 'ConnectionError',
+        description: 'network/connectivity failures',
+        fields: ['cause?: unknown']
       },
       {
-        name: "RateLimitError",
-        description: "API rate limiting",
-        fields: ["retryAfter?: number", "limit?: number", "remaining?: number"]
+        name: 'RateLimitError',
+        description: 'API rate limiting',
+        fields: ['retryAfter?: number', 'limit?: number', 'remaining?: number']
       },
       {
-        name: "ValidationError",
-        description: "input validation failures",
-        fields: ["field?: string", "value?: unknown"]
+        name: 'ValidationError',
+        description: 'input validation failures',
+        fields: ['field?: string', 'value?: unknown']
       },
       {
-        name: "TimeoutError",
-        description: "request timeouts",
-        fields: ["timeout: number"]
+        name: 'TimeoutError',
+        description: 'request timeouts',
+        fields: ['timeout: number']
       },
       {
-        name: "AuthenticationError",
-        description: "auth failures",
-        fields: ["cause?: unknown"]
+        name: 'AuthenticationError',
+        description: 'auth failures',
+        fields: ['cause?: unknown']
       },
       {
-        name: "NotFoundError",
-        description: "404 responses",
-        fields: ["resourceId?: string", "resourceType?: string"]
+        name: 'NotFoundError',
+        description: '404 responses',
+        fields: ['resourceId?: string', 'resourceType?: string']
       },
       {
-        name: "ConflictError",
-        description: "409 conflicts",
-        fields: ["conflictingField?: string"]
+        name: 'ConflictError',
+        description: '409 conflicts',
+        fields: ['conflictingField?: string']
       },
       {
-        name: "ConfigError",
-        description: "configuration failures",
-        fields: ["configKey?: string"]
+        name: 'ConfigError',
+        description: 'configuration failures',
+        fields: ['configKey?: string']
       },
       {
-        name: "InternalError",
-        description: "5xx server errors",
-        fields: ["statusCode?: number", "cause?: unknown"]
+        name: 'InternalError',
+        description: '5xx server errors',
+        fields: ['statusCode?: number', 'cause?: unknown']
       }
     ]
 
     for (const error of sdkErrors) {
-      const fieldList = ["readonly message: string", ...error.fields.map((f) => `readonly ${f}`)]
+      const fieldList = ['readonly message: string', ...error.fields.map((f) => `readonly ${f}`)]
       builder.addRaw(`/**
- * ${error.name.replace("Error", "")} Error - for ${error.description}
+ * ${error.name.replace('Error', '')} Error - for ${error.description}
  */
 export class ${className}${error.name} extends Data.TaggedError("${className}${error.name}")<{
-  ${fieldList.join("\n  ")}
+  ${fieldList.join('\n  ')}
 }> {}`)
       builder.addBlankLine()
     }
@@ -215,14 +215,14 @@ function generateErrorUnionType(
   const errorTypes = [`${className}Error`]
 
   switch (providerType) {
-    case "cli":
+    case 'cli':
       errorTypes.push(
         `${className}CommandError`,
         `${className}NotFoundError`,
         `${className}TimeoutError`
       )
       break
-    case "http":
+    case 'http':
       errorTypes.push(
         `${className}HttpError`,
         `${className}NetworkError`,
@@ -230,7 +230,7 @@ function generateErrorUnionType(
         `${className}TimeoutError`
       )
       break
-    case "graphql":
+    case 'graphql':
       errorTypes.push(
         `${className}HttpError`,
         `${className}NetworkError`,
@@ -255,7 +255,7 @@ function generateErrorUnionType(
   }
 
   builder.addRaw(`export type ${className}ServiceError =
-  | ${errorTypes.join("\n  | ")}`)
+  | ${errorTypes.join('\n  | ')}`)
   builder.addBlankLine()
 }
 
@@ -383,7 +383,7 @@ export function map${className}Error(error: unknown) {
  */
 export function generateErrorsFile(options: ProviderTemplateOptions) {
   const builder = new TypeScriptBuilder()
-  const { className, externalService, name: projectClassName, providerType = "sdk" } = options
+  const { className, externalService, name: projectClassName, providerType = 'sdk' } = options
 
   // File header
   builder.addFileHeader({
@@ -397,9 +397,7 @@ Provider Type: ${providerType}`,
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([
-    { from: "effect", imports: ["Data", "Effect", "Option", "Schema"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Data', 'Effect', 'Option', 'Schema'] }])
   builder.addBlankLine()
 
   // Generate provider-specific errors
@@ -409,7 +407,7 @@ Provider Type: ${providerType}`,
   generateErrorUnionType(builder, className, providerType)
 
   // Generate error mapping (only for SDK type)
-  if (providerType === "sdk") {
+  if (providerType === 'sdk') {
     generateErrorMapping(builder, className)
 
     // Helper function

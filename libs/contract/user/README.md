@@ -1,6 +1,6 @@
 # @samuelho-dev/contract-user
 
-User domain contract with auth integration
+User
 
 ## Overview
 
@@ -25,6 +25,6 @@ import { /* types */ } from '@samuelho-dev/contract-user';
 # Build
 nx build contract-user
 
-# Test
-nx test contract-user
+# Typecheck
+nx typecheck contract-user
 ```

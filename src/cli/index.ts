@@ -7,53 +7,53 @@
  * @module monorepo-library-generator/cli
  */
 
-import { Args, Command, Options } from "@effect/cli"
-import { NodeContext, NodeRuntime } from "@effect/platform-node"
-import { Console, Effect, Option } from "effect"
-import { VERSION } from "../version"
-import { init } from "./commands/init"
-import { generateContract } from "./generators/contract"
-import { generateDataAccess } from "./generators/data-access"
-import { generateDomain } from "./generators/domain"
-import { generateFeature } from "./generators/feature"
-import { generateInfra } from "./generators/infra"
-import { generateProvider } from "./generators/provider"
-import { getCommandHelp } from "./help/commands"
-import { runInkTUI } from "./ink"
+import { Args, Command, Options } from '@effect/cli'
+import { NodeContext, NodeRuntime } from '@effect/platform-node'
+import { Console, Effect, Option } from 'effect'
+import { VERSION } from '../version'
+import { init } from './commands/init'
+import { generateContract } from './generators/contract'
+import { generateDataAccess } from './generators/data-access'
+import { generateDomain } from './generators/domain'
+import { generateFeature } from './generators/feature'
+import { generateInfra } from './generators/infra'
+import { generateProvider } from './generators/provider'
+import { getCommandHelp } from './help/commands'
+import { runInkTUI } from './ink'
 
 /**
  * Common arguments used across all generate commands
  */
-const nameArg = Args.text({ name: "name" }).pipe(
-  Args.withDescription("The name of the library to generate")
+const nameArg = Args.text({ name: 'name' }).pipe(
+  Args.withDescription('The name of the library to generate')
 )
 
 /**
  * Verbosity options for all generate commands
  */
-const verboseOption = Options.boolean("verbose").pipe(
-  Options.withAlias("v"),
-  Options.withDescription("Show detailed output for each file"),
+const verboseOption = Options.boolean('verbose').pipe(
+  Options.withAlias('v'),
+  Options.withDescription('Show detailed output for each file'),
   Options.withDefault(false)
 )
 
-const quietOption = Options.boolean("quiet").pipe(
-  Options.withAlias("q"),
-  Options.withDescription("Minimal output (success/failure only)"),
+const quietOption = Options.boolean('quiet').pipe(
+  Options.withAlias('q'),
+  Options.withDescription('Minimal output (success/failure only)'),
   Options.withDefault(false)
 )
 
 /**
  * Common options for library generation
  */
-const descriptionOption = Options.text("description").pipe(
-  Options.withDescription("Description of the library"),
+const descriptionOption = Options.text('description').pipe(
+  Options.withDescription('Description of the library'),
   Options.optional
 )
 
-const tagsOption = Options.text("tags").pipe(
-  Options.withDescription("Comma-separated list of tags"),
-  Options.withDefault("")
+const tagsOption = Options.text('tags').pipe(
+  Options.withDescription('Comma-separated list of tags'),
+  Options.withDefault('')
 )
 
 /**
@@ -61,30 +61,36 @@ const tagsOption = Options.text("tags").pipe(
  *
  * Generates a contract library with entities, errors, events, and ports.
  */
-const includeCQRSOption = Options.boolean("includeCQRS").pipe(
-  Options.withDescription(
-    "Include CQRS patterns (commands, queries, projections)"
-  ),
+const includeCQRSOption = Options.boolean('includeCQRS').pipe(
+  Options.withDescription('Include CQRS patterns (commands, queries, projections)'),
   Options.withDefault(false)
 )
 
+const typesDatabasePackageOption = Options.text('types-database-package').pipe(
+  Options.withDescription('Package name for prisma-effect-kysely generated types (e.g., @scope/types-database)'),
+  Options.optional
+)
+
 const contractCommand = Command.make(
-  "contract",
+  'contract',
   {
     name: nameArg,
     description: descriptionOption,
     tags: tagsOption,
     includeCQRS: includeCQRSOption,
+    typesDatabasePackage: typesDatabasePackageOption,
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({ description, includeCQRS, name, tags }) => {
+  ({ description, includeCQRS, name, tags, typesDatabasePackage }) => {
     const desc = Option.getOrUndefined(description)
+    const typesPkg = Option.getOrUndefined(typesDatabasePackage)
     return generateContract({
       name,
       ...(desc && { description: desc }),
       tags,
-      includeCQRS
+      includeCQRS,
+      ...(typesPkg && { typesDatabasePackage: typesPkg })
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating contract: ${error}`).pipe(
@@ -93,7 +99,7 @@ const contractCommand = Command.make(
       )
     )
   }
-).pipe(Command.withDescription(getCommandHelp("contract")))
+).pipe(Command.withDescription(getCommandHelp('contract')))
 
 /**
  * Data Access Generator Command
@@ -101,7 +107,7 @@ const contractCommand = Command.make(
  * Generates a data-access library with repositories and database operations.
  */
 const dataAccessCommand = Command.make(
-  "data-access",
+  'data-access',
   {
     name: nameArg,
     description: descriptionOption,
@@ -123,54 +129,47 @@ const dataAccessCommand = Command.make(
       )
     )
   }
-).pipe(Command.withDescription(getCommandHelp("data-access")))
+).pipe(Command.withDescription(getCommandHelp('data-access')))
 
 /**
  * Feature Generator Command
  *
  * Generates a feature library with server, client, and edge implementations.
  */
-const scopeOption = Options.text("scope").pipe(
-  Options.withDescription("Scope tag for the feature"),
+const scopeOption = Options.text('scope').pipe(
+  Options.withDescription('Scope tag for the feature'),
   Options.optional
 )
 
-const platformOption = Options.choice("platform", [
-  "node",
-  "browser",
-  "universal",
-  "edge"
-]).pipe(
-  Options.withDescription("Target platform for the library"),
+const platformOption = Options.choice('platform', ['node', 'browser', 'universal', 'edge']).pipe(
+  Options.withDescription('Target platform for the library'),
   Options.optional
 )
 
-const includeClientServerOption = Options.boolean("includeClientServer").pipe(
-  Options.withDescription(
-    "Generate client and server exports (overrides platform defaults)"
-  ),
+const includeClientServerOption = Options.boolean('includeClientServer').pipe(
+  Options.withDescription('Generate client and server exports (overrides platform defaults)'),
   Options.optional
 )
 
-const includeCQRSFeatureOption = Options.boolean("includeCQRS").pipe(
-  Options.withDescription(
-    "Include CQRS patterns (commands, queries, projections)"
-  ),
+const includeCQRSFeatureOption = Options.boolean('includeCQRS').pipe(
+  Options.withDescription('Include CQRS patterns (commands, queries, projections)'),
   Options.withDefault(false)
 )
 
-const includeSubModulesOption = Options.boolean("includeSubModules").pipe(
-  Options.withDescription("Include modular sub-modules within the feature"),
+const includeSubModulesOption = Options.boolean('includeSubModules').pipe(
+  Options.withDescription('Include modular sub-modules within the feature'),
   Options.withDefault(false)
 )
 
-const subModulesOption = Options.text("subModules").pipe(
-  Options.withDescription("Comma-separated list of sub-module names (e.g., 'cart,checkout,management')"),
+const subModulesOption = Options.text('subModules').pipe(
+  Options.withDescription(
+    "Comma-separated list of sub-module names (e.g., 'cart,checkout,management')"
+  ),
   Options.optional
 )
 
 const featureCommand = Command.make(
-  "feature",
+  'feature',
   {
     name: nameArg,
     description: descriptionOption,
@@ -219,7 +218,7 @@ const featureCommand = Command.make(
       )
     )
   }
-).pipe(Command.withDescription(getCommandHelp("feature")))
+).pipe(Command.withDescription(getCommandHelp('feature')))
 
 /**
  * Infrastructure Generator Command
@@ -227,7 +226,7 @@ const featureCommand = Command.make(
  * Generates an infrastructure library with services and implementations.
  */
 const infraCommand = Command.make(
-  "infra",
+  'infra',
   {
     name: nameArg,
     description: descriptionOption,
@@ -257,19 +256,19 @@ const infraCommand = Command.make(
       )
     )
   }
-).pipe(Command.withDescription(getCommandHelp("infra")))
+).pipe(Command.withDescription(getCommandHelp('infra')))
 
 /**
  * Provider Generator Command
  *
  * Generates a provider library for external service integration.
  */
-const externalServiceArg = Args.text({ name: "externalService" }).pipe(
-  Args.withDescription("Name of the external service to integrate")
+const externalServiceArg = Args.text({ name: 'externalService' }).pipe(
+  Args.withDescription('Name of the external service to integrate')
 )
 
 const providerCommand = Command.make(
-  "provider",
+  'provider',
   {
     name: nameArg,
     externalService: externalServiceArg,
@@ -297,7 +296,7 @@ const providerCommand = Command.make(
       )
     )
   }
-).pipe(Command.withDescription(getCommandHelp("provider")))
+).pipe(Command.withDescription(getCommandHelp('provider')))
 
 /**
  * Domain Generator Command
@@ -308,7 +307,7 @@ const providerCommand = Command.make(
  * - Feature library (business logic)
  */
 const domainCommand = Command.make(
-  "domain",
+  'domain',
   {
     name: nameArg,
     description: descriptionOption,
@@ -319,14 +318,7 @@ const domainCommand = Command.make(
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({
-    description,
-    includeCQRS,
-    includeClientServer,
-    name,
-    scope,
-    tags
-  }) => {
+  ({ description, includeCQRS, includeClientServer, name, scope, tags }) => {
     const desc = Option.getOrUndefined(description)
     const scopeValue = Option.getOrUndefined(scope)
     const includeCS = Option.getOrUndefined(includeClientServer)
@@ -346,13 +338,13 @@ const domainCommand = Command.make(
       )
     )
   }
-).pipe(Command.withDescription(getCommandHelp("domain")))
+).pipe(Command.withDescription(getCommandHelp('domain')))
 
 /**
  * Generate Command (parent command with subcommands)
  */
-const generateCommand = Command.make("generate").pipe(
-  Command.withDescription("Generate a new library"),
+const generateCommand = Command.make('generate').pipe(
+  Command.withDescription('Generate a new library'),
   Command.withSubcommands([
     contractCommand,
     dataAccessCommand,
@@ -368,23 +360,23 @@ const generateCommand = Command.make("generate").pipe(
  *
  * Initializes libs/ directory architecture with built-in libraries
  */
-const skipProvidersOption = Options.boolean("skip-providers").pipe(
-  Options.withDescription("Skip generating built-in provider libraries"),
+const skipProvidersOption = Options.boolean('skip-providers').pipe(
+  Options.withDescription('Skip generating built-in provider libraries'),
   Options.withDefault(false)
 )
 
-const skipInfraOption = Options.boolean("skip-infra").pipe(
-  Options.withDescription("Skip generating built-in infrastructure libraries"),
+const skipInfraOption = Options.boolean('skip-infra').pipe(
+  Options.withDescription('Skip generating built-in infrastructure libraries'),
   Options.withDefault(false)
 )
 
-const skipPrismaOption = Options.boolean("skip-prisma").pipe(
-  Options.withDescription("Skip running prisma generate"),
+const skipPrismaOption = Options.boolean('skip-prisma').pipe(
+  Options.withDescription('Skip running prisma generate'),
   Options.withDefault(false)
 )
 
 const initCommand = Command.make(
-  "init",
+  'init',
   {
     skipProviders: skipProvidersOption,
     skipInfra: skipInfraOption,
@@ -402,23 +394,23 @@ const initCommand = Command.make(
         )
       )
     )
-).pipe(Command.withDescription(getCommandHelp("init")))
+).pipe(Command.withDescription(getCommandHelp('init')))
 
 /**
  * TUI (Text User Interface) Option
  *
  * Launches the interactive wizard mode for guided library generation
  */
-const tuiOption = Options.boolean("tui").pipe(
-  Options.withAlias("i"),
-  Options.withDescription("Launch interactive wizard mode (React Ink TUI)"),
+const tuiOption = Options.boolean('tui').pipe(
+  Options.withAlias('i'),
+  Options.withDescription('Launch interactive wizard mode (React Ink TUI)'),
   Options.withDefault(false)
 )
 
 /**
  * Main CLI Application
  */
-const mainCommand = Command.make("mlg", { tui: tuiOption }, ({ tui }) => {
+const mainCommand = Command.make('mlg', { tui: tuiOption }, ({ tui }) => {
   if (tui) {
     return runInkTUI()
   }
@@ -429,7 +421,7 @@ const mainCommand = Command.make("mlg", { tui: tuiOption }, ({ tui }) => {
 }).pipe(Command.withSubcommands([generateCommand, initCommand]))
 
 const cli = Command.run(mainCommand, {
-  name: "Monorepo Library Generator",
+  name: 'Monorepo Library Generator',
   version: `v${VERSION}`
 })
 

@@ -32,23 +32,19 @@ const AppLayer = Layer.mergeAll(
 // Provider Service
 // ============================================================================
 // OpenTelemetry provider with static layers
-export {
-  OpenTelemetryProvider,
-  OpenTelemetry,
-  type OpenTelemetryProviderOperations,
-} from "./lib/otel"
+export { OpenTelemetry, OpenTelemetryProvider, type OpenTelemetryProviderOperations } from "./lib/otel"
 
 // ============================================================================
 // Types
 // ============================================================================
 // Configuration types
 export {
-  OpenTelemetryConfigSchema,
-  TracesConfigSchema,
+  type MetricsConfig,
   MetricsConfigSchema,
   type OpenTelemetryConfig,
+  OpenTelemetryConfigSchema,
   type TracesConfig,
-  type MetricsConfig,
+  TracesConfigSchema
 } from "./lib/types"
 
 // ============================================================================
@@ -56,9 +52,9 @@ export {
 // ============================================================================
 // Error types
 export {
-  OpenTelemetryError,
-  OpenTelemetryInitError,
-  OpenTelemetryExportError,
   OpenTelemetryConfigError,
+  OpenTelemetryError,
   type OpenTelemetryErrorType,
+  OpenTelemetryExportError,
+  OpenTelemetryInitError
 } from "./lib/errors"

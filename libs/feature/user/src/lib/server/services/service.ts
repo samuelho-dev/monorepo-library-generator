@@ -382,7 +382,7 @@ export class UserService extends Context.Tag("UserService")<
   /**
    * Auto layer - Environment-aware layer selection
    *
-   * Automatically selects the appropriate layer based on process.env.NODE_ENV:
+   * Automatically selects the appropriate layer based on env.NODE_ENV:
    * - "production" → Live layer
    * - "development" → Dev layer (with logging)
    * - "test" → Test layer

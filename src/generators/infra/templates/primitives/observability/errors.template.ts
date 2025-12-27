@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/observability
  */
 
-import { TypeScriptBuilder } from "../../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
 
 /**
  * Generate observability error types
@@ -33,11 +33,9 @@ Error types:
     module: `${scope}/infra-${fileName}/errors`
   })
 
-  builder.addImports([
-    { from: "effect", imports: ["Data"] }
-  ])
+  builder.addImports([{ from: 'effect', imports: ['Data'] }])
 
-  builder.addSectionComment("Base Error")
+  builder.addSectionComment('Base Error')
 
   builder.addRaw(`/**
  * Base error for all observability errors
@@ -50,7 +48,7 @@ export class ${className}Error extends Data.TaggedError(
 }> {}
 `)
 
-  builder.addSectionComment("Configuration Error")
+  builder.addSectionComment('Configuration Error')
 
   builder.addRaw(`/**
  * Invalid observability configuration
@@ -74,7 +72,7 @@ export class ${className}ConfigError extends Data.TaggedError(
 }> {}
 `)
 
-  builder.addSectionComment("Export Error")
+  builder.addSectionComment('Export Error')
 
   builder.addRaw(`/**
  * Failed to export telemetry data
@@ -107,7 +105,7 @@ export class ${className}ExportError extends Data.TaggedError(
 }> {}
 `)
 
-  builder.addSectionComment("Connection Error")
+  builder.addSectionComment('Connection Error')
 
   builder.addRaw(`/**
  * Cannot connect to OTEL collector
@@ -131,7 +129,7 @@ export class ${className}ConnectionError extends Data.TaggedError(
 }> {}
 `)
 
-  builder.addSectionComment("Initialization Error")
+  builder.addSectionComment('Initialization Error')
 
   builder.addRaw(`/**
  * SDK initialization failed
@@ -153,7 +151,7 @@ export class ${className}InitError extends Data.TaggedError(
 }> {}
 `)
 
-  builder.addSectionComment("Error Union")
+  builder.addSectionComment('Error Union')
 
   builder.addRaw(`/**
  * Union of all observability error types

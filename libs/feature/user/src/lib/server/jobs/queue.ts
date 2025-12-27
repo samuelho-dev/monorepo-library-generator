@@ -328,7 +328,7 @@ export class BulkUserJob extends Schema.Class<BulkUserJob>(
 }) {
   static create(params: {
     operation: "create" | "update" | "delete";
-    items: Array<Record<string, unknown>>
+    items: ReadonlyArray<{ readonly [x: string]: unknown }>
     initiatedBy?: string;
     correlationId?: string;
     priority?: number;
@@ -489,8 +489,7 @@ const processBulkItem = (
   validatedUpdateItem: Parameters<UserServiceType["update"]>[1] | null
 ) =>
   Effect.gen(function*() {
-    // Use bracket notation for index signature access (not dot notation)
-    const itemId = item["id"]
+    const itemId = item.id
     const hasValidId = typeof itemId === "string" && itemId.length > 0
 
     if (operation === "create" && validatedCreateItem !== null) {
@@ -499,6 +498,62 @@ const processBulkItem = (
       yield* service.update(itemId, validatedUpdateItem)
     } else if (operation === "delete" && hasValidId) {
       yield* service.delete(itemId)
+    }
+  })
+
+/**
+ * Handle validation error in bulk processing
+ */
+const handleBulkValidationError = (
+  continueOnError: boolean,
+  logger: Context.Tag.Service<typeof LoggingService>,
+  item: Record<string, unknown>
+) => (error: UserJobError) =>
+  continueOnError
+    ? Effect.gen(function*() {
+        yield* logger.warn("Bulk job item validation failed, skipping", {
+          item,
+          error: error.message
+        })
+        return null
+      })
+    : Effect.fail(error)
+
+/**
+ * Process bulk create operation
+ */
+const processBulkCreate = (
+  item: Record<string, unknown>,
+  job: BulkUserJob,
+  service: UserServiceType,
+  logger: Context.Tag.Service<typeof LoggingService>,
+  schemas: { createData: Schema.Schema<Parameters<UserServiceType["create"]>[0], unknown> }
+) =>
+  Effect.gen(function*() {
+    const validatedItem = yield* validateJobData(item, schemas.createData, job.jobId, "bulk").pipe(
+      Effect.catchAll(handleBulkValidationError(job.continueOnError, logger, item))
+    )
+    if (validatedItem !== null) {
+      yield* processBulkItem(item, "create", service, validatedItem, null)
+    }
+  })
+
+/**
+ * Process bulk update operation
+ */
+const processBulkUpdate = (
+  item: Record<string, unknown>,
+  job: BulkUserJob,
+  service: UserServiceType,
+  logger: Context.Tag.Service<typeof LoggingService>,
+  schemas: { updateData: Schema.Schema<Parameters<UserServiceType["update"]>[1], unknown> }
+) =>
+  Effect.gen(function*() {
+    const validatedItem = yield* validateJobData(item, schemas.updateData, job.jobId, "bulk").pipe(
+      Effect.catchAll(handleBulkValidationError(job.continueOnError, logger, item))
+    )
+    if (validatedItem !== null) {
+      yield* processBulkItem(item, "update", service, null, validatedItem)
     }
   })
 
@@ -519,43 +574,16 @@ const processBulkJob = (
 ) =>
   Effect.gen(function*() {
     for (const item of job.items) {
-      // Validate based on operation type
-      if (job.operation === "create") {
-        const validatedItem = yield* validateJobData(item, schemas.createData, job.jobId, "bulk").pipe(
-          Effect.catchAll((error) =>
-            job.continueOnError
-              ? Effect.gen(function*() {
-                  yield* logger.warn("Bulk job item validation failed, skipping", {
-                    item,
-                    error: error.message
-                  })
-                  return null
-                })
-              : Effect.fail(error)
-          )
-        )
-        if (validatedItem !== null) {
-          yield* processBulkItem(item, job.operation, service, validatedItem, null)
-        }
-      } else if (job.operation === "update") {
-        const validatedItem = yield* validateJobData(item, schemas.updateData, job.jobId, "bulk").pipe(
-          Effect.catchAll((error) =>
-            job.continueOnError
-              ? Effect.gen(function*() {
-                  yield* logger.warn("Bulk job item validation failed, skipping", {
-                    item,
-                    error: error.message
-                  })
-                  return null
-                })
-              : Effect.fail(error)
-          )
-        )
-        if (validatedItem !== null) {
-          yield* processBulkItem(item, job.operation, service, null, validatedItem)
-        }
-      } else if (job.operation === "delete") {
-        yield* processBulkItem(item, job.operation, service, null, null)
+      switch (job.operation) {
+        case "create":
+          yield* processBulkCreate(item, job, service, logger, schemas)
+          break
+        case "update":
+          yield* processBulkUpdate(item, job, service, logger, schemas)
+          break
+        case "delete":
+          yield* processBulkItem(item, "delete", service, null, null)
+          break
       }
     }
   })

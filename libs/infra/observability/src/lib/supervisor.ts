@@ -88,9 +88,11 @@ type FiberEvent = { type: "start"; fiberId: string } | { type: "end"; fiberId: s
  * yield* Effect.supervised(supervisor)(myProgram)
  * ```
  */
-export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}): Effect.Effect<Supervisor.Supervisor<ReadonlyArray<FiberEvent>>> =>
+export const makeFiberTrackingSupervisor = (
+  config: SupervisorConfig = {}
+): Effect.Effect<Supervisor.Supervisor<ReadonlyArray<FiberEvent>>> =>
   Effect.gen(function*() {
-    const eventsRef = yield* Ref.make<FiberEvent[]>([])
+    const eventsRef = yield* Ref.make<Array<FiberEvent>>([])
 
     const shouldTrack = (fiberId: FiberId.FiberId) => {
       if (!config.filterPattern) return true
@@ -98,7 +100,7 @@ export const makeFiberTrackingSupervisor = (config: SupervisorConfig = {}): Effe
       return config.filterPattern.test(name)
     }
 
-    class FiberTrackingSupervisor extends Supervisor.AbstractSupervisor<FiberEvent[]> {
+    class FiberTrackingSupervisor extends Supervisor.AbstractSupervisor<Array<FiberEvent>> {
       override get value() {
         return Ref.get(eventsRef)
       }

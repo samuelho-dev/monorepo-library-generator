@@ -16,9 +16,9 @@
  * @module monorepo-library-generator/infra-templates/rpc/middleware/auth
  */
 
-import { TypeScriptBuilder } from "../../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
 
 /**
  * Generate user authentication middleware file
@@ -31,7 +31,7 @@ export function generateAuthMiddlewareFile(options: InfraTemplateOptions) {
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: "User Authentication Middleware",
+    title: 'User Authentication Middleware',
     description: `User authentication for protected RPC routes.
 
 Used for protected routes (RouteTag = "protected") in Contract-First architecture.
@@ -45,13 +45,16 @@ Features:
 - CurrentUser provision to handlers
 - AuthMiddleware implementation`,
     module: `${scope}/infra-${fileName}/middleware/auth`,
-    see: ["@effect/rpc RpcMiddleware.Tag documentation", `${scope}/contract-auth for type definitions`]
+    see: [
+      '@effect/rpc RpcMiddleware.Tag documentation',
+      `${scope}/contract-auth for type definitions`
+    ]
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer", "Option"] },
-    { from: "@effect/platform", imports: ["Headers"] },
-    { from: "@effect/rpc", imports: ["RpcMiddleware"] }
+    { from: 'effect', imports: ['Effect', 'Layer', 'Option'] },
+    { from: '@effect/platform', imports: ['Headers'] },
+    { from: '@effect/rpc', imports: ['RpcMiddleware'] }
   ])
 
   builder.addBlankLine()
@@ -88,7 +91,7 @@ export {
 }
 `)
 
-  builder.addSectionComment("Token Extraction Helpers")
+  builder.addSectionComment('Token Extraction Helpers')
 
   builder.addRaw(`/**
  * Extract authentication from headers (priority: API key > Bearer token)
@@ -112,7 +115,7 @@ const extractAuth = (headers: Headers.Headers): Option.Option<{ type: AuthMethod
 }
 `)
 
-  builder.addSectionComment("Auth Middleware")
+  builder.addSectionComment('Auth Middleware')
 
   builder.addRaw(`/**
  * AuthMiddleware using native RpcMiddleware.Tag
@@ -191,7 +194,7 @@ export const AuthMiddlewareLive = Layer.effect(
 )
 `)
 
-  builder.addSectionComment("Test Utilities")
+  builder.addSectionComment('Test Utilities')
 
   builder.addRaw(`/**
  * Test user for development/testing

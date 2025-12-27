@@ -80,6 +80,40 @@
   },
   "overrides": [
     {
+      "includes": ["**/templates.ts"],
+      "linter": {
+        "rules": {
+          "performance": { "noBarrelFile": "off" }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/cli/**",
+        "src/generators/**",
+        "src/utils/**",
+        "src/infrastructure/**",
+        "src/templates/**"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/utils/index.ts", "**/shared/index.ts", "**/generators/shared/index.ts"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noReExportAll": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["src/**/*.ts", "libs/**/*.ts"],
       "javascript": { "globals": ["exports"] },
       "linter": {
@@ -90,7 +124,7 @@
             "noNamespace": "off",
             "noNonNullAssertion": "off",
             "useArrayLiterals": "off",
-            "useConsistentArrayType": { "level": "warn", "options": { "syntax": "generic" } }
+            "useConsistentArrayType": { "level": "warn", "options": { "syntax": "shorthand" } }
           },
           "suspicious": {
             "noExplicitAny": "off",

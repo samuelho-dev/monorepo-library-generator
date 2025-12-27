@@ -7,11 +7,11 @@
  * @module monorepo-library-generator/templates/fragments/layer-fragment
  */
 
-import { Effect } from "effect"
-import type { SourceFile } from "ts-morph"
-import { interpolateSync } from "../core/resolver"
-import type { TemplateContext } from "../core/types"
-import type { LayerFragmentConfig } from "./types"
+import { Effect } from 'effect'
+import type { SourceFile } from 'ts-morph'
+import { interpolateSync } from '../core/resolver'
+import type { TemplateContext } from '../core/types'
+import type { LayerFragmentConfig } from './types'
 
 // ============================================================================
 // Layer Fragment Renderer
@@ -26,13 +26,13 @@ export function renderLayerFragment(
   sourceFile: SourceFile,
   config: LayerFragmentConfig,
   context: TemplateContext
-): Effect.Effect<void, never> {
+) {
   return Effect.sync(() => {
     const name = interpolateSync(config.name, context)
     const serviceTag = interpolateSync(config.serviceTag, context)
     const implementation = interpolateSync(config.implementation, context)
 
-    const statements: string[] = []
+    const statements: Array<string> = []
 
     // Add JSDoc if provided
     if (config.jsdoc) {
@@ -48,11 +48,11 @@ export function renderLayerFragment(
     }
 
     // Add export
-    const exportKeyword = config.exported !== false ? "export " : ""
+    const exportKeyword = config.exported !== false ? 'export ' : ''
     statements.push(`${exportKeyword}const ${name} = ${layerExpr}`)
 
     // Add to source file
-    sourceFile.addStatements(statements.join("\n"))
+    sourceFile.addStatements(statements.join('\n'))
   })
 }
 
@@ -60,20 +60,20 @@ export function renderLayerFragment(
  * Build the layer expression based on type
  */
 function buildLayerExpression(
-  layerType: LayerFragmentConfig["layerType"],
+  layerType: LayerFragmentConfig['layerType'],
   serviceTag: string,
   implementation: string
-): string {
+) {
   switch (layerType) {
-    case "effect":
+    case 'effect':
       return `Layer.effect(${serviceTag}, ${implementation})`
-    case "sync":
+    case 'sync':
       return `Layer.sync(${serviceTag}, () => ${implementation})`
-    case "scoped":
+    case 'scoped':
       return `Layer.scoped(${serviceTag}, ${implementation})`
-    case "succeed":
+    case 'succeed':
       return `Layer.succeed(${serviceTag}, ${implementation})`
-    case "suspend":
+    case 'suspend':
       return `Layer.suspend(() => Layer.succeed(${serviceTag}, ${implementation}))`
     default:
       return `Layer.succeed(${serviceTag}, ${implementation})`
@@ -85,32 +85,26 @@ function buildLayerExpression(
  */
 function applyComposition(
   baseExpr: string,
-  composition: NonNullable<LayerFragmentConfig["composition"]>,
+  composition: NonNullable<LayerFragmentConfig['composition']>,
   context: TemplateContext
-): string {
+) {
   let expr = baseExpr
 
   // Apply merge
   if (composition.merge && composition.merge.length > 0) {
-    const layers = composition.merge
-      .map((l) => interpolateSync(l, context))
-      .join(", ")
+    const layers = composition.merge.map((l) => interpolateSync(l, context)).join(', ')
     expr = `Layer.merge(${expr}, ${layers})`
   }
 
   // Apply provide
   if (composition.provide && composition.provide.length > 0) {
-    const layers = composition.provide
-      .map((l) => interpolateSync(l, context))
-      .join(", ")
+    const layers = composition.provide.map((l) => interpolateSync(l, context)).join(', ')
     expr = `${expr}.pipe(Layer.provide(${layers}))`
   }
 
   // Apply provideMerge
   if (composition.provideMerge && composition.provideMerge.length > 0) {
-    const layers = composition.provideMerge
-      .map((l) => interpolateSync(l, context))
-      .join(", ")
+    const layers = composition.provideMerge.map((l) => interpolateSync(l, context)).join(', ')
     expr = `${expr}.pipe(Layer.provideMerge(${layers}))`
   }
 
@@ -130,9 +124,11 @@ export function liveRepositoryLayerFragment(
     readonly dependencies?: ReadonlyArray<string>
     readonly implementation?: string
   } = {}
-): LayerFragmentConfig {
+) {
   const serviceName = `${className}Repository`
-  const implementation = options.implementation ?? `{
+  const implementation =
+    options.implementation ??
+    `{
     findById: (id) => Effect.gen(function*() {
       // TODO: Implement
       return Option.none()
@@ -164,7 +160,7 @@ export function liveRepositoryLayerFragment(
 
   return {
     name: `${serviceName}Live`,
-    layerType: "succeed",
+    layerType: 'succeed',
     serviceTag: serviceName,
     implementation,
     dependencies: options.dependencies,
@@ -175,12 +171,12 @@ export function liveRepositoryLayerFragment(
 /**
  * Create a test repository layer fragment (in-memory)
  */
-export function testRepositoryLayerFragment(className: string): LayerFragmentConfig {
+export function testRepositoryLayerFragment(className: string) {
   const serviceName = `${className}Repository`
 
   return {
     name: `${serviceName}Test`,
-    layerType: "sync",
+    layerType: 'sync',
     serviceTag: serviceName,
     implementation: `make${serviceName}InMemory()`,
     jsdoc: `Test implementation of ${serviceName} using in-memory store`
@@ -195,13 +191,13 @@ export function liveServiceLayerFragment(
   options: {
     readonly dependencies?: ReadonlyArray<string>
   } = {}
-): LayerFragmentConfig {
+) {
   const serviceName = `${className}Service`
   const repoName = `${className}Repository`
 
   return {
     name: `${serviceName}Live`,
-    layerType: "effect",
+    layerType: 'effect',
     serviceTag: serviceName,
     implementation: `Effect.gen(function*() {
     const repo = yield* ${repoName}
@@ -234,15 +230,16 @@ export function composedLayerFragment(
     readonly infrastructureLayer?: string
     readonly jsdoc?: string
   }
-): LayerFragmentConfig {
-  const mergeExpr = options.serviceLayers.length > 1
-    ? `Layer.mergeAll(${options.serviceLayers.join(", ")})`
-    : options.serviceLayers[0] ?? "Layer.empty"
+) {
+  const mergeExpr =
+    options.serviceLayers.length > 1
+      ? `Layer.mergeAll(${options.serviceLayers.join(', ')})`
+      : (options.serviceLayers[0] ?? 'Layer.empty')
 
   return {
     name,
-    layerType: "succeed",
-    serviceTag: "",
+    layerType: 'succeed',
+    serviceTag: '',
     implementation: mergeExpr,
     composition: options.infrastructureLayer
       ? { provide: [options.infrastructureLayer] }
@@ -258,17 +255,17 @@ export function infrastructureLayerFragment(
   name: string,
   services: ReadonlyArray<string>,
   options: {
-    readonly variant?: "Live" | "Test" | "Dev"
+    readonly variant?: 'Live' | 'Test' | 'Dev'
     readonly jsdoc?: string
   } = {}
-): LayerFragmentConfig {
-  const variant = options.variant ?? "Live"
-  const serviceRefs = services.map((s) => `${s}${variant}`).join(", ")
+) {
+  const variant = options.variant ?? 'Live'
+  const serviceRefs = services.map((s) => `${s}${variant}`).join(', ')
 
   return {
     name: `${name}${variant}`,
-    layerType: "succeed",
-    serviceTag: "",
+    layerType: 'succeed',
+    serviceTag: '',
     implementation: `Layer.mergeAll(${serviceRefs})`,
     jsdoc: options.jsdoc ?? `${variant} infrastructure layer`
   }

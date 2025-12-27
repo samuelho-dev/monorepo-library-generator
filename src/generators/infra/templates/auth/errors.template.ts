@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/infra-templates/auth/errors
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate auth errors.ts file
@@ -17,7 +17,7 @@ export function generateAuthErrorsFile(options: InfraTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "Auth Infrastructure Errors",
+    title: 'Auth Infrastructure Errors',
     description: `Schema.TaggedError-based error types for auth operations.
 
 These errors use Schema.TaggedError because they need to cross RPC boundaries
@@ -27,11 +27,11 @@ and be serializable. The AuthError is used in Schema.Union with feature RPC erro
   builder.addBlankLine()
 
   // Imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
   builder.addBlankLine()
 
   // Error types
-  builder.addSectionComment("Error Types (Schema.TaggedError for RPC Serialization)")
+  builder.addSectionComment('Error Types (Schema.TaggedError for RPC Serialization)')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -103,7 +103,7 @@ export class InvalidApiKeyError extends Schema.TaggedError<InvalidApiKeyError>()
   builder.addBlankLine()
 
   // Union type
-  builder.addSectionComment("Error Union Type")
+  builder.addSectionComment('Error Union Type')
   builder.addBlankLine()
 
   builder.addRaw(`/**

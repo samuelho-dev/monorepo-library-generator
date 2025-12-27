@@ -126,8 +126,8 @@ export class LoggingService extends Context.Tag(
    * Create logger instance with optional base context
    */
   static makeLogger(baseContext: LogContext) {
-    const log = (level: "trace" | "debug" | "info" | "warn" | "error" | "fatal") =>
-      (message: string, context?: LogContext) => {
+    const log =
+      (level: "trace" | "debug" | "info" | "warn" | "error" | "fatal") => (message: string, context?: LogContext) => {
         const mergedContext = { ...baseContext, ...context }
         const logFn = {
           trace: Effect.logTrace,
@@ -151,11 +151,9 @@ export class LoggingService extends Context.Tag(
       error: log("error"),
       fatal: log("fatal"),
 
-      child: (context: LogContext) =>
-        Effect.succeed(LoggingService.makeLogger({ ...baseContext, ...context })),
+      child: (context: LogContext) => Effect.succeed(LoggingService.makeLogger({ ...baseContext, ...context })),
 
-      withSpan: <A, E, R>(name: string, effect: Effect.Effect<A, E, R>) =>
-        effect.pipe(Effect.withSpan(name)),
+      withSpan: <A, E, R>(name: string, effect: Effect.Effect<A, E, R>) => effect.pipe(Effect.withSpan(name)),
 
       withContext: <A, E, R>(context: LogContext, effect: Effect.Effect<A, E, R>) =>
         effect.pipe(Effect.annotateLogs({ ...baseContext, ...context }))
@@ -200,7 +198,7 @@ export class LoggingService extends Context.Tag(
       // Create logger with OTEL context
       return LoggingService.makeLogger({
         "otel.service.name": otel.serviceName,
-        "otel.service.version": otel.serviceVersion,
+        "otel.service.version": otel.serviceVersion
       })
     })
   )
@@ -240,8 +238,7 @@ export class LoggingService extends Context.Tag(
     warn: () => Effect.void,
     error: () => Effect.void,
     fatal: () => Effect.void,
-    child: (context: LogContext) =>
-      Effect.succeed(LoggingService.makeLogger(context)),
+    child: (context: LogContext) => Effect.succeed(LoggingService.makeLogger(context)),
     withSpan: <A, E, R>(
       _name: string,
       effect: Effect.Effect<A, E, R>

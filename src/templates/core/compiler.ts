@@ -122,7 +122,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
     })
 
     // Helper functions (pure, no this references)
-    const addFileHeader = (sourceFile: SourceFile, title: string, description: string): void => {
+    const addFileHeader = (sourceFile: SourceFile, title: string, description: string) => {
       sourceFile.addStatements(`/**
  * ${title}
  *
@@ -133,7 +133,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
 `)
     }
 
-    const addInterface = (sourceFile: SourceFile, config: InterfaceConfig): void => {
+    const addInterface = (sourceFile: SourceFile, config: InterfaceConfig) => {
       const properties = config.properties.map((p) => ({
         name: p.name,
         type: p.type,
@@ -165,7 +165,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       }
     }
 
-    const addClass = (sourceFile: SourceFile, config: ClassConfig): void => {
+    const addClass = (sourceFile: SourceFile, config: ClassConfig) => {
       const properties =
         config.properties?.map((p) => ({
           name: p.name,
@@ -210,25 +210,31 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       }
     }
 
-    const interpolateConfig = <T>(config: T, context: TemplateContext): Effect.Effect<T, never> =>
-      interpolateDeep(config, context).pipe(
-        Effect.catchAll((error) =>
-          Effect.succeed(config).pipe(
-            Effect.tap(() =>
-              Effect.logWarning(
-                `Interpolation failed: ${error instanceof Error ? error.message : String(error)}, using original config`
-              )
-            )
-          )
-        )
-      )
+    // Type-safe interpolation functions for each config type
+    const interpolateContextTagConfig = (config: ContextTagConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateTaggedErrorConfig = (config: TaggedErrorConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateSchemaConfig = (config: SchemaConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateInterfaceConfig = (config: InterfaceConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateClassConfig = (config: ClassConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateConstantConfig = (config: ConstantConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
 
     // Content processor (functional, captures helpers via closure)
     const processContent = (
       sourceFile: SourceFile,
       content: ContentDefinition,
       context: TemplateContext
-    ): Effect.Effect<void, CompilationError> =>
+    ) =>
       Effect.gen(function* () {
         switch (content.type) {
           case 'raw': {
@@ -238,55 +244,37 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
           }
 
           case 'contextTag': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              ContextTagConfig,
-              never
-            >
+            const config = yield* interpolateContextTagConfig(content.config, context)
             addContextTagClass(sourceFile, config)
             break
           }
 
           case 'taggedError': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              TaggedErrorConfig,
-              never
-            >
+            const config = yield* interpolateTaggedErrorConfig(content.config, context)
             addTaggedErrorClass(sourceFile, config)
             break
           }
 
           case 'schema': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              SchemaConfig,
-              never
-            >
+            const config = yield* interpolateSchemaConfig(content.config, context)
             addSchemaDefinition(sourceFile, config)
             break
           }
 
           case 'interface': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              InterfaceConfig,
-              never
-            >
+            const config = yield* interpolateInterfaceConfig(content.config, context)
             addInterface(sourceFile, config)
             break
           }
 
           case 'class': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              ClassConfig,
-              never
-            >
+            const config = yield* interpolateClassConfig(content.config, context)
             addClass(sourceFile, config)
             break
           }
 
           case 'constant': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              ConstantConfig,
-              never
-            >
+            const config = yield* interpolateConstantConfig(content.config, context)
             addConstExport(sourceFile, config.name, config.type, config.value, config.jsdoc)
             break
           }
@@ -303,7 +291,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       sourceFile: SourceFile,
       section: SectionDefinition,
       context: TemplateContext
-    ): Effect.Effect<void, CompilationError> =>
+    ) =>
       Effect.gen(function* () {
         if (section.condition && !context[section.condition]) {
           return
@@ -325,7 +313,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       sourceFile: SourceFile,
       imports: ReadonlyArray<ImportDefinition>,
       context: TemplateContext
-    ): Effect.Effect<void, CompilationError> =>
+    ) =>
       Effect.gen(function* () {
         for (const imp of imports) {
           if (imp.condition && !context[imp.condition]) {
@@ -350,7 +338,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       sourceFile: SourceFile,
       content: ConditionalContent,
       context: TemplateContext
-    ): Effect.Effect<void, CompilationError> =>
+    ) =>
       Effect.gen(function* () {
         if (content.imports) {
           yield* processImports(sourceFile, content.imports, context)
@@ -477,7 +465,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
     })
 
     // Helper functions (same as Live)
-    const addFileHeader = (sourceFile: SourceFile, title: string, description: string): void => {
+    const addFileHeader = (sourceFile: SourceFile, title: string, description: string) => {
       sourceFile.addStatements(`/**
  * ${title}
  *
@@ -488,7 +476,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
 `)
     }
 
-    const addInterface = (sourceFile: SourceFile, config: InterfaceConfig): void => {
+    const addInterface = (sourceFile: SourceFile, config: InterfaceConfig) => {
       const properties = config.properties.map((p) => ({
         name: p.name,
         type: p.type,
@@ -520,7 +508,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       }
     }
 
-    const addClass = (sourceFile: SourceFile, config: ClassConfig): void => {
+    const addClass = (sourceFile: SourceFile, config: ClassConfig) => {
       const properties =
         config.properties?.map((p) => ({
           name: p.name,
@@ -565,24 +553,30 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       }
     }
 
-    const interpolateConfig = <T>(config: T, context: TemplateContext): Effect.Effect<T, never> =>
-      interpolateDeep(config, context).pipe(
-        Effect.catchAll((error) =>
-          Effect.succeed(config).pipe(
-            Effect.tap(() =>
-              Effect.logWarning(
-                `Interpolation failed: ${error instanceof Error ? error.message : String(error)}, using original config`
-              )
-            )
-          )
-        )
-      )
+    // Type-safe interpolation functions for each config type (same as Live)
+    const interpolateContextTagConfig = (config: ContextTagConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateTaggedErrorConfig = (config: TaggedErrorConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateSchemaConfig = (config: SchemaConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateInterfaceConfig = (config: InterfaceConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateClassConfig = (config: ClassConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
+
+    const interpolateConstantConfig = (config: ConstantConfig, context: TemplateContext) =>
+      interpolateDeep(config, context).pipe(Effect.catchAll(() => Effect.succeed(config)))
 
     const processContent = (
       sourceFile: SourceFile,
       content: ContentDefinition,
       context: TemplateContext
-    ): Effect.Effect<void, CompilationError> =>
+    ) =>
       Effect.gen(function* () {
         switch (content.type) {
           case 'raw': {
@@ -591,50 +585,32 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
             break
           }
           case 'contextTag': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              ContextTagConfig,
-              never
-            >
+            const config = yield* interpolateContextTagConfig(content.config, context)
             addContextTagClass(sourceFile, config)
             break
           }
           case 'taggedError': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              TaggedErrorConfig,
-              never
-            >
+            const config = yield* interpolateTaggedErrorConfig(content.config, context)
             addTaggedErrorClass(sourceFile, config)
             break
           }
           case 'schema': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              SchemaConfig,
-              never
-            >
+            const config = yield* interpolateSchemaConfig(content.config, context)
             addSchemaDefinition(sourceFile, config)
             break
           }
           case 'interface': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              InterfaceConfig,
-              never
-            >
+            const config = yield* interpolateInterfaceConfig(content.config, context)
             addInterface(sourceFile, config)
             break
           }
           case 'class': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              ClassConfig,
-              never
-            >
+            const config = yield* interpolateClassConfig(content.config, context)
             addClass(sourceFile, config)
             break
           }
           case 'constant': {
-            const config = yield* interpolateConfig(content.config, context) as Effect.Effect<
-              ConstantConfig,
-              never
-            >
+            const config = yield* interpolateConstantConfig(content.config, context)
             addConstExport(sourceFile, config.name, config.type, config.value, config.jsdoc)
             break
           }
@@ -648,7 +624,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       sourceFile: SourceFile,
       section: SectionDefinition,
       context: TemplateContext
-    ): Effect.Effect<void, CompilationError> =>
+    ) =>
       Effect.gen(function* () {
         if (section.condition && !context[section.condition]) {
           return
@@ -667,7 +643,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       sourceFile: SourceFile,
       imports: ReadonlyArray<ImportDefinition>,
       context: TemplateContext
-    ): Effect.Effect<void, CompilationError> =>
+    ) =>
       Effect.gen(function* () {
         for (const imp of imports) {
           if (imp.condition && !context[imp.condition]) {
@@ -689,7 +665,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       sourceFile: SourceFile,
       content: ConditionalContent,
       context: TemplateContext
-    ): Effect.Effect<void, CompilationError> =>
+    ) =>
       Effect.gen(function* () {
         if (content.imports) {
           yield* processImports(sourceFile, content.imports, context)

@@ -36,55 +36,42 @@ export type { UserEntity } from "../lib/rpc-definitions"
 // ============================================================================
 // Errors are the SINGLE SOURCE OF TRUTH - data-access and feature layers import these
 export {
-  ProfileNotFoundError,
-  ProfileValidationError,
-  ProfileOperationError,
   type ProfileDomainError,
+  type ProfileError,
+  ProfileNotFoundError,
+  ProfileOperationError,
   type ProfileRepositoryError,
-  type ProfileError
+  ProfileValidationError
 } from "./errors"
 
 // ============================================================================
 // Entity Exports
 // ============================================================================
-export {
-  ProfileId,
-  Profile,
-  ProfileItem,
-  parseProfile,
-  encodeProfile,
-  parseProfileItem
-} from "./entities"
+export { encodeProfile, parseProfile, parseProfileItem, Profile, ProfileId, ProfileItem } from "./entities"
 
 // ============================================================================
 // Event Exports
 // ============================================================================
-export {
-  ProfileCreated,
-  ProfileUpdated,
-  ProfileDeleted,
-  ProfileEvents,
-  type ProfileEvent
-} from "./events"
+export { ProfileCreated, ProfileDeleted, type ProfileEvent, ProfileEvents, ProfileUpdated } from "./events"
 
 // ============================================================================
 // RPC Exports
 // ============================================================================
 export {
   CreateProfileInput,
-  UpdateProfileInput,
+  ProfileCreate,
+  ProfileDelete,
   ProfileGet,
   ProfileList,
-  ProfileCreate,
-  ProfileUpdate,
-  ProfileDelete,
   ProfileRpcs,
-  ProfileRpcsByRoute
+  ProfileRpcsByRoute,
+  ProfileUpdate,
+  UpdateProfileInput
 } from "./rpc-definitions"
 
 export {
   ProfileNotFoundRpcError,
-  ProfileValidationRpcError,
   ProfilePermissionRpcError,
-  ProfileRpcError
+  ProfileRpcError,
+  ProfileValidationRpcError
 } from "./rpc-errors"

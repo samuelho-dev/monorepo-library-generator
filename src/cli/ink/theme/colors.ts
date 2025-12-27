@@ -11,14 +11,14 @@
  */
 export const palette = {
   // Primary colors
-  cyan: "cyan",
-  blue: "blue",
-  green: "green",
-  yellow: "yellow",
-  red: "red",
-  magenta: "magenta",
-  white: "white",
-  gray: "gray"
+  cyan: 'cyan',
+  blue: 'blue',
+  green: 'green',
+  yellow: 'yellow',
+  red: 'red',
+  magenta: 'magenta',
+  white: 'white',
+  gray: 'gray'
 } as const
 
 /**
@@ -56,27 +56,27 @@ export const colors = {
  * Status indicator characters
  */
 export const statusIcons = {
-  pending: "\u25CB", // ○
-  inProgress: "\u25D0", // ◐
-  completed: "\u2713", // ✓
-  error: "\u2717", // ✗
-  arrow: "\u2192", // →
-  bullet: "\u2022", // •
-  chevronRight: "\u203A", // ›
-  chevronDown: "\u2304" // ⌄
+  pending: '\u25CB', // ○
+  inProgress: '\u25D0', // ◐
+  completed: '\u2713', // ✓
+  error: '\u2717', // ✗
+  arrow: '\u2192', // →
+  bullet: '\u2022', // •
+  chevronRight: '\u203A', // ›
+  chevronDown: '\u2304' // ⌄
 } as const
 
 /**
  * Box drawing characters
  */
 export const boxChars = {
-  horizontal: "\u2500", // ─
-  vertical: "\u2502", // │
-  topLeft: "\u250C", // ┌
-  topRight: "\u2510", // ┐
-  bottomLeft: "\u2514", // └
-  bottomRight: "\u2518", // ┘
-  teeRight: "\u251C", // ├
-  teeLeft: "\u2524", // ┤
-  cross: "\u253C" // ┼
+  horizontal: '\u2500', // ─
+  vertical: '\u2502', // │
+  topLeft: '\u250C', // ┌
+  topRight: '\u2510', // ┐
+  bottomLeft: '\u2514', // └
+  bottomRight: '\u2518', // ┘
+  teeRight: '\u251C', // ├
+  teeLeft: '\u2524', // ┤
+  cross: '\u253C' // ┼
 } as const

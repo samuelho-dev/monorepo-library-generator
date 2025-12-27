@@ -13,6 +13,8 @@
  * @module monorepo-library-generator/shared/layers/static-layers
  */
 
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+
 /**
  * Configuration for static layer generation
  */
@@ -26,7 +28,7 @@ export interface StaticLayerConfig {
    * - "effect": Effectful layer with dependencies (Layer.effect)
    * - "sync": Synchronous layer (Layer.sync)
    */
-  readonly layerType: "succeed" | "effect" | "sync"
+  readonly layerType: 'succeed' | 'effect' | 'sync'
 
   /**
    * Live layer implementation code
@@ -70,6 +72,136 @@ export interface StaticLayerConfig {
 }
 
 /**
+ * Get the Layer method based on layer type
+ */
+function getLayerMethod(layerType: string) {
+  switch (layerType) {
+    case 'succeed':
+      return 'succeed'
+    case 'sync':
+      return 'sync'
+    default:
+      return 'effect'
+  }
+}
+
+/**
+ * Generate Live layer static member using TypeScriptBuilder
+ */
+function buildLiveLayer(builder: TypeScriptBuilder, className: string, layerType: string, impl: string) {
+  const layerMethod = getLayerMethod(layerType)
+
+  builder.addRaw(`  /**
+   * Live layer - Production implementation
+   *
+   * Use for production deployments with real external services.
+   */
+  static readonly Live = Layer.${layerMethod}(
+    this,
+    ${impl}
+  )`)
+}
+
+/**
+ * Generate Test layer as alias to Live using TypeScriptBuilder
+ */
+function buildTestLayerAlias(builder: TypeScriptBuilder) {
+  builder.addRaw(`  /**
+   * Test layer - Same as Live
+   *
+   * Testing is done by composing with test infrastructure layers
+   * (e.g., DatabaseService.Test) rather than a separate implementation.
+   */
+  static readonly Test = this.Live`)
+}
+
+/**
+ * Generate Test layer with its own implementation using TypeScriptBuilder
+ */
+function buildTestLayer(builder: TypeScriptBuilder, className: string, layerType: string, impl: string) {
+  const layerMethod = layerType === 'effect' ? 'sync' : layerType
+
+  builder.addRaw(`  /**
+   * Test layer - In-memory implementation for testing
+   *
+   * Provides isolated, deterministic behavior for unit tests.
+   * Each Layer.fresh creates independent state.
+   */
+  static readonly Test = Layer.${layerMethod}(
+    this,
+    ${impl}
+  )`)
+}
+
+/**
+ * Generate Dev layer with logging wrapper using TypeScriptBuilder
+ */
+function buildDevLayer(builder: TypeScriptBuilder, className: string, layerType: string, devImpl: string | undefined) {
+  if (devImpl) {
+    builder.addRaw(`  /**
+   * Dev layer - Development with enhanced logging
+   *
+   * Wraps operations with detailed request/response logging
+   * for debugging during development.
+   */
+  static readonly Dev = Layer.effect(
+    this,
+    ${devImpl}
+  )`)
+  } else {
+    // Default: wrap Live with logging (no console.log to satisfy linter)
+    builder.addRaw(`  /**
+   * Dev layer - Development with enhanced logging
+   *
+   * Wraps Live layer operations with Effect logging
+   * for debugging during development.
+   */
+  static readonly Dev = Layer.effect(
+    this,
+    Effect.gen(function*() {
+      const liveService = yield* ${className}.Live.pipe(
+        Layer.build,
+        Effect.map(Context.unsafeGet(${className}))
+      )
+
+      // Return wrapped service with logging
+      // TODO: Add method-level logging wrappers using Effect.log()
+      return liveService
+    })
+  )`)
+  }
+}
+
+/**
+ * Generate Auto layer for environment-aware selection using TypeScriptBuilder
+ *
+ * Uses process.env for environment access since NODE_ENV
+ * is a standard runtime variable not included in the typed env object.
+ */
+function buildAutoLayer(builder: TypeScriptBuilder, className: string, envVar: string) {
+  builder.addRaw(`  /**
+   * Auto layer - Environment-aware layer selection
+   *
+   * Automatically selects the appropriate layer based on process.env.${envVar}:
+   * - "test" → Test layer
+   * - "development" → Dev layer (with logging)
+   * - "production" or other → Live layer (default)
+   */
+  static readonly Auto = Layer.suspend(() => {
+    // biome-ignore lint/style/noProcessEnv: Environment-aware layer selection requires runtime env check
+    const env = process.env.${envVar}
+    switch (env) {
+      case "test":
+        return ${className}.Test
+      case "development":
+        return ${className}.Dev
+      default:
+        return ${className}.Live
+    }
+  })`)
+}
+
+/**
  * Generate complete static layers code block
  *
  * Returns the code for Live, Test, Dev, and Auto static members
@@ -89,171 +221,35 @@ export function generateStaticLayers(config: StaticLayerConfig) {
   const {
     className,
     devImpl,
-    envVar = "NODE_ENV",
+    envVar = 'NODE_ENV',
     layerType,
     liveImpl,
     testImpl,
     testViaDependencies = false
   } = config
 
-  const lines: Array<string> = []
+  const builder = new TypeScriptBuilder()
 
   // Live layer
-  lines.push(generateLiveLayer(className, layerType, liveImpl))
-  lines.push("")
+  buildLiveLayer(builder, className, layerType, liveImpl)
+  builder.addBlankLine()
 
   // Test layer
   if (testViaDependencies) {
-    lines.push(generateTestLayerAlias())
+    buildTestLayerAlias(builder)
   } else {
-    lines.push(generateTestLayer(className, layerType, testImpl || liveImpl))
+    buildTestLayer(builder, className, layerType, testImpl || liveImpl)
   }
-  lines.push("")
+  builder.addBlankLine()
 
   // Dev layer
-  lines.push(generateDevLayer(className, layerType, devImpl))
-  lines.push("")
+  buildDevLayer(builder, className, layerType, devImpl)
+  builder.addBlankLine()
 
   // Auto layer
-  lines.push(generateAutoLayer(className, envVar))
+  buildAutoLayer(builder, className, envVar)
 
-  return lines.join("\n")
-}
-
-/**
- * Generate Live layer static member
- */
-function generateLiveLayer(className: string, layerType: string, impl: string) {
-  const layerMethod = getLayerMethod(layerType)
-
-  return `  /**
-   * Live layer - Production implementation
-   *
-   * Use for production deployments with real external services.
-   */
-  static readonly Live = Layer.${layerMethod}(
-    this,
-    ${impl}
-  )`
-}
-
-/**
- * Generate Test layer as alias to Live
- */
-function generateTestLayerAlias() {
-  return `  /**
-   * Test layer - Same as Live
-   *
-   * Testing is done by composing with test infrastructure layers
-   * (e.g., DatabaseService.Test) rather than a separate implementation.
-   */
-  static readonly Test = this.Live`
-}
-
-/**
- * Generate Test layer with its own implementation
- */
-function generateTestLayer(className: string, layerType: string, impl: string) {
-  const layerMethod = layerType === "effect" ? "sync" : layerType
-
-  return `  /**
-   * Test layer - In-memory implementation for testing
-   *
-   * Provides isolated, deterministic behavior for unit tests.
-   * Each Layer.fresh creates independent state.
-   */
-  static readonly Test = Layer.${layerMethod}(
-    this,
-    ${impl}
-  )`
-}
-
-/**
- * Generate Dev layer with logging wrapper
- */
-function generateDevLayer(
-  className: string,
-  layerType: string,
-  devImpl: string | undefined
-) {
-  if (devImpl) {
-    return `  /**
-   * Dev layer - Development with enhanced logging
-   *
-   * Wraps operations with detailed request/response logging
-   * for debugging during development.
-   */
-  static readonly Dev = Layer.effect(
-    this,
-    ${devImpl}
-  )`
-  }
-
-  // Default: wrap Live with logging (no console.log to satisfy linter)
-  return `  /**
-   * Dev layer - Development with enhanced logging
-   *
-   * Wraps Live layer operations with Effect logging
-   * for debugging during development.
-   */
-  static readonly Dev = Layer.effect(
-    this,
-    Effect.gen(function*() {
-      const liveService = yield* ${className}.Live.pipe(
-        Layer.build,
-        Effect.map(Context.unsafeGet(${className}))
-      )
-
-      // Return wrapped service with logging
-      // TODO: Add method-level logging wrappers using Effect.log()
-      return liveService
-    })
-  )`
-}
-
-/**
- * Generate Auto layer for environment-aware selection
- *
- * Uses process.env for environment access since NODE_ENV
- * is a standard runtime variable not included in the typed env object.
- *
- * @param className - The Context.Tag class name
- * @param envVar - The environment variable key (e.g., "NODE_ENV")
- */
-function generateAutoLayer(className: string, envVar: string) {
-  return `  /**
-   * Auto layer - Environment-aware layer selection
-   *
-   * Automatically selects the appropriate layer based on process.env.${envVar}:
-   * - "test" → Test layer
-   * - "development" → Dev layer (with logging)
-   * - "production" or other → Live layer (default)
-   */
-  static readonly Auto = Layer.suspend(() => {
-    switch (process.env["${envVar}"]) {
-      case "test":
-        return ${className}.Test
-      case "development":
-        return ${className}.Dev
-      default:
-        return ${className}.Live
-    }
-  })`
-}
-
-/**
- * Get the Layer method based on layer type
- */
-function getLayerMethod(layerType: string) {
-  switch (layerType) {
-    case "succeed":
-      return "succeed"
-    case "sync":
-      return "sync"
-    case "effect":
-    default:
-      return "effect"
-  }
+  return builder.toString()
 }
 
 /**
@@ -263,23 +259,24 @@ function getLayerMethod(layerType: string) {
  */
 export function generateMinimalStaticLayers(config: {
   className: string
-  layerType: "succeed" | "effect" | "sync"
+  layerType: 'succeed' | 'effect' | 'sync'
   liveImpl: string
   testViaDependencies?: boolean
 }) {
   const { className, layerType, liveImpl, testViaDependencies = false } = config
-  const lines: Array<string> = []
 
-  lines.push(generateLiveLayer(className, layerType, liveImpl))
-  lines.push("")
+  const builder = new TypeScriptBuilder()
+
+  buildLiveLayer(builder, className, layerType, liveImpl)
+  builder.addBlankLine()
 
   if (testViaDependencies) {
-    lines.push(generateTestLayerAlias())
+    buildTestLayerAlias(builder)
   } else {
-    lines.push(generateTestLayer(className, layerType, liveImpl))
+    buildTestLayer(builder, className, layerType, liveImpl)
   }
 
-  return lines.join("\n")
+  return builder.toString()
 }
 
 /**
@@ -288,31 +285,39 @@ export function generateMinimalStaticLayers(config: {
  * Useful for templates that need custom layer implementations
  * but want consistent documentation.
  */
-export function generateLayerDocs(layerName: "Live" | "Test" | "Dev" | "Auto") {
+export function generateLayerDocs(layerName: 'Live' | 'Test' | 'Dev' | 'Auto') {
+  const builder = new TypeScriptBuilder()
+
   switch (layerName) {
-    case "Live":
-      return `  /**
+    case 'Live':
+      builder.addRaw(`  /**
    * Live layer - Production implementation
    *
    * Use for production deployments with real external services.
-   */`
-    case "Test":
-      return `  /**
+   */`)
+      break
+    case 'Test':
+      builder.addRaw(`  /**
    * Test layer - In-memory implementation for testing
    *
    * Provides isolated, deterministic behavior for unit tests.
-   */`
-    case "Dev":
-      return `  /**
+   */`)
+      break
+    case 'Dev':
+      builder.addRaw(`  /**
    * Dev layer - Development with enhanced logging
    *
    * Wraps operations with detailed request/response logging.
-   */`
-    case "Auto":
-      return `  /**
+   */`)
+      break
+    case 'Auto':
+      builder.addRaw(`  /**
    * Auto layer - Environment-aware layer selection
    *
    * Automatically selects Live, Dev, or Test based on NODE_ENV.
-   */`
+   */`)
+      break
   }
+
+  return builder.toString()
 }

@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/contract/auth/index
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { AuthTemplateOptions } from "./schemas.template"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { AuthTemplateOptions } from './schemas.template'
 
 /**
  * Generate index.ts for contract-auth library
@@ -16,7 +16,7 @@ export function generateAuthIndexFile(options: AuthTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   builder.addFileHeader({
-    title: "Auth Contract Library",
+    title: 'Auth Contract Library',
     description: `Single source of truth for auth types across the monorepo.
 
 This library defines all auth-related types:
@@ -33,7 +33,7 @@ Other libraries import from here:
   })
   builder.addBlankLine()
 
-  builder.addSectionComment("Schemas")
+  builder.addSectionComment('Schemas')
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -56,7 +56,7 @@ Other libraries import from here:
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Errors")
+  builder.addSectionComment('Errors')
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -76,7 +76,7 @@ Other libraries import from here:
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Ports (Service Interfaces)")
+  builder.addSectionComment('Ports (Service Interfaces)')
   builder.addBlankLine()
 
   builder.addRaw(`export {
@@ -93,7 +93,7 @@ Other libraries import from here:
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Middleware Context")
+  builder.addSectionComment('Middleware Context')
   builder.addBlankLine()
 
   builder.addRaw(`export {

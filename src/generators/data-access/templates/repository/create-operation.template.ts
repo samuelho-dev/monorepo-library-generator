@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/data-access/repository/create-operation-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { DataAccessTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { DataAccessTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate repository/operations/create.ts file
@@ -32,14 +32,14 @@ Bundle optimization: Import this file directly for smallest bundle size:
 
   // Add imports
   builder.addImports([
-    { from: "effect", imports: ["Duration", "Effect"] },
-    { from: `${scope}/infra-database`, imports: ["DatabaseService"] },
-    { from: "../../shared/errors", imports: [`${className}TimeoutError`] },
-    { from: "../../shared/types", imports: [`${className}CreateInput`], isTypeOnly: true }
+    { from: 'effect', imports: ['Duration', 'Effect'] },
+    { from: `${scope}/infra-database`, imports: ['DatabaseService'] },
+    { from: '../../shared/errors', imports: [`${className}TimeoutError`] },
+    { from: '../../shared/types', imports: [`${className}CreateInput`], isTypeOnly: true }
   ])
 
   // Live implementation
-  builder.addSectionComment("Create Operations")
+  builder.addSectionComment('Create Operations')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -89,7 +89,7 @@ export const createOperations = {
   /**
    * Create multiple ${className} entities in batch
    */
-  createMany: (inputs: ReadonlyArray<${className}CreateInput>) =>
+  createMany: (inputs: readonly ${className}CreateInput[]) =>
     Effect.gen(function*() {
       const database = yield* DatabaseService
 

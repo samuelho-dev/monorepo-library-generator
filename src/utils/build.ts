@@ -10,10 +10,10 @@
  * @module monorepo-library-generator/build
  */
 
-import type { ProjectGraph, TargetConfiguration, Tree } from "@nx/devkit"
-import { createProjectGraphAsync, readProjectConfiguration } from "@nx/devkit"
-import { join, relative } from "node:path"
-import type { LibraryType, PlatformType } from "./types"
+import { join, relative } from 'node:path'
+import type { ProjectGraph, TargetConfiguration, Tree } from '@nx/devkit'
+import { createProjectGraphAsync, readProjectConfiguration } from '@nx/devkit'
+import type { LibraryType, PlatformType } from './types'
 
 // Re-export types for convenience
 export type { LibraryType, PlatformType }
@@ -32,11 +32,11 @@ export const DEFAULT_LIBRARY_TAGS: {
   readonly infrastructure: ReadonlyArray<string>
   readonly provider: ReadonlyArray<string>
 } = {
-  contract: ["type:contract", "scope:shared"],
-  feature: ["type:feature", "scope:shared"],
-  dataAccess: ["type:data-access", "scope:server"],
-  infrastructure: ["type:infrastructure", "scope:shared"],
-  provider: ["type:provider", "scope:shared"]
+  contract: ['type:contract', 'scope:shared'],
+  feature: ['type:feature', 'scope:shared'],
+  dataAccess: ['type:data-access', 'scope:server'],
+  infrastructure: ['type:infrastructure', 'scope:shared'],
+  provider: ['type:provider', 'scope:shared']
 }
 
 // ============================================================================
@@ -49,7 +49,7 @@ export interface BuildConfigOptions {
   libraryType: LibraryType
   includeClientServer?: boolean
   additionalEntryPoints?: Array<string>
-  buildMode?: "nx" | "effect"
+  buildMode?: 'nx' | 'effect'
 }
 
 // ============================================================================
@@ -156,7 +156,8 @@ export interface ExportConfig {
  */
 export function resolvePlatformExports(options: PlatformExportOptions) {
   // Library types that don't support platform-specific exports
-  const supportsPlatformExports = options.libraryType !== "data-access" && options.libraryType !== "contract"
+  const supportsPlatformExports =
+    options.libraryType !== 'data-access' && options.libraryType !== 'contract'
 
   if (!supportsPlatformExports) {
     return { shouldGenerateServer: false, shouldGenerateClient: false }
@@ -173,8 +174,8 @@ export function resolvePlatformExports(options: PlatformExportOptions) {
   }
 
   // Platform defaults (includeClientServer is undefined)
-  const shouldGenerateServer = options.platform === "node" || options.platform === "universal"
-  const shouldGenerateClient = options.platform === "browser" || options.platform === "universal"
+  const shouldGenerateServer = options.platform === 'node' || options.platform === 'universal'
+  const shouldGenerateClient = options.platform === 'browser' || options.platform === 'universal'
 
   return { shouldGenerateServer, shouldGenerateClient }
 }
@@ -183,7 +184,7 @@ export function resolvePlatformExports(options: PlatformExportOptions) {
  * Check if a library type supports platform-specific exports
  */
 export function hasPlatformExports(libraryType: LibraryType) {
-  return libraryType !== "data-access" && libraryType !== "contract"
+  return libraryType !== 'data-access' && libraryType !== 'contract'
 }
 
 /**
@@ -244,16 +245,16 @@ function getAdditionalEntryPoints(options: BuildConfigOptions) {
   }
 
   switch (libraryType) {
-    case "data-access":
+    case 'data-access':
       break
-    case "provider":
+    case 'provider':
       break
-    case "infra":
+    case 'infra':
       if (!entryPoints.includes(`${projectRoot}/src/server.ts`)) {
         entryPoints.push(`${projectRoot}/src/server.ts`)
       }
       break
-    case "feature":
+    case 'feature':
       break
   }
 
@@ -267,8 +268,8 @@ export function createBuildTarget(options: BuildConfigOptions) {
   const additionalEntryPoints = getAdditionalEntryPoints(options)
 
   return {
-    executor: "@nx/js:tsc",
-    outputs: ["{options.outputPath}"],
+    executor: '@nx/js:tsc',
+    outputs: ['{options.outputPath}'],
     options: {
       outputPath: `dist/${options.projectRoot}`,
       main: `${options.projectRoot}/src/index.ts`,
@@ -288,8 +289,8 @@ export function createBuildTarget(options: BuildConfigOptions) {
  */
 export function createTestTarget(projectRoot: string) {
   return {
-    executor: "@nx/vite:test",
-    outputs: ["{workspaceRoot}/coverage/{projectRoot}"],
+    executor: '@nx/vite:test',
+    outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
     options: {
       config: `${projectRoot}/vitest.config.ts`,
       passWithNoTests: true
@@ -302,8 +303,8 @@ export function createTestTarget(projectRoot: string) {
  */
 export function createLintTarget(projectRoot: string) {
   return {
-    executor: "@nx/eslint:lint",
-    outputs: ["{options.outputFile}"],
+    executor: '@nx/eslint:lint',
+    outputs: ['{options.outputFile}'],
     options: {
       lintFilePatterns: [`${projectRoot}/**/*.ts`]
     }
@@ -315,7 +316,7 @@ export function createLintTarget(projectRoot: string) {
  */
 export function createTypecheckTarget(projectRoot: string) {
   return {
-    executor: "nx:run-commands",
+    executor: 'nx:run-commands',
     options: {
       command: `tsc --noEmit -p ${projectRoot}/tsconfig.lib.json`
     }
@@ -332,7 +333,7 @@ export function createStandardTargets(options: BuildConfigOptions) {
     typecheck: createTypecheckTarget(options.projectRoot)
   }
 
-  targets["test"] = createTestTarget(options.projectRoot)
+  targets.test = createTestTarget(options.projectRoot)
 
   return targets
 }
@@ -342,17 +343,18 @@ export function createStandardTargets(options: BuildConfigOptions) {
  */
 export function createEffectScripts() {
   return {
-    codegen: "build-utils prepare-v2",
-    build: "pnpm build-esm && pnpm build-annotate && pnpm build-cjs && build-utils pack-v2",
-    "build-esm": `tsc -b tsconfig.lib.json`,
-    "build-cjs":
-      "babel build/esm --plugins @babel/transform-export-namespace-from --plugins @babel/transform-modules-commonjs --out-dir build/cjs --source-maps",
-    "build-annotate": "babel build/esm --plugins annotate-pure-calls --out-dir build/esm --source-maps",
-    check: "tsc -b tsconfig.json",
-    test: "vitest",
-    "test:ci": "vitest run",
-    lint: "eslint \"**/{src,test}/**/*.{ts,mjs}\"",
-    "lint-fix": "pnpm lint --fix"
+    codegen: 'build-utils prepare-v2',
+    build: 'pnpm build-esm && pnpm build-annotate && pnpm build-cjs && build-utils pack-v2',
+    'build-esm': `tsc -b tsconfig.lib.json`,
+    'build-cjs':
+      'babel build/esm --plugins @babel/transform-export-namespace-from --plugins @babel/transform-modules-commonjs --out-dir build/cjs --source-maps',
+    'build-annotate':
+      'babel build/esm --plugins annotate-pure-calls --out-dir build/esm --source-maps',
+    check: 'tsc -b tsconfig.json',
+    test: 'vitest',
+    'test:ci': 'vitest run',
+    lint: 'eslint "**/{src,test}/**/*.{ts,mjs}"',
+    'lint-fix': 'pnpm lint --fix'
   }
 }
 
@@ -382,17 +384,17 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
     for (const dep of deps) {
       const targetNode = graph.nodes[dep.target]
 
-      if (!targetNode || dep.target.startsWith("npm:")) {
+      if (!targetNode || dep.target.startsWith('npm:')) {
         continue
       }
 
       try {
         const targetConfig = readProjectConfiguration(tree, dep.target)
-        if (targetConfig.projectType !== "library") {
+        if (targetConfig.projectType !== 'library') {
           continue
         }
 
-        const depTsConfigPath = join(targetConfig.root, "tsconfig.lib.json")
+        const depTsConfigPath = join(targetConfig.root, 'tsconfig.lib.json')
         if (!tree.exists(depTsConfigPath)) {
           continue
         }
@@ -414,7 +416,7 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
     const circularDeps = detectCircularReferences(graph, projectName)
     if (circularDeps && circularDeps.length > 0) {
       throw new Error(
-        `Circular dependency detected in ${projectName}: ${circularDeps.join(" -> ")}`
+        `Circular dependency detected in ${projectName}: ${circularDeps.join(' -> ')}`
       )
     }
 
@@ -423,9 +425,9 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
     const errorMessage = error instanceof Error ? error.message : String(error)
 
     if (
-      errorMessage.includes("Cannot find module") ||
-      errorMessage.includes("createProjectGraphAsync") ||
-      errorMessage.includes("nx.json")
+      errorMessage.includes('Cannot find module') ||
+      errorMessage.includes('createProjectGraphAsync') ||
+      errorMessage.includes('nx.json')
     ) {
       return { references: [], dependencies: [] }
     }
@@ -436,10 +438,7 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
 /**
  * Detect circular dependencies using iterative DFS
  */
-function detectCircularReferences(
-  graph: ProjectGraph,
-  startProject: string
-) {
+function detectCircularReferences(graph: ProjectGraph, startProject: string) {
   const stack: Array<{ project: string; path: Array<string>; visited: Set<string> }> = [
     { project: startProject, path: [], visited: new Set() }
   ]
@@ -464,7 +463,7 @@ function detectCircularReferences(
 
     const deps = graph.dependencies[project] || []
     for (const dep of deps) {
-      if (!graph.nodes[dep.target] || dep.target.startsWith("npm:")) {
+      if (!graph.nodes[dep.target] || dep.target.startsWith('npm:')) {
         continue
       }
       stack.push({ project: dep.target, path: newPath, visited: newVisited })
@@ -476,139 +475,11 @@ function detectCircularReferences(
 }
 
 /**
- * Generate base tsconfig.json
- */
-export function generateBaseTsConfig(options: TsConfigOptions) {
-  const { offsetFromRoot } = options
-
-  return {
-    extends: `${offsetFromRoot}/tsconfig.base.json`,
-    compilerOptions: {
-      baseUrl: ".",
-      module: "esnext",
-      forceConsistentCasingInFileNames: true,
-      strict: true,
-      noImplicitOverride: true,
-      noPropertyAccessFromIndexSignature: true,
-      noImplicitReturns: true,
-      noFallthroughCasesInSwitch: true
-    },
-    files: [],
-    include: ["src/**/*.ts"],
-    references: [{ path: "./tsconfig.lib.json" }]
-  }
-}
-
-/**
- * Generate tsconfig.lib.json for library compilation
- */
-export function generateLibTsConfig(options: TsConfigOptions, references: Array<ProjectReference>) {
-  const { libraryType, offsetFromRoot, platform, projectRoot } = options
-
-  const types = libraryType === "contract" ? [] : getPlatformTypes(platform)
-
-  const compilerOptions: Record<string, unknown> = {
-    declaration: true,
-    declarationMap: true,
-    outDir: `${offsetFromRoot}dist/${projectRoot}`,
-    noEmit: false,
-    ...(types.length > 0 && { types }),
-    ...(libraryType === "contract" && { typeRoots: [] })
-  }
-
-  return {
-    extends: "./tsconfig.json",
-    compilerOptions,
-    include: ["src/**/*.ts"],
-    exclude: ["vitest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts", "src/**/__tests__/**/*"],
-    ...(references.length > 0 && { references })
-  }
-}
-
-/**
- * Generate tsconfig.spec.json for test compilation
- */
-export function generateSpecTsConfig(options: TsConfigOptions) {
-  const { offsetFromRoot, platform, projectRoot } = options
-
-  const types = [...getPlatformTypes(platform), "vitest"]
-
-  return {
-    extends: "./tsconfig.json",
-    compilerOptions: {
-      outDir: `${offsetFromRoot}dist/libs/${projectRoot}/src`,
-      types,
-      target: "es2022",
-      module: "esnext"
-    },
-    include: ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"]
-  }
-}
-
-/**
- * Get platform-specific type definitions
- */
-function getPlatformTypes(platform: PlatformType) {
-  switch (platform) {
-    case "node":
-      return ["node"]
-    case "browser":
-      return []
-    case "edge":
-      return []
-    case "universal":
-      return ["node"]
-    default:
-      return ["node"]
-  }
-}
-
-/**
- * Get library-type specific compiler options
- */
-export function getLibraryTypeOptions(libraryType: LibraryType) {
-  switch (libraryType) {
-    case "contract":
-      return { noEmitOnError: true }
-    case "data-access":
-      return { strictNullChecks: true, strictPropertyInitialization: true }
-    case "feature":
-      return {}
-    case "provider":
-      return {}
-    case "infra":
-      return {}
-    default:
-      return {}
-  }
-}
-
-/**
- * Add all TypeScript configuration files to the Nx tree
- */
-export async function addTsConfigFiles(tree: Tree, options: TsConfigOptions) {
-  const { projectName, projectRoot } = options
-
-  const { dependencies, references } = await computeProjectReferences(tree, projectName)
-
-  const baseTsConfig = generateBaseTsConfig(options)
-  tree.write(join(projectRoot, "tsconfig.json"), `${JSON.stringify(baseTsConfig, null, 2)}\n`)
-
-  const libTsConfig = generateLibTsConfig(options, references)
-  tree.write(join(projectRoot, "tsconfig.lib.json"), `${JSON.stringify(libTsConfig, null, 2)}\n`)
-
-  const specTsConfig = generateSpecTsConfig(options)
-  tree.write(join(projectRoot, "tsconfig.spec.json"), `${JSON.stringify(specTsConfig, null, 2)}\n`)
-
-  return { references, dependencies }
-}
-
-/**
  * Get offset from project root to workspace root
  */
 export function getOffsetFromRoot(projectRoot: string) {
-  const depth = projectRoot.split("/").length
-  return depth === 1 ? "./" : "../".repeat(depth)
+  const depth = projectRoot.split('/').length
+  return depth === 1 ? './' : '../'.repeat(depth)
 }
 
 // ============================================================================
@@ -620,26 +491,26 @@ export function getOffsetFromRoot(projectRoot: string) {
  */
 export function generateContractExports(config: ExportConfig) {
   const exports: ExportMap = {
-    ".": { import: "./src/index.ts", types: "./src/index.ts" },
-    "./types": { import: "./src/types.ts", types: "./src/types.ts" },
-    "./errors": { import: "./src/lib/errors.ts", types: "./src/lib/errors.ts" },
-    "./ports": { import: "./src/lib/ports.ts", types: "./src/lib/ports.ts" },
+    '.': { import: './src/index.ts', types: './src/index.ts' },
+    './types': { import: './src/types.ts', types: './src/types.ts' },
+    './errors': { import: './src/lib/errors.ts', types: './src/lib/errors.ts' },
+    './ports': { import: './src/lib/ports.ts', types: './src/lib/ports.ts' },
     // RPC definitions (imported by feature libraries for handler implementation)
-    "./rpc": { import: "./src/lib/rpc.ts", types: "./src/lib/rpc.ts" }
+    './rpc': { import: './src/lib/rpc.ts', types: './src/lib/rpc.ts' }
   }
 
   if (config.hasEntities) {
-    exports["./entities"] = {
-      import: "./src/lib/entities/index.ts",
-      types: "./src/lib/entities/index.ts"
+    exports['./entities'] = {
+      import: './src/lib/entities/index.ts',
+      types: './src/lib/entities/index.ts'
     }
-    exports["./entities/*"] = {
-      import: "./src/lib/entities/*.ts",
-      types: "./src/lib/entities/*.ts"
+    exports['./entities/*'] = {
+      import: './src/lib/entities/*.ts',
+      types: './src/lib/entities/*.ts'
     }
   }
 
-  exports["./events"] = { import: "./src/lib/events.ts", types: "./src/lib/events.ts" }
+  exports['./events'] = { import: './src/lib/events.ts', types: './src/lib/events.ts' }
 
   // Add sub-module subpath exports (Hybrid DDD pattern)
   // e.g., "./authentication" -> "./src/authentication/index.ts"
@@ -660,29 +531,29 @@ export function generateContractExports(config: ExportConfig) {
  */
 export function generateDataAccessExports() {
   return {
-    ".": { import: "./src/index.ts", types: "./src/index.ts" },
-    "./types": { import: "./src/types.ts", types: "./src/types.ts" },
-    "./repository": {
-      import: "./src/lib/repository/index.ts",
-      types: "./src/lib/repository/index.ts"
+    '.': { import: './src/index.ts', types: './src/index.ts' },
+    './types': { import: './src/types.ts', types: './src/types.ts' },
+    './repository': {
+      import: './src/lib/repository/index.ts',
+      types: './src/lib/repository/index.ts'
     },
-    "./repository/operations": {
-      import: "./src/lib/repository/operations/index.ts",
-      types: "./src/lib/repository/operations/index.ts"
+    './repository/operations': {
+      import: './src/lib/repository/operations/index.ts',
+      types: './src/lib/repository/operations/index.ts'
     },
-    "./repository/operations/*": {
-      import: "./src/lib/repository/operations/*.ts",
-      types: "./src/lib/repository/operations/*.ts"
+    './repository/operations/*': {
+      import: './src/lib/repository/operations/*.ts',
+      types: './src/lib/repository/operations/*.ts'
     },
-    "./queries": { import: "./src/lib/queries/index.ts", types: "./src/lib/queries/index.ts" },
-    "./queries/*": { import: "./src/lib/queries/*.ts", types: "./src/lib/queries/*.ts" },
-    "./validation": {
-      import: "./src/lib/validation/index.ts",
-      types: "./src/lib/validation/index.ts"
+    './queries': { import: './src/lib/queries/index.ts', types: './src/lib/queries/index.ts' },
+    './queries/*': { import: './src/lib/queries/*.ts', types: './src/lib/queries/*.ts' },
+    './validation': {
+      import: './src/lib/validation/index.ts',
+      types: './src/lib/validation/index.ts'
     },
-    "./validation/*": { import: "./src/lib/validation/*.ts", types: "./src/lib/validation/*.ts" },
-    "./layers": { import: "./src/lib/layers/index.ts", types: "./src/lib/layers/index.ts" },
-    "./layers/*": { import: "./src/lib/layers/*.ts", types: "./src/lib/layers/*.ts" }
+    './validation/*': { import: './src/lib/validation/*.ts', types: './src/lib/validation/*.ts' },
+    './layers': { import: './src/lib/layers/index.ts', types: './src/lib/layers/index.ts' },
+    './layers/*': { import: './src/lib/layers/*.ts', types: './src/lib/layers/*.ts' }
   }
 }
 
@@ -693,16 +564,16 @@ export function generateDataAccessExports() {
  */
 export function generateFeatureExports() {
   const exports: ExportMap = {
-    ".": { import: "./src/index.ts", types: "./src/index.ts" },
-    "./types": { import: "./src/types.ts", types: "./src/types.ts" },
+    '.': { import: './src/index.ts', types: './src/index.ts' },
+    './types': { import: './src/types.ts', types: './src/types.ts' },
     // RPC always prewired
-    "./rpc/handlers": {
-      import: "./src/lib/rpc/handlers/index.ts",
-      types: "./src/lib/rpc/handlers/index.ts"
+    './rpc/handlers': {
+      import: './src/lib/rpc/handlers/index.ts',
+      types: './src/lib/rpc/handlers/index.ts'
     },
-    "./rpc/handlers/*": {
-      import: "./src/lib/rpc/handlers/*.ts",
-      types: "./src/lib/rpc/handlers/*.ts"
+    './rpc/handlers/*': {
+      import: './src/lib/rpc/handlers/*.ts',
+      types: './src/lib/rpc/handlers/*.ts'
     }
   }
 
@@ -714,11 +585,11 @@ export function generateFeatureExports() {
  */
 export function generateInfraExports() {
   return {
-    ".": { import: "./src/index.ts", types: "./src/index.ts" },
-    "./types": { import: "./src/types.ts", types: "./src/types.ts" },
-    "./service": { import: "./src/lib/service/index.ts", types: "./src/lib/service/index.ts" },
-    "./providers/*": { import: "./src/lib/providers/*.ts", types: "./src/lib/providers/*.ts" },
-    "./layers/*": { import: "./src/lib/layers/*.ts", types: "./src/lib/layers/*.ts" }
+    '.': { import: './src/index.ts', types: './src/index.ts' },
+    './types': { import: './src/types.ts', types: './src/types.ts' },
+    './service': { import: './src/lib/service/index.ts', types: './src/lib/service/index.ts' },
+    './providers/*': { import: './src/lib/providers/*.ts', types: './src/lib/providers/*.ts' },
+    './layers/*': { import: './src/lib/layers/*.ts', types: './src/lib/layers/*.ts' }
   }
 }
 
@@ -727,15 +598,15 @@ export function generateInfraExports() {
  */
 export function generateProviderExports() {
   return {
-    ".": { import: "./src/index.ts", types: "./src/index.ts" },
-    "./types": { import: "./src/types.ts", types: "./src/types.ts" },
-    "./service": { import: "./src/lib/service/index.ts", types: "./src/lib/service/index.ts" },
-    "./service/*": {
-      import: "./src/lib/service/operations/*.ts",
-      types: "./src/lib/service/operations/*.ts"
+    '.': { import: './src/index.ts', types: './src/index.ts' },
+    './types': { import: './src/types.ts', types: './src/types.ts' },
+    './service': { import: './src/lib/service/index.ts', types: './src/lib/service/index.ts' },
+    './service/*': {
+      import: './src/lib/service/operations/*.ts',
+      types: './src/lib/service/operations/*.ts'
     },
-    "./errors": { import: "./src/lib/errors.ts", types: "./src/lib/errors.ts" },
-    "./validation": { import: "./src/lib/validation.ts", types: "./src/lib/validation.ts" }
+    './errors': { import: './src/lib/errors.ts', types: './src/lib/errors.ts' },
+    './validation': { import: './src/lib/validation.ts', types: './src/lib/validation.ts' }
   }
 }
 
@@ -744,18 +615,18 @@ export function generateProviderExports() {
  */
 export function generateGranularExports(config: ExportConfig) {
   switch (config.libraryType) {
-    case "contract":
+    case 'contract':
       return generateContractExports(config)
-    case "data-access":
+    case 'data-access':
       return generateDataAccessExports()
-    case "feature":
+    case 'feature':
       return generateFeatureExports()
-    case "infra":
+    case 'infra':
       return generateInfraExports()
-    case "provider":
+    case 'provider':
       return generateProviderExports()
     default:
-      return { ".": { import: "./src/index.ts", types: "./src/index.ts" } }
+      return { '.': { import: './src/index.ts', types: './src/index.ts' } }
   }
 }
 
@@ -793,7 +664,7 @@ export function getExportPathForImport(exports: ExportMap, importPath: string) {
   }
 
   for (const key of Object.keys(exports)) {
-    if (key.endsWith("/*")) {
+    if (key.endsWith('/*')) {
       const basePath = key.slice(0, -2)
       if (importPath.startsWith(`${basePath}/`)) {
         return key
@@ -811,80 +682,80 @@ export function generateImportExamples(config: ExportConfig) {
   const examples: Array<string> = []
 
   switch (config.libraryType) {
-    case "contract":
+    case 'contract':
       examples.push(
-        "// Granular entity import (optimal tree-shaking)",
+        '// Granular entity import (optimal tree-shaking)',
         "import { Product } from '@scope/contract-product/entities/product'",
-        "",
-        "// Barrel import (convenience)",
+        '',
+        '// Barrel import (convenience)',
         "import { Product, Category } from '@scope/contract-product/entities'",
-        "",
-        "// Type-only import (zero runtime overhead)",
+        '',
+        '// Type-only import (zero runtime overhead)',
         "import type { Product } from '@scope/contract-product/types'"
       )
       break
-    case "data-access":
+    case 'data-access':
       examples.push(
-        "// Granular operation import (only bundles create logic)",
+        '// Granular operation import (only bundles create logic)',
         "import { createUser } from '@scope/data-access-user/repository/operations/create'",
-        "",
-        "// Specific query builder",
+        '',
+        '// Specific query builder',
         "import { buildFindByIdQuery } from '@scope/data-access-user/queries/find-queries'",
-        "",
-        "// Type-only import",
+        '',
+        '// Type-only import',
         "import type { User, UserCreateInput } from '@scope/data-access-user/types'"
       )
       break
-    case "feature":
+    case 'feature':
       if (
-        config.platform === "browser" ||
-        config.platform === "universal" ||
+        config.platform === 'browser' ||
+        config.platform === 'universal' ||
         config.includeClientServer
       ) {
         examples.push(
-          "// Granular hook import",
+          '// Granular hook import',
           "import { useUser } from '@scope/feature-user/client/hooks/use-user'",
-          "",
-          "// Type-only import",
+          '',
+          '// Type-only import',
           "import type { UserData } from '@scope/feature-user/types'"
         )
       }
       if (
-        config.platform === "node" ||
-        config.platform === "universal" ||
+        config.platform === 'node' ||
+        config.platform === 'universal' ||
         config.includeClientServer
       ) {
         examples.push(
-          "// Granular service operation",
+          '// Granular service operation',
           "import { createUser } from '@scope/feature-user/server/service/create-user'",
-          "",
-          "// Full server exports",
+          '',
+          '// Full server exports',
           "import { UserService } from '@scope/feature-user/server'"
         )
       }
       break
-    case "provider":
+    case 'provider':
       examples.push(
-        "// Granular operation import",
+        '// Granular operation import',
         "import { createItem } from '@scope/provider-cache/service/create'",
-        "",
-        "// Type-only import",
+        '',
+        '// Type-only import',
         "import type { CacheItem } from '@scope/provider-cache/types'"
       )
       break
-    case "infra":
+    case 'infra':
       examples.push(
-        "// Service import",
+        '// Service import',
         "import { DatabaseService } from '@scope/infra-database/service'",
-        "",
-        "// Specific provider",
+        '',
+        '// Specific provider',
         "import { PostgresProvider } from '@scope/infra-database/providers/postgres'",
-        "",
-        "// Type-only import",
+        '',
+        '// Type-only import',
         "import type { DatabaseConfig } from '@scope/infra-database/types'"
       )
       break
   }
 
-  return examples.join("\n")
+  return examples.join('\n')
 }

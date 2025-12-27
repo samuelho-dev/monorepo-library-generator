@@ -1,4 +1,4 @@
-import { LogLevel, Logger } from "effect"
+import { Logger, LogLevel } from "effect"
 
 /**
  * Observability Constants
@@ -67,7 +67,7 @@ export const HistogramBoundaries = {
    * Cache operation duration (seconds)
    * Very fast operations from 100μs to 100ms
    */
-  cacheDuration: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1] as const,
+  cacheDuration: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1] as const
 } as const
 
 // ============================================================================
@@ -122,7 +122,7 @@ export const StandardMetricNames = {
 
   // Storage metrics
   storageOperationsTotal: "storage_operations_total",
-  storageBytesTransferred: "storage_bytes_transferred_total",
+  storageBytesTransferred: "storage_bytes_transferred_total"
 } as const
 
 // ============================================================================
@@ -171,7 +171,7 @@ export const LogLevelConfigs = {
    * Silent: No logs
    * Use for benchmarks or when logs are not needed
    */
-  silent: Logger.minimumLogLevel(LogLevel.None),
+  silent: Logger.minimumLogLevel(LogLevel.None)
 } as const
 
 /**
@@ -187,8 +187,7 @@ export const LogLevelConfigs = {
  * )
  * ```
  */
-export const withMinLogLevel = (minLevel: LogLevel.LogLevel) =>
-  Logger.minimumLogLevel(minLevel)
+export const withMinLogLevel = (minLevel: LogLevel.LogLevel) => Logger.minimumLogLevel(minLevel)
 
 // ============================================================================
 // Semantic Span Attribute Names
@@ -244,5 +243,5 @@ export const SpanAttributes = {
   // Error
   errorType: "error.type",
   exceptionMessage: "exception.message",
-  exceptionStacktrace: "exception.stacktrace",
+  exceptionStacktrace: "exception.stacktrace"
 } as const

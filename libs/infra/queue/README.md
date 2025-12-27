@@ -1,6 +1,6 @@
 # @samuelho-dev/infra-queue
 
-Queue orchestration infrastructure with Supervisor for background workers
+Queue
 
 ## Overview
 

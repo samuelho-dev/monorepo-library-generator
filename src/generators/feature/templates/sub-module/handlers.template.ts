@@ -12,8 +12,8 @@
  * @module monorepo-library-generator/feature/templates/sub-module/handlers
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 export interface SubModuleHandlersOptions {
   readonly parentName: string
@@ -45,13 +45,13 @@ Contract-First Architecture:
   })
 
   // Detect sub-module type early to determine imports
-  const isCart = subModuleName.toLowerCase() === "cart"
-  const isCheckout = subModuleName.toLowerCase() === "checkout"
-  const isManagement = subModuleName.toLowerCase() === "management"
+  const isCart = subModuleName.toLowerCase() === 'cart'
+  const isCheckout = subModuleName.toLowerCase() === 'checkout'
+  const isManagement = subModuleName.toLowerCase() === 'management'
 
-  builder.addImports([{ from: "effect", imports: ["DateTime", "Effect", "Option"] }])
+  builder.addImports([{ from: 'effect', imports: ['DateTime', 'Effect', 'Option'] }])
 
-  builder.addSectionComment("Contract Imports")
+  builder.addSectionComment('Contract Imports')
 
   // Sub-modules are exported as namespaces from the parent contract
   // Import RPC error types for proper error channel typing
@@ -62,41 +62,41 @@ Contract-First Architecture:
       from: `${scope}/contract-${parentName}/${subModuleName}`,
       imports: [
         `${subModuleClassName}NotFoundRpcError`,
-        `${subModuleClassName}ValidationRpcError`,
-        `${subModuleClassName}RpcError`
+        `${subModuleClassName}ValidationRpcError`
       ]
     }
   ])
 
-  // Import domain error type for error mapping
+  // Import types for error mapping (RpcError union type and domain error)
   builder.addImports([
     {
       from: `${scope}/contract-${parentName}/${subModuleName}`,
-      imports: [`${subModuleClassName}Error`],
+      imports: [`${subModuleClassName}RpcError`, `${subModuleClassName}Error`],
       isTypeOnly: true
     }
   ])
 
-  builder.addSectionComment("Infrastructure Imports")
+  builder.addSectionComment('Infrastructure Imports')
 
   // Only import what's actually used - management handlers use ServiceContext
   if (isManagement) {
     builder.addImports([
-      { from: `${scope}/infra-rpc`, imports: ["getHandlerContext", "RequestMeta", "ServiceContext"] }
+      {
+        from: `${scope}/infra-rpc`,
+        imports: ['getHandlerContext', 'RequestMeta', 'ServiceContext']
+      }
     ])
   } else {
     builder.addImports([
-      { from: `${scope}/infra-rpc`, imports: ["getHandlerContext", "RequestMeta"] }
+      { from: `${scope}/infra-rpc`, imports: ['getHandlerContext', 'RequestMeta'] }
     ])
   }
 
-  builder.addSectionComment("Service Import")
+  builder.addSectionComment('Service Import')
 
-  builder.addImports([
-    { from: "./service", imports: [`${subModuleClassName}Service`] }
-  ])
+  builder.addImports([{ from: './service', imports: [`${subModuleClassName}Service`] }])
 
-  builder.addSectionComment("Error Mapping")
+  builder.addSectionComment('Error Mapping')
 
   // Generate domain-to-RPC error mapping helper
   builder.addRaw(`/**
@@ -128,7 +128,7 @@ const mapToRpcError = (error: ${subModuleClassName}Error): ${subModuleClassName}
 }
 `)
 
-  builder.addSectionComment("Handler Implementations")
+  builder.addSectionComment('Handler Implementations')
 
   // Generate domain-specific handlers based on sub-module type
 

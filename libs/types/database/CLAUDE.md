@@ -1,3 +1,12 @@
+---
+scope: libs/types/database/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/EFFECT_PATTERNS.md
+  - ../../provider/kysely/CLAUDE.md
+---
+
 # @samuelho-dev/types-database
 
 Generated Kysely types from Prisma schema.
@@ -44,3 +53,11 @@ generator prisma_effect_kysely {
   fileName     = "types.ts"
 }
 ```
+
+## For Future Claude Code Instances
+
+- [ ] Types are AUTO-GENERATED - do not manually edit
+- [ ] Run `pnpm prisma generate` after schema changes
+- [ ] Import as `DB` type for Kysely generic parameter
+- [ ] Consumed by provider-kysely and data-access libraries
+- [ ] Source of truth is `prisma/schema.prisma`

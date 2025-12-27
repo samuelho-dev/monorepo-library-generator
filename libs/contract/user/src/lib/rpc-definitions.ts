@@ -136,10 +136,13 @@ export const PaginatedResponse = <T extends Schema.Schema.Any>(itemSchema: T) =>
 
 /**
  * Create User input schema
+ *
+ * NOTE: This is a generated stub. Update to match your Prisma model's required fields.
+ * The handler will add createdAt/updatedAt automatically.
  */
 export const CreateUserInput = Schema.Struct({
-  name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))
-  // TODO: Add domain-specific creation fields
+  email: Schema.String.pipe(Schema.pattern(/^[^@]+@[^@]+$/)),
+  name: Schema.NullOr(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
 }).pipe(
   Schema.annotations({
     identifier: "CreateUserInput",
@@ -152,10 +155,13 @@ export type CreateUserInput = Schema.Schema.Type<typeof CreateUserInput>
 
 /**
  * Update User input schema
+ *
+ * NOTE: This is a generated stub. Update to match your Prisma model's updateable fields.
+ * The handler will set updatedAt automatically.
  */
 export const UpdateUserInput = Schema.Struct({
-  name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
-  // TODO: Add domain-specific update fields
+  email: Schema.optional(Schema.String.pipe(Schema.pattern(/^[^@]+@[^@]+$/))),
+  name: Schema.optional(Schema.NullOr(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))))
 }).pipe(
   Schema.annotations({
     identifier: "UpdateUserInput",

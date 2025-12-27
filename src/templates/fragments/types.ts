@@ -7,10 +7,10 @@
  * @module monorepo-library-generator/templates/fragments/types
  */
 
-import type { Effect } from "effect"
-import type { SourceFile } from "ts-morph"
-import type { InterpolationError } from "../core/resolver"
-import type { TemplateContext } from "../core/types"
+import type { Effect } from 'effect'
+import type { SourceFile } from 'ts-morph'
+import type { InterpolationError } from '../core/resolver'
+import type { TemplateContext } from '../core/types'
 
 // ============================================================================
 // Fragment Configuration Types
@@ -188,7 +188,7 @@ export interface SchemaFragmentConfig extends FragmentConfig {
   readonly name: string
 
   /** Schema type: Struct, String, Number, etc. */
-  readonly schemaType: "Struct" | "String" | "Number" | "Boolean" | "Array" | "Union"
+  readonly schemaType: 'Struct' | 'String' | 'Number' | 'Boolean' | 'Array' | 'Union'
 
   /** Fields for Struct schemas */
   readonly fields?: ReadonlyArray<SchemaField>
@@ -228,7 +228,7 @@ export interface LayerFragmentConfig extends FragmentConfig {
   readonly name: string
 
   /** Layer creation type */
-  readonly layerType: "effect" | "sync" | "scoped" | "succeed" | "suspend"
+  readonly layerType: 'effect' | 'sync' | 'scoped' | 'succeed' | 'suspend'
 
   /** Service tag being implemented */
   readonly serviceTag: string
@@ -315,6 +315,9 @@ export type AnyFragmentConfig =
 
 /**
  * Fragment registry entry
+ *
+ * Uses unknown renderer type internally to avoid generic variance issues.
+ * The registry handles type narrowing at runtime.
  */
 export interface FragmentRegistryEntry<TConfig extends FragmentConfig = FragmentConfig> {
   /** Fragment type name */
@@ -324,5 +327,22 @@ export interface FragmentRegistryEntry<TConfig extends FragmentConfig = Fragment
   readonly renderer: FragmentRenderer<TConfig>
 
   /** Required Effect imports for this fragment */
+  readonly requiredImports: ReadonlyArray<string>
+}
+
+/**
+ * Internal registry entry with broader type for storage
+ *
+ * This type allows storing any FragmentRenderer in the Map without
+ * TypeScript variance issues. The registry ensures type safety through
+ * the fragment type string at runtime.
+ */
+export interface InternalFragmentEntry {
+  readonly type: string
+  readonly renderer: (
+    sourceFile: SourceFile,
+    config: FragmentConfig,
+    context: TemplateContext
+  ) => Effect.Effect<void, InterpolationError>
   readonly requiredImports: ReadonlyArray<string>
 }

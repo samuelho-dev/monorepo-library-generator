@@ -15,11 +15,11 @@
  * @module monorepo-library-generator/generators/core/feature-generator-core
  */
 
-import { Effect } from "effect"
-import { computePlatformConfiguration, type PlatformType } from "../../utils/build"
-import type { FileSystemAdapter } from "../../utils/filesystem"
-import { generateTypesOnlyFile, type TypesOnlyExportOptions } from "../../utils/templates"
-import type { FeatureTemplateOptions } from "../../utils/types"
+import { Effect } from 'effect'
+import { computePlatformConfiguration, type PlatformType } from '../../utils/build'
+import type { FileSystemAdapter } from '../../utils/filesystem'
+import { generateTypesOnlyFile, type TypesOnlyExportOptions } from '../../utils/templates'
+import type { FeatureTemplateOptions } from '../../utils/types'
 import {
   generateAtomsFile,
   generateAtomsIndexFile,
@@ -52,9 +52,12 @@ import {
   // Sub-module CQRS bus
   generateSubModuleCqrsBusFile,
   generateTypesFile
-} from "../feature/templates/index"
-import { generateFeatureServiceFile, generateFeatureServiceIndexFile } from "../feature/templates/service/index"
-import { generateSubModules } from "./sub-modules"
+} from '../feature/templates/index'
+import {
+  generateFeatureServiceFile,
+  generateFeatureServiceIndexFile
+} from '../feature/templates/service/index'
+import { generateSubModules } from './sub-modules'
 
 /**
  * Feature Generator Core Options
@@ -103,7 +106,7 @@ export interface GeneratorResult {
   readonly projectRoot: string
   readonly sourceRoot: string
   readonly packageName: string
-  readonly filesGenerated: Array<string>
+  readonly filesGenerated: string[]
 }
 
 /**
@@ -120,7 +123,7 @@ export interface GeneratorResult {
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
 export function generateFeatureCore(adapter: FileSystemAdapter, options: FeatureCoreOptions) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     // Compute platform-specific configuration
     const includeCQRS = options.includeCQRS ?? false
 
@@ -132,17 +135,21 @@ export function generateFeatureCore(adapter: FileSystemAdapter, options: Feature
         })
       },
       {
-        defaultPlatform: "universal",
-        libraryType: "feature"
+        defaultPlatform: 'universal',
+        libraryType: 'feature'
       }
     )
 
     const { includeClientServer: shouldIncludeClientServer } = platformConfig
 
     // Parse sub-modules if provided
-    const subModulesList = options.includeSubModules && options.subModules
-      ? options.subModules.split(",").map((s) => s.trim()).filter(Boolean)
-      : undefined
+    const subModulesList =
+      options.includeSubModules && options.subModules
+        ? options.subModules
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : undefined
 
     // Assemble template options from pre-computed metadata
     const templateOptions: FeatureTemplateOptions = {
@@ -151,14 +158,14 @@ export function generateFeatureCore(adapter: FileSystemAdapter, options: Feature
       propertyName: options.propertyName,
       fileName: options.fileName,
       constantName: options.constantName,
-      libraryType: "feature",
+      libraryType: 'feature',
       packageName: options.packageName,
       projectName: options.projectName,
       projectRoot: options.projectRoot,
       sourceRoot: options.sourceRoot,
       offsetFromRoot: options.offsetFromRoot,
       description: options.description,
-      tags: options.tags.split(","),
+      tags: options.tags.split(','),
       includeClient: shouldIncludeClientServer,
       includeServer: true,
       includeCQRS,
@@ -166,7 +173,7 @@ export function generateFeatureCore(adapter: FileSystemAdapter, options: Feature
     }
 
     // Generate all domain files
-    const filesGenerated: Array<string> = []
+    const filesGenerated: string[] = []
 
     // Compute directory paths
     const sourceLibPath = `${options.sourceRoot}/lib`
@@ -181,11 +188,11 @@ export function generateFeatureCore(adapter: FileSystemAdapter, options: Feature
 
     // Generate types.ts for type-only exports (zero runtime overhead)
     const typesOnlyOptions: TypesOnlyExportOptions = {
-      libraryType: "feature",
+      libraryType: 'feature',
       className: options.className,
       fileName: options.fileName,
       packageName: options.packageName,
-      platform: "server"
+      platform: 'server'
     }
     const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
     const workspaceRoot = adapter.getWorkspaceRoot()
@@ -211,11 +218,11 @@ This is an AI-optimized reference for ${templateOptions.packageName}, a feature 
 - **lib/rpc.ts**: RPC route definitions
 - **lib/handlers.ts**: RPC handler implementations
 ${
-      shouldIncludeClientServer
-        ? `- **lib/client/hooks/**: React hooks
+  shouldIncludeClientServer
+    ? `- **lib/client/hooks/**: React hooks
 - **lib/client/atoms/**: Jotai atoms`
-        : ""
-    }
+    : ''
+}
 
 ### Import Patterns
 
@@ -294,10 +301,7 @@ const server = ${templateOptions.fileName}Handlers.pipe(
 4. **Use Auto layer** - NODE_ENV-based automatic selection
 `
 
-    yield* adapter.writeFile(
-      `${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`,
-      claudeDoc
-    )
+    yield* adapter.writeFile(`${workspaceRoot}/${templateOptions.projectRoot}/CLAUDE.md`, claudeDoc)
     filesGenerated.push(`${templateOptions.projectRoot}/CLAUDE.md`)
 
     // Always generate shared layer
@@ -353,7 +357,7 @@ const server = ${templateOptions.fileName}Handlers.pipe(
       }
 
       // Log parent integration guidance
-      yield* Effect.logDebug("Sub-modules generated with parent integration code", {
+      yield* Effect.logDebug('Sub-modules generated with parent integration code', {
         imports: subModulesResult.parentIntegration.imports,
         layerProvides: subModulesResult.parentIntegration.layerProvides
       })
@@ -448,17 +452,11 @@ const server = ${templateOptions.fileName}Handlers.pipe(
     // - Middleware is from infra-rpc (applied based on RouteTag)
 
     // Generate handlers (implements contract RPCs)
-    yield* adapter.writeFile(
-      `${rpcPath}/handlers.ts`,
-      generateRpcHandlersFile(templateOptions)
-    )
+    yield* adapter.writeFile(`${rpcPath}/handlers.ts`, generateRpcHandlersFile(templateOptions))
     filesGenerated.push(`${rpcPath}/handlers.ts`)
 
     // Generate router (combines handlers with middleware)
-    yield* adapter.writeFile(
-      `${rpcPath}/router.ts`,
-      generateRpcRouterFile(templateOptions)
-    )
+    yield* adapter.writeFile(`${rpcPath}/router.ts`, generateRpcRouterFile(templateOptions))
     filesGenerated.push(`${rpcPath}/router.ts`)
 
     // Generate RPC errors (feature-specific errors)

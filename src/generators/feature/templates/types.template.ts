@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/feature/types-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate shared/types.ts file for feature library

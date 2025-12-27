@@ -5,9 +5,14 @@
  * Validates inputs using Effect Schema (same as MCP).
  */
 
-import { Console, Effect, ParseResult } from "effect"
-import { type ContractCoreOptions, generateContractCore } from "../../generators/core/contract"
-import { type ContractInput, createExecutor, decodeContractInput, formatOutput } from "../../infrastructure"
+import { Console, Effect, ParseResult } from 'effect'
+import { type ContractCoreOptions, generateContractCore } from '../../generators/core/contract'
+import {
+  type ContractInput,
+  createExecutor,
+  decodeContractInput,
+  formatOutput
+} from '../../infrastructure'
 
 /**
  * Contract Generator Options - imported from validation registry
@@ -20,7 +25,7 @@ export type ContractGeneratorOptions = ContractInput
  * Explicit type parameters ensure type safety without assertions
  */
 const contractExecutor = createExecutor<ContractInput, ContractCoreOptions>(
-  "contract",
+  'contract',
   generateContractCore,
   (validated, metadata) => ({
     ...metadata,
@@ -28,7 +33,9 @@ const contractExecutor = createExecutor<ContractInput, ContractCoreOptions>(
     includeSubModules: validated.includeSubModules ?? false,
     ...(validated.entities !== undefined && { entities: validated.entities }),
     ...(validated.subModules !== undefined && { subModules: validated.subModules }),
-    ...(validated.typesDatabasePackage !== undefined && { typesDatabasePackage: validated.typesDatabasePackage })
+    ...(validated.typesDatabasePackage !== undefined && {
+      typesDatabasePackage: validated.typesDatabasePackage
+    })
   })
 )
 
@@ -39,7 +46,7 @@ const contractExecutor = createExecutor<ContractInput, ContractCoreOptions>(
  * After: ~50 lines using unified executor
  */
 export function generateContract(options: ContractGeneratorOptions) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeContractInput(options).pipe(
       Effect.mapError(
@@ -52,11 +59,11 @@ export function generateContract(options: ContractGeneratorOptions) {
     // Execute using unified infrastructure
     const result = yield* contractExecutor.execute({
       ...validated,
-      __interfaceType: "cli"
+      __interfaceType: 'cli'
     })
 
     // Format and display output
-    const output = formatOutput(result, "cli")
+    const output = formatOutput(result, 'cli')
     yield* Console.log(output)
 
     return result

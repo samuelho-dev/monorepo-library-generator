@@ -7,19 +7,19 @@
  * @module monorepo-library-generator/cli/ink
  */
 
-import { Console, Data, Effect } from "effect"
-import { render } from "ink"
-import React from "react"
+import { Console, Data, Effect } from 'effect'
+import { render } from 'ink'
+import React from 'react'
 
-import { createWorkspaceContext } from "../../infrastructure"
-import { executeWizardResult } from "../interactive/execution"
-import type { WizardResult } from "../interactive/types"
-import { App } from "./App"
+import { createWorkspaceContext } from '../../infrastructure'
+import { executeWizardResult } from '../interactive/execution'
+import type { WizardResult } from '../interactive/types'
+import { App } from './App'
 
 /**
  * Error type for Ink rendering failures
  */
-export class InkRenderError extends Data.TaggedError("InkRenderError")<{
+export class InkRenderError extends Data.TaggedError('InkRenderError')<{
   readonly cause: unknown
 }> {}
 
@@ -32,9 +32,9 @@ export class InkRenderError extends Data.TaggedError("InkRenderError")<{
  * - release: unmount the Ink instance
  */
 export function runInkTUI() {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     // Get workspace context
-    const context = yield* createWorkspaceContext(undefined, "cli")
+    const context = yield* createWorkspaceContext(undefined, 'cli')
 
     // Create a deferred to track completion
     let resolveResult: (result: WizardResult | null) => void
@@ -74,18 +74,20 @@ export function runInkTUI() {
 
     // If user completed the wizard with a result, execute generation
     if (result) {
-      yield* Console.log("")
+      yield* Console.log('')
       yield* executeWizardResult(result)
-      yield* Console.log("")
-      yield* Console.log("Library generated successfully!")
+      yield* Console.log('')
+      yield* Console.log('Library generated successfully!')
       yield* Console.log(`  Location: ${result.targetDirectory}`)
     }
   }).pipe(
     Effect.catchAll((error) =>
-      Console.error(`Error in TUI: ${error instanceof InkRenderError ? String(error.cause) : error}`)
+      Console.error(
+        `Error in TUI: ${error instanceof InkRenderError ? String(error.cause) : error}`
+      )
     )
   )
 }
 
 // Re-export types
-export type { WizardResult } from "../interactive/types"
+export type { WizardResult } from '../interactive/types'

@@ -1,3 +1,12 @@
+---
+scope: libs/infra/database/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/INFRA.md
+  - ../../../docs/EFFECT_PATTERNS.md
+---
+
 # @samuelho-dev/infra-database
 
 Database orchestration infrastructure (coordinates database providers like Kysely)
@@ -77,3 +86,11 @@ import { useDatabase } from '@samuelho-dev/infra-database/client/hooks'function 
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
+
+## For Future Claude Code Instances
+
+- [ ] Uses Context.Tag with static layers (Live, Test, Dev, Auto)
+- [ ] Coordinates with provider-kysely for database queries
+- [ ] Use Layer.scoped for connection lifecycle management
+- [ ] Memory provider is included for testing
+- [ ] Config is in `lib/config.ts`

@@ -14,9 +14,9 @@
  * @module monorepo-library-generator/infra-templates/rpc/middleware/service-auth
  */
 
-import { TypeScriptBuilder } from "../../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
 
 /**
  * Generate service authentication middleware file
@@ -29,7 +29,7 @@ export function generateServiceAuthMiddlewareFile(options: InfraTemplateOptions)
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: "Service-to-Service Authentication Middleware",
+    title: 'Service-to-Service Authentication Middleware',
     description: `Service authentication for internal RPC communication.
 
 Used for service routes (RouteTag = "service") in Contract-First architecture.
@@ -42,14 +42,17 @@ Features:
 - Permission checking for service operations
 - Known services registry`,
     module: `${scope}/infra-${fileName}/middleware/service-auth`,
-    see: ["@effect/rpc RpcMiddleware.Tag documentation", `${scope}/contract-auth for type definitions`]
+    see: [
+      '@effect/rpc RpcMiddleware.Tag documentation',
+      `${scope}/contract-auth for type definitions`
+    ]
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer", "Option"] },
-    { from: "@effect/platform", imports: ["Headers"] },
-    { from: "@effect/rpc", imports: ["RpcMiddleware"] },
-    { from: `${scope}/env`, imports: ["env"] }
+    { from: 'effect', imports: ['Effect', 'Layer', 'Option'] },
+    { from: '@effect/platform', imports: ['Headers'] },
+    { from: '@effect/rpc', imports: ['RpcMiddleware'] },
+    { from: `${scope}/env`, imports: ['env'] }
   ])
 
   builder.addBlankLine()
@@ -78,7 +81,7 @@ export {
 }
 `)
 
-  builder.addSectionComment("Service Token Validation")
+  builder.addSectionComment('Service Token Validation')
 
   builder.addRaw(`/**
  * Service authentication secret
@@ -94,7 +97,7 @@ const SERVICE_AUTH_SECRET = env.SERVICE_AUTH_SECRET
  * Maps service IDs to their names and permissions.
  * In production, load from secure configuration store.
  */
-export const KNOWN_SERVICES: Record<string, { name: string; permissions: ReadonlyArray<string> }> = {
+export const KNOWN_SERVICES: Record<string, { name: string; permissions: readonly string[] }> = {
   "user-service": {
     name: "User Service",
     permissions: ["user:read", "user:write", "user:validate"]
@@ -169,7 +172,7 @@ export function generateServiceToken(serviceId: string) {
 }
 `)
 
-  builder.addSectionComment("Service Middleware")
+  builder.addSectionComment('Service Middleware')
 
   builder.addRaw(`/**
  * ServiceMiddleware using native RpcMiddleware.Tag

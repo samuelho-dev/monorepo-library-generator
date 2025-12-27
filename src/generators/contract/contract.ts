@@ -4,12 +4,12 @@
  * Uses unified infrastructure while preserving Nx-specific functionality.
  */
 
-import type { Tree } from "@nx/devkit"
-import { formatFiles } from "@nx/devkit"
-import { Effect } from "effect"
-import { createExecutor, formatOutput } from "../../infrastructure"
-import { type ContractCoreOptions, generateContractCore } from "../core/contract"
-import type { ContractGeneratorSchema } from "./schema"
+import type { Tree } from '@nx/devkit'
+import { formatFiles } from '@nx/devkit'
+import { Effect } from 'effect'
+import { createExecutor, formatOutput } from '../../infrastructure'
+import { type ContractCoreOptions, generateContractCore } from '../core/contract'
+import type { ContractGeneratorSchema } from './schema'
 
 /**
  * Nx-specific input type for the executor
@@ -20,7 +20,7 @@ interface NxContractInput {
   readonly description?: string
   readonly tags?: string
   readonly includeCQRS?: boolean
-  readonly entities?: ReadonlyArray<string>
+  readonly entities?: readonly string[]
 }
 
 /**
@@ -28,7 +28,7 @@ interface NxContractInput {
  * Explicit type parameters ensure type safety without assertions
  */
 const contractExecutor = createExecutor<NxContractInput, ContractCoreOptions>(
-  "contract",
+  'contract',
   generateContractCore,
   (validated, metadata) => ({
     ...metadata,
@@ -45,16 +45,16 @@ const contractExecutor = createExecutor<NxContractInput, ContractCoreOptions>(
  */
 export async function contractGenerator(tree: Tree, schema: ContractGeneratorSchema) {
   // Validate required fields
-  if (!schema.name || schema.name.trim() === "") {
-    throw new Error("Contract name is required and cannot be empty")
+  if (!schema.name || schema.name.trim() === '') {
+    throw new Error('Contract name is required and cannot be empty')
   }
 
   // Parse entities (supports comma-separated string or array)
-  let entities: ReadonlyArray<string> | undefined
+  let entities: readonly string[] | undefined
   if (schema.entities) {
-    if (typeof schema.entities === "string") {
+    if (typeof schema.entities === 'string') {
       entities = schema.entities
-        .split(",")
+        .split(',')
         .map((e) => e.trim())
         .filter((e) => e.length > 0)
     } else {
@@ -71,7 +71,7 @@ export async function contractGenerator(tree: Tree, schema: ContractGeneratorSch
       ...(schema.tags !== undefined && { tags: schema.tags }),
       ...(schema.includeCQRS !== undefined && { includeCQRS: schema.includeCQRS }),
       ...(entities !== undefined && { entities }),
-      __interfaceType: "nx",
+      __interfaceType: 'nx',
       __nxTree: tree
     })
   )
@@ -85,5 +85,5 @@ export async function contractGenerator(tree: Tree, schema: ContractGeneratorSch
   await formatFiles(tree)
 
   // Return callback (Nx convention)
-  return formatOutput(result, "nx")
+  return formatOutput(result, 'nx')
 }

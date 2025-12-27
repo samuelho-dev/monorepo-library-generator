@@ -11,7 +11,6 @@ and be serializable. The AuthError is used in Schema.Union with feature RPC erro
  * @module @samuelho-dev/infra-auth/errors
  */
 
-
 // ============================================================================
 // Error Types (Schema.TaggedError for RPC Serialization)
 // ============================================================================
@@ -90,4 +89,10 @@ export class InvalidApiKeyError extends Schema.TaggedError<InvalidApiKeyError>()
 /**
  * Union of all auth errors
  */
-export type AuthServiceError = AuthError | UnauthorizedError | ForbiddenError | InvalidTokenError | SessionExpiredError | InvalidApiKeyError
+export type AuthServiceError =
+  | AuthError
+  | UnauthorizedError
+  | ForbiddenError
+  | InvalidTokenError
+  | SessionExpiredError
+  | InvalidApiKeyError

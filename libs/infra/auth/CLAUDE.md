@@ -1,3 +1,13 @@
+---
+scope: libs/infra/auth/
+updated: 2025-12-27
+relates_to:
+  - ../../CLAUDE.md
+  - ../../../docs/INFRA.md
+  - ../../../docs/EFFECT_PATTERNS.md
+  - ../../contract/auth/CLAUDE.md
+---
+
 # @samuelho-dev/infra-auth
 
 Auth infrastructure with session/token verification and RPC middleware integration
@@ -77,3 +87,11 @@ import { useAuth } from '@samuelho-dev/infra-auth/client/hooks'function MyCompon
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
+
+## For Future Claude Code Instances
+
+- [ ] Implements `AuthVerifier` port from contract-auth
+- [ ] Integrates with infra-rpc for protected routes
+- [ ] Uses provider-supabase for token verification
+- [ ] CurrentUser context available in protected RPC handlers
+- [ ] Check contract-auth for auth type definitions

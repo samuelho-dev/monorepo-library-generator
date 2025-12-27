@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/provider/templates/supabase/spec
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Supabase provider service.spec.ts file
@@ -18,7 +18,7 @@ export function generateSupabaseSpecFile(options: ProviderTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "Supabase Provider Tests",
+    title: 'Supabase Provider Tests',
     description: `Comprehensive tests for Supabase provider services.
 
 Tests all three services:
@@ -33,17 +33,17 @@ Total: 24 tests covering Effect layer patterns.`,
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Effect", "Layer", "Option"] },
-    { from: "vitest", imports: ["describe", "expect", "it"] },
-    { from: "./client", imports: ["SupabaseClient"] },
-    { from: "./auth", imports: ["SupabaseAuth"] },
-    { from: "./storage", imports: ["SupabaseStorage"] },
-    { from: "./errors", imports: ["SupabaseError"] }
+    { from: 'effect', imports: ['Effect', 'Layer', 'Option'] },
+    { from: 'vitest', imports: ['describe', 'expect', 'it'] },
+    { from: './client', imports: ['SupabaseClient'] },
+    { from: './auth', imports: ['SupabaseAuth'] },
+    { from: './storage', imports: ['SupabaseStorage'] },
+    { from: './errors', imports: ['SupabaseError'] }
   ])
   builder.addBlankLine()
 
   // SupabaseClient tests
-  builder.addSectionComment("SupabaseClient Tests")
+  builder.addSectionComment('SupabaseClient Tests')
   builder.addBlankLine()
 
   builder.addRaw(`describe("SupabaseClient", () => {
@@ -224,7 +224,7 @@ Total: 24 tests covering Effect layer patterns.`,
   builder.addBlankLine()
 
   // SupabaseAuth tests
-  builder.addSectionComment("SupabaseAuth Tests")
+  builder.addSectionComment('SupabaseAuth Tests')
   builder.addBlankLine()
 
   builder.addRaw(`describe("SupabaseAuth", () => {
@@ -371,7 +371,7 @@ Total: 24 tests covering Effect layer patterns.`,
   builder.addBlankLine()
 
   // SupabaseStorage tests
-  builder.addSectionComment("SupabaseStorage Tests")
+  builder.addSectionComment('SupabaseStorage Tests')
   builder.addBlankLine()
 
   builder.addRaw(`describe("SupabaseStorage", () => {

@@ -53,10 +53,17 @@ export interface UserEntityState {
 }
 
 /**
+ * User entity state with ID (for Atom.family cache)
+ */
+export interface UserEntityFamilyState extends UserEntityState {
+  readonly entityId: string
+}
+
+/**
  * User list state (collection)
  */
 export interface UserListState {
-  readonly items: ReadonlyArray<User>
+  readonly items: readonly User[]
   readonly loadingState: LoadingState
   readonly error: string | null
   readonly pagination: PaginationState
@@ -150,11 +157,13 @@ export const userAtom = Atom.make<UserState>(initialUserState)
  * - Automatic deduplication (same ID = same atom instance)
  * - Independent loading/error states per entity
  */
-export const userEntityFamily = Atom.family((id: string) => {
-  // The id parameter is used internally by Atom.family as the cache key
-  // Each unique id gets a separate atom instance
-  return Atom.make<UserEntityState>(initialUserEntityState)
-})
+export const userEntityFamily = Atom.family((id: string) =>
+  Atom.make<UserEntityFamilyState>({
+    ...initialUserEntityState,
+    // Store the entity ID for reference
+    entityId: id
+  })
+)
 
 /**
  * Helper to fetch and cache a single User entity by ID
@@ -206,10 +215,8 @@ export const userListAtom = Atom.map(userAtom, (state) => state.list.items)
 /**
  * Update entity state
  */
-export function updateUserEntity(
-  update: Partial<UserEntityState>
-): (state: UserState) => UserState {
-  return (state) => ({
+export function updateUserEntity(update: Partial<UserEntityState>) {
+  return (state: UserState) => ({
     ...state,
     entity: { ...state.entity, ...update }
   })
@@ -218,10 +225,8 @@ export function updateUserEntity(
 /**
  * Update list state
  */
-export function updateUserList(
-  update: Partial<UserListState>
-): (state: UserState) => UserState {
-  return (state) => ({
+export function updateUserList(update: Partial<UserListState>) {
+  return (state: UserState) => ({
     ...state,
     list: { ...state.list, ...update }
   })
@@ -230,10 +235,8 @@ export function updateUserList(
 /**
  * Update operation state
  */
-export function updateUserOperation(
-  update: Partial<UserOperationState>
-): (state: UserState) => UserState {
-  return (state) => ({
+export function updateUserOperation(update: Partial<UserOperationState>) {
+  return (state: UserState) => ({
     ...state,
     operation: { ...state.operation, ...update }
   })
@@ -242,6 +245,6 @@ export function updateUserOperation(
 /**
  * Reset all state to initial
  */
-export function resetUserState(): UserState {
+export function resetUserState() {
   return initialUserState
 }

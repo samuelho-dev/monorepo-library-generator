@@ -29,22 +29,16 @@ Features:
 
 // Import canonical types from contract-auth
 import {
-  // Schemas
-  type ServiceIdentity,
-
   // Errors
   ServiceAuthError,
-
   // Context Tags
   ServiceContext,
+  // Schemas
+  type ServiceIdentity
 } from "@samuelho-dev/contract-auth"
 
 // Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
-export {
-  type ServiceIdentity,
-  ServiceAuthError,
-  ServiceContext,
-}
+export { ServiceAuthError, ServiceContext, type ServiceIdentity }
 
 // ============================================================================
 // Service Token Validation
@@ -198,7 +192,9 @@ export const ServiceMiddlewareLive = Layer.succeed(
       }
 
       // Log successful service authentication
-      yield* Effect.logDebug(`Service authenticated: ${identity.serviceName} with permissions: ${identity.permissions.join(", ")}`)
+      yield* Effect.logDebug(
+        `Service authenticated: ${identity.serviceName} with permissions: ${identity.permissions.join(", ")}`
+      )
 
       // Additional security: check for suspicious headers or patterns
       const userAgent = Headers.get(headers, "user-agent")

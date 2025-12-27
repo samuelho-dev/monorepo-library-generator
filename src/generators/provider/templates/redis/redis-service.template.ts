@@ -8,9 +8,9 @@
  * @module monorepo-library-generator/provider/templates/redis/service
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate Redis main service file
@@ -21,7 +21,7 @@ export function generateRedisServiceFile(options: ProviderTemplateOptions) {
   const scope = WORKSPACE_CONFIG.getScope()
 
   builder.addFileHeader({
-    title: "Redis Service",
+    title: 'Redis Service',
     description: `Main Redis provider service with Effect integration.
 
 Wraps ioredis SDK with Effect types and provides:
@@ -34,28 +34,28 @@ Connection Management:
 - Separate connection for pub/sub (Redis requirement)
 - Automatic cleanup on scope close`,
     module: `${packageName}/service`,
-    see: ["https://github.com/redis/ioredis for ioredis documentation"]
+    see: ['https://github.com/redis/ioredis for ioredis documentation']
   })
   builder.addBlankLine()
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer", "Schema"] },
-    { from: "ioredis", imports: [{ name: "Redis", alias: "IORedis" }], isTypeOnly: true },
-    { from: `${scope}/env`, imports: ["env"] },
-    { from: "./cache", imports: ["makeCacheClient"] },
-    { from: "./errors", imports: ["RedisCommandError", "RedisConnectionError"] },
-    { from: "./pubsub", imports: ["makePubSubClient"] },
-    { from: "./queue", imports: ["makeQueueClient"] },
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Schema'] },
+    { from: 'ioredis', imports: [{ name: 'Redis', alias: 'IORedis' }], isTypeOnly: true },
+    { from: `${scope}/env`, imports: ['env'] },
+    { from: './cache', imports: ['makeCacheClient'] },
+    { from: './errors', imports: ['RedisCommandError', 'RedisConnectionError'] },
+    { from: './pubsub', imports: ['makePubSubClient'] },
+    { from: './queue', imports: ['makeQueueClient'] },
     {
-      from: "./types",
+      from: './types',
       imports: [
-        "RedisCacheClient",
-        "RedisConfig",
-        "RedisPubSubClient",
-        "RedisQueueClient",
-        "ScanOptions",
-        "ScanResult"
+        'RedisCacheClient',
+        'RedisConfig',
+        'RedisPubSubClient',
+        'RedisQueueClient',
+        'ScanOptions',
+        'ScanResult'
       ],
       isTypeOnly: true
     }
@@ -65,7 +65,7 @@ import RedisMock from "ioredis-mock"`)
   builder.addBlankLine()
 
   // Service interface
-  builder.addSectionComment("Service Interface")
+  builder.addSectionComment('Service Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -126,7 +126,7 @@ export interface RedisServiceInterface {
    * Find keys matching pattern
    * WARNING: Use SCAN for production (keys can block Redis)
    */
-  readonly keys: (pattern: string) => Effect.Effect<Array<string>, RedisCommandError>
+  readonly keys: (pattern: string) => Effect.Effect<string[], RedisCommandError>
 
   /**
    * Incrementally iterate keys
@@ -159,7 +159,7 @@ export interface RedisServiceInterface {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -222,8 +222,8 @@ export class RedisService extends Context.Tag("Redis")<
   static readonly Test = Layer.sync(RedisService, () => {
     const store = new Map<string, string>()
     const ttls = new Map<string, number>()
-    const lists = new Map<string, Array<string>>()
-    const subscribers = new Map<string, Array<(message: string) => void>>()
+    const lists = new Map<string, string[]>()
+    const subscribers = new Map<string, ((message: string) => void)[]>()
     const mockClient = new RedisMock()
 
     const testConfig: RedisConfig = { host: "localhost", port: 6379 }
@@ -428,7 +428,7 @@ export class RedisService extends Context.Tag("Redis")<
   builder.addBlankLine()
 
   // Helper functions
-  builder.addSectionComment("Service Factory Helpers")
+  builder.addSectionComment('Service Factory Helpers')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -474,8 +474,8 @@ function buildSubOptions(config: RedisConfig) {
 /**
  * Build SCAN command arguments from options
  */
-function buildScanArgs(cursor: number, options?: ScanOptions): Array<string | number> {
-  const args: Array<string | number> = [cursor]
+function buildScanArgs(cursor: number, options?: ScanOptions): string | number[] {
+  const args: string | number[] = [cursor]
   if (options?.match) {
     args.push("MATCH", options.match)
   }
@@ -627,7 +627,7 @@ function makeRedisService(
   builder.addBlankLine()
 
   // Re-export as "Redis" alias
-  builder.addSectionComment("Export Alias")
+  builder.addSectionComment('Export Alias')
   builder.addBlankLine()
 
   builder.addRaw(`/**

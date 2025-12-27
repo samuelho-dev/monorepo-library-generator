@@ -25,7 +25,6 @@ Effect.Cache Features:
 // Cache Service Interface (Effect.Cache Wrapper)
 // ============================================================================
 /**
- *
  * Note: The R (requirements) type parameter from the lookup function
  * is captured during cache creation. Methods return Effect without R.
  */
