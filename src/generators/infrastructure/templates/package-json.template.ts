@@ -97,6 +97,25 @@ function computePeerDependencies(options: PackageJsonOptions) {
     return { ...base, "@supabase/supabase-js": "^2" }
   }
 
+  if (options.libraryType === "provider" && options.projectName.includes("opentelemetry")) {
+    return {
+      ...base,
+      "@opentelemetry/api": "^1.9.0",
+      "@opentelemetry/exporter-metrics-otlp-http": "^0.208.0",
+      "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
+      "@opentelemetry/resources": "^2.0.0",
+      "@opentelemetry/sdk-logs": "^0.208.0",
+      "@opentelemetry/sdk-metrics": "^2.0.0",
+      "@opentelemetry/sdk-trace-base": "^2.0.0",
+      "@opentelemetry/sdk-trace-node": "^2.0.0",
+      "@opentelemetry/semantic-conventions": "^1.33.0"
+    }
+  }
+
+  if (options.libraryType === "provider" && options.projectName.includes("redis")) {
+    return { ...base, ioredis: "^5" }
+  }
+
   if (options.libraryType === "data-access") {
     return { ...base, kysely: "*" }
   }
