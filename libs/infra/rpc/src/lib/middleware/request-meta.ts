@@ -98,17 +98,20 @@ export const RequestMetaMiddlewareLive = Layer.succeed(
       }
 
       // Extract request ID (generate if not present)
-      const requestId = headersRecord["x-request-id"] ??
+      const requestId =
+        headersRecord["x-request-id"] ??
         headersRecord["x-amzn-requestid"] ??
         crypto.randomUUID()
 
       // Extract correlation ID for distributed tracing
-      const correlationId = headersRecord["x-correlation-id"] ??
+      const correlationId =
+        headersRecord["x-correlation-id"] ??
         headersRecord["x-trace-id"] ??
         null
 
       // Extract source IP
-      const source = headersRecord["x-forwarded-for"]?.split(",")[0]?.trim() ??
+      const source =
+        headersRecord["x-forwarded-for"]?.split(",")[0]?.trim() ??
         headersRecord["x-real-ip"] ??
         "unknown"
 
@@ -137,7 +140,7 @@ export interface HandlerContext {
   readonly user: {
     readonly id: string
     readonly email: string
-    readonly roles: ReadonlyArray<string>
+    readonly roles: readonly string[]
   }
   readonly meta: RequestMetadata
 }
@@ -172,12 +175,12 @@ export const getHandlerContext = Effect.all({
     Context.GenericTag<{
       readonly id: string
       readonly email: string
-      readonly roles: ReadonlyArray<string>
+      readonly roles: readonly string[]
     }>("@rpc/CurrentUser")
   ).pipe(Effect.map(Option.getOrNull)),
   meta: RequestMeta
 }).pipe(
-  Effect.map(({ meta, user }) => ({
+  Effect.map(({ user, meta }) => ({
     user: user ?? { id: "", email: "", roles: [] },
     meta
   }))
@@ -193,12 +196,12 @@ export const getHandlerContextOptional = Effect.all({
     Context.GenericTag<{
       readonly id: string
       readonly email: string
-      readonly roles: ReadonlyArray<string>
+      readonly roles: readonly string[]
     }>("@rpc/CurrentUser")
   ),
   meta: Effect.serviceOption(RequestMeta)
 }).pipe(
-  Effect.map(({ meta, user }) => ({
+  Effect.map(({ user, meta }) => ({
     user: Option.getOrNull(user),
     meta: Option.getOrNull(meta)
   }))

@@ -63,7 +63,7 @@ export interface RpcClientConfig {
      * Retryable error codes
      * @default ["NETWORK_ERROR", "TIMEOUT", "SERVICE_UNAVAILABLE"]
      */
-    readonly retryableCodes?: ReadonlyArray<string>
+    readonly retryableCodes?: readonly string[]
   }
 
   /**
@@ -225,12 +225,10 @@ export class RpcClient extends Context.Tag(
         if (body && typeof body === "object" && "error" in body) {
           const errorResult = Schema.decodeUnknownOption(RpcErrorResponseSchema)(body)
           const errorBody = Option.isSome(errorResult) ? errorResult.value : { error: undefined }
-          return Effect.fail(
-            new RpcInfraError({
-              message: errorBody.error?.message ?? "Unknown RPC error",
-              code: errorBody.error?.code ?? "RPC_ERROR"
-            })
-          )
+          return Effect.fail(new RpcInfraError({
+            message: errorBody.error?.message ?? "Unknown RPC error",
+            code: errorBody.error?.code ?? "RPC_ERROR"
+          }))
         }
         return Effect.succeed(body)
       }
@@ -239,10 +237,7 @@ export class RpcClient extends Context.Tag(
       const validateResponse = <A, I, Deps>(body: unknown, responseSchema: Schema.Schema<A, I, Deps>) =>
         Schema.decodeUnknown(responseSchema)(body).pipe(
           Effect.mapError((parseError) =>
-            new RpcInfraError({
-              message: `Response validation failed: ${parseError.message}`,
-              code: "VALIDATION_ERROR"
-            })
+            new RpcInfraError({ message: `Response validation failed: ${parseError.message}`, code: "VALIDATION_ERROR" })
           )
         )
 
@@ -260,19 +255,14 @@ export class RpcClient extends Context.Tag(
             HttpClientRequest.setHeaders({ ...defaultHeaders, ...authHeader, ...customHeaders }),
             HttpClientRequest.bodyJson({ operation, payload }),
             Effect.mapError((error) =>
-              new RpcInfraError({
-                message: `Failed to serialize request body: ${String(error)}`,
-                code: "SERIALIZE_ERROR"
-              })
+              new RpcInfraError({ message: `Failed to serialize request body: ${String(error)}`, code: "SERIALIZE_ERROR" })
             )
           )
 
           const response = yield* executeRequest(request)
 
           if (response.status !== 200) {
-            return yield* Effect.fail(
-              new RpcInfraError({ message: `RPC error: HTTP ${response.status}`, code: "HTTP_ERROR" })
-            )
+            return yield* Effect.fail(new RpcInfraError({ message: `RPC error: HTTP ${response.status}`, code: "HTTP_ERROR" }))
           }
 
           const body = yield* parseResponseBody(response)
@@ -307,11 +297,10 @@ export class RpcClient extends Context.Tag(
             return effect.pipe(
               Effect.timeoutFail({
                 duration: Duration.decode(options.timeout),
-                onTimeout: () =>
-                  new RpcInfraError({
-                    message: "Request timeout",
-                    code: "TIMEOUT"
-                  })
+                onTimeout: () => new RpcInfraError({
+                  message: "Request timeout",
+                  code: "TIMEOUT"
+                })
               })
             )
           }
@@ -375,7 +364,9 @@ export class RpcClient extends Context.Tag(
                 code: "VALIDATION_ERROR"
               })
             ),
-            Effect.tap(() => Effect.logDebug(`Test RPC: ${operation} with payload: ${JSON.stringify(payload)}`))
+            Effect.tap(() =>
+              Effect.logDebug(`Test RPC: ${operation} with payload: ${JSON.stringify(payload)}`)
+            )
           )
         }
         return Effect.fail(

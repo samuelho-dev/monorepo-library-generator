@@ -1,27 +1,32 @@
-import { Option, Runtime, Schema } from "effect"
-import type { Effect, Exit } from "effect"
-import { useCallback, useEffect, useState } from "react"
+import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "@effect/platform"
+import { Atom } from "@effect-atom/atom"
+import { useAtom } from "@effect-atom/atom-react"
+import { Cause, Effect, Option, Schema } from "effect"
+import { useMemo } from "react"
 
 /**
  * RPC Client Hooks
  *
- * React hooks for making RPC calls from client components.
+ * Effect-native React hooks for making RPC calls from client components.
 
 Provides:
-- useRpcMutation: Hook for RPC mutations with loading/error states
-- useRpcQuery: Hook for RPC queries with caching
-- Schema-based error parsing (no type coercions)
-- No return function types - explicit signatures throughout
+- useRpcMutation: Effect-based mutation hook with typed error channel
+- useRpcQuery: Effect-based query hook with auto-fetch
+- useRpcLazyQuery: Effect-based lazy query hook
+- No try/catch - errors flow through Effect's typed error channel
 
 Usage:
-  import { useRpcMutation, useRpcQuery, callRpc } from "@samuelho-dev/infra-rpc/client"  // Direct RPC call
-  const result = await callRpc("/api/rpc", "getUser", { id: "123" })
+  import { useRpcMutation, useRpcQuery, rpcCall } from "@samuelho-dev/infra-rpc/client"
 
-  // With hooks
-  const { data, error } = useRpcQuery(
-    (input) => callRpc("/api/rpc", "getUser", input),
-    { id: userId }
+  // With hooks - errors are typed, no catch blocks needed
+  const { data, error, mutate, isLoading } = useRpcMutation(
+    "createUser",
+    CreateUserInputSchema,
+    UserSchema
   )
+
+  // Execute the mutation
+  mutate({ name: "John", email: "john@example.com" })
  *
  */
 
@@ -29,230 +34,310 @@ Usage:
 // Types
 // ============================================================================
 /**
- * Parsed RPC error for display in React components
+ * RPC Error - typed error for RPC operations
  *
- * This is a simplified structure extracted from Schema.TaggedError types.
- * Use this for displaying error messages in the UI.
+ * All RPC errors flow through Effect's error channel with this structure.
+ * No try/catch needed - errors are typed at the Effect level.
  */
-export interface ParsedRpcError {
-  readonly _tag: string
-  readonly message: string
-  readonly code?: string
-}
-// ============================================================================
-// Error Parsing (Schema-based)
-// ============================================================================
-/**
- * Schema for parsing RPC error responses
- *
- * RPC errors are Schema.TaggedError types serialized as JSON.
- * This schema extracts _tag and message for display.
- */
-const ParsedRpcErrorSchema = Schema.Struct({
-  _tag: Schema.String,
+export class RpcError extends Schema.TaggedError<RpcError>()("RpcError", {
+  operation: Schema.String,
   message: Schema.String,
-  code: Schema.optional(Schema.String)
-})
+  code: Schema.optional(Schema.String),
+  cause: Schema.optional(Schema.Unknown)
+}) {}
 
 /**
- * Parse error using Schema - returns typed ParsedRpcError or fallback
+ * RPC State - represents the state of an RPC operation
  *
- * Uses Schema.decodeUnknownOption for type-safe parsing without coercion.
+ * Used by hooks to track loading, success, and error states.
  */
-function parseRpcError(error: unknown): ParsedRpcError {
-  const result = Schema.decodeUnknownOption(ParsedRpcErrorSchema)(error)
-  if (Option.isSome(result)) {
-    const parsed = result.value
-    return {
-      _tag: parsed._tag,
-      message: parsed.message,
-      ...(parsed.code !== undefined ? { code: parsed.code } : {})
-    }
-  }
-  // Fallback for non-RPC errors
-  return { _tag: "UnknownError", message: "An unexpected error occurred" }
+export type RpcState<A, E> =
+  | { readonly _tag: "Initial" }
+  | { readonly _tag: "Loading" }
+  | { readonly _tag: "Success"; readonly value: A }
+  | { readonly _tag: "Failure"; readonly error: E }
+
+/**
+ * Create initial state
+ */
+function initialState<A, E>(): RpcState<A, E> {
+  return { _tag: "Initial" }
+}
+
+/**
+ * Create loading state
+ */
+function loadingState<A, E>(): RpcState<A, E> {
+  return { _tag: "Loading" }
+}
+
+/**
+ * Create success state
+ */
+function successState<A, E>(value: A): RpcState<A, E> {
+  return { _tag: "Success", value }
+}
+
+/**
+ * Create failure state
+ */
+function failureState<A, E>(error: E): RpcState<A, E> {
+  return { _tag: "Failure", error }
 }
 // ============================================================================
-// RPC Runtime Context
+// RPC Configuration
 // ============================================================================
 /**
- * RPC Runtime for executing Effect programs
+ * RPC endpoint URL - configured via environment
  *
- * This is created once and reused across all hooks.
+ * Uses process.env for client-side configuration.
+ * Falls back to "/api/rpc" if not configured.
  */
-let rpcRuntime: Runtime.Runtime<never> | null = null
+// biome-ignore lint/style/noProcessEnv: Client-side RPC endpoint configured via environment
+const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "/api/rpc"
 
 /**
- * Get or create the RPC runtime
+ * Default timeout for RPC calls (30 seconds)
  */
-export function getRpcRuntime(): Runtime.Runtime<never> {
-  if (rpcRuntime === null) {
-    rpcRuntime = Runtime.defaultRuntime
-  }
-  return rpcRuntime
-}
-
-/**
- * Execute an Effect in the RPC runtime
- *
- * Uses Effect.runPromiseExit + Exit pattern for proper error handling.
- * Returns Exit to allow caller to handle success/failure.
- */
-export function runEffectExit<A, E>(
-  effect: Effect.Effect<A, E, never>
-): Promise<Exit.Exit<A, E>> {
-  const runtime = getRpcRuntime()
-  return Runtime.runPromiseExit(runtime)(effect)
-}
+const DEFAULT_TIMEOUT = 30000
 
 // ============================================================================
-// RPC Call Function
+// RPC Call Effect
 // ============================================================================
 /**
- * RPC call options
- */
-export interface RpcCallOptions<T> {
-  readonly headers?: Record<string, string>
-  readonly timeout?: number
-  readonly responseSchema: Schema.Schema<T, unknown>
-}
-
-/**
- * Make an RPC call to the server with Schema validation
+ * Make an RPC call as an Effect
  *
  * This is the core function for making RPC requests.
- * Uses Schema.decodeUnknown for type-safe response parsing.
- * No type coercions - Schema validates the response.
+ * Returns Effect<T, RpcError> - errors flow through the typed error channel.
+ * No try/catch needed - use Effect.map, Effect.mapError, Effect.catchAll.
  *
- * @param baseUrl - The RPC endpoint URL
+ * Uses @effect/platform HttpClient for browser-compatible HTTP requests.
+ * Schema validation ensures type-safe response parsing.
+ *
  * @param operation - The operation name (e.g., "getUser")
- * @param payload - The request payload
- * @param options - Options including required responseSchema
- * @returns Promise resolving to the validated response data
+ * @param payload - The request payload (will be validated against inputSchema)
+ * @param inputSchema - Schema for validating the input payload
+ * @param outputSchema - Schema for validating the response
+ * @returns Effect that resolves to validated response or fails with RpcError
  *
  * @example
  * ```typescript
- * const UserSchema = Schema.Struct({ id: Schema.String, name: Schema.String })
+ * const getUser = rpcCall(
+ *   "getUser",
+ *   { id: "123" },
+ *   GetUserInputSchema,
+ *   UserSchema
+ * )
  *
- * const user = await callRpc("/api/rpc", "getUser", { id: "123" }, {
- *   responseSchema: UserSchema
- * })
+ * // Run with Effect.runPromise or use in hooks
+ * const user = await Effect.runPromise(
+ *   getUser.pipe(Effect.provide(FetchHttpClient.layer))
+ * )
  * ```
  */
-export async function callRpc<T>(
-  baseUrl: string,
+export function rpcCall<I, O>(
   operation: string,
-  payload: unknown,
-  options: RpcCallOptions<T>
-): Promise<T> {
-  const timeout = options.timeout ?? 30000
-  const headers = options.headers ?? {}
+  payload: I,
+  inputSchema: Schema.Schema<I, unknown>,
+  outputSchema: Schema.Schema<O, unknown>
+): Effect.Effect<O, RpcError, HttpClient.HttpClient> {
+  return Effect.gen(function* () {
+    // Validate input
+    const validatedInput = yield* Schema.decode(inputSchema)(payload).pipe(
+      Effect.mapError((parseError) =>
+        new RpcError({
+          operation,
+          message: `Input validation failed: ${parseError.message}`,
+          code: "VALIDATION_ERROR"
+        })
+      )
+    )
 
-  const response = await fetch(baseUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...headers
-    },
-    body: JSON.stringify({
-      _tag: operation,
-      payload
-    }),
-    signal: AbortSignal.timeout(timeout)
-  })
+    // Get HttpClient from context
+    const client = yield* HttpClient.HttpClient
 
-  const body: unknown = await response.json().catch((): ParsedRpcError => ({
-    _tag: "ParseError",
-    message: response.statusText
-  }))
+    // Build request
+    const request = HttpClientRequest.post(RPC_ENDPOINT).pipe(
+      HttpClientRequest.jsonBody({
+        _tag: operation,
+        payload: validatedInput
+      })
+    )
 
-  if (!response.ok) {
-    throw body
-  }
+    // Execute request with timeout
+    const response = yield* Effect.flatMap(request, (req) =>
+      client.execute(req).pipe(
+        Effect.timeout(DEFAULT_TIMEOUT),
+        Effect.mapError((error) =>
+          new RpcError({
+            operation,
+            message: `Request failed: ${String(error)}`,
+            code: "NETWORK_ERROR",
+            cause: error
+          })
+        )
+      )
+    )
 
-  // Validate response using Schema - throws ParseError on failure
-  const parseResult = Schema.decodeUnknownOption(options.responseSchema)(body)
-  if (Option.isNone(parseResult)) {
-    throw { _tag: "ValidationError", message: "Response validation failed" }
-  }
+    // Check response status
+    if (response.status >= 400) {
+      const errorBody = yield* HttpClientResponse.json(response).pipe(
+        Effect.catchAll(() => Effect.succeed({ message: response.statusText }))
+      )
+      return yield* Effect.fail(
+        new RpcError({
+          operation,
+          message: (errorBody as { message?: string }).message ?? `HTTP ${response.status}`,
+          code: `HTTP_${response.status}`,
+          cause: errorBody
+        })
+      )
+    }
 
-  return parseResult.value
+    // Parse response body
+    const body = yield* HttpClientResponse.json(response).pipe(
+      Effect.mapError((error) =>
+        new RpcError({
+          operation,
+          message: "Failed to parse response JSON",
+          code: "PARSE_ERROR",
+          cause: error
+        })
+      )
+    )
+
+    // Validate response against schema
+    const validated = yield* Schema.decodeUnknown(outputSchema)(body).pipe(
+      Effect.mapError((parseError) =>
+        new RpcError({
+          operation,
+          message: `Response validation failed: ${parseError.message}`,
+          code: "VALIDATION_ERROR"
+        })
+      )
+    )
+
+    return validated
+  }).pipe(Effect.withSpan(`rpc.${operation}`))
+}
+
+/**
+ * Create a runnable RPC Effect with HttpClient layer provided
+ *
+ * Convenience function that adds FetchHttpClient.layer automatically.
+ */
+export function rpcCallWithLayer<I, O>(
+  operation: string,
+  payload: I,
+  inputSchema: Schema.Schema<I, unknown>,
+  outputSchema: Schema.Schema<O, unknown>
+): Effect.Effect<O, RpcError> {
+  return rpcCall(operation, payload, inputSchema, outputSchema).pipe(
+    Effect.provide(FetchHttpClient.layer)
+  )
 }
 
 // ============================================================================
 // Mutation Hook
 // ============================================================================
 /**
- * Hook for RPC mutations with loading/error state
+ * Hook for RPC mutations with Effect-native error handling
  *
- * Uses Schema-based error parsing for type-safe error handling.
- * The caller provides a fetcher function with explicit signature.
+ * Uses Effect + Atom.fn for reactive state management.
+ * Errors flow through Effect's typed error channel - no try/catch needed.
  *
- * @param fetcher - Function that performs the RPC call
- * @returns Mutation state with mutate, isLoading, error, reset
+ * @param operation - The RPC operation name
+ * @param inputSchema - Schema for validating input
+ * @param outputSchema - Schema for validating response
+ * @returns Mutation state with mutate, isLoading, error, data, reset
  *
  * @example
  * ```tsx
  * function CreateUserForm() {
- *   const { mutate, isLoading, error } = useRpcMutation(
- *     (input: CreateUserInput) => callRpc<User>("/api/rpc", "createUser", input)
+ *   const { mutate, isLoading, error, data } = useRpcMutation(
+ *     "createUser",
+ *     CreateUserInputSchema,
+ *     UserSchema
  *   )
  *
- *   const handleSubmit = async (data: CreateUserInput) => {
- *     const user = await mutate(data)
- *   };
+ *   const handleSubmit = (data: CreateUserInput) => {
+ *     mutate(data) // No await needed - state updates reactively
+ *   }
  *
  *   return (
  *     <form onSubmit={handleSubmit}>
- *       {error && <Error message={error.message} tag={error._tag} />}
+ *       {error && <Error message={error.message} code={error.code} />}
+ *       {data && <Success user={data} />}
  *       <button disabled={isLoading}>Create</button>
  *     </form>
  *   )
  * }
  * ```
  */
-export function useRpcMutation<TInput, TOutput>(
-  fetcher: (input: TInput) => Promise<TOutput>
+export function useRpcMutation<I, O>(
+  operation: string,
+  inputSchema: Schema.Schema<I, unknown>,
+  outputSchema: Schema.Schema<O, unknown>
 ) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<ParsedRpcError | null>(null)
-
-  const mutate = useCallback(
-    async (input: TInput): Promise<TOutput> => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const result = await fetcher(input)
-        return result
-      } catch (e: unknown) {
-        const rpcError = parseRpcError(e)
-        setError(rpcError)
-        throw e
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [fetcher]
+  // Create Atom.fn that executes the RPC call
+  const mutationAtom = useMemo(
+    () =>
+      Atom.fn((input: I) =>
+        rpcCallWithLayer(operation, input, inputSchema, outputSchema)
+      ),
+    [operation]
   )
 
-  const reset = useCallback((): void => {
-    setError(null)
-  }, [])
+  // Use the Atom hook - returns [Result, dispatch]
+  const [result, mutate] = useAtom(mutationAtom)
 
-  return { mutate, isLoading, error, reset } as const
+  // Map Atom Result to our state shape
+  const state = useMemo((): RpcState<O, RpcError> => {
+    if (result._tag === "Initial") return initialState()
+    if (result._tag === "Waiting") return loadingState()
+    if (result._tag === "Success") return successState(result.value)
+    if (result._tag === "Failure") {
+      // Extract RpcError from Cause
+      const error = Cause.failureOption(result.cause)
+      if (Option.isSome(error)) {
+        return failureState(error.value)
+      }
+      // Defect or interrupted - create generic error
+      return failureState(
+        new RpcError({
+          operation,
+          message: "An unexpected error occurred",
+          code: "UNEXPECTED_ERROR"
+        })
+      )
+    }
+    return initialState()
+  }, [result, operation])
+
+  return {
+    mutate,
+    isLoading: state._tag === "Loading",
+    error: state._tag === "Failure" ? state.error : null,
+    data: state._tag === "Success" ? state.value : null,
+    state,
+    reset: () => {} // Atom handles reset automatically on next call
+  } as const
 }
 
 // ============================================================================
 // Query Hook
 // ============================================================================
 /**
- * Hook for RPC queries with automatic fetching
+ * Hook for RPC queries with automatic fetching using Effect + Atom
  *
- * Uses Schema-based error parsing for type-safe error handling.
- * The caller provides a fetcher function with explicit signature.
+ * Uses Effect + Atom.fn for reactive query management.
+ * Automatically fetches when input changes.
+ * Errors flow through Effect's typed error channel.
  *
- * @param fetcher - Function that performs the RPC call
+ * @param operation - The RPC operation name
  * @param input - Query input
+ * @param inputSchema - Schema for validating input
+ * @param outputSchema - Schema for validating response
  * @param options - Query options (enabled flag)
  * @returns Query state with data, isLoading, error, refetch
  *
@@ -260,106 +345,163 @@ export function useRpcMutation<TInput, TOutput>(
  * ```tsx
  * function UserProfile({ userId }: { userId: string }) {
  *   const { data, isLoading, error, refetch } = useRpcQuery(
- *     (input: { id: string }) => callRpc<User>("/api/rpc", "getUser", input),
+ *     "getUser",
  *     { id: userId },
+ *     GetUserInputSchema,
+ *     UserSchema,
  *     { enabled: Boolean(userId) }
  *   )
  *
  *   if (isLoading) return <Loading />
- *   if (error) return <Error message={error.message} tag={error._tag} />
- *   if (!data) return null;
+ *   if (error) return <Error message={error.message} code={error.code} />
+ *   if (!data) return null
  *
  *   return <UserCard user={data} />
  * }
  * ```
  */
-export function useRpcQuery<TInput, TOutput>(
-  fetcher: (input: TInput) => Promise<TOutput>,
-  input: TInput,
+export function useRpcQuery<I, O>(
+  operation: string,
+  input: I,
+  inputSchema: Schema.Schema<I, unknown>,
+  outputSchema: Schema.Schema<O, unknown>,
   options?: { readonly enabled?: boolean }
 ) {
-  const [data, setData] = useState<TOutput | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<ParsedRpcError | null>(null)
   const enabled = options?.enabled ?? true
 
-  const refetch = useCallback(async (): Promise<void> => {
-    if (!enabled) return
+  // Create Atom.fn for automatic fetching
+  const queryAtom = useMemo(
+    () =>
+      Atom.fn((_: void) =>
+        enabled
+          ? rpcCallWithLayer(operation, input, inputSchema, outputSchema)
+          : Effect.succeed(null as O | null)
+      ),
+    [operation, JSON.stringify(input), enabled]
+  )
 
-    setIsLoading(true)
-    setError(null)
-    try {
-      const result = await fetcher(input)
-      setData(result)
-    } catch (e: unknown) {
-      const rpcError = parseRpcError(e)
-      setError(rpcError)
-    } finally {
-      setIsLoading(false)
+  // Use the Atom hook
+  const [result, refetch] = useAtom(queryAtom)
+
+  // Trigger initial fetch on mount and when dependencies change
+  useMemo(() => {
+    if (enabled) {
+      refetch()
     }
-  }, [fetcher, JSON.stringify(input), enabled])
+  }, [enabled, refetch])
 
-  useEffect((): void => {
-    refetch()
-  }, [refetch])
+  // Map Atom Result to our state shape
+  const state = useMemo((): RpcState<O | null, RpcError> => {
+    if (result._tag === "Initial") return initialState()
+    if (result._tag === "Waiting") return loadingState()
+    if (result._tag === "Success") return successState(result.value)
+    if (result._tag === "Failure") {
+      const error = Cause.failureOption(result.cause)
+      if (Option.isSome(error)) {
+        return failureState(error.value)
+      }
+      return failureState(
+        new RpcError({
+          operation,
+          message: "An unexpected error occurred",
+          code: "UNEXPECTED_ERROR"
+        })
+      )
+    }
+    return initialState()
+  }, [result, operation])
 
-  return { data, isLoading, error, refetch } as const
+  return {
+    data: state._tag === "Success" ? state.value : null,
+    isLoading: state._tag === "Loading",
+    error: state._tag === "Failure" ? state.error : null,
+    refetch: () => refetch(),
+    state
+  } as const
 }
 
 // ============================================================================
 // Lazy Query Hook
 // ============================================================================
 /**
- * Hook for RPC queries that are triggered manually
+ * Hook for RPC queries that are triggered manually using Effect + Atom
  *
  * Unlike useRpcQuery, this does not fetch automatically.
  * Call execute() to trigger the fetch.
+ * Errors flow through Effect's typed error channel.
  *
- * @param fetcher - Function that performs the RPC call
+ * @param operation - The RPC operation name
+ * @param inputSchema - Schema for validating input
+ * @param outputSchema - Schema for validating response
  * @returns Query state with data, isLoading, error, execute
  *
  * @example
  * ```tsx
  * function SearchUsers() {
  *   const { data, isLoading, error, execute } = useRpcLazyQuery(
- *     (input: { query: string }) => callRpc<User[]>("/api/rpc", "searchUsers", input)
+ *     "searchUsers",
+ *     SearchUsersInputSchema,
+ *     Schema.Array(UserSchema)
  *   )
  *
- *   const handleSearch = (query: string): void => {
- *     execute({ query })
- *   };
+ *   const handleSearch = (query: string) => {
+ *     execute({ query }) // No await needed - state updates reactively
+ *   }
  *
  *   return (
  *     <div>
  *       <SearchInput onSearch={handleSearch} />
  *       {isLoading && <Loading />}
- *       {error && <Error message={error.message} />}
+ *       {error && <Error message={error.message} code={error.code} />}
  *       {data && <UserList users={data} />}
  *     </div>
  *   )
  * }
  * ```
  */
-export function useRpcLazyQuery<TInput, TOutput>(
-  fetcher: (input: TInput) => Promise<TOutput>
+export function useRpcLazyQuery<I, O>(
+  operation: string,
+  inputSchema: Schema.Schema<I, unknown>,
+  outputSchema: Schema.Schema<O, unknown>
 ) {
-  const [data, setData] = useState<TOutput | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<ParsedRpcError | null>(null)
+  // Create Atom.fn that executes the RPC call (same as mutation)
+  const queryAtom = useMemo(
+    () =>
+      Atom.fn((input: I) =>
+        rpcCallWithLayer(operation, input, inputSchema, outputSchema)
+      ),
+    [operation]
+  )
 
-  const execute = useCallback(async (input: TInput): Promise<void> => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const result = await fetcher(input)
-      setData(result)
-    } catch (e: unknown) {
-      const rpcError = parseRpcError(e)
-      setError(rpcError)
-    } finally {
-      setIsLoading(false)
+  // Use the Atom hook
+  const [result, execute] = useAtom(queryAtom)
+
+  // Map Atom Result to our state shape
+  const state = useMemo((): RpcState<O, RpcError> => {
+    if (result._tag === "Initial") return initialState()
+    if (result._tag === "Waiting") return loadingState()
+    if (result._tag === "Success") return successState(result.value)
+    if (result._tag === "Failure") {
+      const error = Cause.failureOption(result.cause)
+      if (Option.isSome(error)) {
+        return failureState(error.value)
+      }
+      return failureState(
+        new RpcError({
+          operation,
+          message: "An unexpected error occurred",
+          code: "UNEXPECTED_ERROR"
+        })
+      )
     }
-  }, [fetcher])
+    return initialState()
+  }, [result, operation])
 
-  return { data, isLoading, error, execute } as const
+  return {
+    data: state._tag === "Success" ? state.value : null,
+    isLoading: state._tag === "Loading",
+    error: state._tag === "Failure" ? state.error : null,
+    execute,
+    state
+  } as const
 }

@@ -45,7 +45,7 @@
     "format:check": "prettier --check .",
     "prepublishOnly": "bun run build",
     "ci:version": "changeset version",
-    "ci:publish": "npm publish --access public --provenance"
+    "ci:publish": "bun scripts/publish.ts"
   },
   "dependencies": {
     "@effect/cli": "^0.73.0",

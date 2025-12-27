@@ -148,7 +148,9 @@ export interface SupabaseAuthServiceInterface {
   builder.addRaw(`/**
  * Decode SDK user to typed SupabaseUser using Schema
  *
- * Uses Effect Schema for type-safe decoding instead of type assertions.
+ * Note: Uses decodeUnknownOption because helper functions receive
+ * values as 'unknown' even though SDK returns typed User objects.
+ * The Schema validation ensures type safety at runtime.
  */
 const decodeUser = Schema.decodeUnknownOption(SupabaseUserSchema)
 

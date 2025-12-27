@@ -25,9 +25,12 @@ Route Types:
 // ============================================================================
 
 // Import canonical route types from contract-auth
-import { RouteTag, type RouteType, type RpcWithRouteTag } from "@samuelho-dev/contract-auth"
-// Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
-export { RouteTag, type RouteType, type RpcWithRouteTag }
+import {
+  RouteTag,
+  type RouteType,
+  type RpcWithRouteTag,
+} from "@samuelho-dev/contract-auth"// Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
+export { RouteTag, type RouteType, type RpcWithRouteTag };
 
 // ============================================================================
 // Route Type Utilities
@@ -91,19 +94,19 @@ export function detectRouteType(headers: Headers.Headers) {
  */
 export interface MiddlewareSelectorConfig {
   /** Middleware for public routes (optional, typically just RequestMeta) */
-
+ 
   readonly publicMiddleware?: Layer.Layer<any, any, any>
 
   /** Middleware for protected routes (user auth) */
-
+ 
   readonly protectedMiddleware: Layer.Layer<any, any, any>
 
   /** Middleware for service routes (S2S auth) */
-
+ 
   readonly serviceMiddleware: Layer.Layer<any, any, any>
 
   /** Middleware applied to ALL routes (typically RequestMeta) */
-
+ 
   readonly globalMiddleware?: Layer.Layer<any, any, any>
 }
 
@@ -278,7 +281,7 @@ export function validateRpcRoutes<Rpcs extends Record<string, unknown>>(
     const hasRouteTag = typeof rpc === "object" && rpc !== null && RouteTag in rpc
     return {
       name,
-      routeType: hasRouteTag ? rpc[RouteTag] : "missing"
+      routeType: hasRouteTag ? (rpc)[RouteTag] : "missing"
     }
   })
 }

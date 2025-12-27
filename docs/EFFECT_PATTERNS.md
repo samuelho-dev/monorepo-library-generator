@@ -2706,6 +2706,48 @@ const safeGetUser = (id: string) =>
 
 Effect Schema provides powerful runtime validation with TypeScript type inference. Beyond basic types, Schema offers filters, transformations, annotations, and projections for production-grade APIs.
 
+### Schema.Class vs decodeUnknown - When to Use Each
+
+Understanding when to use `Schema.Class` constructors vs `Schema.decodeUnknown` is critical for type safety:
+
+```typescript
+import { Schema } from "effect"
+
+// ✅ Schema.Class - Built-in constructor validation
+export class User extends Schema.Class<User>("User")({
+  id: Schema.UUID,
+  email: Schema.String,
+  createdAt: Schema.DateTimeUtc
+}) {}
+
+// Direct instantiation validates automatically
+const user = new User({ id: "...", email: "test@example.com", createdAt: ... })
+
+// ✅ Schema.decode - For typed input (SDK responses, typed data)
+// Use when input type matches schema's encoded type
+const validateTypedUser = (sdkUser: SupabaseUser) =>
+  Schema.decode(SupabaseUserSchema)(sdkUser)
+
+// ✅ Schema.decodeUnknown - For truly unknown input
+// Use for HTTP bodies, queue payloads, user input, catch block errors
+const validateUnknownInput = (input: unknown) =>
+  Schema.decodeUnknown(UserSchema)(input)
+```
+
+**When to use each:**
+
+| Pattern | Use Case | Example |
+|---------|----------|---------|
+| `new Entity({...})` | Creating new entities | `new User({ id, email })` |
+| `Schema.decode` | Typed SDK responses | Supabase, Prisma, Kysely results |
+| `Schema.decodeUnknown` | HTTP bodies, queue payloads | `request.json()`, job data |
+| `Schema.decodeOption` | Optional typed parsing | SDK responses that may be null |
+| `Schema.decodeUnknownOption` | Optional unknown parsing | Error objects, catch blocks |
+
+**Key insight:** If your function parameter is typed as `unknown`, use `decodeUnknown`. If it's typed (e.g., from a typed SDK), use `decode`.
+
+---
+
 ### Schema.annotations() - OpenAPI & Documentation
 
 Add metadata to schemas for auto-generated documentation, API specs, and better error messages.

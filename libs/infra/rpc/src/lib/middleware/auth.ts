@@ -29,20 +29,30 @@ Features:
 
 // Import canonical types from contract-auth
 import {
+  // Schemas
+  type CurrentUserData,
+  type AuthMethod,
+
   // Errors
   AuthError,
-  type AuthMethod,
-  AuthMethodContext,
+
   // Ports (interface for verification)
   AuthVerifier,
+
   // Context Tags
   CurrentUser,
-  // Schemas
-  type CurrentUserData
+  AuthMethodContext,
 } from "@samuelho-dev/contract-auth"
 
 // Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
-export { AuthError, type AuthMethod, AuthMethodContext, AuthVerifier, CurrentUser, type CurrentUserData }
+export {
+  type CurrentUserData,
+  type AuthMethod,
+  AuthError,
+  AuthVerifier,
+  CurrentUser,
+  AuthMethodContext
+}
 
 // ============================================================================
 // Token Extraction Helpers
@@ -130,7 +140,7 @@ export const AuthMiddlewareLive = Layer.effect(
           return yield* Effect.fail(AuthError.tokenMissing())
         }
 
-        const { token, type: authMethod } = auth.value
+        const { type: authMethod, token } = auth.value
 
         // Log authentication attempt (without exposing token)
         yield* Effect.logDebug(`Authentication attempt using ${authMethod}`)

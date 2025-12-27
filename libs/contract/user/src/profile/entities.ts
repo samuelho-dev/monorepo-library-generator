@@ -93,20 +93,3 @@ export class ProfileItem extends Schema.Class<ProfileItem>("ProfileItem")({
   quantity: Schema.optional(Schema.Number.pipe(Schema.positive()))
   // TODO: Add profile-specific item fields
 }) {}
-// ============================================================================
-// Helper Functions
-// ============================================================================
-/**
- * Parse Profile from unknown data
- */
-export const parseProfile = Schema.decodeUnknown(Profile)
-
-/**
- * Encode Profile to plain object
- */
-export const encodeProfile = Schema.encode(Profile)
-
-/**
- * Parse ProfileItem from unknown data
- */
-export const parseProfileItem = Schema.decodeUnknown(ProfileItem)

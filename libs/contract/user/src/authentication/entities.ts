@@ -93,20 +93,3 @@ export class AuthenticationItem extends Schema.Class<AuthenticationItem>("Authen
   quantity: Schema.optional(Schema.Number.pipe(Schema.positive()))
   // TODO: Add authentication-specific item fields
 }) {}
-// ============================================================================
-// Helper Functions
-// ============================================================================
-/**
- * Parse Authentication from unknown data
- */
-export const parseAuthentication = Schema.decodeUnknown(Authentication)
-
-/**
- * Encode Authentication to plain object
- */
-export const encodeAuthentication = Schema.encode(Authentication)
-
-/**
- * Parse AuthenticationItem from unknown data
- */
-export const parseAuthenticationItem = Schema.decodeUnknown(AuthenticationItem)

@@ -29,16 +29,22 @@ Features:
 
 // Import canonical types from contract-auth
 import {
+  // Schemas
+  type ServiceIdentity,
+
   // Errors
   ServiceAuthError,
+
   // Context Tags
   ServiceContext,
-  // Schemas
-  type ServiceIdentity
 } from "@samuelho-dev/contract-auth"
 
 // Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
-export { ServiceAuthError, ServiceContext, type ServiceIdentity }
+export {
+  type ServiceIdentity,
+  ServiceAuthError,
+  ServiceContext,
+}
 
 // ============================================================================
 // Service Token Validation
@@ -57,7 +63,7 @@ const SERVICE_AUTH_SECRET = env.SERVICE_AUTH_SECRET
  * Maps service IDs to their names and permissions.
  * In production, load from secure configuration store.
  */
-export const KNOWN_SERVICES: Record<string, { name: string; permissions: ReadonlyArray<string> }> = {
+export const KNOWN_SERVICES: Record<string, { name: string; permissions: readonly string[] }> = {
   "user-service": {
     name: "User Service",
     permissions: ["user:read", "user:write", "user:validate"]
@@ -192,9 +198,7 @@ export const ServiceMiddlewareLive = Layer.succeed(
       }
 
       // Log successful service authentication
-      yield* Effect.logDebug(
-        `Service authenticated: ${identity.serviceName} with permissions: ${identity.permissions.join(", ")}`
-      )
+      yield* Effect.logDebug(`Service authenticated: ${identity.serviceName} with permissions: ${identity.permissions.join(", ")}`)
 
       // Additional security: check for suspicious headers or patterns
       const userAgent = Headers.get(headers, "user-agent")

@@ -47,14 +47,7 @@ export {
 // ============================================================================
 // Entity Exports
 // ============================================================================
-export {
-  Authentication,
-  AuthenticationId,
-  AuthenticationItem,
-  encodeAuthentication,
-  parseAuthentication,
-  parseAuthenticationItem
-} from "./entities"
+export { Authentication, AuthenticationId, AuthenticationItem } from "./entities"
 
 // ============================================================================
 // Event Exports

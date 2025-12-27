@@ -128,27 +128,6 @@ export class {subModuleClassName}Item extends Schema.Class<{subModuleClassName}I
 }) {}`
       }
     },
-    // Helper Functions
-    {
-      title: "Helper Functions",
-      content: {
-        type: "raw",
-        value: `/**
- * Parse {subModuleClassName} from unknown data
- */
-export const parse{subModuleClassName} = Schema.decodeUnknown({subModuleClassName})
-
-/**
- * Encode {subModuleClassName} to plain object
- */
-export const encode{subModuleClassName} = Schema.encode({subModuleClassName})
-
-/**
- * Parse {subModuleClassName}Item from unknown data
- */
-export const parse{subModuleClassName}Item = Schema.decodeUnknown({subModuleClassName}Item)`
-      }
-    }
   ]
 }
 

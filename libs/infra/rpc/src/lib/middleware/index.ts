@@ -32,31 +32,47 @@ import {
 
 // Import middleware layers for combined layer composition
 // (must be before re-exports to maintain type inference)
-import { AuthMiddleware, AuthMiddlewareLive, AuthMiddlewareTest } from "./auth"
-import { RequestMetaMiddleware, RequestMetaMiddlewareLive } from "./request-meta"
+import {
+  AuthMiddleware,
+  AuthMiddlewareLive,
+  AuthMiddlewareTest,
+} from "./auth"
+import {
+  ServiceMiddleware,
+  ServiceMiddlewareLive,
+  ServiceMiddlewareTest,
+} from "./service-auth"
+import {
+  RequestMetaMiddleware,
+  RequestMetaMiddlewareLive,
+} from "./request-meta"
 import type { MiddlewareSelectorConfig } from "./route-selector"
-import { ServiceMiddleware, ServiceMiddlewareLive, ServiceMiddlewareTest } from "./service-auth"
 
 // ============================================================================
 // User Authentication (Protected Routes)
 // ============================================================================
 // Re-export user auth middleware
 export {
-  AdminTestUser,
-  // Errors
-  AuthError,
-  type AuthMethod,
-  AuthMethodContext,
-  // Middleware (also re-exported from imports above)
-  AuthMiddlewareAdmin,
-  // Interface (for infra-auth to implement)
-  AuthVerifier,
-  // Context Tags
-  CurrentUser,
   // Types
   type CurrentUserData,
+  type AuthMethod,
+
+  // Context Tags
+  CurrentUser,
+  AuthMethodContext,
+
+  // Errors
+  AuthError,
+
+  // Interface (for infra-auth to implement)
+  AuthVerifier,
+
+  // Middleware (also re-exported from imports above)
+  AuthMiddlewareAdmin,
+
   // Test data
-  TestUser
+  TestUser,
+  AdminTestUser,
 } from "./auth"
 
 // Re-export imported middleware (preserves type inference)
@@ -67,20 +83,25 @@ export { AuthMiddleware, AuthMiddlewareLive, AuthMiddlewareTest }
 // ============================================================================
 // Re-export service auth middleware
 export {
-  generateServiceToken,
-  KNOWN_SERVICES,
-  // Permission helper
-  requireServicePermission,
-  // Errors
-  ServiceAuthError,
-  // Context Tags
-  ServiceContext,
   // Types
   type ServiceIdentity,
+
+  // Context Tags
+  ServiceContext,
+
+  // Errors
+  ServiceAuthError,
+
+  // Token utilities
+  validateServiceToken,
+  generateServiceToken,
+  KNOWN_SERVICES,
+
+  // Permission helper
+  requireServicePermission,
+
   // Test data
   TestServiceIdentity,
-  // Token utilities
-  validateServiceToken
 } from "./service-auth"
 
 // Re-export imported middleware (preserves type inference)
@@ -91,14 +112,16 @@ export { ServiceMiddleware, ServiceMiddlewareLive, ServiceMiddlewareTest }
 // ============================================================================
 // Re-export request meta middleware
 export {
+  // Types
+  type RequestMetadata,
+
+  // Context Tags
+  RequestMeta,
+
   // Helpers
   getHandlerContext,
   getHandlerContextOptional,
   type HandlerContext,
-  // Context Tags
-  RequestMeta,
-  // Types
-  type RequestMetadata
 } from "./request-meta"
 
 // Re-export imported middleware (preserves type inference)
@@ -109,25 +132,29 @@ export { RequestMetaMiddleware, RequestMetaMiddlewareLive }
 // ============================================================================
 // Re-export route selector
 export {
-  applyRouteMiddleware,
-  assertRouteType,
-  createMiddlewareSelector,
-  createRequestRouteContext,
-  detectRouteType,
-  // Functions
-  getRouteType,
-  // Dev helpers
-  logRouteType,
-  type MiddlewareSelectorConfig,
-  type RequestRouteContext,
-  // Context
-  RequestRouteContextTag,
-  // Symbol
-  RouteTag,
   // Types
   type RouteType,
   type RpcWithRouteTag,
-  validateRpcRoutes
+  type MiddlewareSelectorConfig,
+  type RequestRouteContext,
+
+  // Symbol
+  RouteTag,
+
+  // Functions
+  getRouteType,
+  detectRouteType,
+  createMiddlewareSelector,
+  applyRouteMiddleware,
+
+  // Context
+  RequestRouteContextTag,
+  createRequestRouteContext,
+
+  // Dev helpers
+  logRouteType,
+  assertRouteType,
+  validateRpcRoutes,
 } from "./route-selector"
 
 // ============================================================================
@@ -141,7 +168,7 @@ export {
 export const AllMiddlewareTest = Layer.mergeAll(
   AuthMiddlewareTest,
   ServiceMiddlewareTest,
-  RequestMetaMiddlewareLive
+  RequestMetaMiddlewareLive,
 )
 
 /**
@@ -153,7 +180,7 @@ export const AllMiddlewareTest = Layer.mergeAll(
 export const AllMiddlewareLive = Layer.mergeAll(
   AuthMiddlewareLive,
   ServiceMiddlewareLive,
-  RequestMetaMiddlewareLive
+  RequestMetaMiddlewareLive,
 )
 
 /**
@@ -162,5 +189,5 @@ export const AllMiddlewareLive = Layer.mergeAll(
 export const defaultMiddlewareConfig: MiddlewareSelectorConfig = {
   protectedMiddleware: AuthMiddlewareTest,
   serviceMiddleware: ServiceMiddlewareTest,
-  globalMiddleware: RequestMetaMiddlewareLive
-}
+  globalMiddleware: RequestMetaMiddlewareLive,
+};

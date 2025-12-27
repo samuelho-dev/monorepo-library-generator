@@ -474,8 +474,8 @@ function buildSubOptions(config: RedisConfig) {
 /**
  * Build SCAN command arguments from options
  */
-function buildScanArgs(cursor: number, options?: ScanOptions): string | number[] {
-  const args: string | number[] = [cursor]
+function buildScanArgs(cursor: number, options?: ScanOptions): (string | number)[] {
+  const args: (string | number)[] = [cursor]
   if (options?.match) {
     args.push("MATCH", options.match)
   }
@@ -500,11 +500,12 @@ const RedisScanResponse = Schema.Tuple(
 /**
  * Execute SCAN with dynamically built arguments
  * Returns strongly typed result via Effect Schema
+ *
+ * Note: Uses decodeUnknown because ioredis .call() returns unknown.
  */
 function executeScan(client: IORedis, cursor: number, options?: ScanOptions) {
   const args = buildScanArgs(cursor, options)
   return Effect.gen(function*() {
-    // ioredis scan takes cursor first, then options as variadic args
     const rawResult = yield* Effect.tryPromise({
       try: () => client.call("SCAN", ...args),
       catch: (error) => new RedisCommandError({
@@ -513,7 +514,7 @@ function executeScan(client: IORedis, cursor: number, options?: ScanOptions) {
         cause: error
       })
     })
-    // Decode with Schema for type safety
+    // Decode with Schema for type safety (call() returns unknown)
     const [nextCursor, keys] = yield* Schema.decodeUnknown(RedisScanResponse)(rawResult)
     return {
       cursor: parseInt(nextCursor, 10),

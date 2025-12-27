@@ -122,7 +122,8 @@ export type RpcRequiredLayers<R> = R extends Layer.Layer<infer A, infer E, infer
 /**
  * Extract only the dependencies from a Layer (simplified version)
  */
-export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps> ? Deps
+export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps>
+  ? Deps
   : never
 
 // ============================================================================
@@ -187,7 +188,7 @@ export type RpcHandlerMap<R = unknown> = Record<string, (payload: unknown) => Ef
  * ```
  */
 export const combineHandlers = <R>(
-  ...handlers: Array<RpcHandlerMap<R>>
+  ...handlers: readonly RpcHandlerMap<R[]>
 ) => {
   const result: RpcHandlerMap<R> = {}
   for (const handler of handlers) {
@@ -265,11 +266,7 @@ export const createNextRpcHandler = <R, E>(
       const parseResult = Schema.decodeUnknownOption(RpcRequestBodySchema)(rawBody)
       if (Option.isNone(parseResult)) {
         return Response.json(
-          {
-            _tag: "RpcInfraError",
-            message: "Invalid request body: expected { operation: string, payload?: unknown }",
-            code: "INVALID_REQUEST"
-          },
+          { _tag: "RpcInfraError", message: "Invalid request body: expected { operation: string, payload?: unknown }", code: "INVALID_REQUEST" },
           { status: 400 }
         )
       }
@@ -457,13 +454,11 @@ export const healthCheck = (options?: {
         const start = Date.now()
         const result = yield* check().pipe(
           Effect.map(() => ({ status: "ok" as const, latencyMs: Date.now() - start })),
-          Effect.catchAllCause((cause) =>
-            Effect.succeed({
-              status: "error" as const,
-              latencyMs: Date.now() - start,
-              message: Cause.pretty(cause)
-            })
-          )
+          Effect.catchAllCause((cause) => Effect.succeed({
+            status: "error" as const,
+            latencyMs: Date.now() - start,
+            message: Cause.pretty(cause)
+          }))
         )
         checksResult[name] = result
         if (result.status === "error") {

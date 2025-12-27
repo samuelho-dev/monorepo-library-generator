@@ -47,7 +47,7 @@ export {
 // ============================================================================
 // Entity Exports
 // ============================================================================
-export { encodeProfile, parseProfile, parseProfileItem, Profile, ProfileId, ProfileItem } from "./entities"
+export { Profile, ProfileId, ProfileItem } from "./entities"
 
 // ============================================================================
 // Event Exports
