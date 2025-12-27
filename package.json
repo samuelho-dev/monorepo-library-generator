@@ -49,9 +49,13 @@
   },
   "dependencies": {
     "@effect/cli": "^0.73.0",
+    "@effect/cluster": "^0.56.0",
+    "@effect/experimental": "^0.58.0",
     "@effect/opentelemetry": "^0.60.0",
     "@effect/platform": "^0.94.0",
     "@effect/platform-node": "^0.104.0",
+    "@effect/rpc": "^0.73.0",
+    "@effect/sql": "^0.49.0",
     "@effect/vitest": "^0.27.0",
     "@nx/devkit": "^22.3.1",
     "@opentelemetry/api": "^1.9.0",
