@@ -127,7 +127,7 @@ export class {subModuleClassName}Item extends Schema.Class<{subModuleClassName}I
   // TODO: Add {subModuleName}-specific item fields
 }) {}`
       }
-    },
+    }
   ]
 }
 
