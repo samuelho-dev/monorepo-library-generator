@@ -6,25 +6,25 @@
  * @module monorepo-library-generator/templates/registry/types
  */
 
-import type { TemplateDefinition } from "../core/types"
+import type { TemplateDefinition } from '../core/types'
 
 /**
  * Library types supported by the generator
  */
-export type LibraryType = "contract" | "data-access" | "feature" | "infra" | "provider" | "env"
+export type LibraryType = 'contract' | 'data-access' | 'feature' | 'infra' | 'provider' | 'env'
 
 /**
  * File types that can be generated
  */
 export type FileType =
-  | "errors"
-  | "events"
-  | "ports"
-  | "layers"
-  | "service"
-  | "types"
-  | "index"
-  | "config"
+  | 'errors'
+  | 'events'
+  | 'ports'
+  | 'layers'
+  | 'service'
+  | 'types'
+  | 'index'
+  | 'config'
 
 /**
  * Template key combining library type and file type
@@ -44,9 +44,9 @@ export interface TemplateMetadata {
   /** Human-readable description */
   readonly description: string
   /** Required context variables */
-  readonly requiredContext: ReadonlyArray<string>
+  readonly requiredContext: readonly string[]
   /** Optional context variables */
-  readonly optionalContext?: ReadonlyArray<string>
+  readonly optionalContext?: readonly string[]
 }
 
 /**
@@ -66,9 +66,9 @@ export interface TemplateRegistry {
   /** Get template by key */
   readonly get: (key: TemplateKey) => TemplateRegistryEntry | undefined
   /** Get all templates for a library type */
-  readonly getByLibraryType: (libraryType: LibraryType) => ReadonlyArray<TemplateRegistryEntry>
+  readonly getByLibraryType: (libraryType: LibraryType) => readonly TemplateRegistryEntry[]
   /** Get all registered template keys */
-  readonly keys: () => ReadonlyArray<TemplateKey>
+  readonly keys: () => readonly TemplateKey[]
   /** Check if a template exists */
   readonly has: (key: TemplateKey) => boolean
   /** Get template count */
@@ -86,7 +86,7 @@ export interface GeneratorOptions {
   /** NPM scope (e.g., "@myorg") */
   readonly scope: string
   /** File types to generate (defaults to all available) */
-  readonly fileTypes?: ReadonlyArray<FileType>
+  readonly fileTypes?: readonly FileType[]
   /** Additional context variables */
   readonly context?: Record<string, unknown>
 }
@@ -110,9 +110,9 @@ export interface GenerationResult {
   /** Library type generated */
   readonly libraryType: LibraryType
   /** Generated files */
-  readonly files: ReadonlyArray<GeneratedFile>
+  readonly files: readonly GeneratedFile[]
   /** Generation duration in milliseconds */
   readonly durationMs: number
   /** Any warnings during generation */
-  readonly warnings?: ReadonlyArray<string>
+  readonly warnings?: readonly string[]
 }

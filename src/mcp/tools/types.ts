@@ -5,11 +5,11 @@
 export interface ToolResult {
   readonly success: boolean
   readonly message: string
-  readonly files?: ReadonlyArray<string>
+  readonly files?: readonly string[]
 }
 
 export interface GeneratorResult {
-  readonly files: ReadonlyArray<string>
+  readonly files: readonly string[]
   readonly projectName: string
   readonly projectRoot: string
 }

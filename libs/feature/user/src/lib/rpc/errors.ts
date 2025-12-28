@@ -1,6 +1,12 @@
-import { RpcConflictError, RpcForbiddenError, RpcInternalError, RpcNotFoundError, RpcValidationError } from "@samuelho-dev/infra-rpc"
-import { Effect } from "effect"
-import type { UserFeatureError } from "../shared/errors"
+import {
+  RpcConflictError,
+  RpcForbiddenError,
+  RpcInternalError,
+  RpcNotFoundError,
+  RpcValidationError
+} from '@samuelho-dev/infra-rpc'
+import { Effect } from 'effect'
+import type { UserFeatureError } from '../shared/errors'
 
 /**
  * User RPC Errors
@@ -57,38 +63,46 @@ Error Flow:
  * )
  * ```
  */
-export const withUserRpcBoundary = <A, R>(
-  effect: Effect.Effect<A, UserFeatureError, R>
-) =>
+export const withUserRpcBoundary = <A, R>(effect: Effect.Effect<A, UserFeatureError, R>) =>
   effect.pipe(
     // Domain Errors → RPC Errors
-    Effect.catchTag("UserNotFoundError", (e) =>
-      Effect.fail(new RpcNotFoundError({
-        message: e.message,
-        resource: "User"
-      }))
+    Effect.catchTag('UserNotFoundError', (e) =>
+      Effect.fail(
+        new RpcNotFoundError({
+          message: e.message,
+          resource: 'User'
+        })
+      )
     ),
-    Effect.catchTag("UserValidationError", (e) =>
-      Effect.fail(new RpcValidationError({
-        message: e.message,
-        issues: []
-      }))
+    Effect.catchTag('UserValidationError', (e) =>
+      Effect.fail(
+        new RpcValidationError({
+          message: e.message,
+          issues: []
+        })
+      )
     ),
-    Effect.catchTag("UserAlreadyExistsError", (e) =>
-      Effect.fail(new RpcConflictError({
-        message: e.message
-      }))
+    Effect.catchTag('UserAlreadyExistsError', (e) =>
+      Effect.fail(
+        new RpcConflictError({
+          message: e.message
+        })
+      )
     ),
-    Effect.catchTag("UserPermissionError", (e) =>
-      Effect.fail(new RpcForbiddenError({
-        message: e.message
-      }))
+    Effect.catchTag('UserPermissionError', (e) =>
+      Effect.fail(
+        new RpcForbiddenError({
+          message: e.message
+        })
+      )
     ),
     // Infrastructure Errors → RPC Internal Error
     // These are Connection, Timeout, Transaction errors from data-access layer
     Effect.catchAll(() =>
-      Effect.fail(new RpcInternalError({
-        message: "An unexpected error occurred"
-      }))
+      Effect.fail(
+        new RpcInternalError({
+          message: 'An unexpected error occurred'
+        })
+      )
     )
   )

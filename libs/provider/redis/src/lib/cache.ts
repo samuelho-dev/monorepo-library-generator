@@ -1,7 +1,7 @@
-import { Context, Effect, Layer } from "effect"
-import type { Redis as IORedis } from "ioredis"
-import { RedisCommandError } from "./errors"
-import type { RedisCacheClient } from "./types"
+import { Context, Effect, Layer } from 'effect'
+import type { Redis as IORedis } from 'ioredis'
+import { RedisCommandError } from './errors'
+import type { RedisCacheClient } from './types'
 
 /**
  * Redis Cache Sub-Service
@@ -46,11 +46,11 @@ export function makeCacheClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `GET failed for key: ${key}`,
-            command: "GET",
+            command: 'GET',
             args: [key],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.cache.get", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.cache.get', { attributes: { key } })),
 
     set: (key: string, value: string) =>
       Effect.tryPromise({
@@ -58,11 +58,11 @@ export function makeCacheClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `SET failed for key: ${key}`,
-            command: "SET",
+            command: 'SET',
             args: [key, value],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.cache.set", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.cache.set', { attributes: { key } })),
 
     setex: (key: string, seconds: number, value: string) =>
       Effect.tryPromise({
@@ -70,11 +70,11 @@ export function makeCacheClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `SETEX failed for key: ${key}`,
-            command: "SETEX",
+            command: 'SETEX',
             args: [key, seconds, value],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.cache.setex", { attributes: { key, seconds } })),
+      }).pipe(Effect.withSpan('Redis.cache.setex', { attributes: { key, seconds } })),
 
     del: (key: string) =>
       Effect.tryPromise({
@@ -82,33 +82,33 @@ export function makeCacheClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `DEL failed for key: ${key}`,
-            command: "DEL",
+            command: 'DEL',
             args: [key],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.cache.del", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.cache.del', { attributes: { key } })),
 
     flushdb: () =>
       Effect.tryPromise({
         try: () => client.flushdb().then(() => undefined),
         catch: (error) =>
           new RedisCommandError({
-            message: "FLUSHDB failed",
-            command: "FLUSHDB",
+            message: 'FLUSHDB failed',
+            command: 'FLUSHDB',
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.cache.flushdb")),
+      }).pipe(Effect.withSpan('Redis.cache.flushdb')),
 
     ping: () =>
       Effect.tryPromise({
         try: () => client.ping(),
         catch: (error) =>
           new RedisCommandError({
-            message: "PING failed",
-            command: "PING",
+            message: 'PING failed',
+            command: 'PING',
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.cache.ping"))
+      }).pipe(Effect.withSpan('Redis.cache.ping'))
   }
 }
 
@@ -126,7 +126,7 @@ export function makeCacheClient(client: IORedis) {
  * - RedisCacheService.Live - Requires RedisConnection
  * - RedisCacheService.Test - In-memory mock for testing
  */
-export class RedisCacheService extends Context.Tag("RedisCacheService")<
+export class RedisCacheService extends Context.Tag('RedisCacheService')<
   RedisCacheService,
   RedisCacheClient
 >() {
@@ -139,7 +139,7 @@ export class RedisCacheService extends Context.Tag("RedisCacheService")<
     setex: () => Effect.void,
     del: () => Effect.succeed(0),
     flushdb: () => Effect.void,
-    ping: () => Effect.succeed("PONG")
+    ping: () => Effect.succeed('PONG')
   })
 
   /**

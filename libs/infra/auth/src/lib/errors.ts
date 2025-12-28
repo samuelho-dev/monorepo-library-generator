@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * Auth Infrastructure Errors
@@ -21,19 +21,16 @@ and be serializable. The AuthError is used in Schema.Union with feature RPC erro
  * This is the primary error type imported by feature RPC definitions
  * for protected routes. Must be Schema.TaggedError for serialization.
  */
-export class AuthError extends Schema.TaggedError<AuthError>()(
-  "AuthError",
-  {
-    message: Schema.String,
-    code: Schema.optional(Schema.String)
-  }
-) {}
+export class AuthError extends Schema.TaggedError<AuthError>()('AuthError', {
+  message: Schema.String,
+  code: Schema.optional(Schema.String)
+}) {}
 
 /**
  * Unauthorized error - user is not authenticated
  */
 export class UnauthorizedError extends Schema.TaggedError<UnauthorizedError>()(
-  "UnauthorizedError",
+  'UnauthorizedError',
   {
     message: Schema.String
   }
@@ -42,23 +39,20 @@ export class UnauthorizedError extends Schema.TaggedError<UnauthorizedError>()(
 /**
  * Forbidden error - user lacks required permissions
  */
-export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
-  "ForbiddenError",
-  {
-    message: Schema.String,
-    requiredRole: Schema.optional(Schema.String),
-    userRole: Schema.optional(Schema.String)
-  }
-) {}
+export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()('ForbiddenError', {
+  message: Schema.String,
+  requiredRole: Schema.optional(Schema.String),
+  userRole: Schema.optional(Schema.String)
+}) {}
 
 /**
  * Invalid token error - token is malformed or expired
  */
 export class InvalidTokenError extends Schema.TaggedError<InvalidTokenError>()(
-  "InvalidTokenError",
+  'InvalidTokenError',
   {
     message: Schema.String,
-    tokenType: Schema.Literal("access", "refresh", "api-key")
+    tokenType: Schema.Literal('access', 'refresh', 'api-key')
   }
 ) {}
 
@@ -66,7 +60,7 @@ export class InvalidTokenError extends Schema.TaggedError<InvalidTokenError>()(
  * Session expired error
  */
 export class SessionExpiredError extends Schema.TaggedError<SessionExpiredError>()(
-  "SessionExpiredError",
+  'SessionExpiredError',
   {
     message: Schema.String
   }
@@ -76,7 +70,7 @@ export class SessionExpiredError extends Schema.TaggedError<SessionExpiredError>
  * API key validation error
  */
 export class InvalidApiKeyError extends Schema.TaggedError<InvalidApiKeyError>()(
-  "InvalidApiKeyError",
+  'InvalidApiKeyError',
   {
     message: Schema.String
   }

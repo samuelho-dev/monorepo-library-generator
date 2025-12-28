@@ -4,17 +4,16 @@
  * @module @samuelho-dev/feature-user/server/jobs
  */
 
-export {
-  UserJobQueue,
-  UserQueueConfig,
-  CreateUserJob,
-  UpdateUserJob,
-  DeleteUserJob,
-  BulkUserJob,
-  JobMetadata,
-} from "./queue"
-
 export type {
   UserJob,
-  UserJobQueueInterface,
-} from "./queue";
+  UserJobQueueInterface
+} from './queue'
+export {
+  BulkUserJob,
+  CreateUserJob,
+  DeleteUserJob,
+  JobMetadata,
+  UpdateUserJob,
+  UserJobQueue,
+  UserQueueConfig
+} from './queue'

@@ -4,4 +4,4 @@
  * Barrel export for client-side hooks
  *
  */
-export { useUser, type UseUserReturn } from "./use-user"
+export { type UseUserReturn, useUser } from './use-user'

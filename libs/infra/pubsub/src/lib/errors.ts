@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * Pubsub Errors
@@ -22,9 +22,7 @@ Uses Data.TaggedError for internal infrastructure errors:
  * All service errors extend this base error.
  * Use domain-specific error types (NotFound, Validation, etc.) for precise handling.
  */
-export class PubsubError extends Data.TaggedError(
-  "PubsubError"
-)<{
+export class PubsubError extends Data.TaggedError('PubsubError')<{
   /** Human-readable error message */
   readonly message: string
   /** Optional underlying cause */
@@ -36,9 +34,7 @@ export class PubsubError extends Data.TaggedError(
  *
  * Raised when unexpected internal error occurs.
  */
-export class PubsubInternalError extends Data.TaggedError(
-  "PubsubInternalError"
-)<{
+export class PubsubInternalError extends Data.TaggedError('PubsubInternalError')<{
   /** Human-readable error message */
   readonly message: string
   /** Underlying error cause */
@@ -50,9 +46,7 @@ export class PubsubInternalError extends Data.TaggedError(
  *
  * Raised when service is misconfigured.
  */
-export class PubsubConfigError extends Data.TaggedError(
-  "PubsubConfigError"
-)<{
+export class PubsubConfigError extends Data.TaggedError('PubsubConfigError')<{
   /** Human-readable error message */
   readonly message: string
   /** Configuration property that is invalid */
@@ -64,9 +58,7 @@ export class PubsubConfigError extends Data.TaggedError(
  *
  * Raised when connection to external service fails.
  */
-export class PubsubConnectionError extends Data.TaggedError(
-  "PubsubConnectionError"
-)<{
+export class PubsubConnectionError extends Data.TaggedError('PubsubConnectionError')<{
   /** Human-readable error message */
   readonly message: string
   /** Connection target (service name, host, etc.) */
@@ -80,9 +72,7 @@ export class PubsubConnectionError extends Data.TaggedError(
  *
  * Raised when operation exceeds timeout.
  */
-export class PubsubTimeoutError extends Data.TaggedError(
-  "PubsubTimeoutError"
-)<{
+export class PubsubTimeoutError extends Data.TaggedError('PubsubTimeoutError')<{
   /** Human-readable error message */
   readonly message: string
   /** Timeout duration in milliseconds */

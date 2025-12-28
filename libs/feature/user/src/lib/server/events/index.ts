@@ -4,10 +4,9 @@
  * @module @samuelho-dev/feature-user/server/events
  */
 
+export type { UserEventPublisherInterface } from './publisher'
 export {
-  UserEventPublisher,
-  UserEventTopics,
   createUserEventSubscription,
-} from "./publisher"
-
-export type { UserEventPublisherInterface } from "./publisher"
+  UserEventPublisher,
+  UserEventTopics
+} from './publisher'

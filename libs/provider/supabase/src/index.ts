@@ -22,6 +22,7 @@ Usage:
 // Error Types
 // ============================================================================
 
+export type { SupabaseProviderError } from './lib/errors'
 export {
   // Auth errors
   SupabaseAuthError,
@@ -35,8 +36,7 @@ export {
   // Storage errors
   SupabaseStorageError,
   SupabaseTokenError
-} from "./lib/errors"
-export type { SupabaseProviderError } from "./lib/errors"
+} from './lib/errors'
 
 // ============================================================================
 // Types
@@ -63,7 +63,7 @@ export type {
   SupabaseUser,
   UploadOptions,
   UserMetadata
-} from "./lib/types"
+} from './lib/types'
 
 // Schema exports for runtime validation
 export {
@@ -75,7 +75,7 @@ export {
   SupabaseSessionSchema,
   SupabaseUserSchema,
   UserMetadataSchema
-} from "./lib/types"
+} from './lib/types'
 
 // ============================================================================
 // Services
@@ -89,21 +89,21 @@ export {
 //   - SupabaseClient.Dev (debug logging)
 //   - SupabaseClient.make(config) (custom configuration)
 
-export { SupabaseClient, type SupabaseClientServiceInterface } from "./lib/client"
+export { SupabaseClient, type SupabaseClientServiceInterface } from './lib/client'
 
 // SupabaseAuth - Authentication operations
 //
 // Provides: signInWithPassword, signUp, signOut, verifyToken, getSession, getUser
 // Used by: infra-auth for auth middleware
 
-export { SupabaseAuth, type SupabaseAuthServiceInterface } from "./lib/auth"
+export { SupabaseAuth, type SupabaseAuthServiceInterface } from './lib/auth'
 
 // SupabaseStorage - File storage operations
 //
 // Provides: upload, download, remove, list, createSignedUrl, getPublicUrl
 // Used by: infra-storage for file operations
 
-export { SupabaseStorage, type SupabaseStorageServiceInterface } from "./lib/storage"
+export { SupabaseStorage, type SupabaseStorageServiceInterface } from './lib/storage'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Usage Examples

@@ -1,9 +1,13 @@
-import { NodeSdk } from "@effect/opentelemetry"
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http"
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
-import { ConsoleMetricExporter, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
-import { BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-node"
-import { Layer } from "effect"
+import { NodeSdk } from '@effect/opentelemetry'
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+import { ConsoleMetricExporter, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
+import {
+  BatchSpanProcessor,
+  ConsoleSpanExporter,
+  SimpleSpanProcessor
+} from '@opentelemetry/sdk-trace-node'
+import { Layer } from 'effect'
 
 /**
  * Observability Presets
@@ -85,7 +89,7 @@ export interface OtlpPresetConfig {
  * ```
  */
 export const OtlpPreset = (config: OtlpPresetConfig) => {
-  const baseUrl = config.endpoint ?? "http://localhost:4318"
+  const baseUrl = config.endpoint ?? 'http://localhost:4318'
 
   // Build exporter configs - only include headers if authorization is provided
   // This avoids exactOptionalPropertyTypes issues with undefined headers
@@ -100,11 +104,9 @@ export const OtlpPreset = (config: OtlpPresetConfig) => {
   return NodeSdk.layer(() => ({
     resource: {
       serviceName: config.serviceName,
-      serviceVersion: config.serviceVersion ?? "0.0.0"
+      serviceVersion: config.serviceVersion ?? '0.0.0'
     },
-    spanProcessor: new BatchSpanProcessor(
-      new OTLPTraceExporter(traceExporterConfig)
-    ),
+    spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter(traceExporterConfig)),
     metricReader: new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter(metricExporterConfig),
       exportIntervalMillis: config.metricsIntervalMs ?? 60000
@@ -162,13 +164,13 @@ export interface JaegerPresetConfig {
  * ```
  */
 export const JaegerPreset = (config: JaegerPresetConfig) => {
-  const baseUrl = config.endpoint ?? "http://localhost:4318"
+  const baseUrl = config.endpoint ?? 'http://localhost:4318'
 
   return NodeSdk.layer(() => ({
     resource: {
       serviceName: config.serviceName,
-      serviceVersion: config.serviceVersion ?? "0.0.0",
-      "deployment.environment": config.environment ?? "development"
+      serviceVersion: config.serviceVersion ?? '0.0.0',
+      'deployment.environment': config.environment ?? 'development'
     },
     spanProcessor: new BatchSpanProcessor(
       new OTLPTraceExporter({
@@ -217,7 +219,7 @@ export const ConsolePreset = (config: ConsolePresetConfig) =>
   NodeSdk.layer(() => ({
     resource: {
       serviceName: config.serviceName,
-      serviceVersion: config.serviceVersion ?? "0.0.0-dev"
+      serviceVersion: config.serviceVersion ?? '0.0.0-dev'
     },
     // Use SimpleSpanProcessor for immediate console output
     spanProcessor: new SimpleSpanProcessor(new ConsoleSpanExporter()),
@@ -313,13 +315,13 @@ export interface GrafanaCloudPresetConfig {
  */
 export const GrafanaCloudPreset = (config: GrafanaCloudPresetConfig) => {
   const endpoint = `https://otlp-gateway-${config.region}.grafana.net/otlp`
-  const authorization = `Basic ${Buffer.from(`${config.instanceId}:${config.apiToken}`).toString("base64")}`
+  const authorization = `Basic ${Buffer.from(`${config.instanceId}:${config.apiToken}`).toString('base64')}`
 
   return NodeSdk.layer(() => ({
     resource: {
       serviceName: config.serviceName,
-      serviceVersion: config.serviceVersion ?? "0.0.0",
-      "deployment.environment": config.environment ?? "production"
+      serviceVersion: config.serviceVersion ?? '0.0.0',
+      'deployment.environment': config.environment ?? 'production'
     },
     spanProcessor: new BatchSpanProcessor(
       new OTLPTraceExporter({

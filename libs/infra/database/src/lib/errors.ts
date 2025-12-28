@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * Database Errors
@@ -22,9 +22,7 @@ Uses Data.TaggedError for internal infrastructure errors:
  * All service errors extend this base error.
  * Use domain-specific error types (NotFound, Validation, etc.) for precise handling.
  */
-export class DatabaseError extends Data.TaggedError(
-  "DatabaseError"
-)<{
+export class DatabaseError extends Data.TaggedError('DatabaseError')<{
   /** Human-readable error message */
   readonly message: string
   /** Optional underlying cause */
@@ -36,9 +34,7 @@ export class DatabaseError extends Data.TaggedError(
  *
  * Raised when unexpected internal error occurs.
  */
-export class DatabaseInternalError extends Data.TaggedError(
-  "DatabaseInternalError"
-)<{
+export class DatabaseInternalError extends Data.TaggedError('DatabaseInternalError')<{
   /** Human-readable error message */
   readonly message: string
   /** Underlying error cause */
@@ -50,9 +46,7 @@ export class DatabaseInternalError extends Data.TaggedError(
  *
  * Raised when service is misconfigured.
  */
-export class DatabaseConfigError extends Data.TaggedError(
-  "DatabaseConfigError"
-)<{
+export class DatabaseConfigError extends Data.TaggedError('DatabaseConfigError')<{
   /** Human-readable error message */
   readonly message: string
   /** Configuration property that is invalid */
@@ -64,9 +58,7 @@ export class DatabaseConfigError extends Data.TaggedError(
  *
  * Raised when connection to external service fails.
  */
-export class DatabaseConnectionError extends Data.TaggedError(
-  "DatabaseConnectionError"
-)<{
+export class DatabaseConnectionError extends Data.TaggedError('DatabaseConnectionError')<{
   /** Human-readable error message */
   readonly message: string
   /** Connection target (service name, host, etc.) */
@@ -80,9 +72,7 @@ export class DatabaseConnectionError extends Data.TaggedError(
  *
  * Raised when operation exceeds timeout.
  */
-export class DatabaseTimeoutError extends Data.TaggedError(
-  "DatabaseTimeoutError"
-)<{
+export class DatabaseTimeoutError extends Data.TaggedError('DatabaseTimeoutError')<{
   /** Human-readable error message */
   readonly message: string
   /** Timeout duration in milliseconds */

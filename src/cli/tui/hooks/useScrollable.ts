@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/cli/tui/hooks/useScrollable
  */
 
-import { useInput } from "ink"
-import { useEffect, useState } from "react"
+import { useInput } from 'ink'
+import { useEffect, useState } from 'react'
 
 /**
  * Options for useScrollable hook
@@ -126,13 +126,13 @@ export function useScrollable({
     (input, key) => {
       if (!isActive) return
 
-      if (key.ctrl && input === "d") {
+      if (key.ctrl && input === 'd') {
         // Page down - scroll by visible items count
         const maxOffset = Math.max(0, totalItems - visibleItems)
         setScrollOffset((prev) => Math.min(maxOffset, prev + visibleItems))
       }
 
-      if (key.ctrl && input === "u") {
+      if (key.ctrl && input === 'u') {
         // Page up - scroll by visible items count
         setScrollOffset((prev) => Math.max(0, prev - visibleItems))
       }

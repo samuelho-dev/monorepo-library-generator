@@ -1,12 +1,12 @@
-import { KyselyService, makeTestKyselyService } from "@samuelho-dev/provider-kysely"
 import type {
   DatabaseConnectionError as ProviderConnectionError,
   DatabaseQueryError as ProviderQueryError
-} from "@samuelho-dev/provider-kysely"
-import type { DB } from "@samuelho-dev/types-database"
-import { Context, Effect, Layer } from "effect"
-import type { Kysely, Transaction } from "kysely"
-import { DatabaseConnectionError, DatabaseInternalError } from "./errors"
+} from '@samuelho-dev/provider-kysely'
+import { KyselyService, makeTestKyselyService } from '@samuelho-dev/provider-kysely'
+import type { DB } from '@samuelho-dev/types-database'
+import { Context, Effect, Layer } from 'effect'
+import type { Kysely, Transaction } from 'kysely'
+import { DatabaseConnectionError, DatabaseInternalError } from './errors'
 
 /**
  * Database Service
@@ -49,7 +49,7 @@ Usage:
  * )
  * ```
  */
-export type { DB as Database } from "@samuelho-dev/types-database"
+export type { DB as Database } from '@samuelho-dev/types-database'
 
 // ============================================================================
 // Service Context.Tag Definition
@@ -106,9 +106,7 @@ export type { DB as Database } from "@samuelho-dev/types-database"
  * )
  * ```
  */
-export class DatabaseService extends Context.Tag(
-  "@samuelho-dev/infra-database/DatabaseService"
-)<
+export class DatabaseService extends Context.Tag('@samuelho-dev/infra-database/DatabaseService')<
   DatabaseService,
   {
     /**
@@ -171,46 +169,49 @@ export class DatabaseService extends Context.Tag(
    */
   static readonly Live = Layer.effect(
     DatabaseService,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const kysely = yield* KyselyService<DB>()
 
       return {
         query: <A>(fn: (db: Kysely<DB>) => Promise<A>) =>
           kysely.query(fn).pipe(
-            Effect.catchTag("DatabaseQueryError", (error: ProviderQueryError) =>
+            Effect.catchTag('DatabaseQueryError', (error: ProviderQueryError) =>
               Effect.fail(
                 new DatabaseInternalError({
                   message: error.message,
                   cause: error
                 })
-              )),
-            Effect.withSpan("DatabaseService.query")
+              )
+            ),
+            Effect.withSpan('DatabaseService.query')
           ),
 
         transaction: <A, E>(fn: (tx: Transaction<DB>) => Effect.Effect<A, E>) =>
           kysely.transaction(fn).pipe(
-            Effect.catchTag("DatabaseTransactionError", (error) =>
+            Effect.catchTag('DatabaseTransactionError', (error) =>
               Effect.fail(
                 new DatabaseInternalError({
-                  message: "message" in error ? error.message : "Transaction failed",
+                  message: 'message' in error ? error.message : 'Transaction failed',
                   cause: error
                 })
-              )),
-            Effect.withSpan("DatabaseService.transaction")
+              )
+            ),
+            Effect.withSpan('DatabaseService.transaction')
           ),
 
         healthCheck: () =>
           kysely.ping().pipe(
             Effect.map(() => true),
-            Effect.catchTag("DatabaseConnectionError", (error: ProviderConnectionError) =>
+            Effect.catchTag('DatabaseConnectionError', (error: ProviderConnectionError) =>
               Effect.fail(
                 new DatabaseConnectionError({
-                  message: "Health check failed",
-                  target: "database",
+                  message: 'Health check failed',
+                  target: 'database',
                   cause: error
                 })
-              )),
-            Effect.withSpan("DatabaseService.healthCheck")
+              )
+            ),
+            Effect.withSpan('DatabaseService.healthCheck')
           )
       }
     })
@@ -233,37 +234,40 @@ export class DatabaseService extends Context.Tag(
     return {
       query: <A>(fn: (db: Kysely<DB>) => Promise<A>) =>
         testService.query(fn).pipe(
-          Effect.catchTag("DatabaseQueryError", (error: ProviderQueryError) =>
+          Effect.catchTag('DatabaseQueryError', (error: ProviderQueryError) =>
             Effect.fail(
               new DatabaseInternalError({
                 message: error.message,
                 cause: error
               })
-            ))
+            )
+          )
         ),
 
       transaction: <A, E>(fn: (tx: Transaction<DB>) => Effect.Effect<A, E>) =>
         testService.transaction(fn).pipe(
-          Effect.catchTag("DatabaseTransactionError", (error) =>
+          Effect.catchTag('DatabaseTransactionError', (error) =>
             Effect.fail(
               new DatabaseInternalError({
-                message: "message" in error ? error.message : "Transaction failed",
+                message: 'message' in error ? error.message : 'Transaction failed',
                 cause: error
               })
-            ))
+            )
+          )
         ),
 
       healthCheck: () =>
         testService.ping().pipe(
           Effect.map(() => true),
-          Effect.catchTag("DatabaseConnectionError", (error: ProviderConnectionError) =>
+          Effect.catchTag('DatabaseConnectionError', (error: ProviderConnectionError) =>
             Effect.fail(
               new DatabaseConnectionError({
-                message: "Health check failed",
-                target: "database",
+                message: 'Health check failed',
+                target: 'database',
                 cause: error
               })
-            ))
+            )
+          )
         )
     }
   })
@@ -279,55 +283,58 @@ export class DatabaseService extends Context.Tag(
    */
   static readonly Dev = Layer.effect(
     DatabaseService,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const kysely = yield* KyselyService<DB>()
 
       return {
         query: <A>(fn: (db: Kysely<DB>) => Promise<A>) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[DatabaseService] [DEV] Executing query")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[DatabaseService] [DEV] Executing query')
             const result = yield* kysely.query(fn).pipe(
-              Effect.catchTag("DatabaseQueryError", (error: ProviderQueryError) =>
+              Effect.catchTag('DatabaseQueryError', (error: ProviderQueryError) =>
                 Effect.fail(
                   new DatabaseInternalError({
                     message: error.message,
                     cause: error
                   })
-                ))
+                )
+              )
             )
-            yield* Effect.logDebug("[DatabaseService] [DEV] Query completed")
+            yield* Effect.logDebug('[DatabaseService] [DEV] Query completed')
             return result
           }),
 
         transaction: <A, E>(fn: (tx: Transaction<DB>) => Effect.Effect<A, E>) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[DatabaseService] [DEV] Starting transaction")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[DatabaseService] [DEV] Starting transaction')
             const result = yield* kysely.transaction(fn).pipe(
-              Effect.catchTag("DatabaseTransactionError", (error) =>
+              Effect.catchTag('DatabaseTransactionError', (error) =>
                 Effect.fail(
                   new DatabaseInternalError({
-                    message: "message" in error ? error.message : "Transaction failed",
+                    message: 'message' in error ? error.message : 'Transaction failed',
                     cause: error
                   })
-                ))
+                )
+              )
             )
-            yield* Effect.logDebug("[DatabaseService] [DEV] Transaction completed")
+            yield* Effect.logDebug('[DatabaseService] [DEV] Transaction completed')
             return result
           }),
 
         healthCheck: () =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[DatabaseService] [DEV] Health check")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[DatabaseService] [DEV] Health check')
             return yield* kysely.ping().pipe(
               Effect.map(() => true),
-              Effect.catchTag("DatabaseConnectionError", (error: ProviderConnectionError) =>
+              Effect.catchTag('DatabaseConnectionError', (error: ProviderConnectionError) =>
                 Effect.fail(
                   new DatabaseConnectionError({
-                    message: "Health check failed",
-                    target: "database",
+                    message: 'Health check failed',
+                    target: 'database',
                     cause: error
                   })
-                ))
+                )
+              )
             )
           })
       }

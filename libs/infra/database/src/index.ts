@@ -12,15 +12,20 @@ Layers are available as static members on the service class.
 // Service and Types
 // ============================================================================
 // Service with static layers (Memory, Test, Live)
-export { DatabaseService } from "./lib/service"
-export type { Database } from "./lib/service"
 
+export type { DatabaseError, DatabaseServiceError } from './lib/errors'
 // ============================================================================
 // Error Types
 // ============================================================================
 // Error types for error handling
-export { DatabaseConfigError, DatabaseConnectionError, DatabaseInternalError, DatabaseTimeoutError } from "./lib/errors"
-export type { DatabaseError, DatabaseServiceError } from "./lib/errors"
+export {
+  DatabaseConfigError,
+  DatabaseConnectionError,
+  DatabaseInternalError,
+  DatabaseTimeoutError
+} from './lib/errors'
+export type { Database } from './lib/service'
+export { DatabaseService } from './lib/service'
 
 // ============================================================================
 // Additional Layers

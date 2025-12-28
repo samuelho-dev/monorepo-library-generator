@@ -8,7 +8,7 @@
  * Prisma schema is configured. Replace with actual schema types.
  */
 
-import type { ColumnType, Generated, Insertable, Selectable, Updateable } from "kysely"
+import type { ColumnType, Generated, Insertable, Selectable, Updateable } from 'kysely'
 
 // ============================================================================
 // Placeholder Entity Types (Replace with Prisma-generated types)

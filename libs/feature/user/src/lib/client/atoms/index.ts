@@ -6,25 +6,25 @@
  * @module @samuelho-dev/feature-user/client/atoms
  */
 export {
+  getUserAtom,
   // State Types
   type LoadingState,
   type PaginationState,
+  resetUserState,
   type UserEntityState,
   type UserListState,
   type UserOperationState,
   type UserState,
-  // Atoms
-  userAtom,
-  userEntityFamily,
-  getUserAtom,
-  // Derived Atoms
-  userIsLoadingAtom,
-  userErrorAtom,
-  userDataAtom,
-  userListAtom,
   // State Updaters
   updateUserEntity,
   updateUserList,
   updateUserOperation,
-  resetUserState
-} from "./user-atoms"
+  // Atoms
+  userAtom,
+  userDataAtom,
+  userEntityFamily,
+  userErrorAtom,
+  // Derived Atoms
+  userIsLoadingAtom,
+  userListAtom
+} from './user-atoms'

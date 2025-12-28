@@ -1,5 +1,5 @@
-import { Headers } from "@effect/platform"
-import { Context, Effect, Layer, Option } from "effect"
+import { Headers } from '@effect/platform'
+import { Context, Effect, Layer, Option } from 'effect'
 
 /**
  * Route Selector Middleware
@@ -25,12 +25,8 @@ Route Types:
 // ============================================================================
 
 // Import canonical route types from contract-auth
-import {
-  RouteTag,
-  type RouteType,
-  type RpcWithRouteTag,
-} from "@samuelho-dev/contract-auth"// Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
-export { RouteTag, type RouteType, type RpcWithRouteTag };
+import { RouteTag, type RouteType, type RpcWithRouteTag } from '@samuelho-dev/contract-auth' // Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
+export { RouteTag, type RouteType, type RpcWithRouteTag }
 
 // ============================================================================
 // Route Type Utilities
@@ -64,23 +60,23 @@ export function getRouteType<T extends RpcWithRouteTag>(rpc: T) {
  */
 export function detectRouteType(headers: Headers.Headers) {
   // Service token takes priority
-  if (Option.isSome(Headers.get(headers, "x-service-token"))) {
-    return "service"
+  if (Option.isSome(Headers.get(headers, 'x-service-token'))) {
+    return 'service'
   }
 
   // Bearer token indicates protected route
-  const auth = Headers.get(headers, "authorization")
-  if (Option.isSome(auth) && auth.value.startsWith("Bearer ")) {
-    return "protected"
+  const auth = Headers.get(headers, 'authorization')
+  if (Option.isSome(auth) && auth.value.startsWith('Bearer ')) {
+    return 'protected'
   }
 
   // API key could be either protected or service
-  if (Option.isSome(Headers.get(headers, "x-api-key"))) {
-    return "protected"
+  if (Option.isSome(Headers.get(headers, 'x-api-key'))) {
+    return 'protected'
   }
 
   // Default to public
-  return "public"
+  return 'public'
 }
 
 // ============================================================================
@@ -94,19 +90,19 @@ export function detectRouteType(headers: Headers.Headers) {
  */
 export interface MiddlewareSelectorConfig {
   /** Middleware for public routes (optional, typically just RequestMeta) */
- 
+
   readonly publicMiddleware?: Layer.Layer<any, any, any>
 
   /** Middleware for protected routes (user auth) */
- 
+
   readonly protectedMiddleware: Layer.Layer<any, any, any>
 
   /** Middleware for service routes (S2S auth) */
- 
+
   readonly serviceMiddleware: Layer.Layer<any, any, any>
 
   /** Middleware applied to ALL routes (typically RequestMeta) */
- 
+
   readonly globalMiddleware?: Layer.Layer<any, any, any>
 }
 
@@ -134,15 +130,13 @@ export function createMiddlewareSelector(config: MiddlewareSelectorConfig) {
 
     // Switch is exhaustive - TypeScript will error if a RouteType case is missing
     switch (routeType) {
-      case "public":
-        return config.publicMiddleware
-          ? Layer.merge(baseLayer, config.publicMiddleware)
-          : baseLayer
+      case 'public':
+        return config.publicMiddleware ? Layer.merge(baseLayer, config.publicMiddleware) : baseLayer
 
-      case "protected":
+      case 'protected':
         return Layer.merge(baseLayer, config.protectedMiddleware)
 
-      case "service":
+      case 'service':
         return Layer.merge(baseLayer, config.serviceMiddleware)
     }
   }
@@ -194,13 +188,10 @@ export function applyRouteMiddleware<Rpcs extends Record<string, RpcWithRouteTag
     }
 
     // Apply middleware based on route type
-    const middleware = selectMiddleware(routeType ?? "public")
+    const middleware = selectMiddleware(routeType ?? 'public')
 
     // Wrap handler with appropriate middleware
-    wrappedHandlers[name] = (input: unknown) =>
-      handler(input).pipe(
-        Effect.provide(middleware)
-      )
+    wrappedHandlers[name] = (input: unknown) => handler(input).pipe(Effect.provide(middleware))
   }
 
   return wrappedHandlers
@@ -222,7 +213,7 @@ export interface RequestRouteContext {
 /**
  * RequestRouteContext Tag
  */
-export class RequestRouteContextTag extends Context.Tag("@rpc/RequestRouteContext")<
+export class RequestRouteContextTag extends Context.Tag('@rpc/RequestRouteContext')<
   RequestRouteContextTag,
   RequestRouteContext
 >() {}
@@ -232,10 +223,7 @@ export class RequestRouteContextTag extends Context.Tag("@rpc/RequestRouteContex
  *
  * Provides route context to handlers for observability.
  */
-export function createRequestRouteContext(
-  rpcName: string,
-  routeType: RouteType
-) {
+export function createRequestRouteContext(rpcName: string, routeType: RouteType) {
   return Layer.succeed(RequestRouteContextTag, {
     routeType,
     rpcName
@@ -249,7 +237,7 @@ export function createRequestRouteContext(
  * Log route type for debugging
  */
 export const logRouteType = <R extends RpcWithRouteTag>(rpc: R, name: string) =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const routeType = getRouteType(rpc)
     yield* Effect.logDebug(`[RPC] ${name} -> ${routeType}`)
     return routeType
@@ -274,14 +262,12 @@ export function assertRouteType<R extends RpcWithRouteTag>(
 /**
  * Validate all RPCs in a group have RouteTag defined
  */
-export function validateRpcRoutes<Rpcs extends Record<string, unknown>>(
-  rpcs: Rpcs
-) {
+export function validateRpcRoutes<Rpcs extends Record<string, unknown>>(rpcs: Rpcs) {
   return Object.entries(rpcs).map(([name, rpc]) => {
-    const hasRouteTag = typeof rpc === "object" && rpc !== null && RouteTag in rpc
+    const hasRouteTag = typeof rpc === 'object' && rpc !== null && RouteTag in rpc
     return {
       name,
-      routeType: hasRouteTag ? (rpc)[RouteTag] : "missing"
+      routeType: hasRouteTag ? rpc[RouteTag] : 'missing'
     }
   })
 }

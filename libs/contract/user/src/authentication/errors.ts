@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * User Authentication Errors
@@ -25,7 +25,7 @@ rather than defining their own.
 /**
  * Error thrown when authentication entity is not found
  */
-export class AuthenticationNotFoundError extends Data.TaggedError("AuthenticationNotFoundError")<{
+export class AuthenticationNotFoundError extends Data.TaggedError('AuthenticationNotFoundError')<{
   readonly message: string
   readonly id: string
 }> {
@@ -39,7 +39,9 @@ export class AuthenticationNotFoundError extends Data.TaggedError("Authenticatio
 /**
  * Error thrown when authentication validation fails
  */
-export class AuthenticationValidationError extends Data.TaggedError("AuthenticationValidationError")<{
+export class AuthenticationValidationError extends Data.TaggedError(
+  'AuthenticationValidationError'
+)<{
   readonly message: string
   readonly field: string
   readonly value?: unknown
@@ -61,7 +63,7 @@ export class AuthenticationValidationError extends Data.TaggedError("Authenticat
 /**
  * Error thrown when authentication operation fails (e.g., database, network)
  */
-export class AuthenticationOperationError extends Data.TaggedError("AuthenticationOperationError")<{
+export class AuthenticationOperationError extends Data.TaggedError('AuthenticationOperationError')<{
   readonly message: string
   readonly operation: string
   readonly cause?: unknown
@@ -80,9 +82,7 @@ export class AuthenticationOperationError extends Data.TaggedError("Authenticati
 /**
  * Union of authentication domain errors (business logic)
  */
-export type AuthenticationDomainError =
-  | AuthenticationNotFoundError
-  | AuthenticationValidationError
+export type AuthenticationDomainError = AuthenticationNotFoundError | AuthenticationValidationError
 /**
  * Union of authentication repository/infrastructure errors
  */
@@ -90,8 +90,6 @@ export type AuthenticationRepositoryError = AuthenticationOperationError
 /**
  * All possible authentication errors
  */
-export type AuthenticationError =
-  | AuthenticationDomainError
-  | AuthenticationRepositoryError
+export type AuthenticationError = AuthenticationDomainError | AuthenticationRepositoryError
 // TODO: Add domain-specific errors here
 // Example: AuthenticationInsufficientFundsError, AuthenticationExpiredError, etc.

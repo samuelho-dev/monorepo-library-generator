@@ -6,17 +6,17 @@
  * @module monorepo-library-generator/cli/tui/hooks/usePanelFocus
  */
 
-import { useInput } from "ink"
-import { useCallback } from "react"
+import { useInput } from 'ink'
+import { useCallback } from 'react'
 
-import type { TUIAction } from "../state"
-import type { PanelId } from "../theme/colors"
+import type { TUIAction } from '../state'
+import type { PanelId } from '../theme/colors'
 
 interface UsePanelFocusOptions {
   readonly panelId: PanelId
   readonly isActive: boolean
   readonly dispatch: React.Dispatch<TUIAction>
-  readonly onNavigate?: (direction: "up" | "down") => void
+  readonly onNavigate?: (direction: 'up' | 'down') => void
   readonly onSelect?: () => void
   readonly onToggle?: () => void
   readonly onEdit?: () => void
@@ -43,12 +43,12 @@ export function usePanelFocus({
       if (!isActive || disabled) return
 
       // Navigation with j/k or arrows
-      if (input === "j" || key.downArrow) {
-        onNavigate?.("down")
+      if (input === 'j' || key.downArrow) {
+        onNavigate?.('down')
         return
       }
-      if (input === "k" || key.upArrow) {
-        onNavigate?.("up")
+      if (input === 'k' || key.upArrow) {
+        onNavigate?.('up')
         return
       }
 
@@ -63,7 +63,7 @@ export function usePanelFocus({
       }
 
       // Toggle with Space
-      if (input === " ") {
+      if (input === ' ') {
         if (onToggle) {
           onToggle()
         } else if (onSelect) {
@@ -77,7 +77,7 @@ export function usePanelFocus({
 
   // Helper to switch focus to this panel
   const focus = useCallback(() => {
-    dispatch({ type: "SET_ACTIVE_PANEL", payload: panelId })
+    dispatch({ type: 'SET_ACTIVE_PANEL', payload: panelId })
   }, [dispatch, panelId])
 
   return {
@@ -90,13 +90,13 @@ export function usePanelFocus({
  * Hook for list navigation within a panel
  */
 export function useListNavigation(
-  items: ReadonlyArray<unknown>,
+  items: readonly unknown[],
   selectedIndex: number,
   setSelectedIndex: (index: number) => void
 ) {
   const navigate = useCallback(
-    (direction: "up" | "down") => {
-      if (direction === "up") {
+    (direction: 'up' | 'down') => {
+      if (direction === 'up') {
         const newIndex = selectedIndex > 0 ? selectedIndex - 1 : items.length - 1
         setSelectedIndex(newIndex)
       } else {

@@ -1,8 +1,8 @@
-import { UserNotFoundError } from "@samuelho-dev/contract-user"
-import { DatabaseService } from "@samuelho-dev/infra-database"
-import { Duration, Effect } from "effect"
-import { UserTimeoutError } from "../../shared/errors"
-import type { UserUpdateInput } from "../../shared/types"
+import { UserNotFoundError } from '@samuelho-dev/contract-user'
+import { DatabaseService } from '@samuelho-dev/infra-database'
+import { Duration, Effect } from 'effect'
+import { UserTimeoutError } from '../../shared/errors'
+import type { UserUpdateInput } from '../../shared/types'
 
 /**
  * User Update Operations
@@ -35,29 +35,31 @@ export const updateOperations = {
    * Update User entity by ID
    */
   update: (id: string, input: UserUpdateInput) =>
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const database = yield* DatabaseService
 
       yield* Effect.logDebug(`Updating User with id: ${id}`)
 
       const updated = yield* database.query((db) =>
         db
-          .updateTable("user")
+          .updateTable('user')
           .set({
             ...input,
             updatedAt: new Date()
           })
-          .where("id", "=", id)
+          .where('id', '=', id)
           .returningAll()
           .executeTakeFirst()
       )
 
       if (!updated) {
         yield* Effect.logWarning(`User not found: ${id}`)
-        return yield* Effect.fail(new UserNotFoundError({
-          message: `User not found: ${id}`,
-          userId: id
-        }))
+        return yield* Effect.fail(
+          new UserNotFoundError({
+            message: `User not found: ${id}`,
+            userId: id
+          })
+        )
       }
 
       yield* Effect.logDebug(`User updated successfully (id: ${id})`)
@@ -66,9 +68,9 @@ export const updateOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("update", 30000)
+        onTimeout: () => UserTimeoutError.create('update', 30000)
       }),
-      Effect.withSpan("UserRepository.update")
+      Effect.withSpan('UserRepository.update')
     )
 } as const
 

@@ -90,6 +90,14 @@
       }
     },
     {
+      "includes": ["src/templates/definitions/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": { "noDefaultExport": "off" }
+        }
+      }
+    },
+    {
       "includes": [
         "src/cli/**",
         "src/generators/**",

@@ -1,5 +1,5 @@
-import { Cause, Effect, Exit, Option, Schema } from "effect"
-import type { Layer } from "effect"
+import type { Layer } from 'effect'
+import { Cause, Effect, Exit, Option, Schema } from 'effect'
 
 /**
  * Rpc Router
@@ -70,7 +70,7 @@ export interface RouterConfig {
  * Default router configuration
  */
 export const defaultRouterConfig: Required<RouterConfig> = {
-  basePath: "/rpc",
+  basePath: '/rpc',
   healthCheck: true,
   introspection: false
 }
@@ -115,16 +115,15 @@ export const defaultRouterConfig: Required<RouterConfig> = {
  * This type helps ensure all required layers are provided.
  * Extracts the dependency requirements from a Layer.
  */
-export type RpcRequiredLayers<R> = R extends Layer.Layer<infer A, infer E, infer Deps>
-  ? { readonly out: A; readonly error: E; readonly deps: Deps }
-  : never
+export type RpcRequiredLayers<R> =
+  R extends Layer.Layer<infer A, infer E, infer Deps>
+    ? { readonly out: A; readonly error: E; readonly deps: Deps }
+    : never
 
 /**
  * Extract only the dependencies from a Layer (simplified version)
  */
-export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps>
-  ? Deps
-  : never
+export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps> ? Deps : never
 
 // ============================================================================
 // App Router Integration (Next.js)
@@ -173,7 +172,10 @@ export type LayerDeps<R> = R extends Layer.Layer<unknown, unknown, infer Deps>
 /**
  * RPC handler map type
  */
-export type RpcHandlerMap<R = unknown> = Record<string, (payload: unknown) => Effect.Effect<unknown, unknown, R>>
+export type RpcHandlerMap<R = unknown> = Record<
+  string,
+  (payload: unknown) => Effect.Effect<unknown, unknown, R>
+>
 
 /**
  * Combine multiple handler maps into one
@@ -187,9 +189,7 @@ export type RpcHandlerMap<R = unknown> = Record<string, (payload: unknown) => Ef
  * )
  * ```
  */
-export const combineHandlers = <R>(
-  ...handlers: readonly RpcHandlerMap<R[]>
-) => {
+export const combineHandlers = <R>(...handlers: readonly RpcHandlerMap<R[]>) => {
   const result: RpcHandlerMap<R> = {}
   for (const handler of handlers) {
     Object.assign(result, handler)
@@ -266,7 +266,11 @@ export const createNextRpcHandler = <R, E>(
       const parseResult = Schema.decodeUnknownOption(RpcRequestBodySchema)(rawBody)
       if (Option.isNone(parseResult)) {
         return Response.json(
-          { _tag: "RpcInfraError", message: "Invalid request body: expected { operation: string, payload?: unknown }", code: "INVALID_REQUEST" },
+          {
+            _tag: 'RpcInfraError',
+            message: 'Invalid request body: expected { operation: string, payload?: unknown }',
+            code: 'INVALID_REQUEST'
+          },
           { status: 400 }
         )
       }
@@ -278,16 +282,13 @@ export const createNextRpcHandler = <R, E>(
       const handler = options.handlers[operation]
       if (!handler) {
         return Response.json(
-          { _tag: "RpcInfraError", message: `Unknown operation: ${operation}`, code: "NOT_FOUND" },
+          { _tag: 'RpcInfraError', message: `Unknown operation: ${operation}`, code: 'NOT_FOUND' },
           { status: 404 }
         )
       }
 
       // Build runnable effect by providing the layer
-      const runnableEffect = Effect.provide(
-        handler(payload),
-        options.layer
-      )
+      const runnableEffect = Effect.provide(handler(payload), options.layer)
 
       const exit = await Effect.runPromiseExit(runnableEffect)
 
@@ -301,13 +302,13 @@ export const createNextRpcHandler = <R, E>(
       }
 
       return Response.json(
-        { _tag: "RpcInfraError", message: Cause.pretty(exit.cause), code: "INTERNAL_ERROR" },
+        { _tag: 'RpcInfraError', message: Cause.pretty(exit.cause), code: 'INTERNAL_ERROR' },
         { status: 500 }
       )
     } catch {
       // Only for non-Effect errors (e.g., JSON parsing)
       return Response.json(
-        { _tag: "RpcInfraError", message: "Request processing failed", code: "INTERNAL_ERROR" },
+        { _tag: 'RpcInfraError', message: 'Request processing failed', code: 'INTERNAL_ERROR' },
         { status: 500 }
       )
     }
@@ -319,12 +320,12 @@ export const createNextRpcHandler = <R, E>(
     GET: () => {
       if (config.healthCheck) {
         return Response.json({
-          status: "ok",
+          status: 'ok',
           basePath: config.basePath,
           timestamp: new Date().toISOString()
         })
       }
-      return Response.json({ message: "RPC endpoint - use POST" })
+      return Response.json({ message: 'RPC endpoint - use POST' })
     }
   }
 }
@@ -415,14 +416,17 @@ export const createServerActionSafe = <Payload, Success, Failure, R>(
  * Standard health check response
  */
 export interface HealthCheckResponse {
-  readonly status: "ok" | "degraded" | "error"
+  readonly status: 'ok' | 'degraded' | 'error'
   readonly timestamp: string
   readonly version?: string
-  readonly checks?: Record<string, {
-    status: "ok" | "error"
-    latencyMs?: number
-    message?: string
-  }>
+  readonly checks?: Record<
+    string,
+    {
+      status: 'ok' | 'error'
+      latencyMs?: number
+      message?: string
+    }
+  >
 }
 
 /**
@@ -441,28 +445,33 @@ export interface HealthCheckResponse {
  */
 export const healthCheck = (options?: {
   version?: string
-  checks?: Record<string, () => Effect.Effect<"ok", unknown>>
+  checks?: Record<string, () => Effect.Effect<'ok', unknown>>
 }) =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const timestamp = new Date().toISOString()
-    let status: "ok" | "degraded" | "error" = "ok"
+    let status: 'ok' | 'degraded' | 'error' = 'ok'
 
-    const checksResult: Record<string, { status: "ok" | "error"; latencyMs?: number; message?: string }> = {}
+    const checksResult: Record<
+      string,
+      { status: 'ok' | 'error'; latencyMs?: number; message?: string }
+    > = {}
 
     if (options?.checks) {
       for (const [name, check] of Object.entries(options.checks)) {
         const start = Date.now()
         const result = yield* check().pipe(
-          Effect.map(() => ({ status: "ok" as const, latencyMs: Date.now() - start })),
-          Effect.catchAllCause((cause) => Effect.succeed({
-            status: "error" as const,
-            latencyMs: Date.now() - start,
-            message: Cause.pretty(cause)
-          }))
+          Effect.map(() => ({ status: 'ok' as const, latencyMs: Date.now() - start })),
+          Effect.catchAllCause((cause) =>
+            Effect.succeed({
+              status: 'error' as const,
+              latencyMs: Date.now() - start,
+              message: Cause.pretty(cause)
+            })
+          )
         )
         checksResult[name] = result
-        if (result.status === "error") {
-          status = "degraded"
+        if (result.status === 'error') {
+          status = 'degraded'
         }
       }
     }

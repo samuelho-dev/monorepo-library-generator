@@ -21,37 +21,37 @@ and avoid bundling server code in client bundles.
 // ============================================================================
 
 // Domain types (universal)
-export type * from "./lib/shared/types"
+export type * from './lib/shared/types'
 
 // ============================================================================
 // Error Types
 // ============================================================================
 
 // Error definitions (universal)
-export type * from "./lib/shared/errors"
+export type * from './lib/shared/errors'
 
 // ============================================================================
 // RPC Definitions (Universal)
 // ============================================================================
 
 // RPC schemas are universal and can be used on any platform
-export type * from "./lib/rpc"
+export type * from './lib/rpc'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Platform-Specific Imports
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 
+//
 // For platform-specific code, use explicit imports:
-// 
+//
 // SERVER (Node.js):
 //   import { UserService } from '@samuelho-dev/feature-user/server';
-// 
+//
 // CLIENT (Browser):
 //   import { useUser } from '@samuelho-dev/feature-user/client';
-// 
+//
 // EDGE (Cloudflare Workers, Vercel Edge):
 //   import { userMiddleware } from '@samuelho-dev/feature-user/edge';
-// 
+//
 // This pattern ensures:
 //   ✓ No server code in client bundles
 //   ✓ Optimal tree-shaking

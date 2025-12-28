@@ -6,17 +6,16 @@
  * @module monorepo-library-generator/cli/tui/App
  */
 
-import { Box, Text } from "ink"
-import { useCallback, useEffect, useReducer, useState } from "react"
-import { Effect, Exit, Runtime } from "effect"
-import { NodeContext } from "@effect/platform-node"
-
-import { detectWorkspaceSync, executeGeneration, getTargetDirectory } from "../core"
-import type { LibraryType } from "../core"
-import { PanelLayout } from "./layouts"
-import { OptionsPanel, PreviewPanel, TypesPanel } from "./panels"
-import { initialState, tuiReducer, type TUIState } from "./state"
-import { colors } from "./theme/colors"
+import { NodeContext } from '@effect/platform-node'
+import { Effect, Exit, Runtime } from 'effect'
+import { Box, Text } from 'ink'
+import { useCallback, useEffect, useReducer, useState } from 'react'
+import type { LibraryType } from '../core'
+import { detectWorkspaceSync, executeGeneration, getTargetDirectory } from '../core'
+import { PanelLayout } from './layouts'
+import { OptionsPanel, PreviewPanel, TypesPanel } from './panels'
+import { initialState, type TUIState, tuiReducer } from './state'
+import { colors } from './theme/colors'
 
 /**
  * Main TUI Application
@@ -28,19 +27,19 @@ export function App() {
   // Initialize workspace detection on mount
   useEffect(() => {
     const workspace = detectWorkspaceSync(process.cwd())
-    dispatch({ type: "SET_WORKSPACE", payload: workspace })
+    dispatch({ type: 'SET_WORKSPACE', payload: workspace })
     setIsInitialized(true)
   }, [])
 
   // Handle generation execution
   useEffect(() => {
-    if (state.generationStatus !== "generating") return
-    if (!state.selectedType || !state.libraryName || !state.workspace) return
+    if (state.generationStatus !== 'generating') return
+    if (!(state.selectedType && state.libraryName && state.workspace)) return
 
     // Skip wizard actions like 'init'
-    if (state.selectedType === "init" || state.selectedType === "domain") {
+    if (state.selectedType === 'init' || state.selectedType === 'domain') {
       // Domain slice generation handled separately
-      if (state.selectedType === "domain") {
+      if (state.selectedType === 'domain') {
         runGeneration(state)
       }
       return
@@ -51,7 +50,7 @@ export function App() {
 
   const runGeneration = useCallback(
     async (currentState: TUIState) => {
-      if (!currentState.selectedType || !currentState.libraryName || !currentState.workspace) {
+      if (!(currentState.selectedType && currentState.libraryName && currentState.workspace)) {
         return
       }
 
@@ -64,7 +63,9 @@ export function App() {
 
       // For provider libraries, the library name IS the service name
       const externalService =
-        libraryType === "provider" ? currentState.libraryName : currentState.externalService || undefined
+        libraryType === 'provider'
+          ? currentState.libraryName
+          : currentState.externalService || undefined
 
       const input = {
         libraryType,
@@ -80,12 +81,12 @@ export function App() {
       const result = await Runtime.runPromiseExit(Runtime.defaultRuntime)(program)
 
       if (Exit.isSuccess(result)) {
-        dispatch({ type: "GENERATION_SUCCESS" })
+        dispatch({ type: 'GENERATION_SUCCESS' })
       } else {
         const error = result.cause
         dispatch({
-          type: "GENERATION_ERROR",
-          payload: error._tag === "Fail" ? String(error.error) : "Generation failed"
+          type: 'GENERATION_ERROR',
+          payload: error._tag === 'Fail' ? String(error.error) : 'Generation failed'
         })
       }
     },

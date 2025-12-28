@@ -6,12 +6,11 @@
  * @module @samuelho-dev/feature-user/server/cqrs/projections
  */
 
-export { UserProjectionBuilder } from "./builder"
-
 export type {
   ProjectionBuilderInterface,
   ProjectionDefinition,
   ProjectionHandler,
   ReadModelStore,
   UserReadModel
-} from "./builder"
+} from './builder'
+export { UserProjectionBuilder } from './builder'

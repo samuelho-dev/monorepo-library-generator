@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * OpenTelemetry Provider Errors
@@ -18,7 +18,7 @@ Provides:
 /**
  * Base error for OpenTelemetry operations
  */
-export class OpenTelemetryError extends Data.TaggedError("OpenTelemetryError")<{
+export class OpenTelemetryError extends Data.TaggedError('OpenTelemetryError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -26,7 +26,7 @@ export class OpenTelemetryError extends Data.TaggedError("OpenTelemetryError")<{
 /**
  * SDK initialization error
  */
-export class OpenTelemetryInitError extends Data.TaggedError("OpenTelemetryInitError")<{
+export class OpenTelemetryInitError extends Data.TaggedError('OpenTelemetryInitError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -34,7 +34,7 @@ export class OpenTelemetryInitError extends Data.TaggedError("OpenTelemetryInitE
 /**
  * Trace/metric export error
  */
-export class OpenTelemetryExportError extends Data.TaggedError("OpenTelemetryExportError")<{
+export class OpenTelemetryExportError extends Data.TaggedError('OpenTelemetryExportError')<{
   readonly message: string
   readonly endpoint?: string
   readonly cause?: unknown
@@ -43,7 +43,7 @@ export class OpenTelemetryExportError extends Data.TaggedError("OpenTelemetryExp
 /**
  * Configuration validation error
  */
-export class OpenTelemetryConfigError extends Data.TaggedError("OpenTelemetryConfigError")<{
+export class OpenTelemetryConfigError extends Data.TaggedError('OpenTelemetryConfigError')<{
   readonly message: string
   readonly field?: string
   readonly cause?: unknown

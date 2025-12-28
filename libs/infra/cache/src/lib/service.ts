@@ -1,6 +1,6 @@
-import { env } from "@samuelho-dev/env"
-import { Cache, Context, Duration, Effect, Layer } from "effect"
-import type { Option } from "effect"
+import { env } from '@samuelho-dev/env'
+import type { Option } from 'effect'
+import { Cache, Context, Duration, Effect, Layer } from 'effect'
 
 /**
  * Cache Service
@@ -86,9 +86,7 @@ export interface SimpleCacheHandle<K, V> {
  * Cache infrastructure using Effect.Cache primitive.
  * Provides memoized caching with TTL, lookup functions, and invalidation.
  */
-export class CacheService extends Context.Tag(
-  "@samuelho-dev/infra-cache/CacheService"
-)<
+export class CacheService extends Context.Tag('@samuelho-dev/infra-cache/CacheService')<
   CacheService,
   {
     /**
@@ -136,7 +134,7 @@ export class CacheService extends Context.Tag(
       readonly capacity: number
       readonly ttl: Duration.Duration
     }) =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         const cache = yield* Cache.make({
           lookup: options.lookup,
           capacity: options.capacity,
@@ -171,7 +169,7 @@ export class CacheService extends Context.Tag(
       readonly capacity: number
       readonly ttl: Duration.Duration
     }) =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         const cache = yield* Cache.make({
           lookup: options.lookup,
           capacity: options.capacity,
@@ -215,15 +213,15 @@ export class CacheService extends Context.Tag(
       readonly capacity: number
       readonly ttl: Duration.Duration
     }) =>
-      Effect.gen(function*() {
-        yield* Effect.logDebug("[CacheService] [DEV] Creating cache", {
+      Effect.gen(function* () {
+        yield* Effect.logDebug('[CacheService] [DEV] Creating cache', {
           capacity: options.capacity,
           ttl: Duration.toMillis(options.ttl)
         })
         const cache = yield* Cache.make({
           lookup: (key: K) =>
-            Effect.gen(function*() {
-              yield* Effect.logDebug("[CacheService] [DEV] Cache miss", { key })
+            Effect.gen(function* () {
+              yield* Effect.logDebug('[CacheService] [DEV] Cache miss', { key })
               return yield* options.lookup(key)
             }),
           capacity: options.capacity,
@@ -232,22 +230,22 @@ export class CacheService extends Context.Tag(
 
         return {
           get: (key: K) =>
-            Effect.gen(function*() {
-              yield* Effect.logDebug("[CacheService] [DEV] get", { key })
+            Effect.gen(function* () {
+              yield* Effect.logDebug('[CacheService] [DEV] get', { key })
               return yield* cache.get(key)
             }),
           invalidate: (key: K) =>
-            Effect.gen(function*() {
-              yield* Effect.logDebug("[CacheService] [DEV] invalidate", { key })
+            Effect.gen(function* () {
+              yield* Effect.logDebug('[CacheService] [DEV] invalidate', { key })
               return yield* cache.invalidate(key)
             }),
-          invalidateAll: Effect.gen(function*() {
-            yield* Effect.logDebug("[CacheService] [DEV] invalidateAll")
+          invalidateAll: Effect.gen(function* () {
+            yield* Effect.logDebug('[CacheService] [DEV] invalidateAll')
             return yield* cache.invalidateAll
           }),
           refresh: (key: K) =>
-            Effect.gen(function*() {
-              yield* Effect.logDebug("[CacheService] [DEV] refresh", { key })
+            Effect.gen(function* () {
+              yield* Effect.logDebug('[CacheService] [DEV] refresh', { key })
               return yield* cache.refresh(key)
             }),
           size: cache.size
@@ -272,9 +270,9 @@ export class CacheService extends Context.Tag(
    */
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
-      case "production":
+      case 'production':
         return CacheService.Live
-      case "test":
+      case 'test':
         return CacheService.Test
       default:
         // "development" and other environments use Dev

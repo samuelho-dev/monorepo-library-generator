@@ -1,7 +1,7 @@
-import { env } from "@samuelho-dev/env"
-import { Context, Effect, Layer, Metric, PubSub, Schema } from "effect"
-import type { Queue, Scope } from "effect"
-import type { ParseError } from "effect/ParseResult"
+import { env } from '@samuelho-dev/env'
+import type { Queue, Scope } from 'effect'
+import { Context, Effect, Layer, Metric, PubSub, Schema } from 'effect'
+import type { ParseError } from 'effect/ParseResult'
 
 /**
  * Pubsub Service
@@ -29,16 +29,16 @@ Effect.PubSub Features:
 /**
  * Metrics for tracking PubSub operations
  */
-const pubsubPublishCounter = Metric.counter("pubsub.publish.count", {
-  description: "Number of messages published to topics"
+const pubsubPublishCounter = Metric.counter('pubsub.publish.count', {
+  description: 'Number of messages published to topics'
 })
 
-const pubsubPublishErrorCounter = Metric.counter("pubsub.publish.errors", {
-  description: "Number of validation errors during publish"
+const pubsubPublishErrorCounter = Metric.counter('pubsub.publish.errors', {
+  description: 'Number of validation errors during publish'
 })
 
-const pubsubSubscriberGauge = Metric.gauge("pubsub.subscribers", {
-  description: "Current number of subscribers per topic"
+const pubsubSubscriberGauge = Metric.gauge('pubsub.subscribers', {
+  description: 'Current number of subscribers per topic'
 })
 
 // ============================================================================
@@ -109,9 +109,7 @@ export interface TopicOptions {
  * Effect context. If your schema has dependencies, resolve them first
  * using Schema.to() or Schema.provide().
  */
-export class PubsubService extends Context.Tag(
-  "@samuelho-dev/infra-pubsub/PubsubService"
-)<
+export class PubsubService extends Context.Tag('@samuelho-dev/infra-pubsub/PubsubService')<
   PubsubService,
   {
     /**
@@ -183,26 +181,26 @@ export class PubsubService extends Context.Tag(
    */
   static readonly Memory = Layer.scoped(
     this,
-    Effect.gen(function*(_) {
+    Effect.gen(function* (_) {
       const makeTopicHandle = <A, E>(
         pubsub: PubSub.PubSub<A>,
         validate: (message: A) => Effect.Effect<A, E>,
         topicName: string
       ) => ({
         publish: (message: A) =>
-          Effect.gen(function*() {
+          Effect.gen(function* () {
             // Validate message
             const validated = yield* validate(message).pipe(
               Effect.tapError((error) =>
-                Effect.gen(function*() {
+                Effect.gen(function* () {
                   // Tag and increment counter - use counter as effect wrapper
                   const taggedErrorCounter = pubsubPublishErrorCounter.pipe(
-                    Metric.tagged("topic", topicName),
-                    Metric.tagged("error", String(error)),
+                    Metric.tagged('topic', topicName),
+                    Metric.tagged('error', String(error)),
                     Metric.withConstantInput(1)
                   )
                   yield* taggedErrorCounter(Effect.void)
-                  yield* Effect.logWarning("[PubSub] Validation error", {
+                  yield* Effect.logWarning('[PubSub] Validation error', {
                     topic: topicName,
                     error: String(error)
                   })
@@ -216,14 +214,14 @@ export class PubsubService extends Context.Tag(
             // Track metrics
             // Tag and increment counter
             const taggedCounter = pubsubPublishCounter.pipe(
-              Metric.tagged("topic", topicName),
+              Metric.tagged('topic', topicName),
               Metric.withConstantInput(1)
             )
             yield* taggedCounter(Effect.void)
 
             return published
           }).pipe(
-            Effect.withSpan("PubSub.publish", {
+            Effect.withSpan('PubSub.publish', {
               attributes: {
                 topic: topicName,
                 messageType: typeof message
@@ -232,42 +230,43 @@ export class PubsubService extends Context.Tag(
           ),
 
         publishAll: (messages: Iterable<A>) =>
-          Effect.gen(function*() {
+          Effect.gen(function* () {
             const messageArray = [...messages]
 
             // Validate all messages
             const validated = yield* Effect.forEach(messageArray, (msg) =>
               validate(msg).pipe(
                 Effect.tapError((error) =>
-                  Effect.gen(function*() {
+                  Effect.gen(function* () {
                     // Tag and increment error counter
                     const taggedErrorCounter = pubsubPublishErrorCounter.pipe(
-                      Metric.tagged("topic", topicName),
-                      Metric.tagged("error", String(error)),
+                      Metric.tagged('topic', topicName),
+                      Metric.tagged('error', String(error)),
                       Metric.withConstantInput(1)
                     )
                     yield* taggedErrorCounter(Effect.void)
-                    yield* Effect.logWarning("[PubSub] Validation error", {
+                    yield* Effect.logWarning('[PubSub] Validation error', {
                       topic: topicName,
                       error: String(error)
                     })
                   })
                 )
-              ))
+              )
+            )
 
             // Publish all validated messages
             const published = yield* PubSub.publishAll(pubsub, validated)
 
             // Track metrics (batch count)
             const taggedBatchCounter = pubsubPublishCounter.pipe(
-              Metric.tagged("topic", topicName),
+              Metric.tagged('topic', topicName),
               Metric.withConstantInput(messageArray.length)
             )
             yield* taggedBatchCounter(Effect.void)
 
             return published
           }).pipe(
-            Effect.withSpan("PubSub.publishAll", {
+            Effect.withSpan('PubSub.publishAll', {
               attributes: {
                 topic: topicName,
                 messageCount: [...messages].length
@@ -278,7 +277,7 @@ export class PubsubService extends Context.Tag(
         subscribe: PubSub.subscribe(pubsub).pipe(
           Effect.tap(() => {
             const taggedSubscriberGauge = pubsubSubscriberGauge.pipe(
-              Metric.tagged("topic", topicName),
+              Metric.tagged('topic', topicName),
               Metric.withConstantInput(1)
             )
             return taggedSubscriberGauge(Effect.void)
@@ -289,27 +288,20 @@ export class PubsubService extends Context.Tag(
       })
 
       return {
-        topic: <A, I>(
-          name: string,
-          schema: Schema.Schema<A, I, never>,
-          options?: TopicOptions
-        ) =>
-          Effect.gen(function*() {
+        topic: <A, I>(name: string, schema: Schema.Schema<A, I, never>, options?: TopicOptions) =>
+          Effect.gen(function* () {
             const capacity = options?.capacity ?? 1000
             const pubsub = yield* PubSub.bounded<A>(capacity)
             const validate = Schema.validate(schema)
             return makeTopicHandle<A, ParseError>(pubsub, validate, name)
           }),
 
-        createTopic: <A, I>(
-          schema: Schema.Schema<A, I, never>,
-          options?: TopicOptions
-        ) =>
-          Effect.gen(function*() {
+        createTopic: <A, I>(schema: Schema.Schema<A, I, never>, options?: TopicOptions) =>
+          Effect.gen(function* () {
             const capacity = options?.capacity ?? 1000
             const pubsub = yield* PubSub.bounded<A>(capacity)
             const validate = Schema.validate(schema)
-            return makeTopicHandle<A, ParseError>(pubsub, validate, "anonymous")
+            return makeTopicHandle<A, ParseError>(pubsub, validate, 'anonymous')
           }),
 
         healthCheck: () => Effect.succeed(true)
@@ -346,8 +338,8 @@ export class PubsubService extends Context.Tag(
    */
   static readonly Dev = Layer.scoped(
     this,
-    Effect.gen(function*() {
-      yield* Effect.logDebug("[PubsubService] [DEV] Initializing pubsub service")
+    Effect.gen(function* () {
+      yield* Effect.logDebug('[PubsubService] [DEV] Initializing pubsub service')
 
       const makeTopicHandle = <A, E>(
         pubsub: PubSub.PubSub<A>,
@@ -355,8 +347,8 @@ export class PubsubService extends Context.Tag(
         topicName: string
       ) => ({
         publish: (message: A) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[PubsubService] [DEV] publish", {
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[PubsubService] [DEV] publish', {
               topic: topicName,
               messagePreview: JSON.stringify(message).substring(0, 100)
             })
@@ -364,15 +356,15 @@ export class PubsubService extends Context.Tag(
             // Validate with error tracking
             const validated = yield* validate(message).pipe(
               Effect.tapError((error) =>
-                Effect.gen(function*() {
+                Effect.gen(function* () {
                   // Tag and increment counter - use counter as effect wrapper
                   const taggedErrorCounter = pubsubPublishErrorCounter.pipe(
-                    Metric.tagged("topic", topicName),
-                    Metric.tagged("error", String(error)),
+                    Metric.tagged('topic', topicName),
+                    Metric.tagged('error', String(error)),
                     Metric.withConstantInput(1)
                   )
                   yield* taggedErrorCounter(Effect.void)
-                  yield* Effect.logError("[PubsubService] [DEV] Validation error", {
+                  yield* Effect.logError('[PubsubService] [DEV] Validation error', {
                     topic: topicName,
                     error: String(error),
                     message: JSON.stringify(message)
@@ -386,28 +378,28 @@ export class PubsubService extends Context.Tag(
             // Track metrics
             // Tag and increment counter
             const taggedCounter = pubsubPublishCounter.pipe(
-              Metric.tagged("topic", topicName),
+              Metric.tagged('topic', topicName),
               Metric.withConstantInput(1)
             )
             yield* taggedCounter(Effect.void)
 
-            yield* Effect.logDebug("[PubsubService] [DEV] Message published", {
+            yield* Effect.logDebug('[PubsubService] [DEV] Message published', {
               topic: topicName,
               published
             })
 
             return published
           }).pipe(
-            Effect.withSpan("PubSub.publish", {
+            Effect.withSpan('PubSub.publish', {
               attributes: { topic: topicName }
             })
           ),
 
         publishAll: (messages: Iterable<A>) =>
-          Effect.gen(function*() {
+          Effect.gen(function* () {
             const messageArray = [...messages]
 
-            yield* Effect.logDebug("[PubsubService] [DEV] publishAll", {
+            yield* Effect.logDebug('[PubsubService] [DEV] publishAll', {
               topic: topicName,
               count: messageArray.length
             })
@@ -416,33 +408,34 @@ export class PubsubService extends Context.Tag(
             const validated = yield* Effect.forEach(messageArray, (msg) =>
               validate(msg).pipe(
                 Effect.tapError((error) =>
-                  Effect.gen(function*() {
+                  Effect.gen(function* () {
                     // Tag and increment error counter
                     const taggedErrorCounter = pubsubPublishErrorCounter.pipe(
-                      Metric.tagged("topic", topicName),
-                      Metric.tagged("error", String(error)),
+                      Metric.tagged('topic', topicName),
+                      Metric.tagged('error', String(error)),
                       Metric.withConstantInput(1)
                     )
                     yield* taggedErrorCounter(Effect.void)
-                    yield* Effect.logError("[PubsubService] [DEV] Validation error", {
+                    yield* Effect.logError('[PubsubService] [DEV] Validation error', {
                       topic: topicName,
                       error: String(error),
                       message: JSON.stringify(msg)
                     })
                   })
                 )
-              ))
+              )
+            )
 
             const published = yield* PubSub.publishAll(pubsub, validated)
 
             // Track metrics (batch count)
             const taggedBatchCounter = pubsubPublishCounter.pipe(
-              Metric.tagged("topic", topicName),
+              Metric.tagged('topic', topicName),
               Metric.withConstantInput(messageArray.length)
             )
             yield* taggedBatchCounter(Effect.void)
 
-            yield* Effect.logDebug("[PubsubService] [DEV] Batch published", {
+            yield* Effect.logDebug('[PubsubService] [DEV] Batch published', {
               topic: topicName,
               count: messageArray.length,
               published
@@ -450,7 +443,7 @@ export class PubsubService extends Context.Tag(
 
             return published
           }).pipe(
-            Effect.withSpan("PubSub.publishAll", {
+            Effect.withSpan('PubSub.publishAll', {
               attributes: {
                 topic: topicName,
                 messageCount: [...messages].length
@@ -458,19 +451,19 @@ export class PubsubService extends Context.Tag(
             })
           ),
 
-        subscribe: Effect.gen(function*() {
-          yield* Effect.logDebug("[PubsubService] [DEV] subscribe", { topic: topicName })
+        subscribe: Effect.gen(function* () {
+          yield* Effect.logDebug('[PubsubService] [DEV] subscribe', { topic: topicName })
 
           const subscription = yield* PubSub.subscribe(pubsub)
 
           // Tag and increment subscriber gauge
           const taggedSubscriberGauge = pubsubSubscriberGauge.pipe(
-            Metric.tagged("topic", topicName),
+            Metric.tagged('topic', topicName),
             Metric.withConstantInput(1)
           )
           yield* taggedSubscriberGauge(Effect.void)
 
-          yield* Effect.logInfo("[PubsubService] [DEV] Subscribed to topic", {
+          yield* Effect.logInfo('[PubsubService] [DEV] Subscribed to topic', {
             topic: topicName
           })
 
@@ -481,29 +474,22 @@ export class PubsubService extends Context.Tag(
       })
 
       return {
-        topic: <A, I>(
-          name: string,
-          schema: Schema.Schema<A, I, never>,
-          options?: TopicOptions
-        ) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[PubsubService] [DEV] Creating topic", { name })
+        topic: <A, I>(name: string, schema: Schema.Schema<A, I, never>, options?: TopicOptions) =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[PubsubService] [DEV] Creating topic', { name })
             const capacity = options?.capacity ?? 1000
             const pubsub = yield* PubSub.bounded<A>(capacity)
             const validate = Schema.validate(schema)
             return makeTopicHandle<A, ParseError>(pubsub, validate, name)
           }),
 
-        createTopic: <A, I>(
-          schema: Schema.Schema<A, I, never>,
-          options?: TopicOptions
-        ) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[PubsubService] [DEV] Creating anonymous topic")
+        createTopic: <A, I>(schema: Schema.Schema<A, I, never>, options?: TopicOptions) =>
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[PubsubService] [DEV] Creating anonymous topic')
             const capacity = options?.capacity ?? 1000
             const pubsub = yield* PubSub.bounded<A>(capacity)
             const validate = Schema.validate(schema)
-            return makeTopicHandle<A, ParseError>(pubsub, validate, "anonymous")
+            return makeTopicHandle<A, ParseError>(pubsub, validate, 'anonymous')
           }),
 
         healthCheck: () => Effect.succeed(true)
@@ -526,9 +512,9 @@ export class PubsubService extends Context.Tag(
    */
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
-      case "production":
+      case 'production':
         return PubsubService.Live
-      case "test":
+      case 'test':
         return PubsubService.Test
       default:
         return PubsubService.Dev

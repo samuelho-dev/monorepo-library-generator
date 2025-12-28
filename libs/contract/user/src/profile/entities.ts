@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * User Profile Entities
@@ -26,11 +26,11 @@ Import shared types from the parent contract when needed.
  * Profile ID branded type
  */
 export const ProfileId = Schema.String.pipe(
-  Schema.brand("ProfileId"),
+  Schema.brand('ProfileId'),
   Schema.annotations({
-    identifier: "ProfileId",
-    title: "Profile ID",
-    description: "Unique identifier for a profile entity"
+    identifier: 'ProfileId',
+    title: 'Profile ID',
+    description: 'Unique identifier for a profile entity'
   })
 )
 
@@ -47,7 +47,7 @@ export type ProfileId = Schema.Schema.Type<typeof ProfileId>
  * @title Profile Entity
  * @description Profile entity within the user domain
  */
-export class Profile extends Schema.Class<Profile>("Profile")({
+export class Profile extends Schema.Class<Profile>('Profile')({
   /** Unique identifier */
   id: ProfileId,
   /** Created timestamp */
@@ -60,16 +60,12 @@ export class Profile extends Schema.Class<Profile>("Profile")({
   name: Schema.String.pipe(
     Schema.minLength(1),
     Schema.annotations({
-      title: "Profile Name",
-      description: "Name of this profile"
+      title: 'Profile Name',
+      description: 'Name of this profile'
     })
   ),
   /** Profile status */
-  status: Schema.Literal(
-    "active",
-    "inactive",
-    "pending"
-  )
+  status: Schema.Literal('active', 'inactive', 'pending')
   // TODO: Add profile-specific fields
 }) {}
 // ============================================================================
@@ -84,7 +80,7 @@ export class Profile extends Schema.Class<Profile>("Profile")({
  * @title Profile Item
  * @description Lightweight profile item representation
  */
-export class ProfileItem extends Schema.Class<ProfileItem>("ProfileItem")({
+export class ProfileItem extends Schema.Class<ProfileItem>('ProfileItem')({
   /** Item identifier */
   id: Schema.UUID,
   /** Item name or label */

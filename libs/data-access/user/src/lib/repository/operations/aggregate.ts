@@ -1,7 +1,7 @@
-import { DatabaseService } from "@samuelho-dev/infra-database"
-import { Duration, Effect } from "effect"
-import { UserTimeoutError } from "../../shared/errors"
-import type { UserFilter } from "../../shared/types"
+import { DatabaseService } from '@samuelho-dev/infra-database'
+import { Duration, Effect } from 'effect'
+import { UserTimeoutError } from '../../shared/errors'
+import type { UserFilter } from '../../shared/types'
 
 /**
  * User Aggregate Operations
@@ -34,21 +34,17 @@ export const aggregateOperations = {
    * Count User entities matching filter
    */
   count: (filter?: UserFilter) =>
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const database = yield* DatabaseService
 
       yield* Effect.logDebug(`Counting User entities (filter: ${JSON.stringify(filter)})`)
 
       const count = yield* database.query((db) => {
-        let query = db.selectFrom("user").select((eb) => eb.fn.countAll().as("count"))
+        let query = db.selectFrom('user').select((eb) => eb.fn.countAll().as('count'))
 
         // Apply filters if provided
         if (filter?.search) {
-          query = query.where((eb) =>
-            eb.or([
-              eb("name", "ilike", `%${filter.search}%`)
-            ])
-          )
+          query = query.where((eb) => eb.or([eb('name', 'ilike', `%${filter.search}%`)]))
         }
 
         return query.executeTakeFirstOrThrow().then((result) => Number(result.count))
@@ -60,25 +56,25 @@ export const aggregateOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("count", 30000)
+        onTimeout: () => UserTimeoutError.create('count', 30000)
       }),
-      Effect.withSpan("UserRepository.count")
+      Effect.withSpan('UserRepository.count')
     ),
 
   /**
    * Check if User entity exists by ID
    */
   exists: (id: string) =>
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const database = yield* DatabaseService
 
       yield* Effect.logDebug(`Checking if User exists: ${id}`)
 
       const result = yield* database.query((db) =>
         db
-          .selectFrom("user")
-          .select((eb) => eb.fn.countAll().as("count"))
-          .where("id", "=", id)
+          .selectFrom('user')
+          .select((eb) => eb.fn.countAll().as('count'))
+          .where('id', '=', id)
           .executeTakeFirstOrThrow()
           .then((result) => Number(result.count) > 0)
       )
@@ -89,9 +85,9 @@ export const aggregateOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("exists", 30000)
+        onTimeout: () => UserTimeoutError.create('exists', 30000)
       }),
-      Effect.withSpan("UserRepository.exists")
+      Effect.withSpan('UserRepository.exists')
     )
 } as const
 

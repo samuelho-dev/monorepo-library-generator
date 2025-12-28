@@ -1,6 +1,15 @@
-import { RpcGroup } from "@effect/rpc"
-import { BulkGetUsers, CreateUser, DeleteUser, GetUser, ListUsers, RouteTag, UpdateUser, ValidateUser } from "./rpc-definitions"
-import type { RouteType } from "./rpc-definitions"
+import { RpcGroup } from '@effect/rpc'
+import type { RouteType } from './rpc-definitions'
+import {
+  BulkGetUsers,
+  CreateUser,
+  DeleteUser,
+  GetUser,
+  ListUsers,
+  RouteTag,
+  UpdateUser,
+  ValidateUser
+} from './rpc-definitions'
 
 /**
  * User RPC Group
@@ -34,7 +43,7 @@ import type { RouteType } from "./rpc-definitions"
 // Re-export Route System
 // ============================================================================
 // biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system
-export { RouteTag, type RouteType } from "./rpc-definitions"
+export { RouteTag, type RouteType } from './rpc-definitions'
 // ============================================================================
 // RPC Group Composition
 // ============================================================================
@@ -57,7 +66,15 @@ export { RouteTag, type RouteType } from "./rpc-definitions"
  * const app = RouterBuilder.make(UserRpcs).handle(handlers)
  * ```
  */
-export const UserRpcs = RpcGroup.make(BulkGetUsers, CreateUser, DeleteUser, GetUser, ListUsers, UpdateUser, ValidateUser)
+export const UserRpcs = RpcGroup.make(
+  BulkGetUsers,
+  CreateUser,
+  DeleteUser,
+  GetUser,
+  ListUsers,
+  UpdateUser,
+  ValidateUser
+)
 // ============================================================================
 // Type Exports
 // ============================================================================
@@ -82,14 +99,14 @@ export type UserRpcDefinitions = {
 // Re-export Individual RPCs
 // ============================================================================
 export {
+  BulkGetUsers,
+  CreateUser,
+  DeleteUser,
   GetUser,
   ListUsers,
-  CreateUser,
   UpdateUser,
-  DeleteUser,
-  ValidateUser,
-  BulkGetUsers
-} from "./rpc-definitions"
+  ValidateUser
+} from './rpc-definitions'
 // ============================================================================
 // Route Helpers
 // ============================================================================
@@ -109,21 +126,21 @@ export function getRouteType<T extends { [RouteTag]: RouteType }>(rpc: T) {
  * Check if an RPC requires user authentication
  */
 export function isProtectedRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
-  return rpc[RouteTag] === "protected"
+  return rpc[RouteTag] === 'protected'
 }
 
 /**
  * Check if an RPC is for service-to-service communication
  */
 export function isServiceRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
-  return rpc[RouteTag] === "service"
+  return rpc[RouteTag] === 'service'
 }
 
 /**
  * Check if an RPC is public (no auth required)
  */
 export function isPublicRoute<T extends { [RouteTag]: RouteType }>(rpc: T) {
-  return rpc[RouteTag] === "public"
+  return rpc[RouteTag] === 'public'
 }
 
 /**

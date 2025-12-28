@@ -1,5 +1,5 @@
-import type { Database } from "@samuelho-dev/infra-database"
-import type { Kysely } from "kysely"
+import type { Database } from '@samuelho-dev/infra-database'
+import type { Kysely } from 'kysely'
 
 /**
  * Kysely Query Builders for User
@@ -11,7 +11,6 @@ Encapsulates common query patterns and SQL building logic.
  *
  * @module @samuelho-dev/data-access-user/server
  */
-
 
 // ============================================================================
 // Query Type Aliases
@@ -43,10 +42,8 @@ export interface PaginationOptions {
  * const results = await query.execute()
  * ```
  */
-export function buildFindAllQuery(
-  db: Kysely<Database>
-) {
-  const query = db.selectFrom("user")
+export function buildFindAllQuery(db: Kysely<Database>) {
+  const query = db.selectFrom('user')
   return query
 }
 
@@ -59,13 +56,8 @@ export function buildFindAllQuery(
  * const result = await query.executeTakeFirst()
  * ```
  */
-export function buildFindByIdQuery(
-  db: Kysely<Database>,
-  id: string
-) {
-  return db
-    .selectFrom("user")
-    .where("id", "=", id)
+export function buildFindByIdQuery(db: Kysely<Database>, id: string) {
+  return db.selectFrom('user').where('id', '=', id)
 }
 
 /**
@@ -77,12 +69,8 @@ export function buildFindByIdQuery(
  * const { count } = await query.executeTakeFirstOrThrow()
  * ```
  */
-export function buildCountQuery(
-  db: Kysely<Database>
-) {
-  const query = db
-    .selectFrom("user")
-    .select((eb) => eb.fn.countAll().as("count"))
+export function buildCountQuery(db: Kysely<Database>) {
+  const query = db.selectFrom('user').select((eb) => eb.fn.countAll().as('count'))
 
   return query
 }

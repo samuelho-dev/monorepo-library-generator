@@ -1,4 +1,4 @@
-import { Data, Option, Schema } from "effect"
+import { Data, Option, Schema } from 'effect'
 
 /**
  * Redis Provider - Error Types
@@ -23,7 +23,7 @@ Includes:
  *
  * Pattern: Data.TaggedError with inline properties
  */
-export class RedisError extends Data.TaggedError("RedisError")<{
+export class RedisError extends Data.TaggedError('RedisError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -37,7 +37,7 @@ export class RedisError extends Data.TaggedError("RedisError")<{
  *
  * Thrown when unable to establish or maintain connection to Redis server.
  */
-export class RedisConnectionError extends Data.TaggedError("RedisConnectionError")<{
+export class RedisConnectionError extends Data.TaggedError('RedisConnectionError')<{
   readonly message: string
   readonly host?: string
   readonly port?: number
@@ -49,7 +49,7 @@ export class RedisConnectionError extends Data.TaggedError("RedisConnectionError
  *
  * Thrown when a Redis operation exceeds the configured timeout.
  */
-export class RedisTimeoutError extends Data.TaggedError("RedisTimeoutError")<{
+export class RedisTimeoutError extends Data.TaggedError('RedisTimeoutError')<{
   readonly message: string
   readonly timeout: number
   readonly operation?: string
@@ -65,10 +65,10 @@ export class RedisTimeoutError extends Data.TaggedError("RedisTimeoutError")<{
  *
  * Thrown when a Redis command fails to execute.
  */
-export class RedisCommandError extends Data.TaggedError("RedisCommandError")<{
+export class RedisCommandError extends Data.TaggedError('RedisCommandError')<{
   readonly message: string
   readonly command: string
-  readonly args?: ReadonlyArray<unknown>
+  readonly args?: readonly unknown[]
   readonly cause?: unknown
 }> {}
 
@@ -77,7 +77,7 @@ export class RedisCommandError extends Data.TaggedError("RedisCommandError")<{
  *
  * Thrown for key-related issues (key not found, wrong type, etc.)
  */
-export class RedisKeyError extends Data.TaggedError("RedisKeyError")<{
+export class RedisKeyError extends Data.TaggedError('RedisKeyError')<{
   readonly message: string
   readonly key: string
   readonly expectedType?: string
@@ -93,7 +93,7 @@ export class RedisKeyError extends Data.TaggedError("RedisKeyError")<{
  *
  * Thrown for pub/sub related failures.
  */
-export class RedisPubSubError extends Data.TaggedError("RedisPubSubError")<{
+export class RedisPubSubError extends Data.TaggedError('RedisPubSubError')<{
   readonly message: string
   readonly channel?: string
   readonly cause?: unknown
@@ -149,17 +149,17 @@ export function mapRedisError(error: unknown, command?: string) {
   const { code, message } = parseSdkError(error)
 
   // Connection errors
-  if (code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "ECONNRESET") {
+  if (code === 'ECONNREFUSED' || code === 'ENOTFOUND' || code === 'ECONNRESET') {
     return new RedisConnectionError({
-      message: message ?? "Connection failed",
+      message: message ?? 'Connection failed',
       cause: error
     })
   }
 
   // Timeout errors
-  if (code === "ETIMEDOUT" || code === "ESOCKETTIMEDOUT") {
+  if (code === 'ETIMEDOUT' || code === 'ESOCKETTIMEDOUT') {
     return new RedisTimeoutError({
-      message: message ?? "Operation timed out",
+      message: message ?? 'Operation timed out',
       timeout: 20000,
       ...(command !== undefined ? { operation: command } : {}),
       cause: error
@@ -169,7 +169,7 @@ export function mapRedisError(error: unknown, command?: string) {
   // Command errors
   if (command !== undefined) {
     return new RedisCommandError({
-      message: message ?? "Command failed",
+      message: message ?? 'Command failed',
       command,
       cause: error
     })
@@ -177,7 +177,7 @@ export function mapRedisError(error: unknown, command?: string) {
 
   // Generic error
   return new RedisError({
-    message: message ?? "Unknown Redis error",
+    message: message ?? 'Unknown Redis error',
     cause: error
   })
 }

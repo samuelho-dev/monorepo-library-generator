@@ -11,21 +11,20 @@ import type {
   GeneratorOptions,
   LibraryType,
   SingleLibraryType,
-  WizardAction,
   WizardSelection,
   WorkspaceContext
-} from "../../core"
-import type { PanelId } from "../theme/colors"
+} from '../../core'
+import type { PanelId } from '../theme/colors'
 
 /**
  * TUI application mode
  */
-export type TUIMode = "browse" | "configure" | "generating" | "complete" | "error"
+export type TUIMode = 'browse' | 'configure' | 'generating' | 'complete' | 'error'
 
 /**
  * Generation status
  */
-export type GenerationStatus = "idle" | "generating" | "success" | "error"
+export type GenerationStatus = 'idle' | 'generating' | 'success' | 'error'
 
 /**
  * Complete TUI state
@@ -36,7 +35,7 @@ export interface TUIState {
 
   // Panel navigation
   readonly activePanel: PanelId
-  readonly panelHistory: ReadonlyArray<PanelId>
+  readonly panelHistory: readonly PanelId[]
 
   // Workspace context
   readonly workspace: WorkspaceContext | null
@@ -51,7 +50,7 @@ export interface TUIState {
   readonly options: GeneratorOptions
 
   // Preview
-  readonly filesToCreate: ReadonlyArray<FilePreview>
+  readonly filesToCreate: readonly FilePreview[]
 
   // Generation
   readonly generationStatus: GenerationStatus
@@ -66,17 +65,17 @@ export interface TUIState {
  * Initial state
  */
 export const initialState: TUIState = {
-  mode: "browse",
-  activePanel: "types",
+  mode: 'browse',
+  activePanel: 'types',
   panelHistory: [],
   workspace: null,
   hoveredType: null,
   selectedType: null,
-  libraryName: "",
-  externalService: "",
+  libraryName: '',
+  externalService: '',
   options: {},
   filesToCreate: [],
-  generationStatus: "idle",
+  generationStatus: 'idle',
   error: null,
   typesSelectedIndex: 0,
   optionsSelectedIndex: 0
@@ -87,33 +86,36 @@ export const initialState: TUIState = {
  */
 export type TUIAction =
   // Initialization
-  | { readonly type: "SET_WORKSPACE"; readonly payload: WorkspaceContext }
+  | { readonly type: 'SET_WORKSPACE'; readonly payload: WorkspaceContext }
   // Panel navigation
-  | { readonly type: "SET_ACTIVE_PANEL"; readonly payload: PanelId }
-  | { readonly type: "NEXT_PANEL" }
-  | { readonly type: "PREVIOUS_PANEL" }
+  | { readonly type: 'SET_ACTIVE_PANEL'; readonly payload: PanelId }
+  | { readonly type: 'NEXT_PANEL' }
+  | { readonly type: 'PREVIOUS_PANEL' }
   // Type selection
-  | { readonly type: "SET_HOVERED_TYPE"; readonly payload: WizardSelection | null }
-  | { readonly type: "SELECT_TYPE"; readonly payload: WizardSelection }
-  | { readonly type: "SET_TYPES_INDEX"; readonly payload: number }
+  | { readonly type: 'SET_HOVERED_TYPE'; readonly payload: WizardSelection | null }
+  | { readonly type: 'SELECT_TYPE'; readonly payload: WizardSelection }
+  | { readonly type: 'SET_TYPES_INDEX'; readonly payload: number }
   // Configuration
-  | { readonly type: "SET_LIBRARY_NAME"; readonly payload: string }
-  | { readonly type: "SET_EXTERNAL_SERVICE"; readonly payload: string }
-  | { readonly type: "SET_OPTION"; readonly payload: { key: keyof GeneratorOptions; value: unknown } }
-  | { readonly type: "SET_OPTIONS_INDEX"; readonly payload: number }
+  | { readonly type: 'SET_LIBRARY_NAME'; readonly payload: string }
+  | { readonly type: 'SET_EXTERNAL_SERVICE'; readonly payload: string }
+  | {
+      readonly type: 'SET_OPTION'
+      readonly payload: { key: keyof GeneratorOptions; value: unknown }
+    }
+  | { readonly type: 'SET_OPTIONS_INDEX'; readonly payload: number }
   // Preview
-  | { readonly type: "SET_FILES_TO_CREATE"; readonly payload: ReadonlyArray<FilePreview> }
+  | { readonly type: 'SET_FILES_TO_CREATE'; readonly payload: readonly FilePreview[] }
   // Generation
-  | { readonly type: "START_GENERATION" }
-  | { readonly type: "GENERATION_SUCCESS" }
-  | { readonly type: "GENERATION_ERROR"; readonly payload: string }
+  | { readonly type: 'START_GENERATION' }
+  | { readonly type: 'GENERATION_SUCCESS' }
+  | { readonly type: 'GENERATION_ERROR'; readonly payload: string }
   // Reset
-  | { readonly type: "RESET_FOR_NEW" }
+  | { readonly type: 'RESET_FOR_NEW' }
 
 /**
  * Panel navigation order
  */
-export const PANEL_ORDER: ReadonlyArray<PanelId> = ["types", "options", "preview"]
+export const PANEL_ORDER: readonly PanelId[] = ['types', 'options', 'preview']
 
 /**
  * Get next panel in order
@@ -146,7 +148,7 @@ export function canNavigateToOptions(state: TUIState): boolean {
 export function canGenerate(state: TUIState): boolean {
   if (!state.selectedType) return false
   if (!state.libraryName.trim()) return false
-  if (state.generationStatus === "generating") return false
+  if (state.generationStatus === 'generating') return false
   return true
 }
 
@@ -154,7 +156,7 @@ export function canGenerate(state: TUIState): boolean {
  * Get library type for generation (converts WizardAction to LibraryType)
  */
 export function getLibraryTypeForGeneration(selection: WizardSelection): LibraryType | null {
-  if (selection === "init") return null // Init is handled separately
-  if (selection === "domain") return "domain"
+  if (selection === 'init') return null // Init is handled separately
+  if (selection === 'domain') return 'domain'
   return selection as SingleLibraryType
 }

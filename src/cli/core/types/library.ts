@@ -9,12 +9,12 @@
 /**
  * Single library types that can be generated
  */
-export type SingleLibraryType = "contract" | "data-access" | "feature" | "infra" | "provider"
+export type SingleLibraryType = 'contract' | 'data-access' | 'feature' | 'infra' | 'provider'
 
 /**
  * Special wizard actions (not single libraries)
  */
-export type WizardAction = "init" | "domain"
+export type WizardAction = 'init' | 'domain'
 
 /**
  * All wizard selection types (libraries + special actions)
@@ -24,7 +24,7 @@ export type WizardSelection = SingleLibraryType | WizardAction
 /**
  * Library type for execution (includes domain for generating 3 libraries)
  */
-export type LibraryType = SingleLibraryType | "domain"
+export type LibraryType = SingleLibraryType | 'domain'
 
 /**
  * Library type metadata for display
@@ -36,7 +36,7 @@ export interface LibraryTypeMetadata {
   readonly icon: string
   readonly hasExternalService?: boolean
   readonly defaultPlatform?: Platform
-  readonly generatedFiles: ReadonlyArray<string>
+  readonly generatedFiles: readonly string[]
 }
 
 /**
@@ -47,13 +47,13 @@ export interface WizardActionMetadata {
   readonly label: string
   readonly description: string
   readonly icon: string
-  readonly generatesTo: ReadonlyArray<string>
+  readonly generatesTo: readonly string[]
 }
 
 /**
  * Platform options for libraries
  */
-export type Platform = "node" | "browser" | "universal" | "edge"
+export type Platform = 'node' | 'browser' | 'universal' | 'edge'
 
 /**
  * Files that will be generated (for preview)
@@ -67,7 +67,7 @@ export interface FilePreview {
 /**
  * Workspace type detection
  */
-export type WorkspaceType = "nx" | "pnpm" | "yarn" | "npm"
+export type WorkspaceType = 'nx' | 'pnpm' | 'yarn' | 'npm'
 
 /**
  * Workspace context information

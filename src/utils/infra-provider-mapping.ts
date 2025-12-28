@@ -17,7 +17,7 @@
 /**
  * Valid infrastructure names that have provider mappings
  */
-export type InfraWithProvider = "database"
+export type InfraWithProvider = 'database'
 
 /**
  * Maps infrastructure library names to their provider dependencies
@@ -26,7 +26,7 @@ export type InfraWithProvider = "database"
  * Other infra libraries use Effect primitives directly.
  */
 export const INFRA_PROVIDER_MAP: Record<InfraWithProvider, string> = {
-  database: "kysely"
+  database: 'kysely'
 }
 
 /**
@@ -45,15 +45,15 @@ export const INFRA_PROVIDER_MAP: Record<InfraWithProvider, string> = {
  * Use infra-observability for unified tracing, logging, and metrics.
  */
 export type InfraConcernType =
-  | "cache"
-  | "database"
-  | "queue"
-  | "pubsub"
-  | "rpc"
-  | "auth"
-  | "storage"
-  | "observability"
-  | "generic"
+  | 'cache'
+  | 'database'
+  | 'queue'
+  | 'pubsub'
+  | 'rpc'
+  | 'auth'
+  | 'storage'
+  | 'observability'
+  | 'generic'
 
 /**
  * Keywords used to detect infrastructure concern type from library name
@@ -62,40 +62,40 @@ export type InfraConcernType =
  * The observability concern provides unified OTEL SDK + LoggingService + MetricsService.
  */
 const CONCERN_KEYWORDS: Record<string, InfraConcernType> = {
-  cache: "cache",
-  caching: "cache",
-  database: "database",
-  db: "database",
-  queue: "queue",
-  job: "queue",
-  worker: "queue",
-  task: "queue",
-  pubsub: "pubsub",
-  event: "pubsub",
-  messaging: "pubsub",
-  broadcast: "pubsub",
-  rpc: "rpc",
-  api: "rpc",
-  remote: "rpc",
-  auth: "auth",
-  authentication: "auth",
-  authorization: "auth",
-  storage: "storage",
-  file: "storage",
-  blob: "storage",
-  upload: "storage",
+  cache: 'cache',
+  caching: 'cache',
+  database: 'database',
+  db: 'database',
+  queue: 'queue',
+  job: 'queue',
+  worker: 'queue',
+  task: 'queue',
+  pubsub: 'pubsub',
+  event: 'pubsub',
+  messaging: 'pubsub',
+  broadcast: 'pubsub',
+  rpc: 'rpc',
+  api: 'rpc',
+  remote: 'rpc',
+  auth: 'auth',
+  authentication: 'auth',
+  authorization: 'auth',
+  storage: 'storage',
+  file: 'storage',
+  blob: 'storage',
+  upload: 'storage',
   // Observability: unified tracing, logging, and metrics
-  observability: "observability",
-  otel: "observability",
-  opentelemetry: "observability",
-  tracing: "observability",
-  trace: "observability",
-  logging: "observability",
-  log: "observability",
-  logger: "observability",
-  metrics: "observability",
-  metric: "observability",
-  telemetry: "observability"
+  observability: 'observability',
+  otel: 'observability',
+  opentelemetry: 'observability',
+  tracing: 'observability',
+  trace: 'observability',
+  logging: 'observability',
+  log: 'observability',
+  logger: 'observability',
+  metrics: 'observability',
+  metric: 'observability',
+  telemetry: 'observability'
 }
 
 /**
@@ -113,7 +113,7 @@ export function detectInfraConcern(name: string) {
     }
   }
 
-  return "generic"
+  return 'generic'
 }
 
 /**
@@ -161,9 +161,9 @@ export function getProviderClassName(infraName: string) {
   // Convert kebab-case to PascalCase
   // "kysely" -> "Kysely"
   return provider
-    .split("-")
+    .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("")
+    .join('')
 }
 
 /**
@@ -195,13 +195,13 @@ export function hasProviderMapping(infraName: string) {
 export function usesEffectPrimitives(infraName: string) {
   const concern = detectInfraConcern(infraName)
   return [
-    "cache",
-    "database",
-    "queue",
-    "pubsub",
-    "rpc",
-    "auth",
-    "storage",
-    "observability"
+    'cache',
+    'database',
+    'queue',
+    'pubsub',
+    'rpc',
+    'auth',
+    'storage',
+    'observability'
   ].includes(concern)
 }

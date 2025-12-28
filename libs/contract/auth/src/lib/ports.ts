@@ -1,7 +1,7 @@
-import type { Effect, Option } from "effect"
-import { Context } from "effect"
-import type { AuthError, ServiceAuthError } from "./errors"
-import type { AuthSession, CurrentUserData, ServiceIdentity } from "./schemas"
+import type { Effect, Option } from 'effect'
+import { Context } from 'effect'
+import type { AuthError, ServiceAuthError } from './errors'
+import type { AuthSession, CurrentUserData, ServiceIdentity } from './schemas'
 
 /**
  * Auth Contract Ports
@@ -57,7 +57,7 @@ export interface AuthVerifierInterface {
 /**
  * Auth Verifier Context Tag
  */
-export class AuthVerifier extends Context.Tag("AuthVerifier")<
+export class AuthVerifier extends Context.Tag('AuthVerifier')<
   AuthVerifier,
   AuthVerifierInterface
 >() {}
@@ -79,9 +79,7 @@ export interface AuthProviderInterface {
   /**
    * Refresh an existing session
    */
-  readonly refresh: (
-    refreshToken: string
-  ) => Effect.Effect<AuthSession, AuthError>
+  readonly refresh: (refreshToken: string) => Effect.Effect<AuthSession, AuthError>
   /**
    * Invalidate a session (logout)
    */
@@ -89,15 +87,13 @@ export interface AuthProviderInterface {
   /**
    * Get current session info
    */
-  readonly getSession: (
-    sessionId: string
-  ) => Effect.Effect<Option.Option<AuthSession>, AuthError>
+  readonly getSession: (sessionId: string) => Effect.Effect<Option.Option<AuthSession>, AuthError>
 }
 
 /**
  * Auth Provider Context Tag
  */
-export class AuthProvider extends Context.Tag("AuthProvider")<
+export class AuthProvider extends Context.Tag('AuthProvider')<
   AuthProvider,
   AuthProviderInterface
 >() {}
@@ -119,18 +115,14 @@ export interface ServiceAuthVerifierInterface {
    * @param token - The service authentication token
    * @returns Service identity if valid, ServiceAuthError if invalid
    */
-  readonly verify: (
-    token: string
-  ) => Effect.Effect<ServiceIdentity, ServiceAuthError>
+  readonly verify: (token: string) => Effect.Effect<ServiceIdentity, ServiceAuthError>
   /**
    * Generate a service token for outgoing requests
    *
    * @param serviceName - The calling service name
    * @returns Service token for authentication
    */
-  readonly generateToken: (
-    serviceName: string
-  ) => Effect.Effect<string, ServiceAuthError>
+  readonly generateToken: (serviceName: string) => Effect.Effect<string, ServiceAuthError>
   /**
    * Check if a service has permission for an operation
    *
@@ -138,16 +130,13 @@ export interface ServiceAuthVerifierInterface {
    * @param permission - The permission to check
    * @returns true if permitted
    */
-  readonly hasPermission: (
-    identity: ServiceIdentity,
-    permission: string
-  ) => Effect.Effect<boolean>
+  readonly hasPermission: (identity: ServiceIdentity, permission: string) => Effect.Effect<boolean>
 }
 
 /**
  * Service Auth Verifier Context Tag
  */
-export class ServiceAuthVerifier extends Context.Tag("ServiceAuthVerifier")<
+export class ServiceAuthVerifier extends Context.Tag('ServiceAuthVerifier')<
   ServiceAuthVerifier,
   ServiceAuthVerifierInterface
 >() {}

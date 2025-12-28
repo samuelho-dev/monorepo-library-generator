@@ -6,6 +6,6 @@
  * @module monorepo-library-generator/cli/tui/components
  */
 
-export { Footer } from "./Footer"
-export { Header } from "./Header"
-export { Panel, PanelSeparator, StatusBar } from "./Panel"
+export { Footer } from './Footer'
+export { Header } from './Header'
+export { Panel, PanelSeparator, StatusBar } from './Panel'

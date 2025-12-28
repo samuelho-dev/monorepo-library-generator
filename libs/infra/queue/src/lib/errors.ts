@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * Queue Errors
@@ -22,9 +22,7 @@ Uses Data.TaggedError for internal infrastructure errors:
  * All service errors extend this base error.
  * Use domain-specific error types (NotFound, Validation, etc.) for precise handling.
  */
-export class QueueError extends Data.TaggedError(
-  "QueueError"
-)<{
+export class QueueError extends Data.TaggedError('QueueError')<{
   /** Human-readable error message */
   readonly message: string
   /** Optional underlying cause */
@@ -36,9 +34,7 @@ export class QueueError extends Data.TaggedError(
  *
  * Raised when unexpected internal error occurs.
  */
-export class QueueInternalError extends Data.TaggedError(
-  "QueueInternalError"
-)<{
+export class QueueInternalError extends Data.TaggedError('QueueInternalError')<{
   /** Human-readable error message */
   readonly message: string
   /** Underlying error cause */
@@ -50,9 +46,7 @@ export class QueueInternalError extends Data.TaggedError(
  *
  * Raised when service is misconfigured.
  */
-export class QueueConfigError extends Data.TaggedError(
-  "QueueConfigError"
-)<{
+export class QueueConfigError extends Data.TaggedError('QueueConfigError')<{
   /** Human-readable error message */
   readonly message: string
   /** Configuration property that is invalid */
@@ -64,9 +58,7 @@ export class QueueConfigError extends Data.TaggedError(
  *
  * Raised when connection to external service fails.
  */
-export class QueueConnectionError extends Data.TaggedError(
-  "QueueConnectionError"
-)<{
+export class QueueConnectionError extends Data.TaggedError('QueueConnectionError')<{
   /** Human-readable error message */
   readonly message: string
   /** Connection target (service name, host, etc.) */
@@ -80,9 +72,7 @@ export class QueueConnectionError extends Data.TaggedError(
  *
  * Raised when operation exceeds timeout.
  */
-export class QueueTimeoutError extends Data.TaggedError(
-  "QueueTimeoutError"
-)<{
+export class QueueTimeoutError extends Data.TaggedError('QueueTimeoutError')<{
   /** Human-readable error message */
   readonly message: string
   /** Timeout duration in milliseconds */

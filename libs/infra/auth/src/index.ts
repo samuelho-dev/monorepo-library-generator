@@ -29,31 +29,29 @@ export {
   InvalidTokenError,
   SessionExpiredError,
   UnauthorizedError
-} from "./lib/errors"
+} from './lib/errors'
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type { AuthContext } from "./lib/types"
-
-export { AuthContextSchema } from "./lib/types"
-
 // Re-export from provider for convenience
-export type { AuthMethod, AuthUser } from "@samuelho-dev/provider-supabase"
-export { AuthUserSchema } from "@samuelho-dev/provider-supabase"
+export type { AuthMethod, AuthUser } from '@samuelho-dev/provider-supabase'
+export { AuthUserSchema } from '@samuelho-dev/provider-supabase'
+export type { AuthContext } from './lib/types'
+export { AuthContextSchema } from './lib/types'
 
 // ============================================================================
 // Service
 // ============================================================================
 
-export { AuthService, type AuthServiceInterface } from "./lib/service"
+export { AuthService, type AuthServiceInterface } from './lib/service'
 
 // ============================================================================
 // AuthVerifier Implementation (for infra-rpc)
 // ============================================================================
 
-export { AuthVerifierLive } from "./lib/service"
+export { AuthVerifierLive } from './lib/service'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Integration Example

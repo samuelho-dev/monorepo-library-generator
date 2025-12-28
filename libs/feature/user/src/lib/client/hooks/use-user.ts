@@ -1,10 +1,24 @@
-import { useAtom, useAtomValue } from "@effect-atom/atom-react"
-import { UserSchema } from "@samuelho-dev/contract-user"
-import type { CreateUserInput, UpdateUserInput, UserEntity as User } from "@samuelho-dev/contract-user"
-import { Option, Schema } from "effect"
-import { useCallback, useMemo } from "react"
-import { resetUserState, updateUserEntity, updateUserList, updateUserOperation, userAtom, userDataAtom, userErrorAtom, userIsLoadingAtom, userListAtom } from "../atoms/user-atoms"
-import type { UserState } from "../atoms/user-atoms"
+import { useAtom, useAtomValue } from '@effect-atom/atom-react'
+import type {
+  CreateUserInput,
+  UpdateUserInput,
+  UserEntity as User
+} from '@samuelho-dev/contract-user'
+import { UserSchema } from '@samuelho-dev/contract-user'
+import { Option, Schema } from 'effect'
+import { useCallback, useMemo } from 'react'
+import type { UserState } from '../atoms/user-atoms'
+import {
+  resetUserState,
+  updateUserEntity,
+  updateUserList,
+  updateUserOperation,
+  userAtom,
+  userDataAtom,
+  userErrorAtom,
+  userIsLoadingAtom,
+  userListAtom
+} from '../atoms/user-atoms'
 
 /**
  * useUser Hook
@@ -49,7 +63,6 @@ function getErrorMessage(error: unknown, fallback: string) {
   return Option.isSome(result) ? result.value.message : fallback
 }
 
-
 // ============================================================================
 // Hook Return Type
 // ============================================================================
@@ -58,11 +71,11 @@ function getErrorMessage(error: unknown, fallback: string) {
  */
 export interface UseUserReturn {
   // State
-  readonly state: UserState;
-  readonly data: User | null;
-  readonly list: ReadonlyArray<User>
-  readonly isLoading: boolean;
-  readonly error: string | null  // Entity operations
+  readonly state: UserState
+  readonly data: User | null
+  readonly list: readonly User[]
+  readonly isLoading: boolean
+  readonly error: string | null // Entity operations
   readonly fetchById: (id: string) => Promise<User | null>
   readonly create: (input: CreateUserInput) => Promise<User>
   readonly update: (id: string, input: UpdateUserInput) => Promise<User>
@@ -73,8 +86,8 @@ export interface UseUserReturn {
   readonly refreshList: () => Promise<void>
 
   // State management
-  readonly reset: () => void;
-  readonly clearError: () => void;
+  readonly reset: () => void
+  readonly clearError: () => void
 }
 
 // ============================================================================
@@ -87,7 +100,7 @@ export interface UseUserReturn {
  * Falls back to "/api/rpc" if PUBLIC_API_URL is not configured.
  */
 // biome-ignore lint/style/noProcessEnv: Client-side RPC endpoint configured via environment
-const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "/api/rpc"
+const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? '/api/rpc'
 
 /**
  * Make an RPC call to the server
@@ -99,8 +112,8 @@ const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_U
  */
 async function rpcCall(operation: string, payload: unknown): Promise<unknown> {
   const response = await fetch(RPC_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ _tag: operation, payload })
   })
 
@@ -139,8 +152,8 @@ const DeleteResponseSchema = Schema.Struct({
 /**
  * List response type from server
  */
-interface ListResponse {
-  readonly items: ReadonlyArray<User>
+export interface ListResponse {
+  readonly items: readonly User[]
   readonly total: number
   readonly hasMore: boolean
 }
@@ -177,113 +190,132 @@ export function useUser(): UseUserReturn {
   const list = useAtomValue(userListAtom)
 
   // Fetch by ID
-  const fetchById = useCallback(async (id: string) => {
-    setState(updateUserEntity({ loadingState: "loading", error: null }))
-    try {
-      const response = await rpcCall("GetUser", { id })
-      const result = decodeResponse(UserSchema, response)
-      setState(updateUserEntity({
-        data: result,
-        loadingState: "idle",
-        lastUpdated: Date.now()
-      }))
-      return result
-    } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to fetch")
-      setState(updateUserEntity({ loadingState: "error", error: errorMessage }))
-      return null
-    }
-  }, [setState])
+  const fetchById = useCallback(
+    async (id: string) => {
+      setState(updateUserEntity({ loadingState: 'loading', error: null }))
+      try {
+        const response = await rpcCall('GetUser', { id })
+        const result = decodeResponse(UserSchema, response)
+        setState(
+          updateUserEntity({
+            data: result,
+            loadingState: 'idle',
+            lastUpdated: Date.now()
+          })
+        )
+        return result
+      } catch (e) {
+        const errorMessage = getErrorMessage(e, 'Failed to fetch')
+        setState(updateUserEntity({ loadingState: 'error', error: errorMessage }))
+        return null
+      }
+    },
+    [setState]
+  )
 
   // Fetch list
-  const fetchList = useCallback(async (options?: { page?: number; pageSize?: number }) => {
-    const page = options?.page ?? state.list.pagination.page
-    const pageSize = options?.pageSize ?? state.list.pagination.pageSize
+  const fetchList = useCallback(
+    async (options?: { page?: number; pageSize?: number }) => {
+      const page = options?.page ?? state.list.pagination.page
+      const pageSize = options?.pageSize ?? state.list.pagination.pageSize
 
-    setState(updateUserList({ loadingState: "loading", error: null }))
-    try {
-      const response = await rpcCall("ListUsers", { page, pageSize })
-      const result = decodeResponse(ListResponseSchema, response)
-      setState(updateUserList({
-        items: result.items,
-        loadingState: "idle",
-        pagination: {
-          page,
-          pageSize,
-          totalCount: result.total,
-          hasMore: result.hasMore
-        },
-        lastUpdated: Date.now()
-      }))
-    } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to fetch list")
-      setState(updateUserList({ loadingState: "error", error: errorMessage }))
-    }
-  }, [setState, state.list.pagination.page, state.list.pagination.pageSize])
+      setState(updateUserList({ loadingState: 'loading', error: null }))
+      try {
+        const response = await rpcCall('ListUsers', { page, pageSize })
+        const result = decodeResponse(ListResponseSchema, response)
+        setState(
+          updateUserList({
+            items: result.items,
+            loadingState: 'idle',
+            pagination: {
+              page,
+              pageSize,
+              totalCount: result.total,
+              hasMore: result.hasMore
+            },
+            lastUpdated: Date.now()
+          })
+        )
+      } catch (e) {
+        const errorMessage = getErrorMessage(e, 'Failed to fetch list')
+        setState(updateUserList({ loadingState: 'error', error: errorMessage }))
+      }
+    },
+    [setState, state.list.pagination.page, state.list.pagination.pageSize]
+  )
 
   // Refresh list (reload current page)
   const refreshList = useCallback(async () => {
-    setState(updateUserList({ loadingState: "refreshing" }))
+    setState(updateUserList({ loadingState: 'refreshing' }))
     await fetchList()
   }, [fetchList, setState])
 
   // Create
-  const create = useCallback(async (input: CreateUserInput) => {
-    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "create" }))
-    try {
-      const response = await rpcCall("CreateUser", input)
-      const result = decodeResponse(UserSchema, response)
-      setState(updateUserOperation({ isSubmitting: false }))
-      // Refresh list after creation
-      await refreshList()
-      return result
-    } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to create")
-      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
-      throw e
-    }
-  }, [setState, refreshList])
+  const create = useCallback(
+    async (input: CreateUserInput) => {
+      setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: 'create' }))
+      try {
+        const response = await rpcCall('CreateUser', input)
+        const result = decodeResponse(UserSchema, response)
+        setState(updateUserOperation({ isSubmitting: false }))
+        // Refresh list after creation
+        await refreshList()
+        return result
+      } catch (e) {
+        const errorMessage = getErrorMessage(e, 'Failed to create')
+        setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
+        throw e
+      }
+    },
+    [setState, refreshList]
+  )
 
   // Update
-  const update = useCallback(async (id: string, input: UpdateUserInput) => {
-    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "update" }))
-    try {
-      const response = await rpcCall("UpdateUser", { id, data: input })
-      const result = decodeResponse(UserSchema, response)
-      setState(updateUserOperation({ isSubmitting: false }))
-      // Update entity if it's the current one
-      if (state.entity.data?.id === id) {
-        setState(updateUserEntity({ data: result, lastUpdated: Date.now() }))
+  const update = useCallback(
+    async (id: string, input: UpdateUserInput) => {
+      setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: 'update' }))
+      try {
+        const response = await rpcCall('UpdateUser', { id, data: input })
+        const result = decodeResponse(UserSchema, response)
+        setState(updateUserOperation({ isSubmitting: false }))
+        // Update entity if it's the current one
+        if (state.entity.data?.id === id) {
+          setState(updateUserEntity({ data: result, lastUpdated: Date.now() }))
+        }
+        // Refresh list after update
+        await refreshList()
+        return result
+      } catch (e) {
+        const errorMessage = getErrorMessage(e, 'Failed to update')
+        setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
+        throw e
       }
-      // Refresh list after update
-      await refreshList()
-      return result
-    } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to update")
-      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
-      throw e
-    }
-  }, [setState, refreshList, state.entity.data?.id])
+    },
+    [setState, refreshList, state.entity.data?.id]
+  )
 
   // Remove
-  const remove = useCallback(async (id: string) => {
-    setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: "delete" }))
-    try {
-      const response = await rpcCall("DeleteUser", { id })
-      decodeResponse(DeleteResponseSchema, response)
-      setState(updateUserOperation({ isSubmitting: false }))
-      // Clear entity if it's the deleted one
-      if (state.entity.data?.id === id) {
-        setState(updateUserEntity({ data: null }))
+  const remove = useCallback(
+    async (id: string) => {
+      setState(updateUserOperation({ isSubmitting: true, error: null, lastOperation: 'delete' }))
+      try {
+        const response = await rpcCall('DeleteUser', { id })
+        decodeResponse(DeleteResponseSchema, response)
+        setState(updateUserOperation({ isSubmitting: false }))
+        // Clear entity if it's the deleted one
+        if (state.entity.data?.id === id) {
+          setState(updateUserEntity({ data: null }))
+        }
+        // Refresh list after deletion
+        await refreshList()
+      } catch (e) {
+        const errorMessage = getErrorMessage(e, 'Failed to delete')
+        setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
+        throw e
       }
-      // Refresh list after deletion
-      await refreshList()
-    } catch (e) {
-      const errorMessage = getErrorMessage(e, "Failed to delete")
-      setState(updateUserOperation({ isSubmitting: false, error: errorMessage }))
-      throw e
-    }
-  }, [setState, refreshList, state.entity.data?.id])
+    },
+    [setState, refreshList, state.entity.data?.id]
+  )
 
   // Reset state
   const reset = useCallback(() => {
@@ -300,30 +332,43 @@ export function useUser(): UseUserReturn {
     }))
   }, [setState])
 
-  return useMemo(() => ({
-    // State
-    state,
-    data,
-    list,
-    isLoading,
-    error,
+  return useMemo(
+    () => ({
+      // State
+      state,
+      data,
+      list,
+      isLoading,
+      error,
 
-    // Entity operations
-    fetchById,
-    create,
-    update,
-    remove,
+      // Entity operations
+      fetchById,
+      create,
+      update,
+      remove,
 
-    // List operations
-    fetchList,
-    refreshList,
+      // List operations
+      fetchList,
+      refreshList,
 
-    // State management
-    reset,
-    clearError
-  }), [
-    state, data, list, isLoading, error,
-    fetchById, create, update, remove,
-    fetchList, refreshList, reset, clearError
-  ])
+      // State management
+      reset,
+      clearError
+    }),
+    [
+      state,
+      data,
+      list,
+      isLoading,
+      error,
+      fetchById,
+      create,
+      update,
+      remove,
+      fetchList,
+      refreshList,
+      reset,
+      clearError
+    ]
+  )
 }

@@ -1,14 +1,21 @@
-import type { SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js"
-import { Context, Effect, Layer, Option, Schema } from "effect"
-import { SupabaseClient } from "./client"
+import type { SupabaseClient as SupabaseSDKClient } from '@supabase/supabase-js'
+import { Context, Effect, Layer, Option, Schema } from 'effect'
+import { SupabaseClient } from './client'
 import {
   SupabaseAuthError,
   SupabaseInvalidCredentialsError,
   SupabaseSessionExpiredError,
   SupabaseTokenError
-} from "./errors"
-import { SupabaseSessionSchema, SupabaseUserSchema } from "./types"
-import type { AuthResult, AuthUser, SignInCredentials, SignUpCredentials, SupabaseSession, SupabaseUser } from "./types"
+} from './errors'
+import type {
+  AuthResult,
+  AuthUser,
+  SignInCredentials,
+  SignUpCredentials,
+  SupabaseSession,
+  SupabaseUser
+} from './types'
+import { SupabaseSessionSchema, SupabaseUserSchema } from './types'
 
 /**
  * SupabaseAuth Service
@@ -47,9 +54,7 @@ export interface SupabaseAuthServiceInterface {
   /**
    * Sign up with email and password
    */
-  readonly signUp: (
-    credentials: SignUpCredentials
-  ) => Effect.Effect<AuthResult, SupabaseAuthError>
+  readonly signUp: (credentials: SignUpCredentials) => Effect.Effect<AuthResult, SupabaseAuthError>
 
   /**
    * Sign out the current user
@@ -70,10 +75,7 @@ export interface SupabaseAuthServiceInterface {
    *
    * Returns None if no active session.
    */
-  readonly getSession: () => Effect.Effect<
-    Option.Option<SupabaseSession>,
-    SupabaseAuthError
-  >
+  readonly getSession: () => Effect.Effect<Option.Option<SupabaseSession>, SupabaseAuthError>
 
   /**
    * Get the current user
@@ -135,7 +137,14 @@ function toAuthUser(user: SupabaseUser) {
 /**
  * Auth operation type for error typing
  */
-type AuthOperation = "signIn" | "signOut" | "signUp" | "verifyToken" | "refreshToken" | "getSession" | "getUser"
+type AuthOperation =
+  | 'signIn'
+  | 'signOut'
+  | 'signUp'
+  | 'verifyToken'
+  | 'refreshToken'
+  | 'getSession'
+  | 'getUser'
 
 /**
  * Validate and decode user from SDK response
@@ -145,7 +154,7 @@ function validateUser(user: unknown, operation: AuthOperation) {
   if (Option.isNone(userOption)) {
     return Effect.fail(
       new SupabaseAuthError({
-        message: "Invalid user data from Supabase",
+        message: 'Invalid user data from Supabase',
         operation
       })
     )
@@ -157,18 +166,18 @@ function validateUser(user: unknown, operation: AuthOperation) {
  * Handle signIn error response
  */
 function handleSignInError(error: { message?: string }) {
-  if (error.message?.includes("Invalid login credentials")) {
+  if (error.message?.includes('Invalid login credentials')) {
     return Effect.fail(
       new SupabaseInvalidCredentialsError({
-        message: "Invalid email or password",
+        message: 'Invalid email or password',
         cause: error
       })
     )
   }
   return Effect.fail(
     new SupabaseAuthError({
-      message: error.message || "Sign in failed",
-      operation: "signIn",
+      message: error.message || 'Sign in failed',
+      operation: 'signIn',
       cause: error
     })
   )
@@ -201,7 +210,7 @@ function buildAuthResult(user: SupabaseUser, session: unknown) {
  * - SupabaseAuth.Test - Test layer with mock implementations
  * - SupabaseAuth.Dev - Development with debug logging
  */
-export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
+export class SupabaseAuth extends Context.Tag('SupabaseAuth')<
   SupabaseAuth,
   SupabaseAuthServiceInterface
 >() {
@@ -211,7 +220,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
   private static createService(client: SupabaseSDKClient) {
     return {
       signInWithPassword: (credentials: SignInCredentials) =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { data, error } = yield* Effect.tryPromise({
             try: () =>
               client.auth.signInWithPassword({
@@ -220,8 +229,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
               }),
             catch: (error) =>
               new SupabaseAuthError({
-                message: "Sign in failed",
-                operation: "signIn",
+                message: 'Sign in failed',
+                operation: 'signIn',
                 cause: error
               })
           })
@@ -230,12 +239,12 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
             return yield* handleSignInError(error)
           }
 
-          const user = yield* validateUser(data.user, "signIn")
+          const user = yield* validateUser(data.user, 'signIn')
           return buildAuthResult(user, data.session)
-        }).pipe(Effect.withSpan("SupabaseAuth.signInWithPassword")),
+        }).pipe(Effect.withSpan('SupabaseAuth.signInWithPassword')),
 
       signUp: (credentials: SignUpCredentials) =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { data, error } = yield* Effect.tryPromise({
             try: () =>
               client.auth.signUp({
@@ -245,8 +254,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
               }),
             catch: (error) =>
               new SupabaseAuthError({
-                message: "Sign up failed",
-                operation: "signUp",
+                message: 'Sign up failed',
+                operation: 'signUp',
                 cause: error
               })
           })
@@ -254,25 +263,25 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (error) {
             return yield* Effect.fail(
               new SupabaseAuthError({
-                message: error.message || "Sign up failed",
-                operation: "signUp",
+                message: error.message || 'Sign up failed',
+                operation: 'signUp',
                 cause: error
               })
             )
           }
 
-          const user = yield* validateUser(data.user, "signUp")
+          const user = yield* validateUser(data.user, 'signUp')
           return buildAuthResult(user, data.session)
-        }).pipe(Effect.withSpan("SupabaseAuth.signUp")),
+        }).pipe(Effect.withSpan('SupabaseAuth.signUp')),
 
       signOut: () =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { error } = yield* Effect.tryPromise({
             try: () => client.auth.signOut(),
             catch: (error) =>
               new SupabaseAuthError({
-                message: "Sign out failed",
-                operation: "signOut",
+                message: 'Sign out failed',
+                operation: 'signOut',
                 cause: error
               })
           })
@@ -280,22 +289,22 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (error) {
             return yield* Effect.fail(
               new SupabaseAuthError({
-                message: error.message || "Sign out failed",
-                operation: "signOut",
+                message: error.message || 'Sign out failed',
+                operation: 'signOut',
                 cause: error
               })
             )
           }
-        }).pipe(Effect.withSpan("SupabaseAuth.signOut")),
+        }).pipe(Effect.withSpan('SupabaseAuth.signOut')),
 
       verifyToken: (token: string) =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.getUser(token),
             catch: (error) =>
               new SupabaseAuthError({
-                message: "Token verification failed",
-                operation: "verifyToken",
+                message: 'Token verification failed',
+                operation: 'verifyToken',
                 cause: error
               })
           })
@@ -303,8 +312,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (error) {
             return yield* Effect.fail(
               new SupabaseTokenError({
-                message: error.message || "Invalid token",
-                tokenType: "access",
+                message: error.message || 'Invalid token',
+                tokenType: 'access',
                 cause: error
               })
             )
@@ -313,8 +322,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (!data.user) {
             return yield* Effect.fail(
               new SupabaseTokenError({
-                message: "Token is valid but no user found",
-                tokenType: "access"
+                message: 'Token is valid but no user found',
+                tokenType: 'access'
               })
             )
           }
@@ -324,23 +333,23 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (Option.isNone(userOption)) {
             return yield* Effect.fail(
               new SupabaseTokenError({
-                message: "Invalid user data from token",
-                tokenType: "access"
+                message: 'Invalid user data from token',
+                tokenType: 'access'
               })
             )
           }
 
           return toAuthUser(userOption.value)
-        }).pipe(Effect.withSpan("SupabaseAuth.verifyToken")),
+        }).pipe(Effect.withSpan('SupabaseAuth.verifyToken')),
 
       getSession: () =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.getSession(),
             catch: (error) =>
               new SupabaseAuthError({
-                message: "Failed to get session",
-                operation: "getSession",
+                message: 'Failed to get session',
+                operation: 'getSession',
                 cause: error
               })
           })
@@ -348,8 +357,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (error) {
             return yield* Effect.fail(
               new SupabaseAuthError({
-                message: error.message || "Failed to get session",
-                operation: "getSession",
+                message: error.message || 'Failed to get session',
+                operation: 'getSession',
                 cause: error
               })
             )
@@ -362,16 +371,16 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
 
           const sessionOption = decodeSession(data.session)
           return sessionOption
-        }).pipe(Effect.withSpan("SupabaseAuth.getSession")),
+        }).pipe(Effect.withSpan('SupabaseAuth.getSession')),
 
       getUser: () =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.getUser(),
             catch: (error) =>
               new SupabaseAuthError({
-                message: "Failed to get user",
-                operation: "getUser",
+                message: 'Failed to get user',
+                operation: 'getUser',
                 cause: error
               })
           })
@@ -383,8 +392,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
             }
             return yield* Effect.fail(
               new SupabaseAuthError({
-                message: error.message || "Failed to get user",
-                operation: "getUser",
+                message: error.message || 'Failed to get user',
+                operation: 'getUser',
                 cause: error
               })
             )
@@ -397,33 +406,33 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
 
           const userOption = decodeUser(data.user)
           return userOption
-        }).pipe(Effect.withSpan("SupabaseAuth.getUser")),
+        }).pipe(Effect.withSpan('SupabaseAuth.getUser')),
 
       refreshSession: () =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.refreshSession(),
             catch: (error) =>
               new SupabaseAuthError({
-                message: "Failed to refresh session",
-                operation: "refreshToken",
+                message: 'Failed to refresh session',
+                operation: 'refreshToken',
                 cause: error
               })
           })
 
           if (error) {
-            if (error.message?.includes("expired")) {
+            if (error.message?.includes('expired')) {
               return yield* Effect.fail(
                 new SupabaseSessionExpiredError({
-                  message: "Session has expired",
+                  message: 'Session has expired',
                   cause: error
                 })
               )
             }
             return yield* Effect.fail(
               new SupabaseAuthError({
-                message: error.message || "Failed to refresh session",
-                operation: "refreshToken",
+                message: error.message || 'Failed to refresh session',
+                operation: 'refreshToken',
                 cause: error
               })
             )
@@ -432,7 +441,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (!data.session) {
             return yield* Effect.fail(
               new SupabaseSessionExpiredError({
-                message: "No session to refresh"
+                message: 'No session to refresh'
               })
             )
           }
@@ -442,23 +451,23 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (Option.isNone(sessionOption)) {
             return yield* Effect.fail(
               new SupabaseAuthError({
-                message: "Invalid session data from Supabase",
-                operation: "refreshToken"
+                message: 'Invalid session data from Supabase',
+                operation: 'refreshToken'
               })
             )
           }
 
           return sessionOption.value
-        }).pipe(Effect.withSpan("SupabaseAuth.refreshSession")),
+        }).pipe(Effect.withSpan('SupabaseAuth.refreshSession')),
 
       getUserFromToken: (accessToken: string) =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { data, error } = yield* Effect.tryPromise({
             try: () => client.auth.getUser(accessToken),
             catch: (error) =>
               new SupabaseAuthError({
-                message: "Failed to get user from token",
-                operation: "getUser",
+                message: 'Failed to get user from token',
+                operation: 'getUser',
                 cause: error
               })
           })
@@ -466,8 +475,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (error) {
             return yield* Effect.fail(
               new SupabaseTokenError({
-                message: error.message || "Invalid access token",
-                tokenType: "access",
+                message: error.message || 'Invalid access token',
+                tokenType: 'access',
                 cause: error
               })
             )
@@ -476,8 +485,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (!data.user) {
             return yield* Effect.fail(
               new SupabaseTokenError({
-                message: "Token is valid but no user found",
-                tokenType: "access"
+                message: 'Token is valid but no user found',
+                tokenType: 'access'
               })
             )
           }
@@ -487,14 +496,14 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           if (Option.isNone(userOption)) {
             return yield* Effect.fail(
               new SupabaseTokenError({
-                message: "Invalid user data from token",
-                tokenType: "access"
+                message: 'Invalid user data from token',
+                tokenType: 'access'
               })
             )
           }
 
           return toAuthUser(userOption.value)
-        }).pipe(Effect.withSpan("SupabaseAuth.getUserFromToken"))
+        }).pipe(Effect.withSpan('SupabaseAuth.getUserFromToken'))
     }
   }
 
@@ -503,7 +512,7 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
    */
   static readonly Live = Layer.effect(
     SupabaseAuth,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const supabaseClient = yield* SupabaseClient
       const client = yield* supabaseClient.getClient()
       return SupabaseAuth.createService(client)
@@ -517,18 +526,18 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
     signInWithPassword: () =>
       Effect.succeed({
         user: {
-          id: "test-user-id",
-          email: "test@example.com",
+          id: 'test-user-id',
+          email: 'test@example.com',
           created_at: new Date().toISOString()
         },
         session: {
-          access_token: "test-access-token",
-          refresh_token: "test-refresh-token",
+          access_token: 'test-access-token',
+          refresh_token: 'test-refresh-token',
           expires_in: 3600,
-          token_type: "bearer",
+          token_type: 'bearer',
           user: {
-            id: "test-user-id",
-            email: "test@example.com",
+            id: 'test-user-id',
+            email: 'test@example.com',
             created_at: new Date().toISOString()
           }
         }
@@ -537,8 +546,8 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
     signUp: () =>
       Effect.succeed({
         user: {
-          id: "new-user-id",
-          email: "new@example.com",
+          id: 'new-user-id',
+          email: 'new@example.com',
           created_at: new Date().toISOString()
         },
         session: null
@@ -548,22 +557,22 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
 
     verifyToken: () =>
       Effect.succeed({
-        id: "test-user-id",
-        email: "test@example.com",
-        name: "Test User",
-        role: "authenticated"
+        id: 'test-user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+        role: 'authenticated'
       }),
 
     getSession: () =>
       Effect.succeed(
         Option.some({
-          access_token: "test-access-token",
-          refresh_token: "test-refresh-token",
+          access_token: 'test-access-token',
+          refresh_token: 'test-refresh-token',
           expires_in: 3600,
-          token_type: "bearer",
+          token_type: 'bearer',
           user: {
-            id: "test-user-id",
-            email: "test@example.com",
+            id: 'test-user-id',
+            email: 'test@example.com',
             created_at: new Date().toISOString()
           }
         })
@@ -572,31 +581,31 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
     getUser: () =>
       Effect.succeed(
         Option.some({
-          id: "test-user-id",
-          email: "test@example.com",
+          id: 'test-user-id',
+          email: 'test@example.com',
           created_at: new Date().toISOString()
         })
       ),
 
     refreshSession: () =>
       Effect.succeed({
-        access_token: "refreshed-access-token",
-        refresh_token: "refreshed-refresh-token",
+        access_token: 'refreshed-access-token',
+        refresh_token: 'refreshed-refresh-token',
         expires_in: 3600,
-        token_type: "bearer",
+        token_type: 'bearer',
         user: {
-          id: "test-user-id",
-          email: "test@example.com",
+          id: 'test-user-id',
+          email: 'test@example.com',
           created_at: new Date().toISOString()
         }
       }),
 
     getUserFromToken: () =>
       Effect.succeed({
-        id: "test-user-id",
-        email: "test@example.com",
-        name: "Test User",
-        role: "authenticated"
+        id: 'test-user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+        role: 'authenticated'
       })
   })
 
@@ -605,27 +614,29 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
    */
   static readonly Dev = Layer.effect(
     SupabaseAuth,
-    Effect.gen(function*() {
-      yield* Effect.logDebug("[SupabaseAuth] Initializing dev auth service...")
+    Effect.gen(function* () {
+      yield* Effect.logDebug('[SupabaseAuth] Initializing dev auth service...')
 
       // Use test implementations with logging
       return {
         signInWithPassword: (credentials: SignInCredentials) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseAuth] signInWithPassword", { email: credentials.email })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseAuth] signInWithPassword', {
+              email: credentials.email
+            })
             return {
               user: {
-                id: "dev-user-id",
+                id: 'dev-user-id',
                 email: credentials.email,
                 created_at: new Date().toISOString()
               },
               session: {
-                access_token: "dev-access-token",
-                refresh_token: "dev-refresh-token",
+                access_token: 'dev-access-token',
+                refresh_token: 'dev-refresh-token',
                 expires_in: 3600,
-                token_type: "bearer",
+                token_type: 'bearer',
                 user: {
-                  id: "dev-user-id",
+                  id: 'dev-user-id',
                   email: credentials.email,
                   created_at: new Date().toISOString()
                 }
@@ -634,11 +645,11 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           }),
 
         signUp: (credentials: SignUpCredentials) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseAuth] signUp", { email: credentials.email })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseAuth] signUp', { email: credentials.email })
             return {
               user: {
-                id: "dev-new-user-id",
+                id: 'dev-new-user-id',
                 email: credentials.email,
                 created_at: new Date().toISOString()
               },
@@ -647,71 +658,75 @@ export class SupabaseAuth extends Context.Tag("SupabaseAuth")<
           }),
 
         signOut: () =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseAuth] signOut")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseAuth] signOut')
           }),
 
         verifyToken: (token: string) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseAuth] verifyToken", { token: `${token.slice(0, 10)}...` })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseAuth] verifyToken', {
+              token: `${token.slice(0, 10)}...`
+            })
             return {
-              id: "dev-user-id",
-              email: "dev@example.com",
-              name: "Dev User",
-              role: "authenticated"
+              id: 'dev-user-id',
+              email: 'dev@example.com',
+              name: 'Dev User',
+              role: 'authenticated'
             }
           }),
 
         getSession: () =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseAuth] getSession")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseAuth] getSession')
             return Option.some({
-              access_token: "dev-access-token",
-              refresh_token: "dev-refresh-token",
+              access_token: 'dev-access-token',
+              refresh_token: 'dev-refresh-token',
               expires_in: 3600,
-              token_type: "bearer",
+              token_type: 'bearer',
               user: {
-                id: "dev-user-id",
-                email: "dev@example.com",
+                id: 'dev-user-id',
+                email: 'dev@example.com',
                 created_at: new Date().toISOString()
               }
             })
           }),
 
         getUser: () =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseAuth] getUser")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseAuth] getUser')
             return Option.some({
-              id: "dev-user-id",
-              email: "dev@example.com",
+              id: 'dev-user-id',
+              email: 'dev@example.com',
               created_at: new Date().toISOString()
             })
           }),
 
         refreshSession: () =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseAuth] refreshSession")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseAuth] refreshSession')
             return {
-              access_token: "dev-refreshed-token",
-              refresh_token: "dev-refresh-token",
+              access_token: 'dev-refreshed-token',
+              refresh_token: 'dev-refresh-token',
               expires_in: 3600,
-              token_type: "bearer",
+              token_type: 'bearer',
               user: {
-                id: "dev-user-id",
-                email: "dev@example.com",
+                id: 'dev-user-id',
+                email: 'dev@example.com',
                 created_at: new Date().toISOString()
               }
             }
           }),
 
         getUserFromToken: (accessToken: string) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseAuth] getUserFromToken", { token: `${accessToken.slice(0, 10)}...` })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseAuth] getUserFromToken', {
+              token: `${accessToken.slice(0, 10)}...`
+            })
             return {
-              id: "dev-user-id",
-              email: "dev@example.com",
-              name: "Dev User",
-              role: "authenticated"
+              id: 'dev-user-id',
+              email: 'dev@example.com',
+              name: 'Dev User',
+              role: 'authenticated'
             }
           })
       }

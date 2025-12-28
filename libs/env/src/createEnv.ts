@@ -1,5 +1,3 @@
-import { Config, ConfigProvider, Layer, ManagedRuntime } from "effect"
-
 /**
  * Environment Configuration Runtime
  *
@@ -17,8 +15,9 @@ Features:
  *
  * @module @workspace/env/createEnv
  */
-import fs from "node:fs"
-import path from "node:path"
+import fs from 'node:fs'
+import path from 'node:path'
+import { Config, ConfigProvider, Layer, ManagedRuntime } from 'effect'
 
 // ============================================================================
 // Re-export Config
@@ -78,8 +77,7 @@ interface CreateEnvOptions<
  * Server: Node.js environment with process.versions.node
  * Client: Browser environment without process or Node.js globals
  */
-const isServer = typeof process !== "undefined" &&
-  process.versions?.node != null
+const isServer = typeof process !== 'undefined' && process.versions?.node != null
 
 // ============================================================================
 // .env Parser
@@ -89,11 +87,11 @@ const isServer = typeof process !== "undefined" &&
  */
 function parseDotEnv(content: string) {
   const result: Record<string, string> = {}
-  for (const line of content.split("\n")) {
+  for (const line of content.split('\n')) {
     const match = line.match(/^([^=:#]+)=(.*)$/)
     if (match?.[1] && match[2] !== undefined) {
       const key = match[1].trim()
-      const value = match[2].trim().replace(/^["']|["']$/g, "")
+      const value = match[2].trim().replace(/^["']|["']$/g, '')
       result[key] = value
     }
   }
@@ -121,8 +119,8 @@ function loadEnvSync(): Map<string, string> {
   // On server, also read .env file if it exists
   if (isServer) {
     try {
-      const envPath = path.resolve(process.cwd(), ".env")
-      const content = fs.readFileSync(envPath, "utf-8")
+      const envPath = path.resolve(process.cwd(), '.env')
+      const content = fs.readFileSync(envPath, 'utf-8')
       const dotEnvVars = parseDotEnv(content)
       // .env values override process.env
       for (const [key, value] of Object.entries(dotEnvVars)) {
@@ -192,9 +190,7 @@ export function createEnv<
   TServer extends Record<string, Config.Config<unknown>>,
   TClient extends Record<string, Config.Config<unknown>>,
   TShared extends Record<string, Config.Config<unknown>>
->(
-  options: CreateEnvOptions<TServer, TClient, TShared>
-) {
+>(options: CreateEnvOptions<TServer, TClient, TShared>) {
   const { client, clientPrefix, server, shared } = options
   // Validate client keys have correct prefix
   for (const key of Object.keys(client)) {
@@ -214,7 +210,7 @@ export function createEnv<
     const serverKeys = new Set(Object.keys(server))
     return new Proxy(result, {
       get(target, prop, receiver) {
-        if (typeof prop === "string" && serverKeys.has(prop)) {
+        if (typeof prop === 'string' && serverKeys.has(prop)) {
           throw new Error(
             `Cannot access server-only env var "${prop}" on the client. This variable is only available in server context.`
           )

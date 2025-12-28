@@ -1,12 +1,12 @@
-import { UserRepository } from "@samuelho-dev/data-access-user"
-import { env } from "@samuelho-dev/env"
-import { CacheService } from "@samuelho-dev/infra-cache"
-import { DatabaseService } from "@samuelho-dev/infra-database"
-import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
-import { PubsubService } from "@samuelho-dev/infra-pubsub"
-import { QueueService } from "@samuelho-dev/infra-queue"
-import { Layer } from "effect"
-import { UserService } from "./service"
+import { UserRepository } from '@samuelho-dev/data-access-user'
+import { env } from '@samuelho-dev/env'
+import { CacheService } from '@samuelho-dev/infra-cache'
+import { DatabaseService } from '@samuelho-dev/infra-database'
+import { LoggingService, MetricsService } from '@samuelho-dev/infra-observability'
+import { PubsubService } from '@samuelho-dev/infra-pubsub'
+import { QueueService } from '@samuelho-dev/infra-queue'
+import { Layer } from 'effect'
+import { UserService } from './service'
 
 /**
  * User Layers
@@ -111,10 +111,9 @@ export const InfrastructureDev = Layer.mergeAll(
  * program.pipe(Effect.provide(UserFeatureLive))
  * ```
  */
-export const UserFeatureLive = Layer.mergeAll(
-  UserService.Live,
-  UserRepository.Live
-).pipe(Layer.provide(InfrastructureLive))
+export const UserFeatureLive = Layer.mergeAll(UserService.Live, UserRepository.Live).pipe(
+  Layer.provide(InfrastructureLive)
+)
 
 /**
  * Full Test Layer for testing
@@ -136,20 +135,18 @@ export const UserFeatureLive = Layer.mergeAll(
  * })
  * ```
  */
-export const UserFeatureTest = Layer.mergeAll(
-  UserService.Live,
-  UserRepository.Live
-).pipe(Layer.provide(InfrastructureTest))
+export const UserFeatureTest = Layer.mergeAll(UserService.Live, UserRepository.Live).pipe(
+  Layer.provide(InfrastructureTest)
+)
 
 /**
  * Full Dev Layer for development
  *
  * Uses local services with verbose logging and debugging enabled.
  */
-export const UserFeatureDev = Layer.mergeAll(
-  UserService.Live,
-  UserRepository.Live
-).pipe(Layer.provide(InfrastructureDev))
+export const UserFeatureDev = Layer.mergeAll(UserService.Live, UserRepository.Live).pipe(
+  Layer.provide(InfrastructureDev)
+)
 
 // ============================================================================
 // Auto-selecting Layer
@@ -164,9 +161,9 @@ export const UserFeatureDev = Layer.mergeAll(
  */
 export const UserFeatureAuto = Layer.suspend(() => {
   switch (env.NODE_ENV) {
-    case "test":
+    case 'test':
       return UserFeatureTest
-    case "development":
+    case 'development':
       return UserFeatureDev
     default:
       return UserFeatureLive

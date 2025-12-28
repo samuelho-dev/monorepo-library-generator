@@ -1,8 +1,13 @@
-import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "@effect/platform"
-import { Atom } from "@effect-atom/atom"
-import { useAtom } from "@effect-atom/atom-react"
-import { Cause, Effect, Option, Schema } from "effect"
-import { useMemo } from "react"
+import {
+  FetchHttpClient,
+  HttpClient,
+  HttpClientRequest,
+  HttpClientResponse
+} from '@effect/platform'
+import { Atom } from '@effect-atom/atom'
+import { useAtom } from '@effect-atom/atom-react'
+import { Cause, Effect, Option, Schema } from 'effect'
+import { useMemo } from 'react'
 
 /**
  * RPC Client Hooks
@@ -39,7 +44,7 @@ Usage:
  * All RPC errors flow through Effect's error channel with this structure.
  * No try/catch needed - errors are typed at the Effect level.
  */
-export class RpcError extends Schema.TaggedError<RpcError>()("RpcError", {
+export class RpcError extends Schema.TaggedError<RpcError>()('RpcError', {
   operation: Schema.String,
   message: Schema.String,
   code: Schema.optional(Schema.String),
@@ -52,37 +57,37 @@ export class RpcError extends Schema.TaggedError<RpcError>()("RpcError", {
  * Used by hooks to track loading, success, and error states.
  */
 export type RpcState<A, E> =
-  | { readonly _tag: "Initial" }
-  | { readonly _tag: "Loading" }
-  | { readonly _tag: "Success"; readonly value: A }
-  | { readonly _tag: "Failure"; readonly error: E }
+  | { readonly _tag: 'Initial' }
+  | { readonly _tag: 'Loading' }
+  | { readonly _tag: 'Success'; readonly value: A }
+  | { readonly _tag: 'Failure'; readonly error: E }
 
 /**
  * Create initial state
  */
 function initialState<A, E>(): RpcState<A, E> {
-  return { _tag: "Initial" }
+  return { _tag: 'Initial' }
 }
 
 /**
  * Create loading state
  */
 function loadingState<A, E>(): RpcState<A, E> {
-  return { _tag: "Loading" }
+  return { _tag: 'Loading' }
 }
 
 /**
  * Create success state
  */
 function successState<A, E>(value: A): RpcState<A, E> {
-  return { _tag: "Success", value }
+  return { _tag: 'Success', value }
 }
 
 /**
  * Create failure state
  */
 function failureState<A, E>(error: E): RpcState<A, E> {
-  return { _tag: "Failure", error }
+  return { _tag: 'Failure', error }
 }
 // ============================================================================
 // RPC Configuration
@@ -94,7 +99,7 @@ function failureState<A, E>(error: E): RpcState<A, E> {
  * Falls back to "/api/rpc" if not configured.
  */
 // biome-ignore lint/style/noProcessEnv: Client-side RPC endpoint configured via environment
-const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "/api/rpc"
+const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? '/api/rpc'
 
 /**
  * Default timeout for RPC calls (30 seconds)
@@ -144,12 +149,13 @@ export function rpcCall<I, O>(
   return Effect.gen(function* () {
     // Validate input
     const validatedInput = yield* Schema.decode(inputSchema)(payload).pipe(
-      Effect.mapError((parseError) =>
-        new RpcError({
-          operation,
-          message: `Input validation failed: ${parseError.message}`,
-          code: "VALIDATION_ERROR"
-        })
+      Effect.mapError(
+        (parseError) =>
+          new RpcError({
+            operation,
+            message: `Input validation failed: ${parseError.message}`,
+            code: 'VALIDATION_ERROR'
+          })
       )
     )
 
@@ -168,13 +174,14 @@ export function rpcCall<I, O>(
     const response = yield* Effect.flatMap(request, (req) =>
       client.execute(req).pipe(
         Effect.timeout(DEFAULT_TIMEOUT),
-        Effect.mapError((error) =>
-          new RpcError({
-            operation,
-            message: `Request failed: ${String(error)}`,
-            code: "NETWORK_ERROR",
-            cause: error
-          })
+        Effect.mapError(
+          (error) =>
+            new RpcError({
+              operation,
+              message: `Request failed: ${String(error)}`,
+              code: 'NETWORK_ERROR',
+              cause: error
+            })
         )
       )
     )
@@ -196,24 +203,26 @@ export function rpcCall<I, O>(
 
     // Parse response body
     const body = yield* HttpClientResponse.json(response).pipe(
-      Effect.mapError((error) =>
-        new RpcError({
-          operation,
-          message: "Failed to parse response JSON",
-          code: "PARSE_ERROR",
-          cause: error
-        })
+      Effect.mapError(
+        (error) =>
+          new RpcError({
+            operation,
+            message: 'Failed to parse response JSON',
+            code: 'PARSE_ERROR',
+            cause: error
+          })
       )
     )
 
     // Validate response against schema
     const validated = yield* Schema.decodeUnknown(outputSchema)(body).pipe(
-      Effect.mapError((parseError) =>
-        new RpcError({
-          operation,
-          message: `Response validation failed: ${parseError.message}`,
-          code: "VALIDATION_ERROR"
-        })
+      Effect.mapError(
+        (parseError) =>
+          new RpcError({
+            operation,
+            message: `Response validation failed: ${parseError.message}`,
+            code: 'VALIDATION_ERROR'
+          })
       )
     )
 
@@ -281,10 +290,7 @@ export function useRpcMutation<I, O>(
 ) {
   // Create Atom.fn that executes the RPC call
   const mutationAtom = useMemo(
-    () =>
-      Atom.fn((input: I) =>
-        rpcCallWithLayer(operation, input, inputSchema, outputSchema)
-      ),
+    () => Atom.fn((input: I) => rpcCallWithLayer(operation, input, inputSchema, outputSchema)),
     [operation]
   )
 
@@ -293,10 +299,10 @@ export function useRpcMutation<I, O>(
 
   // Map Atom Result to our state shape
   const state = useMemo((): RpcState<O, RpcError> => {
-    if (result._tag === "Initial") return initialState()
-    if (result._tag === "Waiting") return loadingState()
-    if (result._tag === "Success") return successState(result.value)
-    if (result._tag === "Failure") {
+    if (result._tag === 'Initial') return initialState()
+    if (result._tag === 'Waiting') return loadingState()
+    if (result._tag === 'Success') return successState(result.value)
+    if (result._tag === 'Failure') {
       // Extract RpcError from Cause
       const error = Cause.failureOption(result.cause)
       if (Option.isSome(error)) {
@@ -306,8 +312,8 @@ export function useRpcMutation<I, O>(
       return failureState(
         new RpcError({
           operation,
-          message: "An unexpected error occurred",
-          code: "UNEXPECTED_ERROR"
+          message: 'An unexpected error occurred',
+          code: 'UNEXPECTED_ERROR'
         })
       )
     }
@@ -316,9 +322,9 @@ export function useRpcMutation<I, O>(
 
   return {
     mutate,
-    isLoading: state._tag === "Loading",
-    error: state._tag === "Failure" ? state.error : null,
-    data: state._tag === "Success" ? state.value : null,
+    isLoading: state._tag === 'Loading',
+    error: state._tag === 'Failure' ? state.error : null,
+    data: state._tag === 'Success' ? state.value : null,
     state,
     reset: () => {} // Atom handles reset automatically on next call
   } as const
@@ -372,7 +378,7 @@ export function useRpcQuery<I, O>(
   // Create Atom.fn for automatic fetching
   const queryAtom = useMemo(
     () =>
-      Atom.fn((_: void) =>
+      Atom.fn((_: undefined) =>
         enabled
           ? rpcCallWithLayer(operation, input, inputSchema, outputSchema)
           : Effect.succeed(null as O | null)
@@ -392,10 +398,10 @@ export function useRpcQuery<I, O>(
 
   // Map Atom Result to our state shape
   const state = useMemo((): RpcState<O | null, RpcError> => {
-    if (result._tag === "Initial") return initialState()
-    if (result._tag === "Waiting") return loadingState()
-    if (result._tag === "Success") return successState(result.value)
-    if (result._tag === "Failure") {
+    if (result._tag === 'Initial') return initialState()
+    if (result._tag === 'Waiting') return loadingState()
+    if (result._tag === 'Success') return successState(result.value)
+    if (result._tag === 'Failure') {
       const error = Cause.failureOption(result.cause)
       if (Option.isSome(error)) {
         return failureState(error.value)
@@ -403,8 +409,8 @@ export function useRpcQuery<I, O>(
       return failureState(
         new RpcError({
           operation,
-          message: "An unexpected error occurred",
-          code: "UNEXPECTED_ERROR"
+          message: 'An unexpected error occurred',
+          code: 'UNEXPECTED_ERROR'
         })
       )
     }
@@ -412,9 +418,9 @@ export function useRpcQuery<I, O>(
   }, [result, operation])
 
   return {
-    data: state._tag === "Success" ? state.value : null,
-    isLoading: state._tag === "Loading",
-    error: state._tag === "Failure" ? state.error : null,
+    data: state._tag === 'Success' ? state.value : null,
+    isLoading: state._tag === 'Loading',
+    error: state._tag === 'Failure' ? state.error : null,
     refetch: () => refetch(),
     state
   } as const
@@ -466,10 +472,7 @@ export function useRpcLazyQuery<I, O>(
 ) {
   // Create Atom.fn that executes the RPC call (same as mutation)
   const queryAtom = useMemo(
-    () =>
-      Atom.fn((input: I) =>
-        rpcCallWithLayer(operation, input, inputSchema, outputSchema)
-      ),
+    () => Atom.fn((input: I) => rpcCallWithLayer(operation, input, inputSchema, outputSchema)),
     [operation]
   )
 
@@ -478,10 +481,10 @@ export function useRpcLazyQuery<I, O>(
 
   // Map Atom Result to our state shape
   const state = useMemo((): RpcState<O, RpcError> => {
-    if (result._tag === "Initial") return initialState()
-    if (result._tag === "Waiting") return loadingState()
-    if (result._tag === "Success") return successState(result.value)
-    if (result._tag === "Failure") {
+    if (result._tag === 'Initial') return initialState()
+    if (result._tag === 'Waiting') return loadingState()
+    if (result._tag === 'Success') return successState(result.value)
+    if (result._tag === 'Failure') {
       const error = Cause.failureOption(result.cause)
       if (Option.isSome(error)) {
         return failureState(error.value)
@@ -489,8 +492,8 @@ export function useRpcLazyQuery<I, O>(
       return failureState(
         new RpcError({
           operation,
-          message: "An unexpected error occurred",
-          code: "UNEXPECTED_ERROR"
+          message: 'An unexpected error occurred',
+          code: 'UNEXPECTED_ERROR'
         })
       )
     }
@@ -498,9 +501,9 @@ export function useRpcLazyQuery<I, O>(
   }, [result, operation])
 
   return {
-    data: state._tag === "Success" ? state.value : null,
-    isLoading: state._tag === "Loading",
-    error: state._tag === "Failure" ? state.error : null,
+    data: state._tag === 'Success' ? state.value : null,
+    isLoading: state._tag === 'Loading',
+    error: state._tag === 'Failure' ? state.error : null,
     execute,
     state
   } as const

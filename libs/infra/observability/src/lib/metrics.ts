@@ -1,6 +1,6 @@
-import { env } from "@samuelho-dev/env"
-import { OpenTelemetryProvider } from "@samuelho-dev/provider-opentelemetry"
-import { Context, Effect, Layer, Metric, MetricBoundaries } from "effect"
+import { env } from '@samuelho-dev/env'
+import { OpenTelemetryProvider } from '@samuelho-dev/provider-opentelemetry'
+import { Context, Effect, Layer, Metric, MetricBoundaries } from 'effect'
 
 /**
  * Observability Metrics Service
@@ -131,7 +131,7 @@ export interface HistogramOptions extends MetricOptions {
    * Custom bucket boundaries
    * @default [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
    */
-  readonly boundaries?: ReadonlyArray<number>
+  readonly boundaries?: readonly number[]
 }
 
 /**
@@ -144,10 +144,7 @@ export interface MetricsOperations {
    * Counters are monotonically increasing values.
    * Use for: request counts, error counts, items processed.
    */
-  readonly counter: (
-    name: string,
-    options?: MetricOptions
-  ) => Effect.Effect<CounterHandle>
+  readonly counter: (name: string, options?: MetricOptions) => Effect.Effect<CounterHandle>
 
   /**
    * Create a gauge metric
@@ -155,10 +152,7 @@ export interface MetricsOperations {
    * Gauges can go up or down.
    * Use for: current connections, queue size, memory usage.
    */
-  readonly gauge: (
-    name: string,
-    options?: MetricOptions
-  ) => Effect.Effect<GaugeHandle>
+  readonly gauge: (name: string, options?: MetricOptions) => Effect.Effect<GaugeHandle>
 
   /**
    * Create a histogram metric
@@ -166,10 +160,7 @@ export interface MetricsOperations {
    * Histograms track value distributions.
    * Use for: request duration, response size, batch size.
    */
-  readonly histogram: (
-    name: string,
-    options?: HistogramOptions
-  ) => Effect.Effect<HistogramHandle>
+  readonly histogram: (name: string, options?: HistogramOptions) => Effect.Effect<HistogramHandle>
 }
 
 /**
@@ -195,9 +186,7 @@ export interface MetricsOperations {
  * }).pipe(Effect.provide(MetricsService.Live))
  * ```
  */
-export class MetricsService extends Context.Tag(
-  "@samuelho-dev/infra-observability/MetricsService"
-)<
+export class MetricsService extends Context.Tag('@samuelho-dev/infra-observability/MetricsService')<
   MetricsService,
   MetricsOperations
 >() {
@@ -222,7 +211,7 @@ export class MetricsService extends Context.Tag(
             get: Metric.value(counter).pipe(
               Effect.map((state) => {
                 // MetricState is a union type - counter state has a "count" property
-                if ("count" in state) {
+                if ('count' in state) {
                   return state.count
                 }
                 return 0
@@ -245,7 +234,7 @@ export class MetricsService extends Context.Tag(
             decrementBy: (value: number) => Metric.incrementBy(gauge, -value),
             get: Metric.value(gauge).pipe(
               Effect.map((state) => {
-                if ("value" in state) {
+                if ('value' in state) {
                   return state.value
                 }
                 return 0
@@ -259,17 +248,17 @@ export class MetricsService extends Context.Tag(
           // Use exponential boundaries by default (good for HTTP latency)
           const boundaries = options?.boundaries
             ? MetricBoundaries.linear({
-              start: options.boundaries[0] ?? 0.005,
-              width: 0.05,
-              count: options.boundaries.length
-            })
+                start: options.boundaries[0] ?? 0.005,
+                width: 0.05,
+                count: options.boundaries.length
+              })
             : MetricBoundaries.exponential({ start: 0.005, factor: 2, count: 11 })
           const histogram = Metric.histogram(name, boundaries)
 
           return {
             record: (value: number) => Metric.update(histogram, value),
             timer: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-              Effect.gen(function*() {
+              Effect.gen(function* () {
                 const start = Date.now()
                 const result = yield* effect
                 const duration = (Date.now() - start) / 1000 // Convert to seconds
@@ -288,7 +277,7 @@ export class MetricsService extends Context.Tag(
     // Store metrics by name for test assertions
     const counters = new Map<string, { count: number }>()
     const gauges = new Map<string, { value: number }>()
-    const histograms = new Map<string, { values: Array<number> }>()
+    const histograms = new Map<string, { values: number[] }>()
 
     return {
       counter: (name: string) =>
@@ -347,7 +336,7 @@ export class MetricsService extends Context.Tag(
                 state.values.push(value)
               }),
             timer: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-              Effect.gen(function*() {
+              Effect.gen(function* () {
                 const start = Date.now()
                 const result = yield* effect
                 const duration = (Date.now() - start) / 1000
@@ -391,7 +380,7 @@ export class MetricsService extends Context.Tag(
    */
   static readonly WithProvider = Layer.effect(
     MetricsService,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       // Just verify OpenTelemetryProvider is available
       // The OTEL SDK layer handles the actual export
       yield* OpenTelemetryProvider
@@ -408,10 +397,7 @@ export class MetricsService extends Context.Tag(
    *
    * Uses Effect.Metric with OTEL SDK for production export.
    */
-  static readonly Live = Layer.provide(
-    MetricsService.WithProvider,
-    OpenTelemetryProvider.Live
-  )
+  static readonly Live = Layer.provide(MetricsService.WithProvider, OpenTelemetryProvider.Live)
 
   // ===========================================================================
   // Static Test Layer
@@ -433,9 +419,9 @@ export class MetricsService extends Context.Tag(
    */
   static readonly Dev = Layer.effect(
     MetricsService,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const otel = yield* OpenTelemetryProvider
-      yield* Effect.logDebug("[MetricsService] [DEV] Initialized", {
+      yield* Effect.logDebug('[MetricsService] [DEV] Initialized', {
         serviceName: otel.serviceName,
         metricsEnabled: otel.metricsEnabled
       })
@@ -444,20 +430,20 @@ export class MetricsService extends Context.Tag(
 
       return {
         counter: (name: string, options?: MetricOptions) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[MetricsService] [DEV] Creating counter", { name, options })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[MetricsService] [DEV] Creating counter', { name, options })
             return yield* baseMetrics.counter(name, options)
           }),
 
         gauge: (name: string, options?: MetricOptions) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[MetricsService] [DEV] Creating gauge", { name, options })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[MetricsService] [DEV] Creating gauge', { name, options })
             return yield* baseMetrics.gauge(name, options)
           }),
 
         histogram: (name: string, options?: HistogramOptions) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[MetricsService] [DEV] Creating histogram", { name, options })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[MetricsService] [DEV] Creating histogram', { name, options })
             return yield* baseMetrics.histogram(name, options)
           })
       }
@@ -479,9 +465,9 @@ export class MetricsService extends Context.Tag(
    */
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
-      case "production":
+      case 'production':
         return MetricsService.Live
-      case "test":
+      case 'test':
         return MetricsService.Test
       default:
         // "development" and other environments use Dev

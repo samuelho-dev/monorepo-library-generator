@@ -21,7 +21,7 @@
  * @module monorepo-library-generator/infrastructure
  */
 
-import { Effect } from "effect"
+import { Effect } from 'effect'
 import {
   generateBaseTsConfig,
   generateLibTsConfig,
@@ -30,9 +30,9 @@ import {
   generateReadme,
   generateSpecTsConfig,
   generateVitestConfig
-} from "../generators/infrastructure/templates"
-import type { LibraryType, PlatformType } from "./build"
-import type { FileSystemAdapter } from "./filesystem"
+} from '../generators/infrastructure/templates'
+import type { LibraryType, PlatformType } from './build'
+import type { FileSystemAdapter } from './filesystem'
 
 /**
  * Unified Infrastructure Generation Options
@@ -84,7 +84,7 @@ export interface InfrastructureOptions {
   /**
    * Project tags for Nx constraints
    */
-  readonly tags: Array<string>
+  readonly tags: string[]
 
   /**
    * Generate client/server split exports
@@ -94,12 +94,12 @@ export interface InfrastructureOptions {
   /**
    * Entity names for contract libraries (enables granular entity exports)
    */
-  readonly entities?: ReadonlyArray<string>
+  readonly entities?: readonly string[]
 
   /**
    * Sub-module names for contract libraries (enables subpath exports)
    */
-  readonly subModules?: ReadonlyArray<string>
+  readonly subModules?: readonly string[]
 }
 
 /**
@@ -121,16 +121,16 @@ export interface InfrastructureGenerationResult {
   readonly projectConfig?: {
     readonly name: string
     readonly root: string
-    readonly projectType: "library"
+    readonly projectType: 'library'
     readonly sourceRoot: string
-    readonly tags: Array<string>
+    readonly tags: string[]
     readonly targets: Record<string, unknown>
   }
 
   /**
    * Files generated during infrastructure phase
    */
-  readonly filesGenerated: Array<string>
+  readonly filesGenerated: string[]
 }
 
 /**
@@ -151,10 +151,10 @@ export function generateLibraryInfrastructure(
   adapter: FileSystemAdapter,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const mode = adapter.getMode()
     const workspaceRoot = adapter.getWorkspaceRoot()
-    const filesGenerated: Array<string> = []
+    const filesGenerated: string[] = []
 
     // Compute source root if not provided
     const sourceRoot = options.sourceRoot || `${options.projectRoot}/src`
@@ -170,7 +170,7 @@ export function generateLibraryInfrastructure(
     }
 
     // 3. Generate vitest configuration (skip for contract libraries - types only)
-    if (options.libraryType !== "contract") {
+    if (options.libraryType !== 'contract') {
       yield* writeVitestConfig(adapter, workspaceRoot, options)
       filesGenerated.push(`${options.projectRoot}/vitest.config.ts`)
     }
@@ -197,7 +197,7 @@ export function generateLibraryInfrastructure(
       includeClientServer: options.includeClientServer
     })
 
-    if (mode === "nx") {
+    if (mode === 'nx') {
       // Nx mode: Return config for addProjectConfiguration() to handle via Nx devkit
       return {
         requiresNxRegistration: true,
@@ -233,7 +233,7 @@ function writePackageJson(
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const packageJson = generatePackageJson({
       packageName: options.packageName,
       projectName: options.projectName,
@@ -258,8 +258,8 @@ function writeTsConfigFiles(
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
-    const filesGenerated: Array<string> = []
+  return Effect.gen(function* () {
+    const filesGenerated: string[] = []
 
     // Generate tsconfig.json (base)
     const baseTsConfig = generateBaseTsConfig({
@@ -284,7 +284,7 @@ function writeTsConfigFiles(
     filesGenerated.push(`${options.projectRoot}/tsconfig.lib.json`)
 
     // Generate tsconfig.spec.json (test) - skip for contract libraries (types only)
-    if (options.libraryType !== "contract") {
+    if (options.libraryType !== 'contract') {
       const specTsConfig = generateSpecTsConfig()
 
       yield* adapter.writeFile(
@@ -306,7 +306,7 @@ function writeVitestConfig(
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const vitestConfig = generateVitestConfig()
 
     yield* adapter.writeFile(
@@ -324,8 +324,8 @@ function writeDocumentationFiles(
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function*() {
-    const filesGenerated: Array<string> = []
+  return Effect.gen(function* () {
+    const filesGenerated: string[] = []
 
     // Generate README.md using template
     const readmeContent = generateReadme({
@@ -356,8 +356,8 @@ function generateSourceFileScaffolds(
   workspaceRoot: string,
   sourceRoot: string
 ) {
-  return Effect.gen(function*() {
-    const filesGenerated: Array<string> = []
+  return Effect.gen(function* () {
+    const filesGenerated: string[] = []
 
     // Create src directory
     yield* adapter.makeDirectory(`${workspaceRoot}/${sourceRoot}`)

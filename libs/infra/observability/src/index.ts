@@ -24,14 +24,6 @@ Key exports:
 // Fiber Tracking Supervisor
 // ============================================================================
 // Optional fiber lifecycle tracking
-export {
-  FiberTrackingFiltered,
-  FiberTrackingFull,
-  FiberTrackingMinimal,
-  makeFiberTrackingSupervisor,
-  type SupervisorConfig,
-  withFiberTracking
-} from "./lib/supervisor"
 
 // ============================================================================
 // Configuration
@@ -49,8 +41,47 @@ export {
   TestConfig,
   type TracesConfig,
   TracesConfigSchema
-} from "./lib/config"
-
+} from './lib/config'
+// ============================================================================
+// Constants
+// ============================================================================
+// Common constants for metrics, logging, and tracing
+export {
+  HistogramBoundaries,
+  LogLevelConfigs,
+  SpanAttributes,
+  StandardMetricNames,
+  withMinLogLevel
+} from './lib/constants'
+// ============================================================================
+// Error Types
+// ============================================================================
+// Error types for observability operations
+export {
+  ObservabilityConfigError,
+  ObservabilityConnectionError,
+  ObservabilityError,
+  type ObservabilityErrorType,
+  ObservabilityExportError,
+  ObservabilityInitError
+} from './lib/errors'
+// ============================================================================
+// Logging Service
+// ============================================================================
+// Effect Logger wrapper with structured logging
+export { type LogContext, type LoggingOperations, LoggingService } from './lib/logging'
+// ============================================================================
+// Metrics Service
+// ============================================================================
+// Effect.Metric wrapper with counters, gauges, histograms
+export {
+  type CounterHandle,
+  type GaugeHandle,
+  type HistogramHandle,
+  type HistogramOptions,
+  type MetricOptions,
+  MetricsService
+} from './lib/metrics'
 // ============================================================================
 // Presets
 // ============================================================================
@@ -65,48 +96,12 @@ export {
   NoopPreset,
   OtlpPreset,
   type OtlpPresetConfig
-} from "./lib/presets"
-
-// ============================================================================
-// Error Types
-// ============================================================================
-// Error types for observability operations
+} from './lib/presets'
 export {
-  ObservabilityConfigError,
-  ObservabilityConnectionError,
-  ObservabilityError,
-  type ObservabilityErrorType,
-  ObservabilityExportError,
-  ObservabilityInitError
-} from "./lib/errors"
-
-// ============================================================================
-// Constants
-// ============================================================================
-// Common constants for metrics, logging, and tracing
-export {
-  HistogramBoundaries,
-  LogLevelConfigs,
-  SpanAttributes,
-  StandardMetricNames,
-  withMinLogLevel
-} from "./lib/constants"
-
-// ============================================================================
-// Logging Service
-// ============================================================================
-// Effect Logger wrapper with structured logging
-export { type LogContext, type LoggingOperations, LoggingService } from "./lib/logging"
-
-// ============================================================================
-// Metrics Service
-// ============================================================================
-// Effect.Metric wrapper with counters, gauges, histograms
-export {
-  type CounterHandle,
-  type GaugeHandle,
-  type HistogramHandle,
-  type HistogramOptions,
-  type MetricOptions,
-  MetricsService
-} from "./lib/metrics"
+  FiberTrackingFiltered,
+  FiberTrackingFull,
+  FiberTrackingMinimal,
+  makeFiberTrackingSupervisor,
+  type SupervisorConfig,
+  withFiberTracking
+} from './lib/supervisor'

@@ -7,7 +7,7 @@
  * @module @samuelho-dev/contract-user/authentication/rpc-errors
  */
 
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 // ============================================================================
 // RPC Errors (Schema.TaggedError for serialization)
@@ -17,7 +17,7 @@ import { Schema } from "effect"
  * Authentication not found RPC error
  */
 export class AuthenticationNotFoundRpcError extends Schema.TaggedError<AuthenticationNotFoundRpcError>()(
-  "AuthenticationNotFoundRpcError",
+  'AuthenticationNotFoundRpcError',
   {
     message: Schema.String,
     authenticationId: Schema.String
@@ -35,7 +35,7 @@ export class AuthenticationNotFoundRpcError extends Schema.TaggedError<Authentic
  * Authentication validation RPC error
  */
 export class AuthenticationValidationRpcError extends Schema.TaggedError<AuthenticationValidationRpcError>()(
-  "AuthenticationValidationRpcError",
+  'AuthenticationValidationRpcError',
   {
     message: Schema.String,
     field: Schema.optional(Schema.String),
@@ -51,7 +51,7 @@ export class AuthenticationValidationRpcError extends Schema.TaggedError<Authent
  * Authentication permission RPC error
  */
 export class AuthenticationPermissionRpcError extends Schema.TaggedError<AuthenticationPermissionRpcError>()(
-  "AuthenticationPermissionRpcError",
+  'AuthenticationPermissionRpcError',
   {
     message: Schema.String,
     action: Schema.String,

@@ -17,8 +17,8 @@ For convenience, import from this barrel:
 // Re-export all operations
 // ============================================================================
 
-export { aggregateOperations, type AggregateUserOperations } from "./aggregate"
-export { createOperations, type CreateUserOperations } from "./create"
-export { deleteOperations, type DeleteUserOperations } from "./delete"
-export { readOperations, type ReadUserOperations } from "./read"
-export { updateOperations, type UpdateUserOperations } from "./update"
+export { type AggregateUserOperations, aggregateOperations } from './aggregate'
+export { type CreateUserOperations, createOperations } from './create'
+export { type DeleteUserOperations, deleteOperations } from './delete'
+export { type ReadUserOperations, readOperations } from './read'
+export { type UpdateUserOperations, updateOperations } from './update'

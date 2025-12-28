@@ -1,4 +1,4 @@
-import { Logger, LogLevel } from "effect"
+import { Logger, LogLevel } from 'effect'
 
 /**
  * Observability Constants
@@ -91,38 +91,38 @@ export const HistogramBoundaries = {
  */
 export const StandardMetricNames = {
   // HTTP metrics
-  httpRequestsTotal: "http_requests_total",
-  httpRequestDuration: "http_request_duration_seconds",
-  httpResponseSize: "http_response_size_bytes",
-  httpActiveRequests: "http_active_requests",
+  httpRequestsTotal: 'http_requests_total',
+  httpRequestDuration: 'http_request_duration_seconds',
+  httpResponseSize: 'http_response_size_bytes',
+  httpActiveRequests: 'http_active_requests',
 
   // Database metrics
-  dbConnectionsActive: "db_connections_active",
-  dbConnectionsIdle: "db_connections_idle",
-  dbQueryDuration: "db_query_duration_seconds",
-  dbQueryTotal: "db_queries_total",
-  dbTransactionDuration: "db_transaction_duration_seconds",
+  dbConnectionsActive: 'db_connections_active',
+  dbConnectionsIdle: 'db_connections_idle',
+  dbQueryDuration: 'db_query_duration_seconds',
+  dbQueryTotal: 'db_queries_total',
+  dbTransactionDuration: 'db_transaction_duration_seconds',
 
   // Queue metrics
-  queueSize: "queue_size",
-  queueLatency: "queue_latency_seconds",
-  queueProcessed: "queue_messages_processed_total",
-  queueFailed: "queue_messages_failed_total",
+  queueSize: 'queue_size',
+  queueLatency: 'queue_latency_seconds',
+  queueProcessed: 'queue_messages_processed_total',
+  queueFailed: 'queue_messages_failed_total',
 
   // Cache metrics
-  cacheHits: "cache_hits_total",
-  cacheMisses: "cache_misses_total",
-  cacheSize: "cache_size",
-  cacheEvictions: "cache_evictions_total",
+  cacheHits: 'cache_hits_total',
+  cacheMisses: 'cache_misses_total',
+  cacheSize: 'cache_size',
+  cacheEvictions: 'cache_evictions_total',
 
   // Auth metrics
-  authSuccessTotal: "auth_success_total",
-  authFailureTotal: "auth_failure_total",
-  authTokensIssued: "auth_tokens_issued_total",
+  authSuccessTotal: 'auth_success_total',
+  authFailureTotal: 'auth_failure_total',
+  authTokensIssued: 'auth_tokens_issued_total',
 
   // Storage metrics
-  storageOperationsTotal: "storage_operations_total",
-  storageBytesTransferred: "storage_bytes_transferred_total"
+  storageOperationsTotal: 'storage_operations_total',
+  storageBytesTransferred: 'storage_bytes_transferred_total'
 } as const
 
 // ============================================================================
@@ -215,33 +215,33 @@ export const withMinLogLevel = (minLevel: LogLevel.LogLevel) => Logger.minimumLo
  */
 export const SpanAttributes = {
   // HTTP
-  httpMethod: "http.method",
-  httpRoute: "http.route",
-  httpStatusCode: "http.status_code",
-  httpUrl: "http.url",
+  httpMethod: 'http.method',
+  httpRoute: 'http.route',
+  httpStatusCode: 'http.status_code',
+  httpUrl: 'http.url',
 
   // Database
-  dbSystem: "db.system",
-  dbName: "db.name",
-  dbOperation: "db.operation",
-  dbStatement: "db.statement",
+  dbSystem: 'db.system',
+  dbName: 'db.name',
+  dbOperation: 'db.operation',
+  dbStatement: 'db.statement',
 
   // Messaging/Queue
-  messagingSystem: "messaging.system",
-  messagingOperation: "messaging.operation",
-  messagingDestination: "messaging.destination.name",
+  messagingSystem: 'messaging.system',
+  messagingOperation: 'messaging.operation',
+  messagingDestination: 'messaging.destination.name',
 
   // RPC
-  rpcSystem: "rpc.system",
-  rpcService: "rpc.service",
-  rpcMethod: "rpc.method",
+  rpcSystem: 'rpc.system',
+  rpcService: 'rpc.service',
+  rpcMethod: 'rpc.method',
 
   // User/Session
-  userId: "enduser.id",
-  sessionId: "session.id",
+  userId: 'enduser.id',
+  sessionId: 'session.id',
 
   // Error
-  errorType: "error.type",
-  exceptionMessage: "exception.message",
-  exceptionStacktrace: "exception.stacktrace"
+  errorType: 'error.type',
+  exceptionMessage: 'exception.message',
+  exceptionStacktrace: 'exception.stacktrace'
 } as const

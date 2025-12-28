@@ -1,9 +1,9 @@
-import { Chunk, Context, Effect, Layer, Option, Stream } from "effect"
-import { aggregateOperations } from "./operations/aggregate"
-import { createOperations } from "./operations/create"
-import { deleteOperations } from "./operations/delete"
-import { readOperations } from "./operations/read"
-import { updateOperations } from "./operations/update"
+import { Chunk, Context, Effect, Layer, Option, Stream } from 'effect'
+import { aggregateOperations } from './operations/aggregate'
+import { createOperations } from './operations/create'
+import { deleteOperations } from './operations/delete'
+import { readOperations } from './operations/read'
+import { updateOperations } from './operations/update'
 
 /**
  * User Repository
@@ -81,7 +81,7 @@ export type UserRepositoryInterface = typeof repositoryImpl
  * Effect.provide(UserRepository.Auto)
  * ```
  */
-export class UserRepository extends Context.Tag("UserRepository")<
+export class UserRepository extends Context.Tag('UserRepository')<
   UserRepository,
   UserRepositoryInterface
 >() {
@@ -90,10 +90,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
    *
    * Use for production deployments with real external services.
    */
-  static readonly Live = Layer.succeed(
-    this,
-    repositoryImpl
-  )
+  static readonly Live = Layer.succeed(this, repositoryImpl)
 
   /**
    * Test layer - Same as Live
@@ -111,7 +108,7 @@ export class UserRepository extends Context.Tag("UserRepository")<
    */
   static readonly Dev = Layer.effect(
     this,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const liveService = yield* UserRepository.Live.pipe(
         Layer.build,
         Effect.map(Context.unsafeGet(UserRepository))
@@ -135,9 +132,9 @@ export class UserRepository extends Context.Tag("UserRepository")<
     // biome-ignore lint/style/noProcessEnv: Environment-aware layer selection requires runtime env check
     const env = process.env.NODE_ENV
     switch (env) {
-      case "test":
+      case 'test':
         return UserRepository.Test
-      case "development":
+      case 'development':
         return UserRepository.Dev
       default:
         return UserRepository.Live

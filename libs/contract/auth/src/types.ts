@@ -22,13 +22,13 @@ export type {
   CurrentUserData,
   KnownService,
   ServiceIdentity
-} from "./lib/schemas"
+} from './lib/schemas'
 
 // ============================================================================
 // Error Types
 // ============================================================================
 
-export type { AuthContractError, AuthErrorCode, ServiceAuthErrorCode } from "./lib/errors"
+export type { AuthContractError, AuthErrorCode, ServiceAuthErrorCode } from './lib/errors'
 
 // Note: AuthError and ServiceAuthError are classes, not just types
 // Import from main entry point if you need the class
@@ -37,7 +37,11 @@ export type { AuthContractError, AuthErrorCode, ServiceAuthErrorCode } from "./l
 // Port Types
 // ============================================================================
 
-export type { AuthProviderInterface, AuthVerifierInterface, ServiceAuthVerifierInterface } from "./lib/ports"
+export type {
+  AuthProviderInterface,
+  AuthVerifierInterface,
+  ServiceAuthVerifierInterface
+} from './lib/ports'
 
 // ============================================================================
 // Middleware Types
@@ -49,4 +53,4 @@ export type {
   RouteType,
   RpcWithRouteTag,
   ServiceHandlerContext
-} from "./lib/middleware"
+} from './lib/middleware'

@@ -6,7 +6,7 @@
  * @module monorepo-library-generator/cli/core/types/options
  */
 
-import type { Platform } from "./library"
+import type { Platform } from './library'
 
 /**
  * All possible generator options across all library types
@@ -15,7 +15,7 @@ export interface GeneratorOptions {
   // Common options (all types)
   readonly description?: string
   readonly tags?: string
-  readonly selectedTags?: ReadonlyArray<string>
+  readonly selectedTags?: readonly string[]
 
   // Platform options (feature, infra, provider)
   readonly platform?: Platform
@@ -30,7 +30,7 @@ export interface GeneratorOptions {
 
   // Contract specific
   readonly typesDatabasePackage?: string
-  readonly entities?: ReadonlyArray<string>
+  readonly entities?: readonly string[]
 
   // Provider specific
   readonly externalService?: string
@@ -39,7 +39,7 @@ export interface GeneratorOptions {
 /**
  * Input component types for TUI
  */
-export type InputComponentType = "boolean" | "text" | "select" | "multiselect" | "tags"
+export type InputComponentType = 'boolean' | 'text' | 'select' | 'multiselect' | 'tags'
 
 /**
  * Option field configuration for TUI rendering
@@ -50,7 +50,7 @@ export interface OptionFieldConfig {
   readonly label: string
   readonly description: string
   readonly placeholder?: string
-  readonly options?: ReadonlyArray<string>
+  readonly options?: readonly string[]
   readonly required?: boolean
   readonly default?: unknown
   readonly conditional?: {
@@ -70,13 +70,13 @@ export interface ValidationResult {
 /**
  * Get effective tags from options (handles both selectedTags and legacy tags string)
  */
-export function getEffectiveTags(options: GeneratorOptions): ReadonlyArray<string> {
+export function getEffectiveTags(options: GeneratorOptions): readonly string[] {
   if (options.selectedTags && options.selectedTags.length > 0) {
     return options.selectedTags
   }
   if (options.tags) {
     return options.tags
-      .split(",")
+      .split(',')
       .map((t) => t.trim())
       .filter(Boolean)
   }

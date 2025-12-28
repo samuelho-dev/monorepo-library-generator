@@ -18,7 +18,7 @@ export type {
   UserInsert as UserCreateInput,
   UserSelect as User,
   UserUpdate as UserUpdateInput
-} from "@samuelho-dev/contract-user"
+} from '@samuelho-dev/contract-user'
 
 // ============================================================================
 // Filter & Query Types
@@ -57,7 +57,7 @@ export interface UserFilter {
   readonly search?: string
 }
 
-export type SortDirection = "asc" | "desc"
+export type SortDirection = 'asc' | 'desc'
 
 // User Sort Options
 // TODO: Add domain-specific sortable fields

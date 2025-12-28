@@ -1,6 +1,6 @@
-import { env } from "@samuelho-dev/env"
-import { OpenTelemetryProvider } from "@samuelho-dev/provider-opentelemetry"
-import { Context, Effect, Layer } from "effect"
+import { env } from '@samuelho-dev/env'
+import { OpenTelemetryProvider } from '@samuelho-dev/provider-opentelemetry'
+import { Context, Effect, Layer } from 'effect'
 
 /**
  * Observability Logging Service
@@ -112,9 +112,7 @@ export interface LoggingOperations {
  * }).pipe(Effect.provide(LoggingService.Live))
  * ```
  */
-export class LoggingService extends Context.Tag(
-  "@samuelho-dev/infra-observability/LoggingService"
-)<
+export class LoggingService extends Context.Tag('@samuelho-dev/infra-observability/LoggingService')<
   LoggingService,
   LoggingOperations
 >() {
@@ -127,7 +125,8 @@ export class LoggingService extends Context.Tag(
    */
   static makeLogger(baseContext: LogContext) {
     const log =
-      (level: "trace" | "debug" | "info" | "warn" | "error" | "fatal") => (message: string, context?: LogContext) => {
+      (level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal') =>
+      (message: string, context?: LogContext) => {
         const mergedContext = { ...baseContext, ...context }
         const logFn = {
           trace: Effect.logTrace,
@@ -144,16 +143,18 @@ export class LoggingService extends Context.Tag(
       }
 
     return {
-      trace: log("trace"),
-      debug: log("debug"),
-      info: log("info"),
-      warn: log("warn"),
-      error: log("error"),
-      fatal: log("fatal"),
+      trace: log('trace'),
+      debug: log('debug'),
+      info: log('info'),
+      warn: log('warn'),
+      error: log('error'),
+      fatal: log('fatal'),
 
-      child: (context: LogContext) => Effect.succeed(LoggingService.makeLogger({ ...baseContext, ...context })),
+      child: (context: LogContext) =>
+        Effect.succeed(LoggingService.makeLogger({ ...baseContext, ...context })),
 
-      withSpan: <A, E, R>(name: string, effect: Effect.Effect<A, E, R>) => effect.pipe(Effect.withSpan(name)),
+      withSpan: <A, E, R>(name: string, effect: Effect.Effect<A, E, R>) =>
+        effect.pipe(Effect.withSpan(name)),
 
       withContext: <A, E, R>(context: LogContext, effect: Effect.Effect<A, E, R>) =>
         effect.pipe(Effect.annotateLogs({ ...baseContext, ...context }))
@@ -193,12 +194,12 @@ export class LoggingService extends Context.Tag(
    */
   static readonly WithProvider = Layer.effect(
     LoggingService,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const otel = yield* OpenTelemetryProvider
       // Create logger with OTEL context
       return LoggingService.makeLogger({
-        "otel.service.name": otel.serviceName,
-        "otel.service.version": otel.serviceVersion
+        'otel.service.name': otel.serviceName,
+        'otel.service.version': otel.serviceVersion
       })
     })
   )
@@ -216,10 +217,7 @@ export class LoggingService extends Context.Tag(
    * Note: The OTEL SDK layer (from OpenTelemetryProvider) handles the actual export.
    * This layer just provides the logging interface.
    */
-  static readonly Live = Layer.provide(
-    LoggingService.WithProvider,
-    OpenTelemetryProvider.Live
-  )
+  static readonly Live = Layer.provide(LoggingService.WithProvider, OpenTelemetryProvider.Live)
 
   // ===========================================================================
   // Static Test Layer
@@ -239,14 +237,8 @@ export class LoggingService extends Context.Tag(
     error: () => Effect.void,
     fatal: () => Effect.void,
     child: (context: LogContext) => Effect.succeed(LoggingService.makeLogger(context)),
-    withSpan: <A, E, R>(
-      _name: string,
-      effect: Effect.Effect<A, E, R>
-    ) => effect,
-    withContext: <A, E, R>(
-      _context: LogContext,
-      effect: Effect.Effect<A, E, R>
-    ) => effect
+    withSpan: <A, E, R>(_name: string, effect: Effect.Effect<A, E, R>) => effect,
+    withContext: <A, E, R>(_context: LogContext, effect: Effect.Effect<A, E, R>) => effect
   })
 
   // ===========================================================================
@@ -259,10 +251,7 @@ export class LoggingService extends Context.Tag(
    * Uses OpenTelemetry provider for local development. Attempts to connect to
    * localhost OTEL collector but won't fail if unavailable.
    */
-  static readonly Dev = Layer.provide(
-    LoggingService.WithProvider,
-    OpenTelemetryProvider.Dev
-  )
+  static readonly Dev = Layer.provide(LoggingService.WithProvider, OpenTelemetryProvider.Dev)
 
   // ===========================================================================
   // Auto Layer
@@ -279,9 +268,9 @@ export class LoggingService extends Context.Tag(
    */
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
-      case "production":
+      case 'production':
         return LoggingService.Live
-      case "test":
+      case 'test':
         return LoggingService.Test
       default:
         // "development" and other environments use Dev

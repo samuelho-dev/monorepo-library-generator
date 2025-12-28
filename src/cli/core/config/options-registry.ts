@@ -7,100 +7,100 @@
  * @module monorepo-library-generator/cli/core/config/options-registry
  */
 
-import type { GeneratorOptions, LibraryType, OptionFieldConfig, Platform } from "../types"
+import type { GeneratorOptions, LibraryType, OptionFieldConfig, Platform } from '../types'
 
 /**
  * Platform options - matches CLI choices
  */
-export const PLATFORM_OPTIONS: ReadonlyArray<Platform> = ["node", "browser", "universal", "edge"]
+export const PLATFORM_OPTIONS: readonly Platform[] = ['node', 'browser', 'universal', 'edge']
 
 /**
  * Shared option definitions - reusable across library types
  */
 const SHARED_OPTIONS: Record<string, OptionFieldConfig> = {
   platform: {
-    type: "select",
-    key: "platform",
-    label: "Platform",
-    description: "Target platform for the library",
+    type: 'select',
+    key: 'platform',
+    label: 'Platform',
+    description: 'Target platform for the library',
     options: PLATFORM_OPTIONS,
-    default: "universal"
+    default: 'universal'
   },
 
   scope: {
-    type: "text",
-    key: "scope",
-    label: "Scope",
-    description: "Custom scope for the library",
-    placeholder: "@myorg"
+    type: 'text',
+    key: 'scope',
+    label: 'Scope',
+    description: 'Custom scope for the library',
+    placeholder: '@myorg'
   },
 
   includeCQRS: {
-    type: "boolean",
-    key: "includeCQRS",
-    label: "Include CQRS",
-    description: "Include CQRS pattern files (commands, queries, projections)",
+    type: 'boolean',
+    key: 'includeCQRS',
+    label: 'Include CQRS',
+    description: 'Include CQRS pattern files (commands, queries, projections)',
     default: false
   },
 
   includeClientServer: {
-    type: "boolean",
-    key: "includeClientServer",
-    label: "Client/Server",
-    description: "Generate client-side hooks and state management",
+    type: 'boolean',
+    key: 'includeClientServer',
+    label: 'Client/Server',
+    description: 'Generate client-side hooks and state management',
     default: false
   },
 
   includeSubModules: {
-    type: "boolean",
-    key: "includeSubModules",
-    label: "Sub-Modules",
-    description: "Include modular sub-modules within the library",
+    type: 'boolean',
+    key: 'includeSubModules',
+    label: 'Sub-Modules',
+    description: 'Include modular sub-modules within the library',
     default: false
   },
 
   subModules: {
-    type: "text",
-    key: "subModules",
-    label: "Sub-Module Names",
-    description: "Comma-separated list of sub-module names",
-    placeholder: "cart,checkout,management",
+    type: 'text',
+    key: 'subModules',
+    label: 'Sub-Module Names',
+    description: 'Comma-separated list of sub-module names',
+    placeholder: 'cart,checkout,management',
     conditional: {
-      dependsOn: "includeSubModules",
+      dependsOn: 'includeSubModules',
       showWhen: (value) => value === true
     }
   },
 
   typesDatabasePackage: {
-    type: "text",
-    key: "typesDatabasePackage",
-    label: "Types DB Package",
-    description: "Package name for prisma-effect-kysely generated types",
-    placeholder: "@scope/types-database"
+    type: 'text',
+    key: 'typesDatabasePackage',
+    label: 'Types DB Package',
+    description: 'Package name for prisma-effect-kysely generated types',
+    placeholder: '@scope/types-database'
   },
 
   externalService: {
-    type: "text",
-    key: "externalService",
-    label: "External Service",
-    description: "Name of the external service to integrate",
-    placeholder: "stripe",
+    type: 'text',
+    key: 'externalService',
+    label: 'External Service',
+    description: 'Name of the external service to integrate',
+    placeholder: 'stripe',
     required: true
   },
 
   description: {
-    type: "text",
-    key: "description",
-    label: "Description",
-    description: "Library description for package.json",
-    placeholder: "A brief description..."
+    type: 'text',
+    key: 'description',
+    label: 'Description',
+    description: 'Library description for package.json',
+    placeholder: 'A brief description...'
   },
 
   tags: {
-    type: "tags",
-    key: "selectedTags",
-    label: "Tags",
-    description: "Tags for categorization and filtering"
+    type: 'tags',
+    key: 'selectedTags',
+    label: 'Tags',
+    description: 'Tags for categorization and filtering'
   }
 }
 
@@ -115,7 +115,7 @@ const SHARED_OPTIONS: Record<string, OptionFieldConfig> = {
  * - provider: platform, externalService (required)
  * - domain: scope, includeClientServer, includeCQRS, includeSubModules, subModules
  */
-const OPTIONS_BY_TYPE: Record<LibraryType, ReadonlyArray<OptionFieldConfig>> = {
+const OPTIONS_BY_TYPE: Record<LibraryType, readonly OptionFieldConfig[]> = {
   contract: [
     SHARED_OPTIONS.includeCQRS,
     SHARED_OPTIONS.includeSubModules,
@@ -125,7 +125,7 @@ const OPTIONS_BY_TYPE: Record<LibraryType, ReadonlyArray<OptionFieldConfig>> = {
     SHARED_OPTIONS.tags
   ],
 
-  "data-access": [
+  'data-access': [
     SHARED_OPTIONS.includeSubModules,
     SHARED_OPTIONS.subModules,
     SHARED_OPTIONS.description,
@@ -171,7 +171,7 @@ const OPTIONS_BY_TYPE: Record<LibraryType, ReadonlyArray<OptionFieldConfig>> = {
 /**
  * Get options for a specific library type
  */
-export function getOptionsForType(libraryType: LibraryType): ReadonlyArray<OptionFieldConfig> {
+export function getOptionsForType(libraryType: LibraryType): readonly OptionFieldConfig[] {
   return OPTIONS_BY_TYPE[libraryType] ?? []
 }
 
@@ -181,7 +181,7 @@ export function getOptionsForType(libraryType: LibraryType): ReadonlyArray<Optio
 export function getVisibleOptions(
   libraryType: LibraryType,
   currentOptions: GeneratorOptions
-): ReadonlyArray<OptionFieldConfig> {
+): readonly OptionFieldConfig[] {
   const allOptions = getOptionsForType(libraryType)
 
   return allOptions.filter((opt) => {
@@ -211,7 +211,7 @@ export function getDefaultOptions(libraryType: LibraryType): Partial<GeneratorOp
 /**
  * Get required options for a library type
  */
-export function getRequiredOptions(libraryType: LibraryType): ReadonlyArray<OptionFieldConfig> {
+export function getRequiredOptions(libraryType: LibraryType): readonly OptionFieldConfig[] {
   return getOptionsForType(libraryType).filter((opt) => opt.required === true)
 }
 
@@ -221,13 +221,13 @@ export function getRequiredOptions(libraryType: LibraryType): ReadonlyArray<Opti
 export function validateRequiredOptions(
   libraryType: LibraryType,
   options: GeneratorOptions
-): { isValid: boolean; missing: ReadonlyArray<string> } {
+): { isValid: boolean; missing: readonly string[] } {
   const required = getRequiredOptions(libraryType)
   const missing: string[] = []
 
   for (const opt of required) {
     const value = options[opt.key]
-    if (value === undefined || value === null || value === "") {
+    if (value === undefined || value === null || value === '') {
       missing.push(opt.label)
     }
   }

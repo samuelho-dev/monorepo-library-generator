@@ -1,10 +1,10 @@
-import { env } from "@samuelho-dev/env"
-import { Context, Effect, Layer, Schema } from "effect"
-import type { Redis as IORedis } from "ioredis"
-import { makeCacheClient } from "./cache"
-import { RedisCommandError, RedisConnectionError } from "./errors"
-import { makePubSubClient } from "./pubsub"
-import { makeQueueClient } from "./queue"
+import { env } from '@samuelho-dev/env'
+import { Context, Effect, Layer, Schema } from 'effect'
+import type { Redis as IORedis } from 'ioredis'
+import { makeCacheClient } from './cache'
+import { RedisCommandError, RedisConnectionError } from './errors'
+import { makePubSubClient } from './pubsub'
+import { makeQueueClient } from './queue'
 import type {
   RedisCacheClient,
   RedisConfig,
@@ -12,7 +12,7 @@ import type {
   RedisQueueClient,
   ScanOptions,
   ScanResult
-} from "./types"
+} from './types'
 
 /**
  * Redis Service
@@ -33,8 +33,8 @@ Connection Management:
  * @see https://github.com/redis/ioredis for ioredis documentation
  */
 
-import Redis from "ioredis"
-import RedisMock from "ioredis-mock"
+import Redis from 'ioredis'
+import RedisMock from 'ioredis-mock'
 
 // ============================================================================
 // Service Interface
@@ -101,12 +101,15 @@ export interface RedisServiceInterface {
    * Find keys matching pattern
    * WARNING: Use SCAN for production (keys can block Redis)
    */
-  readonly keys: (pattern: string) => Effect.Effect<Array<string>, RedisCommandError>
+  readonly keys: (pattern: string) => Effect.Effect<string[], RedisCommandError>
 
   /**
    * Incrementally iterate keys
    */
-  readonly scan: (cursor: number, options?: ScanOptions) => Effect.Effect<ScanResult, RedisCommandError>
+  readonly scan: (
+    cursor: number,
+    options?: ScanOptions
+  ) => Effect.Effect<ScanResult, RedisCommandError>
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // Raw Command Execution
@@ -147,17 +150,14 @@ export interface RedisServiceInterface {
  * - Redis.Dev - Development with debug logging
  * - Redis.make(config) - Custom configuration
  */
-export class RedisService extends Context.Tag("Redis")<
-  RedisService,
-  RedisServiceInterface
->() {
+export class RedisService extends Context.Tag('Redis')<RedisService, RedisServiceInterface>() {
   /**
    * Create a layer with custom configuration
    */
   static make(config: RedisConfig) {
     return Layer.scoped(
       RedisService,
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         const mainOptions = buildMainOptions(config)
         const subOptions = buildSubOptions(config)
 
@@ -182,7 +182,7 @@ export class RedisService extends Context.Tag("Redis")<
    * For custom configuration, use RedisService.make(config)
    */
   static readonly Live = RedisService.make({
-    host: "localhost",
+    host: 'localhost',
     port: 6379,
     db: 0
   })
@@ -196,11 +196,11 @@ export class RedisService extends Context.Tag("Redis")<
   static readonly Test = Layer.sync(RedisService, () => {
     const store = new Map<string, string>()
     const ttls = new Map<string, number>()
-    const lists = new Map<string, Array<string>>()
+    const lists = new Map<string, string[]>()
     const subscribers = new Map<string, Array<(message: string) => void>>()
     const mockClient = new RedisMock()
 
-    const testConfig: RedisConfig = { host: "localhost", port: 6379 }
+    const testConfig: RedisConfig = { host: 'localhost', port: 6379 }
 
     return {
       config: testConfig,
@@ -231,7 +231,7 @@ export class RedisService extends Context.Tag("Redis")<
             ttls.clear()
             lists.clear()
           }),
-        ping: () => Effect.succeed("PONG")
+        ping: () => Effect.succeed('PONG')
       },
 
       pubsub: {
@@ -253,7 +253,7 @@ export class RedisService extends Context.Tag("Redis")<
           Effect.sync(() => {
             subscribers.delete(channel)
           }),
-        ping: () => Effect.succeed("PONG")
+        ping: () => Effect.succeed('PONG')
       },
 
       queue: {
@@ -299,7 +299,7 @@ export class RedisService extends Context.Tag("Redis")<
             lists.delete(key)
             return existed
           }),
-        ping: () => Effect.succeed("PONG")
+        ping: () => Effect.succeed('PONG')
       },
 
       exists: (key: string) => Effect.succeed(store.has(key) || lists.has(key)),
@@ -321,7 +321,7 @@ export class RedisService extends Context.Tag("Redis")<
         }),
       keys: (pattern: string) =>
         Effect.sync(() => {
-          const regex = new RegExp(`^${pattern.replace(/\*/g, ".*").replace(/\?/g, ".")}$`)
+          const regex = new RegExp(`^${pattern.replace(/\*/g, '.*').replace(/\?/g, '.')}$`)
           const allKeys = [...store.keys(), ...lists.keys()]
           return allKeys.filter((k) => regex.test(k))
         }),
@@ -332,7 +332,7 @@ export class RedisService extends Context.Tag("Redis")<
           const match = options?.match
           let filtered = allKeys
           if (match) {
-            const regex = new RegExp(`^${match.replace(/\*/g, ".*").replace(/\?/g, ".")}$`)
+            const regex = new RegExp(`^${match.replace(/\*/g, '.*').replace(/\?/g, '.')}$`)
             filtered = allKeys.filter((k) => regex.test(k))
           }
           const start = cursor
@@ -362,40 +362,42 @@ export class RedisService extends Context.Tag("Redis")<
    */
   static readonly Dev = Layer.scoped(
     RedisService,
-    Effect.gen(function*() {
-      yield* Effect.logDebug("[Redis] Initializing dev client...")
+    Effect.gen(function* () {
+      yield* Effect.logDebug('[Redis] Initializing dev client...')
 
       const config: RedisConfig = {
-        host: "localhost",
+        host: 'localhost',
         port: 6379,
         db: 0
       }
 
-      yield* Effect.logDebug("[Redis] Config loaded", { host: config.host, port: config.port })
+      yield* Effect.logDebug('[Redis] Config loaded', { host: config.host, port: config.port })
 
       const mainClient = yield* Effect.acquireRelease(
-        Effect.sync(() =>
-          new Redis({
-            host: config.host ?? "localhost",
-            port: config.port ?? 6379,
-            db: config.db ?? 0
-          })
+        Effect.sync(
+          () =>
+            new Redis({
+              host: config.host ?? 'localhost',
+              port: config.port ?? 6379,
+              db: config.db ?? 0
+            })
         ),
         (client) => Effect.sync(() => client.disconnect())
       )
 
       const subClient = yield* Effect.acquireRelease(
-        Effect.sync(() =>
-          new Redis({
-            host: config.host ?? "localhost",
-            port: config.port ?? 6379,
-            db: config.db ?? 0
-          })
+        Effect.sync(
+          () =>
+            new Redis({
+              host: config.host ?? 'localhost',
+              port: config.port ?? 6379,
+              db: config.db ?? 0
+            })
         ),
         (client) => Effect.sync(() => client.disconnect())
       )
 
-      yield* Effect.logDebug("[Redis] Connections established")
+      yield* Effect.logDebug('[Redis] Connections established')
 
       return makeRedisService(config, mainClient, subClient)
     })
@@ -412,9 +414,9 @@ export class RedisService extends Context.Tag("Redis")<
    */
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
-      case "production":
+      case 'production':
         return RedisService.Live
-      case "test":
+      case 'test':
         return RedisService.Test
       default:
         // development and other environments use Dev layer
@@ -432,7 +434,7 @@ export class RedisService extends Context.Tag("Redis")<
  */
 function buildBaseOptions(config: RedisConfig) {
   return {
-    host: config.host ?? "localhost",
+    host: config.host ?? 'localhost',
     port: config.port ?? 6379,
     db: config.db ?? 0,
     connectTimeout: config.connectTimeout ?? 10000,
@@ -459,7 +461,7 @@ function buildMainOptions(config: RedisConfig) {
  */
 function buildSubOptions(config: RedisConfig) {
   return {
-    host: config.host ?? "localhost",
+    host: config.host ?? 'localhost',
     port: config.port ?? 6379,
     db: config.db ?? 0,
     ...(config.password !== undefined ? { password: config.password } : {}),
@@ -473,13 +475,13 @@ function buildSubOptions(config: RedisConfig) {
 function buildScanArgs(cursor: number, options?: ScanOptions): Array<string | number> {
   const args: Array<string | number> = [cursor]
   if (options?.match) {
-    args.push("MATCH", options.match)
+    args.push('MATCH', options.match)
   }
   if (options?.count) {
-    args.push("COUNT", options.count)
+    args.push('COUNT', options.count)
   }
   if (options?.type) {
-    args.push("TYPE", options.type)
+    args.push('TYPE', options.type)
   }
   return args
 }
@@ -498,13 +500,13 @@ const RedisScanResponse = Schema.Tuple(Schema.String, Schema.Array(Schema.String
  */
 function executeScan(client: IORedis, cursor: number, options?: ScanOptions) {
   const args = buildScanArgs(cursor, options)
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const rawResult = yield* Effect.tryPromise({
-      try: () => client.call("SCAN", ...args),
+      try: () => client.call('SCAN', ...args),
       catch: (error) =>
         new RedisCommandError({
-          message: "SCAN command failed",
-          command: "SCAN",
+          message: 'SCAN command failed',
+          command: 'SCAN',
           cause: error
         })
     })
@@ -520,11 +522,7 @@ function executeScan(client: IORedis, cursor: number, options?: ScanOptions) {
 /**
  * Create Redis service implementation from ioredis clients
  */
-function makeRedisService(
-  config: RedisConfig,
-  mainClient: IORedis,
-  subClient: IORedis
-) {
+function makeRedisService(config: RedisConfig, mainClient: IORedis, subClient: IORedis) {
   return {
     config,
 
@@ -532,14 +530,14 @@ function makeRedisService(
       try: () => mainClient.ping(),
       catch: (error) =>
         new RedisConnectionError({
-          message: "Health check failed",
+          message: 'Health check failed',
           ...(config.host !== undefined ? { host: config.host } : {}),
           ...(config.port !== undefined ? { port: config.port } : {}),
           cause: error
         })
     }).pipe(
       Effect.map(() => true),
-      Effect.withSpan("Redis.healthCheck")
+      Effect.withSpan('Redis.healthCheck')
     ),
 
     cache: makeCacheClient(mainClient),
@@ -552,11 +550,11 @@ function makeRedisService(
         catch: (error) =>
           new RedisCommandError({
             message: `EXISTS failed for key: ${key}`,
-            command: "EXISTS",
+            command: 'EXISTS',
             args: [key],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.exists", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.exists', { attributes: { key } })),
 
     expire: (key: string, seconds: number) =>
       Effect.tryPromise({
@@ -564,11 +562,11 @@ function makeRedisService(
         catch: (error) =>
           new RedisCommandError({
             message: `EXPIRE failed for key: ${key}`,
-            command: "EXPIRE",
+            command: 'EXPIRE',
             args: [key, seconds],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.expire", { attributes: { key, seconds } })),
+      }).pipe(Effect.withSpan('Redis.expire', { attributes: { key, seconds } })),
 
     ttl: (key: string) =>
       Effect.tryPromise({
@@ -576,11 +574,11 @@ function makeRedisService(
         catch: (error) =>
           new RedisCommandError({
             message: `TTL failed for key: ${key}`,
-            command: "TTL",
+            command: 'TTL',
             args: [key],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.ttl", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.ttl', { attributes: { key } })),
 
     keys: (pattern: string) =>
       Effect.tryPromise({
@@ -588,24 +586,25 @@ function makeRedisService(
         catch: (error) =>
           new RedisCommandError({
             message: `KEYS failed for pattern: ${pattern}`,
-            command: "KEYS",
+            command: 'KEYS',
             args: [pattern],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.keys", { attributes: { pattern } })),
+      }).pipe(Effect.withSpan('Redis.keys', { attributes: { pattern } })),
 
     scan: (cursor: number, options?: ScanOptions) =>
       executeScan(mainClient, cursor, options).pipe(
-        Effect.catchTag("ParseError", (error) =>
+        Effect.catchTag('ParseError', (error) =>
           Effect.fail(
             new RedisCommandError({
               message: `SCAN response parsing failed at cursor: ${cursor}`,
-              command: "SCAN",
+              command: 'SCAN',
               args: [cursor, options],
               cause: error
             })
-          )),
-        Effect.withSpan("Redis.scan", { attributes: { cursor } })
+          )
+        ),
+        Effect.withSpan('Redis.scan', { attributes: { cursor } })
       ),
 
     executeCommand: <A>(fn: (client: IORedis) => Promise<A>, commandName: string) =>

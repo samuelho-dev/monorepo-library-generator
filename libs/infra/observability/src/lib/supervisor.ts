@@ -1,5 +1,5 @@
-import { Effect, Exit, FiberId, Layer, Ref, Supervisor } from "effect"
-import type { Context, Fiber, Option } from "effect"
+import type { Context, Fiber, Option } from 'effect'
+import { Effect, Exit, FiberId, Layer, Ref, Supervisor } from 'effect'
 
 /**
  * Observability Fiber Tracking
@@ -54,7 +54,7 @@ export interface SupervisorConfig {
    * Log level for fiber events
    * @default "debug"
    */
-  readonly logLevel?: "trace" | "debug" | "info" | "warning" | "error"
+  readonly logLevel?: 'trace' | 'debug' | 'info' | 'warning' | 'error'
 }
 
 // ============================================================================
@@ -63,7 +63,9 @@ export interface SupervisorConfig {
 /**
  * Internal: track a fiber event in a queue for later logging
  */
-type FiberEvent = { type: "start"; fiberId: string } | { type: "end"; fiberId: string; failed: boolean; cause?: string }
+type FiberEvent =
+  | { type: 'start'; fiberId: string }
+  | { type: 'end'; fiberId: string; failed: boolean; cause?: string }
 
 /**
  * Create a Supervisor that tracks fiber lifecycle events
@@ -90,9 +92,9 @@ type FiberEvent = { type: "start"; fiberId: string } | { type: "end"; fiberId: s
  */
 export const makeFiberTrackingSupervisor = (
   config: SupervisorConfig = {}
-): Effect.Effect<Supervisor.Supervisor<ReadonlyArray<FiberEvent>>> =>
-  Effect.gen(function*() {
-    const eventsRef = yield* Ref.make<Array<FiberEvent>>([])
+): Effect.Effect<Supervisor.Supervisor<readonly FiberEvent[]>> =>
+  Effect.gen(function* () {
+    const eventsRef = yield* Ref.make<FiberEvent[]>([])
 
     const shouldTrack = (fiberId: FiberId.FiberId) => {
       if (!config.filterPattern) return true
@@ -100,7 +102,7 @@ export const makeFiberTrackingSupervisor = (
       return config.filterPattern.test(name)
     }
 
-    class FiberTrackingSupervisor extends Supervisor.AbstractSupervisor<Array<FiberEvent>> {
+    class FiberTrackingSupervisor extends Supervisor.AbstractSupervisor<FiberEvent[]> {
       override get value() {
         return Ref.get(eventsRef)
       }
@@ -112,7 +114,7 @@ export const makeFiberTrackingSupervisor = (
         fiber: Fiber.RuntimeFiber<A, E>
       ): void {
         if (config.trackStart !== false && shouldTrack(fiber.id())) {
-          const event: FiberEvent = { type: "start", fiberId: FiberId.threadName(fiber.id()) }
+          const event: FiberEvent = { type: 'start', fiberId: FiberId.threadName(fiber.id()) }
           Effect.runSync(Ref.update(eventsRef, (events) => [...events, event]))
         }
       }
@@ -123,7 +125,7 @@ export const makeFiberTrackingSupervisor = (
         // Track failures if configured (default true)
         if (config.trackFailure !== false && Exit.isFailure(exit) && shouldTrack(fiber.id())) {
           const event: FiberEvent = {
-            type: "end",
+            type: 'end',
             fiberId,
             failed: true,
             cause: String(exit.cause)
@@ -133,7 +135,7 @@ export const makeFiberTrackingSupervisor = (
 
         // Track normal ends only if explicitly configured
         if (config.trackEnd === true && Exit.isSuccess(exit) && shouldTrack(fiber.id())) {
-          const event: FiberEvent = { type: "end", fiberId, failed: false }
+          const event: FiberEvent = { type: 'end', fiberId, failed: false }
           Effect.runSync(Ref.update(eventsRef, (events) => [...events, event]))
         }
       }
@@ -163,9 +165,8 @@ export const makeFiberTrackingSupervisor = (
  */
 export const withFiberTracking = (config?: SupervisorConfig) =>
   Layer.unwrapEffect(
-    Effect.map(
-      makeFiberTrackingSupervisor(config),
-      (supervisor) => Supervisor.addSupervisor(supervisor)
+    Effect.map(makeFiberTrackingSupervisor(config), (supervisor) =>
+      Supervisor.addSupervisor(supervisor)
     )
   )
 
@@ -182,7 +183,7 @@ export const FiberTrackingMinimal = withFiberTracking({
   trackStart: false,
   trackEnd: false,
   trackFailure: true,
-  logLevel: "warning"
+  logLevel: 'warning'
 })
 
 /**
@@ -195,7 +196,7 @@ export const FiberTrackingFull = withFiberTracking({
   trackStart: true,
   trackEnd: true,
   trackFailure: true,
-  logLevel: "debug"
+  logLevel: 'debug'
 })
 
 /**
@@ -219,5 +220,5 @@ export const FiberTrackingFiltered = (pattern: RegExp) =>
     trackEnd: true,
     trackFailure: true,
     filterPattern: pattern,
-    logLevel: "debug"
+    logLevel: 'debug'
   })

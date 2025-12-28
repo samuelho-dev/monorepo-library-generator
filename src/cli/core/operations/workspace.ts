@@ -6,11 +6,14 @@
  * @module monorepo-library-generator/cli/core/operations/workspace
  */
 
-import { Effect, Option } from "effect"
-import * as FileSystem from "@effect/platform/FileSystem"
-import * as Path from "@effect/platform/Path"
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 
-import type { WorkspaceContext, WorkspaceType } from "../types"
+import * as FileSystem from '@effect/platform/FileSystem'
+import * as Path from '@effect/platform/Path'
+import { Effect, Option } from 'effect'
+
+import type { WorkspaceContext, WorkspaceType } from '../types'
 
 /**
  * Detect workspace type from available config files
@@ -20,10 +23,10 @@ export function detectWorkspaceType(
   hasPnpmWorkspace: boolean,
   hasYarnWorkspaces: boolean
 ): WorkspaceType {
-  if (hasNxJson) return "nx"
-  if (hasPnpmWorkspace) return "pnpm"
-  if (hasYarnWorkspaces) return "yarn"
-  return "npm"
+  if (hasNxJson) return 'nx'
+  if (hasPnpmWorkspace) return 'pnpm'
+  if (hasYarnWorkspaces) return 'yarn'
+  return 'npm'
 }
 
 /**
@@ -33,7 +36,7 @@ function fileExists(path: string) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
     return yield* Effect.either(fs.exists(path)).pipe(
-      Effect.map((either) => (either._tag === "Right" ? either.right : false))
+      Effect.map((either) => (either._tag === 'Right' ? either.right : false))
     )
   })
 }
@@ -45,7 +48,7 @@ function readJsonFile(path: string) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
     const content = yield* Effect.either(fs.readFileString(path))
-    if (content._tag === "Left") return Option.none()
+    if (content._tag === 'Left') return Option.none()
 
     try {
       return Option.some(JSON.parse(content.right))
@@ -68,7 +71,7 @@ function getLibrariesRoot(nxJson: Option.Option<Record<string, unknown>>): strin
     }
   }
   // Default to 'libs'
-  return "libs"
+  return 'libs'
 }
 
 /**
@@ -77,12 +80,12 @@ function getLibrariesRoot(nxJson: Option.Option<Record<string, unknown>>): strin
 function getScopeFromPackageJson(packageJson: Option.Option<Record<string, unknown>>): string {
   if (Option.isSome(packageJson)) {
     const name = packageJson.value.name as string | undefined
-    if (name?.startsWith("@")) {
+    if (name?.startsWith('@')) {
       const scopeMatch = name.match(/^(@[^/]+)/)
       if (scopeMatch) return scopeMatch[1]
     }
   }
-  return "@scope"
+  return '@scope'
 }
 
 /**
@@ -93,9 +96,9 @@ export function detectWorkspace(rootPath: string) {
     const pathService = yield* Path.Path
 
     // Check for configuration files
-    const nxJsonPath = pathService.join(rootPath, "nx.json")
-    const pnpmWorkspacePath = pathService.join(rootPath, "pnpm-workspace.yaml")
-    const packageJsonPath = pathService.join(rootPath, "package.json")
+    const nxJsonPath = pathService.join(rootPath, 'nx.json')
+    const pnpmWorkspacePath = pathService.join(rootPath, 'pnpm-workspace.yaml')
+    const packageJsonPath = pathService.join(rootPath, 'package.json')
 
     const hasNxJson = yield* fileExists(nxJsonPath)
     const hasPnpmWorkspace = yield* fileExists(pnpmWorkspacePath)
@@ -105,7 +108,7 @@ export function detectWorkspace(rootPath: string) {
     const packageJson = yield* readJsonFile(packageJsonPath)
 
     // Check for yarn workspaces in package.json
-    const hasYarnWorkspaces = Option.isSome(packageJson) && "workspaces" in packageJson.value
+    const hasYarnWorkspaces = Option.isSome(packageJson) && 'workspaces' in packageJson.value
 
     const workspaceType = detectWorkspaceType(hasNxJson, hasPnpmWorkspace, hasYarnWorkspaces)
     const librariesRoot = getLibrariesRoot(nxJson)
@@ -128,37 +131,34 @@ export function detectWorkspace(rootPath: string) {
  * Uses basic file system checks without Effect runtime
  */
 export function detectWorkspaceSync(rootPath: string): WorkspaceContext {
-  const fs = require("node:fs")
-  const path = require("node:path")
-
-  const nxJsonPath = path.join(rootPath, "nx.json")
-  const pnpmWorkspacePath = path.join(rootPath, "pnpm-workspace.yaml")
-  const packageJsonPath = path.join(rootPath, "package.json")
+  const nxJsonPath = path.join(rootPath, 'nx.json')
+  const pnpmWorkspacePath = path.join(rootPath, 'pnpm-workspace.yaml')
+  const packageJsonPath = path.join(rootPath, 'package.json')
 
   const hasNxJson = fs.existsSync(nxJsonPath)
   const hasPnpmWorkspace = fs.existsSync(pnpmWorkspacePath)
 
   // Read package.json for scope
-  let scope = "@scope"
+  let scope = '@scope'
   let hasYarnWorkspaces = false
 
   try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
     const name = packageJson.name as string | undefined
-    if (name?.startsWith("@")) {
+    if (name?.startsWith('@')) {
       const scopeMatch = name.match(/^(@[^/]+)/)
       if (scopeMatch) scope = scopeMatch[1]
     }
-    hasYarnWorkspaces = "workspaces" in packageJson
+    hasYarnWorkspaces = 'workspaces' in packageJson
   } catch {
     // Ignore errors
   }
 
   // Read nx.json for libraries root
-  let librariesRoot = "libs"
+  let librariesRoot = 'libs'
   if (hasNxJson) {
     try {
-      const nxJson = JSON.parse(fs.readFileSync(nxJsonPath, "utf-8"))
+      const nxJson = JSON.parse(fs.readFileSync(nxJsonPath, 'utf-8'))
       if (nxJson.workspaceLayout?.libsDir) {
         librariesRoot = nxJson.workspaceLayout.libsDir
       }

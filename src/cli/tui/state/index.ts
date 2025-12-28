@@ -6,6 +6,14 @@
  * @module monorepo-library-generator/cli/tui/state
  */
 
+export { tuiReducer } from './reducer'
+
+export type {
+  GenerationStatus,
+  TUIAction,
+  TUIMode,
+  TUIState
+} from './types'
 export {
   canGenerate,
   canNavigateToOptions,
@@ -14,13 +22,4 @@ export {
   getPreviousPanel,
   initialState,
   PANEL_ORDER
-} from "./types"
-
-export type {
-  GenerationStatus,
-  TUIAction,
-  TUIMode,
-  TUIState
-} from "./types"
-
-export { tuiReducer } from "./reducer"
+} from './types'

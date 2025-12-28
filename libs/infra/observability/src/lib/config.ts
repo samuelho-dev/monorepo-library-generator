@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * Observability Configuration
@@ -39,7 +39,7 @@ export const TracesConfigSchema = Schema.Struct({
    * @default "http://localhost:4318/v1/traces"
    */
   endpoint: Schema.optionalWith(Schema.String, {
-    default: () => "http://localhost:4318/v1/traces"
+    default: () => 'http://localhost:4318/v1/traces'
   }),
 
   /**
@@ -51,7 +51,7 @@ export const TracesConfigSchema = Schema.Struct({
   samplingRatio: Schema.optionalWith(
     Schema.Number.pipe(
       Schema.filter((n) => n >= 0 && n <= 1, {
-        message: () => "Sampling ratio must be between 0.0 and 1.0"
+        message: () => 'Sampling ratio must be between 0.0 and 1.0'
       })
     ),
     { default: () => 1.0 }
@@ -78,7 +78,7 @@ export const MetricsConfigSchema = Schema.Struct({
    * @default "http://localhost:4318/v1/metrics"
    */
   endpoint: Schema.optionalWith(Schema.String, {
-    default: () => "http://localhost:4318/v1/metrics"
+    default: () => 'http://localhost:4318/v1/metrics'
   }),
 
   /**
@@ -88,7 +88,7 @@ export const MetricsConfigSchema = Schema.Struct({
   exportIntervalMs: Schema.optionalWith(
     Schema.Number.pipe(
       Schema.filter((n) => n >= 1000, {
-        message: () => "Export interval must be at least 1000ms"
+        message: () => 'Export interval must be at least 1000ms'
       })
     ),
     { default: () => 60000 }
@@ -115,7 +115,7 @@ export const LogsConfigSchema = Schema.Struct({
    * @default "http://localhost:4318/v1/logs"
    */
   endpoint: Schema.optionalWith(Schema.String, {
-    default: () => "http://localhost:4318/v1/logs"
+    default: () => 'http://localhost:4318/v1/logs'
   }),
 
   /**
@@ -123,8 +123,8 @@ export const LogsConfigSchema = Schema.Struct({
    * @default "info"
    */
   minLevel: Schema.optionalWith(
-    Schema.Literal("trace", "debug", "info", "warning", "error", "fatal"),
-    { default: () => "info" as const }
+    Schema.Literal('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
+    { default: () => 'info' as const }
   )
 })
 
@@ -162,17 +162,16 @@ export const ObservabilityConfigSchema = Schema.Struct({
    * @default "0.0.0"
    */
   serviceVersion: Schema.optionalWith(Schema.String, {
-    default: () => "0.0.0"
+    default: () => '0.0.0'
   }),
 
   /**
    * Deployment environment
    * @default "development"
    */
-  environment: Schema.optionalWith(
-    Schema.Literal("production", "staging", "development", "test"),
-    { default: () => "development" as const }
-  ),
+  environment: Schema.optionalWith(Schema.Literal('production', 'staging', 'development', 'test'), {
+    default: () => 'development' as const
+  }),
 
   /**
    * Tracing configuration
@@ -180,7 +179,7 @@ export const ObservabilityConfigSchema = Schema.Struct({
   traces: Schema.optionalWith(TracesConfigSchema, {
     default: () => ({
       enabled: true,
-      endpoint: "http://localhost:4318/v1/traces",
+      endpoint: 'http://localhost:4318/v1/traces',
       samplingRatio: 1.0
     })
   }),
@@ -191,7 +190,7 @@ export const ObservabilityConfigSchema = Schema.Struct({
   metrics: Schema.optionalWith(MetricsConfigSchema, {
     default: () => ({
       enabled: true,
-      endpoint: "http://localhost:4318/v1/metrics",
+      endpoint: 'http://localhost:4318/v1/metrics',
       exportIntervalMs: 60000
     })
   }),
@@ -202,8 +201,8 @@ export const ObservabilityConfigSchema = Schema.Struct({
   logs: Schema.optionalWith(LogsConfigSchema, {
     default: () => ({
       enabled: true,
-      endpoint: "http://localhost:4318/v1/logs",
-      minLevel: "info" as const
+      endpoint: 'http://localhost:4318/v1/logs',
+      minLevel: 'info' as const
     })
   }),
 
@@ -233,21 +232,21 @@ export type ObservabilityConfig = typeof ObservabilityConfigSchema.Type
  * - Logs at info level and above
  */
 export const ProductionConfig: Partial<ObservabilityConfig> = {
-  environment: "production",
+  environment: 'production',
   traces: {
     enabled: true,
-    endpoint: "http://localhost:4318/v1/traces",
+    endpoint: 'http://localhost:4318/v1/traces',
     samplingRatio: 0.1 // Sample 10% of traces
   },
   metrics: {
     enabled: true,
-    endpoint: "http://localhost:4318/v1/metrics",
+    endpoint: 'http://localhost:4318/v1/metrics',
     exportIntervalMs: 60000 // 1 minute
   },
   logs: {
     enabled: true,
-    endpoint: "http://localhost:4318/v1/logs",
-    minLevel: "info"
+    endpoint: 'http://localhost:4318/v1/logs',
+    minLevel: 'info'
   }
 }
 
@@ -259,21 +258,21 @@ export const ProductionConfig: Partial<ObservabilityConfig> = {
  * - Debug logging
  */
 export const DevelopmentConfig: Partial<ObservabilityConfig> = {
-  environment: "development",
+  environment: 'development',
   traces: {
     enabled: true,
-    endpoint: "http://localhost:4318/v1/traces",
+    endpoint: 'http://localhost:4318/v1/traces',
     samplingRatio: 1.0 // Sample all traces
   },
   metrics: {
     enabled: true,
-    endpoint: "http://localhost:4318/v1/metrics",
+    endpoint: 'http://localhost:4318/v1/metrics',
     exportIntervalMs: 10000 // 10 seconds
   },
   logs: {
     enabled: true,
-    endpoint: "http://localhost:4318/v1/logs",
-    minLevel: "debug"
+    endpoint: 'http://localhost:4318/v1/logs',
+    minLevel: 'debug'
   }
 }
 
@@ -283,8 +282,8 @@ export const DevelopmentConfig: Partial<ObservabilityConfig> = {
  * - All exports disabled (no network calls)
  */
 export const TestConfig: Partial<ObservabilityConfig> = {
-  environment: "test",
-  traces: { enabled: false, endpoint: "", samplingRatio: 0 },
-  metrics: { enabled: false, endpoint: "", exportIntervalMs: 60000 },
-  logs: { enabled: false, endpoint: "", minLevel: "info" }
+  environment: 'test',
+  traces: { enabled: false, endpoint: '', samplingRatio: 0 },
+  metrics: { enabled: false, endpoint: '', exportIntervalMs: 60000 },
+  logs: { enabled: false, endpoint: '', minLevel: 'info' }
 }

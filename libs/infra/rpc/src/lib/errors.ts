@@ -1,4 +1,4 @@
-import { Data, Effect, Schema } from "effect"
+import { Data, Effect, Schema } from 'effect'
 
 /**
  * Rpc Errors
@@ -26,20 +26,17 @@ Note: AuthError is defined in middleware.ts for co-location with AuthMiddleware.
  * Use for errors that need to cross RPC boundaries.
  * This is serializable and can be sent over the wire.
  */
-export class RpcInfraError extends Schema.TaggedError<RpcInfraError>()(
-  "RpcInfraError",
-  {
-    message: Schema.String,
-    code: Schema.String,
-    details: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
-  }
-) {}
+export class RpcInfraError extends Schema.TaggedError<RpcInfraError>()('RpcInfraError', {
+  message: Schema.String,
+  code: Schema.String,
+  details: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+}) {}
 
 /**
  * Rate limit error
  */
 export class RpcRateLimitError extends Schema.TaggedError<RpcRateLimitError>()(
-  "RpcRateLimitError",
+  'RpcRateLimitError',
   {
     message: Schema.String,
     retryAfter: Schema.Number // Seconds until retry allowed
@@ -50,7 +47,7 @@ export class RpcRateLimitError extends Schema.TaggedError<RpcRateLimitError>()(
  * Validation error for invalid request payloads
  */
 export class RpcValidationError extends Schema.TaggedError<RpcValidationError>()(
-  "RpcValidationError",
+  'RpcValidationError',
   {
     message: Schema.String,
     field: Schema.optional(Schema.String),
@@ -66,32 +63,26 @@ export class RpcValidationError extends Schema.TaggedError<RpcValidationError>()
 /**
  * Not found error
  */
-export class RpcNotFoundError extends Schema.TaggedError<RpcNotFoundError>()(
-  "RpcNotFoundError",
-  {
-    message: Schema.String,
-    resource: Schema.String,
-    id: Schema.optional(Schema.String)
-  }
-) {}
+export class RpcNotFoundError extends Schema.TaggedError<RpcNotFoundError>()('RpcNotFoundError', {
+  message: Schema.String,
+  resource: Schema.String,
+  id: Schema.optional(Schema.String)
+}) {}
 
 /**
  * Timeout error
  */
-export class RpcTimeoutError extends Schema.TaggedError<RpcTimeoutError>()(
-  "RpcTimeoutError",
-  {
-    message: Schema.String,
-    operation: Schema.String,
-    timeoutMs: Schema.Number
-  }
-) {}
+export class RpcTimeoutError extends Schema.TaggedError<RpcTimeoutError>()('RpcTimeoutError', {
+  message: Schema.String,
+  operation: Schema.String,
+  timeoutMs: Schema.Number
+}) {}
 
 /**
  * Forbidden/Permission error
  */
 export class RpcForbiddenError extends Schema.TaggedError<RpcForbiddenError>()(
-  "RpcForbiddenError",
+  'RpcForbiddenError',
   {
     message: Schema.String,
     operation: Schema.optional(Schema.String)
@@ -101,34 +92,25 @@ export class RpcForbiddenError extends Schema.TaggedError<RpcForbiddenError>()(
 /**
  * Conflict error (resource already exists)
  */
-export class RpcConflictError extends Schema.TaggedError<RpcConflictError>()(
-  "RpcConflictError",
-  {
-    message: Schema.String,
-    conflictingId: Schema.optional(Schema.String)
-  }
-) {}
+export class RpcConflictError extends Schema.TaggedError<RpcConflictError>()('RpcConflictError', {
+  message: Schema.String,
+  conflictingId: Schema.optional(Schema.String)
+}) {}
 
 /**
  * Service error (internal service failures)
  */
-export class RpcServiceError extends Schema.TaggedError<RpcServiceError>()(
-  "RpcServiceError",
-  {
-    message: Schema.String,
-    code: Schema.Literal("INTERNAL_ERROR", "SERVICE_UNAVAILABLE", "ORCHESTRATION_FAILED")
-  }
-) {}
+export class RpcServiceError extends Schema.TaggedError<RpcServiceError>()('RpcServiceError', {
+  message: Schema.String,
+  code: Schema.Literal('INTERNAL_ERROR', 'SERVICE_UNAVAILABLE', 'ORCHESTRATION_FAILED')
+}) {}
 
 /**
  * Internal error (catch-all for unexpected errors)
  */
-export class RpcInternalError extends Schema.TaggedError<RpcInternalError>()(
-  "RpcInternalError",
-  {
-    message: Schema.String
-  }
-) {}
+export class RpcInternalError extends Schema.TaggedError<RpcInternalError>()('RpcInternalError', {
+  message: Schema.String
+}) {}
 
 /**
  * Union of all RPC infrastructure errors (excluding AuthError which is in middleware.ts)
@@ -154,9 +136,7 @@ export type RpcError =
  * These are NOT serializable and should not cross RPC boundaries.
  * For RPC boundary errors, use RpcInternalError (Schema.TaggedError) above.
  */
-export class RpcInternalDomainError extends Data.TaggedError(
-  "RpcInternalDomainError"
-)<{
+export class RpcInternalDomainError extends Data.TaggedError('RpcInternalDomainError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -164,9 +144,7 @@ export class RpcInternalDomainError extends Data.TaggedError(
 /**
  * Configuration error
  */
-export class RpcConfigError extends Data.TaggedError(
-  "RpcConfigError"
-)<{
+export class RpcConfigError extends Data.TaggedError('RpcConfigError')<{
   readonly message: string
   readonly key?: string
 }> {}
@@ -174,9 +152,7 @@ export class RpcConfigError extends Data.TaggedError(
 /**
  * Connection error
  */
-export class RpcConnectionError extends Data.TaggedError(
-  "RpcConnectionError"
-)<{
+export class RpcConnectionError extends Data.TaggedError('RpcConnectionError')<{
   readonly message: string
   readonly endpoint?: string
   readonly cause?: unknown
@@ -200,7 +176,7 @@ export const RpcHttpStatus = {
   RpcRateLimitError: 429,
   RpcServiceError: 503,
   RpcInfraError: 500,
-  RpcInternalError: 500,
+  RpcInternalError: 500
 } as const
 
 /**
@@ -209,8 +185,7 @@ export const RpcHttpStatus = {
  * Uses the error's _tag to determine HTTP status code.
  * All RPC errors extend Schema.TaggedError so _tag is always present.
  */
-export const getHttpStatus = (error: RpcError): number =>
-  RpcHttpStatus[error._tag] ?? 500
+export const getHttpStatus = (error: RpcError): number => RpcHttpStatus[error._tag] ?? 500
 
 // ============================================================================
 // Error Boundary (Effect-native)
@@ -251,11 +226,9 @@ export const getHttpStatus = (error: RpcError): number =>
  * )
  * ```
  */
-export const withRpcErrorBoundary = <A, E, R>(
-  effect: Effect.Effect<A, E, R>
-) =>
+export const withRpcErrorBoundary = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(
     Effect.catchAll(() =>
-      Effect.fail(new RpcInternalError({ message: "An unexpected error occurred" }))
+      Effect.fail(new RpcInternalError({ message: 'An unexpected error occurred' }))
     )
   )

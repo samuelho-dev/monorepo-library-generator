@@ -7,7 +7,7 @@
  * @module @samuelho-dev/contract-user/profile/rpc-errors
  */
 
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 // ============================================================================
 // RPC Errors (Schema.TaggedError for serialization)
@@ -17,7 +17,7 @@ import { Schema } from "effect"
  * Profile not found RPC error
  */
 export class ProfileNotFoundRpcError extends Schema.TaggedError<ProfileNotFoundRpcError>()(
-  "ProfileNotFoundRpcError",
+  'ProfileNotFoundRpcError',
   {
     message: Schema.String,
     profileId: Schema.String
@@ -35,7 +35,7 @@ export class ProfileNotFoundRpcError extends Schema.TaggedError<ProfileNotFoundR
  * Profile validation RPC error
  */
 export class ProfileValidationRpcError extends Schema.TaggedError<ProfileValidationRpcError>()(
-  "ProfileValidationRpcError",
+  'ProfileValidationRpcError',
   {
     message: Schema.String,
     field: Schema.optional(Schema.String),
@@ -51,7 +51,7 @@ export class ProfileValidationRpcError extends Schema.TaggedError<ProfileValidat
  * Profile permission RPC error
  */
 export class ProfilePermissionRpcError extends Schema.TaggedError<ProfilePermissionRpcError>()(
-  "ProfilePermissionRpcError",
+  'ProfilePermissionRpcError',
   {
     message: Schema.String,
     action: Schema.String,

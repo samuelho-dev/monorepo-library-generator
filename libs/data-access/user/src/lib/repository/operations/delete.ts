@@ -1,7 +1,7 @@
-import { UserNotFoundError } from "@samuelho-dev/contract-user"
-import { DatabaseService } from "@samuelho-dev/infra-database"
-import { Duration, Effect } from "effect"
-import { UserTimeoutError } from "../../shared/errors"
+import { UserNotFoundError } from '@samuelho-dev/contract-user'
+import { DatabaseService } from '@samuelho-dev/infra-database'
+import { Duration, Effect } from 'effect'
+import { UserTimeoutError } from '../../shared/errors'
 
 /**
  * User Delete Operations
@@ -34,35 +34,34 @@ export const deleteOperations = {
    * Delete User entity by ID
    */
   delete: (id: string) =>
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const database = yield* DatabaseService
 
       yield* Effect.logDebug(`Deleting User with id: ${id}`)
 
       const result = yield* database.query((db) =>
-        db
-          .deleteFrom("user")
-          .where("id", "=", id)
-          .executeTakeFirst()
+        db.deleteFrom('user').where('id', '=', id).executeTakeFirst()
       )
 
       const deletedCount = Number(result.numDeletedRows)
       if (deletedCount === 0) {
         // Throw NotFoundError when record doesn't exist
         // This ensures callers can distinguish "deleted" from "nothing to delete"
-        return yield* Effect.fail(new UserNotFoundError({
-          message: `User not found: ${id}`,
-          userId: id
-        }))
+        return yield* Effect.fail(
+          new UserNotFoundError({
+            message: `User not found: ${id}`,
+            userId: id
+          })
+        )
       }
 
       yield* Effect.logDebug(`User deleted successfully (id: ${id})`)
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("delete", 30000)
+        onTimeout: () => UserTimeoutError.create('delete', 30000)
       }),
-      Effect.withSpan("UserRepository.delete")
+      Effect.withSpan('UserRepository.delete')
     ),
 
   /**
@@ -75,7 +74,7 @@ export const deleteOperations = {
    * @returns The number of records that were actually deleted
    */
   deleteMany: (ids: readonly string[]) =>
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const database = yield* DatabaseService
 
       if (ids.length === 0) {
@@ -85,10 +84,7 @@ export const deleteOperations = {
       yield* Effect.logDebug(`Deleting ${ids.length} User entities`)
 
       const result = yield* database.query((db) =>
-        db
-          .deleteFrom("user")
-          .where("id", "in", ids)
-          .executeTakeFirst()
+        db.deleteFrom('user').where('id', 'in', ids).executeTakeFirst()
       )
 
       const deletedCount = Number(result.numDeletedRows)
@@ -98,9 +94,9 @@ export const deleteOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("deleteMany", 30000)
+        onTimeout: () => UserTimeoutError.create('deleteMany', 30000)
       }),
-      Effect.withSpan("UserRepository.deleteMany")
+      Effect.withSpan('UserRepository.deleteMany')
     )
 } as const
 

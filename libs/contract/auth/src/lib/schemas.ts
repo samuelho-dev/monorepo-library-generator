@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * Auth Contract Schemas
@@ -26,10 +26,10 @@ Schemas:
  * Authentication method used for the request
  */
 export const AuthMethodSchema = Schema.Union(
-  Schema.Literal("jwt"),
-  Schema.Literal("session"),
-  Schema.Literal("api-key"),
-  Schema.Literal("service-token")
+  Schema.Literal('jwt'),
+  Schema.Literal('session'),
+  Schema.Literal('api-key'),
+  Schema.Literal('service-token')
 )
 export type AuthMethod = Schema.Schema.Type<typeof AuthMethodSchema>
 
@@ -106,7 +106,11 @@ export const ServiceIdentitySchema = Schema.Struct({
   permissions: Schema.optional(Schema.Array(Schema.String)),
   /** Service environment */
   environment: Schema.optional(
-    Schema.Union(Schema.Literal("development"), Schema.Literal("staging"), Schema.Literal("production"))
+    Schema.Union(
+      Schema.Literal('development'),
+      Schema.Literal('staging'),
+      Schema.Literal('production')
+    )
   )
 })
 export type ServiceIdentity = Schema.Schema.Type<typeof ServiceIdentitySchema>
@@ -115,10 +119,10 @@ export type ServiceIdentity = Schema.Schema.Type<typeof ServiceIdentitySchema>
  * Known services for service-to-service auth
  */
 export const KnownServicesSchema = Schema.Union(
-  Schema.Literal("user-service"),
-  Schema.Literal("payment-service"),
-  Schema.Literal("notification-service"),
-  Schema.Literal("analytics-service"),
-  Schema.Literal("internal-tools")
+  Schema.Literal('user-service'),
+  Schema.Literal('payment-service'),
+  Schema.Literal('notification-service'),
+  Schema.Literal('analytics-service'),
+  Schema.Literal('internal-tools')
 )
 export type KnownService = Schema.Schema.Type<typeof KnownServicesSchema>

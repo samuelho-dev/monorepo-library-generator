@@ -32,214 +32,178 @@ Usage:
 // ============================================================================
 
 export {
-  // RPC Errors (Schema.TaggedError for serialization)
-  RpcInfraError,
-  RpcRateLimitError,
-  RpcValidationError,
-  RpcNotFoundError,
-  RpcTimeoutError,
-  RpcForbiddenError,
-  RpcConflictError,
-  RpcServiceError,
-  RpcInternalError,
-  type RpcError,
-
-  // Domain Errors (Data.TaggedError for internal use)
-  RpcInternalDomainError,
+  getHttpStatus,
   RpcConfigError,
+  RpcConflictError,
   RpcConnectionError,
-
+  type RpcError,
+  RpcForbiddenError,
   // HTTP Status (single source of truth)
   RpcHttpStatus,
-  getHttpStatus,
-
+  // RPC Errors (Schema.TaggedError for serialization)
+  RpcInfraError,
+  // Domain Errors (Data.TaggedError for internal use)
+  RpcInternalDomainError,
+  RpcInternalError,
+  RpcNotFoundError,
+  RpcRateLimitError,
+  RpcServiceError,
+  RpcTimeoutError,
+  RpcValidationError,
   // Error Boundary
-  withRpcErrorBoundary,
-} from "./lib/errors"
+  withRpcErrorBoundary
+} from './lib/errors'
 
 // ============================================================================
 // Core RPC Utilities
 // ============================================================================
 
 // Re-exports from @effect/rpc
-export { Rpc, RpcGroup } from "./lib/core"
-
 // Definition helpers
-export {
-  defineRpc,
-  defineRpcGroup,
-  createHandlers,
-  type RpcHandler,
-  type HandlersFor,
-} from "./lib/core"
-
 // Schema helpers
 export {
+  createHandlers,
+  defineRpc,
+  defineRpcGroup,
+  EmptyRequest,
+  type HandlersFor,
+  IdRequest,
   paginatedResponse,
   paginationRequest,
-  IdRequest,
-  SuccessResponse,
-  EmptyRequest,
-} from "./lib/core"
+  Rpc,
+  RpcGroup,
+  type RpcHandler,
+  SuccessResponse
+} from './lib/core'
 
 // ============================================================================
 // RPC Client
 // ============================================================================
 
 export {
-  RpcClient,
-  RpcClientConfigTag,
   createRpcClientLayer,
+  RpcClient,
   type RpcClientConfig,
-} from "./lib/client"
+  RpcClientConfigTag
+} from './lib/client'
 
 // ============================================================================
 // Transport Layer
 // ============================================================================
 
-// Transport types
-export type {
-  TransportMode,
-  TransportConfig,
-  HttpTransportConfig,
-  RpcTransportConfig,
-  HttpTransportOptions,
-  HttpRpcClientConfig,
-} from "./lib/transport"
-
-// HTTP transport client
-export { HttpRpcClient, RpcTransportClient, createNextHandler } from "./lib/transport"
-
-// Transport utilities
-export {
-  extractHeaders,
-  jsonResponse,
-  errorResponse,
-  type NextHandler,
-} from "./lib/transport"
-
 // Router utilities
 export {
-  createNextRpcHandler,
   combineHandlers,
-  healthCheck,
+  createNextRpcHandler,
   defaultRouterConfig,
-  type RouterConfig,
   type HealthCheckResponse,
-  type RpcHandlerMap,
-  type RpcRequiredLayers,
-  type NextRpcHandlerOptions,
+  healthCheck,
   type NextRpcHandler,
-} from "./lib/router"
+  type NextRpcHandlerOptions,
+  type RouterConfig,
+  type RpcHandlerMap,
+  type RpcRequiredLayers
+} from './lib/router'
+// Transport types
+export type {
+  HttpRpcClientConfig,
+  HttpTransportConfig,
+  HttpTransportOptions,
+  RpcTransportConfig,
+  TransportConfig,
+  TransportMode
+} from './lib/transport'
+// HTTP transport client
+// Transport utilities
+export {
+  createNextHandler,
+  errorResponse,
+  extractHeaders,
+  HttpRpcClient,
+  jsonResponse,
+  type NextHandler,
+  RpcTransportClient
+} from './lib/transport'
 
 // ============================================================================
 // Middleware (Contract-First Architecture)
 // ============================================================================
 
 // User Authentication (Protected Routes)
+// Service-to-Service Authentication (Service Routes)
+// Request Metadata (All Routes)
+// Route Selection (Contract-First)
+// Combined Middleware Layers
 export {
-  // Types
-  type CurrentUserData,
-  type AuthMethod,
-
-  // Context Tags
-  CurrentUser,
-  AuthMethodContext,
-
+  AdminTestUser,
+  AllMiddlewareLive,
+  AllMiddlewareTest,
   // Errors
   AuthError,
-
-  // Interface (for infra-auth to implement)
-  AuthVerifier,
-
+  type AuthMethod,
+  AuthMethodContext,
   // Middleware
   AuthMiddleware,
+  AuthMiddlewareAdmin,
   AuthMiddlewareLive,
   AuthMiddlewareTest,
-  AuthMiddlewareAdmin,
-
-  // Test data
-  TestUser,
-  AdminTestUser,
-} from "./lib/middleware"
-
-// Service-to-Service Authentication (Service Routes)
-export {
-  // Types
-  type ServiceIdentity,
-
+  // Interface (for infra-auth to implement)
+  AuthVerifier,
+  applyRouteMiddleware,
+  assertRouteType,
   // Context Tags
-  ServiceContext,
-
+  CurrentUser,
+  // Types
+  type CurrentUserData,
+  createMiddlewareSelector,
+  createRequestRouteContext,
+  defaultMiddlewareConfig,
+  detectRouteType,
+  generateServiceToken,
+  // Helpers
+  getHandlerContext,
+  getHandlerContextOptional,
+  // Functions
+  getRouteType,
+  type HandlerContext,
+  KNOWN_SERVICES,
+  // Dev helpers
+  logRouteType,
+  type MiddlewareSelectorConfig,
+  // Context Tags
+  RequestMeta,
+  // Types
+  type RequestMetadata,
+  // Middleware
+  RequestMetaMiddleware,
+  RequestMetaMiddlewareLive,
+  type RequestRouteContext,
+  // Context
+  RequestRouteContextTag,
+  // Symbol
+  RouteTag,
+  // Types
+  type RouteType,
+  type RpcWithRouteTag,
+  requireServicePermission,
   // Errors
   ServiceAuthError,
-
-  // Token utilities
-  validateServiceToken,
-  generateServiceToken,
-  KNOWN_SERVICES,
-
+  // Context Tags
+  ServiceContext,
+  // Types
+  type ServiceIdentity,
   // Middleware
   ServiceMiddleware,
   ServiceMiddlewareLive,
   ServiceMiddlewareTest,
-  requireServicePermission,
-
   // Test data
   TestServiceIdentity,
-} from "./lib/middleware"
-
-// Request Metadata (All Routes)
-export {
-  // Types
-  type RequestMetadata,
-
-  // Context Tags
-  RequestMeta,
-
-  // Middleware
-  RequestMetaMiddleware,
-  RequestMetaMiddlewareLive,
-
-  // Helpers
-  getHandlerContext,
-  getHandlerContextOptional,
-  type HandlerContext,
-} from "./lib/middleware"
-
-// Route Selection (Contract-First)
-export {
-  // Types
-  type RouteType,
-  type RpcWithRouteTag,
-  type MiddlewareSelectorConfig,
-  type RequestRouteContext,
-
-  // Symbol
-  RouteTag,
-
-  // Functions
-  getRouteType,
-  detectRouteType,
-  createMiddlewareSelector,
-  applyRouteMiddleware,
-
-  // Context
-  RequestRouteContextTag,
-  createRequestRouteContext,
-
-  // Dev helpers
-  logRouteType,
-  assertRouteType,
+  // Test data
+  TestUser,
   validateRpcRoutes,
-} from "./lib/middleware"
-
-// Combined Middleware Layers
-export {
-  AllMiddlewareTest,
-  AllMiddlewareLive,
-  defaultMiddlewareConfig,
-} from "./lib/middleware"
+  // Token utilities
+  validateServiceToken
+} from './lib/middleware'
 
 // ============================================================================
 // Client Hooks (React)
@@ -248,21 +212,16 @@ export {
 export {
   // Core RPC call function (Schema-validated)
   callRpc,
-
-  // Mutation hook with loading/error state
-  useRpcMutation,
-
-  // Query hook with automatic fetching
-  useRpcQuery,
-
-  // Lazy query hook (manual trigger)
-  useRpcLazyQuery,
-
   // Runtime utilities
   getRpcRuntime,
-  runEffectExit,
-
+  type ParsedRpcError,
   // Types
   type RpcCallOptions,
-  type ParsedRpcError,
-} from "./lib/hooks"
+  runEffectExit,
+  // Lazy query hook (manual trigger)
+  useRpcLazyQuery,
+  // Mutation hook with loading/error state
+  useRpcMutation,
+  // Query hook with automatic fetching
+  useRpcQuery
+} from './lib/hooks'

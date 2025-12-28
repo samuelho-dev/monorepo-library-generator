@@ -12,41 +12,8 @@ Repository implements contract from @samuelho-dev/contract-user
 // ============================================================================
 // Error Types (from shared/)
 // ============================================================================
-export { UserConnectionError, UserTimeoutError, UserTransactionError } from "./lib/shared/errors"
-export type { UserDataAccessError, UserInfrastructureError } from "./lib/shared/errors"
 
-// ============================================================================
-// Domain Types (from shared/)
-// ============================================================================
-export type {
-  User,
-  UserCreateInput,
-  UserFilter,
-  UserSort,
-  UserUpdateInput
-} from "./lib/shared/types"
-
-export type {
-  PaginatedResponse,
-  PaginationOptions,
-  QueryOptions,
-  SortDirection
-} from "./lib/shared/types"
-
-// ============================================================================
-// Validation Functions (from shared/)
-// ============================================================================
-export {
-  isUser,
-  isValidUserCreateInput,
-  isValidUserUpdateInput,
-  validateUserCreateInput,
-  validateUserFilter,
-  validateUserId,
-  validateUserUpdateInput,
-  validatePagination
-} from "./lib/shared/validation"
-
+export type { PaginationOptions as QueryPaginationOptions, UserQueryFilters } from './lib/queries'
 // ============================================================================
 // Query Builders (from queries.ts)
 // ============================================================================
@@ -54,11 +21,36 @@ export {
   buildCountQuery,
   buildFindAllQuery,
   buildFindByIdQuery
-} from "./lib/queries"
-
-export type { UserQueryFilters } from "./lib/queries"
-
-export type { PaginationOptions as QueryPaginationOptions } from "./lib/queries"
+} from './lib/queries'
+export type { UserDataAccessError, UserInfrastructureError } from './lib/shared/errors'
+export { UserConnectionError, UserTimeoutError, UserTransactionError } from './lib/shared/errors'
+// ============================================================================
+// Domain Types (from shared/)
+// ============================================================================
+export type {
+  PaginatedResponse,
+  PaginationOptions,
+  QueryOptions,
+  SortDirection,
+  User,
+  UserCreateInput,
+  UserFilter,
+  UserSort,
+  UserUpdateInput
+} from './lib/shared/types'
+// ============================================================================
+// Validation Functions (from shared/)
+// ============================================================================
+export {
+  isUser,
+  isValidUserCreateInput,
+  isValidUserUpdateInput,
+  validatePagination,
+  validateUserCreateInput,
+  validateUserFilter,
+  validateUserId,
+  validateUserUpdateInput
+} from './lib/shared/validation'
 
 // Repository (Effect 3.0+ Pattern: Static Members)
 // Export the UserRepository Context.Tag class.
@@ -71,4 +63,4 @@ export type { PaginationOptions as QueryPaginationOptions } from "./lib/queries"
 // NEW: import { UserRepository } from "@samuelho-dev/data-access-user";
 //      const layer = UserRepository.Live;
 
-export { UserRepository } from "./lib/repository"
+export { UserRepository } from './lib/repository'

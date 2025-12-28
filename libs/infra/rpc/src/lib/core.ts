@@ -1,6 +1,6 @@
-import { Rpc, RpcGroup } from "@effect/rpc"
-import { Schema } from "effect"
-import type { Effect } from "effect"
+import { Rpc, RpcGroup } from '@effect/rpc'
+import type { Effect } from 'effect'
+import { Schema } from 'effect'
 
 /**
  * Rpc Core
@@ -148,10 +148,7 @@ export type HandlersFor<G> =
         >
           ? (
               payload: Schema.Schema.Type<Payload>
-            ) => Effect.Effect<
-              Schema.Schema.Type<Success>,
-              Schema.Schema.Type<Failure>
-            >
+            ) => Effect.Effect<Schema.Schema.Type<Success>, Schema.Schema.Type<Failure>>
           : never
       }
     : never
@@ -159,30 +156,54 @@ export type HandlersFor<G> =
 /**
  * Extract RPC tag/name from an RPC definition
  */
-export type RpcTag<R> = R extends Rpc.Rpc<infer Tag extends string, Schema.Schema.Any, Schema.Schema.Any, Schema.Schema.Any>
-  ? Tag
-  : never
+export type RpcTag<R> =
+  R extends Rpc.Rpc<
+    infer Tag extends string,
+    Schema.Schema.Any,
+    Schema.Schema.Any,
+    Schema.Schema.Any
+  >
+    ? Tag
+    : never
 
 /**
  * Extract payload type from an RPC definition
  */
-export type RpcPayload<R> = R extends Rpc.Rpc<string, infer Payload extends Schema.Schema.Any, Schema.Schema.Any, Schema.Schema.Any>
-  ? Schema.Schema.Type<Payload>
-  : never
+export type RpcPayload<R> =
+  R extends Rpc.Rpc<
+    string,
+    infer Payload extends Schema.Schema.Any,
+    Schema.Schema.Any,
+    Schema.Schema.Any
+  >
+    ? Schema.Schema.Type<Payload>
+    : never
 
 /**
  * Extract success type from an RPC definition
  */
-export type RpcSuccess<R> = R extends Rpc.Rpc<string, Schema.Schema.Any, infer Success extends Schema.Schema.Any, Schema.Schema.Any>
-  ? Schema.Schema.Type<Success>
-  : never
+export type RpcSuccess<R> =
+  R extends Rpc.Rpc<
+    string,
+    Schema.Schema.Any,
+    infer Success extends Schema.Schema.Any,
+    Schema.Schema.Any
+  >
+    ? Schema.Schema.Type<Success>
+    : never
 
 /**
  * Extract failure type from an RPC definition
  */
-export type RpcFailure<R> = R extends Rpc.Rpc<string, Schema.Schema.Any, Schema.Schema.Any, infer Failure extends Schema.Schema.Any>
-  ? Schema.Schema.Type<Failure>
-  : never
+export type RpcFailure<R> =
+  R extends Rpc.Rpc<
+    string,
+    Schema.Schema.Any,
+    Schema.Schema.Any,
+    infer Failure extends Schema.Schema.Any
+  >
+    ? Schema.Schema.Type<Failure>
+    : never
 
 // ============================================================================
 // Schema Helpers

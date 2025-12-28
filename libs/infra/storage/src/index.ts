@@ -17,6 +17,7 @@ Usage:
 // Errors
 // ============================================================================
 
+export type { StorageInfraError } from './lib/errors'
 export {
   BucketNotFoundError,
   DownloadFailedError,
@@ -25,17 +26,11 @@ export {
   InvalidFileTypeError,
   StorageError,
   UploadFailedError
-} from "./lib/errors"
-
-export type { StorageInfraError } from "./lib/errors"
+} from './lib/errors'
 
 // ============================================================================
 // Types
 // ============================================================================
-
-export type { ListFilesOptions, ListFilesResult, StorageConfig, UploadResult } from "./lib/types"
-
-export { StorageConfigSchema, UploadResultSchema } from "./lib/types"
 
 // Re-export from provider for convenience
 export type {
@@ -44,13 +39,15 @@ export type {
   StorageBucket,
   StorageFile,
   UploadOptions
-} from "@samuelho-dev/provider-supabase"
+} from '@samuelho-dev/provider-supabase'
+export type { ListFilesOptions, ListFilesResult, StorageConfig, UploadResult } from './lib/types'
+export { StorageConfigSchema, UploadResultSchema } from './lib/types'
 
 // ============================================================================
 // Service
 // ============================================================================
 
-export { StorageService, type StorageServiceInterface } from "./lib/service"
+export { StorageService, type StorageServiceInterface } from './lib/service'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Usage Examples

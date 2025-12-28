@@ -6,10 +6,9 @@
  * @module monorepo-library-generator/cli/tui/components/Footer
  */
 
-import { Box, Text } from "ink"
-
-import { colors, type PanelId } from "../theme/colors"
-import type { TUIMode } from "../state"
+import { Box, Text } from 'ink'
+import type { TUIMode } from '../state'
+import { colors, type PanelId } from '../theme/colors'
 
 interface FooterProps {
   readonly activePanel: PanelId
@@ -19,13 +18,7 @@ interface FooterProps {
 /**
  * Keyboard shortcut display
  */
-function Shortcut({
-  keys,
-  description
-}: {
-  readonly keys: string
-  readonly description: string
-}) {
+function Shortcut({ keys, description }: { readonly keys: string; readonly description: string }) {
   return (
     <Text>
       <Text color={colors.highlight}>{keys}</Text>
@@ -44,9 +37,9 @@ export function Footer({ activePanel, mode }: FooterProps) {
         <Shortcut keys="1-3" description="panels" />
         <Shortcut keys="j/k" description="scroll" />
 
-        {activePanel === "types" && <Shortcut keys="Enter" description="select" />}
+        {activePanel === 'types' && <Shortcut keys="Enter" description="select" />}
 
-        {activePanel === "options" && (
+        {activePanel === 'options' && (
           <>
             <Shortcut keys="Space" description="toggle" />
             <Shortcut keys="Enter" description="edit" />
@@ -55,7 +48,7 @@ export function Footer({ activePanel, mode }: FooterProps) {
 
         <Shortcut keys="G" description="generate" />
 
-        {mode === "complete" && <Shortcut keys="n" description="new" />}
+        {mode === 'complete' && <Shortcut keys="n" description="new" />}
 
         <Shortcut keys="q" description="quit" />
       </Box>

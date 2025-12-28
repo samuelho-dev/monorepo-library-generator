@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer } from "effect"
+import { describe, expect, it } from '@effect/vitest'
+import { Context, Effect, Layer } from 'effect'
 
 /**
  * Rpc Service Tests
@@ -16,11 +16,10 @@ Testing Guidelines:
  * @module @samuelho-dev/infra-rpc
  */
 
-
 /**
  * Test service tag for layer composition tests
  */
-class RpcTestService extends Context.Tag("RpcTestService")<
+class RpcTestService extends Context.Tag('RpcTestService')<
   RpcTestService,
   {
     readonly getName: () => Effect.Effect<string>
@@ -33,92 +32,95 @@ class RpcTestService extends Context.Tag("RpcTestService")<
  */
 function createRpcTestLayer(config: Record<string, unknown> = {}) {
   return Layer.succeed(RpcTestService, {
-    getName: () => Effect.succeed("rpc"),
+    getName: () => Effect.succeed('rpc'),
     getConfig: () => Effect.succeed(config)
   })
 }
 
-describe("Rpc Service", () => {
-  describe("Service Interface", () => {
-    it.scoped("should provide service through layer", () =>
-      Effect.gen(function*() {
+describe('Rpc Service', () => {
+  describe('Service Interface', () => {
+    it.scoped('should provide service through layer', () =>
+      Effect.gen(function* () {
         const service = yield* RpcTestService
         const name = yield* service.getName()
-        expect(name).toBe("rpc")
-      }).pipe(Effect.provide(Layer.fresh(createRpcTestLayer()))))
+        expect(name).toBe('rpc')
+      }).pipe(Effect.provide(Layer.fresh(createRpcTestLayer())))
+    )
 
-    it.scoped("should provide configuration", () =>
-      Effect.gen(function*() {
+    it.scoped('should provide configuration', () =>
+      Effect.gen(function* () {
         const service = yield* RpcTestService
         const config = yield* service.getConfig()
         expect(config).toEqual({ timeout: 5000 })
-      }).pipe(Effect.provide(Layer.fresh(createRpcTestLayer({ timeout: 5000 })))))
+      }).pipe(Effect.provide(Layer.fresh(createRpcTestLayer({ timeout: 5000 }))))
+    )
   })
 
-  describe("Layer Composition", () => {
-    it.scoped("should compose with other layers", () =>
-      Effect.gen(function*() {
+  describe('Layer Composition', () => {
+    it.scoped('should compose with other layers', () =>
+      Effect.gen(function* () {
         const service = yield* RpcTestService
         const name = yield* service.getName()
-        expect(name).toBe("rpc")
+        expect(name).toBe('rpc')
       }).pipe(
         Effect.provide(
           Layer.fresh(
             Layer.merge(
               createRpcTestLayer(),
-              Layer.succeed(Context.GenericTag<{ version: string }>("Version"), {
-                version: "1.0.0"
+              Layer.succeed(Context.GenericTag<{ version: string }>('Version'), {
+                version: '1.0.0'
               })
             )
           )
         )
-      ))
+      )
+    )
 
-    it.scoped("should allow layer override", () => {
+    it.scoped('should allow layer override', () => {
       const overrideLayer = Layer.succeed(RpcTestService, {
-        getName: () => Effect.succeed("overridden"),
+        getName: () => Effect.succeed('overridden'),
         getConfig: () => Effect.succeed({ custom: true })
       })
 
-      return Effect.gen(function*() {
+      return Effect.gen(function* () {
         const service = yield* RpcTestService
         const name = yield* service.getName()
-        expect(name).toBe("overridden")
+        expect(name).toBe('overridden')
       }).pipe(Effect.provide(Layer.fresh(overrideLayer)))
     })
   })
 
-  describe("Layer Types", () => {
-    it.scoped("should work with Layer.succeed for synchronous initialization", () => {
+  describe('Layer Types', () => {
+    it.scoped('should work with Layer.succeed for synchronous initialization', () => {
       const syncLayer = Layer.succeed(RpcTestService, {
-        getName: () => Effect.succeed("sync-rpc"),
+        getName: () => Effect.succeed('sync-rpc'),
         getConfig: () => Effect.succeed({})
       })
 
-      return Effect.gen(function*() {
+      return Effect.gen(function* () {
         const service = yield* RpcTestService
         const name = yield* service.getName()
-        expect(name).toBe("sync-rpc")
+        expect(name).toBe('sync-rpc')
       }).pipe(Effect.provide(Layer.fresh(syncLayer)))
     })
 
-    it.scoped("should work with Layer.effect for async initialization", () => {
+    it.scoped('should work with Layer.effect for async initialization', () => {
       const asyncLayer = Layer.effect(
         RpcTestService,
         Effect.sync(() => ({
-          getName: () => Effect.succeed("async-rpc"),
+          getName: () => Effect.succeed('async-rpc'),
           getConfig: () => Effect.succeed({ async: true })
         }))
       )
 
-      return Effect.gen(function*() {
+      return Effect.gen(function* () {
         const service = yield* RpcTestService
         const name = yield* service.getName()
-        expect(name).toBe("async-rpc")
+        expect(name).toBe('async-rpc')
       }).pipe(Effect.provide(Layer.fresh(asyncLayer)))
     })
 
-    it.scoped("should work with Layer.scoped for resource management", () => {
+    it.scoped('should work with Layer.scoped for resource management', () => {
       let initialized = false
 
       const scopedLayer = Layer.scoped(
@@ -127,7 +129,7 @@ describe("Rpc Service", () => {
           Effect.sync(() => {
             initialized = true
             return {
-              getName: () => Effect.succeed("scoped-rpc"),
+              getName: () => Effect.succeed('scoped-rpc'),
               getConfig: () => Effect.succeed({ scoped: true })
             }
           }),
@@ -135,17 +137,17 @@ describe("Rpc Service", () => {
         )
       )
 
-      return Effect.gen(function*() {
+      return Effect.gen(function* () {
         const service = yield* RpcTestService
         const name = yield* service.getName()
-        expect(name).toBe("scoped-rpc")
+        expect(name).toBe('scoped-rpc')
         expect(initialized).toBe(true)
       }).pipe(Effect.provide(Layer.fresh(scopedLayer)))
     })
   })
 
-  describe("Layer Isolation", () => {
-    it.scoped("should isolate state between tests with Layer.fresh", () => {
+  describe('Layer Isolation', () => {
+    it.scoped('should isolate state between tests with Layer.fresh', () => {
       let callCount = 0
 
       const countingLayer = Layer.effect(
@@ -159,10 +161,10 @@ describe("Rpc Service", () => {
         })
       )
 
-      return Effect.gen(function*() {
+      return Effect.gen(function* () {
         const service = yield* RpcTestService
         const name = yield* service.getName()
-        expect(name).toBe("call-1")
+        expect(name).toBe('call-1')
         expect(callCount).toBe(1)
       }).pipe(Effect.provide(Layer.fresh(countingLayer)))
     })

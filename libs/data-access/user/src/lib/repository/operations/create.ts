@@ -1,7 +1,7 @@
-import { DatabaseService } from "@samuelho-dev/infra-database"
-import { Duration, Effect } from "effect"
-import { UserTimeoutError } from "../../shared/errors"
-import type { UserCreateInput } from "../../shared/types"
+import { DatabaseService } from '@samuelho-dev/infra-database'
+import { Duration, Effect } from 'effect'
+import { UserTimeoutError } from '../../shared/errors'
+import type { UserCreateInput } from '../../shared/types'
 
 /**
  * User Create Operations
@@ -34,14 +34,14 @@ export const createOperations = {
    * Create a new User entity
    */
   create: (input: UserCreateInput) =>
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const database = yield* DatabaseService
 
       yield* Effect.logDebug(`Creating User: ${JSON.stringify(input)}`)
 
       const entity = yield* database.query((db) =>
         db
-          .insertInto("user")
+          .insertInto('user')
           .values({
             ...input,
             createdAt: new Date(),
@@ -51,29 +51,29 @@ export const createOperations = {
           .executeTakeFirstOrThrow()
       )
 
-      yield* Effect.logDebug("User created successfully")
+      yield* Effect.logDebug('User created successfully')
 
       return entity
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("create", 30000)
+        onTimeout: () => UserTimeoutError.create('create', 30000)
       }),
-      Effect.withSpan("UserRepository.create")
+      Effect.withSpan('UserRepository.create')
     ),
 
   /**
    * Create multiple User entities in batch
    */
   createMany: (inputs: readonly UserCreateInput[]) =>
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const database = yield* DatabaseService
 
       yield* Effect.logDebug(`Creating ${inputs.length} User entities`)
 
       const entities = yield* database.query((db) =>
         db
-          .insertInto("user")
+          .insertInto('user')
           .values(
             inputs.map((input) => ({
               ...input,
@@ -91,9 +91,9 @@ export const createOperations = {
     }).pipe(
       Effect.timeoutFail({
         duration: Duration.seconds(30),
-        onTimeout: () => UserTimeoutError.create("createMany", 30000)
+        onTimeout: () => UserTimeoutError.create('createMany', 30000)
       }),
-      Effect.withSpan("UserRepository.createMany")
+      Effect.withSpan('UserRepository.createMany')
     )
 } as const
 

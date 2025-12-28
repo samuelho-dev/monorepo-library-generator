@@ -1,5 +1,5 @@
-import type { UserRepositoryError } from "@samuelho-dev/contract-user"
-import { Data } from "effect"
+import type { UserRepositoryError } from '@samuelho-dev/contract-user'
+import { Data } from 'effect'
 
 /**
  * User Data Access Infrastructure Errors
@@ -22,13 +22,12 @@ For domain errors, import from contract:
  * @module @samuelho-dev/data-access-user/errors
  */
 
-
 // ============================================================================
 // Infrastructure Errors (Data-Access Specific)
 // ============================================================================
 // These errors are specific to data-access infrastructure operations.
 // They do not exist in the contract layer as they are implementation details.
-// 
+//
 // For domain errors, import directly from contract:
 //   import { UserNotFoundError } from "@samuelho-dev/contract-user";
 
@@ -39,9 +38,7 @@ Server error (503). This is an infrastructure error that occurs when
 the data layer cannot establish a connection to the underlying database
 or external service.
  */
-export class UserConnectionError extends Data.TaggedError(
-  "UserConnectionError"
-)<{
+export class UserConnectionError extends Data.TaggedError('UserConnectionError')<{
   /** Human-readable error message */
   readonly message: string
   /** Connection target (service name, host, etc.) */
@@ -64,9 +61,7 @@ export class UserConnectionError extends Data.TaggedError(
 Server error (504). This is an infrastructure error that occurs when
 a database query or transaction takes longer than the configured timeout.
  */
-export class UserTimeoutError extends Data.TaggedError(
-  "UserTimeoutError"
-)<{
+export class UserTimeoutError extends Data.TaggedError('UserTimeoutError')<{
   /** Human-readable error message */
   readonly message: string
   /** Operation that timed out */
@@ -89,19 +84,17 @@ export class UserTimeoutError extends Data.TaggedError(
 Server error (500). This is an infrastructure error that occurs when
 a database transaction cannot be started, committed, or rolled back.
  */
-export class UserTransactionError extends Data.TaggedError(
-  "UserTransactionError"
-)<{
+export class UserTransactionError extends Data.TaggedError('UserTransactionError')<{
   /** Human-readable error message */
   readonly message: string
   /** Transaction operation that failed */
   readonly operation: string
   /** Transaction phase that failed */
-  readonly phase: "begin" | "commit" | "rollback"
+  readonly phase: 'begin' | 'commit' | 'rollback'
   /** Underlying database error */
   readonly cause?: unknown
 }> {
-  static create(operation: string, phase: "begin" | "commit" | "rollback", cause?: unknown) {
+  static create(operation: string, phase: 'begin' | 'commit' | 'rollback', cause?: unknown) {
     return new UserTransactionError({
       message: `Transaction ${phase} failed during ${operation}`,
       operation,

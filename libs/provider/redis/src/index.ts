@@ -28,6 +28,7 @@ Usage:
 // Error Types
 // ============================================================================
 
+export type { RedisProviderError } from './lib/errors'
 export {
   // Error mapping utility
   mapRedisError,
@@ -40,8 +41,7 @@ export {
   RedisKeyError,
   RedisPubSubError,
   RedisTimeoutError
-} from "./lib/errors"
-export type { RedisProviderError } from "./lib/errors"
+} from './lib/errors'
 
 // ============================================================================
 // Types
@@ -57,7 +57,7 @@ export type {
   RedisQueueClient,
   ScanOptions,
   ScanResult
-} from "./lib/types"
+} from './lib/types'
 
 // ============================================================================
 // Service
@@ -76,7 +76,7 @@ export type {
 //   - redis.pubsub: RedisPubSubClient (for infra-pubsub)
 //   - redis.queue: RedisQueueClient (for infra-queue)
 
-export { Redis, RedisService, type RedisServiceInterface } from "./lib/redis"
+export { Redis, RedisService, type RedisServiceInterface } from './lib/redis'
 
 // ============================================================================
 // Sub-Service Context.Tags
@@ -85,9 +85,9 @@ export { Redis, RedisService, type RedisServiceInterface } from "./lib/redis"
 // Independent access to Redis sub-services
 // Each can be used separately for fine-grained dependency injection
 
-export { RedisCacheService } from "./lib/cache"
-export { RedisPubSubService } from "./lib/pubsub"
-export { RedisQueueService } from "./lib/queue"
+export { RedisCacheService } from './lib/cache'
+export { RedisPubSubService } from './lib/pubsub'
+export { RedisQueueService } from './lib/queue'
 
 // ============================================================================
 // Sub-Service Factories
@@ -96,9 +96,9 @@ export { RedisQueueService } from "./lib/queue"
 // These are exported for advanced use cases where you need
 // to create sub-services with custom ioredis instances.
 
-export { makeCacheClient } from "./lib/cache"
-export { makePubSubClient } from "./lib/pubsub"
-export { makeQueueClient } from "./lib/queue"
+export { makeCacheClient } from './lib/cache'
+export { makePubSubClient } from './lib/pubsub'
+export { makeQueueClient } from './lib/queue'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Usage Examples

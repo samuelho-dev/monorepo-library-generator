@@ -1,7 +1,7 @@
-import { Context, Effect, Layer } from "effect"
-import type { Redis as IORedis } from "ioredis"
-import { RedisCommandError } from "./errors"
-import type { RedisQueueClient } from "./types"
+import { Context, Effect, Layer } from 'effect'
+import type { Redis as IORedis } from 'ioredis'
+import { RedisCommandError } from './errors'
+import type { RedisQueueClient } from './types'
 
 /**
  * Redis Queue Sub-Service
@@ -50,11 +50,11 @@ export function makeQueueClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `LPUSH failed for key: ${key}`,
-            command: "LPUSH",
+            command: 'LPUSH',
             args: [key, value],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.queue.lpush", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.queue.lpush', { attributes: { key } })),
 
     brpop: (key: string, timeout: number) =>
       Effect.tryPromise({
@@ -62,11 +62,11 @@ export function makeQueueClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `BRPOP failed for key: ${key}`,
-            command: "BRPOP",
+            command: 'BRPOP',
             args: [key, timeout],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.queue.brpop", { attributes: { key, timeout } })),
+      }).pipe(Effect.withSpan('Redis.queue.brpop', { attributes: { key, timeout } })),
 
     rpop: (key: string) =>
       Effect.tryPromise({
@@ -74,11 +74,11 @@ export function makeQueueClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `RPOP failed for key: ${key}`,
-            command: "RPOP",
+            command: 'RPOP',
             args: [key],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.queue.rpop", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.queue.rpop', { attributes: { key } })),
 
     llen: (key: string) =>
       Effect.tryPromise({
@@ -86,11 +86,11 @@ export function makeQueueClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `LLEN failed for key: ${key}`,
-            command: "LLEN",
+            command: 'LLEN',
             args: [key],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.queue.llen", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.queue.llen', { attributes: { key } })),
 
     lrange: (key: string, start: number, stop: number) =>
       Effect.tryPromise({
@@ -98,11 +98,11 @@ export function makeQueueClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `LRANGE failed for key: ${key}`,
-            command: "LRANGE",
+            command: 'LRANGE',
             args: [key, start, stop],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.queue.lrange", { attributes: { key, start, stop } })),
+      }).pipe(Effect.withSpan('Redis.queue.lrange', { attributes: { key, start, stop } })),
 
     ltrim: (key: string, start: number, stop: number) =>
       Effect.tryPromise({
@@ -110,11 +110,11 @@ export function makeQueueClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `LTRIM failed for key: ${key}`,
-            command: "LTRIM",
+            command: 'LTRIM',
             args: [key, start, stop],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.queue.ltrim", { attributes: { key, start, stop } })),
+      }).pipe(Effect.withSpan('Redis.queue.ltrim', { attributes: { key, start, stop } })),
 
     del: (key: string) =>
       Effect.tryPromise({
@@ -122,22 +122,22 @@ export function makeQueueClient(client: IORedis) {
         catch: (error) =>
           new RedisCommandError({
             message: `DEL failed for key: ${key}`,
-            command: "DEL",
+            command: 'DEL',
             args: [key],
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.queue.del", { attributes: { key } })),
+      }).pipe(Effect.withSpan('Redis.queue.del', { attributes: { key } })),
 
     ping: () =>
       Effect.tryPromise({
         try: () => client.ping(),
         catch: (error) =>
           new RedisCommandError({
-            message: "PING failed",
-            command: "PING",
+            message: 'PING failed',
+            command: 'PING',
             cause: error
           })
-      }).pipe(Effect.withSpan("Redis.queue.ping"))
+      }).pipe(Effect.withSpan('Redis.queue.ping'))
   }
 }
 
@@ -154,7 +154,7 @@ export function makeQueueClient(client: IORedis) {
  * Static layers:
  * - RedisQueueService.Test - In-memory mock for testing
  */
-export class RedisQueueService extends Context.Tag("RedisQueueService")<
+export class RedisQueueService extends Context.Tag('RedisQueueService')<
   RedisQueueService,
   RedisQueueClient
 >() {
@@ -169,7 +169,7 @@ export class RedisQueueService extends Context.Tag("RedisQueueService")<
     lrange: () => Effect.succeed([]),
     ltrim: () => Effect.void,
     del: () => Effect.succeed(0),
-    ping: () => Effect.succeed("PONG")
+    ping: () => Effect.succeed('PONG')
   })
 
   /**

@@ -29,8 +29,11 @@ import {
 // Parent Entity Re-Export
 // ============================================================================
 // Sub-modules use parent entity type - re-export for convenience
-export type { UserEntity } from "../lib/rpc-definitions"
-
+export type { UserEntity } from '../lib/rpc-definitions'
+// ============================================================================
+// Entity Exports
+// ============================================================================
+export { Profile, ProfileId, ProfileItem } from './entities'
 // ============================================================================
 // Error Exports (Contract-First)
 // ============================================================================
@@ -42,17 +45,18 @@ export {
   ProfileOperationError,
   type ProfileRepositoryError,
   ProfileValidationError
-} from "./errors"
-
-// ============================================================================
-// Entity Exports
-// ============================================================================
-export { Profile, ProfileId, ProfileItem } from "./entities"
+} from './errors'
 
 // ============================================================================
 // Event Exports
 // ============================================================================
-export { ProfileCreated, ProfileDeleted, type ProfileEvent, ProfileEvents, ProfileUpdated } from "./events"
+export {
+  ProfileCreated,
+  ProfileDeleted,
+  type ProfileEvent,
+  ProfileEvents,
+  ProfileUpdated
+} from './events'
 
 // ============================================================================
 // RPC Exports
@@ -67,11 +71,11 @@ export {
   ProfileRpcsByRoute,
   ProfileUpdate,
   UpdateProfileInput
-} from "./rpc-definitions"
+} from './rpc-definitions'
 
 export {
   ProfileNotFoundRpcError,
   ProfilePermissionRpcError,
   ProfileRpcError,
   ProfileValidationRpcError
-} from "./rpc-errors"
+} from './rpc-errors'

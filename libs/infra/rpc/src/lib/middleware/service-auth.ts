@@ -1,7 +1,7 @@
-import { Headers } from "@effect/platform"
-import { RpcMiddleware } from "@effect/rpc"
-import { env } from "@samuelho-dev/env"
-import { Effect, Layer, Option } from "effect"
+import { Headers } from '@effect/platform'
+import { RpcMiddleware } from '@effect/rpc'
+import { env } from '@samuelho-dev/env'
+import { Effect, Layer, Option } from 'effect'
 
 /**
  * Service-to-Service Authentication Middleware
@@ -29,22 +29,16 @@ Features:
 
 // Import canonical types from contract-auth
 import {
-  // Schemas
-  type ServiceIdentity,
-
   // Errors
   ServiceAuthError,
-
   // Context Tags
   ServiceContext,
-} from "@samuelho-dev/contract-auth"
+  // Schemas
+  type ServiceIdentity
+} from '@samuelho-dev/contract-auth'
 
 // Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
-export {
-  type ServiceIdentity,
-  ServiceAuthError,
-  ServiceContext,
-}
+export { type ServiceIdentity, ServiceAuthError, ServiceContext }
 
 // ============================================================================
 // Service Token Validation
@@ -64,25 +58,25 @@ const SERVICE_AUTH_SECRET = env.SERVICE_AUTH_SECRET
  * In production, load from secure configuration store.
  */
 export const KNOWN_SERVICES: Record<string, { name: string; permissions: readonly string[] }> = {
-  "user-service": {
-    name: "User Service",
-    permissions: ["user:read", "user:write", "user:validate"]
+  'user-service': {
+    name: 'User Service',
+    permissions: ['user:read', 'user:write', 'user:validate']
   },
-  "order-service": {
-    name: "Order Service",
-    permissions: ["order:read", "order:write", "user:validate"]
+  'order-service': {
+    name: 'Order Service',
+    permissions: ['order:read', 'order:write', 'user:validate']
   },
-  "inventory-service": {
-    name: "Inventory Service",
-    permissions: ["inventory:read", "inventory:write", "order:notify"]
+  'inventory-service': {
+    name: 'Inventory Service',
+    permissions: ['inventory:read', 'inventory:write', 'order:notify']
   },
-  "notification-service": {
-    name: "Notification Service",
-    permissions: ["notification:send", "user:read"]
+  'notification-service': {
+    name: 'Notification Service',
+    permissions: ['notification:send', 'user:read']
   },
-  "payment-service": {
-    name: "Payment Service",
-    permissions: ["payment:process", "order:update"]
+  'payment-service': {
+    name: 'Payment Service',
+    permissions: ['payment:process', 'order:update']
   }
   // Add more services as needed
 }
@@ -100,16 +94,16 @@ export function validateServiceToken(token: string) {
   if (!token) return null
 
   // Format: serviceId:signature
-  const parts = token.split(":")
+  const parts = token.split(':')
   if (parts.length !== 2) return null
 
   const [serviceId, signature] = parts
   if (!(serviceId && signature)) return null
 
   // Validate signature
-  const expectedSignature = Buffer.from(
-    `${serviceId}:${SERVICE_AUTH_SECRET}`
-  ).toString("base64").slice(0, 16)
+  const expectedSignature = Buffer.from(`${serviceId}:${SERVICE_AUTH_SECRET}`)
+    .toString('base64')
+    .slice(0, 16)
 
   if (signature !== expectedSignature) return null
 
@@ -130,9 +124,9 @@ export function validateServiceToken(token: string) {
  * @returns Service token string
  */
 export function generateServiceToken(serviceId: string) {
-  const signature = Buffer.from(
-    `${serviceId}:${SERVICE_AUTH_SECRET}`
-  ).toString("base64").slice(0, 16)
+  const signature = Buffer.from(`${serviceId}:${SERVICE_AUTH_SECRET}`)
+    .toString('base64')
+    .slice(0, 16)
 
   return `${serviceId}:${signature}`
 }
@@ -162,7 +156,7 @@ export function generateServiceToken(serviceId: string) {
  * ```
  */
 export class ServiceMiddleware extends RpcMiddleware.Tag<ServiceMiddleware>()(
-  "@rpc/ServiceMiddleware",
+  '@rpc/ServiceMiddleware',
   {
     provides: ServiceContext,
     failure: ServiceAuthError
@@ -175,53 +169,51 @@ export class ServiceMiddleware extends RpcMiddleware.Tag<ServiceMiddleware>()(
  * Validates service-to-service authentication tokens and provides ServiceContext.
  * Logs authentication attempts for security auditing.
  */
-export const ServiceMiddlewareLive = Layer.succeed(
-  ServiceMiddleware,
-  (request) =>
-    Effect.gen(function*() {
-      const { headers } = request
+export const ServiceMiddlewareLive = Layer.succeed(ServiceMiddleware, (request) =>
+  Effect.gen(function* () {
+    const { headers } = request
 
-      // Extract service token from header
-      const serviceToken = Headers.get(headers, "x-service-token")
+    // Extract service token from header
+    const serviceToken = Headers.get(headers, 'x-service-token')
 
-      if (Option.isNone(serviceToken)) {
-        yield* Effect.logWarning("Service authentication failed: No service token provided")
-        return yield* Effect.fail(ServiceAuthError.tokenInvalid())
-      }
+    if (Option.isNone(serviceToken)) {
+      yield* Effect.logWarning('Service authentication failed: No service token provided')
+      return yield* Effect.fail(ServiceAuthError.tokenInvalid())
+    }
 
-      // Validate token and extract identity
-      const identity = validateServiceToken(serviceToken.value)
+    // Validate token and extract identity
+    const identity = validateServiceToken(serviceToken.value)
 
-      if (!identity) {
-        yield* Effect.logWarning("Service authentication failed: Invalid service token")
-        return yield* Effect.fail(ServiceAuthError.tokenInvalid())
-      }
+    if (!identity) {
+      yield* Effect.logWarning('Service authentication failed: Invalid service token')
+      return yield* Effect.fail(ServiceAuthError.tokenInvalid())
+    }
 
-      // Log successful service authentication
-      yield* Effect.logDebug(`Service authenticated: ${identity.serviceName} with permissions: ${identity.permissions.join(", ")}`)
+    // Log successful service authentication
+    yield* Effect.logDebug(
+      `Service authenticated: ${identity.serviceName} with permissions: ${identity.permissions.join(', ')}`
+    )
 
-      // Additional security: check for suspicious headers or patterns
-      const userAgent = Headers.get(headers, "user-agent")
-      if (Option.isSome(userAgent)) {
-        yield* Effect.logDebug(`Service request user-agent: ${userAgent.value}`)
-      }
+    // Additional security: check for suspicious headers or patterns
+    const userAgent = Headers.get(headers, 'user-agent')
+    if (Option.isSome(userAgent)) {
+      yield* Effect.logDebug(`Service request user-agent: ${userAgent.value}`)
+    }
 
-      return identity
-    })
+    return identity
+  })
 )
 
 /**
  * Check if service has required permission
  */
 export const requireServicePermission = (permission: string) =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const service = yield* ServiceContext
     const permissions = service.permissions ?? []
 
     if (!permissions.includes(permission)) {
-      return yield* Effect.fail(
-        ServiceAuthError.permissionDenied(service.serviceName, permission)
-      )
+      return yield* Effect.fail(ServiceAuthError.permissionDenied(service.serviceName, permission))
     }
 
     return service
@@ -231,14 +223,13 @@ export const requireServicePermission = (permission: string) =>
  * Test service identity for development
  */
 export const TestServiceIdentity: ServiceIdentity = {
-  serviceName: "test-service",
-  permissions: ["*"]
+  serviceName: 'test-service',
+  permissions: ['*']
 }
 
 /**
  * Test ServiceMiddleware - always provides TestServiceIdentity
  */
-export const ServiceMiddlewareTest = Layer.succeed(
-  ServiceMiddleware,
-  () => Effect.succeed(TestServiceIdentity)
+export const ServiceMiddlewareTest = Layer.succeed(ServiceMiddleware, () =>
+  Effect.succeed(TestServiceIdentity)
 )

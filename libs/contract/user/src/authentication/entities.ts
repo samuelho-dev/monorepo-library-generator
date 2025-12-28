@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * User Authentication Entities
@@ -26,11 +26,11 @@ Import shared types from the parent contract when needed.
  * Authentication ID branded type
  */
 export const AuthenticationId = Schema.String.pipe(
-  Schema.brand("AuthenticationId"),
+  Schema.brand('AuthenticationId'),
   Schema.annotations({
-    identifier: "AuthenticationId",
-    title: "Authentication ID",
-    description: "Unique identifier for a authentication entity"
+    identifier: 'AuthenticationId',
+    title: 'Authentication ID',
+    description: 'Unique identifier for a authentication entity'
   })
 )
 
@@ -47,7 +47,7 @@ export type AuthenticationId = Schema.Schema.Type<typeof AuthenticationId>
  * @title Authentication Entity
  * @description Authentication entity within the user domain
  */
-export class Authentication extends Schema.Class<Authentication>("Authentication")({
+export class Authentication extends Schema.Class<Authentication>('Authentication')({
   /** Unique identifier */
   id: AuthenticationId,
   /** Created timestamp */
@@ -60,16 +60,12 @@ export class Authentication extends Schema.Class<Authentication>("Authentication
   name: Schema.String.pipe(
     Schema.minLength(1),
     Schema.annotations({
-      title: "Authentication Name",
-      description: "Name of this authentication"
+      title: 'Authentication Name',
+      description: 'Name of this authentication'
     })
   ),
   /** Authentication status */
-  status: Schema.Literal(
-    "active",
-    "inactive",
-    "pending"
-  )
+  status: Schema.Literal('active', 'inactive', 'pending')
   // TODO: Add authentication-specific fields
 }) {}
 // ============================================================================
@@ -84,7 +80,7 @@ export class Authentication extends Schema.Class<Authentication>("Authentication
  * @title Authentication Item
  * @description Lightweight authentication item representation
  */
-export class AuthenticationItem extends Schema.Class<AuthenticationItem>("AuthenticationItem")({
+export class AuthenticationItem extends Schema.Class<AuthenticationItem>('AuthenticationItem')({
   /** Item identifier */
   id: Schema.UUID,
   /** Item name or label */

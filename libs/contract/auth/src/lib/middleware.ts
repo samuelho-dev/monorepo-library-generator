@@ -1,5 +1,5 @@
-import { Context } from "effect"
-import type { AuthMethod, CurrentUserData, ServiceIdentity } from "./schemas"
+import { Context } from 'effect'
+import type { AuthMethod, CurrentUserData, ServiceIdentity } from './schemas'
 
 /**
  * Auth Contract Middleware
@@ -31,7 +31,7 @@ Route Types:
  * - "protected": User authentication middleware (CurrentUser)
  * - "service": Service authentication middleware (ServiceContext)
  */
-export type RouteType = "public" | "protected" | "service"
+export type RouteType = 'public' | 'protected' | 'service'
 
 /**
  * Symbol for marking RPC route types
@@ -45,7 +45,7 @@ export type RouteType = "public" | "protected" | "service"
  * }
  * ```
  */
-export const RouteTag: unique symbol = Symbol.for("@samuelho-dev/contract-auth/RouteTag")
+export const RouteTag: unique symbol = Symbol.for('@samuelho-dev/contract-auth/RouteTag')
 
 /**
  * Type helper for RPC classes with RouteTag
@@ -72,10 +72,7 @@ export interface RpcWithRouteTag {
  * })
  * ```
  */
-export class CurrentUser extends Context.Tag("CurrentUser")<
-  CurrentUser,
-  CurrentUserData
->() {}
+export class CurrentUser extends Context.Tag('CurrentUser')<CurrentUser, CurrentUserData>() {}
 
 /**
  * Auth Method Context Tag
@@ -91,7 +88,7 @@ export class CurrentUser extends Context.Tag("CurrentUser")<
  * })
  * ```
  */
-export class AuthMethodContext extends Context.Tag("AuthMethodContext")<
+export class AuthMethodContext extends Context.Tag('AuthMethodContext')<
   AuthMethodContext,
   { readonly type: AuthMethod; readonly token: string }
 >() {}
@@ -114,7 +111,7 @@ export class AuthMethodContext extends Context.Tag("AuthMethodContext")<
  * })
  * ```
  */
-export class ServiceContext extends Context.Tag("ServiceContext")<
+export class ServiceContext extends Context.Tag('ServiceContext')<
   ServiceContext,
   ServiceIdentity
 >() {}
@@ -155,10 +152,7 @@ export interface RequestMetadata {
  * })
  * ```
  */
-export class RequestMeta extends Context.Tag("RequestMeta")<
-  RequestMeta,
-  RequestMetadata
->() {}
+export class RequestMeta extends Context.Tag('RequestMeta')<RequestMeta, RequestMetadata>() {}
 
 // ============================================================================
 // Handler Context Helpers

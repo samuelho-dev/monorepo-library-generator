@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * Cache Errors
@@ -22,9 +22,7 @@ Uses Data.TaggedError for internal infrastructure errors:
  * All service errors extend this base error.
  * Use domain-specific error types (NotFound, Validation, etc.) for precise handling.
  */
-export class CacheError extends Data.TaggedError(
-  "CacheError"
-)<{
+export class CacheError extends Data.TaggedError('CacheError')<{
   /** Human-readable error message */
   readonly message: string
   /** Optional underlying cause */
@@ -36,9 +34,7 @@ export class CacheError extends Data.TaggedError(
  *
  * Raised when unexpected internal error occurs.
  */
-export class CacheInternalError extends Data.TaggedError(
-  "CacheInternalError"
-)<{
+export class CacheInternalError extends Data.TaggedError('CacheInternalError')<{
   /** Human-readable error message */
   readonly message: string
   /** Underlying error cause */
@@ -50,9 +46,7 @@ export class CacheInternalError extends Data.TaggedError(
  *
  * Raised when service is misconfigured.
  */
-export class CacheConfigError extends Data.TaggedError(
-  "CacheConfigError"
-)<{
+export class CacheConfigError extends Data.TaggedError('CacheConfigError')<{
   /** Human-readable error message */
   readonly message: string
   /** Configuration property that is invalid */
@@ -64,9 +58,7 @@ export class CacheConfigError extends Data.TaggedError(
  *
  * Raised when connection to external service fails.
  */
-export class CacheConnectionError extends Data.TaggedError(
-  "CacheConnectionError"
-)<{
+export class CacheConnectionError extends Data.TaggedError('CacheConnectionError')<{
   /** Human-readable error message */
   readonly message: string
   /** Connection target (service name, host, etc.) */
@@ -80,9 +72,7 @@ export class CacheConnectionError extends Data.TaggedError(
  *
  * Raised when operation exceeds timeout.
  */
-export class CacheTimeoutError extends Data.TaggedError(
-  "CacheTimeoutError"
-)<{
+export class CacheTimeoutError extends Data.TaggedError('CacheTimeoutError')<{
   /** Human-readable error message */
   readonly message: string
   /** Timeout duration in milliseconds */

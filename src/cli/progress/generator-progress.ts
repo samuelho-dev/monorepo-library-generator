@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/cli/progress/generator-progress
  */
 
-import { Console, Effect } from "effect"
-import { createWorkspaceContext } from "../../infrastructure"
-import { formatPathDisplay, logFileCreation, showError, showSuccess, type Verbosity } from "./index"
+import { Console, Effect } from 'effect'
+import { createWorkspaceContext } from '../../infrastructure'
+import { formatPathDisplay, logFileCreation, showError, showSuccess, type Verbosity } from './index'
 
 /**
  * ANSI escape codes
@@ -19,10 +19,10 @@ const ANSI: Readonly<{
   dim: string
   reset: string
 }> = Object.freeze({
-  cyan: "\x1b[36m",
-  green: "\x1b[32m",
-  dim: "\x1b[2m",
-  reset: "\x1b[0m"
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  dim: '\x1b[2m',
+  reset: '\x1b[0m'
 })
 
 /**
@@ -38,9 +38,9 @@ export interface GeneratorOptionsWithVerbosity {
  * Get verbosity level from options
  */
 export function getVerbosity(options: { verbose?: boolean; quiet?: boolean }) {
-  if (options.quiet) return "quiet"
-  if (options.verbose) return "verbose"
-  return "normal"
+  if (options.quiet) return 'quiet'
+  if (options.verbose) return 'verbose'
+  return 'normal'
 }
 
 /**
@@ -52,25 +52,25 @@ export function withGeneratorProgress<A, E, R>(
   generator: Effect.Effect<A, E, R>,
   verbosity: Verbosity
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const startTime = Date.now()
 
     // Get workspace context to display paths
-    const contextResult = yield* createWorkspaceContext(undefined, "cli").pipe(Effect.either)
+    const contextResult = yield* createWorkspaceContext(undefined, 'cli').pipe(Effect.either)
 
     let relativePath = `libs/${libraryType}/${libraryName}`
     let absolutePath = `${process.cwd()}/${relativePath}`
 
-    if (contextResult._tag === "Right") {
+    if (contextResult._tag === 'Right') {
       const ctx = contextResult.right
       relativePath = `${ctx.librariesRoot}/${libraryType}/${libraryName}`
       absolutePath = `${ctx.root}/${relativePath}`
     }
 
     // Show start message
-    if (verbosity !== "quiet") {
+    if (verbosity !== 'quiet') {
       yield* Console.log(formatPathDisplay(absolutePath, relativePath))
-      yield* Console.log("")
+      yield* Console.log('')
       yield* Console.log(
         `${ANSI.cyan}⠋${ANSI.reset} Creating ${libraryType} library: ${libraryName}...`
       )

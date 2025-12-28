@@ -1,5 +1,5 @@
-import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
-import { Context, Effect, Layer } from "effect"
+import { LoggingService, MetricsService } from '@samuelho-dev/infra-observability'
+import { Context, Effect, Layer } from 'effect'
 
 /**
  * User Operation Executor
@@ -34,7 +34,7 @@ export interface OperationMetadata {
   readonly name: string
 
   /** Operation type (command or query) */
-  readonly type: "command" | "query"
+  readonly type: 'command' | 'query'
 
   /** Optional correlation ID */
   readonly correlationId?: string
@@ -50,9 +50,7 @@ export interface OperationMetadata {
  * @typeParam E - Error type
  * @typeParam R - Dependencies
  */
-export type Middleware<A, E, R> = (
-  next: Effect.Effect<A, E, R>
-) => Effect.Effect<A, E, R>
+export type Middleware<A, E, R> = (next: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
 
 // ============================================================================
 // Operation Executor Interface
@@ -74,7 +72,7 @@ export interface OperationExecutorInterface {
   readonly execute: <A, E, R>(
     metadata: OperationMetadata,
     operation: Effect.Effect<A, E, R>,
-    middlewares?: ReadonlyArray<Middleware<A, E, R>>
+    middlewares?: readonly Middleware<A, E, R>[]
   ) => Effect.Effect<A, E, R | LoggingService | MetricsService>
 }
 
@@ -92,7 +90,7 @@ const createExecutorImpl = (
   execute: <A, E, R>(
     metadata: OperationMetadata,
     operation: Effect.Effect<A, E, R>,
-    middlewares: ReadonlyArray<Middleware<A, E, R>> = []
+    middlewares: readonly Middleware<A, E, R>[] = []
   ) => {
     // Build middleware pipeline
     const pipeline = middlewares.reduce<Effect.Effect<A, E, R>>(
@@ -100,10 +98,10 @@ const createExecutorImpl = (
       operation
     )
 
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const startTime = Date.now()
-      const histogram = yield* metrics.histogram("user_operation_duration_seconds")
-      const counter = yield* metrics.counter("user_operations_total")
+      const histogram = yield* metrics.histogram('user_operation_duration_seconds')
+      const counter = yield* metrics.counter('user_operations_total')
 
       yield* logger.debug(`Starting ${metadata.type}: ${metadata.name}`, {
         type: metadata.type,
@@ -113,7 +111,7 @@ const createExecutorImpl = (
 
       const result = yield* pipeline.pipe(
         Effect.tapError((error) =>
-          Effect.gen(function*() {
+          Effect.gen(function* () {
             yield* counter.increment
             yield* logger.error(`${metadata.type} failed: ${metadata.name}`, {
               error: String(error),
@@ -136,9 +134,9 @@ const createExecutorImpl = (
     }).pipe(
       Effect.withSpan(`UserOperation.${metadata.name}`, {
         attributes: {
-          "operation.type": metadata.type,
-          "operation.name": metadata.name,
-          ...(metadata.correlationId && { "correlation.id": metadata.correlationId }),
+          'operation.type': metadata.type,
+          'operation.name': metadata.name,
+          ...(metadata.correlationId && { 'correlation.id': metadata.correlationId }),
           ...(metadata.actor && { actor: metadata.actor })
         }
       })
@@ -174,7 +172,7 @@ const createExecutorImpl = (
  * })
  * ```
  */
-export class UserOperationExecutor extends Context.Tag("UserOperationExecutor")<
+export class UserOperationExecutor extends Context.Tag('UserOperationExecutor')<
   UserOperationExecutor,
   OperationExecutorInterface
 >() {
@@ -183,7 +181,7 @@ export class UserOperationExecutor extends Context.Tag("UserOperationExecutor")<
    */
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const logger = yield* LoggingService
       const metrics = yield* MetricsService
 
@@ -216,7 +214,7 @@ export function createValidationMiddleware<A, E, R>(
   errorFactory: () => E
 ): Middleware<A, E, R> {
   return (next) =>
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       // Validation would happen before dispatch
       return yield* next
     })
@@ -233,8 +231,5 @@ export function createValidationMiddleware<A, E, R>(
 export function createRetryMiddleware<A, E, R>(options: {
   readonly times: number
 }): Middleware<A, E, R> {
-  return (next) =>
-    next.pipe(
-      Effect.retry({ times: options.times })
-    )
+  return (next) => next.pipe(Effect.retry({ times: options.times }))
 }

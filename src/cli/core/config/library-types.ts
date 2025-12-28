@@ -7,78 +7,78 @@
  * @module monorepo-library-generator/cli/core/config/library-types
  */
 
-import type { LibraryTypeMetadata, WizardActionMetadata } from "../types"
+import type { LibraryTypeMetadata, WizardActionMetadata } from '../types'
 
 /**
  * All single library types with their metadata
  */
-export const LIBRARY_TYPES: ReadonlyArray<LibraryTypeMetadata> = Object.freeze([
+export const LIBRARY_TYPES: readonly LibraryTypeMetadata[] = Object.freeze([
   Object.freeze({
-    type: "contract",
-    label: "Contract",
-    description: "Domain types, schemas, and interfaces",
-    icon: "📝",
+    type: 'contract',
+    label: 'Contract',
+    description: 'Domain types, schemas, and interfaces',
+    icon: '📝',
     generatedFiles: [
-      "src/index.ts",
-      "src/lib/entities.ts",
-      "src/lib/errors.ts",
-      "src/lib/events.ts",
-      "src/lib/ports.ts",
-      "src/lib/rpc.ts"
+      'src/index.ts',
+      'src/lib/entities.ts',
+      'src/lib/errors.ts',
+      'src/lib/events.ts',
+      'src/lib/ports.ts',
+      'src/lib/rpc.ts'
     ]
   }),
   Object.freeze({
-    type: "data-access",
-    label: "Data-Access",
-    description: "Repository with database operations",
-    icon: "💾",
+    type: 'data-access',
+    label: 'Data-Access',
+    description: 'Repository with database operations',
+    icon: '💾',
     generatedFiles: [
-      "src/index.ts",
-      "src/lib/repository.ts",
-      "src/lib/repository.spec.ts",
-      "src/lib/types.ts"
+      'src/index.ts',
+      'src/lib/repository.ts',
+      'src/lib/repository.spec.ts',
+      'src/lib/types.ts'
     ]
   }),
   Object.freeze({
-    type: "feature",
-    label: "Feature",
-    description: "Business logic with server/client support",
-    icon: "⚙️",
-    defaultPlatform: "universal",
+    type: 'feature',
+    label: 'Feature',
+    description: 'Business logic with server/client support',
+    icon: '⚙️',
+    defaultPlatform: 'universal',
     generatedFiles: [
-      "src/index.ts",
-      "src/lib/service.ts",
-      "src/lib/service.spec.ts",
-      "src/lib/rpc/"
+      'src/index.ts',
+      'src/lib/service.ts',
+      'src/lib/service.spec.ts',
+      'src/lib/rpc/'
     ]
   }),
   Object.freeze({
-    type: "infra",
-    label: "Infra",
-    description: "Infrastructure services and implementations",
-    icon: "🔧",
-    defaultPlatform: "node",
+    type: 'infra',
+    label: 'Infra',
+    description: 'Infrastructure services and implementations',
+    icon: '🔧',
+    defaultPlatform: 'node',
     generatedFiles: [
-      "src/index.ts",
-      "src/lib/service.ts",
-      "src/lib/service.spec.ts",
-      "src/lib/layers.ts",
-      "src/lib/types.ts"
+      'src/index.ts',
+      'src/lib/service.ts',
+      'src/lib/service.spec.ts',
+      'src/lib/layers.ts',
+      'src/lib/types.ts'
     ]
   }),
   Object.freeze({
-    type: "provider",
-    label: "Provider",
-    description: "External service integrations",
-    icon: "🔌",
-    defaultPlatform: "node",
+    type: 'provider',
+    label: 'Provider',
+    description: 'External service integrations',
+    icon: '🔌',
+    defaultPlatform: 'node',
     generatedFiles: [
-      "src/index.ts",
-      "src/lib/service.ts",
-      "src/lib/service.spec.ts",
-      "src/lib/layers.ts",
-      "src/lib/types.ts",
-      "src/lib/errors.ts"
+      'src/index.ts',
+      'src/lib/service.ts',
+      'src/lib/service.spec.ts',
+      'src/lib/layers.ts',
+      'src/lib/types.ts',
+      'src/lib/errors.ts'
     ]
   })
 ])
@@ -86,37 +86,33 @@ export const LIBRARY_TYPES: ReadonlyArray<LibraryTypeMetadata> = Object.freeze([
 /**
  * Special wizard actions (shown separately from library types)
  */
-export const WIZARD_ACTIONS: ReadonlyArray<WizardActionMetadata> = Object.freeze([
+export const WIZARD_ACTIONS: readonly WizardActionMetadata[] = Object.freeze([
   Object.freeze({
-    type: "init",
-    label: "Init",
-    description: "Generate all built-in provider and infra libraries",
-    icon: "🚀",
+    type: 'init',
+    label: 'Init',
+    description: 'Generate all built-in provider and infra libraries',
+    icon: '🚀',
     generatesTo: [
-      "libs/provider/kysely/",
-      "libs/provider/supabase/",
-      "libs/env/",
-      "libs/infra/cache/",
-      "libs/infra/database/",
-      "libs/infra/logging/",
-      "libs/infra/metrics/",
-      "libs/infra/queue/",
-      "libs/infra/pubsub/",
-      "libs/infra/auth/",
-      "libs/infra/storage/",
-      "libs/infra/rpc/"
+      'libs/provider/kysely/',
+      'libs/provider/supabase/',
+      'libs/env/',
+      'libs/infra/cache/',
+      'libs/infra/database/',
+      'libs/infra/logging/',
+      'libs/infra/metrics/',
+      'libs/infra/queue/',
+      'libs/infra/pubsub/',
+      'libs/infra/auth/',
+      'libs/infra/storage/',
+      'libs/infra/rpc/'
     ]
   }),
   Object.freeze({
-    type: "domain",
-    label: "Domain",
-    description: "Complete domain with contract, data-access, and feature",
-    icon: "📦",
-    generatesTo: [
-      "libs/contract/<name>/",
-      "libs/data-access/<name>/",
-      "libs/feature/<name>/"
-    ]
+    type: 'domain',
+    label: 'Domain',
+    description: 'Complete domain with contract, data-access, and feature',
+    icon: '📦',
+    generatesTo: ['libs/contract/<name>/', 'libs/data-access/<name>/', 'libs/feature/<name>/']
   })
 ])
 
@@ -145,8 +141,8 @@ export function requiresExternalService(type: string): boolean {
 /**
  * Check if selection is a wizard action (init/domain)
  */
-export function isWizardAction(type: string): type is "init" | "domain" {
-  return type === "init" || type === "domain"
+export function isWizardAction(type: string): type is 'init' | 'domain' {
+  return type === 'init' || type === 'domain'
 }
 
 /**
@@ -154,6 +150,6 @@ export function isWizardAction(type: string): type is "init" | "domain" {
  */
 export function isSingleLibraryType(
   type: string
-): type is "contract" | "data-access" | "feature" | "infra" | "provider" {
+): type is 'contract' | 'data-access' | 'feature' | 'infra' | 'provider' {
   return LIBRARY_TYPES.some((t) => t.type === type)
 }

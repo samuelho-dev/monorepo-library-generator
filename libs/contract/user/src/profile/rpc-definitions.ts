@@ -1,9 +1,9 @@
-import { Rpc, RpcGroup } from "@effect/rpc"
-import { Schema } from "effect"
-import { RouteTag } from "../lib/rpc-definitions"
-import type { RouteType } from "../lib/rpc-definitions"
-import { Profile, ProfileId } from "./entities"
-import { ProfileRpcError } from "./rpc-errors"
+import { Rpc, RpcGroup } from '@effect/rpc'
+import { Schema } from 'effect'
+import type { RouteType } from '../lib/rpc-definitions'
+import { RouteTag } from '../lib/rpc-definitions'
+import { Profile, ProfileId } from './entities'
+import { ProfileRpcError } from './rpc-errors'
 
 /**
  * Profile RPC Definitions
@@ -43,10 +43,12 @@ import { ProfileRpcError } from "./rpc-errors"
 export const CreateProfileInput = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))
   // TODO: Add domain-specific fields for Profile
-}).pipe(Schema.annotations({
-  identifier: "CreateProfileInput",
-  title: "Create Profile Input"
-}))
+}).pipe(
+  Schema.annotations({
+    identifier: 'CreateProfileInput',
+    title: 'Create Profile Input'
+  })
+)
 
 export type CreateProfileInput = Schema.Schema.Type<typeof CreateProfileInput>
 
@@ -56,10 +58,12 @@ export type CreateProfileInput = Schema.Schema.Type<typeof CreateProfileInput>
 export const UpdateProfileInput = Schema.Struct({
   name: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
   // TODO: Add domain-specific update fields for Profile
-}).pipe(Schema.annotations({
-  identifier: "UpdateProfileInput",
-  title: "Update Profile Input"
-}))
+}).pipe(
+  Schema.annotations({
+    identifier: 'UpdateProfileInput',
+    title: 'Update Profile Input'
+  })
+)
 
 export type UpdateProfileInput = Schema.Schema.Type<typeof UpdateProfileInput>
 
@@ -72,14 +76,14 @@ export type UpdateProfileInput = Schema.Schema.Type<typeof UpdateProfileInput>
  *
  * @route public - No authentication required
  */
-export class ProfileGet extends Rpc.make("Profile.Get", {
+export class ProfileGet extends Rpc.make('Profile.Get', {
   payload: Schema.Struct({
     id: ProfileId
   }),
   success: Profile,
   error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public"
+  static readonly [RouteTag]: RouteType = 'public'
 }
 
 /**
@@ -87,7 +91,7 @@ export class ProfileGet extends Rpc.make("Profile.Get", {
  *
  * @route public - No authentication required
  */
-export class ProfileList extends Rpc.make("Profile.List", {
+export class ProfileList extends Rpc.make('Profile.List', {
   payload: Schema.Struct({
     page: Schema.optionalWith(Schema.Number.pipe(Schema.int(), Schema.positive()), {
       default: () => 1
@@ -104,7 +108,7 @@ export class ProfileList extends Rpc.make("Profile.List", {
   }),
   error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public"
+  static readonly [RouteTag]: RouteType = 'public'
 }
 
 /**
@@ -112,12 +116,12 @@ export class ProfileList extends Rpc.make("Profile.List", {
  *
  * @route protected - Requires user authentication
  */
-export class ProfileCreate extends Rpc.make("Profile.Create", {
+export class ProfileCreate extends Rpc.make('Profile.Create', {
   payload: CreateProfileInput,
   success: Profile,
   error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected"
+  static readonly [RouteTag]: RouteType = 'protected'
 }
 
 /**
@@ -125,7 +129,7 @@ export class ProfileCreate extends Rpc.make("Profile.Create", {
  *
  * @route protected - Requires user authentication
  */
-export class ProfileUpdate extends Rpc.make("Profile.Update", {
+export class ProfileUpdate extends Rpc.make('Profile.Update', {
   payload: Schema.Struct({
     id: ProfileId,
     data: UpdateProfileInput
@@ -133,7 +137,7 @@ export class ProfileUpdate extends Rpc.make("Profile.Update", {
   success: Profile,
   error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected"
+  static readonly [RouteTag]: RouteType = 'protected'
 }
 
 /**
@@ -141,7 +145,7 @@ export class ProfileUpdate extends Rpc.make("Profile.Update", {
  *
  * @route protected - Requires user authentication
  */
-export class ProfileDelete extends Rpc.make("Profile.Delete", {
+export class ProfileDelete extends Rpc.make('Profile.Delete', {
   payload: Schema.Struct({
     id: ProfileId
   }),
@@ -151,7 +155,7 @@ export class ProfileDelete extends Rpc.make("Profile.Delete", {
   }),
   error: ProfileRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected"
+  static readonly [RouteTag]: RouteType = 'protected'
 }
 
 // ============================================================================

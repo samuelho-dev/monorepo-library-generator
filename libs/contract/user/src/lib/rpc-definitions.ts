@@ -1,6 +1,6 @@
-import { Rpc } from "@effect/rpc"
-import { Schema } from "effect"
-import { UserRpcError } from "./rpc-errors"
+import { Rpc } from '@effect/rpc'
+import { Schema } from 'effect'
+import { UserRpcError } from './rpc-errors'
 
 /**
  * User RPC Definitions
@@ -49,11 +49,11 @@ import { UserRpcError } from "./rpc-errors"
  * ```
  */
 export const UserId = Schema.String.pipe(
-  Schema.brand("UserId"),
+  Schema.brand('UserId'),
   Schema.annotations({
-    identifier: "UserId",
-    title: "User ID",
-    description: "Unique identifier for User entity"
+    identifier: 'UserId',
+    title: 'User ID',
+    description: 'Unique identifier for User entity'
   })
 )
 
@@ -69,7 +69,7 @@ export type UserId = Schema.Schema.Type<typeof UserId>
  * - "protected": User authentication via Bearer token, CurrentUser provided
  * - "service": Service-to-service authentication, ServiceContext provided
  */
-export type RouteType = "public" | "protected" | "service"
+export type RouteType = 'public' | 'protected' | 'service'
 
 /**
  * Symbol for accessing route type on RPC definitions
@@ -79,7 +79,7 @@ export type RouteType = "public" | "protected" | "service"
  * const routeType = GetUser[RouteTag] // "public"
  * ```
  */
-export const RouteTag = Symbol.for("@contract/RouteTag")
+export const RouteTag = Symbol.for('@contract/RouteTag')
 
 // ============================================================================
 // Entity Schema
@@ -98,9 +98,9 @@ export const UserSchema = Schema.Struct({
   updatedAt: Schema.DateFromSelf
 }).pipe(
   Schema.annotations({
-    identifier: "User",
-    title: "User Entity",
-    description: "A User entity from the database"
+    identifier: 'User',
+    title: 'User Entity',
+    description: 'A User entity from the database'
   })
 )
 
@@ -145,9 +145,9 @@ export const CreateUserInput = Schema.Struct({
   name: Schema.NullOr(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
 }).pipe(
   Schema.annotations({
-    identifier: "CreateUserInput",
-    title: "Create User Input",
-    description: "Input data for creating a new User"
+    identifier: 'CreateUserInput',
+    title: 'Create User Input',
+    description: 'Input data for creating a new User'
   })
 )
 
@@ -161,12 +161,14 @@ export type CreateUserInput = Schema.Schema.Type<typeof CreateUserInput>
  */
 export const UpdateUserInput = Schema.Struct({
   email: Schema.optional(Schema.String.pipe(Schema.pattern(/^[^@]+@[^@]+$/))),
-  name: Schema.optional(Schema.NullOr(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255))))
+  name: Schema.optional(
+    Schema.NullOr(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(255)))
+  )
 }).pipe(
   Schema.annotations({
-    identifier: "UpdateUserInput",
-    title: "Update User Input",
-    description: "Input data for updating an existing User"
+    identifier: 'UpdateUserInput',
+    title: 'Update User Input',
+    description: 'Input data for updating an existing User'
   })
 )
 
@@ -180,9 +182,9 @@ export const ValidateUserInput = Schema.Struct({
   validationType: Schema.optional(Schema.String)
 }).pipe(
   Schema.annotations({
-    identifier: "ValidateUserInput",
-    title: "Validate User Input",
-    description: "Input for validating a User entity"
+    identifier: 'ValidateUserInput',
+    title: 'Validate User Input',
+    description: 'Input for validating a User entity'
   })
 )
 
@@ -198,9 +200,9 @@ export const ValidationResponse = Schema.Struct({
   errors: Schema.optional(Schema.Array(Schema.String))
 }).pipe(
   Schema.annotations({
-    identifier: "ValidationResponse",
-    title: "Validation Response",
-    description: "Result of User validation"
+    identifier: 'ValidationResponse',
+    title: 'Validation Response',
+    description: 'Result of User validation'
   })
 )
 
@@ -213,9 +215,9 @@ export const BulkGetUserInput = Schema.Struct({
   ids: Schema.Array(UserId).pipe(Schema.minItems(1), Schema.maxItems(100))
 }).pipe(
   Schema.annotations({
-    identifier: "BulkGetUserInput",
-    title: "Bulk Get User Input",
-    description: "Input for fetching multiple Users by ID"
+    identifier: 'BulkGetUserInput',
+    title: 'Bulk Get User Input',
+    description: 'Input for fetching multiple Users by ID'
   })
 )
 
@@ -229,14 +231,14 @@ export type BulkGetUserInput = Schema.Schema.Type<typeof BulkGetUserInput>
  *
  * @route public - No authentication required
  */
-export class GetUser extends Rpc.make("GetUser", {
+export class GetUser extends Rpc.make('GetUser', {
   payload: Schema.Struct({
     id: UserId
   }),
   success: UserSchema,
   error: UserRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public"
+  static readonly [RouteTag]: RouteType = 'public'
 }
 
 /**
@@ -244,12 +246,12 @@ export class GetUser extends Rpc.make("GetUser", {
  *
  * @route public - No authentication required
  */
-export class ListUsers extends Rpc.make("ListUsers", {
+export class ListUsers extends Rpc.make('ListUsers', {
   payload: PaginationParams,
   success: PaginatedResponse(UserSchema),
   error: UserRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "public"
+  static readonly [RouteTag]: RouteType = 'public'
 }
 
 /**
@@ -257,12 +259,12 @@ export class ListUsers extends Rpc.make("ListUsers", {
  *
  * @route protected - Requires user authentication
  */
-export class CreateUser extends Rpc.make("CreateUser", {
+export class CreateUser extends Rpc.make('CreateUser', {
   payload: CreateUserInput,
   success: UserSchema,
   error: UserRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected"
+  static readonly [RouteTag]: RouteType = 'protected'
 }
 
 /**
@@ -270,7 +272,7 @@ export class CreateUser extends Rpc.make("CreateUser", {
  *
  * @route protected - Requires user authentication
  */
-export class UpdateUser extends Rpc.make("UpdateUser", {
+export class UpdateUser extends Rpc.make('UpdateUser', {
   payload: Schema.Struct({
     id: UserId,
     data: UpdateUserInput
@@ -278,7 +280,7 @@ export class UpdateUser extends Rpc.make("UpdateUser", {
   success: UserSchema,
   error: UserRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected"
+  static readonly [RouteTag]: RouteType = 'protected'
 }
 
 /**
@@ -286,7 +288,7 @@ export class UpdateUser extends Rpc.make("UpdateUser", {
  *
  * @route protected - Requires user authentication
  */
-export class DeleteUser extends Rpc.make("DeleteUser", {
+export class DeleteUser extends Rpc.make('DeleteUser', {
   payload: Schema.Struct({
     id: UserId
   }),
@@ -296,7 +298,7 @@ export class DeleteUser extends Rpc.make("DeleteUser", {
   }),
   error: UserRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "protected"
+  static readonly [RouteTag]: RouteType = 'protected'
 }
 
 // ============================================================================
@@ -307,12 +309,12 @@ export class DeleteUser extends Rpc.make("DeleteUser", {
  *
  * @route service - Requires service authentication
  */
-export class ValidateUser extends Rpc.make("ValidateUser", {
+export class ValidateUser extends Rpc.make('ValidateUser', {
   payload: ValidateUserInput,
   success: ValidationResponse,
   error: UserRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "service"
+  static readonly [RouteTag]: RouteType = 'service'
 }
 
 /**
@@ -320,7 +322,7 @@ export class ValidateUser extends Rpc.make("ValidateUser", {
  *
  * @route service - Requires service authentication
  */
-export class BulkGetUsers extends Rpc.make("BulkGetUsers", {
+export class BulkGetUsers extends Rpc.make('BulkGetUsers', {
   payload: BulkGetUserInput,
   success: Schema.Struct({
     items: Schema.Array(UserSchema),
@@ -328,5 +330,5 @@ export class BulkGetUsers extends Rpc.make("BulkGetUsers", {
   }),
   error: UserRpcError
 }) {
-  static readonly [RouteTag]: RouteType = "service"
+  static readonly [RouteTag]: RouteType = 'service'
 }

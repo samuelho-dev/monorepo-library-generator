@@ -1,6 +1,6 @@
-import { Headers } from "@effect/platform"
-import { RpcMiddleware } from "@effect/rpc"
-import { Effect, Layer, Option } from "effect"
+import { Headers } from '@effect/platform'
+import { RpcMiddleware } from '@effect/rpc'
+import { Effect, Layer, Option } from 'effect'
 
 /**
  * User Authentication Middleware
@@ -29,20 +29,17 @@ Features:
 
 // Import canonical types from contract-auth
 import {
-  // Schemas
-  type CurrentUserData,
-  type AuthMethod,
-
   // Errors
   AuthError,
-
+  type AuthMethod,
+  AuthMethodContext,
   // Ports (interface for verification)
   AuthVerifier,
-
   // Context Tags
   CurrentUser,
-  AuthMethodContext,
-} from "@samuelho-dev/contract-auth"
+  // Schemas
+  type CurrentUserData
+} from '@samuelho-dev/contract-auth'
 
 // Re-export for convenience (consumers can import from infra-rpc OR contract-auth)
 export {
@@ -62,17 +59,19 @@ export {
  *
  * Uses @effect/platform Headers.get() for type-safe header access.
  */
-const extractAuth = (headers: Headers.Headers): Option.Option<{ type: AuthMethod; token: string }> => {
+const extractAuth = (
+  headers: Headers.Headers
+): Option.Option<{ type: AuthMethod; token: string }> => {
   // Priority 1: API Key (x-api-key header)
-  const apiKey = Headers.get(headers, "x-api-key")
+  const apiKey = Headers.get(headers, 'x-api-key')
   if (Option.isSome(apiKey)) {
-    return Option.some({ type: "api-key" as const, token: apiKey.value })
+    return Option.some({ type: 'api-key' as const, token: apiKey.value })
   }
 
   // Priority 2: Bearer Token (JWT)
-  const auth = Headers.get(headers, "authorization")
-  if (Option.isSome(auth) && auth.value.startsWith("Bearer ")) {
-    return Option.some({ type: "jwt" as const, token: auth.value.slice(7) })
+  const auth = Headers.get(headers, 'authorization')
+  if (Option.isSome(auth) && auth.value.startsWith('Bearer ')) {
+    return Option.some({ type: 'jwt' as const, token: auth.value.slice(7) })
   }
 
   return Option.none()
@@ -103,13 +102,10 @@ const extractAuth = (headers: Headers.Headers): Option.Option<{ type: AuthMethod
  * }
  * ```
  */
-export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()(
-  "@rpc/AuthMiddleware",
-  {
-    provides: CurrentUser,
-    failure: AuthError
-  }
-) {}
+export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()('@rpc/AuthMiddleware', {
+  provides: CurrentUser,
+  failure: AuthError
+}) {}
 
 /**
  * AuthMiddleware implementation Layer
@@ -124,11 +120,11 @@ export class AuthMiddleware extends RpcMiddleware.Tag<AuthMiddleware>()(
  */
 export const AuthMiddlewareLive = Layer.effect(
   AuthMiddleware,
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const verifier = yield* AuthVerifier
 
     return (request) =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         const { headers } = request
 
         // Extract authentication method and token
@@ -136,7 +132,7 @@ export const AuthMiddlewareLive = Layer.effect(
 
         if (Option.isNone(auth)) {
           // Log authentication failure for security auditing
-          yield* Effect.logWarning("Authentication failed: No credentials provided")
+          yield* Effect.logWarning('Authentication failed: No credentials provided')
           return yield* Effect.fail(AuthError.tokenMissing())
         }
 
@@ -164,18 +160,18 @@ export const AuthMiddlewareLive = Layer.effect(
  * Test user for development/testing
  */
 export const TestUser: CurrentUserData = {
-  id: "test-user-id",
-  email: "test@example.com",
-  roles: ["user"]
+  id: 'test-user-id',
+  email: 'test@example.com',
+  roles: ['user']
 }
 
 /**
  * Admin test user for testing admin routes
  */
 export const AdminTestUser: CurrentUserData = {
-  id: "admin-user-id",
-  email: "admin@example.com",
-  roles: ["user", "admin"]
+  id: 'admin-user-id',
+  email: 'admin@example.com',
+  roles: ['user', 'admin']
 }
 
 /**
@@ -183,15 +179,11 @@ export const AdminTestUser: CurrentUserData = {
  *
  * Use in development and testing.
  */
-export const AuthMiddlewareTest = Layer.succeed(
-  AuthMiddleware,
-  () => Effect.succeed(TestUser)
-)
+export const AuthMiddlewareTest = Layer.succeed(AuthMiddleware, () => Effect.succeed(TestUser))
 
 /**
  * Admin AuthMiddleware - provides admin user for testing admin routes
  */
-export const AuthMiddlewareAdmin = Layer.succeed(
-  AuthMiddleware,
-  () => Effect.succeed(AdminTestUser)
+export const AuthMiddlewareAdmin = Layer.succeed(AuthMiddleware, () =>
+  Effect.succeed(AdminTestUser)
 )

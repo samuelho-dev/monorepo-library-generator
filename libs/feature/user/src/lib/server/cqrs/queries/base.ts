@@ -1,5 +1,5 @@
-import type { Duration, Schema } from "effect"
-import { Context, Effect, Layer, Option } from "effect"
+import type { Duration, Schema } from 'effect'
+import { Context, Effect, Layer, Option } from 'effect'
 
 /**
  * User Query Base
@@ -176,25 +176,17 @@ export interface QueryBusInterface {
  * })
  * ```
  */
-export class UserQueryBus extends Context.Tag("UserQueryBus")<
-  UserQueryBus,
-  QueryBusInterface
->() {
+export class UserQueryBus extends Context.Tag('UserQueryBus')<UserQueryBus, QueryBusInterface>() {
   /**
    * Live layer - dispatches queries directly (no caching)
    *
    * For caching, provide a layer that integrates with CacheService
    */
-  static readonly Live = Layer.succeed(
-    this,
-    {
-      dispatch: (query, input) =>
-        query.execute(input).pipe(
-          Effect.withSpan(`UserQueryBus.dispatch.${query._tag}`)
-        ),
-      invalidate: () => Effect.void
-    }
-  )
+  static readonly Live = Layer.succeed(this, {
+    dispatch: (query, input) =>
+      query.execute(input).pipe(Effect.withSpan(`UserQueryBus.dispatch.${query._tag}`)),
+    invalidate: () => Effect.void
+  })
 
   /**
    * Test layer - same as Live, suitable for testing

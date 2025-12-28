@@ -1,10 +1,10 @@
-import { CurrentUser } from "@samuelho-dev/contract-auth"
-import { DatabaseService } from "@samuelho-dev/infra-database"
-import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
-import { QueueService } from "@samuelho-dev/infra-queue"
-import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect"
-import type { ParseError } from "effect/ParseResult"
-import { UserService } from "../services"
+import { CurrentUser } from '@samuelho-dev/contract-auth'
+import { DatabaseService } from '@samuelho-dev/infra-database'
+import { LoggingService, MetricsService } from '@samuelho-dev/infra-observability'
+import { QueueService } from '@samuelho-dev/infra-queue'
+import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from 'effect'
+import type { ParseError } from 'effect/ParseResult'
+import { UserService } from '../services'
 
 /**
  * User Job Queue
@@ -26,7 +26,6 @@ Job Types:
  * @module @samuelho-dev/feature-user/server/jobs/queue
  */
 
-
 // ============================================================================
 // Infrastructure Services
 // ============================================================================
@@ -46,7 +45,7 @@ Job Types:
 /**
  * Error thrown when job data fails schema validation
  */
-export class UserJobValidationError extends Data.TaggedError("UserJobValidationError")<{
+export class UserJobValidationError extends Data.TaggedError('UserJobValidationError')<{
   readonly message: string
   readonly jobId: string
   readonly jobType: string
@@ -56,7 +55,7 @@ export class UserJobValidationError extends Data.TaggedError("UserJobValidationE
 /**
  * Error thrown when job execution fails
  */
-export class UserJobExecutionError extends Data.TaggedError("UserJobExecutionError")<{
+export class UserJobExecutionError extends Data.TaggedError('UserJobExecutionError')<{
   readonly message: string
   readonly jobId: string
   readonly jobType: string
@@ -66,7 +65,7 @@ export class UserJobExecutionError extends Data.TaggedError("UserJobExecutionErr
 /**
  * Error thrown when job times out
  */
-export class UserJobTimeoutError extends Data.TaggedError("UserJobTimeoutError")<{
+export class UserJobTimeoutError extends Data.TaggedError('UserJobTimeoutError')<{
   readonly message: string
   readonly jobId: string
   readonly jobType: string
@@ -76,10 +75,7 @@ export class UserJobTimeoutError extends Data.TaggedError("UserJobTimeoutError")
 /**
  * Union of all job processing errors
  */
-export type UserJobError =
-  | UserJobValidationError
-  | UserJobExecutionError
-  | UserJobTimeoutError
+export type UserJobError = UserJobValidationError | UserJobExecutionError | UserJobTimeoutError
 
 // ============================================================================
 // Job Processor Schemas
@@ -110,15 +106,20 @@ export interface UserJobProcessorSchemas {
    * Schema for create job data validation
    * Must produce a type compatible with UserService.create()
    */
-  readonly createData: Schema.Schema<Parameters<Context.Tag.Service<typeof UserService>["create"]>[0], unknown>
+  readonly createData: Schema.Schema<
+    Parameters<Context.Tag.Service<typeof UserService>['create']>[0],
+    unknown
+  >
 
   /**
    * Schema for update job data validation
    * Must produce a type compatible with UserService.update() second parameter
    */
-  readonly updateData: Schema.Schema<Parameters<Context.Tag.Service<typeof UserService>["update"]>[1], unknown>
+  readonly updateData: Schema.Schema<
+    Parameters<Context.Tag.Service<typeof UserService>['update']>[1],
+    unknown
+  >
 }
-
 
 // ============================================================================
 // Job Definitions
@@ -129,7 +130,7 @@ export interface UserJobProcessorSchemas {
  */
 export const UserQueueConfig = {
   /** Queue name for user jobs */
-  QUEUE_NAME: "user-jobs",
+  QUEUE_NAME: 'user-jobs',
 
   /** Default retry configuration */
   DEFAULT_RETRIES: 3,
@@ -142,9 +143,9 @@ export const UserQueueConfig = {
 
   /** System user for job processing (when no user context from job data) */
   SYSTEM_USER: {
-    id: "system-job-processor",
-    email: "system@user-jobs.internal",
-    roles: ["system"] as const
+    id: 'system-job-processor',
+    email: 'system@user-jobs.internal',
+    roles: ['system'] as const
   }
 } as const
 
@@ -158,10 +159,7 @@ export const UserQueueConfig = {
  * For user-initiated jobs, extract user info from job.initiatedBy
  * and create a user-specific layer instead.
  */
-export const UserSystemUserLayer = Layer.succeed(
-  CurrentUser,
-  UserQueueConfig.SYSTEM_USER
-)
+export const UserSystemUserLayer = Layer.succeed(CurrentUser, UserQueueConfig.SYSTEM_USER)
 
 // ============================================================================
 // Job Types
@@ -190,13 +188,11 @@ export const JobMetadata = Schema.Struct({
 /**
  * Create user job
  */
-export class CreateUserJob extends Schema.Class<CreateUserJob>(
-  "CreateUserJob"
-)({
+export class CreateUserJob extends Schema.Class<CreateUserJob>('CreateUserJob')({
   ...JobMetadata.fields,
 
   /** Job type identifier */
-  type: Schema.Literal("create"),
+  type: Schema.Literal('create'),
 
   /** Entity data to create */
   data: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
@@ -206,13 +202,13 @@ export class CreateUserJob extends Schema.Class<CreateUserJob>(
 }) {
   static create(params: {
     data: Record<string, unknown>
-    initiatedBy?: string;
-    correlationId?: string;
+    initiatedBy?: string
+    correlationId?: string
     priority?: number
   }) {
     return new CreateUserJob({
       jobId: crypto.randomUUID(),
-      type: "create",
+      type: 'create',
       data: params.data,
       ...(params.initiatedBy !== undefined && { initiatedBy: params.initiatedBy }),
       ...(params.correlationId !== undefined && { correlationId: params.correlationId }),
@@ -224,13 +220,11 @@ export class CreateUserJob extends Schema.Class<CreateUserJob>(
 /**
  * Update user job
  */
-export class UpdateUserJob extends Schema.Class<UpdateUserJob>(
-  "UpdateUserJob"
-)({
+export class UpdateUserJob extends Schema.Class<UpdateUserJob>('UpdateUserJob')({
   ...JobMetadata.fields,
 
   /** Job type identifier */
-  type: Schema.Literal("update"),
+  type: Schema.Literal('update'),
 
   /** Entity ID to update */
   entityId: Schema.UUID,
@@ -242,15 +236,15 @@ export class UpdateUserJob extends Schema.Class<UpdateUserJob>(
   initiatedBy: Schema.optional(Schema.UUID)
 }) {
   static create(params: {
-    entityId: string;
+    entityId: string
     data: Record<string, unknown>
-    initiatedBy?: string;
-    correlationId?: string;
+    initiatedBy?: string
+    correlationId?: string
     priority?: number
   }) {
     return new UpdateUserJob({
       jobId: crypto.randomUUID(),
-      type: "update",
+      type: 'update',
       entityId: params.entityId,
       data: params.data,
       ...(params.initiatedBy !== undefined && { initiatedBy: params.initiatedBy }),
@@ -263,13 +257,11 @@ export class UpdateUserJob extends Schema.Class<UpdateUserJob>(
 /**
  * Delete user job
  */
-export class DeleteUserJob extends Schema.Class<DeleteUserJob>(
-  "DeleteUserJob"
-)({
+export class DeleteUserJob extends Schema.Class<DeleteUserJob>('DeleteUserJob')({
   ...JobMetadata.fields,
 
   /** Job type identifier */
-  type: Schema.Literal("delete"),
+  type: Schema.Literal('delete'),
 
   /** Entity ID to delete */
   entityId: Schema.UUID,
@@ -281,15 +273,15 @@ export class DeleteUserJob extends Schema.Class<DeleteUserJob>(
   initiatedBy: Schema.optional(Schema.UUID)
 }) {
   static create(params: {
-    entityId: string;
-    softDelete?: boolean;
-    initiatedBy?: string;
-    correlationId?: string;
+    entityId: string
+    softDelete?: boolean
+    initiatedBy?: string
+    correlationId?: string
     priority?: number
   }) {
     return new DeleteUserJob({
       jobId: crypto.randomUUID(),
-      type: "delete",
+      type: 'delete',
       entityId: params.entityId,
       ...(params.softDelete !== undefined && { softDelete: params.softDelete }),
       ...(params.initiatedBy !== undefined && { initiatedBy: params.initiatedBy }),
@@ -302,19 +294,17 @@ export class DeleteUserJob extends Schema.Class<DeleteUserJob>(
 /**
  * Bulk user job for batch processing
  */
-export class BulkUserJob extends Schema.Class<BulkUserJob>(
-  "BulkUserJob"
-)({
+export class BulkUserJob extends Schema.Class<BulkUserJob>('BulkUserJob')({
   ...JobMetadata.fields,
 
   /** Job type identifier */
-  type: Schema.Literal("bulk"),
+  type: Schema.Literal('bulk'),
 
   /** Operation to perform */
   operation: Schema.Union(
-    Schema.Literal("create"),
-    Schema.Literal("update"),
-    Schema.Literal("delete")
+    Schema.Literal('create'),
+    Schema.Literal('update'),
+    Schema.Literal('delete')
   ),
 
   /** Items to process */
@@ -327,16 +317,16 @@ export class BulkUserJob extends Schema.Class<BulkUserJob>(
   continueOnError: Schema.optionalWith(Schema.Boolean, { default: () => true })
 }) {
   static create(params: {
-    operation: "create" | "update" | "delete";
+    operation: 'create' | 'update' | 'delete'
     items: ReadonlyArray<{ readonly [x: string]: unknown }>
-    initiatedBy?: string;
-    correlationId?: string;
-    priority?: number;
+    initiatedBy?: string
+    correlationId?: string
+    priority?: number
     continueOnError?: boolean
   }) {
     return new BulkUserJob({
       jobId: crypto.randomUUID(),
-      type: "bulk",
+      type: 'bulk',
       operation: params.operation,
       items: params.items,
       ...(params.initiatedBy !== undefined && { initiatedBy: params.initiatedBy }),
@@ -352,11 +342,7 @@ export class BulkUserJob extends Schema.Class<BulkUserJob>(
 /**
  * Union of all user job types
  */
-export type UserJob =
-  | CreateUserJob
-  | UpdateUserJob
-  | DeleteUserJob
-  | BulkUserJob
+export type UserJob = CreateUserJob | UpdateUserJob | DeleteUserJob | BulkUserJob
 
 // ============================================================================
 // Job Queue Interface
@@ -402,7 +388,6 @@ export interface UserJobQueueInterface {
   }>
 }
 
-
 // ============================================================================
 // Job Processor Helpers
 // ============================================================================
@@ -417,13 +402,14 @@ const validateJobData = <T>(
   jobType: string
 ) =>
   Schema.decodeUnknown(schema)(data).pipe(
-    Effect.mapError((parseError) =>
-      new UserJobValidationError({
-        message: `Job data validation failed: ${parseError.message}`,
-        jobId,
-        jobType,
-        cause: parseError
-      })
+    Effect.mapError(
+      (parseError) =>
+        new UserJobValidationError({
+          message: `Job data validation failed: ${parseError.message}`,
+          jobId,
+          jobType,
+          cause: parseError
+        })
     )
   )
 
@@ -444,10 +430,10 @@ type UserServiceType = Context.Tag.Service<typeof UserService>
 const processCreateJob = (
   job: CreateUserJob,
   service: UserServiceType,
-  schemas: { createData: Schema.Schema<Parameters<UserServiceType["create"]>[0], unknown> }
+  schemas: { createData: Schema.Schema<Parameters<UserServiceType['create']>[0], unknown> }
 ) =>
-  Effect.gen(function*() {
-    const validatedData = yield* validateJobData(job.data, schemas.createData, job.jobId, "create")
+  Effect.gen(function* () {
+    const validatedData = yield* validateJobData(job.data, schemas.createData, job.jobId, 'create')
     yield* service.create(validatedData)
   })
 
@@ -460,20 +446,18 @@ const processCreateJob = (
 const processUpdateJob = (
   job: UpdateUserJob,
   service: UserServiceType,
-  schemas: { updateData: Schema.Schema<Parameters<UserServiceType["update"]>[1], unknown> }
+  schemas: { updateData: Schema.Schema<Parameters<UserServiceType['update']>[1], unknown> }
 ) =>
-  Effect.gen(function*() {
-    const validatedData = yield* validateJobData(job.data, schemas.updateData, job.jobId, "update")
+  Effect.gen(function* () {
+    const validatedData = yield* validateJobData(job.data, schemas.updateData, job.jobId, 'update')
     yield* service.update(job.entityId, validatedData)
   })
 
 /**
  * Process a delete job
  */
-const processDeleteJob = (
-  job: DeleteUserJob,
-  service: UserServiceType
-) => service.delete(job.entityId)
+const processDeleteJob = (job: DeleteUserJob, service: UserServiceType) =>
+  service.delete(job.entityId)
 
 /**
  * Process a single bulk item
@@ -483,20 +467,20 @@ const processDeleteJob = (
  */
 const processBulkItem = (
   item: Record<string, unknown>,
-  operation: "create" | "update" | "delete",
+  operation: 'create' | 'update' | 'delete',
   service: UserServiceType,
-  validatedCreateItem: Parameters<UserServiceType["create"]>[0] | null,
-  validatedUpdateItem: Parameters<UserServiceType["update"]>[1] | null
+  validatedCreateItem: Parameters<UserServiceType['create']>[0] | null,
+  validatedUpdateItem: Parameters<UserServiceType['update']>[1] | null
 ) =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const itemId = item.id
-    const hasValidId = typeof itemId === "string" && itemId.length > 0
+    const hasValidId = typeof itemId === 'string' && itemId.length > 0
 
-    if (operation === "create" && validatedCreateItem !== null) {
+    if (operation === 'create' && validatedCreateItem !== null) {
       yield* service.create(validatedCreateItem)
-    } else if (operation === "update" && hasValidId && validatedUpdateItem !== null) {
+    } else if (operation === 'update' && hasValidId && validatedUpdateItem !== null) {
       yield* service.update(itemId, validatedUpdateItem)
-    } else if (operation === "delete" && hasValidId) {
+    } else if (operation === 'delete' && hasValidId) {
       yield* service.delete(itemId)
     }
   })
@@ -504,20 +488,22 @@ const processBulkItem = (
 /**
  * Handle validation error in bulk processing
  */
-const handleBulkValidationError = (
-  continueOnError: boolean,
-  logger: Context.Tag.Service<typeof LoggingService>,
-  item: Record<string, unknown>
-) => (error: UserJobError) =>
-  continueOnError
-    ? Effect.gen(function*() {
-        yield* logger.warn("Bulk job item validation failed, skipping", {
-          item,
-          error: error.message
+const handleBulkValidationError =
+  (
+    continueOnError: boolean,
+    logger: Context.Tag.Service<typeof LoggingService>,
+    item: Record<string, unknown>
+  ) =>
+  (error: UserJobError) =>
+    continueOnError
+      ? Effect.gen(function* () {
+          yield* logger.warn('Bulk job item validation failed, skipping', {
+            item,
+            error: error.message
+          })
+          return null
         })
-        return null
-      })
-    : Effect.fail(error)
+      : Effect.fail(error)
 
 /**
  * Process bulk create operation
@@ -527,14 +513,14 @@ const processBulkCreate = (
   job: BulkUserJob,
   service: UserServiceType,
   logger: Context.Tag.Service<typeof LoggingService>,
-  schemas: { createData: Schema.Schema<Parameters<UserServiceType["create"]>[0], unknown> }
+  schemas: { createData: Schema.Schema<Parameters<UserServiceType['create']>[0], unknown> }
 ) =>
-  Effect.gen(function*() {
-    const validatedItem = yield* validateJobData(item, schemas.createData, job.jobId, "bulk").pipe(
+  Effect.gen(function* () {
+    const validatedItem = yield* validateJobData(item, schemas.createData, job.jobId, 'bulk').pipe(
       Effect.catchAll(handleBulkValidationError(job.continueOnError, logger, item))
     )
     if (validatedItem !== null) {
-      yield* processBulkItem(item, "create", service, validatedItem, null)
+      yield* processBulkItem(item, 'create', service, validatedItem, null)
     }
   })
 
@@ -546,14 +532,14 @@ const processBulkUpdate = (
   job: BulkUserJob,
   service: UserServiceType,
   logger: Context.Tag.Service<typeof LoggingService>,
-  schemas: { updateData: Schema.Schema<Parameters<UserServiceType["update"]>[1], unknown> }
+  schemas: { updateData: Schema.Schema<Parameters<UserServiceType['update']>[1], unknown> }
 ) =>
-  Effect.gen(function*() {
-    const validatedItem = yield* validateJobData(item, schemas.updateData, job.jobId, "bulk").pipe(
+  Effect.gen(function* () {
+    const validatedItem = yield* validateJobData(item, schemas.updateData, job.jobId, 'bulk').pipe(
       Effect.catchAll(handleBulkValidationError(job.continueOnError, logger, item))
     )
     if (validatedItem !== null) {
-      yield* processBulkItem(item, "update", service, null, validatedItem)
+      yield* processBulkItem(item, 'update', service, null, validatedItem)
     }
   })
 
@@ -568,26 +554,25 @@ const processBulkJob = (
   service: UserServiceType,
   logger: Context.Tag.Service<typeof LoggingService>,
   schemas: {
-    createData: Schema.Schema<Parameters<UserServiceType["create"]>[0], unknown>
-    updateData: Schema.Schema<Parameters<UserServiceType["update"]>[1], unknown>
+    createData: Schema.Schema<Parameters<UserServiceType['create']>[0], unknown>
+    updateData: Schema.Schema<Parameters<UserServiceType['update']>[1], unknown>
   }
 ) =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     for (const item of job.items) {
       switch (job.operation) {
-        case "create":
+        case 'create':
           yield* processBulkCreate(item, job, service, logger, schemas)
           break
-        case "update":
+        case 'update':
           yield* processBulkUpdate(item, job, service, logger, schemas)
           break
-        case "delete":
-          yield* processBulkItem(item, "delete", service, null, null)
+        case 'delete':
+          yield* processBulkItem(item, 'delete', service, null, null)
           break
       }
     }
   })
-
 
 // ============================================================================
 // Job Processor Implementation
@@ -606,38 +591,37 @@ const processJob = (
   metrics: Context.Tag.Service<typeof MetricsService>,
   schemas: UserJobProcessorSchemas
 ) =>
-  Effect.gen(function*() {
-    const histogram = yield* metrics.histogram("user_job_duration_seconds")
-    const counter = yield* metrics.counter("user_jobs_processed_total")
+  Effect.gen(function* () {
+    const histogram = yield* metrics.histogram('user_job_duration_seconds')
+    const counter = yield* metrics.counter('user_jobs_processed_total')
 
-    yield* logger.info("Processing user job", {
+    yield* logger.info('Processing user job', {
       jobId: job.jobId,
       type: job.type,
       attempt: job.attempt
     })
 
     yield* histogram.timer(
-      Effect.gen(function*() {
-        if (job.type === "create") {
+      Effect.gen(function* () {
+        if (job.type === 'create') {
           yield* processCreateJob(job, service, schemas)
-        } else if (job.type === "update") {
+        } else if (job.type === 'update') {
           yield* processUpdateJob(job, service, schemas)
-        } else if (job.type === "delete") {
+        } else if (job.type === 'delete') {
           yield* processDeleteJob(job, service)
-        } else if (job.type === "bulk") {
+        } else if (job.type === 'bulk') {
           yield* processBulkJob(job, service, logger, schemas)
         }
       })
     )
 
     yield* counter.increment
-    yield* logger.info("user job completed", { jobId: job.jobId, type: job.type })
+    yield* logger.info('user job completed', { jobId: job.jobId, type: job.type })
   }).pipe(
-    Effect.withSpan("UserJobQueue.processJob", {
+    Effect.withSpan('UserJobQueue.processJob', {
       attributes: { jobId: job.jobId, type: job.type }
     })
   )
-
 
 // ============================================================================
 // Context.Tag
@@ -672,7 +656,7 @@ const processJob = (
  * program.pipe(Effect.provide(UserJobQueue.Live(schemas)))
  * ```
  */
-export class UserJobQueue extends Context.Tag("UserJobQueue")<
+export class UserJobQueue extends Context.Tag('UserJobQueue')<
   UserJobQueue,
   UserJobQueueInterface
 >() {
@@ -702,198 +686,193 @@ export class UserJobQueue extends Context.Tag("UserJobQueue")<
    *
    * @param schemas - Schema configuration for validating job data
    */
-  static readonly Live = (
-    schemas: UserJobProcessorSchemas
-  ) => Layer.effect(
-    this,
-    Effect.gen(function*() {
-      const queueService = yield* QueueService;
-      const service = yield* UserService;
-      const logger = yield* LoggingService;
-      const metrics = yield* MetricsService;
-      const database = yield* DatabaseService;
+  static readonly Live = (schemas: UserJobProcessorSchemas) =>
+    Layer.effect(
+      this,
+      Effect.gen(function* () {
+        const queueService = yield* QueueService
+        const service = yield* UserService
+        const logger = yield* LoggingService
+        const metrics = yield* MetricsService
+        const database = yield* DatabaseService
 
-      // Capture CurrentUser at layer construction for job processing
-      // This ensures service method requirements are satisfied
-      const systemUser = UserQueueConfig.SYSTEM_USER;
-      const failedCounter = yield* metrics.counter("user_jobs_failed_total")
-      const pendingGauge = yield* metrics.gauge("user_jobs_pending")
-      const processingGauge = yield* metrics.gauge("user_jobs_processing")
+        // Capture CurrentUser at layer construction for job processing
+        // This ensures service method requirements are satisfied
+        const systemUser = UserQueueConfig.SYSTEM_USER
+        const failedCounter = yield* metrics.counter('user_jobs_failed_total')
+        const pendingGauge = yield* metrics.gauge('user_jobs_pending')
+        const processingGauge = yield* metrics.gauge('user_jobs_processing')
 
-      // Job schema for queue validation (union of all job types)
-      const UserJobSchema = Schema.Union(
-        CreateUserJob,
-        UpdateUserJob,
-        DeleteUserJob,
-        BulkUserJob
-      )
+        // Job schema for queue validation (union of all job types)
+        const UserJobSchema = Schema.Union(CreateUserJob, UpdateUserJob, DeleteUserJob, BulkUserJob)
 
-      // Create bounded queue for job storage with schema validation
-      const jobQueue = yield* queueService.bounded(1000, UserJobSchema)
+        // Create bounded queue for job storage with schema validation
+        const jobQueue = yield* queueService.bounded(1000, UserJobSchema)
 
-      // Stats tracking
-      let pending = 0;
-      let processing = 0;
-      let completed = 0;
-      let failed = 0;
-      let isProcessing = false      // Retry schedule: fixed delay with max retries
-      const retrySchedule = Schedule.spaced(UserQueueConfig.RETRY_DELAY).pipe(
-        Schedule.compose(Schedule.recurs(UserQueueConfig.DEFAULT_RETRIES))
-      )
-
-      // Process jobs from the queue with retry logic
-      // CurrentUser is captured in service at layer construction time
-      // All errors are properly tagged for contract-first error handling
-      const processWithRetry = (job: UserJob) =>
-        processJob(job, service, logger, metrics, schemas).pipe(
-          // Transform any service errors into job execution errors FIRST
-          // This ensures all errors have job-scoped tags before catchTag
-          Effect.mapError((error) => {
-            // Preserve job-scoped validation errors as-is
-            if (error instanceof UserJobValidationError) {
-              return error
-            }
-            // Wrap all other errors as job execution errors
-            return new UserJobExecutionError({
-              message: error instanceof Error ? error.message : String(error),
-              jobId: job.jobId,
-              jobType: job.type,
-              cause: error
-            })
-          }),
-          Effect.retry(retrySchedule),
-          Effect.timeoutFail({
-            duration: UserQueueConfig.JOB_TIMEOUT,
-            onTimeout: () => new UserJobTimeoutError({
-              message: `Job ${job.jobId} timed out after ${UserQueueConfig.JOB_TIMEOUT}`,
-              jobId: job.jobId,
-              jobType: job.type,
-              timeout: `${UserQueueConfig.JOB_TIMEOUT}`
-            })
-          }),
-          // Handle validation errors (tagged with feature-scoped name)
-          Effect.catchTag("UserJobValidationError", (error) =>
-            Effect.gen(function*() {
-              yield* failedCounter.increment
-              failed++
-              yield* logger.error("user job validation failed", {
-                jobId: error.jobId,
-                jobType: error.jobType,
-                errorTag: error._tag,
-                message: error.message
-              })
-            })
-          ),
-          // Handle timeout errors (tagged with feature-scoped name)
-          Effect.catchTag("UserJobTimeoutError", (error) =>
-            Effect.gen(function*() {
-              yield* failedCounter.increment
-              failed++
-              yield* logger.error("user job timed out", {
-                jobId: error.jobId,
-                jobType: error.jobType,
-                errorTag: error._tag,
-                timeout: error.timeout
-              })
-            })
-          ),
-          // Handle execution errors (tagged with feature-scoped name)
-          Effect.catchTag("UserJobExecutionError", (error) =>
-            Effect.gen(function*() {
-              yield* failedCounter.increment
-              failed++
-              yield* logger.error("user job execution failed", {
-                jobId: error.jobId,
-                jobType: error.jobType,
-                errorTag: error._tag,
-                message: error.message
-              })
-            })
-          ),
-          Effect.tap(() => {
-            completed++
-          }),
-          Effect.ensuring(Effect.sync(() => {
-            processing--
-          }))
+        // Stats tracking
+        let pending = 0
+        let processing = 0
+        let completed = 0
+        let failed = 0
+        let isProcessing = false // Retry schedule: fixed delay with max retries
+        const retrySchedule = Schedule.spaced(UserQueueConfig.RETRY_DELAY).pipe(
+          Schedule.compose(Schedule.recurs(UserQueueConfig.DEFAULT_RETRIES))
         )
 
-      return {
-        enqueue: (job) =>
-          Effect.gen(function*() {
-            yield* jobQueue.offer(job)
-            pending++
-            yield* pendingGauge.set(pending)
-            yield* logger.debug("Job enqueued", {
-              jobId: job.jobId,
-              type: job.type
-            })
-          }).pipe(Effect.withSpan("UserJobQueue.enqueue")),
-
-        enqueueWithPriority: (job, priority) =>
-          Effect.gen(function*() {
-            // For priority, we'd need a priority queue - using regular offer for now
-            yield* jobQueue.offer({ ...job, priority })
-            pending++
-            yield* pendingGauge.set(pending)
-            yield* logger.debug("Job enqueued with priority", {
-              jobId: job.jobId,
-              type: job.type,
-              priority
-            })
-          }).pipe(Effect.withSpan("UserJobQueue.enqueueWithPriority")),
-
-        startProcessing: () =>
-          Effect.gen(function*() {
-            if (isProcessing) return
-            isProcessing = true
-
-            yield* logger.info("user job queue started")
-
-            // Start processing loop in background
-            // Provide CurrentUser context for service method requirements
-            yield* Effect.forkDaemon(
-              Effect.forever(
-                Effect.gen(function*() {
-                  const job = yield* jobQueue.take
-                  pending--
-                  processing++
-                  yield* pendingGauge.set(pending)
-                  yield* processingGauge.set(processing)
-                  // Provide system user and database context when processing job
-                  yield* Effect.fork(
-                    processWithRetry(job).pipe(
-                      Effect.provideService(CurrentUser, systemUser),
-                      Effect.provideService(DatabaseService, database)
-                    )
-                  )
+        // Process jobs from the queue with retry logic
+        // CurrentUser is captured in service at layer construction time
+        // All errors are properly tagged for contract-first error handling
+        const processWithRetry = (job: UserJob) =>
+          processJob(job, service, logger, metrics, schemas).pipe(
+            // Transform any service errors into job execution errors FIRST
+            // This ensures all errors have job-scoped tags before catchTag
+            Effect.mapError((error) => {
+              // Preserve job-scoped validation errors as-is
+              if (error instanceof UserJobValidationError) {
+                return error
+              }
+              // Wrap all other errors as job execution errors
+              return new UserJobExecutionError({
+                message: error instanceof Error ? error.message : String(error),
+                jobId: job.jobId,
+                jobType: job.type,
+                cause: error
+              })
+            }),
+            Effect.retry(retrySchedule),
+            Effect.timeoutFail({
+              duration: UserQueueConfig.JOB_TIMEOUT,
+              onTimeout: () =>
+                new UserJobTimeoutError({
+                  message: `Job ${job.jobId} timed out after ${UserQueueConfig.JOB_TIMEOUT}`,
+                  jobId: job.jobId,
+                  jobType: job.type,
+                  timeout: `${UserQueueConfig.JOB_TIMEOUT}`
                 })
-              )
+            }),
+            // Handle validation errors (tagged with feature-scoped name)
+            Effect.catchTag('UserJobValidationError', (error) =>
+              Effect.gen(function* () {
+                yield* failedCounter.increment
+                failed++
+                yield* logger.error('user job validation failed', {
+                  jobId: error.jobId,
+                  jobType: error.jobType,
+                  errorTag: error._tag,
+                  message: error.message
+                })
+              })
+            ),
+            // Handle timeout errors (tagged with feature-scoped name)
+            Effect.catchTag('UserJobTimeoutError', (error) =>
+              Effect.gen(function* () {
+                yield* failedCounter.increment
+                failed++
+                yield* logger.error('user job timed out', {
+                  jobId: error.jobId,
+                  jobType: error.jobType,
+                  errorTag: error._tag,
+                  timeout: error.timeout
+                })
+              })
+            ),
+            // Handle execution errors (tagged with feature-scoped name)
+            Effect.catchTag('UserJobExecutionError', (error) =>
+              Effect.gen(function* () {
+                yield* failedCounter.increment
+                failed++
+                yield* logger.error('user job execution failed', {
+                  jobId: error.jobId,
+                  jobType: error.jobType,
+                  errorTag: error._tag,
+                  message: error.message
+                })
+              })
+            ),
+            Effect.tap(() => {
+              completed++
+            }),
+            Effect.ensuring(
+              Effect.sync(() => {
+                processing--
+              })
             )
-          }).pipe(Effect.withSpan("UserJobQueue.startProcessing")),
+          )
 
-        stopProcessing: () =>
-          Effect.gen(function*() {
-            isProcessing = false
-            yield* logger.info("user job queue stopped")
-          }).pipe(Effect.withSpan("UserJobQueue.stopProcessing")),
+        return {
+          enqueue: (job) =>
+            Effect.gen(function* () {
+              yield* jobQueue.offer(job)
+              pending++
+              yield* pendingGauge.set(pending)
+              yield* logger.debug('Job enqueued', {
+                jobId: job.jobId,
+                type: job.type
+              })
+            }).pipe(Effect.withSpan('UserJobQueue.enqueue')),
 
-        stats: Effect.succeed({
-          pending,
-          processing,
-          completed,
-          failed
-        }).pipe(Effect.withSpan("UserJobQueue.stats"))
-      }
-    })
-  )
+          enqueueWithPriority: (job, priority) =>
+            Effect.gen(function* () {
+              // For priority, we'd need a priority queue - using regular offer for now
+              yield* jobQueue.offer({ ...job, priority })
+              pending++
+              yield* pendingGauge.set(pending)
+              yield* logger.debug('Job enqueued with priority', {
+                jobId: job.jobId,
+                type: job.type,
+                priority
+              })
+            }).pipe(Effect.withSpan('UserJobQueue.enqueueWithPriority')),
+
+          startProcessing: () =>
+            Effect.gen(function* () {
+              if (isProcessing) return
+              isProcessing = true
+
+              yield* logger.info('user job queue started')
+
+              // Start processing loop in background
+              // Provide CurrentUser context for service method requirements
+              yield* Effect.forkDaemon(
+                Effect.forever(
+                  Effect.gen(function* () {
+                    const job = yield* jobQueue.take
+                    pending--
+                    processing++
+                    yield* pendingGauge.set(pending)
+                    yield* processingGauge.set(processing)
+                    // Provide system user and database context when processing job
+                    yield* Effect.fork(
+                      processWithRetry(job).pipe(
+                        Effect.provideService(CurrentUser, systemUser),
+                        Effect.provideService(DatabaseService, database)
+                      )
+                    )
+                  })
+                )
+              )
+            }).pipe(Effect.withSpan('UserJobQueue.startProcessing')),
+
+          stopProcessing: () =>
+            Effect.gen(function* () {
+              isProcessing = false
+              yield* logger.info('user job queue stopped')
+            }).pipe(Effect.withSpan('UserJobQueue.stopProcessing')),
+
+          stats: Effect.succeed({
+            pending,
+            processing,
+            completed,
+            failed
+          }).pipe(Effect.withSpan('UserJobQueue.stats'))
+        }
+      })
+    )
 
   /**
    * Test layer - uses same implementation as Live
    *
    * @param schemas - Schema configuration for validating job data
    */
-  static readonly Test = (
-    schemas: UserJobProcessorSchemas
-  ) => this.Live(schemas)
+  static readonly Test = (schemas: UserJobProcessorSchemas) => this.Live(schemas)
 }

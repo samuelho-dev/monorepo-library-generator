@@ -1,6 +1,6 @@
-import { env } from "@samuelho-dev/env"
-import { Context, Effect, Layer, Redacted } from "effect"
-import { SupabaseConnectionError, SupabaseError } from "./errors"
+import { env } from '@samuelho-dev/env'
+import { Context, Effect, Layer, Redacted } from 'effect'
+import { SupabaseConnectionError, SupabaseError } from './errors'
 
 /**
  * SupabaseClient Service
@@ -19,8 +19,8 @@ Architecture:
  * @see https://supabase.com/docs for Supabase documentation
  */
 
-import { createClient, type SupabaseClient as SupabaseSDKClient } from "@supabase/supabase-js"
-import type { SupabaseConfig } from "./types"
+import { createClient, type SupabaseClient as SupabaseSDKClient } from '@supabase/supabase-js'
+import type { SupabaseConfig } from './types'
 
 // ============================================================================
 // Service Interface
@@ -66,7 +66,7 @@ export interface SupabaseClientServiceInterface {
  * - SupabaseClient.Dev - Development with debug logging
  * - SupabaseClient.make(config) - Custom configuration
  */
-export class SupabaseClient extends Context.Tag("SupabaseClient")<
+export class SupabaseClient extends Context.Tag('SupabaseClient')<
   SupabaseClient,
   SupabaseClientServiceInterface
 >() {
@@ -85,20 +85,20 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
           try: () => createClient(config.url, config.anonKey),
           catch: (error) =>
             new SupabaseError({
-              message: "Failed to create Supabase client",
+              message: 'Failed to create Supabase client',
               cause: error
             })
         }),
 
       healthCheck: () =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const client = createClient(config.url, config.anonKey)
           // Simple health check - verify we can reach Supabase
           const { error } = yield* Effect.tryPromise({
             try: () => client.auth.getSession(),
             catch: (error) =>
               new SupabaseConnectionError({
-                message: "Failed to connect to Supabase",
+                message: 'Failed to connect to Supabase',
                 cause: error
               })
           })
@@ -107,7 +107,7 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
           if (error && error.status !== 400) {
             return yield* Effect.fail(
               new SupabaseConnectionError({
-                message: "Supabase health check failed",
+                message: 'Supabase health check failed',
                 cause: error
               })
             )
@@ -144,19 +144,19 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
       getClient: () => Effect.succeed(client),
 
       healthCheck: () =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const { error } = yield* Effect.tryPromise({
             try: () => client.auth.getSession(),
             catch: (error) =>
               new SupabaseConnectionError({
-                message: "Failed to connect to Supabase",
+                message: 'Failed to connect to Supabase',
                 cause: error
               })
           })
           if (error && error.status !== 400) {
             return yield* Effect.fail(
               new SupabaseConnectionError({
-                message: "Supabase health check failed",
+                message: 'Supabase health check failed',
                 cause: error
               })
             )
@@ -179,14 +179,14 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
    */
   static readonly Test = Layer.sync(SupabaseClient, () => ({
     config: {
-      url: "https://test.supabase.co",
-      anonKey: "test-anon-key"
+      url: 'https://test.supabase.co',
+      anonKey: 'test-anon-key'
     },
 
     getClient: () =>
       Effect.fail(
         new SupabaseError({
-          message: "Test layer does not provide a real client. Use make() for integration tests."
+          message: 'Test layer does not provide a real client. Use make() for integration tests.'
         })
       ),
 
@@ -200,8 +200,8 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
    */
   static readonly Dev = Layer.effect(
     SupabaseClient,
-    Effect.gen(function*() {
-      yield* Effect.logDebug("[SupabaseClient] Initializing dev client...")
+    Effect.gen(function* () {
+      yield* Effect.logDebug('[SupabaseClient] Initializing dev client...')
 
       // Read from centralized env library
       const url = env.SUPABASE_URL
@@ -210,21 +210,21 @@ export class SupabaseClient extends Context.Tag("SupabaseClient")<
 
       const config: SupabaseConfig = { url, anonKey, serviceRoleKey }
 
-      yield* Effect.logDebug("[SupabaseClient] Config loaded", { url: config.url })
+      yield* Effect.logDebug('[SupabaseClient] Config loaded', { url: config.url })
 
       return {
         config,
 
         getClient: () =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseClient] Creating client...")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseClient] Creating client...')
             return createClient(config.url, config.anonKey)
           }),
 
         healthCheck: () =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[SupabaseClient] Running health check...")
-            yield* Effect.logDebug("[SupabaseClient] Health check passed (dev mode)")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[SupabaseClient] Running health check...')
+            yield* Effect.logDebug('[SupabaseClient] Health check passed (dev mode)')
             return true
           })
       }

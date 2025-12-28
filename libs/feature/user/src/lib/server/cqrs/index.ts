@@ -15,34 +15,33 @@ Structure:
  * @module @samuelho-dev/feature-user/server/cqrs
  */
 
+export type { CommandBusInterface } from './commands'
 // ============================================================================
 // Commands
 // ============================================================================
-export { Command, UserCommandBus } from "./commands"
-export type { CommandBusInterface } from "./commands"
-
-// ============================================================================
-// Queries
-// ============================================================================
-export { Query, UserQueryBus } from "./queries"
-export type { QueryBusInterface } from "./queries"
-
+export { Command, UserCommandBus } from './commands'
+export type { Middleware, OperationExecutorInterface, OperationMetadata } from './operations'
 // ============================================================================
 // Operations
 // ============================================================================
-export { createRetryMiddleware, createValidationMiddleware, UserOperationExecutor } from "./operations"
-
-export type { Middleware, OperationExecutorInterface, OperationMetadata } from "./operations"
-
-// ============================================================================
-// Projections
-// ============================================================================
-export { UserProjectionBuilder } from "./projections"
-
+export {
+  createRetryMiddleware,
+  createValidationMiddleware,
+  UserOperationExecutor
+} from './operations'
 export type {
   ProjectionBuilderInterface,
   ProjectionDefinition,
   ProjectionHandler,
   ReadModelStore,
   UserReadModel
-} from "./projections"
+} from './projections'
+// ============================================================================
+// Projections
+// ============================================================================
+export { UserProjectionBuilder } from './projections'
+export type { QueryBusInterface } from './queries'
+// ============================================================================
+// Queries
+// ============================================================================
+export { Query, UserQueryBus } from './queries'

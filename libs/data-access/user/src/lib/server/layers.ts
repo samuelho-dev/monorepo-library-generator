@@ -1,9 +1,9 @@
-import { env } from "@samuelho-dev/env"
-import { CacheService } from "@samuelho-dev/infra-cache"
-import { DatabaseService } from "@samuelho-dev/infra-database"
-import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
-import { Layer } from "effect"
-import { UserRepository } from "../repository"
+import { env } from '@samuelho-dev/env'
+import { CacheService } from '@samuelho-dev/infra-cache'
+import { DatabaseService } from '@samuelho-dev/infra-database'
+import { LoggingService, MetricsService } from '@samuelho-dev/infra-observability'
+import { Layer } from 'effect'
+import { UserRepository } from '../repository'
 
 /**
  * User Data Access Layers
@@ -24,7 +24,6 @@ Infrastructure included:
  *
  * @module @samuelho-dev/data-access-user/server
  */
-
 
 // ============================================================================
 // Repository
@@ -98,9 +97,9 @@ export const InfrastructureDev = Layer.mergeAll(
  * program.pipe(Effect.provide(UserDataAccessLive))
  * ```
  */
-export const UserDataAccessLive = Layer.mergeAll(
-  UserRepository.Live
-).pipe(Layer.provide(InfrastructureLive))
+export const UserDataAccessLive = Layer.mergeAll(UserRepository.Live).pipe(
+  Layer.provide(InfrastructureLive)
+)
 
 /**
  * User DataAccess Test Layer
@@ -120,9 +119,9 @@ export const UserDataAccessLive = Layer.mergeAll(
  * })
  * ```
  */
-export const UserDataAccessTest = Layer.mergeAll(
-  UserRepository.Live
-).pipe(Layer.provide(InfrastructureTest))
+export const UserDataAccessTest = Layer.mergeAll(UserRepository.Live).pipe(
+  Layer.provide(InfrastructureTest)
+)
 
 /**
  * User DataAccess Dev Layer
@@ -130,9 +129,9 @@ export const UserDataAccessTest = Layer.mergeAll(
  * Development layer with local infrastructure.
  * Verbose logging and debugging enabled.
  */
-export const UserDataAccessDev = Layer.mergeAll(
-  UserRepository.Live
-).pipe(Layer.provide(InfrastructureDev))
+export const UserDataAccessDev = Layer.mergeAll(UserRepository.Live).pipe(
+  Layer.provide(InfrastructureDev)
+)
 
 // ============================================================================
 // Auto-selecting Layer
@@ -147,9 +146,9 @@ export const UserDataAccessDev = Layer.mergeAll(
  */
 export const UserDataAccessAuto = Layer.suspend(() => {
   switch (env.NODE_ENV) {
-    case "test":
+    case 'test':
       return UserDataAccessTest
-    case "development":
+    case 'development':
       return UserDataAccessDev
     default:
       return UserDataAccessLive

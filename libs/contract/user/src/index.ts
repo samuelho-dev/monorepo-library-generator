@@ -15,100 +15,96 @@ This library defines the contract between layers:
 // Core Exports
 // ============================================================================
 
+// Entity types re-exported from @samuelho-dev/types-database
+export type {
+  DB,
+  Json,
+  User,
+  UserInsert,
+  UserSelect,
+  UserTable,
+  UserUpdate
+} from '@samuelho-dev/types-database'
 // Errors
 export {
-  UserNotFoundError,
-  UserValidationError,
   UserAlreadyExistsError,
-  UserPermissionError,
-  UserNotFoundRepositoryError,
-  UserValidationRepositoryError,
   UserConflictRepositoryError,
   UserDatabaseRepositoryError,
   type UserDomainError,
+  type UserError,
+  UserNotFoundError,
+  UserNotFoundRepositoryError,
+  UserPermissionError,
   type UserRepositoryError,
-  type UserError
-} from "./lib/errors"
-
-// Entity types re-exported from @samuelho-dev/types-database
-export type {
-  UserTable,
-  User,
-  UserSelect,
-  UserInsert,
-  UserUpdate,
-  DB,
-  Json
-} from "@samuelho-dev/types-database"
-
-// Ports (Repository and Service interfaces)
-export {
-  UserRepository,
-  UserService,
-  type UserFilters,
-  type OffsetPaginationParams,
-  type SortOptions,
-  type PaginatedResult
-} from "./lib/ports"
-
+  UserValidationError,
+  UserValidationRepositoryError
+} from './lib/errors'
 // Events
 export {
+  createAggregateMetadata,
+  createEventMetadata,
   EventMetadata,
   UserAggregateMetadata,
   UserCreatedEvent,
-  UserUpdatedEvent,
   UserDeletedEvent,
+  type UserEvent,
   UserEventSchema,
-  createEventMetadata,
-  createAggregateMetadata,
-  type UserEvent
-} from "./lib/events"
+  UserUpdatedEvent
+} from './lib/events'
+// Ports (Repository and Service interfaces)
+export {
+  type OffsetPaginationParams,
+  type PaginatedResult,
+  type SortOptions,
+  type UserFilters,
+  UserRepository,
+  UserService
+} from './lib/ports'
 
 // ============================================================================
 // RPC Exports (Contract-First - Always Prewired)
 // ============================================================================
 
+// RPC Definitions (Rpc.make with RouteTag)
+export {
+  BulkGetUserInput,
+  BulkGetUsers,
+  CreateUser,
+  CreateUserInput,
+  DeleteUser,
+  GetUser,
+  ListUsers,
+  PaginatedResponse,
+  PaginationParams,
+  RouteTag,
+  type RouteType,
+  UpdateUser,
+  UpdateUserInput,
+  type UserEntity,
+  UserId,
+  UserSchema,
+  ValidateUser,
+  ValidateUserInput,
+  ValidationResponse
+} from './lib/rpc-definitions'
 // RPC Errors (Schema.TaggedError for network serialization)
 export {
   UserNotFoundRpcError,
-  UserValidationRpcError,
   UserPermissionRpcError,
-  UserRpcError
-} from "./lib/rpc-errors"
-
-// RPC Definitions (Rpc.make with RouteTag)
-export {
-  UserId,
-  RouteTag,
-  type RouteType,
-  UserSchema,
-  type UserEntity,
-  PaginationParams,
-  PaginatedResponse,
-  CreateUserInput,
-  UpdateUserInput,
-  ValidateUserInput,
-  ValidationResponse,
-  BulkGetUserInput,
-  GetUser,
-  ListUsers,
-  CreateUser,
-  UpdateUser,
-  DeleteUser,
-  ValidateUser,
-  BulkGetUsers
-} from "./lib/rpc-definitions"
+  UserRpcError,
+  UserValidationRpcError
+} from './lib/rpc-errors'
 
 // RPC Group (RpcGroup.make composition)
 export {
-  UserRpcs,
-  type UserRpcDefinitions,
   getRouteType,
   isProtectedRoute,
-  isServiceRoute,
   isPublicRoute,
+  isServiceRoute,
+  type UserRpcDefinitions,
+  UserRpcs,
   UserRpcsByRoute
-} from "./lib/rpc-group"
+} from './lib/rpc-group'
 
 // ============================================================================
 // Sub-Module Namespace Exports (Hybrid DDD Pattern)

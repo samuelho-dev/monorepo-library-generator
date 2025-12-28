@@ -6,5 +6,5 @@
  * @module @samuelho-dev/feature-user/server/cqrs/queries
  */
 
-export { Query, UserQueryBus } from "./base"
-export type { QueryBusInterface } from "./base"
+export type { QueryBusInterface } from './base'
+export { Query, UserQueryBus } from './base'

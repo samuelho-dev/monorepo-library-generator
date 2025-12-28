@@ -19,6 +19,6 @@ Import options:
 // ============================================================================
 // Main Service
 // ============================================================================
-export { UserService } from "./service"
-export type { UserServiceInterface } from "./service"
 
+export type { UserServiceInterface } from './service'
+export { UserService } from './service'

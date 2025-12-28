@@ -24,7 +24,7 @@ Import options (from most optimal to most convenient):
 // Re-export repository interface and tag
 // ============================================================================
 
-export { UserRepository, type UserRepositoryInterface } from "./repository"
+export { UserRepository, type UserRepositoryInterface } from './repository'
 
 // ============================================================================
 // Re-export all operations
@@ -36,7 +36,7 @@ export type {
   DeleteUserOperations,
   ReadUserOperations,
   UpdateUserOperations
-} from "./operations"
+} from './operations'
 
 export {
   aggregateOperations,
@@ -44,4 +44,4 @@ export {
   deleteOperations,
   readOperations,
   updateOperations
-} from "./operations"
+} from './operations'

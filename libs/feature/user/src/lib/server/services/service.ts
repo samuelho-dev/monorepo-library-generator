@@ -1,14 +1,19 @@
-import { CurrentUser } from "@samuelho-dev/contract-auth"
-import { UserNotFoundError } from "@samuelho-dev/contract-user"
-import { UserRepository } from "@samuelho-dev/data-access-user"
-import type { User, UserCreateInput, UserFilter, UserUpdateInput } from "@samuelho-dev/data-access-user"
-import { env } from "@samuelho-dev/env"
-import { DatabaseService } from "@samuelho-dev/infra-database"
-import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
-import { PubsubService } from "@samuelho-dev/infra-pubsub"
-import type { TopicHandle } from "@samuelho-dev/infra-pubsub"
-import { Context, Effect, Layer, Option, Schema } from "effect"
-import type { ParseError } from "effect/ParseResult"
+import { CurrentUser } from '@samuelho-dev/contract-auth'
+import { UserNotFoundError } from '@samuelho-dev/contract-user'
+import type {
+  User,
+  UserCreateInput,
+  UserFilter,
+  UserUpdateInput
+} from '@samuelho-dev/data-access-user'
+import { UserRepository } from '@samuelho-dev/data-access-user'
+import { env } from '@samuelho-dev/env'
+import { DatabaseService } from '@samuelho-dev/infra-database'
+import { LoggingService, MetricsService } from '@samuelho-dev/infra-observability'
+import type { TopicHandle } from '@samuelho-dev/infra-pubsub'
+import { PubsubService } from '@samuelho-dev/infra-pubsub'
+import { Context, Effect, Layer, Option, Schema } from 'effect'
+import type { ParseError } from 'effect/ParseResult'
 
 /**
  * User Service Interface
@@ -58,17 +63,17 @@ export type { User, UserCreateInput, UserUpdateInput, UserFilter }
  */
 const UserEventSchema = Schema.Union(
   Schema.Struct({
-    type: Schema.Literal("UserCreated"),
+    type: Schema.Literal('UserCreated'),
     id: Schema.String,
     timestamp: Schema.DateFromSelf
   }),
   Schema.Struct({
-    type: Schema.Literal("UserUpdated"),
+    type: Schema.Literal('UserUpdated'),
     id: Schema.String,
     timestamp: Schema.DateFromSelf
   }),
   Schema.Struct({
-    type: Schema.Literal("UserDeleted"),
+    type: Schema.Literal('UserDeleted'),
     id: Schema.String,
     timestamp: Schema.DateFromSelf
   })
@@ -96,49 +101,47 @@ const createServiceImpl = (
   eventTopic: TopicHandle<UserEvent, ParseError>
 ) => ({
   get: (id: string) =>
-    Effect.gen(function*() {
-      const histogram = yield* metrics.histogram("user_get_duration_seconds")
+    Effect.gen(function* () {
+      const histogram = yield* metrics.histogram('user_get_duration_seconds')
       const start = Date.now()
 
-      yield* logger.debug("UserService.get", { id })
+      yield* logger.debug('UserService.get', { id })
 
       const result = yield* repo.findById(id)
 
       if (Option.isNone(result)) {
-        yield* logger.debug("User not found", { id })
-        return yield* Effect.fail(new UserNotFoundError({
-          message: `User not found: ${id}`,
-          userId: id
-        }))
+        yield* logger.debug('User not found', { id })
+        return yield* Effect.fail(
+          new UserNotFoundError({
+            message: `User not found: ${id}`,
+            userId: id
+          })
+        )
       }
 
       // Record duration after successful operation
       yield* histogram.record((Date.now() - start) / 1000)
 
       return result.value
-    }).pipe(Effect.withSpan("UserService.get", { attributes: { id } })),
+    }).pipe(Effect.withSpan('UserService.get', { attributes: { id } })),
 
-  findByCriteria: (
-    criteria: UserFilter,
-    offset: number,
-    limit: number
-  ) =>
-    Effect.gen(function*() {
-      const histogram = yield* metrics.histogram("user_list_duration_seconds")
+  findByCriteria: (criteria: UserFilter, offset: number, limit: number) =>
+    Effect.gen(function* () {
+      const histogram = yield* metrics.histogram('user_list_duration_seconds')
       const start = Date.now()
 
-      yield* logger.debug("UserService.findByCriteria", {
+      yield* logger.debug('UserService.findByCriteria', {
         criteria,
         offset,
         limit
       })
 
       // Errors bubble up with full type information
-      const result = yield* repo.findAll(criteria, { skip: offset, limit }).pipe(
-        Effect.map((r) => r.items)
-      )
+      const result = yield* repo
+        .findAll(criteria, { skip: offset, limit })
+        .pipe(Effect.map((r) => r.items))
 
-      yield* logger.debug("UserService.findByCriteria completed", {
+      yield* logger.debug('UserService.findByCriteria completed', {
         count: result.length
       })
 
@@ -146,20 +149,20 @@ const createServiceImpl = (
       yield* histogram.record((Date.now() - start) / 1000)
 
       return result
-    }).pipe(Effect.withSpan("UserService.findByCriteria")),
+    }).pipe(Effect.withSpan('UserService.findByCriteria')),
 
   count: (criteria: UserFilter) =>
-    Effect.gen(function*() {
-      yield* logger.debug("UserService.count", { criteria })
+    Effect.gen(function* () {
+      yield* logger.debug('UserService.count', { criteria })
 
       // Errors bubble up with full type information
       return yield* repo.count(criteria)
-    }).pipe(Effect.withSpan("UserService.count")),
+    }).pipe(Effect.withSpan('UserService.count')),
 
   create: (input: UserCreateInput) =>
-    Effect.gen(function*() {
-      const counter = yield* metrics.counter("user_created_total")
-      const histogram = yield* metrics.histogram("user_create_duration_seconds")
+    Effect.gen(function* () {
+      const counter = yield* metrics.counter('user_created_total')
+      const histogram = yield* metrics.histogram('user_create_duration_seconds')
       const start = Date.now()
 
       // CurrentUser is request-scoped - yield it inside the method, not at layer construction
@@ -167,7 +170,7 @@ const createServiceImpl = (
       // Job processors must provide SystemUserLayer for background processing
       const currentUser = yield* CurrentUser
 
-      yield* logger.info("UserService.create", {
+      yield* logger.info('UserService.create', {
         input,
         userId: currentUser.id
       })
@@ -179,30 +182,30 @@ const createServiceImpl = (
       const result = yield* repo.create(input)
 
       yield* counter.increment
-      yield* logger.info("User created", {
+      yield* logger.info('User created', {
         id: result.id,
         userId: currentUser.id
       })
 
       // Record duration and publish event after successful operation
       yield* histogram.record((Date.now() - start) / 1000)
-      yield* eventTopic.publish({ type: "UserCreated" as const, id: result.id, timestamp: new Date() }).pipe(
-        Effect.catchAll((error) => Effect.logWarning("Event publishing failed", { error }))
-      )
+      yield* eventTopic
+        .publish({ type: 'UserCreated' as const, id: result.id, timestamp: new Date() })
+        .pipe(Effect.catchAll((error) => Effect.logWarning('Event publishing failed', { error })))
 
       return result
-    }).pipe(Effect.withSpan("UserService.create")),
+    }).pipe(Effect.withSpan('UserService.create')),
 
   update: (id: string, input: UserUpdateInput) =>
-    Effect.gen(function*() {
-      const counter = yield* metrics.counter("user_updated_total")
-      const histogram = yield* metrics.histogram("user_update_duration_seconds")
+    Effect.gen(function* () {
+      const counter = yield* metrics.counter('user_updated_total')
+      const histogram = yield* metrics.histogram('user_update_duration_seconds')
       const start = Date.now()
 
       // CurrentUser is request-scoped - yield it inside the method
       const currentUser = yield* CurrentUser
 
-      yield* logger.info("UserService.update", {
+      yield* logger.info('UserService.update', {
         id,
         input,
         userId: currentUser.id
@@ -214,41 +217,43 @@ const createServiceImpl = (
       // First check if entity exists - fail with domain error if not found
       const existing = yield* repo.findById(id)
       if (Option.isNone(existing)) {
-        yield* logger.debug("User not found for update", { id })
-        return yield* Effect.fail(new UserNotFoundError({
-          message: `User not found: ${id}`,
-          userId: id
-        }))
+        yield* logger.debug('User not found for update', { id })
+        return yield* Effect.fail(
+          new UserNotFoundError({
+            message: `User not found: ${id}`,
+            userId: id
+          })
+        )
       }
 
       // Repository update operation
       const result = yield* repo.update(id, input)
 
       yield* counter.increment
-      yield* logger.info("User updated", {
+      yield* logger.info('User updated', {
         id,
         userId: currentUser.id
       })
 
       // Record duration and publish event after successful operation
       yield* histogram.record((Date.now() - start) / 1000)
-      yield* eventTopic.publish({ type: "UserUpdated" as const, id: result.id, timestamp: new Date() }).pipe(
-        Effect.catchAll((error) => Effect.logWarning("Event publishing failed", { error }))
-      )
+      yield* eventTopic
+        .publish({ type: 'UserUpdated' as const, id: result.id, timestamp: new Date() })
+        .pipe(Effect.catchAll((error) => Effect.logWarning('Event publishing failed', { error })))
 
       return result
-    }).pipe(Effect.withSpan("UserService.update", { attributes: { id } })),
+    }).pipe(Effect.withSpan('UserService.update', { attributes: { id } })),
 
   delete: (id: string) =>
-    Effect.gen(function*() {
-      const counter = yield* metrics.counter("user_deleted_total")
-      const histogram = yield* metrics.histogram("user_delete_duration_seconds")
+    Effect.gen(function* () {
+      const counter = yield* metrics.counter('user_deleted_total')
+      const histogram = yield* metrics.histogram('user_delete_duration_seconds')
       const start = Date.now()
 
       // CurrentUser is request-scoped - yield it inside the method
       const currentUser = yield* CurrentUser
 
-      yield* logger.info("UserService.delete", {
+      yield* logger.info('UserService.delete', {
         id,
         userId: currentUser.id
       })
@@ -256,11 +261,13 @@ const createServiceImpl = (
       // First check if entity exists - fail with domain error if not found
       const existing = yield* repo.findById(id)
       if (Option.isNone(existing)) {
-        yield* logger.debug("User not found for delete", { id })
-        return yield* Effect.fail(new UserNotFoundError({
-          message: `User not found: ${id}`,
-          userId: id
-        }))
+        yield* logger.debug('User not found for delete', { id })
+        return yield* Effect.fail(
+          new UserNotFoundError({
+            message: `User not found: ${id}`,
+            userId: id
+          })
+        )
       }
 
       // Optional: Add authorization check
@@ -278,25 +285,25 @@ const createServiceImpl = (
       yield* repo.delete(id)
 
       yield* counter.increment
-      yield* logger.info("User deleted", {
+      yield* logger.info('User deleted', {
         id,
         userId: currentUser.id
       })
 
       // Record duration and publish event after successful operation
       yield* histogram.record((Date.now() - start) / 1000)
-      yield* eventTopic.publish({ type: "UserDeleted" as const, id, timestamp: new Date() }).pipe(
-        Effect.catchAll((error) => Effect.logWarning("Event publishing failed", { error }))
-      )
-    }).pipe(Effect.withSpan("UserService.delete", { attributes: { id } })),
+      yield* eventTopic
+        .publish({ type: 'UserDeleted' as const, id, timestamp: new Date() })
+        .pipe(Effect.catchAll((error) => Effect.logWarning('Event publishing failed', { error })))
+    }).pipe(Effect.withSpan('UserService.delete', { attributes: { id } })),
 
   exists: (id: string) =>
-    Effect.gen(function*() {
-      yield* logger.debug("UserService.exists", { id })
+    Effect.gen(function* () {
+      yield* logger.debug('UserService.exists', { id })
 
       // Errors bubble up with full type information
       return yield* repo.exists(id)
-    }).pipe(Effect.withSpan("UserService.exists", { attributes: { id } }))
+    }).pipe(Effect.withSpan('UserService.exists', { attributes: { id } }))
 })
 // ============================================================================
 // Service Interface (Inferred from Implementation)
@@ -320,10 +327,7 @@ export type UserServiceInterface = ReturnType<typeof createServiceImpl>
  *
  * Event publishing is handled inline using withEventPublishing helper.
  */
-export class UserService extends Context.Tag("UserService")<
-  UserService,
-  UserServiceInterface
->() {
+export class UserService extends Context.Tag('UserService')<UserService, UserServiceInterface>() {
   /**
    * Live layer - Production implementation
    *
@@ -349,12 +353,12 @@ export class UserService extends Context.Tag("UserService")<
    */
   static readonly Live = Layer.effect(
     this,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const repo = yield* UserRepository
       const logger = yield* LoggingService
       const metrics = yield* MetricsService
       const pubsub = yield* PubsubService
-      const eventTopic = yield* pubsub.topic("user-events", UserEventSchema)
+      const eventTopic = yield* pubsub.topic('user-events', UserEventSchema)
 
       // DO NOT yield CurrentUser here - it's request-scoped, not application-scoped
       // Service methods yield CurrentUser inside to get fresh context per call
@@ -390,9 +394,9 @@ export class UserService extends Context.Tag("UserService")<
    */
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
-      case "test":
+      case 'test':
         return UserService.Test
-      case "development":
+      case 'development':
         return UserService.Dev
       default:
         return UserService.Live

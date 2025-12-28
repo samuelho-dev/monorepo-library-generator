@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@effect/vitest"
-import { Effect, Layer, Option } from "effect"
-import { UserService } from "./service"
+import { describe, expect, it } from '@effect/vitest'
+import { Effect, Layer, Option } from 'effect'
+import { UserService } from './service'
 
 /**
  * UserService Tests
@@ -23,12 +23,12 @@ interface UserTestEntity {
   readonly name: string
 }
 
-describe("UserService", () => {
-  it.scoped("should create and retrieve user", () =>
-    Effect.gen(function*() {
+describe('UserService', () => {
+  it.scoped('should create and retrieve user', () =>
+    Effect.gen(function* () {
       const service = yield* UserService
 
-      const created: UserTestEntity = yield* service.create({ name: "Test User" })
+      const created: UserTestEntity = yield* service.create({ name: 'Test User' })
       expect(created).toBeDefined()
 
       const result = yield* service.get(created.id)
@@ -36,12 +36,12 @@ describe("UserService", () => {
     }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   )
 
-  it.scoped("should list users with pagination", () =>
-    Effect.gen(function*() {
+  it.scoped('should list users with pagination', () =>
+    Effect.gen(function* () {
       const service = yield* UserService
 
-      yield* service.create({ name: "First User" })
-      yield* service.create({ name: "Second User" })
+      yield* service.create({ name: 'First User' })
+      yield* service.create({ name: 'Second User' })
 
       const items = yield* service.findByCriteria({}, 0, 10)
       expect(items.length).toBeGreaterThan(0)
@@ -51,22 +51,22 @@ describe("UserService", () => {
     }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   )
 
-  it.scoped("should update user", () =>
-    Effect.gen(function*() {
+  it.scoped('should update user', () =>
+    Effect.gen(function* () {
       const service = yield* UserService
 
-      const created: UserTestEntity = yield* service.create({ name: "Original" })
+      const created: UserTestEntity = yield* service.create({ name: 'Original' })
 
-      const updated = yield* service.update(created.id, { name: "Updated" })
+      const updated = yield* service.update(created.id, { name: 'Updated' })
       expect(Option.isSome(updated)).toBe(true)
     }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   )
 
-  it.scoped("should delete user", () =>
-    Effect.gen(function*() {
+  it.scoped('should delete user', () =>
+    Effect.gen(function* () {
       const service = yield* UserService
 
-      const created: UserTestEntity = yield* service.create({ name: "ToDelete" })
+      const created: UserTestEntity = yield* service.create({ name: 'ToDelete' })
 
       yield* service.delete(created.id)
 
@@ -75,8 +75,8 @@ describe("UserService", () => {
     }).pipe(Effect.provide(Layer.fresh(UserService.TestLayer)))
   )
 
-  it.scoped("service methods should be defined", () =>
-    Effect.gen(function*() {
+  it.scoped('service methods should be defined', () =>
+    Effect.gen(function* () {
       const service = yield* UserService
 
       expect(service.get).toBeDefined()

@@ -1,5 +1,5 @@
-import { Atom } from "@effect-atom/atom"
-import type { UserSelect as User } from "@samuelho-dev/contract-user"
+import { Atom } from '@effect-atom/atom'
+import type { UserSelect as User } from '@samuelho-dev/contract-user'
 
 /**
  * User Client State
@@ -30,7 +30,7 @@ Usage:
 /**
  * Loading state for async operations
  */
-export type LoadingState = "idle" | "loading" | "refreshing" | "error"
+export type LoadingState = 'idle' | 'loading' | 'refreshing' | 'error'
 
 /**
  * Pagination state for list operations
@@ -93,14 +93,14 @@ export interface UserState {
 // ============================================================================
 const initialUserEntityState: UserEntityState = {
   data: null,
-  loadingState: "idle",
+  loadingState: 'idle',
   error: null,
   lastUpdated: null
 }
 
 const initialUserListState: UserListState = {
   items: [],
-  loadingState: "idle",
+  loadingState: 'idle',
   error: null,
   pagination: {
     page: 1,
@@ -186,17 +186,20 @@ export function getUserAtom(id: string) {
 /**
  * Is any operation loading?
  */
-export const userIsLoadingAtom = Atom.map(userAtom, (state) =>
-  state.entity.loadingState === "loading" ||
-  state.list.loadingState === "loading" ||
-  state.operation.isSubmitting
+export const userIsLoadingAtom = Atom.map(
+  userAtom,
+  (state) =>
+    state.entity.loadingState === 'loading' ||
+    state.list.loadingState === 'loading' ||
+    state.operation.isSubmitting
 )
 
 /**
  * Current error (if any)
  */
-export const userErrorAtom = Atom.map(userAtom, (state) =>
-  state.entity.error || state.list.error || state.operation.error
+export const userErrorAtom = Atom.map(
+  userAtom,
+  (state) => state.entity.error || state.list.error || state.operation.error
 )
 
 /**

@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * User Profile Errors
@@ -25,7 +25,7 @@ rather than defining their own.
 /**
  * Error thrown when profile entity is not found
  */
-export class ProfileNotFoundError extends Data.TaggedError("ProfileNotFoundError")<{
+export class ProfileNotFoundError extends Data.TaggedError('ProfileNotFoundError')<{
   readonly message: string
   readonly id: string
 }> {
@@ -39,7 +39,7 @@ export class ProfileNotFoundError extends Data.TaggedError("ProfileNotFoundError
 /**
  * Error thrown when profile validation fails
  */
-export class ProfileValidationError extends Data.TaggedError("ProfileValidationError")<{
+export class ProfileValidationError extends Data.TaggedError('ProfileValidationError')<{
   readonly message: string
   readonly field: string
   readonly value?: unknown
@@ -61,7 +61,7 @@ export class ProfileValidationError extends Data.TaggedError("ProfileValidationE
 /**
  * Error thrown when profile operation fails (e.g., database, network)
  */
-export class ProfileOperationError extends Data.TaggedError("ProfileOperationError")<{
+export class ProfileOperationError extends Data.TaggedError('ProfileOperationError')<{
   readonly message: string
   readonly operation: string
   readonly cause?: unknown
@@ -80,9 +80,7 @@ export class ProfileOperationError extends Data.TaggedError("ProfileOperationErr
 /**
  * Union of profile domain errors (business logic)
  */
-export type ProfileDomainError =
-  | ProfileNotFoundError
-  | ProfileValidationError
+export type ProfileDomainError = ProfileNotFoundError | ProfileValidationError
 /**
  * Union of profile repository/infrastructure errors
  */
@@ -90,8 +88,6 @@ export type ProfileRepositoryError = ProfileOperationError
 /**
  * All possible profile errors
  */
-export type ProfileError =
-  | ProfileDomainError
-  | ProfileRepositoryError
+export type ProfileError = ProfileDomainError | ProfileRepositoryError
 // TODO: Add domain-specific errors here
 // Example: ProfileInsufficientFundsError, ProfileExpiredError, etc.

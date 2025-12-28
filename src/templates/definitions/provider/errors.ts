@@ -7,7 +7,7 @@
  * @module monorepo-library-generator/templates/definitions/provider/errors
  */
 
-import type { TemplateDefinition } from "../../core/types"
+import type { TemplateDefinition } from '../../core/types'
 
 /**
  * Provider Errors Template Definition
@@ -20,21 +20,21 @@ import type { TemplateDefinition } from "../../core/types"
  * - Error union type
  */
 export const providerErrorsTemplate: TemplateDefinition = {
-  id: "provider/errors",
+  id: 'provider/errors',
   meta: {
-    title: "{className} Provider Errors",
+    title: '{className} Provider Errors',
     description: `Provider errors for {externalService} integration using Data.TaggedError.
 These errors are NOT serializable (use in internal operations).
 For RPC/network boundaries, use Schema.TaggedError instead.`,
-    module: "{scope}/provider-{fileName}/errors"
+    module: '{scope}/provider-{fileName}/errors'
   },
-  imports: [{ from: "effect", items: ["Data"] }],
+  imports: [{ from: 'effect', items: ['Data'] }],
   sections: [
     // Base Provider Error
     {
-      title: "Provider Errors",
+      title: 'Provider Errors',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Base error for {className} provider
  */
@@ -55,7 +55,7 @@ export class {className}Error extends Data.TaggedError(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Error thrown when resource is not found in external service
  */
@@ -78,7 +78,7 @@ export class {className}NotFoundError extends Data.TaggedError(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Error thrown when request validation fails
  */
@@ -105,7 +105,7 @@ export class {className}ValidationError extends Data.TaggedError(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Error thrown when rate limit is exceeded
  */
@@ -133,7 +133,7 @@ export class {className}RateLimitError extends Data.TaggedError(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Error thrown when authentication fails
  */
@@ -156,7 +156,7 @@ export class {className}AuthenticationError extends Data.TaggedError(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Error thrown when authorization fails
  */
@@ -184,7 +184,7 @@ export class {className}AuthorizationError extends Data.TaggedError(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Error thrown when network request fails
  */
@@ -212,7 +212,7 @@ export class {className}NetworkError extends Data.TaggedError(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Error thrown when request times out
  */
@@ -240,7 +240,7 @@ export class {className}TimeoutError extends Data.TaggedError(
     },
     {
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Error thrown for internal provider failures
  */
@@ -262,9 +262,9 @@ export class {className}InternalError extends Data.TaggedError(
 
     // Error Type Union
     {
-      title: "Error Type Union",
+      title: 'Error Type Union',
       content: {
-        type: "raw",
+        type: 'raw',
         value: `/**
  * Union of all {className} provider errors
  *

@@ -29,8 +29,11 @@ import {
 // Parent Entity Re-Export
 // ============================================================================
 // Sub-modules use parent entity type - re-export for convenience
-export type { UserEntity } from "../lib/rpc-definitions"
-
+export type { UserEntity } from '../lib/rpc-definitions'
+// ============================================================================
+// Entity Exports
+// ============================================================================
+export { Authentication, AuthenticationId, AuthenticationItem } from './entities'
 // ============================================================================
 // Error Exports (Contract-First)
 // ============================================================================
@@ -42,12 +45,7 @@ export {
   AuthenticationOperationError,
   type AuthenticationRepositoryError,
   AuthenticationValidationError
-} from "./errors"
-
-// ============================================================================
-// Entity Exports
-// ============================================================================
-export { Authentication, AuthenticationId, AuthenticationItem } from "./entities"
+} from './errors'
 
 // ============================================================================
 // Event Exports
@@ -58,7 +56,7 @@ export {
   type AuthenticationEvent,
   AuthenticationEvents,
   AuthenticationUpdated
-} from "./events"
+} from './events'
 
 // ============================================================================
 // RPC Exports
@@ -73,11 +71,11 @@ export {
   AuthenticationUpdate,
   CreateAuthenticationInput,
   UpdateAuthenticationInput
-} from "./rpc-definitions"
+} from './rpc-definitions'
 
 export {
   AuthenticationNotFoundRpcError,
   AuthenticationPermissionRpcError,
   AuthenticationRpcError,
   AuthenticationValidationRpcError
-} from "./rpc-errors"
+} from './rpc-errors'

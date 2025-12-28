@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * User Authentication Domain Events
@@ -24,10 +24,12 @@ const AuthenticationEventBase = Schema.Struct({
   /** User who triggered the event (if applicable) */
   userId: Schema.optional(Schema.UUID),
   /** Additional metadata */
-  metadata: Schema.optional(Schema.Record({
-    key: Schema.String,
-    value: Schema.Unknown
-  }))
+  metadata: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.Unknown
+    })
+  )
 })
 // ============================================================================
 // Authentication Domain Events
@@ -36,43 +38,49 @@ const AuthenticationEventBase = Schema.Struct({
  * Authentication created event
  */
 export const AuthenticationCreated = Schema.Struct({
-  _tag: Schema.Literal("Authentication.Created"),
+  _tag: Schema.Literal('Authentication.Created'),
   authenticationId: Schema.UUID,
   parentUserId: Schema.optional(Schema.UUID),
   ...AuthenticationEventBase.fields
-}).pipe(Schema.annotations({
-  identifier: "Authentication.Created",
-  title: "Authentication Created",
-  description: "Emitted when a authentication is created"
-}))
+}).pipe(
+  Schema.annotations({
+    identifier: 'Authentication.Created',
+    title: 'Authentication Created',
+    description: 'Emitted when a authentication is created'
+  })
+)
 /**
  * Authentication updated event
  */
 export const AuthenticationUpdated = Schema.Struct({
-  _tag: Schema.Literal("Authentication.Updated"),
+  _tag: Schema.Literal('Authentication.Updated'),
   authenticationId: Schema.UUID,
   changes: Schema.Record({
     key: Schema.String,
     value: Schema.Unknown
   }),
   ...AuthenticationEventBase.fields
-}).pipe(Schema.annotations({
-  identifier: "Authentication.Updated",
-  title: "Authentication Updated",
-  description: "Emitted when a authentication is updated"
-}))
+}).pipe(
+  Schema.annotations({
+    identifier: 'Authentication.Updated',
+    title: 'Authentication Updated',
+    description: 'Emitted when a authentication is updated'
+  })
+)
 /**
  * Authentication deleted event
  */
 export const AuthenticationDeleted = Schema.Struct({
-  _tag: Schema.Literal("Authentication.Deleted"),
+  _tag: Schema.Literal('Authentication.Deleted'),
   authenticationId: Schema.UUID,
   ...AuthenticationEventBase.fields
-}).pipe(Schema.annotations({
-  identifier: "Authentication.Deleted",
-  title: "Authentication Deleted",
-  description: "Emitted when a authentication is deleted"
-}))
+}).pipe(
+  Schema.annotations({
+    identifier: 'Authentication.Deleted',
+    title: 'Authentication Deleted',
+    description: 'Emitted when a authentication is deleted'
+  })
+)
 // ============================================================================
 // Event Union Type
 // ============================================================================

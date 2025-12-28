@@ -1,6 +1,6 @@
-import { Redis } from "@samuelho-dev/provider-redis"
-import { Cache, Duration, Effect, Layer } from "effect"
-import { CacheService } from "./service"
+import { Redis } from '@samuelho-dev/provider-redis'
+import { Cache, Duration, Effect, Layer } from 'effect'
+import { CacheService } from './service'
 
 /**
  * Cache Redis Layer
@@ -47,13 +47,13 @@ On cache miss:
  */
 export const CacheRedisLayer = Layer.effect(
   CacheService,
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const redis = yield* Redis
     const cacheClient = redis.cache
 
     const serialize = <V>(value: V) => JSON.stringify(value)
 
-    const serializeKey = <K>(key: K) => (typeof key === "string" ? key : JSON.stringify(key))
+    const serializeKey = <K>(key: K) => (typeof key === 'string' ? key : JSON.stringify(key))
 
     return {
       make: <K, V, E = never>(options: {
@@ -61,19 +61,19 @@ export const CacheRedisLayer = Layer.effect(
         readonly capacity: number
         readonly ttl: Duration.Duration
       }) =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const ttlSeconds = Math.floor(Duration.toMillis(options.ttl) / 1000)
 
           // Create memory cache with Redis-aware lookup
           const memoryCache = yield* Cache.make({
             lookup: (key: K) =>
-              Effect.gen(function*() {
+              Effect.gen(function* () {
                 const redisKey = serializeKey(key)
 
                 // Check Redis first
-                const cached = yield* cacheClient.get(redisKey).pipe(
-                  Effect.catchAll(() => Effect.succeed(null))
-                )
+                const cached = yield* cacheClient
+                  .get(redisKey)
+                  .pipe(Effect.catchAll(() => Effect.succeed(null)))
 
                 if (cached !== null) {
                   // Redis hit - parse JSON and return value
@@ -99,21 +99,19 @@ export const CacheRedisLayer = Layer.effect(
             get: (key: K) => memoryCache.get(key),
 
             invalidate: (key: K) =>
-              Effect.gen(function*() {
+              Effect.gen(function* () {
                 // Invalidate both memory and Redis
                 yield* memoryCache.invalidate(key)
-                yield* cacheClient.del(serializeKey(key)).pipe(
-                  Effect.catchAll(() => Effect.succeed(0))
-                )
+                yield* cacheClient
+                  .del(serializeKey(key))
+                  .pipe(Effect.catchAll(() => Effect.succeed(0)))
               }),
 
-            invalidateAll: Effect.gen(function*() {
+            invalidateAll: Effect.gen(function* () {
               // Invalidate memory and flush Redis
               yield* memoryCache.invalidateAll
               // Note: flushdb is aggressive - consider using key patterns instead
-              yield* cacheClient.flushdb().pipe(
-                Effect.catchAll(() => Effect.void)
-              )
+              yield* cacheClient.flushdb().pipe(Effect.catchAll(() => Effect.void))
             }),
 
             refresh: (key: K) => memoryCache.refresh(key),
@@ -125,9 +123,9 @@ export const CacheRedisLayer = Layer.effect(
 
       healthCheck: () =>
         cacheClient.ping().pipe(
-          Effect.map((response) => response === "PONG"),
+          Effect.map((response) => response === 'PONG'),
           Effect.catchAll(() => Effect.succeed(false)),
-          Effect.withSpan("Cache.healthCheck")
+          Effect.withSpan('Cache.healthCheck')
         )
     }
   })

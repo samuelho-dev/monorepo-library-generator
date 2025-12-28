@@ -6,14 +6,14 @@
  * @module monorepo-library-generator/cli/tui/state/reducer
  */
 
-import type { GeneratorOptions } from "../../core"
+import type { GeneratorOptions } from '../../core'
 import {
   getNextPanel,
   getPreviousPanel,
   initialState,
   type TUIAction,
   type TUIState
-} from "./types"
+} from './types'
 
 /**
  * TUI state reducer
@@ -21,28 +21,28 @@ import {
 export function tuiReducer(state: TUIState, action: TUIAction): TUIState {
   switch (action.type) {
     // Initialization
-    case "SET_WORKSPACE":
+    case 'SET_WORKSPACE':
       return {
         ...state,
         workspace: action.payload
       }
 
     // Panel navigation
-    case "SET_ACTIVE_PANEL":
+    case 'SET_ACTIVE_PANEL':
       return {
         ...state,
         activePanel: action.payload,
         panelHistory: [...state.panelHistory, state.activePanel]
       }
 
-    case "NEXT_PANEL":
+    case 'NEXT_PANEL':
       return {
         ...state,
         activePanel: getNextPanel(state.activePanel),
         panelHistory: [...state.panelHistory, state.activePanel]
       }
 
-    case "PREVIOUS_PANEL":
+    case 'PREVIOUS_PANEL':
       return {
         ...state,
         activePanel: getPreviousPanel(state.activePanel),
@@ -50,43 +50,43 @@ export function tuiReducer(state: TUIState, action: TUIAction): TUIState {
       }
 
     // Type selection
-    case "SET_HOVERED_TYPE":
+    case 'SET_HOVERED_TYPE':
       return {
         ...state,
         hoveredType: action.payload
       }
 
-    case "SELECT_TYPE":
+    case 'SELECT_TYPE':
       return {
         ...state,
         selectedType: action.payload,
         hoveredType: action.payload,
-        mode: "configure",
+        mode: 'configure',
         // Move to options panel after selection
-        activePanel: "options",
+        activePanel: 'options',
         panelHistory: [...state.panelHistory, state.activePanel]
       }
 
-    case "SET_TYPES_INDEX":
+    case 'SET_TYPES_INDEX':
       return {
         ...state,
         typesSelectedIndex: action.payload
       }
 
     // Configuration
-    case "SET_LIBRARY_NAME":
+    case 'SET_LIBRARY_NAME':
       return {
         ...state,
         libraryName: action.payload
       }
 
-    case "SET_EXTERNAL_SERVICE":
+    case 'SET_EXTERNAL_SERVICE':
       return {
         ...state,
         externalService: action.payload
       }
 
-    case "SET_OPTION": {
+    case 'SET_OPTION': {
       const newOptions: GeneratorOptions = {
         ...state.options,
         [action.payload.key]: action.payload.value
@@ -97,45 +97,45 @@ export function tuiReducer(state: TUIState, action: TUIAction): TUIState {
       }
     }
 
-    case "SET_OPTIONS_INDEX":
+    case 'SET_OPTIONS_INDEX':
       return {
         ...state,
         optionsSelectedIndex: action.payload
       }
 
     // Preview
-    case "SET_FILES_TO_CREATE":
+    case 'SET_FILES_TO_CREATE':
       return {
         ...state,
         filesToCreate: action.payload
       }
 
     // Generation
-    case "START_GENERATION":
+    case 'START_GENERATION':
       return {
         ...state,
-        mode: "generating",
-        generationStatus: "generating",
+        mode: 'generating',
+        generationStatus: 'generating',
         error: null
       }
 
-    case "GENERATION_SUCCESS":
+    case 'GENERATION_SUCCESS':
       return {
         ...state,
-        mode: "complete",
-        generationStatus: "success"
+        mode: 'complete',
+        generationStatus: 'success'
       }
 
-    case "GENERATION_ERROR":
+    case 'GENERATION_ERROR':
       return {
         ...state,
-        mode: "error",
-        generationStatus: "error",
+        mode: 'error',
+        generationStatus: 'error',
         error: action.payload
       }
 
     // Reset
-    case "RESET_FOR_NEW":
+    case 'RESET_FOR_NEW':
       return {
         ...initialState,
         workspace: state.workspace // Preserve workspace context

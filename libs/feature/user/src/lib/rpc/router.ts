@@ -1,6 +1,6 @@
-import { AllMiddlewareLive, AllMiddlewareTest } from "@samuelho-dev/infra-rpc"
-import { Layer } from "effect"
-import { UserHandlersLayer } from "./handlers"
+import { AllMiddlewareLive, AllMiddlewareTest } from '@samuelho-dev/infra-rpc'
+import { Layer } from 'effect'
+import { UserHandlersLayer } from './handlers'
 
 /**
  * User RPC Router
@@ -33,20 +33,14 @@ Usage:
  * Includes all handlers and middleware for production use.
  * Compose with your infrastructure layers.
  */
-export const UserProductionLayer = Layer.mergeAll(
-  UserHandlersLayer,
-  AllMiddlewareLive
-)
+export const UserProductionLayer = Layer.mergeAll(UserHandlersLayer, AllMiddlewareLive)
 
 /**
  * Combined layer for testing
  *
  * Includes all handlers with test middleware.
  */
-export const UserTestLayer = Layer.mergeAll(
-  UserHandlersLayer,
-  AllMiddlewareTest
-)
+export const UserTestLayer = Layer.mergeAll(UserHandlersLayer, AllMiddlewareTest)
 
 // ============================================================================
 // HTTP Handler (Next.js / Express)

@@ -1,7 +1,7 @@
-import { env } from "@samuelho-dev/env"
-import { Context, Effect, Layer, Queue, Schema } from "effect"
-import type { Chunk, Option, Scope } from "effect"
-import type { ParseError } from "effect/ParseResult"
+import { env } from '@samuelho-dev/env'
+import type { Chunk, Option, Scope } from 'effect'
+import { Context, Effect, Layer, Queue, Schema } from 'effect'
+import type { ParseError } from 'effect/ParseResult'
 
 /**
  * Queue Service
@@ -140,9 +140,7 @@ export interface QueueOptions {
  * Queue infrastructure using Effect.Queue primitive.
  * Provides bounded and unbounded queues with various overflow strategies.
  */
-export class QueueService extends Context.Tag(
-  "@samuelho-dev/infra-queue/QueueService"
-)<
+export class QueueService extends Context.Tag('@samuelho-dev/infra-queue/QueueService')<
   QueueService,
   {
     /**
@@ -260,17 +258,21 @@ export class QueueService extends Context.Tag(
    * Queues are automatically cleaned up when scope closes.
    */
   static readonly Memory = Layer.succeed(this, {
-    bounded: <T, I = T>(capacity: number, schema: Schema.Schema<T, I, never>, options?: QueueOptions) =>
-      Effect.gen(function*() {
-        const queueName = options?.name ?? "anonymous"
-        const queue = yield* Queue.bounded<T>(capacity).pipe(Effect.withSpan(`Queue.bounded(${queueName})`))
+    bounded: <T, I = T>(
+      capacity: number,
+      schema: Schema.Schema<T, I, never>,
+      options?: QueueOptions
+    ) =>
+      Effect.gen(function* () {
+        const queueName = options?.name ?? 'anonymous'
+        const queue = yield* Queue.bounded<T>(capacity).pipe(
+          Effect.withSpan(`Queue.bounded(${queueName})`)
+        )
         const validate = Schema.validate(schema)
 
         return {
           offer: (item: T) =>
-            validate(item).pipe(
-              Effect.flatMap((validated) => Queue.offer(queue, validated))
-            ),
+            validate(item).pipe(Effect.flatMap((validated) => Queue.offer(queue, validated))),
           take: Queue.take(queue),
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
           takeAll: Queue.takeAll(queue),
@@ -282,16 +284,16 @@ export class QueueService extends Context.Tag(
       }),
 
     unbounded: <T, I = T>(schema: Schema.Schema<T, I, never>, options?: QueueOptions) =>
-      Effect.gen(function*() {
-        const queueName = options?.name ?? "anonymous"
-        const queue = yield* Queue.unbounded<T>().pipe(Effect.withSpan(`Queue.unbounded(${queueName})`))
+      Effect.gen(function* () {
+        const queueName = options?.name ?? 'anonymous'
+        const queue = yield* Queue.unbounded<T>().pipe(
+          Effect.withSpan(`Queue.unbounded(${queueName})`)
+        )
         const validate = Schema.validate(schema)
 
         return {
           offer: (item: T) =>
-            validate(item).pipe(
-              Effect.flatMap((validated) => Queue.offer(queue, validated))
-            ),
+            validate(item).pipe(Effect.flatMap((validated) => Queue.offer(queue, validated))),
           take: Queue.take(queue),
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
           takeAll: Queue.takeAll(queue),
@@ -300,17 +302,21 @@ export class QueueService extends Context.Tag(
         }
       }),
 
-    dropping: <T, I = T>(capacity: number, schema: Schema.Schema<T, I, never>, options?: QueueOptions) =>
-      Effect.gen(function*() {
-        const queueName = options?.name ?? "anonymous"
-        const queue = yield* Queue.dropping<T>(capacity).pipe(Effect.withSpan(`Queue.dropping(${queueName})`))
+    dropping: <T, I = T>(
+      capacity: number,
+      schema: Schema.Schema<T, I, never>,
+      options?: QueueOptions
+    ) =>
+      Effect.gen(function* () {
+        const queueName = options?.name ?? 'anonymous'
+        const queue = yield* Queue.dropping<T>(capacity).pipe(
+          Effect.withSpan(`Queue.dropping(${queueName})`)
+        )
         const validate = Schema.validate(schema)
 
         return {
           offer: (item: T) =>
-            validate(item).pipe(
-              Effect.flatMap((validated) => Queue.offer(queue, validated))
-            ),
+            validate(item).pipe(Effect.flatMap((validated) => Queue.offer(queue, validated))),
           take: Queue.take(queue),
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
           takeAll: Queue.takeAll(queue),
@@ -321,17 +327,21 @@ export class QueueService extends Context.Tag(
         }
       }),
 
-    sliding: <T, I = T>(capacity: number, schema: Schema.Schema<T, I, never>, options?: QueueOptions) =>
-      Effect.gen(function*() {
-        const queueName = options?.name ?? "anonymous"
-        const queue = yield* Queue.sliding<T>(capacity).pipe(Effect.withSpan(`Queue.sliding(${queueName})`))
+    sliding: <T, I = T>(
+      capacity: number,
+      schema: Schema.Schema<T, I, never>,
+      options?: QueueOptions
+    ) =>
+      Effect.gen(function* () {
+        const queueName = options?.name ?? 'anonymous'
+        const queue = yield* Queue.sliding<T>(capacity).pipe(
+          Effect.withSpan(`Queue.sliding(${queueName})`)
+        )
         const validate = Schema.validate(schema)
 
         return {
           offer: (item: T) =>
-            validate(item).pipe(
-              Effect.flatMap((validated) => Queue.offer(queue, validated))
-            ),
+            validate(item).pipe(Effect.flatMap((validated) => Queue.offer(queue, validated))),
           take: Queue.take(queue),
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
           takeAll: Queue.takeAll(queue),
@@ -373,21 +383,28 @@ export class QueueService extends Context.Tag(
    * Dev Layer - Memory with debug logging
    */
   static readonly Dev = Layer.succeed(this, {
-    bounded: <T, I = T>(capacity: number, schema: Schema.Schema<T, I, never>, options?: QueueOptions) =>
-      Effect.gen(function*() {
-        yield* Effect.logDebug("[QueueService] [DEV] Creating bounded queue", { capacity, name: options?.name })
+    bounded: <T, I = T>(
+      capacity: number,
+      schema: Schema.Schema<T, I, never>,
+      options?: QueueOptions
+    ) =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug('[QueueService] [DEV] Creating bounded queue', {
+          capacity,
+          name: options?.name
+        })
         const queue = yield* Queue.bounded<T>(capacity)
         const validate = Schema.validate(schema)
 
         return {
           offer: (item: T) =>
-            Effect.gen(function*() {
-              yield* Effect.logDebug("[QueueService] [DEV] bounded.offer")
+            Effect.gen(function* () {
+              yield* Effect.logDebug('[QueueService] [DEV] bounded.offer')
               const validated = yield* validate(item)
               return yield* Queue.offer(queue, validated)
             }),
-          take: Effect.gen(function*() {
-            yield* Effect.logDebug("[QueueService] [DEV] bounded.take")
+          take: Effect.gen(function* () {
+            yield* Effect.logDebug('[QueueService] [DEV] bounded.take')
             return yield* Queue.take(queue)
           }),
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
@@ -400,20 +417,22 @@ export class QueueService extends Context.Tag(
       }),
 
     unbounded: <T, I = T>(schema: Schema.Schema<T, I, never>, options?: QueueOptions) =>
-      Effect.gen(function*() {
-        yield* Effect.logDebug("[QueueService] [DEV] Creating unbounded queue", { name: options?.name })
+      Effect.gen(function* () {
+        yield* Effect.logDebug('[QueueService] [DEV] Creating unbounded queue', {
+          name: options?.name
+        })
         const queue = yield* Queue.unbounded<T>()
         const validate = Schema.validate(schema)
 
         return {
           offer: (item: T) =>
-            Effect.gen(function*() {
-              yield* Effect.logDebug("[QueueService] [DEV] unbounded.offer")
+            Effect.gen(function* () {
+              yield* Effect.logDebug('[QueueService] [DEV] unbounded.offer')
               const validated = yield* validate(item)
               return yield* Queue.offer(queue, validated)
             }),
-          take: Effect.gen(function*() {
-            yield* Effect.logDebug("[QueueService] [DEV] unbounded.take")
+          take: Effect.gen(function* () {
+            yield* Effect.logDebug('[QueueService] [DEV] unbounded.take')
             return yield* Queue.take(queue)
           }),
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
@@ -423,17 +442,22 @@ export class QueueService extends Context.Tag(
         }
       }),
 
-    dropping: <T, I = T>(capacity: number, schema: Schema.Schema<T, I, never>, options?: QueueOptions) =>
-      Effect.gen(function*() {
-        yield* Effect.logDebug("[QueueService] [DEV] Creating dropping queue", { capacity, name: options?.name })
+    dropping: <T, I = T>(
+      capacity: number,
+      schema: Schema.Schema<T, I, never>,
+      options?: QueueOptions
+    ) =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug('[QueueService] [DEV] Creating dropping queue', {
+          capacity,
+          name: options?.name
+        })
         const queue = yield* Queue.dropping<T>(capacity)
         const validate = Schema.validate(schema)
 
         return {
           offer: (item: T) =>
-            validate(item).pipe(
-              Effect.flatMap((validated) => Queue.offer(queue, validated))
-            ),
+            validate(item).pipe(Effect.flatMap((validated) => Queue.offer(queue, validated))),
           take: Queue.take(queue),
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
           takeAll: Queue.takeAll(queue),
@@ -444,17 +468,22 @@ export class QueueService extends Context.Tag(
         }
       }),
 
-    sliding: <T, I = T>(capacity: number, schema: Schema.Schema<T, I, never>, options?: QueueOptions) =>
-      Effect.gen(function*() {
-        yield* Effect.logDebug("[QueueService] [DEV] Creating sliding queue", { capacity, name: options?.name })
+    sliding: <T, I = T>(
+      capacity: number,
+      schema: Schema.Schema<T, I, never>,
+      options?: QueueOptions
+    ) =>
+      Effect.gen(function* () {
+        yield* Effect.logDebug('[QueueService] [DEV] Creating sliding queue', {
+          capacity,
+          name: options?.name
+        })
         const queue = yield* Queue.sliding<T>(capacity)
         const validate = Schema.validate(schema)
 
         return {
           offer: (item: T) =>
-            validate(item).pipe(
-              Effect.flatMap((validated) => Queue.offer(queue, validated))
-            ),
+            validate(item).pipe(Effect.flatMap((validated) => Queue.offer(queue, validated))),
           take: Queue.take(queue),
           takeUpTo: (n: number) => Queue.takeUpTo(queue, n),
           takeAll: Queue.takeAll(queue),
@@ -483,9 +512,9 @@ export class QueueService extends Context.Tag(
    */
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
-      case "production":
+      case 'production':
         return QueueService.Live
-      case "test":
+      case 'test':
         return QueueService.Test
       default:
         // "development" and other environments use Dev

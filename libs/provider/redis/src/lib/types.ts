@@ -1,5 +1,5 @@
-import type { Effect } from "effect"
-import type { RedisCommandError, RedisPubSubError } from "./errors"
+import type { Effect } from 'effect'
+import type { RedisCommandError, RedisPubSubError } from './errors'
 
 /**
  * Redis Provider - Types
@@ -24,7 +24,7 @@ Includes:
  * Re-exported from ioredis for native SDK type compatibility.
  * Use RedisOptions for full configuration options.
  */
-export type { RedisOptions } from "ioredis"
+export type { RedisOptions } from 'ioredis'
 
 /**
  * Simplified Redis config for common use cases
@@ -58,7 +58,7 @@ export interface ScanOptions {
   /** Number of keys to return per iteration */
   readonly count?: number
   /** Key type filter */
-  readonly type?: "string" | "list" | "set" | "zset" | "hash" | "stream"
+  readonly type?: 'string' | 'list' | 'set' | 'zset' | 'hash' | 'stream'
 }
 
 /**
@@ -68,7 +68,7 @@ export interface ScanResult {
   /** Cursor for next iteration (0 = iteration complete) */
   readonly cursor: number
   /** Keys found in this iteration */
-  readonly keys: ReadonlyArray<string>
+  readonly keys: readonly string[]
 }
 
 // ============================================================================
@@ -95,7 +95,11 @@ export interface RedisCacheClient {
   /**
    * Set value with expiration in seconds
    */
-  readonly setex: (key: string, seconds: number, value: string) => Effect.Effect<void, RedisCommandError>
+  readonly setex: (
+    key: string,
+    seconds: number,
+    value: string
+  ) => Effect.Effect<void, RedisCommandError>
 
   /**
    * Delete key
@@ -173,7 +177,10 @@ export interface RedisQueueClient {
    * @param timeout - Timeout in seconds (0 = block indefinitely)
    * @returns [key, value] tuple or null if timeout
    */
-  readonly brpop: (key: string, timeout: number) => Effect.Effect<[string, string] | null, RedisCommandError>
+  readonly brpop: (
+    key: string,
+    timeout: number
+  ) => Effect.Effect<[string, string] | null, RedisCommandError>
 
   /**
    * Pop item from right of list (RPOP)
@@ -188,12 +195,20 @@ export interface RedisQueueClient {
   /**
    * Get range of list items (LRANGE)
    */
-  readonly lrange: (key: string, start: number, stop: number) => Effect.Effect<Array<string>, RedisCommandError>
+  readonly lrange: (
+    key: string,
+    start: number,
+    stop: number
+  ) => Effect.Effect<string[], RedisCommandError>
 
   /**
    * Trim list to specified range (LTRIM)
    */
-  readonly ltrim: (key: string, start: number, stop: number) => Effect.Effect<void, RedisCommandError>
+  readonly ltrim: (
+    key: string,
+    start: number,
+    stop: number
+  ) => Effect.Effect<void, RedisCommandError>
 
   /**
    * Delete key (DEL)

@@ -6,10 +6,10 @@
  * @module monorepo-library-generator/cli/tui/components/Panel
  */
 
-import { Box, Text } from "ink"
-import type React from "react"
+import { Box, Text } from 'ink'
+import type React from 'react'
 
-import { colors, type PanelId, panelConfig } from "../theme/colors"
+import { colors, type PanelId, panelConfig } from '../theme/colors'
 
 interface PanelProps {
   readonly id: PanelId
@@ -22,13 +22,7 @@ interface PanelProps {
 /**
  * Panel wrapper with focus-aware border and title
  */
-export function Panel({
-  id,
-  isActive,
-  children,
-  width,
-  height
-}: PanelProps) {
+export function Panel({ id, isActive, children, width, height }: PanelProps) {
   const config = panelConfig[id]
   const borderColor = isActive ? colors.panelActive : colors.panelInactive
   const titleColor = isActive ? colors.primary : colors.muted
@@ -38,8 +32,8 @@ export function Panel({
       flexDirection="column"
       borderStyle="round"
       borderColor={borderColor}
-      width={width ?? "100%"}
-      height={height ?? "100%"}
+      width={width ?? '100%'}
+      height={height ?? '100%'}
       overflow="hidden"
     >
       {/* Panel header */}

@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * Storage Infrastructure Errors
@@ -17,7 +17,7 @@ All errors extend Data.TaggedError for structural equality and pattern matching.
 /**
  * Base storage error
  */
-export class StorageError extends Data.TaggedError("StorageError")<{
+export class StorageError extends Data.TaggedError('StorageError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -25,7 +25,7 @@ export class StorageError extends Data.TaggedError("StorageError")<{
 /**
  * File not found error
  */
-export class FileNotFoundError extends Data.TaggedError("FileNotFoundError")<{
+export class FileNotFoundError extends Data.TaggedError('FileNotFoundError')<{
   readonly message: string
   readonly bucket: string
   readonly path: string
@@ -35,7 +35,7 @@ export class FileNotFoundError extends Data.TaggedError("FileNotFoundError")<{
 /**
  * Bucket not found error
  */
-export class BucketNotFoundError extends Data.TaggedError("BucketNotFoundError")<{
+export class BucketNotFoundError extends Data.TaggedError('BucketNotFoundError')<{
   readonly message: string
   readonly bucket: string
   readonly cause?: unknown
@@ -44,7 +44,7 @@ export class BucketNotFoundError extends Data.TaggedError("BucketNotFoundError")
 /**
  * Upload failed error
  */
-export class UploadFailedError extends Data.TaggedError("UploadFailedError")<{
+export class UploadFailedError extends Data.TaggedError('UploadFailedError')<{
   readonly message: string
   readonly bucket: string
   readonly path: string
@@ -54,7 +54,7 @@ export class UploadFailedError extends Data.TaggedError("UploadFailedError")<{
 /**
  * Download failed error
  */
-export class DownloadFailedError extends Data.TaggedError("DownloadFailedError")<{
+export class DownloadFailedError extends Data.TaggedError('DownloadFailedError')<{
   readonly message: string
   readonly bucket: string
   readonly path: string
@@ -64,7 +64,7 @@ export class DownloadFailedError extends Data.TaggedError("DownloadFailedError")
 /**
  * File size exceeded error
  */
-export class FileSizeExceededError extends Data.TaggedError("FileSizeExceededError")<{
+export class FileSizeExceededError extends Data.TaggedError('FileSizeExceededError')<{
   readonly message: string
   readonly maxSize: number
   readonly actualSize: number
@@ -74,9 +74,9 @@ export class FileSizeExceededError extends Data.TaggedError("FileSizeExceededErr
 /**
  * Invalid file type error
  */
-export class InvalidFileTypeError extends Data.TaggedError("InvalidFileTypeError")<{
+export class InvalidFileTypeError extends Data.TaggedError('InvalidFileTypeError')<{
   readonly message: string
-  readonly allowedTypes: ReadonlyArray<string>
+  readonly allowedTypes: readonly string[]
   readonly actualType: string
   readonly cause?: unknown
 }> {}

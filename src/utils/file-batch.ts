@@ -22,9 +22,9 @@
  * ```
  */
 
-import { Effect } from "effect"
-import type { FileSystemAdapter } from "./filesystem"
-import type { LibraryType } from "./types"
+import { Effect } from 'effect'
+import type { FileSystemAdapter } from './filesystem'
+import type { LibraryType } from './types'
 
 // ============================================================================
 // Types
@@ -49,10 +49,10 @@ export interface FileSpec {
  */
 export interface BatchWriteResult {
   /** Paths of successfully written files */
-  readonly written: ReadonlyArray<string>
+  readonly written: readonly string[]
 
   /** Paths of skipped files (condition was false) */
-  readonly skipped: ReadonlyArray<string>
+  readonly skipped: readonly string[]
 }
 
 /**
@@ -96,10 +96,10 @@ export interface BatchWriteOptions {
  * ])
  * ```
  */
-export function writeFilesBatch(adapter: FileSystemAdapter, files: ReadonlyArray<FileSpec>) {
-  return Effect.gen(function*() {
-    const written: Array<string> = []
-    const skipped: Array<string> = []
+export function writeFilesBatch(adapter: FileSystemAdapter, files: readonly FileSpec[]) {
+  return Effect.gen(function* () {
+    const written: string[] = []
+    const skipped: string[] = []
 
     for (const file of files) {
       // Check condition (default true)
@@ -109,7 +109,7 @@ export function writeFilesBatch(adapter: FileSystemAdapter, files: ReadonlyArray
       }
 
       // Evaluate content (support lazy evaluation)
-      const content = typeof file.content === "function" ? file.content() : file.content
+      const content = typeof file.content === 'function' ? file.content() : file.content
 
       // Write file
       yield* adapter.writeFile(file.path, content)
@@ -139,7 +139,7 @@ export function writeFilesBatch(adapter: FileSystemAdapter, files: ReadonlyArray
  * // files = ['src/index.ts', 'src/types.ts']
  * ```
  */
-export function writeFiles(adapter: FileSystemAdapter, files: ReadonlyArray<FileSpec>) {
+export function writeFiles(adapter: FileSystemAdapter, files: readonly FileSpec[]) {
   return writeFilesBatch(adapter, files).pipe(Effect.map((result) => result.written))
 }
 
@@ -194,12 +194,12 @@ export function createDirectories(
   basePath: string,
   directories: ReadonlyArray<string | DirectorySpec>
 ) {
-  return Effect.gen(function*() {
-    const created: Array<string> = []
+  return Effect.gen(function* () {
+    const created: string[] = []
 
     for (const dir of directories) {
       // Normalize to DirectorySpec
-      const spec: DirectorySpec = typeof dir === "string" ? { path: dir } : dir
+      const spec: DirectorySpec = typeof dir === 'string' ? { path: dir } : dir
 
       // Check condition
       if (spec.condition === false) {
@@ -223,7 +223,7 @@ export function createDirectories(
  * Library types that have directory structure presets
  * (excludes 'util' which uses a minimal structure)
  */
-export type DirectoryPresetLibraryType = Exclude<LibraryType, "util">
+export type DirectoryPresetLibraryType = Exclude<LibraryType, 'util'>
 
 /**
  * Directory structure presets for each library type
@@ -231,23 +231,23 @@ export type DirectoryPresetLibraryType = Exclude<LibraryType, "util">
  * These are the standard directories created for each library type.
  * Additional directories may be created based on feature flags.
  */
-export const LIBRARY_DIRECTORIES: Record<DirectoryPresetLibraryType, ReadonlyArray<string>> = {
-  contract: ["lib", "lib/types"],
+export const LIBRARY_DIRECTORIES: Record<DirectoryPresetLibraryType, readonly string[]> = {
+  contract: ['lib', 'lib/types'],
 
-  "data-access": ["lib", "lib/shared", "lib/server", "lib/repository", "lib/repository/operations"],
+  'data-access': ['lib', 'lib/shared', 'lib/server', 'lib/repository', 'lib/repository/operations'],
 
   feature: [
-    "lib",
-    "lib/shared",
-    "lib/server",
-    "lib/server/service",
-    "lib/server/events",
-    "lib/server/jobs"
+    'lib',
+    'lib/shared',
+    'lib/server',
+    'lib/server/service',
+    'lib/server/events',
+    'lib/server/jobs'
   ],
 
-  infra: ["lib", "lib/service"],
+  infra: ['lib', 'lib/service'],
 
-  provider: ["lib", "lib/service"]
+  provider: ['lib', 'lib/service']
 }
 
 /**
@@ -255,29 +255,29 @@ export const LIBRARY_DIRECTORIES: Record<DirectoryPresetLibraryType, ReadonlyArr
  */
 export const OPTIONAL_DIRECTORIES: Record<
   DirectoryPresetLibraryType,
-  Record<string, ReadonlyArray<string>>
+  Record<string, readonly string[]>
 > = {
   contract: {
-    includeCQRS: ["lib/commands", "lib/queries", "lib/projections"],
-    includeRPC: ["lib/rpc"],
-    includeSubModules: ["lib/modules"]
+    includeCQRS: ['lib/commands', 'lib/queries', 'lib/projections'],
+    includeRPC: ['lib/rpc'],
+    includeSubModules: ['lib/modules']
   },
 
-  "data-access": {
-    includeCache: ["lib/cache"],
-    includeSubModules: ["lib/modules"]
+  'data-access': {
+    includeCache: ['lib/cache'],
+    includeSubModules: ['lib/modules']
   },
 
   feature: {
-    includeRPC: ["lib/rpc", "lib/rpc/external", "lib/rpc/internal"],
-    includeClientServer: ["lib/client", "lib/client/hooks", "lib/client/atoms"],
-    includeEdge: ["lib/edge"],
-    includeCQRS: ["lib/server/cqrs", "lib/server/cqrs/commands", "lib/server/cqrs/queries"],
-    includeSubModules: ["lib/modules"]
+    includeRPC: ['lib/rpc', 'lib/rpc/external', 'lib/rpc/internal'],
+    includeClientServer: ['lib/client', 'lib/client/hooks', 'lib/client/atoms'],
+    includeEdge: ['lib/edge'],
+    includeCQRS: ['lib/server/cqrs', 'lib/server/cqrs/commands', 'lib/server/cqrs/queries'],
+    includeSubModules: ['lib/modules']
   },
 
   infra: {
-    includeClientServer: ["lib/client", "lib/edge"]
+    includeClientServer: ['lib/client', 'lib/edge']
   },
 
   provider: {}
@@ -310,13 +310,13 @@ export function createLibraryDirectories(
   libraryType: DirectoryPresetLibraryType,
   options?: Record<string, boolean>
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     // Get base directories for library type
     const baseDirectories = LIBRARY_DIRECTORIES[libraryType] ?? []
 
     // Get optional directories based on feature flags
     const optionalDirs = OPTIONAL_DIRECTORIES[libraryType] ?? {}
-    const additionalDirectories: Array<string> = []
+    const additionalDirectories: string[] = []
 
     if (options) {
       for (const [flag, dirs] of Object.entries(optionalDirs)) {

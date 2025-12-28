@@ -1,5 +1,5 @@
-import type { Schema } from "effect"
-import { Context, Effect, Layer } from "effect"
+import type { Schema } from 'effect'
+import { Context, Effect, Layer } from 'effect'
 
 /**
  * User Command Base
@@ -147,23 +147,18 @@ export interface CommandBusInterface {
  * })
  * ```
  */
-export class UserCommandBus extends Context.Tag("UserCommandBus")<
+export class UserCommandBus extends Context.Tag('UserCommandBus')<
   UserCommandBus,
   CommandBusInterface
 >() {
   /**
    * Live layer - dispatches commands directly to their execute method
    */
-  static readonly Live = Layer.succeed(
-    this,
-    {
-      dispatch: (command, input) =>
-        command.execute(input).pipe(
-          Effect.withSpan(`UserCommandBus.dispatch.${command._tag}`)
-        ),
-      register: () => Effect.void
-    }
-  )
+  static readonly Live = Layer.succeed(this, {
+    dispatch: (command, input) =>
+      command.execute(input).pipe(Effect.withSpan(`UserCommandBus.dispatch.${command._tag}`)),
+    register: () => Effect.void
+  })
 
   /**
    * Test layer - same as Live, suitable for testing

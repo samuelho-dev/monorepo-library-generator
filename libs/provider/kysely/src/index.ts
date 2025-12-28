@@ -15,13 +15,18 @@ Usage:
 // Error Types
 // ============================================================================
 
-export { DatabaseConnectionError, type DatabaseError, DatabaseQueryError, DatabaseTransactionError } from "./lib/errors"
+export {
+  DatabaseConnectionError,
+  type DatabaseError,
+  DatabaseQueryError,
+  DatabaseTransactionError
+} from './lib/errors'
 
 // ============================================================================
 // Interface
 // ============================================================================
 
-export type { KyselyServiceInterface } from "./lib/interface"
+export type { KyselyServiceInterface } from './lib/interface'
 
 // ============================================================================
 // Service
@@ -30,10 +35,10 @@ export type { KyselyServiceInterface } from "./lib/interface"
 export {
   type KyselyConfig,
   KyselyService,
+  type MockServiceOptions,
   makeKyselyService,
-  makeTestKyselyService,
-  type MockServiceOptions
-} from "./lib/service"
+  makeTestKyselyService
+} from './lib/service'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Usage Example

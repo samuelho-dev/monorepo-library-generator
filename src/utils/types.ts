@@ -14,22 +14,22 @@
 /**
  * Library types supported by the generator
  */
-export type LibraryType = "contract" | "data-access" | "feature" | "provider" | "infra" | "util"
+export type LibraryType = 'contract' | 'data-access' | 'feature' | 'provider' | 'infra' | 'util'
 
 /**
  * Platform type for build configuration
  */
-export type PlatformType = "node" | "browser" | "universal" | "edge"
+export type PlatformType = 'node' | 'browser' | 'universal' | 'edge'
 
 /**
  * Runtime platforms supported by libraries
  */
-export type Platform = "client" | "server" | "edge" | "universal"
+export type Platform = 'client' | 'server' | 'edge' | 'universal'
 
 /**
  * Provider integration types
  */
-export type ProviderType = "sdk" | "cli" | "http" | "graphql"
+export type ProviderType = 'sdk' | 'cli' | 'http' | 'graphql'
 
 // ============================================================================
 // Naming Variants
@@ -120,7 +120,7 @@ export interface BaseTemplateOptions extends NamingVariants {
   /**
    * Library tags for organization
    */
-  readonly tags: ReadonlyArray<string>
+  readonly tags: readonly string[]
 }
 
 /**
@@ -131,7 +131,7 @@ export interface ContractTemplateOptions extends BaseTemplateOptions {
    * List of entity names to generate
    * Used for bundle optimization with separate entity files
    */
-  readonly entities: ReadonlyArray<string>
+  readonly entities: readonly string[]
 
   /**
    * Whether to include CQRS patterns (commands, queries, projections)
@@ -147,7 +147,7 @@ export interface ContractTemplateOptions extends BaseTemplateOptions {
    * Sub-module names for Hybrid DDD pattern
    * @example ["cart", "checkout", "management"]
    */
-  readonly subModules?: Array<string>
+  readonly subModules?: string[]
 
   /**
    * External package containing database entity types from prisma-effect-kysely.
@@ -181,7 +181,7 @@ export interface FeatureTemplateOptions extends BaseTemplateOptions {
    * When provided, generates sub-module services with parent integration
    * @example ["cart", "checkout", "management"]
    */
-  readonly subModules?: Array<string>
+  readonly subModules?: string[]
 }
 
 /**
@@ -191,7 +191,7 @@ export interface DataAccessTemplateOptions extends BaseTemplateOptions {
   /**
    * Database type (for type-specific query builders)
    */
-  readonly databaseType?: "postgres" | "mysql" | "sqlite"
+  readonly databaseType?: 'postgres' | 'mysql' | 'sqlite'
 
   /**
    * Contract library this data-access implements
@@ -207,7 +207,7 @@ export interface DataAccessTemplateOptions extends BaseTemplateOptions {
    * Sub-module names for Hybrid DDD pattern
    * @example ["cart", "checkout", "management"]
    */
-  readonly subModules?: Array<string>
+  readonly subModules?: string[]
 }
 
 /**
@@ -218,19 +218,19 @@ export interface InfrastructureTemplateOptions extends BaseTemplateOptions {
    * Type of infrastructure service
    */
   readonly infraType:
-    | "cache"
-    | "logging"
-    | "metrics"
-    | "auth"
-    | "config"
-    | "storage"
-    | "messaging"
-    | "custom"
+    | 'cache'
+    | 'logging'
+    | 'metrics'
+    | 'auth'
+    | 'config'
+    | 'storage'
+    | 'messaging'
+    | 'custom'
 
   /**
    * Platforms this infrastructure service supports
    */
-  readonly platforms: ReadonlyArray<Platform>
+  readonly platforms: readonly Platform[]
 }
 
 /**
@@ -255,12 +255,12 @@ export interface ProviderTemplateOptions extends BaseTemplateOptions {
   /**
    * Platform-specific implementations needed
    */
-  readonly platforms: ReadonlyArray<Platform>
+  readonly platforms: readonly Platform[]
 
   /**
    * Type of provider integration
    */
-  readonly providerType?: "sdk" | "cli" | "http" | "graphql"
+  readonly providerType?: 'sdk' | 'cli' | 'http' | 'graphql'
 
   /**
    * CLI command name (for CLI providers)
@@ -275,7 +275,7 @@ export interface ProviderTemplateOptions extends BaseTemplateOptions {
   /**
    * Authentication type (for HTTP/GraphQL providers)
    */
-  readonly authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
+  readonly authType?: 'bearer' | 'apikey' | 'oauth' | 'basic' | 'none'
 }
 
 // ============================================================================
@@ -285,22 +285,22 @@ export interface ProviderTemplateOptions extends BaseTemplateOptions {
 /**
  * Operation category for data-access repositories
  */
-export type RepositoryOperationType = "create" | "read" | "update" | "delete" | "aggregate"
+export type RepositoryOperationType = 'create' | 'read' | 'update' | 'delete' | 'aggregate'
 
 /**
  * Operation category for feature services
  */
-export type ServiceOperationType = "create" | "update" | "delete" | "query" | "batch"
+export type ServiceOperationType = 'create' | 'update' | 'delete' | 'query' | 'batch'
 
 /**
  * Handler category for RPC handlers
  */
-export type HandlerCategory = "mutation" | "query" | "batch" | "subscription"
+export type HandlerCategory = 'mutation' | 'query' | 'batch' | 'subscription'
 
 /**
  * Query builder category
  */
-export type QueryBuilderType = "find" | "mutation" | "aggregate"
+export type QueryBuilderType = 'find' | 'mutation' | 'aggregate'
 
 /**
  * File split configuration
@@ -366,12 +366,12 @@ export interface GeneratorConfig<TOptions = BaseTemplateOptions> {
   /**
    * Default files always generated
    */
-  readonly defaultFiles: ReadonlyArray<string>
+  readonly defaultFiles: readonly string[]
 
   /**
    * Conditional files based on feature flags
    */
-  readonly conditionalFiles?: Readonly<Record<string, ReadonlyArray<string>>>
+  readonly conditionalFiles?: Readonly<Record<string, readonly string[]>>
 
   /**
    * Template functions for each file
@@ -381,7 +381,7 @@ export interface GeneratorConfig<TOptions = BaseTemplateOptions> {
   /**
    * Default tags for this library type
    */
-  readonly defaultTags: ReadonlyArray<string>
+  readonly defaultTags: readonly string[]
 }
 
 /**
@@ -396,7 +396,7 @@ export interface ValidationResult {
   /**
    * Validation errors (if any)
    */
-  readonly errors: ReadonlyArray<string>
+  readonly errors: readonly string[]
 }
 
 /**
@@ -413,7 +413,7 @@ export interface GeneratorContext {
   /**
    * Package manager being used
    */
-  readonly packageManager: "npm" | "yarn" | "pnpm"
+  readonly packageManager: 'npm' | 'yarn' | 'pnpm'
 
   /**
    * Whether this is an NX workspace
@@ -433,17 +433,17 @@ export interface FileGenerationResult {
   /**
    * Files that were generated
    */
-  readonly generatedFiles: ReadonlyArray<string>
+  readonly generatedFiles: readonly string[]
 
   /**
    * Files that were skipped (already exist)
    */
-  readonly skippedFiles: ReadonlyArray<string>
+  readonly skippedFiles: readonly string[]
 
   /**
    * Any warnings during generation
    */
-  readonly warnings: ReadonlyArray<string>
+  readonly warnings: readonly string[]
 }
 
 /**

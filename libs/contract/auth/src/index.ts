@@ -36,7 +36,7 @@ export {
   type ServiceIdentity,
   // Service authentication
   ServiceIdentitySchema
-} from "./lib/schemas"
+} from './lib/schemas'
 
 // ============================================================================
 // Errors
@@ -53,7 +53,7 @@ export {
   ServiceAuthError,
   type ServiceAuthErrorCode,
   ServiceAuthErrorCodeSchema
-} from "./lib/errors"
+} from './lib/errors'
 
 // ============================================================================
 // Ports (Service Interfaces)
@@ -68,7 +68,7 @@ export {
   // Service authentication
   ServiceAuthVerifier,
   type ServiceAuthVerifierInterface
-} from "./lib/ports"
+} from './lib/ports'
 
 // ============================================================================
 // Middleware Context
@@ -90,4 +90,4 @@ export {
   // Service context
   ServiceContext,
   type ServiceHandlerContext
-} from "./lib/middleware"
+} from './lib/middleware'

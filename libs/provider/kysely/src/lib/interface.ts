@@ -1,6 +1,10 @@
-import type { Effect } from "effect"
-import type { CompiledQuery, Kysely, RawBuilder, Transaction } from "kysely"
-import type { DatabaseConnectionError, DatabaseQueryError, DatabaseTransactionError } from "./errors"
+import type { Effect } from 'effect'
+import type { CompiledQuery, Kysely, RawBuilder, Transaction } from 'kysely'
+import type {
+  DatabaseConnectionError,
+  DatabaseQueryError,
+  DatabaseTransactionError
+} from './errors'
 
 /**
  * Kysely Service Interface
@@ -56,9 +60,7 @@ export interface KyselyServiceInterface<DB> {
    * )
    * ```
    */
-  readonly query: <T>(
-    fn: (db: Kysely<DB>) => Promise<T>
-  ) => Effect.Effect<T, DatabaseQueryError>
+  readonly query: <T>(fn: (db: Kysely<DB>) => Promise<T>) => Effect.Effect<T, DatabaseQueryError>
 
   /**
    * Execute a compiled query
@@ -66,9 +68,7 @@ export interface KyselyServiceInterface<DB> {
    * @param query - Compiled query from Kysely
    * @returns Effect that succeeds with rows as unknown[]
    */
-  readonly execute: (
-    query: CompiledQuery
-  ) => Effect.Effect<ReadonlyArray<unknown>, DatabaseQueryError>
+  readonly execute: (query: CompiledQuery) => Effect.Effect<readonly unknown[], DatabaseQueryError>
 
   /**
    * Execute queries within a transaction
@@ -102,7 +102,7 @@ export interface KyselyServiceInterface<DB> {
    */
   readonly sql: (
     query: RawBuilder<unknown>
-  ) => Effect.Effect<ReadonlyArray<unknown>, DatabaseQueryError>
+  ) => Effect.Effect<readonly unknown[], DatabaseQueryError>
 
   /**
    * Ping database to check connectivity
@@ -117,7 +117,7 @@ export interface KyselyServiceInterface<DB> {
    * @returns Effect with tables and dialect info
    */
   readonly introspection: () => Effect.Effect<
-    { tables: Array<string>; dialect: string },
+    { tables: string[]; dialect: string },
     DatabaseQueryError
   >
 

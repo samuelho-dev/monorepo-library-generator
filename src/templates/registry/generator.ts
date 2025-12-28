@@ -7,12 +7,19 @@
  * @module monorepo-library-generator/templates/registry/generator
  */
 
-import { Data, Effect, Metric, MetricBoundaries } from "effect"
-import { createNamingVariants } from "../../utils/naming"
-import { TemplateCompiler } from "../core/compiler"
-import type { TemplateContext } from "../core/types"
-import { getTemplateRegistry, validateContext } from "./registry"
-import type { FileType, GeneratedFile, GenerationResult, GeneratorOptions, LibraryType, TemplateKey } from "./types"
+import { Data, Effect, Metric, MetricBoundaries } from 'effect'
+import { createNamingVariants } from '../../utils/naming'
+import { TemplateCompiler } from '../core/compiler'
+import type { TemplateContext } from '../core/types'
+import { getTemplateRegistry, validateContext } from './registry'
+import type {
+  FileType,
+  GeneratedFile,
+  GenerationResult,
+  GeneratorOptions,
+  LibraryType,
+  TemplateKey
+} from './types'
 
 // ============================================================================
 // Error Types
@@ -21,7 +28,7 @@ import type { FileType, GeneratedFile, GenerationResult, GeneratorOptions, Libra
 /**
  * Error thrown when template is not found
  */
-export class TemplateNotFoundError extends Data.TaggedError("TemplateNotFoundError")<{
+export class TemplateNotFoundError extends Data.TaggedError('TemplateNotFoundError')<{
   readonly libraryType: LibraryType
   readonly fileType: FileType
   readonly message: string
@@ -30,16 +37,16 @@ export class TemplateNotFoundError extends Data.TaggedError("TemplateNotFoundErr
 /**
  * Error thrown when context validation fails
  */
-export class ContextValidationError extends Data.TaggedError("ContextValidationError")<{
+export class ContextValidationError extends Data.TaggedError('ContextValidationError')<{
   readonly templateKey: TemplateKey
-  readonly missingVariables: ReadonlyArray<string>
+  readonly missingVariables: readonly string[]
   readonly message: string
 }> {}
 
 /**
  * Error thrown during file generation
  */
-export class GenerationError extends Data.TaggedError("GenerationError")<{
+export class GenerationError extends Data.TaggedError('GenerationError')<{
   readonly templateKey: TemplateKey
   readonly message: string
   readonly cause?: unknown
@@ -54,12 +61,12 @@ export type GeneratorError = TemplateNotFoundError | ContextValidationError | Ge
 // Metrics
 // ============================================================================
 
-const filesGenerated = Metric.counter("template_files_generated_total", {
-  description: "Total number of files generated"
+const filesGenerated = Metric.counter('template_files_generated_total', {
+  description: 'Total number of files generated'
 })
 
 const generationDuration = Metric.histogram(
-  "template_generation_duration_ms",
+  'template_generation_duration_ms',
   MetricBoundaries.exponential({ start: 10, factor: 2, count: 10 })
 )
 
@@ -78,9 +85,10 @@ function buildContext(options: GeneratorOptions) {
   const projectName = `${options.libraryType}-${naming.fileName}`
 
   // Default entity type source to local types file (can be overridden via context)
-  const entityTypeSource = typeof options.context?.entityTypeSource === "string"
-    ? options.context.entityTypeSource
-    : "./types"
+  const entityTypeSource =
+    typeof options.context?.entityTypeSource === 'string'
+      ? options.context.entityTypeSource
+      : './types'
 
   return {
     ...naming,
@@ -126,7 +134,7 @@ export function generateFile(
   fileType: FileType,
   context: TemplateContext
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const templateKey: TemplateKey = `${libraryType}/${fileType}`
     const registry = getTemplateRegistry()
     const entry = registry.get(templateKey)
@@ -148,7 +156,7 @@ export function generateFile(
         new ContextValidationError({
           templateKey,
           missingVariables: validation.missing,
-          message: `Missing required context variables: ${validation.missing.join(", ")}`
+          message: `Missing required context variables: ${validation.missing.join(', ')}`
         })
       )
     }
@@ -168,8 +176,8 @@ export function generateFile(
 
     // Track metrics
     yield* filesGenerated.pipe(
-      Metric.tagged("library_type", libraryType),
-      Metric.tagged("file_type", fileType),
+      Metric.tagged('library_type', libraryType),
+      Metric.tagged('file_type', fileType),
       Metric.increment
     )
 
@@ -181,9 +189,9 @@ export function generateFile(
   }).pipe(
     Effect.withSpan(`generate.file.${libraryType}.${fileType}`, {
       attributes: {
-        "template.library_type": libraryType,
-        "template.file_type": fileType,
-        "context.class_name": context.className
+        'template.library_type': libraryType,
+        'template.file_type': fileType,
+        'context.class_name': context.className
       }
     })
   )
@@ -195,7 +203,7 @@ export function generateFile(
  * Requires TemplateCompiler service to be provided.
  */
 export function generateLibrary(options: GeneratorOptions) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const startTime = Date.now()
     const registry = getTemplateRegistry()
     const context = buildContext(options)
@@ -205,8 +213,8 @@ export function generateLibrary(options: GeneratorOptions) {
     const fileTypes = options.fileTypes ?? entries.map((e) => e.metadata.fileType)
 
     // Generate each file
-    const files: Array<GeneratedFile> = []
-    const warnings: Array<string> = []
+    const files: GeneratedFile[] = []
+    const warnings: string[] = []
 
     for (const fileType of fileTypes) {
       const templateKey: TemplateKey = `${options.libraryType}/${fileType}`
@@ -224,7 +232,7 @@ export function generateLibrary(options: GeneratorOptions) {
 
     // Track generation duration
     yield* generationDuration.pipe(
-      Metric.tagged("library_type", options.libraryType),
+      Metric.tagged('library_type', options.libraryType),
       Metric.update(durationMs)
     )
 
@@ -237,9 +245,9 @@ export function generateLibrary(options: GeneratorOptions) {
   }).pipe(
     Effect.withSpan(`generate.library.${options.libraryType}`, {
       attributes: {
-        "generator.library_type": options.libraryType,
-        "generator.name": options.name,
-        "generator.scope": options.scope
+        'generator.library_type': options.libraryType,
+        'generator.name': options.name,
+        'generator.scope': options.scope
       }
     })
   )
@@ -253,11 +261,11 @@ export function generateLibrary(options: GeneratorOptions) {
 export function generateDomain(
   name: string,
   scope: string,
-  libraryTypes: ReadonlyArray<LibraryType>,
+  libraryTypes: readonly LibraryType[],
   context?: Record<string, unknown>
 ) {
-  return Effect.gen(function*() {
-    const results: Array<GenerationResult> = []
+  return Effect.gen(function* () {
+    const results: GenerationResult[] = []
 
     for (const libraryType of libraryTypes) {
       const result = yield* generateLibrary({
@@ -273,9 +281,9 @@ export function generateDomain(
   }).pipe(
     Effect.withSpan(`generate.domain.${name}`, {
       attributes: {
-        "generator.name": name,
-        "generator.scope": scope,
-        "generator.library_count": libraryTypes.length
+        'generator.name': name,
+        'generator.scope': scope,
+        'generator.library_count': libraryTypes.length
       }
     })
   )
@@ -289,35 +297,35 @@ export const generate = {
    * Generate a contract library
    */
   contract: (name: string, scope: string, context?: Record<string, unknown>) =>
-    generateLibrary({ name, scope, libraryType: "contract", context }),
+    generateLibrary({ name, scope, libraryType: 'contract', context }),
 
   /**
    * Generate a data-access library
    */
   dataAccess: (name: string, scope: string, context?: Record<string, unknown>) =>
-    generateLibrary({ name, scope, libraryType: "data-access", context }),
+    generateLibrary({ name, scope, libraryType: 'data-access', context }),
 
   /**
    * Generate a feature library
    */
   feature: (name: string, scope: string, context?: Record<string, unknown>) =>
-    generateLibrary({ name, scope, libraryType: "feature", context }),
+    generateLibrary({ name, scope, libraryType: 'feature', context }),
 
   /**
    * Generate an infra library
    */
   infra: (name: string, scope: string, context?: Record<string, unknown>) =>
-    generateLibrary({ name, scope, libraryType: "infra", context }),
+    generateLibrary({ name, scope, libraryType: 'infra', context }),
 
   /**
    * Generate a provider library
    */
   provider: (name: string, scope: string, context?: Record<string, unknown>) =>
-    generateLibrary({ name, scope, libraryType: "provider", context }),
+    generateLibrary({ name, scope, libraryType: 'provider', context }),
 
   /**
    * Generate a full domain (contract + data-access + feature)
    */
   fullDomain: (name: string, scope: string, context?: Record<string, unknown>) =>
-    generateDomain(name, scope, ["contract", "data-access", "feature"], context)
+    generateDomain(name, scope, ['contract', 'data-access', 'feature'], context)
 }

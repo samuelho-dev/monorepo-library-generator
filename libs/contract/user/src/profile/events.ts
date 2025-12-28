@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * User Profile Domain Events
@@ -24,10 +24,12 @@ const ProfileEventBase = Schema.Struct({
   /** User who triggered the event (if applicable) */
   userId: Schema.optional(Schema.UUID),
   /** Additional metadata */
-  metadata: Schema.optional(Schema.Record({
-    key: Schema.String,
-    value: Schema.Unknown
-  }))
+  metadata: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.Unknown
+    })
+  )
 })
 // ============================================================================
 // Profile Domain Events
@@ -36,43 +38,49 @@ const ProfileEventBase = Schema.Struct({
  * Profile created event
  */
 export const ProfileCreated = Schema.Struct({
-  _tag: Schema.Literal("Profile.Created"),
+  _tag: Schema.Literal('Profile.Created'),
   profileId: Schema.UUID,
   parentUserId: Schema.optional(Schema.UUID),
   ...ProfileEventBase.fields
-}).pipe(Schema.annotations({
-  identifier: "Profile.Created",
-  title: "Profile Created",
-  description: "Emitted when a profile is created"
-}))
+}).pipe(
+  Schema.annotations({
+    identifier: 'Profile.Created',
+    title: 'Profile Created',
+    description: 'Emitted when a profile is created'
+  })
+)
 /**
  * Profile updated event
  */
 export const ProfileUpdated = Schema.Struct({
-  _tag: Schema.Literal("Profile.Updated"),
+  _tag: Schema.Literal('Profile.Updated'),
   profileId: Schema.UUID,
   changes: Schema.Record({
     key: Schema.String,
     value: Schema.Unknown
   }),
   ...ProfileEventBase.fields
-}).pipe(Schema.annotations({
-  identifier: "Profile.Updated",
-  title: "Profile Updated",
-  description: "Emitted when a profile is updated"
-}))
+}).pipe(
+  Schema.annotations({
+    identifier: 'Profile.Updated',
+    title: 'Profile Updated',
+    description: 'Emitted when a profile is updated'
+  })
+)
 /**
  * Profile deleted event
  */
 export const ProfileDeleted = Schema.Struct({
-  _tag: Schema.Literal("Profile.Deleted"),
+  _tag: Schema.Literal('Profile.Deleted'),
   profileId: Schema.UUID,
   ...ProfileEventBase.fields
-}).pipe(Schema.annotations({
-  identifier: "Profile.Deleted",
-  title: "Profile Deleted",
-  description: "Emitted when a profile is deleted"
-}))
+}).pipe(
+  Schema.annotations({
+    identifier: 'Profile.Deleted',
+    title: 'Profile Deleted',
+    description: 'Emitted when a profile is deleted'
+  })
+)
 // ============================================================================
 // Event Union Type
 // ============================================================================

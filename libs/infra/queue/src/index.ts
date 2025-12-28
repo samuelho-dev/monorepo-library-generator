@@ -12,21 +12,18 @@ Layers are available as static members on the service class.
 // Service and Types
 // ============================================================================
 // Service with static layers (Memory, Test, Live)
-export { QueueService } from "./lib/service"
-export type { BoundedQueueHandle, QueueOptions, UnboundedQueueHandle } from "./lib/service"
 
+export type { QueueError, QueueServiceError } from './lib/errors'
 // ============================================================================
 // Error Types
 // ============================================================================
 // Error types for error handling
 export {
-  QueueInternalError,
   QueueConfigError,
   QueueConnectionError,
-  QueueTimeoutError,
-} from "./lib/errors"
-export type { QueueError, QueueServiceError } from "./lib/errors"
-
+  QueueInternalError,
+  QueueTimeoutError
+} from './lib/errors'
 // ============================================================================
 // Additional Layers
 // ============================================================================
@@ -34,4 +31,6 @@ export type { QueueError, QueueServiceError } from "./lib/errors"
 export {
   QueueRedisLayer,
   withJobEnqueuing
-} from "./lib/layers"
+} from './lib/layers'
+export type { BoundedQueueHandle, QueueOptions, UnboundedQueueHandle } from './lib/service'
+export { QueueService } from './lib/service'

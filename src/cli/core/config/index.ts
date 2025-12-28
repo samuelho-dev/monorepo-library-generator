@@ -14,7 +14,7 @@ export {
   LIBRARY_TYPES,
   requiresExternalService,
   WIZARD_ACTIONS
-} from "./library-types"
+} from './library-types'
 
 export {
   getDefaultOptions,
@@ -23,4 +23,4 @@ export {
   getVisibleOptions,
   PLATFORM_OPTIONS,
   validateRequiredOptions
-} from "./options-registry"
+} from './options-registry'

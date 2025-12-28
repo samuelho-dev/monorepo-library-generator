@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * Observability Errors
@@ -22,9 +22,7 @@ Error types:
 /**
  * Base error for all observability errors
  */
-export class ObservabilityError extends Data.TaggedError(
-  "ObservabilityError"
-)<{
+export class ObservabilityError extends Data.TaggedError('ObservabilityError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -44,9 +42,7 @@ export class ObservabilityError extends Data.TaggedError(
  * })
  * ```
  */
-export class ObservabilityConfigError extends Data.TaggedError(
-  "ObservabilityConfigError"
-)<{
+export class ObservabilityConfigError extends Data.TaggedError('ObservabilityConfigError')<{
   readonly message: string
   readonly field?: string
   readonly value?: unknown
@@ -76,11 +72,9 @@ export class ObservabilityConfigError extends Data.TaggedError(
  * })
  * ```
  */
-export class ObservabilityExportError extends Data.TaggedError(
-  "ObservabilityExportError"
-)<{
+export class ObservabilityExportError extends Data.TaggedError('ObservabilityExportError')<{
   readonly message: string
-  readonly exporterType?: "traces" | "metrics" | "logs"
+  readonly exporterType?: 'traces' | 'metrics' | 'logs'
   readonly endpoint?: string
   readonly statusCode?: number
   readonly cause?: unknown
@@ -101,9 +95,7 @@ export class ObservabilityExportError extends Data.TaggedError(
  * })
  * ```
  */
-export class ObservabilityConnectionError extends Data.TaggedError(
-  "ObservabilityConnectionError"
-)<{
+export class ObservabilityConnectionError extends Data.TaggedError('ObservabilityConnectionError')<{
   readonly message: string
   readonly endpoint?: string
   readonly retryCount?: number
@@ -124,9 +116,7 @@ export class ObservabilityConnectionError extends Data.TaggedError(
  * })
  * ```
  */
-export class ObservabilityInitError extends Data.TaggedError(
-  "ObservabilityInitError"
-)<{
+export class ObservabilityInitError extends Data.TaggedError('ObservabilityInitError')<{
   readonly message: string
   readonly component?: string
   readonly cause?: unknown

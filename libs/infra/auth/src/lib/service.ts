@@ -1,11 +1,15 @@
-import { Headers } from "@effect/platform"
-import { AuthError as ContractAuthError, AuthVerifier, CurrentUserDataSchema } from "@samuelho-dev/contract-auth"
-import type { CurrentUserData } from "@samuelho-dev/contract-auth"
-import { SupabaseAuth } from "@samuelho-dev/provider-supabase"
-import type { AuthUser } from "@samuelho-dev/provider-supabase"
-import { Context, Effect, Layer, Option, Schema } from "effect"
-import { AuthError, InvalidTokenError, UnauthorizedError } from "./errors"
-import type { AuthContext } from "./types"
+import { Headers } from '@effect/platform'
+import type { CurrentUserData } from '@samuelho-dev/contract-auth'
+import {
+  AuthVerifier,
+  AuthError as ContractAuthError,
+  CurrentUserDataSchema
+} from '@samuelho-dev/contract-auth'
+import type { AuthUser } from '@samuelho-dev/provider-supabase'
+import { SupabaseAuth } from '@samuelho-dev/provider-supabase'
+import { Context, Effect, Layer, Option, Schema } from 'effect'
+import { AuthError, InvalidTokenError, UnauthorizedError } from './errors'
+import type { AuthContext } from './types'
 
 /**
  * Auth Infrastructure Service
@@ -56,7 +60,9 @@ export interface AuthServiceInterface {
    * Used by RPC middleware for session-based auth.
    * Delegates to SupabaseAuth.verifyToken.
    */
-  readonly verifyToken: (token: string) => Effect.Effect<AuthUser, UnauthorizedError | InvalidTokenError>
+  readonly verifyToken: (
+    token: string
+  ) => Effect.Effect<AuthUser, UnauthorizedError | InvalidTokenError>
 
   /**
    * Get the current user from session
@@ -75,7 +81,9 @@ export interface AuthServiceInterface {
    *
    * For API key auth, use ApiKeyRepository from data-access layer.
    */
-  readonly buildAuthContext: (headers: Headers.Headers) => Effect.Effect<Option.Option<AuthContext>, AuthError>
+  readonly buildAuthContext: (
+    headers: Headers.Headers
+  ) => Effect.Effect<Option.Option<AuthContext>, AuthError>
 }
 
 // ============================================================================
@@ -89,10 +97,7 @@ export interface AuthServiceInterface {
  *
  * Requires: SupabaseAuth (from provider-supabase)
  */
-export class AuthService extends Context.Tag("AuthService")<
-  AuthService,
-  AuthServiceInterface
->() {
+export class AuthService extends Context.Tag('AuthService')<AuthService, AuthServiceInterface>() {
   /**
    * Live layer - requires SupabaseAuth
    *
@@ -100,19 +105,20 @@ export class AuthService extends Context.Tag("AuthService")<
    */
   static readonly Live = Layer.effect(
     AuthService,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const supabaseAuth = yield* SupabaseAuth
 
       return {
         verifyToken: (token) =>
           supabaseAuth.verifyToken(token).pipe(
-            Effect.catchTag("SupabaseTokenError", (error) =>
+            Effect.catchTag('SupabaseTokenError', (error) =>
               Effect.fail(
                 new InvalidTokenError({
                   message: error.message,
-                  tokenType: "access"
+                  tokenType: 'access'
                 })
-              )),
+              )
+            ),
             Effect.catchAll((error) =>
               Effect.fail(
                 new UnauthorizedError({
@@ -120,7 +126,7 @@ export class AuthService extends Context.Tag("AuthService")<
                 })
               )
             ),
-            Effect.withSpan("AuthService.verifyToken")
+            Effect.withSpan('AuthService.verifyToken')
           ),
 
         getCurrentUser: () =>
@@ -141,25 +147,23 @@ export class AuthService extends Context.Tag("AuthService")<
                 })
               )
             ),
-            Effect.withSpan("AuthService.getCurrentUser")
+            Effect.withSpan('AuthService.getCurrentUser')
           ),
 
         buildAuthContext: (headers) =>
-          Effect.gen(function*() {
-            const authHeader = Headers.get(headers, "authorization")
-            const cookie = Headers.get(headers, "cookie")
+          Effect.gen(function* () {
+            const authHeader = Headers.get(headers, 'authorization')
+            const cookie = Headers.get(headers, 'cookie')
 
             // Priority 1: Bearer Token
-            if (Option.isSome(authHeader) && authHeader.value.startsWith("Bearer ")) {
+            if (Option.isSome(authHeader) && authHeader.value.startsWith('Bearer ')) {
               const token = authHeader.value.slice(7)
-              const userResult = yield* supabaseAuth.verifyToken(token).pipe(
-                Effect.option
-              )
+              const userResult = yield* supabaseAuth.verifyToken(token).pipe(Effect.option)
 
               if (Option.isSome(userResult)) {
                 return Option.some<AuthContext>({
                   user: userResult.value,
-                  authMethod: "session",
+                  authMethod: 'session',
                   sessionToken: token
                 })
               }
@@ -183,13 +187,13 @@ export class AuthService extends Context.Tag("AuthService")<
               if (Option.isSome(userResult)) {
                 return Option.some<AuthContext>({
                   user: userResult.value,
-                  authMethod: "session"
+                  authMethod: 'session'
                 })
               }
             }
 
             return Option.none()
-          }).pipe(Effect.withSpan("AuthService.buildAuthContext"))
+          }).pipe(Effect.withSpan('AuthService.buildAuthContext'))
       }
     })
   )
@@ -203,18 +207,18 @@ export class AuthService extends Context.Tag("AuthService")<
     verifyToken: (token) =>
       Effect.succeed({
         id: `test-user-${token.slice(0, 8)}`,
-        email: "test@example.com",
-        name: "Test User",
-        role: "authenticated"
+        email: 'test@example.com',
+        name: 'Test User',
+        role: 'authenticated'
       }),
 
     getCurrentUser: () =>
       Effect.succeed(
         Option.some({
-          id: "test-user-id",
-          email: "test@example.com",
-          name: "Test User",
-          role: "authenticated"
+          id: 'test-user-id',
+          email: 'test@example.com',
+          name: 'Test User',
+          role: 'authenticated'
         })
       ),
 
@@ -222,12 +226,12 @@ export class AuthService extends Context.Tag("AuthService")<
       Effect.succeed(
         Option.some<AuthContext>({
           user: {
-            id: "test-user-id",
-            email: "test@example.com",
-            name: "Test User",
-            role: "authenticated"
+            id: 'test-user-id',
+            email: 'test@example.com',
+            name: 'Test User',
+            role: 'authenticated'
           },
-          authMethod: "session"
+          authMethod: 'session'
         })
       )
   })
@@ -239,43 +243,45 @@ export class AuthService extends Context.Tag("AuthService")<
    */
   static readonly Dev = Layer.effect(
     AuthService,
-    Effect.gen(function*() {
-      yield* Effect.logDebug("[AuthService] Initializing dev auth service...")
+    Effect.gen(function* () {
+      yield* Effect.logDebug('[AuthService] Initializing dev auth service...')
 
       return {
         verifyToken: (token) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[AuthService] verifyToken", { tokenLength: token.length })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[AuthService] verifyToken', { tokenLength: token.length })
             return {
               id: `dev-user-${token.slice(0, 8)}`,
-              email: "dev@example.com",
-              name: "Dev User",
-              role: "authenticated"
+              email: 'dev@example.com',
+              name: 'Dev User',
+              role: 'authenticated'
             }
           }),
 
         getCurrentUser: () =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[AuthService] getCurrentUser")
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[AuthService] getCurrentUser')
             return Option.some({
-              id: "dev-user-id",
-              email: "dev@example.com",
-              name: "Dev User",
-              role: "authenticated"
+              id: 'dev-user-id',
+              email: 'dev@example.com',
+              name: 'Dev User',
+              role: 'authenticated'
             })
           }),
 
         buildAuthContext: (headers) =>
-          Effect.gen(function*() {
-            yield* Effect.logDebug("[AuthService] buildAuthContext", { headers: Object.keys(headers) })
+          Effect.gen(function* () {
+            yield* Effect.logDebug('[AuthService] buildAuthContext', {
+              headers: Object.keys(headers)
+            })
             return Option.some<AuthContext>({
               user: {
-                id: "dev-user-id",
-                email: "dev@example.com",
-                name: "Dev User",
-                role: "authenticated"
+                id: 'dev-user-id',
+                email: 'dev@example.com',
+                name: 'Dev User',
+                role: 'authenticated'
               },
-              authMethod: "session"
+              authMethod: 'session'
             })
           })
       }
@@ -314,7 +320,7 @@ export class AuthService extends Context.Tag("AuthService")<
  */
 export const AuthVerifierLive = Layer.effect(
   AuthVerifier,
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const authService = yield* AuthService
 
     const verifyToken = (token: string) =>
@@ -322,26 +328,33 @@ export const AuthVerifierLive = Layer.effect(
         // Map provider-specific user to CurrentUserData shape
         Effect.map((user) => ({
           id: user.id,
-          email: user.email ?? "",
+          email: user.email ?? '',
           roles: user.role ? [user.role] : [],
           metadata: user.metadata
         })),
         // Validate at boundary using Schema.decode
         Effect.flatMap((data) =>
           Schema.decode(CurrentUserDataSchema)(data).pipe(
-            Effect.mapError((parseError) => ContractAuthError.tokenInvalid(`Invalid user data: ${parseError.message}`))
+            Effect.mapError((parseError) =>
+              ContractAuthError.tokenInvalid(`Invalid user data: ${parseError.message}`)
+            )
           )
         ),
         // Map infra errors to contract errors using Effect.catchTags
         Effect.catchTags({
           AuthError: (error) => Effect.fail(error),
           InvalidTokenError: (error) => Effect.fail(ContractAuthError.tokenInvalid(error.message)),
-          UnauthorizedError: (error) => Effect.fail(ContractAuthError.unauthenticated(error.message))
+          UnauthorizedError: (error) =>
+            Effect.fail(ContractAuthError.unauthenticated(error.message))
         }),
         Effect.catchAll((error) =>
-          Effect.fail(ContractAuthError.unauthenticated("message" in error ? error.message : "Authentication failed"))
+          Effect.fail(
+            ContractAuthError.unauthenticated(
+              'message' in error ? error.message : 'Authentication failed'
+            )
+          )
         ),
-        Effect.withSpan("AuthVerifierLive.verify")
+        Effect.withSpan('AuthVerifierLive.verify')
       )
 
     return {
@@ -350,9 +363,9 @@ export const AuthVerifierLive = Layer.effect(
       verifyOptional: (token: string | undefined) =>
         token
           ? verifyToken(token).pipe(
-            Effect.map(Option.some),
-            Effect.catchAll(() => Effect.succeed(Option.none()))
-          )
+              Effect.map(Option.some),
+              Effect.catchAll(() => Effect.succeed(Option.none()))
+            )
           : Effect.succeed(Option.none())
     }
   })
@@ -367,17 +380,19 @@ export const AuthVerifierLive = Layer.effect(
 export const AuthVerifierTest = Layer.succeed(AuthVerifier, {
   verify: (_token: string) =>
     Effect.succeed<CurrentUserData>({
-      id: "test-user-id",
-      email: "test@example.com",
-      roles: ["user"]
+      id: 'test-user-id',
+      email: 'test@example.com',
+      roles: ['user']
     }),
 
   verifyOptional: (token: string | undefined) =>
     token
-      ? Effect.succeed(Option.some<CurrentUserData>({
-        id: "test-user-id",
-        email: "test@example.com",
-        roles: ["user"]
-      }))
+      ? Effect.succeed(
+          Option.some<CurrentUserData>({
+            id: 'test-user-id',
+            email: 'test@example.com',
+            roles: ['user']
+          })
+        )
       : Effect.succeed(Option.none())
 })

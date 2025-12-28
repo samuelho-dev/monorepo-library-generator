@@ -6,4 +6,4 @@
  * @module monorepo-library-generator/cli/tui/layouts
  */
 
-export { PanelLayout } from "./PanelLayout"
+export { PanelLayout } from './PanelLayout'

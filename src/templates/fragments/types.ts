@@ -7,10 +7,10 @@
  * @module monorepo-library-generator/templates/fragments/types
  */
 
-import type { Effect } from "effect"
-import type { SourceFile } from "ts-morph"
-import type { InterpolationError } from "../core/resolver"
-import type { TemplateContext } from "../core/types"
+import type { Effect } from 'effect'
+import type { SourceFile } from 'ts-morph'
+import type { InterpolationError } from '../core/resolver'
+import type { TemplateContext } from '../core/types'
 
 // ============================================================================
 // Fragment Configuration Types
@@ -75,10 +75,10 @@ export interface TaggedErrorFragmentConfig extends FragmentConfig {
   readonly tagName?: string
 
   /** Error fields */
-  readonly fields: ReadonlyArray<ErrorField>
+  readonly fields: readonly ErrorField[]
 
   /** Static factory methods */
-  readonly staticMethods?: ReadonlyArray<ErrorStaticMethod>
+  readonly staticMethods?: readonly ErrorStaticMethod[]
 
   /** Whether to export the class */
   readonly exported?: boolean
@@ -106,7 +106,7 @@ export interface ServiceMethod {
   readonly name: string
 
   /** Method parameters */
-  readonly params: ReadonlyArray<MethodParam>
+  readonly params: readonly MethodParam[]
 
   /** Return type (the full Effect.Effect<...> type) */
   readonly returnType: string
@@ -140,10 +140,10 @@ export interface ContextTagFragmentConfig extends FragmentConfig {
   readonly tagIdentifier?: string
 
   /** Service methods */
-  readonly methods: ReadonlyArray<ServiceMethod>
+  readonly methods: readonly ServiceMethod[]
 
   /** Static layer definitions */
-  readonly staticLayers?: ReadonlyArray<StaticLayer>
+  readonly staticLayers?: readonly StaticLayer[]
 
   /** Whether to export the class */
   readonly exported?: boolean
@@ -188,10 +188,10 @@ export interface SchemaFragmentConfig extends FragmentConfig {
   readonly name: string
 
   /** Schema type: Struct, String, Number, etc. */
-  readonly schemaType: "Struct" | "String" | "Number" | "Boolean" | "Array" | "Union"
+  readonly schemaType: 'Struct' | 'String' | 'Number' | 'Boolean' | 'Array' | 'Union'
 
   /** Fields for Struct schemas */
-  readonly fields?: ReadonlyArray<SchemaField>
+  readonly fields?: readonly SchemaField[]
 
   /** Brand name for branded types */
   readonly brand?: string
@@ -211,13 +211,13 @@ export interface SchemaFragmentConfig extends FragmentConfig {
  */
 export interface LayerComposition {
   /** Layers to merge */
-  readonly merge?: ReadonlyArray<string>
+  readonly merge?: readonly string[]
 
   /** Layers to provide */
-  readonly provide?: ReadonlyArray<string>
+  readonly provide?: readonly string[]
 
   /** Layers to provide and merge */
-  readonly provideMerge?: ReadonlyArray<string>
+  readonly provideMerge?: readonly string[]
 }
 
 /**
@@ -228,7 +228,7 @@ export interface LayerFragmentConfig extends FragmentConfig {
   readonly name: string
 
   /** Layer creation type */
-  readonly layerType: "effect" | "sync" | "scoped" | "succeed" | "suspend"
+  readonly layerType: 'effect' | 'sync' | 'scoped' | 'succeed' | 'suspend'
 
   /** Service tag being implemented */
   readonly serviceTag: string
@@ -237,7 +237,7 @@ export interface LayerFragmentConfig extends FragmentConfig {
   readonly implementation: string
 
   /** Dependencies required by this layer */
-  readonly dependencies?: ReadonlyArray<string>
+  readonly dependencies?: readonly string[]
 
   /** Layer composition */
   readonly composition?: LayerComposition
@@ -254,7 +254,7 @@ export interface ImportFragmentConfig extends FragmentConfig {
   readonly from: string
 
   /** Named imports */
-  readonly imports: ReadonlyArray<string>
+  readonly imports: readonly string[]
 
   /** Whether this is a type-only import */
   readonly typeOnly?: boolean
@@ -268,7 +268,7 @@ export interface SectionCommentFragmentConfig extends FragmentConfig {
   readonly title: string
 
   /** Optional description lines */
-  readonly description?: ReadonlyArray<string>
+  readonly description?: readonly string[]
 }
 
 // ============================================================================
@@ -327,7 +327,7 @@ export interface FragmentRegistryEntry<TConfig extends FragmentConfig = Fragment
   readonly renderer: FragmentRenderer<TConfig>
 
   /** Required Effect imports for this fragment */
-  readonly requiredImports: ReadonlyArray<string>
+  readonly requiredImports: readonly string[]
 }
 
 /**
@@ -344,5 +344,5 @@ export interface InternalFragmentEntry {
     config: FragmentConfig,
     context: TemplateContext
   ) => Effect.Effect<void, InterpolationError>
-  readonly requiredImports: ReadonlyArray<string>
+  readonly requiredImports: readonly string[]
 }

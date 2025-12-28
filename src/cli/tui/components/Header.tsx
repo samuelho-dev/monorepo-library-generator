@@ -6,10 +6,10 @@
  * @module monorepo-library-generator/cli/tui/components/Header
  */
 
-import { Box, Text } from "ink"
+import { Box, Text } from 'ink'
 
-import type { WorkspaceContext } from "../../core"
-import { colors } from "../theme/colors"
+import type { WorkspaceContext } from '../../core'
+import { colors } from '../theme/colors'
 
 interface HeaderProps {
   readonly workspace: WorkspaceContext | null
@@ -30,7 +30,7 @@ export function Header({ workspace }: HeaderProps) {
           <Text color={colors.root}>{workspace.librariesRoot}</Text>
           <Text color={colors.muted}> | Type: </Text>
           <Text color={workspace.isNx ? colors.success : colors.secondary}>
-            {workspace.isNx ? "Nx Workspace" : `${workspace.type} Workspace`}
+            {workspace.isNx ? 'Nx Workspace' : `${workspace.type} Workspace`}
           </Text>
           <Text color={colors.muted}> | Scope: </Text>
           <Text color={colors.libraryType}>{workspace.scope}</Text>

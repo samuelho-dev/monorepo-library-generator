@@ -1,8 +1,8 @@
-import { UserCreatedEvent, UserDeletedEvent, UserUpdatedEvent } from "@samuelho-dev/contract-user"
-import type { UserEvent } from "@samuelho-dev/contract-user"
-import { LoggingService, MetricsService } from "@samuelho-dev/infra-observability"
-import { PubsubService } from "@samuelho-dev/infra-pubsub"
-import { Context, Effect, Layer, Queue, Schema } from "effect"
+import type { UserEvent } from '@samuelho-dev/contract-user'
+import { UserCreatedEvent, UserDeletedEvent, UserUpdatedEvent } from '@samuelho-dev/contract-user'
+import { LoggingService, MetricsService } from '@samuelho-dev/infra-observability'
+import { PubsubService } from '@samuelho-dev/infra-pubsub'
+import { Context, Effect, Layer, Queue, Schema } from 'effect'
 
 /**
  * User Projection Builder
@@ -91,7 +91,7 @@ export interface ProjectionBuilderInterface<TModel> {
   /**
    * Rebuild all projections from event history
    */
-  readonly rebuild: (events: ReadonlyArray<UserEvent>) => Effect.Effect<void>
+  readonly rebuild: (events: readonly UserEvent[]) => Effect.Effect<void>
 
   /**
    * Get current projection state
@@ -130,10 +130,10 @@ const createProjectionBuilderImpl = (
   store: ReadModelStore<UserReadModel>
 ) => {
   const processEvent = (event: UserEvent) =>
-    Effect.gen(function*() {
-      const counter = yield* metrics.counter("user_projections_processed_total")
+    Effect.gen(function* () {
+      const counter = yield* metrics.counter('user_projections_processed_total')
 
-      yield* logger.debug("Processing projection event", {
+      yield* logger.debug('Processing projection event', {
         eventType: event.metadata.eventType,
         correlationId: event.metadata.correlationId
       })
@@ -145,7 +145,7 @@ const createProjectionBuilderImpl = (
 
       // Use eventType for discrimination
       switch (event.metadata.eventType) {
-        case "UserCreatedEvent":
+        case 'UserCreatedEvent':
           yield* store.save(id, {
             id,
             createdAt: occurredAt,
@@ -154,7 +154,7 @@ const createProjectionBuilderImpl = (
             data: {}
           })
           break
-        case "UserUpdatedEvent":
+        case 'UserUpdatedEvent':
           if (current) {
             yield* store.save(id, {
               ...current,
@@ -163,18 +163,18 @@ const createProjectionBuilderImpl = (
             })
           }
           break
-        case "UserDeletedEvent":
+        case 'UserDeletedEvent':
           yield* store.delete(id)
           break
       }
 
       yield* counter.increment
-      yield* logger.info("Projection updated", {
+      yield* logger.info('Projection updated', {
         eventType: event.metadata.eventType,
         entityId: id
       })
     }).pipe(
-      Effect.withSpan("UserProjection.processEvent", {
+      Effect.withSpan('UserProjection.processEvent', {
         attributes: {
           eventType: event.metadata.eventType
         }
@@ -182,31 +182,27 @@ const createProjectionBuilderImpl = (
     )
 
   // Create event schema for topic subscription
-  const UserEventSchema = Schema.Union(
-    UserCreatedEvent,
-    UserUpdatedEvent,
-    UserDeletedEvent
-  )
+  const UserEventSchema = Schema.Union(UserCreatedEvent, UserUpdatedEvent, UserDeletedEvent)
 
   return {
     processEvent,
 
     startProjecting: () =>
-      Effect.gen(function*() {
-        yield* logger.info("Starting User projection consumer")
+      Effect.gen(function* () {
+        yield* logger.info('Starting User projection consumer')
 
         // Create topic and subscribe to events with scoped subscription
-        const topic = yield* pubsub.topic("user.events", UserEventSchema)
+        const topic = yield* pubsub.topic('user.events', UserEventSchema)
 
         // Use Effect.scoped to handle the Scope requirement internally
         yield* Effect.scoped(
-          Effect.gen(function*() {
+          Effect.gen(function* () {
             const subscription = yield* topic.subscribe
 
             // Process events in background
             yield* Effect.forkDaemon(
               Effect.forever(
-                Effect.gen(function*() {
+                Effect.gen(function* () {
                   const event = yield* Queue.take(subscription)
                   yield* processEvent(event)
                 })
@@ -216,15 +212,15 @@ const createProjectionBuilderImpl = (
         )
       }),
 
-    rebuild: (events: ReadonlyArray<UserEvent>) =>
-      Effect.gen(function*() {
+    rebuild: (events: readonly UserEvent[]) =>
+      Effect.gen(function* () {
         yield* logger.info(`Rebuilding projections from ${events.length} events`)
 
         for (const event of events) {
           yield* processEvent(event)
         }
 
-        yield* logger.info("Projection rebuild complete")
+        yield* logger.info('Projection rebuild complete')
       }),
 
     getProjection: (id: string) => store.get(id)
@@ -256,7 +252,7 @@ const createProjectionBuilderImpl = (
  * })
  * ```
  */
-export class UserProjectionBuilder extends Context.Tag("UserProjectionBuilder")<
+export class UserProjectionBuilder extends Context.Tag('UserProjectionBuilder')<
   UserProjectionBuilder,
   ProjectionBuilderInterface<UserReadModel>
 >() {
@@ -266,7 +262,7 @@ export class UserProjectionBuilder extends Context.Tag("UserProjectionBuilder")<
   static Live(store: ReadModelStore<UserReadModel>) {
     return Layer.effect(
       this,
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         const pubsub = yield* PubsubService
         const logger = yield* LoggingService
         const metrics = yield* MetricsService

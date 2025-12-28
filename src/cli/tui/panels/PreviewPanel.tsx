@@ -6,20 +6,20 @@
  * @module monorepo-library-generator/cli/tui/panels/PreviewPanel
  */
 
-import { Box, Text, useInput } from "ink"
-import { useEffect, useMemo, useState } from "react"
+import { Box, Text, useInput } from 'ink'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   countFiles,
+  type FilePreview,
   getFilePreview,
   getTargetDirectory,
   isWizardAction,
-  type FilePreview,
   type LibraryType
-} from "../../core"
-import { Panel } from "../components"
-import type { TUIAction, TUIState } from "../state"
-import { colors } from "../theme/colors"
+} from '../../core'
+import { Panel } from '../components'
+import type { TUIAction, TUIState } from '../state'
+import { colors } from '../theme/colors'
 
 interface PreviewPanelProps {
   readonly state: TUIState
@@ -45,15 +45,15 @@ interface TreeLine {
 /**
  * Build a tree structure from flat file paths
  */
-function buildTree(files: ReadonlyArray<FilePreview>): TreeNode {
-  const root: TreeNode = { name: "", isDirectory: true, children: new Map() }
+function buildTree(files: readonly FilePreview[]): TreeNode {
+  const root: TreeNode = { name: '', isDirectory: true, children: new Map() }
 
   for (const file of files) {
-    const parts = file.path.split("/").filter(p => p.length > 0)
+    const parts = file.path.split('/').filter((p) => p.length > 0)
     if (parts.length === 0) continue
 
     let current = root
-    const isDirectoryPath = file.path.endsWith("/")
+    const isDirectoryPath = file.path.endsWith('/')
 
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]
@@ -67,7 +67,8 @@ function buildTree(files: ReadonlyArray<FilePreview>): TreeNode {
           children: new Map()
         })
       }
-      current = current.children.get(part)!
+      const next = current.children.get(part)
+      if (next) current = next
     }
   }
 
@@ -77,7 +78,7 @@ function buildTree(files: ReadonlyArray<FilePreview>): TreeNode {
 /**
  * Flatten tree into lines with proper prefixes for rendering
  */
-function flattenTree(node: TreeNode, prefix = ""): TreeLine[] {
+function flattenTree(node: TreeNode, prefix = ''): TreeLine[] {
   const lines: TreeLine[] = []
 
   const sortedChildren = Array.from(node.children.values()).sort((a, b) => {
@@ -89,8 +90,8 @@ function flattenTree(node: TreeNode, prefix = ""): TreeLine[] {
 
   sortedChildren.forEach((child, index) => {
     const isLastChild = index === sortedChildren.length - 1
-    const connector = isLastChild ? "└─" : "├─"
-    const childPrefix = prefix + (isLastChild ? "   " : "│  ")
+    const connector = isLastChild ? '└─' : '├─'
+    const childPrefix = prefix + (isLastChild ? '   ' : '│  ')
 
     lines.push({
       name: child.isDirectory ? `${child.name}/` : child.name,
@@ -111,45 +112,55 @@ function flattenTree(node: TreeNode, prefix = ""): TreeLine[] {
  * Preview panel showing files to be generated
  */
 export function PreviewPanel({ state, dispatch }: PreviewPanelProps) {
-  const isActive = state.activePanel === "preview"
+  const isActive = state.activePanel === 'preview'
   const [scrollOffset, setScrollOffset] = useState(0)
 
   const previewType = state.hoveredType ?? state.selectedType
-  const previewName = state.libraryName || "<name>"
+  const previewName = state.libraryName || '<name>'
   const isNx = state.workspace?.isNx ?? true
 
   // Get files for preview
   const files = useMemo(() => {
     if (!previewType) return []
 
-    if (previewType === "init") {
+    if (previewType === 'init') {
       const allFiles: FilePreview[] = []
-      for (const name of ["kysely", "supabase"]) {
-        const providerFiles = getFilePreview("provider", name, {}, isNx)
-        allFiles.push(...providerFiles.map(f => ({ ...f, path: `provider/${name}/${f.path}` })))
+      for (const name of ['kysely', 'supabase']) {
+        const providerFiles = getFilePreview('provider', name, {}, isNx)
+        allFiles.push(...providerFiles.map((f) => ({ ...f, path: `provider/${name}/${f.path}` })))
       }
-      const envFiles = getFilePreview("infra", "env", {}, isNx)
-      allFiles.push(...envFiles.map(f => ({ ...f, path: `env/${f.path}` })))
-      for (const name of ["cache", "database", "logging", "metrics", "queue", "pubsub", "auth", "storage", "rpc"]) {
-        const infraFiles = getFilePreview("infra", name, {}, isNx)
-        allFiles.push(...infraFiles.map(f => ({ ...f, path: `infra/${name}/${f.path}` })))
+      const envFiles = getFilePreview('infra', 'env', {}, isNx)
+      allFiles.push(...envFiles.map((f) => ({ ...f, path: `env/${f.path}` })))
+      for (const name of [
+        'cache',
+        'database',
+        'logging',
+        'metrics',
+        'queue',
+        'pubsub',
+        'auth',
+        'storage',
+        'rpc'
+      ]) {
+        const infraFiles = getFilePreview('infra', name, {}, isNx)
+        allFiles.push(...infraFiles.map((f) => ({ ...f, path: `infra/${name}/${f.path}` })))
       }
       return allFiles
     }
 
-    if (previewType === "domain") {
-      return getFilePreview("domain", previewName, state.options, isNx)
+    if (previewType === 'domain') {
+      return getFilePreview('domain', previewName, state.options, isNx)
     }
 
     return getFilePreview(previewType as LibraryType, previewName, state.options, isNx)
   }, [previewType, previewName, state.options, isNx])
 
   useEffect(() => {
-    dispatch({ type: "SET_FILES_TO_CREATE", payload: files })
+    dispatch({ type: 'SET_FILES_TO_CREATE', payload: files })
   }, [dispatch, files])
 
   const targetDir = useMemo(() => {
-    if (!previewType || !state.workspace) return ""
+    if (!(previewType && state.workspace)) return ''
     if (isWizardAction(previewType)) {
       return state.workspace.librariesRoot
     }
@@ -177,10 +188,10 @@ export function PreviewPanel({ state, dispatch }: PreviewPanelProps) {
   useInput(
     (input, key) => {
       if (!isActive) return
-      if (input === "j" || key.downArrow) {
+      if (input === 'j' || key.downArrow) {
         setScrollOffset((prev) => Math.min(prev + 1, maxScrollOffset))
       }
-      if (input === "k" || key.upArrow) {
+      if (input === 'k' || key.upArrow) {
         setScrollOffset((prev) => Math.max(prev - 1, 0))
       }
     },
@@ -207,7 +218,11 @@ export function PreviewPanel({ state, dispatch }: PreviewPanelProps) {
         {visibleLines.map((line, index) => (
           <Box key={`${line.name}-${index}`}>
             <Text color={colors.muted}>{line.prefix} </Text>
-            <Text color={line.isDirectory ? colors.root : line.isOptional ? colors.muted : colors.secondary}>
+            <Text
+              color={
+                line.isDirectory ? colors.root : line.isOptional ? colors.muted : colors.secondary
+              }
+            >
               {line.name}
             </Text>
             {line.isOptional && <Text color={colors.muted}> (opt)</Text>}

@@ -17,13 +17,13 @@ export type {
   WizardSelection,
   WorkspaceContext,
   WorkspaceType
-} from "./library"
+} from './library'
 
 export type {
   GeneratorOptions,
   InputComponentType,
   OptionFieldConfig,
   ValidationResult
-} from "./options"
+} from './options'
 
-export { getEffectiveTags } from "./options"
+export { getEffectiveTags } from './options'

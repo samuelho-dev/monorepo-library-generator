@@ -6,11 +6,11 @@
  * @module monorepo-library-generator/cli/tui/layouts/PanelLayout
  */
 
-import { Box, useApp, useInput } from "ink"
-import type React from "react"
+import { Box, useApp, useInput } from 'ink'
+import type React from 'react'
 
-import { Footer, Header } from "../components"
-import { canGenerate, type TUIAction, type TUIState } from "../state"
+import { Footer, Header } from '../components'
+import { canGenerate, type TUIAction, type TUIState } from '../state'
 
 interface PanelLayoutProps {
   readonly state: TUIState
@@ -31,7 +31,7 @@ export function PanelLayout({ state, dispatch, children }: PanelLayoutProps) {
   // Global keyboard shortcuts
   useInput((input, key) => {
     // Quit
-    if (input === "q") {
+    if (input === 'q') {
       exit()
       return
     }
@@ -39,36 +39,36 @@ export function PanelLayout({ state, dispatch, children }: PanelLayoutProps) {
     // Panel switching with Tab
     if (key.tab) {
       if (key.shift) {
-        dispatch({ type: "PREVIOUS_PANEL" })
+        dispatch({ type: 'PREVIOUS_PANEL' })
       } else {
-        dispatch({ type: "NEXT_PANEL" })
+        dispatch({ type: 'NEXT_PANEL' })
       }
       return
     }
 
     // Direct panel access with numbers
-    if (input === "1") {
-      dispatch({ type: "SET_ACTIVE_PANEL", payload: "types" })
+    if (input === '1') {
+      dispatch({ type: 'SET_ACTIVE_PANEL', payload: 'types' })
       return
     }
-    if (input === "2") {
-      dispatch({ type: "SET_ACTIVE_PANEL", payload: "options" })
+    if (input === '2') {
+      dispatch({ type: 'SET_ACTIVE_PANEL', payload: 'options' })
       return
     }
-    if (input === "3") {
-      dispatch({ type: "SET_ACTIVE_PANEL", payload: "preview" })
+    if (input === '3') {
+      dispatch({ type: 'SET_ACTIVE_PANEL', payload: 'preview' })
       return
     }
 
     // Generate with G (capital)
-    if (input === "G" && canGenerate(state)) {
-      dispatch({ type: "START_GENERATION" })
+    if (input === 'G' && canGenerate(state)) {
+      dispatch({ type: 'START_GENERATION' })
       return
     }
 
     // New generation after complete
-    if (input === "n" && state.mode === "complete") {
-      dispatch({ type: "RESET_FOR_NEW" })
+    if (input === 'n' && state.mode === 'complete') {
+      dispatch({ type: 'RESET_FOR_NEW' })
       return
     }
   })

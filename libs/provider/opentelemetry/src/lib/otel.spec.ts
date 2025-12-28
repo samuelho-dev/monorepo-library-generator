@@ -1,5 +1,5 @@
-import { Effect } from "effect"
-import { OpenTelemetryProvider } from "./otel"
+import { Effect } from 'effect'
+import { OpenTelemetryProvider } from './otel'
 
 /**
  * OpenTelemetry Provider Tests
@@ -8,10 +8,10 @@ import { OpenTelemetryProvider } from "./otel"
  *
  * @module @samuelho-dev/provider-opentelemetry/spec
  */
-describe("OpenTelemetryProvider", () => {
-  describe("Test layer", () => {
-    it("provides disabled tracing and metrics", async () => {
-      const program = Effect.gen(function*() {
+describe('OpenTelemetryProvider', () => {
+  describe('Test layer', () => {
+    it('provides disabled tracing and metrics', async () => {
+      const program = Effect.gen(function* () {
         const otel = yield* OpenTelemetryProvider
         return {
           tracesEnabled: otel.tracesEnabled,
@@ -26,15 +26,15 @@ describe("OpenTelemetryProvider", () => {
 
       expect(result.tracesEnabled).toBe(false)
       expect(result.metricsEnabled).toBe(false)
-      expect(result.serviceName).toBe("test-service")
+      expect(result.serviceName).toBe('test-service')
     })
   })
 
-  describe("make factory", () => {
-    it("creates layer with custom configuration", () => {
+  describe('make factory', () => {
+    it('creates layer with custom configuration', () => {
       const customLayer = OpenTelemetryProvider.make({
-        serviceName: "custom-service",
-        serviceVersion: "1.2.3",
+        serviceName: 'custom-service',
+        serviceVersion: '1.2.3',
         traces: { enabled: true },
         metrics: { enabled: false }
       })
@@ -45,10 +45,10 @@ describe("OpenTelemetryProvider", () => {
     })
   })
 
-  describe("Auto layer", () => {
-    it("selects Test layer in test environment", async () => {
+  describe('Auto layer', () => {
+    it('selects Test layer in test environment', async () => {
       // In test environment, Auto should resolve to Test layer
-      const program = Effect.gen(function*() {
+      const program = Effect.gen(function* () {
         const otel = yield* OpenTelemetryProvider
         return otel.serviceName
       })
@@ -57,7 +57,7 @@ describe("OpenTelemetryProvider", () => {
         program.pipe(Effect.provide(OpenTelemetryProvider.Test))
       )
 
-      expect(result).toBe("test-service")
+      expect(result).toBe('test-service')
     })
   })
 })

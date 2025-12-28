@@ -1,8 +1,8 @@
-import { Redis } from "@samuelho-dev/provider-redis"
-import { Effect, Layer, PubSub, Schema } from "effect"
-import type { Fiber } from "effect"
-import { PubsubService } from "./service"
-import type { TopicHandle, TopicOptions } from "./service"
+import { Redis } from '@samuelho-dev/provider-redis'
+import type { Fiber } from 'effect'
+import { Effect, Layer, PubSub, Schema } from 'effect'
+import type { TopicHandle, TopicOptions } from './service'
+import { PubsubService } from './service'
 
 /**
  * Pubsub Redis Layer
@@ -57,7 +57,7 @@ Use Cases:
  */
 export const PubsubRedisLayer = Layer.scoped(
   PubsubService,
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const redis = yield* Redis
     const pubsubClient = redis.pubsub
 
@@ -76,7 +76,7 @@ export const PubsubRedisLayer = Layer.scoped(
       schema: Schema.Schema<A, I, never>,
       capacity: number
     ) =>
-      Effect.gen(function*() {
+      Effect.gen(function* () {
         // Create JSON codec from schema for type-safe serialization
         const JsonSchema = Schema.parseJson(schema)
         const encode = Schema.encode(JsonSchema)
@@ -92,7 +92,9 @@ export const PubsubRedisLayer = Layer.scoped(
               // Effect-idiomatic decode with error logging
               Effect.try(() => decode(message)).pipe(
                 Effect.flatMap((decoded) => PubSub.publish(localPubSub, decoded)),
-                Effect.catchAll((error) => Effect.logWarning("PubSub decode error", { channelName, error })),
+                Effect.catchAll((error) =>
+                  Effect.logWarning('PubSub decode error', { channelName, error })
+                ),
                 Effect.runFork
               )
             })
@@ -102,7 +104,7 @@ export const PubsubRedisLayer = Layer.scoped(
 
         return {
           publish: (message: A) =>
-            Effect.gen(function*() {
+            Effect.gen(function* () {
               // Type-safe encode using Schema
               const serialized = yield* encode(message)
               // Redis errors are converted to defects (orDie) since they indicate infrastructure failure
@@ -113,11 +115,13 @@ export const PubsubRedisLayer = Layer.scoped(
             }),
 
           publishAll: (messages: Iterable<A>) =>
-            Effect.gen(function*() {
+            Effect.gen(function* () {
               let success = false
               for (const message of messages) {
                 const serialized = yield* encode(message)
-                const count = yield* pubsubClient.publish(channelName, serialized).pipe(Effect.orDie)
+                const count = yield* pubsubClient
+                  .publish(channelName, serialized)
+                  .pipe(Effect.orDie)
                 yield* PubSub.publish(localPubSub, message)
                 if (count > 0) success = true
               }
@@ -131,17 +135,11 @@ export const PubsubRedisLayer = Layer.scoped(
       })
 
     return {
-      topic: <A, I>(
-        name: string,
-        schema: Schema.Schema<A, I, never>,
-        options?: TopicOptions
-      ) => createTypedTopicHandle(name, schema, options?.capacity ?? 1000),
+      topic: <A, I>(name: string, schema: Schema.Schema<A, I, never>, options?: TopicOptions) =>
+        createTypedTopicHandle(name, schema, options?.capacity ?? 1000),
 
-      createTopic: <A, I>(
-        schema: Schema.Schema<A, I, never>,
-        options?: TopicOptions
-      ) =>
-        Effect.gen(function*() {
+      createTopic: <A, I>(schema: Schema.Schema<A, I, never>, options?: TopicOptions) =>
+        Effect.gen(function* () {
           const capacity = options?.capacity ?? 1000
           const name = `ephemeral:${crypto.randomUUID()}`
 
@@ -158,7 +156,9 @@ export const PubsubRedisLayer = Layer.scoped(
               // Effect-idiomatic decode with error logging
               Effect.try(() => decode(message)).pipe(
                 Effect.flatMap((decoded) => PubSub.publish(localPubSub, decoded)),
-                Effect.catchAll((error) => Effect.logWarning("PubSub decode error", { channel: name, error })),
+                Effect.catchAll((error) =>
+                  Effect.logWarning('PubSub decode error', { channel: name, error })
+                ),
                 Effect.runFork
               )
             })
@@ -166,14 +166,18 @@ export const PubsubRedisLayer = Layer.scoped(
 
           // Cleanup on scope close
           yield* Effect.addFinalizer(() =>
-            pubsubClient.unsubscribe(name).pipe(
-              Effect.catchAll((error) => Effect.logWarning(`Failed to unsubscribe from ${name}: ${String(error)}`))
-            )
+            pubsubClient
+              .unsubscribe(name)
+              .pipe(
+                Effect.catchAll((error) =>
+                  Effect.logWarning(`Failed to unsubscribe from ${name}: ${String(error)}`)
+                )
+              )
           )
 
           return {
             publish: (message: A) =>
-              Effect.gen(function*() {
+              Effect.gen(function* () {
                 const serialized = yield* encode(message)
                 const count = yield* pubsubClient.publish(name, serialized).pipe(Effect.orDie)
                 yield* PubSub.publish(localPubSub, message)
@@ -181,7 +185,7 @@ export const PubsubRedisLayer = Layer.scoped(
               }),
 
             publishAll: (messages: Iterable<A>) =>
-              Effect.gen(function*() {
+              Effect.gen(function* () {
                 let success = false
                 for (const message of messages) {
                   const serialized = yield* encode(message)
@@ -200,9 +204,9 @@ export const PubsubRedisLayer = Layer.scoped(
 
       healthCheck: () =>
         pubsubClient.ping().pipe(
-          Effect.map((response) => response === "PONG"),
+          Effect.map((response) => response === 'PONG'),
           Effect.catchAll(() => Effect.succeed(false)),
-          Effect.withSpan("Pubsub.healthCheck")
+          Effect.withSpan('Pubsub.healthCheck')
         )
     }
   })
@@ -321,8 +325,8 @@ export const withEventPublishing = <A, E, R, Event, TopicE>(
 ) =>
   effect.pipe(
     Effect.tap((result) =>
-      topic.publish(buildEvent(result)).pipe(
-        Effect.catchAll((error) => Effect.logWarning("Event publishing failed", { error }))
-      )
+      topic
+        .publish(buildEvent(result))
+        .pipe(Effect.catchAll((error) => Effect.logWarning('Event publishing failed', { error })))
     )
   )

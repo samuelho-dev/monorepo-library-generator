@@ -1,5 +1,5 @@
-import type { Bucket, FileObject, FileOptions, TransformOptions } from "@supabase/storage-js"
-import { Schema } from "effect"
+import type { Bucket, FileObject, FileOptions, TransformOptions } from '@supabase/storage-js'
+import { Schema } from 'effect'
 
 /**
  * Supabase Provider Types
@@ -119,7 +119,13 @@ export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>
  * Storage types are re-exported from the native @supabase/storage-js SDK
  * with aliases for consistent naming across the provider.
  */
-export type { Bucket, FileObject, FileOptions, SearchOptions, TransformOptions } from "@supabase/storage-js"
+export type {
+  Bucket,
+  FileObject,
+  FileOptions,
+  SearchOptions,
+  TransformOptions
+} from '@supabase/storage-js'
 
 /**
  * Type alias for storage bucket (matches Bucket from SDK)
@@ -188,7 +194,7 @@ export const StorageFileSchema = Schema.Struct({
  *
  * Used by RPC middleware to identify how the user was authenticated.
  */
-export type AuthMethod = "session" | "api-key" | "service-role"
+export type AuthMethod = 'session' | 'api-key' | 'service-role'
 
 /**
  * Sign in credentials
@@ -214,20 +220,20 @@ export interface SignUpCredentials {
  * OAuth provider
  */
 export type OAuthProvider =
-  | "google"
-  | "github"
-  | "gitlab"
-  | "bitbucket"
-  | "azure"
-  | "facebook"
-  | "twitter"
-  | "discord"
-  | "slack"
-  | "spotify"
-  | "notion"
-  | "zoom"
-  | "linkedin"
-  | "linkedin_oidc"
-  | "apple"
-  | "keycloak"
-  | "workos"
+  | 'google'
+  | 'github'
+  | 'gitlab'
+  | 'bitbucket'
+  | 'azure'
+  | 'facebook'
+  | 'twitter'
+  | 'discord'
+  | 'slack'
+  | 'spotify'
+  | 'notion'
+  | 'zoom'
+  | 'linkedin'
+  | 'linkedin_oidc'
+  | 'apple'
+  | 'keycloak'
+  | 'workos'

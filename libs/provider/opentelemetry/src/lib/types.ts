@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * OpenTelemetry Provider Types
@@ -31,7 +31,7 @@ export const TracesConfigSchema = Schema.Struct({
    * @default "http://localhost:4318/v1/traces"
    */
   endpoint: Schema.optionalWith(Schema.String, {
-    default: () => "http://localhost:4318/v1/traces"
+    default: () => 'http://localhost:4318/v1/traces'
   }),
 
   /**
@@ -43,7 +43,7 @@ export const TracesConfigSchema = Schema.Struct({
   samplingRatio: Schema.optionalWith(
     Schema.Number.pipe(
       Schema.filter((n) => n >= 0 && n <= 1, {
-        message: () => "Sampling ratio must be between 0.0 and 1.0"
+        message: () => 'Sampling ratio must be between 0.0 and 1.0'
       })
     ),
     { default: () => 1.0 }
@@ -70,7 +70,7 @@ export const MetricsConfigSchema = Schema.Struct({
    * @default "http://localhost:4318/v1/metrics"
    */
   endpoint: Schema.optionalWith(Schema.String, {
-    default: () => "http://localhost:4318/v1/metrics"
+    default: () => 'http://localhost:4318/v1/metrics'
   }),
 
   /**
@@ -80,7 +80,7 @@ export const MetricsConfigSchema = Schema.Struct({
   exportIntervalMs: Schema.optionalWith(
     Schema.Number.pipe(
       Schema.filter((n) => n >= 1000, {
-        message: () => "Export interval must be at least 1000ms"
+        message: () => 'Export interval must be at least 1000ms'
       })
     ),
     { default: () => 60000 }
@@ -108,7 +108,7 @@ export const OpenTelemetryConfigSchema = Schema.Struct({
    * @default "0.0.0"
    */
   serviceVersion: Schema.optionalWith(Schema.String, {
-    default: () => "0.0.0"
+    default: () => '0.0.0'
   }),
 
   /**
@@ -117,7 +117,7 @@ export const OpenTelemetryConfigSchema = Schema.Struct({
   traces: Schema.optionalWith(TracesConfigSchema, {
     default: () => ({
       enabled: true,
-      endpoint: "http://localhost:4318/v1/traces",
+      endpoint: 'http://localhost:4318/v1/traces',
       samplingRatio: 1.0
     })
   }),
@@ -128,7 +128,7 @@ export const OpenTelemetryConfigSchema = Schema.Struct({
   metrics: Schema.optionalWith(MetricsConfigSchema, {
     default: () => ({
       enabled: true,
-      endpoint: "http://localhost:4318/v1/metrics",
+      endpoint: 'http://localhost:4318/v1/metrics',
       exportIntervalMs: 60000
     })
   }),

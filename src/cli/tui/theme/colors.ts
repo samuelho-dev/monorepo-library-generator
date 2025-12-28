@@ -11,31 +11,31 @@
  */
 export const colors = {
   // Panel states
-  panelActive: "cyan",
-  panelInactive: "gray",
-  panelBorder: "gray",
+  panelActive: 'cyan',
+  panelInactive: 'gray',
+  panelBorder: 'gray',
 
   // Text colors
-  primary: "cyan",
-  secondary: "white",
-  muted: "gray",
-  highlight: "yellow",
+  primary: 'cyan',
+  secondary: 'white',
+  muted: 'gray',
+  highlight: 'yellow',
 
   // Status colors
-  success: "green",
-  error: "red",
-  warning: "yellow",
-  info: "blue",
+  success: 'green',
+  error: 'red',
+  warning: 'yellow',
+  info: 'blue',
 
   // Library type colors
-  libraryType: "magenta",
-  libraryName: "green",
-  root: "blue",
+  libraryType: 'magenta',
+  libraryName: 'green',
+  root: 'blue',
 
   // Input states
-  inputActive: "cyan",
-  inputInactive: "gray",
-  placeholder: "gray"
+  inputActive: 'cyan',
+  inputInactive: 'gray',
+  placeholder: 'gray'
 } as const
 
 /**
@@ -43,41 +43,41 @@ export const colors = {
  */
 export const icons = {
   // Selection
-  selected: ">",
-  unselected: " ",
-  chevron: ">",
+  selected: '>',
+  unselected: ' ',
+  chevron: '>',
 
   // Checkboxes
-  checked: "[x]",
-  unchecked: "[ ]",
+  checked: '[x]',
+  unchecked: '[ ]',
 
   // Status
-  success: "✓",
-  error: "✗",
-  warning: "!",
-  info: "i",
-  spinner: "◐",
+  success: '✓',
+  error: '✗',
+  warning: '!',
+  info: 'i',
+  spinner: '◐',
 
   // Tree
-  treeBranch: "├─",
-  treeLast: "└─",
-  treeVertical: "│",
+  treeBranch: '├─',
+  treeLast: '└─',
+  treeVertical: '│',
 
   // Arrows
-  arrowRight: "→",
-  arrowDown: "↓"
+  arrowRight: '→',
+  arrowDown: '↓'
 } as const
 
 /**
  * Panel IDs
  */
-export type PanelId = "types" | "options" | "preview"
+export type PanelId = 'types' | 'options' | 'preview'
 
 /**
  * Panel configuration
  */
 export const panelConfig: Record<PanelId, { title: string; shortcut: string }> = {
-  types: { title: "Types", shortcut: "1" },
-  options: { title: "Options", shortcut: "2" },
-  preview: { title: "Preview", shortcut: "3" }
+  types: { title: 'Types', shortcut: '1' },
+  options: { title: 'Options', shortcut: '2' },
+  preview: { title: 'Preview', shortcut: '3' }
 }

@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * Storage Infrastructure Types
@@ -40,7 +40,7 @@ export interface StorageConfig {
   /**
    * Allowed MIME types
    */
-  readonly allowedMimeTypes?: ReadonlyArray<string>
+  readonly allowedMimeTypes?: readonly string[]
 
   /**
    * Default signed URL expiration in seconds
@@ -90,8 +90,8 @@ export interface ListFilesOptions {
   readonly offset?: number
   readonly prefix?: string
   readonly sortBy?: {
-    readonly column: "name" | "created_at" | "updated_at"
-    readonly order: "asc" | "desc"
+    readonly column: 'name' | 'created_at' | 'updated_at'
+    readonly order: 'asc' | 'desc'
   }
 }
 
@@ -109,7 +109,7 @@ export interface StorageFileInfo {
  * List files result
  */
 export interface ListFilesResult {
-  readonly files: ReadonlyArray<StorageFileInfo>
+  readonly files: readonly StorageFileInfo[]
   readonly hasMore: boolean
   readonly nextOffset?: number
 }

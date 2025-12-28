@@ -1,7 +1,7 @@
-import { HttpClient, HttpClientRequest } from "@effect/platform"
-import type { HttpClientResponse } from "@effect/platform"
-import { Context, Duration, Effect, Layer, Option, Schema } from "effect"
-import { RpcInfraError } from "./errors"
+import type { HttpClientResponse } from '@effect/platform'
+import { HttpClient, HttpClientRequest } from '@effect/platform'
+import { Context, Duration, Effect, Layer, Option, Schema } from 'effect'
+import { RpcInfraError } from './errors'
 
 /**
  * Rpc Client
@@ -80,7 +80,7 @@ export interface RpcClientConfig {
 /**
  * RPC Client Config Context Tag
  */
-export class RpcClientConfigTag extends Context.Tag("RpcClientConfig")<
+export class RpcClientConfigTag extends Context.Tag('RpcClientConfig')<
   RpcClientConfigTag,
   RpcClientConfig
 >() {}
@@ -113,9 +113,7 @@ export class RpcClientConfigTag extends Context.Tag("RpcClientConfig")<
  * })
  * ```
  */
-export class RpcClient extends Context.Tag(
-  "@samuelho-dev/infra-rpc/RpcClient"
-)<
+export class RpcClient extends Context.Tag('@samuelho-dev/infra-rpc/RpcClient')<
   RpcClient,
   {
     /**
@@ -160,13 +158,13 @@ export class RpcClient extends Context.Tag(
    */
   static readonly Http = Layer.effect(
     this,
-    Effect.gen(function*() {
+    Effect.gen(function* () {
       const config = yield* RpcClientConfigTag
       const httpClient = yield* HttpClient.HttpClient
 
       // Build default headers
       const defaultHeaders: Record<string, string> = {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...config.headers
       }
 
@@ -175,12 +173,10 @@ export class RpcClient extends Context.Tag(
 
       // Helper: Get auth header from token provider
       const getAuthHeader = () =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           if (!config.getAuthToken) return {}
           const token = yield* config.getAuthToken()
-          return Option.isSome(token)
-            ? { Authorization: `Bearer ${token.value}` }
-            : {}
+          return Option.isSome(token) ? { Authorization: `Bearer ${token.value}` } : {}
         })
 
       // Helper: Execute HTTP request with retries
@@ -188,18 +184,22 @@ export class RpcClient extends Context.Tag(
       const executeRequest = (request: HttpClientRequest.HttpClientRequest) => {
         const baseEffect = httpClient.execute(request).pipe(
           Effect.timeoutFail({
-            duration: Duration.decode(config.timeout ?? "30 seconds"),
-            onTimeout: () => new RpcInfraError({ message: "Request timeout", code: "TIMEOUT" })
+            duration: Duration.decode(config.timeout ?? '30 seconds'),
+            onTimeout: () => new RpcInfraError({ message: 'Request timeout', code: 'TIMEOUT' })
           })
         )
 
-        const withRetry = maxRetries > 0
-          ? baseEffect.pipe(Effect.retry({ times: maxRetries }))
-          : baseEffect
+        const withRetry =
+          maxRetries > 0 ? baseEffect.pipe(Effect.retry({ times: maxRetries })) : baseEffect
 
         return withRetry.pipe(
           Effect.catchAll((error) =>
-            Effect.fail(new RpcInfraError({ message: `RPC call failed: ${String(error)}`, code: "NETWORK_ERROR" }))
+            Effect.fail(
+              new RpcInfraError({
+                message: `RPC call failed: ${String(error)}`,
+                code: 'NETWORK_ERROR'
+              })
+            )
           )
         )
       }
@@ -208,36 +208,49 @@ export class RpcClient extends Context.Tag(
       const parseResponseBody = (response: HttpClientResponse.HttpClientResponse) =>
         response.json.pipe(
           Effect.catchAll(() =>
-            Effect.fail(new RpcInfraError({ message: "Failed to parse RPC response", code: "PARSE_ERROR" }))
+            Effect.fail(
+              new RpcInfraError({ message: 'Failed to parse RPC response', code: 'PARSE_ERROR' })
+            )
           )
         )
 
       // Schema for RPC error response validation
       const RpcErrorResponseSchema = Schema.Struct({
-        error: Schema.optional(Schema.Struct({
-          message: Schema.optional(Schema.String),
-          code: Schema.optional(Schema.String)
-        }))
+        error: Schema.optional(
+          Schema.Struct({
+            message: Schema.optional(Schema.String),
+            code: Schema.optional(Schema.String)
+          })
+        )
       })
 
       // Helper: Check for RPC-level error in body
       const checkRpcError = (body: unknown) => {
-        if (body && typeof body === "object" && "error" in body) {
+        if (body && typeof body === 'object' && 'error' in body) {
           const errorResult = Schema.decodeUnknownOption(RpcErrorResponseSchema)(body)
           const errorBody = Option.isSome(errorResult) ? errorResult.value : { error: undefined }
-          return Effect.fail(new RpcInfraError({
-            message: errorBody.error?.message ?? "Unknown RPC error",
-            code: errorBody.error?.code ?? "RPC_ERROR"
-          }))
+          return Effect.fail(
+            new RpcInfraError({
+              message: errorBody.error?.message ?? 'Unknown RPC error',
+              code: errorBody.error?.code ?? 'RPC_ERROR'
+            })
+          )
         }
         return Effect.succeed(body)
       }
 
       // Helper: Validate response against schema
-      const validateResponse = <A, I, Deps>(body: unknown, responseSchema: Schema.Schema<A, I, Deps>) =>
+      const validateResponse = <A, I, Deps>(
+        body: unknown,
+        responseSchema: Schema.Schema<A, I, Deps>
+      ) =>
         Schema.decodeUnknown(responseSchema)(body).pipe(
-          Effect.mapError((parseError) =>
-            new RpcInfraError({ message: `Response validation failed: ${parseError.message}`, code: "VALIDATION_ERROR" })
+          Effect.mapError(
+            (parseError) =>
+              new RpcInfraError({
+                message: `Response validation failed: ${parseError.message}`,
+                code: 'VALIDATION_ERROR'
+              })
           )
         )
 
@@ -247,22 +260,31 @@ export class RpcClient extends Context.Tag(
         responseSchema: Schema.Schema<A, I, Deps>,
         customHeaders?: Record<string, string>
       ) =>
-        Effect.gen(function*() {
+        Effect.gen(function* () {
           const authHeader = yield* getAuthHeader()
 
           // Build request - handle potential body serialization error
           const request = yield* HttpClientRequest.post(config.baseUrl).pipe(
             HttpClientRequest.setHeaders({ ...defaultHeaders, ...authHeader, ...customHeaders }),
             HttpClientRequest.bodyJson({ operation, payload }),
-            Effect.mapError((error) =>
-              new RpcInfraError({ message: `Failed to serialize request body: ${String(error)}`, code: "SERIALIZE_ERROR" })
+            Effect.mapError(
+              (error) =>
+                new RpcInfraError({
+                  message: `Failed to serialize request body: ${String(error)}`,
+                  code: 'SERIALIZE_ERROR'
+                })
             )
           )
 
           const response = yield* executeRequest(request)
 
           if (response.status !== 200) {
-            return yield* Effect.fail(new RpcInfraError({ message: `RPC error: HTTP ${response.status}`, code: "HTTP_ERROR" }))
+            return yield* Effect.fail(
+              new RpcInfraError({
+                message: `RPC error: HTTP ${response.status}`,
+                code: 'HTTP_ERROR'
+              })
+            )
           }
 
           const body = yield* parseResponseBody(response)
@@ -297,10 +319,11 @@ export class RpcClient extends Context.Tag(
             return effect.pipe(
               Effect.timeoutFail({
                 duration: Duration.decode(options.timeout),
-                onTimeout: () => new RpcInfraError({
-                  message: "Request timeout",
-                  code: "TIMEOUT"
-                })
+                onTimeout: () =>
+                  new RpcInfraError({
+                    message: 'Request timeout',
+                    code: 'TIMEOUT'
+                  })
               })
             )
           }
@@ -308,8 +331,8 @@ export class RpcClient extends Context.Tag(
         },
 
         healthCheck: () =>
-          makeRequest("_health", {}, HealthCheckSchema).pipe(
-            Effect.map((r) => r.status === "ok"),
+          makeRequest('_health', {}, HealthCheckSchema).pipe(
+            Effect.map((r) => r.status === 'ok'),
             Effect.catchAll(() => Effect.succeed(false))
           )
       }
@@ -353,16 +376,15 @@ export class RpcClient extends Context.Tag(
         const mockResponse = mockResponses[operation]
         if (mockResponse !== undefined) {
           // Support function-based mocks for payload-dependent responses
-          const response = typeof mockResponse === "function"
-            ? mockResponse(payload)
-            : mockResponse
+          const response = typeof mockResponse === 'function' ? mockResponse(payload) : mockResponse
 
           return Schema.decodeUnknown(responseSchema)(response).pipe(
-            Effect.mapError((parseError) =>
-              new RpcInfraError({
-                message: `Mock validation failed: ${parseError.message}`,
-                code: "VALIDATION_ERROR"
-              })
+            Effect.mapError(
+              (parseError) =>
+                new RpcInfraError({
+                  message: `Mock validation failed: ${parseError.message}`,
+                  code: 'VALIDATION_ERROR'
+                })
             ),
             Effect.tap(() =>
               Effect.logDebug(`Test RPC: ${operation} with payload: ${JSON.stringify(payload)}`)
@@ -372,7 +394,7 @@ export class RpcClient extends Context.Tag(
         return Effect.fail(
           new RpcInfraError({
             message: `No mock for ${operation}`,
-            code: "NO_MOCK"
+            code: 'NO_MOCK'
           })
         )
       },
@@ -390,16 +412,15 @@ export class RpcClient extends Context.Tag(
         const mockResponse = mockResponses[operation]
         if (mockResponse !== undefined) {
           // Support function-based mocks for payload-dependent responses
-          const response = typeof mockResponse === "function"
-            ? mockResponse(payload)
-            : mockResponse
+          const response = typeof mockResponse === 'function' ? mockResponse(payload) : mockResponse
 
           return Schema.decodeUnknown(responseSchema)(response).pipe(
-            Effect.mapError((parseError) =>
-              new RpcInfraError({
-                message: `Mock validation failed: ${parseError.message}`,
-                code: "VALIDATION_ERROR"
-              })
+            Effect.mapError(
+              (parseError) =>
+                new RpcInfraError({
+                  message: `Mock validation failed: ${parseError.message}`,
+                  code: 'VALIDATION_ERROR'
+                })
             ),
             Effect.tap(() =>
               Effect.logDebug(
@@ -411,7 +432,7 @@ export class RpcClient extends Context.Tag(
         return Effect.fail(
           new RpcInfraError({
             message: `No mock for ${operation}`,
-            code: "NO_MOCK"
+            code: 'NO_MOCK'
           })
         )
       },
@@ -447,7 +468,4 @@ export class RpcClient extends Context.Tag(
  * ```
  */
 export const createRpcClientLayer = (config: RpcClientConfig) =>
-  Layer.provide(
-    RpcClient.Http,
-    Layer.succeed(RpcClientConfigTag, config)
-  )
+  Layer.provide(RpcClient.Http, Layer.succeed(RpcClientConfigTag, config))

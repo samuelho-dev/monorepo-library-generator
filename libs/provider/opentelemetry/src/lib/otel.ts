@@ -1,11 +1,11 @@
-import { NodeSdk } from "@effect/opentelemetry"
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http"
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
-import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node"
-import { env } from "@samuelho-dev/env"
-import { Context, Layer } from "effect"
-import type { OpenTelemetryConfig } from "./types"
+import { NodeSdk } from '@effect/opentelemetry'
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
+import { env } from '@samuelho-dev/env'
+import { Context, Layer } from 'effect'
+import type { OpenTelemetryConfig } from './types'
 
 /**
  * OpenTelemetry Provider Service
@@ -90,11 +90,8 @@ export interface OpenTelemetryProviderOperations {
  * ```
  */
 export class OpenTelemetryProvider extends Context.Tag(
-  "@samuelho-dev/provider-opentelemetry/OpenTelemetryProvider"
-)<
-  OpenTelemetryProvider,
-  OpenTelemetryProviderOperations
->() {
+  '@samuelho-dev/provider-opentelemetry/OpenTelemetryProvider'
+)<OpenTelemetryProvider, OpenTelemetryProviderOperations>() {
   // ===========================================================================
   // Factory: Create Custom Provider
   // ===========================================================================
@@ -121,7 +118,7 @@ export class OpenTelemetryProvider extends Context.Tag(
   static make(config: OpenTelemetryConfig) {
     const tracesEnabled = config.traces?.enabled !== false
     const metricsEnabled = config.metrics?.enabled !== false
-    const serviceVersion = config.serviceVersion ?? "0.0.0"
+    const serviceVersion = config.serviceVersion ?? '0.0.0'
 
     // Create the OTEL SDK layer
     const sdkLayer = NodeSdk.layer(() => ({
@@ -132,18 +129,18 @@ export class OpenTelemetryProvider extends Context.Tag(
       },
       spanProcessor: tracesEnabled
         ? new BatchSpanProcessor(
-          new OTLPTraceExporter({
-            url: config.traces?.endpoint ?? "http://localhost:4318/v1/traces"
-          })
-        )
+            new OTLPTraceExporter({
+              url: config.traces?.endpoint ?? 'http://localhost:4318/v1/traces'
+            })
+          )
         : undefined,
       metricReader: metricsEnabled
         ? new PeriodicExportingMetricReader({
-          exporter: new OTLPMetricExporter({
-            url: config.metrics?.endpoint ?? "http://localhost:4318/v1/metrics"
-          }),
-          exportIntervalMillis: config.metrics?.exportIntervalMs ?? 60000
-        })
+            exporter: new OTLPMetricExporter({
+              url: config.metrics?.endpoint ?? 'http://localhost:4318/v1/metrics'
+            }),
+            exportIntervalMillis: config.metrics?.exportIntervalMs ?? 60000
+          })
         : undefined
     }))
 
@@ -177,22 +174,24 @@ export class OpenTelemetryProvider extends Context.Tag(
    * - OTEL_METRICS_EXPORT_INTERVAL_MS: Export interval (default: 60000)
    */
   static readonly Live = OpenTelemetryProvider.make({
-    serviceName: env.OTEL_SERVICE_NAME ?? "unknown-service",
-    serviceVersion: env.OTEL_SERVICE_VERSION ?? "0.0.0",
+    serviceName: env.OTEL_SERVICE_NAME ?? 'unknown-service',
+    serviceVersion: env.OTEL_SERVICE_VERSION ?? '0.0.0',
     traces: {
-      enabled: env.OTEL_TRACES_ENABLED !== "false",
-      endpoint: env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ??
+      enabled: env.OTEL_TRACES_ENABLED !== 'false',
+      endpoint:
+        env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ??
         env.OTEL_EXPORTER_OTLP_ENDPOINT ??
-        "http://localhost:4318/v1/traces",
+        'http://localhost:4318/v1/traces',
       samplingRatio: env.OTEL_TRACES_SAMPLER_ARG
         ? Number.parseFloat(env.OTEL_TRACES_SAMPLER_ARG)
         : 1.0
     },
     metrics: {
-      enabled: env.OTEL_METRICS_ENABLED !== "false",
-      endpoint: env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ??
+      enabled: env.OTEL_METRICS_ENABLED !== 'false',
+      endpoint:
+        env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT ??
         env.OTEL_EXPORTER_OTLP_ENDPOINT ??
-        "http://localhost:4318/v1/metrics",
+        'http://localhost:4318/v1/metrics',
       exportIntervalMs: env.OTEL_METRICS_EXPORT_INTERVAL_MS
         ? Number.parseInt(env.OTEL_METRICS_EXPORT_INTERVAL_MS, 10)
         : 60000
@@ -212,8 +211,8 @@ export class OpenTelemetryProvider extends Context.Tag(
   static readonly Test = Layer.succeed(OpenTelemetryProvider, {
     tracesEnabled: false,
     metricsEnabled: false,
-    serviceName: "test-service",
-    serviceVersion: "0.0.0-test"
+    serviceName: 'test-service',
+    serviceVersion: '0.0.0-test'
   })
 
   // ===========================================================================
@@ -227,16 +226,16 @@ export class OpenTelemetryProvider extends Context.Tag(
    * is unavailable. Useful for local development with optional observability.
    */
   static readonly Dev = OpenTelemetryProvider.make({
-    serviceName: env.OTEL_SERVICE_NAME ?? "dev-service",
-    serviceVersion: "0.0.0-dev",
+    serviceName: env.OTEL_SERVICE_NAME ?? 'dev-service',
+    serviceVersion: '0.0.0-dev',
     traces: {
       enabled: true,
-      endpoint: "http://localhost:4318/v1/traces",
+      endpoint: 'http://localhost:4318/v1/traces',
       samplingRatio: 1.0
     },
     metrics: {
       enabled: true,
-      endpoint: "http://localhost:4318/v1/metrics",
+      endpoint: 'http://localhost:4318/v1/metrics',
       exportIntervalMs: 30000 // Faster export in dev
     }
   })
@@ -256,9 +255,9 @@ export class OpenTelemetryProvider extends Context.Tag(
    */
   static readonly Auto = Layer.suspend(() => {
     switch (env.NODE_ENV) {
-      case "production":
+      case 'production':
         return OpenTelemetryProvider.Live
-      case "test":
+      case 'test':
         return OpenTelemetryProvider.Test
       default:
         // "development" and other environments use Dev

@@ -1,6 +1,6 @@
-import type { UserDomainError } from "@samuelho-dev/contract-user"
-import type { UserInfrastructureError } from "@samuelho-dev/data-access-user"
-import { Data } from "effect"
+import type { UserDomainError } from '@samuelho-dev/contract-user'
+import type { UserInfrastructureError } from '@samuelho-dev/data-access-user'
+import { Data } from 'effect'
 
 /**
  * User Feature Service Errors
@@ -21,7 +21,6 @@ For domain errors, import from contract:
  *
  * @module @samuelho-dev/feature-user/shared/errors
  */
-
 
 // ============================================================================
 // Service Errors (Feature Specific)
@@ -49,7 +48,7 @@ For domain errors, import from contract:
  * )
  * ```
  */
-export class UserServiceError extends Data.TaggedError("UserServiceError")<{
+export class UserServiceError extends Data.TaggedError('UserServiceError')<{
   readonly message: string
   readonly code: UserServiceErrorCode
   readonly operation: string
@@ -58,7 +57,7 @@ export class UserServiceError extends Data.TaggedError("UserServiceError")<{
   static dependency(operation: string, message: string, cause?: unknown) {
     return new UserServiceError({
       message,
-      code: "DEPENDENCY",
+      code: 'DEPENDENCY',
       operation,
       ...(cause !== undefined && { cause })
     })
@@ -66,7 +65,7 @@ export class UserServiceError extends Data.TaggedError("UserServiceError")<{
   static orchestration(operation: string, message: string, cause?: unknown) {
     return new UserServiceError({
       message,
-      code: "ORCHESTRATION",
+      code: 'ORCHESTRATION',
       operation,
       ...(cause !== undefined && { cause })
     })
@@ -74,7 +73,7 @@ export class UserServiceError extends Data.TaggedError("UserServiceError")<{
   static internal(operation: string, message: string, cause?: unknown) {
     return new UserServiceError({
       message,
-      code: "INTERNAL",
+      code: 'INTERNAL',
       operation,
       ...(cause !== undefined && { cause })
     })
@@ -87,7 +86,7 @@ export class UserServiceError extends Data.TaggedError("UserServiceError")<{
  * - ORCHESTRATION: Workflow coordination failed
  * - INTERNAL: Unexpected internal error
  */
-export type UserServiceErrorCode = "DEPENDENCY" | "ORCHESTRATION" | "INTERNAL"
+export type UserServiceErrorCode = 'DEPENDENCY' | 'ORCHESTRATION' | 'INTERNAL'
 // ============================================================================
 // Combined Feature Error Types
 // ============================================================================

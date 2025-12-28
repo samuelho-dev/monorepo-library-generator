@@ -34,7 +34,7 @@ export interface ListParams {
  * Paginated Result
  */
 export interface PaginatedResult<T> {
-  readonly data: ReadonlyArray<T>
+  readonly data: readonly T[]
   readonly page: number
   readonly limit: number
   readonly total: number
@@ -44,7 +44,7 @@ export interface PaginatedResult<T> {
  * Health Check Result
  */
 export interface HealthCheckResult {
-  readonly status: "healthy" | "unhealthy"
+  readonly status: 'healthy' | 'unhealthy'
   readonly timestamp?: Date
 }
 
@@ -63,7 +63,7 @@ export interface ServiceMetadata {
   /**
    * Environment
    */
-  readonly environment: "production" | "development" | "test"
+  readonly environment: 'production' | 'development' | 'test'
 }
 /**
  * Pagination Options
@@ -89,7 +89,7 @@ export interface PaginatedResponse<T> {
   /**
    * Data items
    */
-  readonly data: ReadonlyArray<T>
+  readonly data: readonly T[]
   /**
    * Total number of items
    */
@@ -114,7 +114,7 @@ export interface SortOptions {
   /**
    * Sort direction
    */
-  readonly direction: "asc" | "desc"
+  readonly direction: 'asc' | 'desc'
 }
 /**
  * Filter Options

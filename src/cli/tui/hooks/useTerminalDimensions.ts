@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/cli/tui/hooks/useTerminalDimensions
  */
 
-import { useStdout } from "ink"
-import { useEffect, useState } from "react"
+import { useStdout } from 'ink'
+import { useEffect, useState } from 'react'
 
 /**
  * Terminal dimension information
@@ -38,9 +38,9 @@ export function useTerminalDimensions(): TerminalDimensions {
       })
     }
 
-    stdout.on("resize", handleResize)
+    stdout.on('resize', handleResize)
     return () => {
-      stdout.off("resize", handleResize)
+      stdout.off('resize', handleResize)
     }
   }, [stdout])
 

@@ -1,4 +1,4 @@
-import { Data } from "effect"
+import { Data } from 'effect'
 
 /**
  * Supabase Provider Errors
@@ -23,7 +23,7 @@ All errors extend Data.TaggedError for:
  * Parent class for all Supabase-specific errors.
  * Use specific error types for better error handling.
  */
-export class SupabaseError extends Data.TaggedError("SupabaseError")<{
+export class SupabaseError extends Data.TaggedError('SupabaseError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -37,7 +37,7 @@ export class SupabaseError extends Data.TaggedError("SupabaseError")<{
  *
  * Thrown when unable to initialize Supabase client or connect to the service.
  */
-export class SupabaseConnectionError extends Data.TaggedError("SupabaseConnectionError")<{
+export class SupabaseConnectionError extends Data.TaggedError('SupabaseConnectionError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -51,9 +51,16 @@ export class SupabaseConnectionError extends Data.TaggedError("SupabaseConnectio
  *
  * Thrown when authentication operations fail (sign in, sign out, verify token).
  */
-export class SupabaseAuthError extends Data.TaggedError("SupabaseAuthError")<{
+export class SupabaseAuthError extends Data.TaggedError('SupabaseAuthError')<{
   readonly message: string
-  readonly operation: "signIn" | "signOut" | "signUp" | "verifyToken" | "refreshToken" | "getSession" | "getUser"
+  readonly operation:
+    | 'signIn'
+    | 'signOut'
+    | 'signUp'
+    | 'verifyToken'
+    | 'refreshToken'
+    | 'getSession'
+    | 'getUser'
   readonly cause?: unknown
 }> {}
 
@@ -62,7 +69,9 @@ export class SupabaseAuthError extends Data.TaggedError("SupabaseAuthError")<{
  *
  * Thrown when provided credentials are invalid.
  */
-export class SupabaseInvalidCredentialsError extends Data.TaggedError("SupabaseInvalidCredentialsError")<{
+export class SupabaseInvalidCredentialsError extends Data.TaggedError(
+  'SupabaseInvalidCredentialsError'
+)<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -72,7 +81,7 @@ export class SupabaseInvalidCredentialsError extends Data.TaggedError("SupabaseI
  *
  * Thrown when the session has expired and needs refresh.
  */
-export class SupabaseSessionExpiredError extends Data.TaggedError("SupabaseSessionExpiredError")<{
+export class SupabaseSessionExpiredError extends Data.TaggedError('SupabaseSessionExpiredError')<{
   readonly message: string
   readonly cause?: unknown
 }> {}
@@ -82,9 +91,9 @@ export class SupabaseSessionExpiredError extends Data.TaggedError("SupabaseSessi
  *
  * Thrown when JWT token verification fails.
  */
-export class SupabaseTokenError extends Data.TaggedError("SupabaseTokenError")<{
+export class SupabaseTokenError extends Data.TaggedError('SupabaseTokenError')<{
   readonly message: string
-  readonly tokenType: "access" | "refresh"
+  readonly tokenType: 'access' | 'refresh'
   readonly cause?: unknown
 }> {}
 
@@ -97,21 +106,21 @@ export class SupabaseTokenError extends Data.TaggedError("SupabaseTokenError")<{
  *
  * Thrown when storage operations fail (upload, download, delete).
  */
-export class SupabaseStorageError extends Data.TaggedError("SupabaseStorageError")<{
+export class SupabaseStorageError extends Data.TaggedError('SupabaseStorageError')<{
   readonly message: string
   readonly operation:
-    | "upload"
-    | "download"
-    | "delete"
-    | "list"
-    | "move"
-    | "copy"
-    | "createBucket"
-    | "deleteBucket"
-    | "getBucket"
-    | "listBuckets"
-    | "createSignedUrl"
-    | "getPublicUrl"
+    | 'upload'
+    | 'download'
+    | 'delete'
+    | 'list'
+    | 'move'
+    | 'copy'
+    | 'createBucket'
+    | 'deleteBucket'
+    | 'getBucket'
+    | 'listBuckets'
+    | 'createSignedUrl'
+    | 'getPublicUrl'
   readonly bucket?: string
   readonly path?: string
   readonly cause?: unknown
@@ -122,7 +131,7 @@ export class SupabaseStorageError extends Data.TaggedError("SupabaseStorageError
  *
  * Thrown when attempting to access a file that doesn't exist.
  */
-export class SupabaseFileNotFoundError extends Data.TaggedError("SupabaseFileNotFoundError")<{
+export class SupabaseFileNotFoundError extends Data.TaggedError('SupabaseFileNotFoundError')<{
   readonly message: string
   readonly bucket: string
   readonly path: string
@@ -134,7 +143,7 @@ export class SupabaseFileNotFoundError extends Data.TaggedError("SupabaseFileNot
  *
  * Thrown when attempting to access a bucket that doesn't exist.
  */
-export class SupabaseBucketNotFoundError extends Data.TaggedError("SupabaseBucketNotFoundError")<{
+export class SupabaseBucketNotFoundError extends Data.TaggedError('SupabaseBucketNotFoundError')<{
   readonly message: string
   readonly bucket: string
   readonly cause?: unknown
