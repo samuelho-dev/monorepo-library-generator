@@ -54,7 +54,15 @@ Job Types:
 
   builder.addSectionComment('Infrastructure Services')
   builder.addImports([
-    { from: `${scope}/infra-queue`, imports: ['QueueService'] },
+    {
+      from: `${scope}/infra-queue`,
+      imports: ['QueueService', 'JobMetadata', 'JobDataRecord', 'UUID', 'makePriorityQueue']
+    },
+    {
+      from: `${scope}/infra-queue`,
+      imports: ['JobValidationError', 'JobExecutionError', 'JobTimeoutError'],
+      isTypeOnly: true
+    },
     { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] },
     { from: `${scope}/infra-database`, imports: ['DatabaseService'] }
   ])
@@ -72,7 +80,18 @@ Job Types:
   builder.addBlankLine()
 
   builder.addRaw(`/**
+ * Feature-scoped job errors for typed Effect.catchTag handling
+ *
+ * These errors follow the same structure as the shared errors from infra-queue
+ * (JobValidationError, JobExecutionError, JobTimeoutError) but with feature-specific
+ * _tag values for precise error handling in this feature's context.
+ *
+ * @see JobValidationError from infra-queue for shared error patterns
+ */
+
+/**
  * Error thrown when job data fails schema validation
+ * Feature-scoped for Effect.catchTag("${className}JobValidationError", ...)
  */
 export class ${className}JobValidationError extends Data.TaggedError("${className}JobValidationError")<{
   readonly message: string
@@ -83,6 +102,7 @@ export class ${className}JobValidationError extends Data.TaggedError("${classNam
 
 /**
  * Error thrown when job execution fails
+ * Feature-scoped for Effect.catchTag("${className}JobExecutionError", ...)
  */
 export class ${className}JobExecutionError extends Data.TaggedError("${className}JobExecutionError")<{
   readonly message: string
@@ -93,6 +113,7 @@ export class ${className}JobExecutionError extends Data.TaggedError("${className
 
 /**
  * Error thrown when job times out
+ * Feature-scoped for Effect.catchTag("${className}JobTimeoutError", ...)
  */
 export class ${className}JobTimeoutError extends Data.TaggedError("${className}JobTimeoutError")<{
   readonly message: string
@@ -102,7 +123,7 @@ export class ${className}JobTimeoutError extends Data.TaggedError("${className}J
 }> {}
 
 /**
- * Union of all job processing errors
+ * Union of all ${name} job processing errors
  */
 export type ${className}JobError =
   | ${className}JobValidationError
@@ -196,28 +217,27 @@ export const ${className}SystemUserLayer = Layer.succeed(
   builder.addBlankLine()
 
   builder.addRaw(`/**
- * Base job metadata included in all jobs
+ * Re-export JobMetadata from infra-queue for convenience
+ *
+ * The shared JobMetadata schema provides:
+ * - jobId: UUID (branded string with UUID pattern validation)
+ * - correlationId: optional UUID for distributed tracing
+ * - attempt: retry count (default 0)
+ * - priority: job priority (default 0, higher = more urgent)
+ * - enqueuedAt: timestamp (default now)
+ *
+ * @see JobMetadata from ${scope}/infra-queue
  */
-export const JobMetadata = Schema.Struct({
-  /** Unique job identifier */
-  jobId: Schema.UUID,
-
-  /** Correlation ID for tracing */
-  correlationId: Schema.optional(Schema.UUID),
-
-  /** Number of retry attempts */
-  attempt: Schema.optionalWith(Schema.Number, { default: () => 0 }),
-
-  /** Job priority (higher = more urgent) */
-  priority: Schema.optionalWith(Schema.Number, { default: () => 0 }),
-
-  /** When the job was enqueued */
-  enqueuedAt: Schema.optionalWith(Schema.Date, { default: () => new Date() })
-})`)
+export { JobMetadata } from "${scope}/infra-queue"`)
   builder.addBlankLine()
 
   builder.addRaw(`/**
  * Create ${name} job
+ *
+ * Uses shared JobMetadata schema from infra-queue with:
+ * - UUID validation via branded string pattern
+ * - Default values for attempt, priority, enqueuedAt
+ * - Optional correlationId for distributed tracing
  */
 export class Create${className}Job extends Schema.Class<Create${className}Job>(
   "Create${className}Job"
@@ -227,11 +247,11 @@ export class Create${className}Job extends Schema.Class<Create${className}Job>(
   /** Job type identifier */
   type: Schema.Literal("create"),
 
-  /** Entity data to create */
-  data: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  /** Entity data to create (uses shared JobDataRecord pattern) */
+  data: JobDataRecord,
 
   /** User who initiated the job */
-  initiatedBy: Schema.optional(Schema.UUID)
+  initiatedBy: Schema.optional(UUID)
 }) {
   static create(params: {
     data: Record<string, unknown>
@@ -263,13 +283,13 @@ export class Update${className}Job extends Schema.Class<Update${className}Job>(
   type: Schema.Literal("update"),
 
   /** Entity ID to update */
-  entityId: Schema.UUID,
+  entityId: UUID,
 
   /** Fields to update */
-  data: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  data: JobDataRecord,
 
   /** User who initiated the job */
-  initiatedBy: Schema.optional(Schema.UUID)
+  initiatedBy: Schema.optional(UUID)
 }) {
   static create(params: {
     entityId: string;
@@ -303,13 +323,13 @@ export class Delete${className}Job extends Schema.Class<Delete${className}Job>(
   type: Schema.Literal("delete"),
 
   /** Entity ID to delete */
-  entityId: Schema.UUID,
+  entityId: UUID,
 
   /** Whether to soft delete */
   softDelete: Schema.optionalWith(Schema.Boolean, { default: () => false }),
 
   /** User who initiated the job */
-  initiatedBy: Schema.optional(Schema.UUID)
+  initiatedBy: Schema.optional(UUID)
 }) {
   static create(params: {
     entityId: string;
@@ -342,7 +362,7 @@ export class Bulk${className}Job extends Schema.Class<Bulk${className}Job>(
   /** Job type identifier */
   type: Schema.Literal("bulk"),
 
-  /** Operation to perform */
+  /** Operation to perform (uses shared JobOperationType pattern) */
   operation: Schema.Union(
     Schema.Literal("create"),
     Schema.Literal("update"),
@@ -350,10 +370,10 @@ export class Bulk${className}Job extends Schema.Class<Bulk${className}Job>(
   ),
 
   /** Items to process */
-  items: Schema.Array(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  items: Schema.Array(JobDataRecord),
 
   /** User who initiated the job */
-  initiatedBy: Schema.optional(Schema.UUID),
+  initiatedBy: Schema.optional(UUID),
 
   /** Continue on individual item errors */
   continueOnError: Schema.optionalWith(Schema.Boolean, { default: () => true })
@@ -770,8 +790,9 @@ export class ${className}JobQueue extends Context.Tag("${className}JobQueue")<
       let completed = 0;
       let failed = 0;
       let isProcessing = false      // Retry schedule: fixed delay with max retries
+      // Uses Schedule.intersect to combine the spacing and recurrence policies
       const retrySchedule = Schedule.spaced(${className}QueueConfig.RETRY_DELAY).pipe(
-        Schedule.compose(Schedule.recurs(${className}QueueConfig.DEFAULT_RETRIES))
+        Schedule.intersect(Schedule.recurs(${className}QueueConfig.DEFAULT_RETRIES))
       )
 
       // Process jobs from the queue with retry logic

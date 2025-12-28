@@ -1,5 +1,21 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.11.0
+
+### Minor Changes
+
+- feat: add job processor infrastructure to infra-queue
+  - Add shared job schemas (UUID, JobMetadata, JobOperationType, JobDataRecord) to infra-queue
+  - Add shared job errors (JobValidationError, JobExecutionError, JobTimeoutError)
+  - Add in-memory priority queue using TPriorityQueue (Effect STM)
+  - Add Redis priority queue using Sorted Sets (ZADD/BZPOPMAX)
+  - Add sorted set operations to provider-redis (zadd, bzpopmax, zpopmax, zcard, zrange)
+  - Fix Effect.succeed → Effect.sync bug in Redis Test layer for llen/zcard
+  - Update feature generator template to use shared infrastructure
+  - Fix Schema.UUID (doesn't exist) → use branded UUID with pattern validation
+  - Fix Schedule.compose → Schedule.intersect for retry policies
+  - Add 48 unit and integration tests for priority queues
+
 ## 1.10.0
 
 ### Minor Changes

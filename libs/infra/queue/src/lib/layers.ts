@@ -1,5 +1,7 @@
 import { Redis } from '@samuelho-dev/provider-redis'
+import type { Scope } from 'effect'
 import { Chunk, Effect, Layer, Option, Schema } from 'effect'
+import type { ParseError } from 'effect/ParseResult'
 import type { BoundedQueueHandle, QueueOptions, UnboundedQueueHandle } from './service'
 import { QueueService } from './service'
 
@@ -414,3 +416,97 @@ export const withJobEnqueuing = <A, E, R, Job>(
         .pipe(Effect.catchAll((error) => Effect.logWarning('Job enqueuing failed', { error })))
     )
   )
+
+// ============================================================================
+// Redis Priority Queue
+// ============================================================================
+
+/**
+ * Create a Redis-backed priority queue using Sorted Sets
+ *
+ * Uses Redis Sorted Sets (ZADD/BZPOPMAX) for priority ordering.
+ * Higher priority values (scores) are dequeued first.
+ *
+ * This is the distributed counterpart to makePriorityQueue (TPriorityQueue).
+ * Both implement the same PriorityQueueHandle interface.
+ *
+ * Features:
+ * - Distributed across multiple processes/instances
+ * - Persistent (survives restarts)
+ * - Higher scores = higher priority
+ * - Blocking take with BZPOPMAX
+ *
+ * @param schema - Schema for type-safe serialization/deserialization
+ * @param queueName - Name of the queue (used as Redis key prefix)
+ *
+ * @example
+ * ```typescript
+ * const queue = yield* makePriorityQueueRedis(JobSchema, 'my-jobs')
+ *
+ * // Add items with priorities
+ * yield* queue.offer(job1, 1)   // Low priority
+ * yield* queue.offer(job2, 10)  // High priority
+ *
+ * // Take in priority order (highest first)
+ * const next = yield* queue.take  // job2 (priority 10)
+ * ```
+ */
+export const makePriorityQueueRedis = <T, I>(
+  schema: Schema.Schema<T, I, never>,
+  queueName: string
+): Effect.Effect<
+  {
+    readonly offer: (item: T, priority: number) => Effect.Effect<boolean, ParseError>
+    readonly take: Effect.Effect<T, ParseError>
+    readonly peek: Effect.Effect<Option.Option<T>, ParseError>
+    readonly size: Effect.Effect<number>
+    readonly shutdown: Effect.Effect<void>
+    readonly isShutdown: Effect.Effect<boolean>
+  },
+  never,
+  Redis | Scope.Scope
+> =>
+  Effect.gen(function* () {
+    const redis = yield* Redis
+    const key = `priority-queue:${queueName}`
+    let isShutdownFlag = false
+
+    const serializeJson = Schema.encode(Schema.parseJson(schema))
+    const deserializeJson = Schema.decode(Schema.parseJson(schema))
+
+    return {
+      offer: (item: T, priority: number) =>
+        Effect.gen(function* () {
+          if (isShutdownFlag) return false
+          const serialized = yield* serializeJson(item)
+          yield* redis.queue.zadd(key, priority, serialized).pipe(Effect.orDie)
+          return true
+        }),
+
+      take: Effect.gen(function* () {
+        if (isShutdownFlag) return yield* Effect.die('Queue is shutdown')
+        // BZPOPMAX returns highest scored item [key, member, score]
+        const result = yield* redis.queue.bzpopmax(key, 0).pipe(Effect.orDie)
+        if (!result) return yield* Effect.die('Queue closed unexpectedly')
+        const [, member] = result
+        return yield* deserializeJson(member)
+      }),
+
+      peek: Effect.gen(function* () {
+        // ZRANGE with REV gets highest scored items
+        const items = yield* redis.queue.zrange(key, 0, 0, { rev: true }).pipe(Effect.orDie)
+        const firstItem = items[0]
+        if (firstItem === undefined) return Option.none()
+        const value = yield* deserializeJson(firstItem)
+        return Option.some(value)
+      }),
+
+      size: redis.queue.zcard(key).pipe(Effect.orDie),
+
+      shutdown: Effect.sync(() => {
+        isShutdownFlag = true
+      }),
+
+      isShutdown: Effect.sync(() => isShutdownFlag)
+    }
+  })

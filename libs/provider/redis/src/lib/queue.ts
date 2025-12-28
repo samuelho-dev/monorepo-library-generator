@@ -137,7 +137,79 @@ export function makeQueueClient(client: IORedis) {
             command: 'PING',
             cause: error
           })
-      }).pipe(Effect.withSpan('Redis.queue.ping'))
+      }).pipe(Effect.withSpan('Redis.queue.ping')),
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Sorted Set Operations (Priority Queue)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    zadd: (key: string, score: number, member: string) =>
+      Effect.tryPromise({
+        try: () => client.zadd(key, score, member),
+        catch: (error) =>
+          new RedisCommandError({
+            message: `ZADD failed for key: ${key}`,
+            command: 'ZADD',
+            args: [key, score, member],
+            cause: error
+          })
+      }).pipe(Effect.withSpan('Redis.queue.zadd', { attributes: { key, score } })),
+
+    bzpopmax: (key: string, timeout: number) =>
+      Effect.tryPromise({
+        try: () => client.bzpopmax(key, timeout),
+        catch: (error) =>
+          new RedisCommandError({
+            message: `BZPOPMAX failed for key: ${key}`,
+            command: 'BZPOPMAX',
+            args: [key, timeout],
+            cause: error
+          })
+      }).pipe(Effect.withSpan('Redis.queue.bzpopmax', { attributes: { key, timeout } })),
+
+    zpopmax: (key: string) =>
+      Effect.tryPromise({
+        try: async () => {
+          const result = await client.zpopmax(key)
+          if (!result || result.length === 0) return null
+          // zpopmax returns [member, score]
+          return [result[0], result[1]] as [string, string]
+        },
+        catch: (error) =>
+          new RedisCommandError({
+            message: `ZPOPMAX failed for key: ${key}`,
+            command: 'ZPOPMAX',
+            args: [key],
+            cause: error
+          })
+      }).pipe(Effect.withSpan('Redis.queue.zpopmax', { attributes: { key } })),
+
+    zcard: (key: string) =>
+      Effect.tryPromise({
+        try: () => client.zcard(key),
+        catch: (error) =>
+          new RedisCommandError({
+            message: `ZCARD failed for key: ${key}`,
+            command: 'ZCARD',
+            args: [key],
+            cause: error
+          })
+      }).pipe(Effect.withSpan('Redis.queue.zcard', { attributes: { key } })),
+
+    zrange: (key: string, start: number, stop: number, options?: { rev?: boolean }) =>
+      Effect.tryPromise({
+        try: () =>
+          options?.rev
+            ? client.zrange(key, start, stop, 'REV')
+            : client.zrange(key, start, stop),
+        catch: (error) =>
+          new RedisCommandError({
+            message: `ZRANGE failed for key: ${key}`,
+            command: 'ZRANGE',
+            args: [key, start, stop, options],
+            cause: error
+          })
+      }).pipe(Effect.withSpan('Redis.queue.zrange', { attributes: { key, start, stop } }))
   }
 }
 
@@ -162,6 +234,7 @@ export class RedisQueueService extends Context.Tag('RedisQueueService')<
    * Test layer with in-memory mock
    */
   static readonly Test = Layer.succeed(RedisQueueService, {
+    // List operations
     lpush: () => Effect.succeed(1),
     brpop: () => Effect.succeed(null),
     rpop: () => Effect.succeed(null),
@@ -169,7 +242,13 @@ export class RedisQueueService extends Context.Tag('RedisQueueService')<
     lrange: () => Effect.succeed([]),
     ltrim: () => Effect.void,
     del: () => Effect.succeed(0),
-    ping: () => Effect.succeed('PONG')
+    ping: () => Effect.succeed('PONG'),
+    // Sorted set operations
+    zadd: () => Effect.succeed(1),
+    bzpopmax: () => Effect.succeed(null),
+    zpopmax: () => Effect.succeed(null),
+    zcard: () => Effect.succeed(0),
+    zrange: () => Effect.succeed([])
   })
 
   /**

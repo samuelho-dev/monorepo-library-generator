@@ -165,8 +165,13 @@ export interface RedisPubSubClient {
  *
  * Matches the RedisQueueClient interface expected by infra-queue.
  * Uses Redis Lists for queue operations (LPUSH/BRPOP pattern).
+ * Uses Redis Sorted Sets for priority queue operations (ZADD/BZPOPMAX pattern).
  */
 export interface RedisQueueClient {
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // List Operations (FIFO Queue)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   /**
    * Push item to left of list (LPUSH)
    */
@@ -219,4 +224,52 @@ export interface RedisQueueClient {
    * Health check ping
    */
   readonly ping: () => Effect.Effect<string, RedisCommandError>
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Sorted Set Operations (Priority Queue)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /**
+   * Add item to sorted set with score (ZADD)
+   * For priority queues, use priority as the score.
+   * @returns Number of elements added (0 if element already exists and score was updated)
+   */
+  readonly zadd: (
+    key: string,
+    score: number,
+    member: string
+  ) => Effect.Effect<number, RedisCommandError>
+
+  /**
+   * Blocking pop highest scored item from sorted set (BZPOPMAX)
+   * Returns the item with the highest score (highest priority).
+   * @param timeout - Timeout in seconds (0 = block indefinitely)
+   * @returns [key, member, score] tuple or null if timeout
+   */
+  readonly bzpopmax: (
+    key: string,
+    timeout: number
+  ) => Effect.Effect<[string, string, string] | null, RedisCommandError>
+
+  /**
+   * Pop highest scored item from sorted set without blocking (ZPOPMAX)
+   * @returns [member, score] tuple or null if empty
+   */
+  readonly zpopmax: (key: string) => Effect.Effect<[string, string] | null, RedisCommandError>
+
+  /**
+   * Get sorted set cardinality (ZCARD)
+   */
+  readonly zcard: (key: string) => Effect.Effect<number, RedisCommandError>
+
+  /**
+   * Get range of sorted set items (ZRANGE)
+   * Use with REV option for descending order (highest score first)
+   */
+  readonly zrange: (
+    key: string,
+    start: number,
+    stop: number,
+    options?: { rev?: boolean }
+  ) => Effect.Effect<string[], RedisCommandError>
 }

@@ -197,6 +197,7 @@ export class RedisService extends Context.Tag('Redis')<RedisService, RedisServic
     const store = new Map<string, string>()
     const ttls = new Map<string, number>()
     const lists = new Map<string, string[]>()
+    const sortedSets = new Map<string, Array<{ member: string; score: number }>>()
     const subscribers = new Map<string, Array<(message: string) => void>>()
     const mockClient = new RedisMock()
 
@@ -257,6 +258,7 @@ export class RedisService extends Context.Tag('Redis')<RedisService, RedisServic
       },
 
       queue: {
+        // List operations
         lpush: (key: string, value: string) =>
           Effect.sync(() => {
             const list = lists.get(key) ?? []
@@ -280,7 +282,7 @@ export class RedisService extends Context.Tag('Redis')<RedisService, RedisServic
             lists.set(key, list)
             return value
           }),
-        llen: (key: string) => Effect.succeed(lists.get(key)?.length ?? 0),
+        llen: (key: string) => Effect.sync(() => lists.get(key)?.length ?? 0),
         lrange: (key: string, start: number, stop: number) =>
           Effect.sync(() => {
             const list = lists.get(key) ?? []
@@ -295,17 +297,66 @@ export class RedisService extends Context.Tag('Redis')<RedisService, RedisServic
           }),
         del: (key: string) =>
           Effect.sync(() => {
-            const existed = lists.has(key) ? 1 : 0
+            const existed = lists.has(key) || sortedSets.has(key) ? 1 : 0
             lists.delete(key)
+            sortedSets.delete(key)
             return existed
           }),
-        ping: () => Effect.succeed('PONG')
+        ping: () => Effect.succeed('PONG'),
+        // Sorted set operations (for priority queue)
+        zadd: (key: string, score: number, member: string) =>
+          Effect.sync(() => {
+            const set = sortedSets.get(key) ?? []
+            // Check if member already exists
+            const existingItem = set.find((item) => item.member === member)
+            if (existingItem !== undefined) {
+              // Update score
+              existingItem.score = score
+              // Re-sort
+              set.sort((a, b) => b.score - a.score)
+              sortedSets.set(key, set)
+              return 0 // Element was updated, not added
+            }
+            // Add new member
+            set.push({ member, score })
+            set.sort((a, b) => b.score - a.score)
+            sortedSets.set(key, set)
+            return 1
+          }),
+        bzpopmax: (key: string) =>
+          Effect.sync(() => {
+            const set = sortedSets.get(key) ?? []
+            if (set.length === 0) return null
+            // Pop highest scored item (already sorted descending)
+            const item = set.shift()
+            sortedSets.set(key, set)
+            return item ? [key, item.member, String(item.score)] : null
+          }),
+        zpopmax: (key: string) =>
+          Effect.sync(() => {
+            const set = sortedSets.get(key) ?? []
+            if (set.length === 0) return null
+            const item = set.shift()
+            sortedSets.set(key, set)
+            return item ? [item.member, String(item.score)] : null
+          }),
+        zcard: (key: string) => Effect.sync(() => sortedSets.get(key)?.length ?? 0),
+        zrange: (key: string, start: number, stop: number, options?: { rev?: boolean }) =>
+          Effect.sync(() => {
+            const set = sortedSets.get(key) ?? []
+            const end = stop < 0 ? set.length + stop + 1 : stop + 1
+            const slice = set.slice(start, end)
+            // If rev is true, we want highest first (which is already the order)
+            // If rev is false, reverse to get lowest first
+            const members = options?.rev ? slice : slice.reverse()
+            return members.map((item) => item.member)
+          })
       },
 
-      exists: (key: string) => Effect.succeed(store.has(key) || lists.has(key)),
+      exists: (key: string) => Effect.succeed(store.has(key) || lists.has(key) || sortedSets.has(key)),
       expire: (key: string, seconds: number) =>
         Effect.sync(() => {
-          if (store.has(key) || lists.has(key)) {
+          if (store.has(key) || lists.has(key) || sortedSets.has(key)) {
             ttls.set(key, Date.now() + seconds * 1000)
             return true
           }
@@ -315,19 +366,19 @@ export class RedisService extends Context.Tag('Redis')<RedisService, RedisServic
         Effect.sync(() => {
           const expiry = ttls.get(key)
           if (expiry === undefined) {
-            return store.has(key) || lists.has(key) ? -1 : -2
+            return store.has(key) || lists.has(key) || sortedSets.has(key) ? -1 : -2
           }
           return Math.max(0, Math.floor((expiry - Date.now()) / 1000))
         }),
       keys: (pattern: string) =>
         Effect.sync(() => {
           const regex = new RegExp(`^${pattern.replace(/\*/g, '.*').replace(/\?/g, '.')}$`)
-          const allKeys = [...store.keys(), ...lists.keys()]
+          const allKeys = [...store.keys(), ...lists.keys(), ...sortedSets.keys()]
           return allKeys.filter((k) => regex.test(k))
         }),
       scan: (cursor: number, options?: ScanOptions) =>
         Effect.sync(() => {
-          const allKeys = [...store.keys(), ...lists.keys()]
+          const allKeys = [...store.keys(), ...lists.keys(), ...sortedSets.keys()]
           const count = options?.count ?? 10
           const match = options?.match
           let filtered = allKeys
