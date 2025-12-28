@@ -202,6 +202,8 @@ export interface DomainGeneratorOptions {
   readonly scope?: string
   readonly includeClientServer?: boolean
   readonly includeCQRS?: boolean
+  readonly includeSubModules?: boolean
+  readonly subModules?: string
 }
 
 /**
@@ -223,7 +225,16 @@ export interface DomainGeneratorOptions {
  */
 export function generateDomain(options: DomainGeneratorOptions) {
   return Effect.gen(function*() {
-    const { description, includeCQRS, includeClientServer, name, scope, tags } = options
+    const {
+      description,
+      includeCQRS,
+      includeClientServer,
+      includeSubModules,
+      name,
+      scope,
+      subModules,
+      tags
+    } = options
 
     yield* Console.log(`\n🏗️  Generating complete domain: ${name}`)
     yield* Console.log("=".repeat(60))
@@ -261,7 +272,9 @@ export function generateDomain(options: DomainGeneratorOptions) {
       tags: tags ?? "domain:feature",
       ...(scope !== undefined && { scope }),
       ...(includeClientServer !== undefined && { includeClientServer }),
-      ...(includeCQRS !== undefined && { includeCQRS })
+      ...(includeCQRS !== undefined && { includeCQRS }),
+      ...(includeSubModules !== undefined && { includeSubModules }),
+      ...(subModules !== undefined && { subModules })
     })
     yield* Console.log(`✅ Feature library created: libs/feature/${name}`)
 

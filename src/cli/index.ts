@@ -315,13 +315,25 @@ const domainCommand = Command.make(
     scope: scopeOption,
     includeClientServer: includeClientServerOption,
     includeCQRS: includeCQRSFeatureOption,
+    includeSubModules: includeSubModulesOption,
+    subModules: subModulesOption,
     verbose: verboseOption,
     quiet: quietOption
   },
-  ({ description, includeCQRS, includeClientServer, name, scope, tags }) => {
+  ({
+    description,
+    includeCQRS,
+    includeClientServer,
+    includeSubModules,
+    name,
+    scope,
+    subModules,
+    tags
+  }) => {
     const desc = Option.getOrUndefined(description)
     const scopeValue = Option.getOrUndefined(scope)
     const includeCS = Option.getOrUndefined(includeClientServer)
+    const subModulesVal = Option.getOrUndefined(subModules)
 
     return generateDomain({
       name,
@@ -329,7 +341,9 @@ const domainCommand = Command.make(
       tags,
       ...(scopeValue && { scope: scopeValue }),
       ...(includeCS === true && { includeClientServer: includeCS }),
-      ...(includeCQRS && { includeCQRS })
+      ...(includeCQRS && { includeCQRS }),
+      ...(includeSubModules && { includeSubModules }),
+      ...(subModulesVal && { subModules: subModulesVal })
     }).pipe(
       Effect.catchAll((error) =>
         Console.error(`Error generating domain: ${error}`).pipe(
