@@ -12,14 +12,7 @@ import { createNamingVariants } from '../../utils/naming'
 import { TemplateCompiler } from '../core/compiler'
 import type { TemplateContext } from '../core/types'
 import { getTemplateRegistry, validateContext } from './registry'
-import type {
-  FileType,
-  GeneratedFile,
-  GenerationResult,
-  GeneratorOptions,
-  LibraryType,
-  TemplateKey
-} from './types'
+import type { FileType, GeneratedFile, GenerationResult, GeneratorOptions, LibraryType, TemplateKey } from './types'
 
 // ============================================================================
 // Error Types
@@ -85,10 +78,9 @@ function buildContext(options: GeneratorOptions) {
   const projectName = `${options.libraryType}-${naming.fileName}`
 
   // Default entity type source to local types file (can be overridden via context)
-  const entityTypeSource =
-    typeof options.context?.entityTypeSource === 'string'
-      ? options.context.entityTypeSource
-      : './types'
+  const entityTypeSource = typeof options.context?.entityTypeSource === 'string'
+    ? options.context.entityTypeSource
+    : './types'
 
   return {
     ...naming,
@@ -134,7 +126,7 @@ export function generateFile(
   fileType: FileType,
   context: TemplateContext
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const templateKey: TemplateKey = `${libraryType}/${fileType}`
     const registry = getTemplateRegistry()
     const entry = registry.get(templateKey)
@@ -203,7 +195,7 @@ export function generateFile(
  * Requires TemplateCompiler service to be provided.
  */
 export function generateLibrary(options: GeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const startTime = Date.now()
     const registry = getTemplateRegistry()
     const context = buildContext(options)
@@ -264,7 +256,7 @@ export function generateDomain(
   libraryTypes: readonly LibraryType[],
   context?: Record<string, unknown>
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const results: GenerationResult[] = []
 
     for (const libraryType of libraryTypes) {

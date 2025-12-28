@@ -7,12 +7,7 @@
 
 import { Console, Effect, ParseResult } from 'effect'
 import { type FeatureCoreOptions, generateFeatureCore } from '../../generators/core/feature'
-import {
-  createExecutor,
-  decodeFeatureInput,
-  type FeatureInput,
-  formatOutput
-} from '../../infrastructure'
+import { createExecutor, decodeFeatureInput, type FeatureInput, formatOutput } from '../../infrastructure'
 
 /**
  * Feature Generator Options - imported from validation registry
@@ -41,7 +36,7 @@ const featureExecutor = createExecutor<FeatureInput, FeatureCoreOptions>(
 )
 
 export function generateFeature(options: FeatureGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeFeatureInput(options).pipe(
       Effect.mapError(

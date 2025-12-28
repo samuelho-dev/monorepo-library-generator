@@ -76,11 +76,11 @@ function generateDataError(
   tagName: string,
   fields: readonly DataFieldDef[],
   staticCreate?: string,
-  additionalMethods?: ReadonlyArray<{
+  additionalMethods?: readonly {
     name: string
-    params: ReadonlyArray<{ name: string; type: string; optional?: boolean }>
+    params: readonly { name: string; type: string; optional?: boolean }[]
     body: string
-  }>
+  }[]
 ) {
   // Map fields to their string representations (without extra blank lines)
   const fieldLines: string[] = []
@@ -213,8 +213,7 @@ export function createErrorFactory(config: ErrorFactoryConfig) {
       const typeName = unionTypeName ?? `${className}Error`
 
       // Format union type based on number of members
-      const unionType =
-        errorNames.length >= 3 ? `\n  | ${errorNames.join('\n  | ')}` : errorNames.join(' | ')
+      const unionType = errorNames.length >= 3 ? `\n  | ${errorNames.join('\n  | ')}` : errorNames.join(' | ')
 
       builder.addRaw(`/**
  * Union of all ${className} error types
@@ -798,7 +797,7 @@ export function getErrorNames(config: ErrorFactoryConfig) {
  * Returns validation errors if configuration is invalid.
  */
 export function validateErrorFactoryConfig(config: ErrorFactoryConfig) {
-  const errors: Array<{ field: string; message: string }> = []
+  const errors: { field: string; message: string }[] = []
 
   if (!config.className || config.className.trim() === '') {
     errors.push({ field: 'className', message: 'className is required' })

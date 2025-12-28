@@ -35,10 +35,10 @@ export {
   getCreationDescription,
   getFilePreview,
   getTargetDirectory,
-  VALIDATION_PATTERNS,
   validateExternalService,
   validateName,
-  validateSubModules
+  validateSubModules,
+  VALIDATION_PATTERNS
 } from './operations'
 // Types
 export type {

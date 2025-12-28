@@ -14,7 +14,7 @@ export class DataAccessArgsSchema extends Schema.Class<DataAccessArgsSchema>('Da
     Schema.pattern(/^[a-z][a-z0-9-]*[a-z0-9]$/),
     Schema.annotations({
       title: 'Library Name',
-      description: "Domain name matching the contract library (e.g., 'product', 'user')",
+      description: 'Domain name matching the contract library (e.g., \'product\', \'user\')',
       examples: ['product', 'user', 'order']
     })
   ),

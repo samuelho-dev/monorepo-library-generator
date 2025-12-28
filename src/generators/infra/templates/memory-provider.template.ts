@@ -21,7 +21,8 @@ export function generateMemoryProviderFile(options: InfraTemplateOptions) {
   // File header
   builder.addFileHeader({
     title: `Memory Provider for ${className}`,
-    description: `In-memory provider implementation for testing and development.\nProvides a simple data store without external dependencies.\n\nTODO: Customize this file for your service:\n1. Implement in-memory data structures for your domain\n2. Add helper methods for testing\n3. Consider state management (Map, Set, custom class)\n4. Add reset() method for test isolation`,
+    description:
+      `In-memory provider implementation for testing and development.\nProvides a simple data store without external dependencies.\n\nTODO: Customize this file for your service:\n1. Implement in-memory data structures for your domain\n2. Add helper methods for testing\n3. Consider state management (Map, Set, custom class)\n4. Add reset() method for test isolation`,
     module: `${scope}/infra-${fileName}/providers`
   })
 

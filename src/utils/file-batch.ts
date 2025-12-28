@@ -97,7 +97,7 @@ export interface BatchWriteOptions {
  * ```
  */
 export function writeFilesBatch(adapter: FileSystemAdapter, files: readonly FileSpec[]) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const written: string[] = []
     const skipped: string[] = []
 
@@ -192,9 +192,9 @@ export interface DirectorySpec {
 export function createDirectories(
   adapter: FileSystemAdapter,
   basePath: string,
-  directories: ReadonlyArray<string | DirectorySpec>
+  directories: readonly (string | DirectorySpec)[]
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const created: string[] = []
 
     for (const dir of directories) {
@@ -310,7 +310,7 @@ export function createLibraryDirectories(
   libraryType: DirectoryPresetLibraryType,
   options?: Record<string, boolean>
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Get base directories for library type
     const baseDirectories = LIBRARY_DIRECTORIES[libraryType] ?? []
 

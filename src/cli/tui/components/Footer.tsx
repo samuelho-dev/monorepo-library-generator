@@ -18,11 +18,11 @@ interface FooterProps {
 /**
  * Keyboard shortcut display
  */
-function Shortcut({ keys, description }: { readonly keys: string; readonly description: string }) {
+function Shortcut({ description, keys }: { readonly keys: string; readonly description: string }) {
   return (
     <Text>
       <Text color={colors.highlight}>{keys}</Text>
-      <Text color={colors.muted}>: {description} </Text>
+      <Text color={colors.muted}>: {description}</Text>
     </Text>
   )
 }
@@ -34,23 +34,23 @@ export function Footer({ activePanel, mode }: FooterProps) {
   return (
     <Box paddingX={1} marginTop={0}>
       <Box flexGrow={1}>
-        <Shortcut keys="1-3" description="panels" />
-        <Shortcut keys="j/k" description="scroll" />
+        <Shortcut keys='1-3' description='panels' />
+        <Shortcut keys='j/k' description='scroll' />
 
-        {activePanel === 'types' && <Shortcut keys="Enter" description="select" />}
+        {activePanel === 'types' && <Shortcut keys='Enter' description='select' />}
 
         {activePanel === 'options' && (
           <>
-            <Shortcut keys="Space" description="toggle" />
-            <Shortcut keys="Enter" description="edit" />
+            <Shortcut keys='Space' description='toggle' />
+            <Shortcut keys='Enter' description='edit' />
           </>
         )}
 
-        <Shortcut keys="G" description="generate" />
+        <Shortcut keys='G' description='generate' />
 
-        {mode === 'complete' && <Shortcut keys="n" description="new" />}
+        {mode === 'complete' && <Shortcut keys='n' description='new' />}
 
-        <Shortcut keys="q" description="quit" />
+        <Shortcut keys='q' description='quit' />
       </Box>
     </Box>
   )

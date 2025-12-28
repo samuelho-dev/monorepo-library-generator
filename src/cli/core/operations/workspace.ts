@@ -33,7 +33,7 @@ export function detectWorkspaceType(
  * Check if a file exists
  */
 function fileExists(path: string) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
     return yield* Effect.either(fs.exists(path)).pipe(
       Effect.map((either) => (either._tag === 'Right' ? either.right : false))
@@ -45,7 +45,7 @@ function fileExists(path: string) {
  * Read JSON file safely
  */
 function readJsonFile(path: string) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
     const content = yield* Effect.either(fs.readFileString(path))
     if (content._tag === 'Left') return Option.none()
@@ -92,7 +92,7 @@ function getScopeFromPackageJson(packageJson: Option.Option<Record<string, unkno
  * Detect workspace context from current directory
  */
 export function detectWorkspace(rootPath: string) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const pathService = yield* Path.Path
 
     // Check for configuration files

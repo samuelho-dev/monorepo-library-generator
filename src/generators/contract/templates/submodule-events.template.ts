@@ -73,10 +73,9 @@ const ${subModuleClassName}EventBase = Schema.Struct({
   const eventNames = getEventNamesForSubModule(subModuleName, subModuleClassName)
 
   // Format union type with leading | for multiple events
-  const unionType =
-    eventNames.length > 1
-      ? `\n  | ${eventNames.map((e) => `Schema.Schema.Type<typeof ${e}>`).join('\n  | ')}`
-      : `Schema.Schema.Type<typeof ${eventNames[0]}>`
+  const unionType = eventNames.length > 1
+    ? `\n  | ${eventNames.map((e) => `Schema.Schema.Type<typeof ${e}>`).join('\n  | ')}`
+    : `Schema.Schema.Type<typeof ${eventNames[0]}>`
 
   builder.addRaw(`/**
  * Union of all ${subModuleName} domain events

@@ -31,7 +31,8 @@ export function generateIndexFile(options: ContractTemplateOptions) {
   const builder = new TypeScriptBuilder()
 
   // File header - RPC is always included
-  let headerDesc = `Domain interfaces, ports, entities, errors, and events for ${className}.\n\nThis library defines the contract between layers:\n- Entities: Domain models with runtime validation\n- Errors: Domain and repository errors\n- Ports: Repository and service interfaces\n- Events: Domain events for event-driven architecture\n- RPC: Request/Response schemas for network boundaries`
+  let headerDesc =
+    `Domain interfaces, ports, entities, errors, and events for ${className}.\n\nThis library defines the contract between layers:\n- Entities: Domain models with runtime validation\n- Errors: Domain and repository errors\n- Ports: Repository and service interfaces\n- Events: Domain events for event-driven architecture\n- RPC: Request/Response schemas for network boundaries`
 
   if (includeCQRS) {
     headerDesc +=

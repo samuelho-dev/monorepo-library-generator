@@ -87,7 +87,7 @@ export type {
   builder.addComment('Usage Examples')
   builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   builder.addComment('')
-  builder.addComment("import { Effect } from 'effect';")
+  builder.addComment('import { Effect } from \'effect\';')
   builder.addComment(`import { StorageService } from '${packageName}';`)
   builder.addComment('')
   builder.addComment('const program = Effect.gen(function*() {')

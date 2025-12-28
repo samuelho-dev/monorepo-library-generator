@@ -64,8 +64,8 @@ export {
   generateServiceAuthMiddlewareFile
 } from './rpc/index'
 export { generateServerLayersFile } from './server-layers.template'
-export { generateServiceFile } from './service.template'
 export { generateInfraServiceSpecFile } from './service-spec.template'
+export { generateServiceFile } from './service.template'
 
 // Storage templates
 export {

@@ -56,10 +56,10 @@ import {
   generateQueueRedisLayerFile
 } from '../infra/templates/primitives'
 import {
+  generateAuthMiddlewareFile as generateRpcAuthMiddlewareFile,
   generateMiddlewareIndexFile,
   generateRequestMetaMiddlewareFile,
   generateRouteSelectorMiddlewareFile,
-  generateAuthMiddlewareFile as generateRpcAuthMiddlewareFile,
   generateRpcClientFile,
   generateRpcClientHooksFile,
   generateRpcCoreFile,
@@ -136,7 +136,7 @@ export interface GeneratorResult {
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
 export function generateInfraCore(adapter: FileSystemAdapter, options: InfraCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Detect infrastructure concern type early for conditional generation
     // Must be done before platform configuration to determine prewired defaults
     const concern = detectInfraConcern(options.name)
@@ -266,8 +266,8 @@ const result = program.pipe(
 )
 \`\`\`
 ${
-  includeClientServer
-    ? `
+      includeClientServer
+        ? `
 ### Client Usage
 
 \`\`\`typescript
@@ -277,8 +277,8 @@ import { use${templateOptions.className} } from '${templateOptions.packageName}/
 }
 \`\`\`
 `
-    : ''
-}
+        : ''
+    }
 ### Testing Strategy
 
 1. **Use Test layer** - pure mock implementation for unit tests

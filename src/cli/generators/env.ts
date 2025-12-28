@@ -20,8 +20,8 @@
  * @module monorepo-library-generator/cli/generators/env
  */
 
-import * as path from 'node:path'
 import { Console, Effect } from 'effect'
+import * as path from 'node:path'
 import { generateCreateEnvFile } from '../../generators/env/templates/createEnv.template'
 import { generateEnvScaffoldFile } from '../../generators/env/templates/env-scaffold.template'
 import { generateIndexFile } from '../../generators/env/templates/index.template'
@@ -49,7 +49,7 @@ export interface EnvGeneratorOptions {
  * Uses Effect-native FileSystem operations for cross-platform compatibility.
  */
 export function generateEnv(options: EnvGeneratorOptions = {}) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const workspaceRoot = yield* Effect.sync(() => process.cwd())
     const adapter = yield* createEffectFsAdapter(workspaceRoot)
 

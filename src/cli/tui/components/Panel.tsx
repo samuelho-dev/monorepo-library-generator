@@ -9,7 +9,7 @@
 import { Box, Text } from 'ink'
 import type React from 'react'
 
-import { colors, type PanelId, panelConfig } from '../theme/colors'
+import { colors, panelConfig, type PanelId } from '../theme/colors'
 
 interface PanelProps {
   readonly id: PanelId
@@ -22,19 +22,19 @@ interface PanelProps {
 /**
  * Panel wrapper with focus-aware border and title
  */
-export function Panel({ id, isActive, children, width, height }: PanelProps) {
+export function Panel({ children, height, id, isActive, width }: PanelProps) {
   const config = panelConfig[id]
   const borderColor = isActive ? colors.panelActive : colors.panelInactive
   const titleColor = isActive ? colors.primary : colors.muted
 
   return (
     <Box
-      flexDirection="column"
-      borderStyle="round"
+      flexDirection='column'
+      borderStyle='round'
       borderColor={borderColor}
       width={width ?? '100%'}
       height={height ?? '100%'}
-      overflow="hidden"
+      overflow='hidden'
     >
       {/* Panel header */}
       <Box paddingX={1}>
@@ -44,7 +44,7 @@ export function Panel({ id, isActive, children, width, height }: PanelProps) {
       </Box>
 
       {/* Panel content */}
-      <Box flexDirection="column" paddingX={1} flexGrow={1} overflow="hidden">
+      <Box flexDirection='column' paddingX={1} flexGrow={1} overflow='hidden'>
         {children}
       </Box>
     </Box>

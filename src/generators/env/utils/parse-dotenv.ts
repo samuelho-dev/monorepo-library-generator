@@ -67,13 +67,11 @@ export function parseDotEnvFile(filePath: string) {
       // Remove quotes if present
       const cleanValue = value.replace(/^["']|["']$/g, '')
 
-      const isPublic =
-        name.startsWith('PUBLIC_') ||
+      const isPublic = name.startsWith('PUBLIC_') ||
         name.startsWith('NEXT_PUBLIC_') ||
         name.startsWith('VITE_') ||
         name === 'NODE_ENV'
-      const isSecret =
-        name.endsWith('_SECRET') ||
+      const isSecret = name.endsWith('_SECRET') ||
         name.endsWith('_KEY') ||
         name === 'DATABASE_URL' ||
         name === 'REDIS_URL'

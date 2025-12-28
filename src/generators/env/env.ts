@@ -18,9 +18,9 @@
  * - Simple API: import { env } from '@workspace/env'
  */
 
-import * as path from 'node:path'
 import type { Tree } from '@nx/devkit'
 import { formatFiles, logger } from '@nx/devkit'
+import * as path from 'node:path'
 import type { EnvGeneratorSchema } from './schema'
 import { generateCreateEnvFile } from './templates/createEnv.template'
 import { generateEnvScaffoldFile } from './templates/env-scaffold.template'

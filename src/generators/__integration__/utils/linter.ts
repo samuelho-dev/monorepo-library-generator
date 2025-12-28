@@ -9,12 +9,12 @@ import type { Tree } from '@nx/devkit'
 
 export interface LintResult {
   readonly success: boolean
-  readonly errors: ReadonlyArray<{
+  readonly errors: readonly {
     readonly file: string
     readonly line: number
     readonly rule: string
     readonly message: string
-  }>
+  }[]
   readonly fileCount: number
 }
 
@@ -32,12 +32,12 @@ export interface LintResult {
  */
 export function lintTreeFiles(tree: Tree, projectRoot: string) {
   const files = collectTypeScriptFiles(tree, projectRoot)
-  const errors: Array<{
+  const errors: {
     file: string
     line: number
     rule: string
     message: string
-  }> = []
+  }[] = []
 
   for (const filePath of files) {
     const content = tree.read(filePath, 'utf-8')
@@ -50,8 +50,7 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
 
       // Skip comment lines and lines that are part of JSDoc/docstrings
       const trimmed = line.trim()
-      const isCommentLine =
-        trimmed.startsWith('//') ||
+      const isCommentLine = trimmed.startsWith('//') ||
         trimmed.startsWith('*') ||
         trimmed.startsWith('/*') ||
         trimmed.startsWith('```')
@@ -113,8 +112,7 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
           file: filePath,
           line: lineNum,
           rule: 'no-spread-in-push',
-          message:
-            'Do not use spread arguments in Array.push. Use arr = [...arr, ...items] instead.'
+          message: 'Do not use spread arguments in Array.push. Use arr = [...arr, ...items] instead.'
         })
       }
     })
@@ -124,8 +122,7 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
     // - Comments (// or *)
     // - Interface method signatures
     // - Type annotations in variable declarations
-    const functionReturnTypePattern =
-      /(?:^|\n)\s*(?:export\s+)?function\s+\w+\s*\([^)]*\)\s*:\s*[^{]+\s*\{/g
+    const functionReturnTypePattern = /(?:^|\n)\s*(?:export\s+)?function\s+\w+\s*\([^)]*\)\s*:\s*[^{]+\s*\{/g
     for (const match of content.matchAll(functionReturnTypePattern)) {
       // Skip if it's a type predicate (x is Type)
       if (match[0].includes(' is ')) continue
@@ -145,8 +142,7 @@ export function lintTreeFiles(tree: Tree, projectRoot: string) {
         file: filePath,
         line: lineNum,
         rule: 'no-explicit-return-type',
-        message:
-          'Do not use explicit return type annotations. Let TypeScript infer the return type.'
+        message: 'Do not use explicit return type annotations. Let TypeScript infer the return type.'
       })
     }
   }

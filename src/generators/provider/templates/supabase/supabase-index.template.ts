@@ -141,7 +141,7 @@ export {
   builder.addComment('Usage Examples')
   builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   builder.addComment('')
-  builder.addComment("import { Effect, Layer } from 'effect';")
+  builder.addComment('import { Effect, Layer } from \'effect\';')
   builder.addComment(
     `import { SupabaseAuth, SupabaseClient, SupabaseStorage } from '${packageName}';`
   )
@@ -150,8 +150,8 @@ export {
   builder.addComment('const authProgram = Effect.gen(function*() {')
   builder.addComment('  const auth = yield* SupabaseAuth;')
   builder.addComment('  const result = yield* auth.signInWithPassword({')
-  builder.addComment("    email: 'user@example.com',")
-  builder.addComment("    password: 'password123',")
+  builder.addComment('    email: \'user@example.com\',')
+  builder.addComment('    password: \'password123\',')
   builder.addComment('  })')
   builder.addComment('  return result.user;')
   builder.addComment('})')
@@ -159,7 +159,7 @@ export {
   builder.addComment('// Storage example')
   builder.addComment('const storageProgram = Effect.gen(function*() {')
   builder.addComment('  const storage = yield* SupabaseStorage;')
-  builder.addComment("  const files = yield* storage.list('my-bucket')")
+  builder.addComment('  const files = yield* storage.list(\'my-bucket\')')
   builder.addComment('  return files;')
   builder.addComment('})')
   builder.addComment('')

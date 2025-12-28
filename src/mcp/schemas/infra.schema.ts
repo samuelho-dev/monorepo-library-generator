@@ -24,7 +24,7 @@ export class InfraArgsSchema extends Schema.Class<InfraArgsSchema>('InfraArgs')(
     Schema.pattern(/^[a-z][a-z0-9-]*[a-z0-9]$/),
     Schema.annotations({
       title: 'Library Name',
-      description: "Infrastructure concern (e.g., 'cache', 'storage', 'queue', 'logging')",
+      description: 'Infrastructure concern (e.g., \'cache\', \'storage\', \'queue\', \'logging\')',
       examples: ['cache', 'storage', 'queue', 'logging']
     })
   ),

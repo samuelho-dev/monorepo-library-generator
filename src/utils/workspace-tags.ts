@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/utils/workspace-tags
  */
 
+import { Effect } from 'effect'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { Effect } from 'effect'
 
 /**
  * Result of scanning workspace for tags

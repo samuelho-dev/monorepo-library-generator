@@ -50,10 +50,10 @@ export function getFilePreview(
         { path: 'src/lib/rpc.ts', description: 'RPC definitions' },
         ...(options.includeCQRS
           ? [
-              { path: 'src/lib/commands.ts', description: 'CQRS commands', isOptional: true },
-              { path: 'src/lib/queries.ts', description: 'CQRS queries', isOptional: true },
-              { path: 'src/lib/projections.ts', description: 'CQRS projections', isOptional: true }
-            ]
+            { path: 'src/lib/commands.ts', description: 'CQRS commands', isOptional: true },
+            { path: 'src/lib/queries.ts', description: 'CQRS queries', isOptional: true },
+            { path: 'src/lib/projections.ts', description: 'CQRS projections', isOptional: true }
+          ]
           : [])
       ]
 
@@ -74,15 +74,15 @@ export function getFilePreview(
         { path: 'src/lib/rpc/router.ts', description: 'RPC router' },
         ...(options.includeClientServer
           ? [
-              { path: 'src/lib/server.ts', description: 'Server-side logic', isOptional: true },
-              { path: 'src/lib/client.ts', description: 'Client-side logic', isOptional: true }
-            ]
+            { path: 'src/lib/server.ts', description: 'Server-side logic', isOptional: true },
+            { path: 'src/lib/client.ts', description: 'Client-side logic', isOptional: true }
+          ]
           : []),
         ...(options.includeCQRS
           ? [
-              { path: 'src/lib/commands.ts', description: 'Command handlers', isOptional: true },
-              { path: 'src/lib/queries.ts', description: 'Query handlers', isOptional: true }
-            ]
+            { path: 'src/lib/commands.ts', description: 'Command handlers', isOptional: true },
+            { path: 'src/lib/queries.ts', description: 'Query handlers', isOptional: true }
+          ]
           : [])
       ]
 
@@ -95,9 +95,9 @@ export function getFilePreview(
         { path: 'src/lib/types.ts', description: 'Service types' },
         ...(options.includeClientServer
           ? [
-              { path: 'src/lib/server.ts', description: 'Server implementation', isOptional: true },
-              { path: 'src/lib/client.ts', description: 'Client implementation', isOptional: true }
-            ]
+            { path: 'src/lib/server.ts', description: 'Server implementation', isOptional: true },
+            { path: 'src/lib/client.ts', description: 'Client implementation', isOptional: true }
+          ]
           : [])
       ]
 

@@ -98,8 +98,8 @@ function detectPackageManager(tree: Tree) {
   const manager: 'npm' | 'yarn' | 'pnpm' = tree.exists('pnpm-lock.yaml')
     ? 'pnpm'
     : tree.exists('yarn.lock')
-      ? 'yarn'
-      : 'npm'
+    ? 'yarn'
+    : 'npm'
   return manager
 }
 
@@ -201,8 +201,8 @@ function extractScope(packageName: string | undefined) {
   // Require package.json name field
   if (!packageName || packageName.trim() === '') {
     throw new Error(
-      "package.json must have a 'name' field. " +
-        "Set it to your workspace name (e.g., '@myorg/monorepo' or 'my-workspace')"
+      'package.json must have a \'name\' field. ' +
+        'Set it to your workspace name (e.g., \'@myorg/monorepo\' or \'my-workspace\')'
     )
   }
 
@@ -238,7 +238,7 @@ function detectLibrariesRoot(
   workspaceRoot: string,
   hasNxJson: boolean
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // 1. Check nx.json for workspaceLayout.libsDir
     if (hasNxJson) {
       const nxJsonContent = yield* adapter
@@ -300,7 +300,7 @@ function detectLibrariesRoot(
  * const config = yield* detectWorkspaceConfig(treeAdapter)
  */
 export function detectWorkspaceConfig(adapter: FileSystemAdapter) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const workspaceRoot = adapter.getWorkspaceRoot()
 
     // Read root package.json
@@ -336,8 +336,8 @@ export function detectWorkspaceConfig(adapter: FileSystemAdapter) {
     const packageManager: 'pnpm' | 'yarn' | 'npm' = hasPnpmLock
       ? 'pnpm'
       : hasYarnLock
-        ? 'yarn'
-        : 'npm'
+      ? 'yarn'
+      : 'npm'
 
     // Auto-detect configuration from package.json and workspace structure
     const scope = extractScope(packageJson.name)

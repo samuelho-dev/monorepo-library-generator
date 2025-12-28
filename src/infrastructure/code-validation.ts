@@ -74,7 +74,7 @@ export const yieldStarRequiredRule: CodeValidationRule = {
           rule: 'effect/yield-star-required',
           severity: 'error',
           message: `Found ${badYields.length} yield without * in Effect.gen. Use yield* for Effects.`,
-          suggestion: "Replace 'yield someEffect' with 'yield* someEffect'"
+          suggestion: 'Replace \'yield someEffect\' with \'yield* someEffect\''
         })
       }
     }
@@ -126,8 +126,7 @@ export const layerOrderRule: CodeValidationRule = {
   id: 'effect/layer-order',
   description: 'Ensures Context.Tag static layers follow convention order',
   severity: 'info',
-  pattern:
-    /class\s+\w+\s+extends\s+Context\.Tag\([^)]+\)<[^>]+>\(\)\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}/g,
+  pattern: /class\s+\w+\s+extends\s+Context\.Tag\([^)]+\)<[^>]+>\(\)\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}/g,
   validate: (content, matches) => {
     const violations: CodeViolation[] = []
     const expectedOrder = ['Live', 'Test', 'Dev', 'Auto']
@@ -265,8 +264,7 @@ export const schemaImportRule: CodeValidationRule = {
     const violations: CodeViolation[] = []
 
     if (matches.length > 0) {
-      const hasSchemaImport =
-        /import\s+.*\{[^}]*Schema[^}]*\}\s+from\s+["']effect["']/.test(content) ||
+      const hasSchemaImport = /import\s+.*\{[^}]*Schema[^}]*\}\s+from\s+["']effect["']/.test(content) ||
         /import\s+.*Schema\s+from\s+["']@effect\/schema["']/.test(content)
       if (!hasSchemaImport) {
         violations.push({
@@ -378,10 +376,10 @@ export function validateGeneratedCode(
  * Validate multiple files
  */
 export function validateGeneratedFiles(
-  files: ReadonlyArray<{ path: string; content: string }>,
+  files: readonly { path: string; content: string }[],
   rules: readonly CodeValidationRule[] = defaultCodeRules
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const results = new Map<string, CodeValidationResult>()
 
     for (const file of files) {

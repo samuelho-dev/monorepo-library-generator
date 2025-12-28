@@ -92,7 +92,7 @@ export function formatPathDisplay(absolutePath: string, relativePath: string) {
  * Simple spinner that shows message with animated indicator
  */
 export function spinner(message: string) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const frameRef = yield* Ref.make(0)
 
     // Start spinner
@@ -139,7 +139,7 @@ export function withProgress<A, E, R>(
     return effect
   }
 
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     if (verbosity === 'verbose') {
       yield* Console.log(`${ANSI.dim}${message}...${ANSI.reset}`)
       return yield* effect
@@ -153,8 +153,7 @@ export function withProgress<A, E, R>(
     const result = yield* Effect.onExit(effect, () =>
       Effect.sync(() => {
         process.stdout.write(`${ANSI.clearLine}${ANSI.cursorToStart}${ANSI.showCursor}`)
-      })
-    )
+      }))
 
     return result
   })

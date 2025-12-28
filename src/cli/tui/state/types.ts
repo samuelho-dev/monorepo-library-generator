@@ -99,9 +99,9 @@ export type TUIAction =
   | { readonly type: 'SET_LIBRARY_NAME'; readonly payload: string }
   | { readonly type: 'SET_EXTERNAL_SERVICE'; readonly payload: string }
   | {
-      readonly type: 'SET_OPTION'
-      readonly payload: { key: keyof GeneratorOptions; value: unknown }
-    }
+    readonly type: 'SET_OPTION'
+    readonly payload: { key: keyof GeneratorOptions; value: unknown }
+  }
   | { readonly type: 'SET_OPTIONS_INDEX'; readonly payload: number }
   // Preview
   | { readonly type: 'SET_FILES_TO_CREATE'; readonly payload: readonly FilePreview[] }

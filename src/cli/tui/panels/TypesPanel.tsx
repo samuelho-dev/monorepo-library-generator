@@ -21,11 +21,11 @@ interface TypesPanelProps {
 }
 
 // Build combined list: library types + separator + wizard actions
-const ALL_ITEMS: ReadonlyArray<{
+const ALL_ITEMS: readonly {
   type: WizardSelection | 'separator'
   label: string
   icon: string
-}> = [
+}[] = [
   ...LIBRARY_TYPES.map((t) => ({
     type: t.type as WizardSelection,
     label: t.label,
@@ -42,7 +42,7 @@ const ALL_ITEMS: ReadonlyArray<{
 /**
  * Types panel with library type selection
  */
-export function TypesPanel({ state, dispatch }: TypesPanelProps) {
+export function TypesPanel({ dispatch, state }: TypesPanelProps) {
   const isActive = state.activePanel === 'types'
   const selectedIndex = state.typesSelectedIndex
 
@@ -86,12 +86,12 @@ export function TypesPanel({ state, dispatch }: TypesPanelProps) {
   }, [dispatch, selectedIndex])
 
   return (
-    <Panel id="types" isActive={isActive}>
-      <Box flexDirection="column">
+    <Panel id='types' isActive={isActive}>
+      <Box flexDirection='column'>
         {ALL_ITEMS.map((item, index) => {
           if (item.type === 'separator') {
             return (
-              <Box key="separator">
+              <Box key='separator'>
                 <Text color={colors.muted}>-----------</Text>
               </Box>
             )
@@ -103,14 +103,15 @@ export function TypesPanel({ state, dispatch }: TypesPanelProps) {
           return (
             <Box key={item.type}>
               <Text color={isSelected ? colors.primary : colors.muted}>
-                {isSelected ? icons.selected : icons.unselected}{' '}
+                {isSelected ? icons.selected : icons.unselected}
+                {' '}
               </Text>
               <Text
                 color={isChosen ? colors.success : isSelected ? colors.secondary : colors.muted}
               >
                 {item.icon} {item.label}
               </Text>
-              {isChosen && <Text color={colors.success}> {icons.success}</Text>}
+              {isChosen && <Text color={colors.success}>{icons.success}</Text>}
             </Box>
           )
         })}

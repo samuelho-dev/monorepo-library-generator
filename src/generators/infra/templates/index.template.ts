@@ -35,8 +35,8 @@ export { ${className}Service } from "./lib/service"
 export type { ${className}Config } from "./lib/config"
 export { default${className}Config, get${className}ConfigForEnvironment } from "./lib/config"
 ${
-  isDatabaseInfra
-    ? `
+      isDatabaseInfra
+        ? `
 // Database types for Kysely-compatible queries
 export type {
   Database,
@@ -49,8 +49,8 @@ export type {
   ExpressionBuilder,
 } from "./lib/service"
 `
-    : ''
-}
+        : ''
+    }
 // Primary layers are static members of ${className}Service:
 // - ${className}Service.Live (production)
 // - ${className}Service.Test (testing)
@@ -80,8 +80,8 @@ export type { ${className}Config } from "./lib/config"
 // Configuration (universal)
 export { default${className}Config, get${className}ConfigForEnvironment } from "./lib/config"
 ${
-  isDatabaseInfra
-    ? `
+      isDatabaseInfra
+        ? `
 // Database types for Kysely-compatible queries
 export type {
   Database,
@@ -94,8 +94,8 @@ export type {
   ExpressionBuilder,
 } from "./lib/service"
 `
-    : ''
-}
+        : ''
+    }
 // Error types (universal)
 export {
   ${className}Error,

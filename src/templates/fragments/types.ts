@@ -54,11 +54,11 @@ export interface ErrorStaticMethod {
   readonly name: string
 
   /** Method parameters */
-  readonly params: ReadonlyArray<{
+  readonly params: readonly {
     readonly name: string
     readonly type: string
     readonly optional?: boolean
-  }>
+  }[]
 
   /** Method body code */
   readonly body: string

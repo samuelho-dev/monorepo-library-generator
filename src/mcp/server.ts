@@ -86,7 +86,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         default:
           return {
             success: false,
-            message: `❌ Unknown tool: ${name}\n\nAvailable tools:\n  - generate_contract\n  - generate_data_access\n  - generate_feature\n  - generate_infra\n  - generate_provider`
+            message:
+              `❌ Unknown tool: ${name}\n\nAvailable tools:\n  - generate_contract\n  - generate_data_access\n  - generate_feature\n  - generate_infra\n  - generate_provider`
           }
       }
     })()

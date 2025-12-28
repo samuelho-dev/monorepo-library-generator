@@ -70,7 +70,7 @@ export interface SubModuleGenerationResult {
  * - Gap #3: Server barrel exports
  */
 export const generateSubModules = (adapter: FileSystemAdapter, options: SubModuleOptions) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Sub-modules go in lib/server/services/{submodule}/
     // The main service.ts is also in lib/server/services/
     const servicesDir = `${options.sourceRoot}/lib/server/services`
@@ -105,7 +105,7 @@ const generateSingleSubModule = (
   adapter: FileSystemAdapter,
   options: SubModuleOptions & { servicesDir: string; moduleName: string }
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const serviceDir = `${options.servicesDir}/${options.moduleName}`
     const subModuleClassName = createNamingVariants(options.moduleName).className
 

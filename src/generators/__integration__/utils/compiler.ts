@@ -32,11 +32,11 @@ function getParseDiagnostics(sourceFile: ts.SourceFile) {
 
 export interface CompilationResult {
   readonly success: boolean
-  readonly errors: ReadonlyArray<{
+  readonly errors: readonly {
     readonly file: string
     readonly line: number
     readonly message: string
-  }>
+  }[]
   readonly fileCount: number
 }
 
@@ -57,7 +57,7 @@ export function compileTreeFiles(tree: Tree, projectRoot: string) {
     }
   }
 
-  const errors: Array<{ file: string; line: number; message: string }> = []
+  const errors: { file: string; line: number; message: string }[] = []
 
   // Parse each file to check for syntax errors
   for (const filePath of files) {
@@ -75,10 +75,9 @@ export function compileTreeFiles(tree: Tree, projectRoot: string) {
     // Get syntax diagnostics (parse errors)
     const syntaxDiags = getParseDiagnostics(sourceFile)
     for (const diag of syntaxDiags) {
-      const pos =
-        diag.start !== undefined
-          ? ts.getLineAndCharacterOfPosition(sourceFile, diag.start)
-          : { line: 0, character: 0 }
+      const pos = diag.start !== undefined
+        ? ts.getLineAndCharacterOfPosition(sourceFile, diag.start)
+        : { line: 0, character: 0 }
       errors.push({
         file: filePath,
         line: pos.line + 1,

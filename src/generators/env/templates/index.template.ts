@@ -20,11 +20,10 @@ export function generateIndexFile() {
   // File header
   builder.addFileHeader({
     title: 'Environment Variables',
-    description:
-      'Type-safe environment variable access.\n\n' +
+    description: 'Type-safe environment variable access.\n\n' +
       'Usage:\n' +
       '```typescript\n' +
-      "import { env } from '@workspace/env'\n\n" +
+      'import { env } from \'@workspace/env\'\n\n' +
       '// All context - runtime detection\n' +
       'env.PUBLIC_API_URL  // string (works everywhere)\n' +
       'env.NODE_ENV        // string (works everywhere)\n' +

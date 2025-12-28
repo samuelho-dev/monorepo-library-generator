@@ -28,10 +28,10 @@ export {
   createContextFromName,
   extractVariables,
   hasInterpolation,
-  InterpolationError,
   interpolate,
   interpolateDeep,
-  interpolateSync
+  interpolateSync,
+  InterpolationError
 } from './core/resolver'
 // Core types
 export type {
@@ -147,11 +147,11 @@ export {
   ContextValidationError,
   // Registry functions
   createTemplateRegistry,
-  GenerationError,
   generate,
   generateDomain,
   generateFile,
   generateLibrary,
+  GenerationError,
   getAvailableFileTypes,
   getRegisteredLibraryTypes,
   getTemplate,

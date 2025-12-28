@@ -16,7 +16,7 @@ export default [
   js.configs.recommended,
   ...effectEslint.configs.dprint,
   {
-    files: ["src/**/*.ts", "libs/**/*.ts"],
+    files: ["src/**/*.ts", "src/**/*.tsx", "libs/**/*.ts", "libs/**/*.tsx"],
     plugins: {
       "@typescript-eslint": tseslint,
       import: fixupPluginRules(_import),
@@ -31,7 +31,13 @@ export default [
       sourceType: "module",
       globals: {
         ...globals.node,
-        ...globals.es2022
+        ...globals.es2022,
+        React: "readonly"
+      },
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true
+        }
       }
     },
 
@@ -118,8 +124,8 @@ export default [
       "sort-destructure-keys/sort-destructure-keys": "error",
 
       "@typescript-eslint/array-type": ["warn", {
-        default: "generic",
-        readonly: "generic"
+        default: "array",
+        readonly: "array"
       }],
 
       "@typescript-eslint/member-delimiter-style": 0,
@@ -150,7 +156,7 @@ export default [
           indentWidth: 2,
           lineWidth: 120,
           semiColons: "asi",
-          quoteStyle: "alwaysDouble",
+          quoteStyle: "alwaysSingle",
           trailingCommas: "never",
           operatorPosition: "maintain",
           "arrowFunction.useParentheses": "force"
@@ -171,6 +177,40 @@ export default [
         afterAll: "readonly",
         vi: "readonly"
       }
+    }
+  },
+  {
+    // Relax strict rules for CLI/TUI code where some patterns are necessary
+    files: ["src/cli/**/*.ts", "src/cli/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.property.name='push'] > SpreadElement.arguments",
+          message: "Do not use spread arguments in Array.push"
+        },
+        {
+          selector: "ImportDeclaration[source.value=/\\.(m|c)?js$/]",
+          message: "Do not use .js, .mjs, or .cjs extensions in imports."
+        },
+        {
+          selector: "ExportNamedDeclaration[source.value=/\\.(m|c)?js$/]",
+          message: "Do not use .js, .mjs, or .cjs extensions in exports."
+        },
+        {
+          selector: "ExportAllDeclaration[source.value=/\\.(m|c)?js$/]",
+          message: "Do not use .js, .mjs, or .cjs extensions in exports."
+        },
+        // Keep Effect.ts rules but remove return type and as-assertion restrictions
+        {
+          selector: "MemberExpression[object.name='Effect'][property.name='Do']",
+          message: "Effect.Do is deprecated. Use Effect.gen with yield* syntax instead."
+        },
+        {
+          selector: "CallExpression[callee.object.name='Effect'][callee.property.name='gen'] > FunctionExpression[generator=true] YieldExpression[delegate=false]",
+          message: "Use yield* (not yield) for Effect operations in Effect.gen."
+        }
+      ]
     }
   }
 ]

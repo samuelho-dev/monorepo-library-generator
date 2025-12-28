@@ -12,8 +12,7 @@ import { JSONSchema, Schema } from 'effect'
 export const PlatformSchema = Schema.Literal('node', 'browser', 'universal', 'edge').pipe(
   Schema.annotations({
     title: 'Platform',
-    description:
-      'Target platform: node (server), browser (client), universal (both), edge (CDN runtime)'
+    description: 'Target platform: node (server), browser (client), universal (both), edge (CDN runtime)'
   })
 )
 
@@ -25,7 +24,7 @@ export class FeatureArgsSchema extends Schema.Class<FeatureArgsSchema>('FeatureA
     Schema.pattern(/^[a-z][a-z0-9-]*[a-z0-9]$/),
     Schema.annotations({
       title: 'Library Name',
-      description: "Feature name (e.g., 'user-management', 'auth', 'checkout')",
+      description: 'Feature name (e.g., \'user-management\', \'auth\', \'checkout\')',
       examples: ['user-management', 'auth', 'checkout']
     })
   ),

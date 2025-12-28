@@ -47,12 +47,7 @@ export {
   getErrorNames,
   validateErrorFactoryConfig
 } from './error-factory'
-export type {
-  AutoLayerConfig,
-  DomainLayerConfig,
-  InfrastructureLayerConfig,
-  LayerImportsConfig
-} from './layer-factory'
+export type { AutoLayerConfig, DomainLayerConfig, InfrastructureLayerConfig, LayerImportsConfig } from './layer-factory'
 // Layer factory
 export {
   createAutoLayer,

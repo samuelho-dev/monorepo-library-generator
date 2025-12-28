@@ -27,8 +27,8 @@ import { getPackageName } from '../../utils/workspace-config'
 // import { generateCacheFile } from '../data-access/templates/cache.template'
 import { generateErrorsFile } from '../data-access/templates/errors.template'
 import { generateIndexFile } from '../data-access/templates/index.template'
-import { generateLayersFile } from '../data-access/templates/layers.template'
 import { generateLayersSpecFile } from '../data-access/templates/layers-spec.template'
+import { generateLayersFile } from '../data-access/templates/layers.template'
 import { generateQueriesFile } from '../data-access/templates/queries.template'
 // Import new granular repository templates
 import {
@@ -101,7 +101,7 @@ export interface DataAccessCoreOptions {
  * @returns Effect that succeeds with GeneratorResult or fails with FileSystemErrors
  */
 export function generateDataAccessCore(adapter: FileSystemAdapter, options: DataAccessCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Parse tags from comma-separated string
     const parsedTags = parseTags(options.tags, [])
 
@@ -152,7 +152,7 @@ function generateDomainFiles(
   sourceRoot: string,
   templateOptions: DataAccessTemplateOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const workspaceRoot = adapter.getWorkspaceRoot()
     const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`
     const sourceSharedPath = `${sourceLibPath}/shared`

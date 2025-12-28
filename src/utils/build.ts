@@ -10,9 +10,9 @@
  * @module monorepo-library-generator/build
  */
 
-import { join, relative } from 'node:path'
 import type { ProjectGraph, TargetConfiguration, Tree } from '@nx/devkit'
 import { createProjectGraphAsync, readProjectConfiguration } from '@nx/devkit'
+import { join, relative } from 'node:path'
 import type { LibraryType, PlatformType } from './types'
 
 // Re-export types for convenience
@@ -156,8 +156,7 @@ export interface ExportConfig {
  */
 export function resolvePlatformExports(options: PlatformExportOptions) {
   // Library types that don't support platform-specific exports
-  const supportsPlatformExports =
-    options.libraryType !== 'data-access' && options.libraryType !== 'contract'
+  const supportsPlatformExports = options.libraryType !== 'data-access' && options.libraryType !== 'contract'
 
   if (!supportsPlatformExports) {
     return { shouldGenerateServer: false, shouldGenerateClient: false }
@@ -348,8 +347,7 @@ export function createEffectScripts() {
     'build-esm': `tsc -b tsconfig.lib.json`,
     'build-cjs':
       'babel build/esm --plugins @babel/transform-export-namespace-from --plugins @babel/transform-modules-commonjs --out-dir build/cjs --source-maps',
-    'build-annotate':
-      'babel build/esm --plugins annotate-pure-calls --out-dir build/esm --source-maps',
+    'build-annotate': 'babel build/esm --plugins annotate-pure-calls --out-dir build/esm --source-maps',
     check: 'tsc -b tsconfig.json',
     test: 'vitest',
     'test:ci': 'vitest run',
@@ -439,7 +437,7 @@ export async function computeProjectReferences(tree: Tree, projectName: string) 
  * Detect circular dependencies using iterative DFS
  */
 function detectCircularReferences(graph: ProjectGraph, startProject: string) {
-  const stack: Array<{ project: string; path: string[]; visited: Set<string> }> = [
+  const stack: { project: string; path: string[]; visited: Set<string> }[] = [
     { project: startProject, path: [], visited: new Set() }
   ]
 
@@ -685,25 +683,25 @@ export function generateImportExamples(config: ExportConfig) {
     case 'contract':
       examples.push(
         '// Granular entity import (optimal tree-shaking)',
-        "import { Product } from '@scope/contract-product/entities/product'",
+        'import { Product } from \'@scope/contract-product/entities/product\'',
         '',
         '// Barrel import (convenience)',
-        "import { Product, Category } from '@scope/contract-product/entities'",
+        'import { Product, Category } from \'@scope/contract-product/entities\'',
         '',
         '// Type-only import (zero runtime overhead)',
-        "import type { Product } from '@scope/contract-product/types'"
+        'import type { Product } from \'@scope/contract-product/types\''
       )
       break
     case 'data-access':
       examples.push(
         '// Granular operation import (only bundles create logic)',
-        "import { createUser } from '@scope/data-access-user/repository/operations/create'",
+        'import { createUser } from \'@scope/data-access-user/repository/operations/create\'',
         '',
         '// Specific query builder',
-        "import { buildFindByIdQuery } from '@scope/data-access-user/queries/find-queries'",
+        'import { buildFindByIdQuery } from \'@scope/data-access-user/queries/find-queries\'',
         '',
         '// Type-only import',
-        "import type { User, UserCreateInput } from '@scope/data-access-user/types'"
+        'import type { User, UserCreateInput } from \'@scope/data-access-user/types\''
       )
       break
     case 'feature':
@@ -714,10 +712,10 @@ export function generateImportExamples(config: ExportConfig) {
       ) {
         examples.push(
           '// Granular hook import',
-          "import { useUser } from '@scope/feature-user/client/hooks/use-user'",
+          'import { useUser } from \'@scope/feature-user/client/hooks/use-user\'',
           '',
           '// Type-only import',
-          "import type { UserData } from '@scope/feature-user/types'"
+          'import type { UserData } from \'@scope/feature-user/types\''
         )
       }
       if (
@@ -727,32 +725,32 @@ export function generateImportExamples(config: ExportConfig) {
       ) {
         examples.push(
           '// Granular service operation',
-          "import { createUser } from '@scope/feature-user/server/service/create-user'",
+          'import { createUser } from \'@scope/feature-user/server/service/create-user\'',
           '',
           '// Full server exports',
-          "import { UserService } from '@scope/feature-user/server'"
+          'import { UserService } from \'@scope/feature-user/server\''
         )
       }
       break
     case 'provider':
       examples.push(
         '// Granular operation import',
-        "import { createItem } from '@scope/provider-cache/service/create'",
+        'import { createItem } from \'@scope/provider-cache/service/create\'',
         '',
         '// Type-only import',
-        "import type { CacheItem } from '@scope/provider-cache/types'"
+        'import type { CacheItem } from \'@scope/provider-cache/types\''
       )
       break
     case 'infra':
       examples.push(
         '// Service import',
-        "import { DatabaseService } from '@scope/infra-database/service'",
+        'import { DatabaseService } from \'@scope/infra-database/service\'',
         '',
         '// Specific provider',
-        "import { PostgresProvider } from '@scope/infra-database/providers/postgres'",
+        'import { PostgresProvider } from \'@scope/infra-database/providers/postgres\'',
         '',
         '// Type-only import',
-        "import type { DatabaseConfig } from '@scope/infra-database/types'"
+        'import type { DatabaseConfig } from \'@scope/infra-database/types\''
       )
       break
   }

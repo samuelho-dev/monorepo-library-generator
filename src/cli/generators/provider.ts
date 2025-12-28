@@ -7,12 +7,7 @@
 
 import { Console, Effect, ParseResult } from 'effect'
 import { generateProviderCore, type ProviderCoreOptions } from '../../generators/core/provider'
-import {
-  createExecutor,
-  decodeProviderInput,
-  formatOutput,
-  type ProviderInput
-} from '../../infrastructure'
+import { createExecutor, decodeProviderInput, formatOutput, type ProviderInput } from '../../infrastructure'
 
 /**
  * Provider Generator Options - imported from validation registry
@@ -38,7 +33,7 @@ const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
 )
 
 export function generateProvider(options: ProviderGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeProviderInput(options).pipe(
       Effect.mapError(

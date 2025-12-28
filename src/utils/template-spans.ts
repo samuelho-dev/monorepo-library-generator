@@ -38,7 +38,7 @@ export function generateTemplateWithSpan<TOptions>(
   generator: TemplateGeneratorFn<TOptions>,
   options: TOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const startTime = Date.now()
 
     // Track template compilation
@@ -78,15 +78,15 @@ export function generateTemplateWithSpan<TOptions>(
  */
 export function generateTemplatesWithSpan<TOptions>(
   adapter: FileSystemAdapter,
-  templates: ReadonlyArray<{
+  templates: readonly {
     readonly id: string
     readonly path: string
     readonly generator: TemplateGeneratorFn<TOptions>
-  }>,
+  }[],
   basePath: string,
   options: TOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const files: string[] = []
 
     for (const template of templates) {
@@ -124,7 +124,7 @@ export function writeContentWithSpan(
   filePath: string,
   content: string
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     yield* adapter.writeFile(filePath, content)
     return filePath
   }).pipe(

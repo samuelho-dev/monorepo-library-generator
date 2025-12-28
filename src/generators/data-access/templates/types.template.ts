@@ -7,11 +7,7 @@
  */
 
 import { TypeScriptBuilder } from '../../../utils/code-builder'
-import {
-  addPaginatedResponse,
-  addPaginationOptions,
-  addSortDirection
-} from '../../../utils/templates'
+import { addPaginatedResponse, addPaginationOptions, addSortDirection } from '../../../utils/templates'
 import type { DataAccessTemplateOptions } from '../../../utils/types'
 import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 

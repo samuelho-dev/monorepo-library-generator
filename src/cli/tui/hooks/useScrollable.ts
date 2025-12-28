@@ -86,10 +86,10 @@ export interface UseScrollableResult {
  * ```
  */
 export function useScrollable({
-  totalItems,
-  visibleItems,
   isActive,
-  selectedIndex
+  selectedIndex,
+  totalItems,
+  visibleItems
 }: UseScrollableOptions): UseScrollableResult {
   const [scrollOffset, setScrollOffset] = useState(0)
   const [prevSelectedIndex, setPrevSelectedIndex] = useState(selectedIndex)

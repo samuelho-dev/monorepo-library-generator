@@ -131,8 +131,7 @@ const BUILTIN_INFRA: readonly BuiltinInfra[] = Object.freeze([
   }),
   Object.freeze({
     name: 'database',
-    description:
-      'Database orchestration infrastructure (coordinates database providers like Kysely)'
+    description: 'Database orchestration infrastructure (coordinates database providers like Kysely)'
   }),
   Object.freeze({
     name: 'observability',
@@ -149,8 +148,7 @@ const BUILTIN_INFRA: readonly BuiltinInfra[] = Object.freeze([
   }),
   Object.freeze({
     name: 'auth',
-    description:
-      'Auth infrastructure with session/token verification and RPC middleware integration'
+    description: 'Auth infrastructure with session/token verification and RPC middleware integration'
   }),
   Object.freeze({
     name: 'storage',
@@ -168,7 +166,7 @@ const BUILTIN_INFRA: readonly BuiltinInfra[] = Object.freeze([
  * Must run FIRST - these define types that infra libraries depend on.
  */
 function generateBuiltinContracts() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     yield* Console.log('📜 Generating built-in contract libraries...')
     yield* Console.log('')
 
@@ -212,7 +210,7 @@ const USER_SUBMODULES = 'authentication,profile'
  * Feature layer has submodules for business capabilities.
  */
 function generateUserDomainSlice() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     yield* Console.log('👤 Generating user domain slice...')
     yield* Console.log('')
 
@@ -260,7 +258,7 @@ function generateUserDomainSlice() {
  * Generate all built-in provider libraries
  */
 function generateBuiltinProviders() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     yield* Console.log('📦 Generating built-in provider libraries...')
     yield* Console.log('')
 
@@ -287,7 +285,7 @@ function generateBuiltinProviders() {
  * Generate all built-in infrastructure libraries
  */
 function generateBuiltinInfra() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     yield* Console.log('📦 Generating built-in infrastructure libraries...')
     yield* Console.log('')
 
@@ -336,7 +334,7 @@ function generateBuiltinInfra() {
  * caching, logging, metrics, queues, and pub/sub out of the box.
  */
 export function init(options: InitOptions = {}) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const includeProviders = options.includeProviders ?? true
     const includeInfra = options.includeInfra ?? true
     const skipPrisma = options.skipPrisma ?? false

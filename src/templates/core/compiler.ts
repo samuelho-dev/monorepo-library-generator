@@ -46,7 +46,7 @@ import type {
 export class CompilationError extends Data.TaggedError('CompilationError')<{
   readonly templateId: string
   readonly message: string
-  readonly diagnostics?: ReadonlyArray<{ line: number; column: number; message: string }>
+  readonly diagnostics?: readonly { line: number; column: number; message: string }[]
 }> {}
 
 // ============================================================================
@@ -73,7 +73,7 @@ interface TemplateCompilerImpl {
    */
   readonly getDiagnostics: (
     code: string
-  ) => Effect.Effect<ReadonlyArray<{ line: number; column: number; message: string }>, never, never>
+  ) => Effect.Effect<readonly { line: number; column: number; message: string }[], never, never>
 
   /**
    * Reset the compiler (clear all files)
@@ -141,16 +141,15 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
         hasQuestionToken: p.optional
       }))
 
-      const methods =
-        config.methods?.map((m) => ({
-          name: m.name,
-          parameters: m.params.map((p) => ({
-            name: p.name,
-            type: p.type,
-            hasQuestionToken: p.optional
-          })),
-          returnType: m.returnType
-        })) ?? []
+      const methods = config.methods?.map((m) => ({
+        name: m.name,
+        parameters: m.params.map((p) => ({
+          name: p.name,
+          type: p.type,
+          hasQuestionToken: p.optional
+        })),
+        returnType: m.returnType
+      })) ?? []
 
       const interfaceDecl = sourceFile.addInterface({
         name: config.name,
@@ -166,35 +165,32 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
     }
 
     const addClass = (sourceFile: SourceFile, config: ClassConfig) => {
-      const properties =
-        config.properties?.map((p) => ({
+      const properties = config.properties?.map((p) => ({
+        name: p.name,
+        type: p.type,
+        isReadonly: p.readonly,
+        hasQuestionToken: p.optional
+      })) ?? []
+
+      const methods = config.methods?.map((m) => ({
+        name: m.name,
+        isStatic: m.isStatic,
+        isAsync: m.isAsync,
+        parameters: m.params.map((p) => ({
           name: p.name,
           type: p.type,
-          isReadonly: p.readonly,
           hasQuestionToken: p.optional
-        })) ?? []
+        })),
+        returnType: m.returnType,
+        statements: m.body
+      })) ?? []
 
-      const methods =
-        config.methods?.map((m) => ({
-          name: m.name,
-          isStatic: m.isStatic,
-          isAsync: m.isAsync,
-          parameters: m.params.map((p) => ({
-            name: p.name,
-            type: p.type,
-            hasQuestionToken: p.optional
-          })),
-          returnType: m.returnType,
-          statements: m.body
-        })) ?? []
-
-      const statics =
-        config.statics?.map((s) => ({
-          name: s.name,
-          isStatic: true,
-          type: s.type,
-          initializer: s.value
-        })) ?? []
+      const statics = config.statics?.map((s) => ({
+        name: s.name,
+        isStatic: true,
+        type: s.type,
+        initializer: s.value
+      })) ?? []
 
       const classDecl = sourceFile.addClass({
         name: config.name,
@@ -235,7 +231,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       content: ContentDefinition,
       context: TemplateContext
     ) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         switch (content.type) {
           case 'raw': {
             const value = interpolateSync(content.value, context)
@@ -292,7 +288,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       section: SectionDefinition,
       context: TemplateContext
     ) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         if (section.condition && !context[section.condition]) {
           return
         }
@@ -339,7 +335,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       content: ConditionalContent,
       context: TemplateContext
     ) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         if (content.imports) {
           yield* processImports(sourceFile, content.imports, context)
         }
@@ -352,7 +348,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
     // Return the service implementation
     return {
       compile: (template, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const startTime = Date.now()
 
           yield* templateCompilations.pipe(
@@ -425,8 +421,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
 
           return diagnostics.map((d) => {
             const start = d.getStart()
-            const lineAndCol =
-              start !== undefined ? sourceFile.getLineAndColumnAtPos(start) : { line: 0, column: 0 }
+            const lineAndCol = start !== undefined ? sourceFile.getLineAndColumnAtPos(start) : { line: 0, column: 0 }
 
             return {
               line: lineAndCol.line,
@@ -484,16 +479,15 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
         hasQuestionToken: p.optional
       }))
 
-      const methods =
-        config.methods?.map((m) => ({
-          name: m.name,
-          parameters: m.params.map((p) => ({
-            name: p.name,
-            type: p.type,
-            hasQuestionToken: p.optional
-          })),
-          returnType: m.returnType
-        })) ?? []
+      const methods = config.methods?.map((m) => ({
+        name: m.name,
+        parameters: m.params.map((p) => ({
+          name: p.name,
+          type: p.type,
+          hasQuestionToken: p.optional
+        })),
+        returnType: m.returnType
+      })) ?? []
 
       const interfaceDecl = sourceFile.addInterface({
         name: config.name,
@@ -509,35 +503,32 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
     }
 
     const addClass = (sourceFile: SourceFile, config: ClassConfig) => {
-      const properties =
-        config.properties?.map((p) => ({
+      const properties = config.properties?.map((p) => ({
+        name: p.name,
+        type: p.type,
+        isReadonly: p.readonly,
+        hasQuestionToken: p.optional
+      })) ?? []
+
+      const methods = config.methods?.map((m) => ({
+        name: m.name,
+        isStatic: m.isStatic,
+        isAsync: m.isAsync,
+        parameters: m.params.map((p) => ({
           name: p.name,
           type: p.type,
-          isReadonly: p.readonly,
           hasQuestionToken: p.optional
-        })) ?? []
+        })),
+        returnType: m.returnType,
+        statements: m.body
+      })) ?? []
 
-      const methods =
-        config.methods?.map((m) => ({
-          name: m.name,
-          isStatic: m.isStatic,
-          isAsync: m.isAsync,
-          parameters: m.params.map((p) => ({
-            name: p.name,
-            type: p.type,
-            hasQuestionToken: p.optional
-          })),
-          returnType: m.returnType,
-          statements: m.body
-        })) ?? []
-
-      const statics =
-        config.statics?.map((s) => ({
-          name: s.name,
-          isStatic: true,
-          type: s.type,
-          initializer: s.value
-        })) ?? []
+      const statics = config.statics?.map((s) => ({
+        name: s.name,
+        isStatic: true,
+        type: s.type,
+        initializer: s.value
+      })) ?? []
 
       const classDecl = sourceFile.addClass({
         name: config.name,
@@ -577,7 +568,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       content: ContentDefinition,
       context: TemplateContext
     ) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         switch (content.type) {
           case 'raw': {
             const value = interpolateSync(content.value, context)
@@ -625,7 +616,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       section: SectionDefinition,
       context: TemplateContext
     ) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         if (section.condition && !context[section.condition]) {
           return
         }
@@ -666,7 +657,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
       content: ConditionalContent,
       context: TemplateContext
     ) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         if (content.imports) {
           yield* processImports(sourceFile, content.imports, context)
         }
@@ -677,7 +668,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
 
     return {
       compile: (template, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const startTime = Date.now()
           yield* templateCompilations.pipe(
             Metric.tagged('template_id', template.id),
@@ -733,8 +724,7 @@ export class TemplateCompiler extends Context.Tag('TemplateCompiler')<
           const diagnostics = sourceFile.getPreEmitDiagnostics()
           return diagnostics.map((d) => {
             const start = d.getStart()
-            const lineAndCol =
-              start !== undefined ? sourceFile.getLineAndColumnAtPos(start) : { line: 0, column: 0 }
+            const lineAndCol = start !== undefined ? sourceFile.getLineAndColumnAtPos(start) : { line: 0, column: 0 }
             return {
               line: lineAndCol.line,
               column: lineAndCol.column,

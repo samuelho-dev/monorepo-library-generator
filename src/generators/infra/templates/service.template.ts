@@ -38,7 +38,8 @@ export function generateServiceFile(options: InfraTemplateOptions) {
   // File header
   builder.addFileHeader({
     title: `${className} Service`,
-    description: `Infrastructure service using Effect 3.0+ Context.Tag pattern.\n\nProvides CRUD operations with dependency injection and resource management.\nCustomize resource initialization, dependencies, and error handling as needed.`,
+    description:
+      `Infrastructure service using Effect 3.0+ Context.Tag pattern.\n\nProvides CRUD operations with dependency injection and resource management.\nCustomize resource initialization, dependencies, and error handling as needed.`,
     module: `${scope}/infra-${fileName}/service`,
     see: ['EFFECT_PATTERNS.md for service patterns and examples']
   })
@@ -162,16 +163,16 @@ export class ${className}Service extends Context.Tag(
      * \`\`\`
      */
     readonly healthCheck: () => Effect.Effect<boolean, never>${
-      isDatabaseInfra
-        ? `
+    isDatabaseInfra
+      ? `
 
     // TODO: Add database-specific operations here
     // For Kysely integration, add query and transaction methods:
     //
     // readonly query: <A>(fn: (db: Kysely<Database>) => Promise<A>)
     // readonly transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>)`
-        : ''
-    }
+      : ''
+  }
   }
 >() {`)
 
@@ -194,23 +195,23 @@ export class ${className}Service extends Context.Tag(
       // const config = yield* ${className}Config;
       // const logger = yield* LoggingService;
       ${
-        hasProvider && providerClassName
-          ? `const provider = yield* ${providerClassName};`
-          : `// const provider = yield* ProviderService; // Replace with actual provider`
-      }
+    hasProvider && providerClassName
+      ? `const provider = yield* ${providerClassName};`
+      : `// const provider = yield* ProviderService; // Replace with actual provider`
+  }
 ${
-  isDatabaseInfra
-    ? `
+    isDatabaseInfra
+      ? `
       // Note: For database operations, implement your Kysely provider integration here
       // Example: const kysely = yield* KyselyProvider;`
-    : ''
-}
+      : ''
+  }
 
       // 2. Acquire Resources with Effect.acquireRelease
       // Example: Connection pool that needs cleanup
 ${
-  hasProvider && providerClassName
-    ? `      // When using a provider, resource acquisition is handled by the provider
+    hasProvider && providerClassName
+      ? `      // When using a provider, resource acquisition is handled by the provider
       // Uncomment below if you need additional custom resources
       // const resource = yield* Effect.acquireRelease(
       //   Effect.gen(function*() {
@@ -242,7 +243,7 @@ ${
       //       Effect.catchAll(() => Effect.void) // Ignore cleanup errors
       //     )
       // )`
-    : `      const resource = yield* Effect.acquireRelease(
+      : `      const resource = yield* Effect.acquireRelease(
         Effect.sync(() => {
           // Acquire phase: Initialize resource (sync baseline)
           // For async initialization with dependencies, use Effect.gen with yield*
@@ -276,7 +277,7 @@ ${
             Effect.catchAll(() => Effect.void) // Ignore cleanup errors
           )
       )`
-}
+  }
 
       // ${'='.repeat(74)}
       // OPTIONAL: Background Job Queue with Queue
@@ -555,15 +556,15 @@ ${
             // yield* logger.debug(\`Getting item: \${id}\`)
 
             ${
-              hasProvider && providerClassName
-                ? `// Delegate to provider
+    hasProvider && providerClassName
+      ? `// Delegate to provider
             return yield* provider.get(id).pipe(
               Effect.map(Option.some),
               Effect.catchTag("${providerClassName}NotFoundError", () =>
                 Effect.succeed(Option.none())
               )
             )`
-                : `const result = yield* Effect.tryPromise({
+      : `const result = yield* Effect.tryPromise({
               try: () => resource.query(id),
               catch: (error) => new ${className}InternalError({
                 message: \`Failed to get item \${id}\`,
@@ -571,7 +572,7 @@ ${
               })
             })
             return Option.fromNullable(result)`
-            }
+  }
           }).pipe(Effect.withSpan("${className}.get")),
 
         findByCriteria: (criteria, skip = 0, limit = 10) =>
@@ -597,10 +598,10 @@ ${
             // yield* logger.info("Creating item", { input })
 
             ${
-              hasProvider && providerClassName
-                ? `// Delegate to provider
+    hasProvider && providerClassName
+      ? `// Delegate to provider
             return yield* provider.create(input)`
-                : `const result = yield* Effect.tryPromise({
+      : `const result = yield* Effect.tryPromise({
               try: async () => {
                 // Replace with actual creation logic
                 return { id: randomUUID(), ...input, createdAt: new Date() };
@@ -611,7 +612,7 @@ ${
               })
             })
             return result;`
-            }
+  }
           }).pipe(Effect.withSpan("${className}.create")),
 
         update: (id, input) =>
@@ -619,10 +620,10 @@ ${
             // yield* logger.info(\`Updating item: \${id}\`, { input })
 
             ${
-              hasProvider && providerClassName
-                ? `// Delegate to provider
+    hasProvider && providerClassName
+      ? `// Delegate to provider
             return yield* provider.update(id, input)`
-                : `// Note: Cannot use yield* inside async callback
+      : `// Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
             const result = yield* Effect.tryPromise({
               try: async () => {
@@ -636,7 +637,7 @@ ${
               })
             })
             return result;`
-            }
+  }
           }).pipe(Effect.withSpan("${className}.update")),
 
         delete: (id) =>
@@ -644,10 +645,10 @@ ${
             // yield* logger.info(\`Deleting item: \${id}\`)
 
             ${
-              hasProvider && providerClassName
-                ? `// Delegate to provider
+    hasProvider && providerClassName
+      ? `// Delegate to provider
             yield* provider.delete(id)`
-                : `// Note: Cannot use yield* inside async callback
+      : `// Note: Cannot use yield* inside async callback
             // If you need to check existence first, do it outside Effect.tryPromise
             yield* Effect.tryPromise({
               try: async () => {
@@ -660,17 +661,17 @@ ${
                 cause: error
               })
             })`
-            }
+  }
           }).pipe(Effect.withSpan("${className}.delete")),
 
         healthCheck: () =>
           ${
-            hasProvider && providerClassName
-              ? `Effect.gen(function*() {
+    hasProvider && providerClassName
+      ? `Effect.gen(function*() {
             // Delegate to provider
             return yield* provider.healthCheck()
           })`
-              : `Effect.sync(() => {
+      : `Effect.sync(() => {
             // Check resource health (sync baseline)
             // For async health checks, use Effect.gen with yield*
             //
@@ -686,9 +687,9 @@ ${
             // Baseline: Return sync health status
             return resource.isConnected;
           })`
-          }.pipe(Effect.withSpan("${className}.healthCheck"))${
-            isDatabaseInfra
-              ? `
+  }.pipe(Effect.withSpan("${className}.healthCheck"))${
+    isDatabaseInfra
+      ? `
 
         // TODO: Add database query and transaction operations with your database schema type
         // Example implementation:
@@ -711,8 +712,8 @@ ${
         //       })
         //     )
         //   }).pipe(Effect.withSpan("${className}.transaction"))`
-              : ''
-          }
+      : ''
+  }
       };
     })
   )
@@ -769,8 +770,8 @@ ${
           yield* Effect.logDebug(\`[${className}] TEST healthCheck\`)
           return true
         })${
-          isDatabaseInfra
-            ? `
+    isDatabaseInfra
+      ? `
 
       // TODO: Add test mock implementations for database query and transaction operations
       // Example:
@@ -778,8 +779,8 @@ ${
       //   Effect.succeed({}),
       // transaction: <A, E>(fn: Effect.Effect<A, E, ${className}Service>) =>
       //   fn.pipe(Effect.provideService(${className}Service, ${className}Service.Test))`
-            : ''
-        }
+      : ''
+  }
     }
   })
 
@@ -852,8 +853,8 @@ ${
             yield* Effect.logDebug(\`[${className}Service] [DEV] healthCheck result:\`, result)
             return result;
           })${
-            isDatabaseInfra
-              ? `
+    isDatabaseInfra
+      ? `
 
         // TODO: Add development layer wrappers for database query and transaction operations
         // Example:
@@ -871,8 +872,8 @@ ${
         //     yield* Effect.logDebug(\`[${className}Service] [DEV] transaction completed\`)
         //     return result;
         //   })`
-              : ''
-          }
+      : ''
+  }
       };
     })
   )

@@ -37,12 +37,12 @@ export function generatePackageJson(options: PackageJsonOptions) {
     hasEntities: Boolean(options.entities && options.entities.length > 0),
     ...(options.entities &&
       options.entities.length > 0 && {
-        entityNames: Array.from(options.entities)
-      }),
+      entityNames: Array.from(options.entities)
+    }),
     ...(options.subModules &&
       options.subModules.length > 0 && {
-        subModuleNames: Array.from(options.subModules)
-      })
+      subModuleNames: Array.from(options.subModules)
+    })
   }
 
   const exports = generateGranularExports(exportConfig)

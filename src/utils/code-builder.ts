@@ -20,7 +20,7 @@
 
 export interface ImportSpec {
   from: string
-  imports: Array<string | { name: string; alias: string }>
+  imports: (string | { name: string; alias: string })[]
   isTypeOnly?: boolean
 }
 
@@ -314,10 +314,9 @@ export class TypeScriptBuilder {
 
     const exported = config.exported !== false ? 'export ' : ''
     const extendsClause = config.extends ? ` extends ${config.extends}` : ''
-    const implementsClause =
-      config.implements && config.implements.length > 0
-        ? ` implements ${config.implements.join(', ')}`
-        : ''
+    const implementsClause = config.implements && config.implements.length > 0
+      ? ` implements ${config.implements.join(', ')}`
+      : ''
 
     this.lines.push(`${exported}class ${config.className}${extendsClause}${implementsClause} {`)
 
@@ -415,8 +414,7 @@ export class TypeScriptBuilder {
     }
 
     const exported = config.exported !== false ? 'export ' : ''
-    const extendsClause =
-      config.extends && config.extends.length > 0 ? ` extends ${config.extends.join(', ')}` : ''
+    const extendsClause = config.extends && config.extends.length > 0 ? ` extends ${config.extends.join(', ')}` : ''
 
     this.lines.push(`${exported}interface ${config.name}${extendsClause} {`)
 
@@ -450,8 +448,7 @@ export class TypeScriptBuilder {
     }
 
     const exported = config.exported !== false ? 'export ' : ''
-    const typeParams =
-      config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(', ')}>` : ''
+    const typeParams = config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(', ')}>` : ''
 
     this.lines.push(`${exported}type ${config.name}${typeParams} = ${config.type}`)
 
@@ -468,8 +465,7 @@ export class TypeScriptBuilder {
 
     const exported = config.exported !== false ? 'export ' : ''
     const asyncModifier = config.isAsync ? 'async ' : ''
-    const typeParams =
-      config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(', ')}>` : ''
+    const typeParams = config.typeParams && config.typeParams.length > 0 ? `<${config.typeParams.join(', ')}>` : ''
 
     const params = config.params
       .map((p) => {
@@ -702,22 +698,25 @@ export function createLiveLayerPattern(config: LayerConfig) {
   const jsdocComment = config.jsdoc ? `  /**\n   * ${config.jsdoc}\n   */\n` : ''
 
   // Generate dependency yields if specified
-  const dependencyYields =
-    config.dependencies && config.dependencies.length > 0
-      ? `${config.dependencies
-          .map((dep) => `    const ${dep.charAt(0).toLowerCase() + dep.slice(1)} = yield* ${dep};`)
-          .join('\n')}\n\n`
-      : ''
+  const dependencyYields = config.dependencies && config.dependencies.length > 0
+    ? `${
+      config.dependencies
+        .map((dep) => `    const ${dep.charAt(0).toLowerCase() + dep.slice(1)} = yield* ${dep};`)
+        .join('\n')
+    }\n\n`
+    : ''
 
   const implementation = config.implementation.trim()
 
   return `${jsdocComment}  static readonly ${layerName} = ${layerMethod}(
     ${config.serviceName},
     Effect.gen(function*() {
-${dependencyYields}${implementation
-  .split('\n')
-  .map((line) => `      ${line}`)
-  .join('\n')}
+${dependencyYields}${
+    implementation
+      .split('\n')
+      .map((line) => `      ${line}`)
+      .join('\n')
+  }
     })
   )`
 }

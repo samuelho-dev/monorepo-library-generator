@@ -213,18 +213,18 @@ describe('Contract Generator - Exports', () => {
       await contractGenerator(tree, { name: 'product', includeCQRS: true })
 
       const indexContent = tree.read('libs/contract/product/src/index.ts', 'utf-8')
-      expect(indexContent).toContain("from './lib/commands'")
-      expect(indexContent).toContain("from './lib/queries'")
-      expect(indexContent).toContain("from './lib/projections'")
+      expect(indexContent).toContain('from \'./lib/commands\'')
+      expect(indexContent).toContain('from \'./lib/queries\'')
+      expect(indexContent).toContain('from \'./lib/projections\'')
     })
 
     it('should NOT export CQRS files when includeCQRS=false', async () => {
       await contractGenerator(tree, { name: 'product', includeCQRS: false })
 
       const indexContent = tree.read('libs/contract/product/src/index.ts', 'utf-8')
-      expect(indexContent).not.toContain("./lib/commands'")
-      expect(indexContent).not.toContain("./lib/queries'")
-      expect(indexContent).not.toContain("./lib/projections'")
+      expect(indexContent).not.toContain('./lib/commands\'')
+      expect(indexContent).not.toContain('./lib/queries\'')
+      expect(indexContent).not.toContain('./lib/projections\'')
     })
 
     it('should always export RPC files (prewired integration)', async () => {
@@ -232,8 +232,8 @@ describe('Contract Generator - Exports', () => {
 
       const indexContent = tree.read('libs/contract/product/src/index.ts', 'utf-8')
       // RPC is always exported (prewired integration) - separate files now
-      expect(indexContent).toContain("from './lib/rpc-errors'")
-      expect(indexContent).toContain("from './lib/rpc-definitions'")
+      expect(indexContent).toContain('from \'./lib/rpc-errors\'')
+      expect(indexContent).toContain('from \'./lib/rpc-definitions\'')
     })
   })
 

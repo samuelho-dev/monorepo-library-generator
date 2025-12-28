@@ -309,7 +309,7 @@ export interface FileSplitConfig {
   libraryType: LibraryType
   entityName: string
   className: string
-  operationTypes?: Array<RepositoryOperationType | ServiceOperationType>
+  operationTypes?: (RepositoryOperationType | ServiceOperationType)[]
   includeTests?: boolean
 }
 

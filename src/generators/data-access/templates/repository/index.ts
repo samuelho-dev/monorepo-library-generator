@@ -11,6 +11,6 @@ export { generateRepositoryCreateOperationFile } from './create-operation.templa
 export { generateRepositoryDeleteOperationFile } from './delete-operation.template'
 export { generateRepositoryOperationsIndexFile } from './operations-index.template'
 export { generateRepositoryReadOperationFile } from './read-operation.template'
-export { generateRepositoryFile } from './repository.template'
 export { generateRepositoryIndexFile } from './repository-index.template'
+export { generateRepositoryFile } from './repository.template'
 export { generateRepositoryUpdateOperationFile } from './update-operation.template'

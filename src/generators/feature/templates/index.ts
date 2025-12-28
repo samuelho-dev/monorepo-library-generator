@@ -27,8 +27,8 @@ export {
 export { generateErrorsFile } from './errors.template'
 // Events templates (PubSub integration)
 export { generateEventsPublisherFile } from './events/events-publisher.template'
-export { generateHooksFile } from './hooks.template'
 export { generateHooksIndexFile } from './hooks-index.template'
+export { generateHooksFile } from './hooks.template'
 // Index template
 export { generateIndexFile } from './index.template'
 // Jobs templates (Queue integration)

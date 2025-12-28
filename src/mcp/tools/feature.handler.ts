@@ -42,7 +42,7 @@ const featureExecutor = createExecutor<FeatureInput, FeatureCoreOptions>(
  * Handle feature generation with unified infrastructure
  */
 export const handleGenerateFeature = (input: unknown) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // 1. Validate input using proper error channel
     const validated = yield* decodeFeatureInput(input).pipe(
       Effect.mapError(
@@ -81,9 +81,7 @@ export const handleGenerateFeature = (input: unknown) =>
       })
       .pipe(
         Effect.map((result) => formatOutput(result, 'mcp')),
-        Effect.catchTag('GeneratorExecutionError', (error) =>
-          Effect.succeed(formatErrorResponse(error))
-        )
+        Effect.catchTag('GeneratorExecutionError', (error) => Effect.succeed(formatErrorResponse(error)))
       )
   }).pipe(
     // Handle validation errors at top level
@@ -91,6 +89,5 @@ export const handleGenerateFeature = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      })
-    )
+      }))
   )

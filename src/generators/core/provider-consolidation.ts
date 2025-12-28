@@ -15,7 +15,7 @@ export const generateProviderConsolidation = (
   adapter: FileSystemAdapter,
   options: ProviderConsolidationOptions
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Generate main index with provider re-exports
     yield* adapter.writeFile(
       `${options.sourceRoot}/index.ts`,

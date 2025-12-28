@@ -151,7 +151,7 @@ export function generateLibraryInfrastructure(
   adapter: FileSystemAdapter,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const mode = adapter.getMode()
     const workspaceRoot = adapter.getWorkspaceRoot()
     const filesGenerated: string[] = []
@@ -233,7 +233,7 @@ function writePackageJson(
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const packageJson = generatePackageJson({
       packageName: options.packageName,
       projectName: options.projectName,
@@ -258,7 +258,7 @@ function writeTsConfigFiles(
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const filesGenerated: string[] = []
 
     // Generate tsconfig.json (base)
@@ -306,7 +306,7 @@ function writeVitestConfig(
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const vitestConfig = generateVitestConfig()
 
     yield* adapter.writeFile(
@@ -324,7 +324,7 @@ function writeDocumentationFiles(
   workspaceRoot: string,
   options: InfrastructureOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const filesGenerated: string[] = []
 
     // Generate README.md using template
@@ -356,7 +356,7 @@ function generateSourceFileScaffolds(
   workspaceRoot: string,
   sourceRoot: string
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const filesGenerated: string[] = []
 
     // Create src directory

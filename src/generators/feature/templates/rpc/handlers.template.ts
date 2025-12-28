@@ -344,12 +344,14 @@ export const ${className}Handlers = ${className}Rpcs.toLayer({
  */
 export const All${className}Handlers = Layer.mergeAll(
   ${className}Handlers,
-${subModulesList
-  .map((sub: string) => {
-    const subClassName = sub.charAt(0).toUpperCase() + sub.slice(1)
-    return `  ${subClassName}Handlers`
-  })
-  .join(',\n')}
+${
+      subModulesList
+        .map((sub: string) => {
+          const subClassName = sub.charAt(0).toUpperCase() + sub.slice(1)
+          return `  ${subClassName}Handlers`
+        })
+        .join(',\n')
+    }
 )
 `)
   }

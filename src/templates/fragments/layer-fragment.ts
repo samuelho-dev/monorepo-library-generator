@@ -126,8 +126,7 @@ export function liveRepositoryLayerFragment(
   } = {}
 ) {
   const serviceName = `${className}Repository`
-  const implementation =
-    options.implementation ??
+  const implementation = options.implementation ??
     `{
     findById: (id) => Effect.gen(function*() {
       // TODO: Implement
@@ -231,10 +230,9 @@ export function composedLayerFragment(
     readonly jsdoc?: string
   }
 ) {
-  const mergeExpr =
-    options.serviceLayers.length > 1
-      ? `Layer.mergeAll(${options.serviceLayers.join(', ')})`
-      : (options.serviceLayers[0] ?? 'Layer.empty')
+  const mergeExpr = options.serviceLayers.length > 1
+    ? `Layer.mergeAll(${options.serviceLayers.join(', ')})`
+    : (options.serviceLayers[0] ?? 'Layer.empty')
 
   return {
     name,

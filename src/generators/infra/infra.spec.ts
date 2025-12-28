@@ -64,8 +64,8 @@ describe('Infra Generator - Foundation', () => {
 
       const indexContent = tree.read('libs/infra/myservice/src/index.ts', 'utf-8')
       // New structure exports from lib/ directly
-      expect(indexContent).toContain("from './lib/service'")
-      expect(indexContent).toContain("from './lib/errors'")
+      expect(indexContent).toContain('from \'./lib/service\'')
+      expect(indexContent).toContain('from \'./lib/errors\'')
     })
   })
 
@@ -372,8 +372,8 @@ describe('Infra Generator - Client-Server Separation', () => {
 
       const indexContent = tree.read('libs/infra/myservice/src/index.ts', 'utf-8')
       // Index exports from flat lib structure (single quotes)
-      expect(indexContent).toContain("from './lib/service'")
-      expect(indexContent).toContain("from './lib/config'")
+      expect(indexContent).toContain('from \'./lib/service\'')
+      expect(indexContent).toContain('from \'./lib/config\'')
     })
 
     it('should export client layers from client-layers.ts (prewired for generic concerns)', async () => {

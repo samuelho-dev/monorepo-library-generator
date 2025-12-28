@@ -38,37 +38,31 @@ export interface GenerationInput {
  * Both the CLI commands and the TUI use this function.
  */
 export function executeGeneration(input: GenerationInput) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Import generators dynamically to avoid circular dependencies
     const { generateContract } = yield* Effect.tryPromise({
       try: () => import('../../generators/contract'),
-      catch: (error) =>
-        new GenerationError({ cause: error, message: 'Failed to load contract generator' })
+      catch: (error) => new GenerationError({ cause: error, message: 'Failed to load contract generator' })
     })
     const { generateDataAccess } = yield* Effect.tryPromise({
       try: () => import('../../generators/data-access'),
-      catch: (error) =>
-        new GenerationError({ cause: error, message: 'Failed to load data-access generator' })
+      catch: (error) => new GenerationError({ cause: error, message: 'Failed to load data-access generator' })
     })
     const { generateFeature } = yield* Effect.tryPromise({
       try: () => import('../../generators/feature'),
-      catch: (error) =>
-        new GenerationError({ cause: error, message: 'Failed to load feature generator' })
+      catch: (error) => new GenerationError({ cause: error, message: 'Failed to load feature generator' })
     })
     const { generateInfra } = yield* Effect.tryPromise({
       try: () => import('../../generators/infra'),
-      catch: (error) =>
-        new GenerationError({ cause: error, message: 'Failed to load infra generator' })
+      catch: (error) => new GenerationError({ cause: error, message: 'Failed to load infra generator' })
     })
     const { generateProvider } = yield* Effect.tryPromise({
       try: () => import('../../generators/provider'),
-      catch: (error) =>
-        new GenerationError({ cause: error, message: 'Failed to load provider generator' })
+      catch: (error) => new GenerationError({ cause: error, message: 'Failed to load provider generator' })
     })
     const { generateDomain } = yield* Effect.tryPromise({
       try: () => import('../../generators/domain'),
-      catch: (error) =>
-        new GenerationError({ cause: error, message: 'Failed to load domain generator' })
+      catch: (error) => new GenerationError({ cause: error, message: 'Failed to load domain generator' })
     })
 
     // Get tags as string for generators

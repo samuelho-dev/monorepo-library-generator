@@ -16,11 +16,11 @@
 // Code Validation - Pattern-based validation for generated code
 export {
   aggregateResults,
+  classNamingRule,
   CodeValidationError,
   type CodeValidationResult,
   type CodeValidationRule,
   type CodeViolation,
-  classNamingRule,
   contextImportRule,
   createCodeRule,
   dataImportRule,

@@ -134,8 +134,7 @@ This ensures proper type inference and avoids recursive type issues.`,
             {
               name: 'findById',
               params: [{ name: 'id', type: 'string' }],
-              returnType:
-                'Effect.Effect<Option.Option<{className}>, {className}RepositoryError, never>',
+              returnType: 'Effect.Effect<Option.Option<{className}>, {className}RepositoryError, never>',
               jsdoc: 'Find {propertyName} by ID'
             },
             {
@@ -211,8 +210,7 @@ Effect 3.0+ pattern: Context.Tag with inline interface definition.`,
                 { name: 'pagination', type: 'OffsetPaginationParams', optional: true },
                 { name: 'sort', type: 'SortOptions', optional: true }
               ],
-              returnType:
-                'Effect.Effect<PaginatedResult<{className}>, {className}RepositoryError, never>',
+              returnType: 'Effect.Effect<PaginatedResult<{className}>, {className}RepositoryError, never>',
               jsdoc: 'List {propertyName}s with filters and pagination'
             },
             {
@@ -261,8 +259,7 @@ Manages projections (denormalized read models) for optimized query performance.`
                 {
                   name: 'findProjection',
                   params: [{ name: 'id', type: 'string' }],
-                  returnType:
-                    'Effect.Effect<Option.Option<unknown>, {className}RepositoryError, never>',
+                  returnType: 'Effect.Effect<Option.Option<unknown>, {className}RepositoryError, never>',
                   jsdoc: 'Find projection by ID'
                 },
                 {
@@ -271,8 +268,7 @@ Manages projections (denormalized read models) for optimized query performance.`
                     { name: 'filters', type: 'Record<string, unknown>', optional: true },
                     { name: 'pagination', type: 'OffsetPaginationParams', optional: true }
                   ],
-                  returnType:
-                    'Effect.Effect<PaginatedResult<unknown>, {className}RepositoryError, never>',
+                  returnType: 'Effect.Effect<PaginatedResult<unknown>, {className}RepositoryError, never>',
                   jsdoc: 'List projections with filters'
                 },
                 {

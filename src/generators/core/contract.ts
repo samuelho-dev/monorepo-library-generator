@@ -30,9 +30,9 @@ import { generateCommandsFile } from '../contract/templates/commands.template'
 import { generateIndexFile } from '../contract/templates/index.template'
 import { generateProjectionsFile } from '../contract/templates/projections.template'
 import { generateQueriesFile } from '../contract/templates/queries.template'
-import { generateRpcErrorsFile } from '../contract/templates/rpc.template'
 import { generateRpcDefinitionsFile } from '../contract/templates/rpc-definitions.template'
 import { generateRpcGroupFile } from '../contract/templates/rpc-group.template'
+import { generateRpcErrorsFile } from '../contract/templates/rpc.template'
 import { generateSubModuleEntitiesFile } from '../contract/templates/submodule-entities.template'
 import { generateSubModuleErrorsFile } from '../contract/templates/submodule-errors.template'
 import { generateSubModuleEventsFile } from '../contract/templates/submodule-events.template'
@@ -122,10 +122,9 @@ export interface GeneratorResult {
  * @requires TemplateCompiler - Template compilation service for code generation
  */
 export function generateContractCore(adapter: FileSystemAdapter, options: ContractCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Prepare entities list (defaults to single entity based on library name)
-    const entities =
-      options.entities && options.entities.length > 0 ? options.entities : [options.className]
+    const entities = options.entities && options.entities.length > 0 ? options.entities : [options.className]
 
     // Parse tags from comma-separated string
     const parsedTags = parseTags(options.tags, [])
@@ -150,9 +149,9 @@ export function generateContractCore(adapter: FileSystemAdapter, options: Contra
       includeSubModules: options.includeSubModules ?? false,
       subModules: options.subModules
         ? options.subModules
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
         : undefined,
       typesDatabasePackage: options.typesDatabasePackage
     }
@@ -189,7 +188,7 @@ function generateDomainFiles(
   sourceRoot: string,
   templateOptions: ContractTemplateOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const workspaceRoot = adapter.getWorkspaceRoot()
     const sourceLibPath = `${workspaceRoot}/${sourceRoot}/lib`
     const files: string[] = []
@@ -215,10 +214,10 @@ This is a contract library defining domain types and interfaces.
 - **lib/ports.ts**: Repository/service interfaces (Context.Tag pattern)
 - **lib/rpc.ts**: RPC endpoint definitions
 ${
-  templateOptions.includeCQRS
-    ? `- **lib/commands.ts**: CQRS command schemas\n- **lib/queries.ts**: CQRS query schemas\n- **lib/projections.ts**: Read-model projections`
-    : ''
-}
+      templateOptions.includeCQRS
+        ? `- **lib/commands.ts**: CQRS command schemas\n- **lib/queries.ts**: CQRS query schemas\n- **lib/projections.ts**: Read-model projections`
+        : ''
+    }
 
 ### Integration with prisma-effect-kysely
 
@@ -412,7 +411,7 @@ function generateSubModules(
   sourceRoot: string,
   templateOptions: ContractTemplateOptions
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const files: string[] = []
     const subModuleNames = templateOptions.subModules ?? []
 
@@ -604,7 +603,7 @@ function updateMainIndexWithSubModules(
   templateOptions: ContractTemplateOptions,
   subModuleNames: string[]
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const indexPath = `${workspaceRoot}/${sourceRoot}/index.ts`
 
     // Read existing index content

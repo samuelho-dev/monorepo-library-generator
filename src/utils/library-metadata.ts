@@ -9,7 +9,7 @@
  */
 
 import type { Tree } from '@nx/devkit'
-import { offsetFromRoot as computeOffsetFromRoot, joinPathFragments } from '@nx/devkit'
+import { joinPathFragments, offsetFromRoot as computeOffsetFromRoot } from '@nx/devkit'
 import { Effect } from 'effect'
 import { createTreeAdapter } from './filesystem'
 import { createNamingVariants } from './naming'
@@ -151,7 +151,7 @@ export const computeLibraryMetadata = (
   libraryType: LibraryType,
   additionalTags?: readonly string[]
 ) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Detect workspace configuration
     const adapter = createTreeAdapter(tree)
 
@@ -160,9 +160,9 @@ export const computeLibraryMetadata = (
     // Parse schema tags if provided
     const schemaTags = schema.tags
       ? schema.tags
-          .split(',')
-          .map((t) => t.trim())
-          .filter((t) => t.length > 0)
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
       : []
 
     // Combine schema tags with additional tags
@@ -172,8 +172,7 @@ export const computeLibraryMetadata = (
     const fileName = nameVariants.fileName // kebab-case
 
     // Get directory (use default if not provided)
-    const directory =
-      schema.directory || getDefaultDirectory(libraryType, workspaceConfig.librariesRoot)
+    const directory = schema.directory || getDefaultDirectory(libraryType, workspaceConfig.librariesRoot)
 
     // Compute paths
     const projectRoot = joinPathFragments(directory, fileName)

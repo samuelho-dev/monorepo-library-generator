@@ -24,29 +24,29 @@ export function StatusPanel({ state }: StatusPanelProps) {
   const isActive = state.activePanel === 'status'
 
   return (
-    <Panel id="status" isActive={isActive} height={3}>
-      <Box flexDirection="row" alignItems="center">
+    <Panel id='status' isActive={isActive} height={3}>
+      <Box flexDirection='row' alignItems='center'>
         {state.generationStatus === 'idle' && <Text color={colors.muted}>Ready to generate</Text>}
 
         {state.generationStatus === 'generating' && (
           <>
             <Text color={colors.info}>
-              <Spinner type="dots" />
+              <Spinner type='dots' />
             </Text>
-            <Text color={colors.info}> Generating...</Text>
+            <Text color={colors.info}>Generating...</Text>
           </>
         )}
 
         {state.generationStatus === 'success' && (
           <>
             <Text color={colors.success}>{icons.success} Done!</Text>
-            <Text color={colors.muted}> Press 'n' for new or 'q' to quit</Text>
+            <Text color={colors.muted}>Press 'n' for new or 'q' to quit</Text>
           </>
         )}
 
         {state.generationStatus === 'error' && (
           <>
-            <Text color={colors.error}>{icons.error} Error: </Text>
+            <Text color={colors.error}>{icons.error} Error:</Text>
             <Text color={colors.error}>{state.error ?? 'Unknown error'}</Text>
           </>
         )}

@@ -53,10 +53,7 @@ import {
   generateSubModuleCqrsBusFile,
   generateTypesFile
 } from '../feature/templates/index'
-import {
-  generateFeatureServiceFile,
-  generateFeatureServiceIndexFile
-} from '../feature/templates/service/index'
+import { generateFeatureServiceFile, generateFeatureServiceIndexFile } from '../feature/templates/service/index'
 import { generateSubModules } from './sub-modules'
 
 /**
@@ -123,7 +120,7 @@ export interface GeneratorResult {
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
 export function generateFeatureCore(adapter: FileSystemAdapter, options: FeatureCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Compute platform-specific configuration
     const includeCQRS = options.includeCQRS ?? false
 
@@ -143,13 +140,12 @@ export function generateFeatureCore(adapter: FileSystemAdapter, options: Feature
     const { includeClientServer: shouldIncludeClientServer } = platformConfig
 
     // Parse sub-modules if provided
-    const subModulesList =
-      options.includeSubModules && options.subModules
-        ? options.subModules
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : undefined
+    const subModulesList = options.includeSubModules && options.subModules
+      ? options.subModules
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+      : undefined
 
     // Assemble template options from pre-computed metadata
     const templateOptions: FeatureTemplateOptions = {
@@ -218,11 +214,11 @@ This is an AI-optimized reference for ${templateOptions.packageName}, a feature 
 - **lib/rpc.ts**: RPC route definitions
 - **lib/handlers.ts**: RPC handler implementations
 ${
-  shouldIncludeClientServer
-    ? `- **lib/client/hooks/**: React hooks
+      shouldIncludeClientServer
+        ? `- **lib/client/hooks/**: React hooks
 - **lib/client/atoms/**: Jotai atoms`
-    : ''
-}
+        : ''
+    }
 
 ### Import Patterns
 

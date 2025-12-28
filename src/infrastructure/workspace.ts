@@ -7,11 +7,11 @@
  * @module monorepo-library-generator/infrastructure/workspace
  */
 
-import * as path from 'node:path'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Effect } from 'effect'
 import * as Schema from 'effect/Schema'
+import * as path from 'node:path'
 
 // ============================================================================
 // Types
@@ -104,7 +104,7 @@ const LIBRARY_TYPE_SUBDIRS: readonly string[] = Object.freeze([
  * nx.json, pnpm-workspace.yaml, etc.
  */
 const findWorkspaceRoot = (fs: FileSystem.FileSystem, startPath: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     let currentPath = startPath
     const maxDepth = 10
     let depth = 0
@@ -142,7 +142,7 @@ const findWorkspaceRoot = (fs: FileSystem.FileSystem, startPath: string) =>
  * - package.json with workspaces field (Yarn/npm workspaces)
  */
 const isWorkspaceRoot = (fs: FileSystem.FileSystem, dirPath: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Check for workspace indicators
     const indicators = ['nx.json', 'pnpm-workspace.yaml', 'lerna.json', 'turbo.json']
 
@@ -174,7 +174,7 @@ const isWorkspaceRoot = (fs: FileSystem.FileSystem, dirPath: string) =>
  * - "standalone" = Other workspace types (pnpm, yarn, turborepo, or plain)
  */
 const detectWorkspaceType = (fs: FileSystem.FileSystem, rootPath: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Check for Nx
     const nxExists = yield* fs.exists(`${rootPath}/nx.json`).pipe(Effect.orElseSucceed(() => false))
 
@@ -195,7 +195,7 @@ const detectWorkspaceType = (fs: FileSystem.FileSystem, rootPath: string) =>
  * 3. default -> npm
  */
 const detectPackageManager = (fs: FileSystem.FileSystem, rootPath: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // Check for pnpm
     const pnpmExists = yield* fs
       .exists(`${rootPath}/pnpm-lock.yaml`)
@@ -232,7 +232,7 @@ const extractScope = (packageName?: string) => {
  * Read package.json scope from workspace root
  */
 const readScope = (fs: FileSystem.FileSystem, rootPath: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const pkgPath = `${rootPath}/package.json`
     const content = yield* fs
       .readFileString(pkgPath)
@@ -255,7 +255,7 @@ const readScope = (fs: FileSystem.FileSystem, rootPath: string) =>
  * library type directories (contract, data-access, feature, etc.)
  */
 const hasLibraryTypeSubdirs = (fs: FileSystem.FileSystem, dirPath: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     for (const subdir of LIBRARY_TYPE_SUBDIRS) {
       const exists = yield* fs
         .exists(`${dirPath}/${subdir}`)
@@ -284,7 +284,7 @@ const hasLibraryTypeSubdirs = (fs: FileSystem.FileSystem, dirPath: string) =>
  * detectLibrariesRoot(fs, "/project") // Effect.succeed("libs") (default)
  */
 const detectLibrariesRoot = (fs: FileSystem.FileSystem, rootPath: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const candidates = ['packages/libs', 'libs', 'packages', 'src/libs']
 
     for (const candidate of candidates) {
@@ -316,7 +316,7 @@ const detectLibrariesRoot = (fs: FileSystem.FileSystem, rootPath: string) =>
  * Combines all detection utilities into single operation
  */
 const detectWorkspaceContext = (startPath: string) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
 
     // Find workspace root
@@ -375,7 +375,7 @@ const detectWorkspaceContext = (startPath: string) =>
  * ```
  */
 export function createWorkspaceContext(rootPath: string | undefined, interfaceType: InterfaceType) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const startPath = rootPath ?? process.cwd()
 
     // Auto-detect workspace properties

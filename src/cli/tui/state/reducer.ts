@@ -7,13 +7,7 @@
  */
 
 import type { GeneratorOptions } from '../../core'
-import {
-  getNextPanel,
-  getPreviousPanel,
-  initialState,
-  type TUIAction,
-  type TUIState
-} from './types'
+import { getNextPanel, getPreviousPanel, initialState, type TUIAction, type TUIState } from './types'
 
 /**
  * TUI state reducer

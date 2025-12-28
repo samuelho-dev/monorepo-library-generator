@@ -154,7 +154,7 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
       getTypes: () => Effect.sync(() => Array.from(entries.keys())),
 
       render: (sourceFile, definition, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const entry = entries.get(definition.type)
 
           if (!entry) {
@@ -165,7 +165,7 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
         }),
 
       renderAll: (sourceFile, definitions, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           for (const definition of definitions) {
             // Check condition if present
             if (definition.condition) {
@@ -233,7 +233,7 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
       getTypes: () => Effect.sync(() => Array.from(entries.keys())),
 
       render: (sourceFile, definition, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const entry = entries.get(definition.type)
 
           if (!entry) {
@@ -244,7 +244,7 @@ export class FragmentRegistry extends Context.Tag('FragmentRegistry')<
         }),
 
       renderAll: (sourceFile, definitions, context) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           for (const definition of definitions) {
             if (definition.condition) {
               const conditionValue = context[definition.condition]

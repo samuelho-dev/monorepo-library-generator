@@ -24,8 +24,7 @@ const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
   'infra',
   generateInfraCore,
   (validated, metadata) => {
-    const includeClientServer =
-      validated.includeClient && validated.includeServer ? true : undefined
+    const includeClientServer = validated.includeClient && validated.includeServer ? true : undefined
     return {
       ...metadata,
       ...(validated.platform !== undefined && { platform: validated.platform }),
@@ -38,7 +37,7 @@ const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
  * Handle infra generation with unified infrastructure
  */
 export const handleGenerateInfra = (input: unknown) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // 1. Validate input using proper error channel
     const validated = yield* decodeInfraInput(input).pipe(
       Effect.mapError(
@@ -78,9 +77,7 @@ export const handleGenerateInfra = (input: unknown) =>
       })
       .pipe(
         Effect.map((result) => formatOutput(result, 'mcp')),
-        Effect.catchTag('GeneratorExecutionError', (error) =>
-          Effect.succeed(formatErrorResponse(error))
-        )
+        Effect.catchTag('GeneratorExecutionError', (error) => Effect.succeed(formatErrorResponse(error)))
       )
   }).pipe(
     // Handle validation errors at top level
@@ -88,6 +85,5 @@ export const handleGenerateInfra = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      })
-    )
+      }))
   )

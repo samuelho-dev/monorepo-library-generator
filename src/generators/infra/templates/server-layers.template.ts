@@ -21,7 +21,8 @@ export function generateServerLayersFile(options: InfraTemplateOptions) {
   // File header
   builder.addFileHeader({
     title: `${className} Service Layers`,
-    description: `Layer compositions for server-side dependency injection using Effect.\nProvides additional layer variants for different environments and use cases.\n\nNOTE: The primary Live and Test layers are now static members of ${className}Service\n(see ../service/service.ts). This file provides optional additional layer variants.`,
+    description:
+      `Layer compositions for server-side dependency injection using Effect.\nProvides additional layer variants for different environments and use cases.\n\nNOTE: The primary Live and Test layers are now static members of ${className}Service\n(see ../service/service.ts). This file provides optional additional layer variants.`,
     module: `${scope}/infra-${fileName}/layers`,
     see: ['https://effect.website/docs/guides/context-management for layer patterns']
   })

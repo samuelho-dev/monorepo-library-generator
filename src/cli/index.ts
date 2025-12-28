@@ -165,7 +165,7 @@ const includeSubModulesOption = Options.boolean('includeSubModules').pipe(
 
 const subModulesOption = Options.text('subModules').pipe(
   Options.withDescription(
-    "Comma-separated list of sub-module names (e.g., 'cart,checkout,management')"
+    'Comma-separated list of sub-module names (e.g., \'cart,checkout,management\')'
   ),
   Options.optional
 )

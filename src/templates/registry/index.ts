@@ -10,11 +10,11 @@ export type { GeneratorError } from './generator'
 // Generator
 export {
   ContextValidationError,
-  GenerationError,
   generate,
   generateDomain,
   generateFile,
   generateLibrary,
+  GenerationError,
   TemplateNotFoundError
 } from './generator'
 // Registry

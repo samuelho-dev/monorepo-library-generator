@@ -109,15 +109,13 @@ describe('Data Access Library Generator', () => {
       expect(tree.exists(`${projectRoot}/src/lib/repository/operations/read.ts`)).toBe(true)
       expect(tree.exists(`${projectRoot}/src/lib/repository/index.ts`)).toBe(true)
 
-      const repositoryContent =
-        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
 
       // Should have ProductRepository Context.Tag
       expect(repositoryContent).toContain('ProductRepository')
       expect(repositoryContent).toContain('Context.Tag')
 
-      const readContent =
-        tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || ''
+      const readContent = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || ''
       // Should have standard repository read methods
       expect(readContent).toContain('findById')
     })
@@ -129,8 +127,7 @@ describe('Data Access Library Generator', () => {
 
       // Static members are in repository.ts (Effect 3.0+ pattern)
       // Only Live layer exists - testing is done via infrastructure layer composition
-      const repositoryContent =
-        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
       expect(repositoryContent).toContain('static readonly Live')
 
       // Layers file should export data access layer compositions with Auto environment selection
@@ -152,12 +149,10 @@ describe('Data Access Library Generator', () => {
       expect(layersContent).toContain('DatabaseService.Test')
 
       // Check operations files for methods
-      const readOps =
-        tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || ''
+      const readOps = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || ''
       expect(readOps).toContain('findById')
 
-      const createOps =
-        tree.read(`${projectRoot}/src/lib/repository/operations/create.ts`, 'utf-8') || ''
+      const createOps = tree.read(`${projectRoot}/src/lib/repository/operations/create.ts`, 'utf-8') || ''
       expect(createOps).toContain('create')
     })
 
@@ -206,7 +201,7 @@ describe('Data Access Library Generator', () => {
       const content = tree.read(`${projectRoot}/src/lib/shared/errors.ts`, 'utf-8') || ''
 
       // Should import Data from effect
-      expect(content).toContain("import { Data } from 'effect'")
+      expect(content).toContain('import { Data } from \'effect\'')
 
       // Contract-First Architecture: domain errors are imported TYPE-ONLY from contract library
       // No re-exports - import domain errors directly from contract
@@ -252,8 +247,7 @@ describe('Data Access Library Generator', () => {
       // Should have filter types
       expect(content).toContain('Filter')
       // Should have pagination types
-      const hasPagination =
-        content.includes('Pagination') || content.includes('skip') || content.includes('limit')
+      const hasPagination = content.includes('Pagination') || content.includes('skip') || content.includes('limit')
       expect(hasPagination).toBe(true)
       // Should have input types
       expect(content).toContain('CreateInput')
@@ -270,13 +264,11 @@ describe('Data Access Library Generator', () => {
       const content = tree.read(`${projectRoot}/src/lib/shared/validation.ts`, 'utf-8') || ''
 
       // Should have validation functions
-      const hasCreateValidation =
-        content.includes('validateProductCreateInput') ||
+      const hasCreateValidation = content.includes('validateProductCreateInput') ||
         (content.includes('validate') && content.includes('CreateInput'))
       expect(hasCreateValidation).toBe(true)
 
-      const hasUpdateValidation =
-        content.includes('validateProductUpdateInput') ||
+      const hasUpdateValidation = content.includes('validateProductUpdateInput') ||
         (content.includes('validate') && content.includes('UpdateInput'))
       expect(hasUpdateValidation).toBe(true)
 
@@ -303,8 +295,7 @@ describe('Data Access Library Generator', () => {
       expect(typeContent).toContain('PaymentMethod')
 
       // Check validation uses PascalCase
-      const validationContent =
-        tree.read(`${paymentRoot}/src/lib/shared/validation.ts`, 'utf-8') || ''
+      const validationContent = tree.read(`${paymentRoot}/src/lib/shared/validation.ts`, 'utf-8') || ''
       expect(validationContent).toContain('PaymentMethod')
     })
   })
@@ -325,12 +316,10 @@ describe('Data Access Library Generator', () => {
       const content = tree.read(`${projectRoot}/src/lib/queries.ts`, 'utf-8') || ''
 
       // Should have query builder functions
-      const hasFindAllQuery =
-        content.includes('buildFindAllQuery') || content.includes('findAllQuery')
+      const hasFindAllQuery = content.includes('buildFindAllQuery') || content.includes('findAllQuery')
       expect(hasFindAllQuery).toBe(true)
 
-      const hasFindByIdQuery =
-        content.includes('buildFindByIdQuery') || content.includes('findByIdQuery')
+      const hasFindByIdQuery = content.includes('buildFindByIdQuery') || content.includes('findByIdQuery')
       expect(hasFindByIdQuery).toBe(true)
 
       const hasCountQuery = content.includes('buildCountQuery') || content.includes('countQuery')
@@ -345,8 +334,7 @@ describe('Data Access Library Generator', () => {
       const content = tree.read(`${projectRoot}/src/lib/queries.ts`, 'utf-8') || ''
 
       // Should import or reference Kysely
-      const hasKysely =
-        content.includes('Kysely') || content.includes('kysely') || content.includes('QueryBuilder')
+      const hasKysely = content.includes('Kysely') || content.includes('kysely') || content.includes('QueryBuilder')
       expect(hasKysely).toBe(true)
     })
   })
@@ -435,8 +423,7 @@ describe('Data Access Library Generator', () => {
 
       await dataAccessGenerator(tree, schema)
 
-      const repositoryContent =
-        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
 
       // Should use PascalCase for class/interface names
       expect(repositoryContent).toContain('ProductRepository')
@@ -453,15 +440,13 @@ describe('Data Access Library Generator', () => {
 
       await dataAccessGenerator(tree, schema)
 
-      const repositoryContent =
-        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
 
       // Should not have EJS template syntax (which would indicate incomplete generation)
       expect(repositoryContent).not.toContain('<%=')
       expect(repositoryContent).not.toContain('%>')
       // Should have actual implementation (at least one of these)
-      const hasImplementation =
-        repositoryContent.includes('Context.Tag') ||
+      const hasImplementation = repositoryContent.includes('Context.Tag') ||
         repositoryContent.includes('const') ||
         repositoryContent.includes('export')
       expect(hasImplementation).toBe(true)
@@ -568,17 +553,14 @@ describe('Data Access Library Generator', () => {
       expect(typesContent).toContain('UpdateInput')
 
       // Check operations files for Effect usage
-      const createContent =
-        tree.read(`${projectRoot}/src/lib/repository/operations/create.ts`, 'utf-8') || ''
-      const hasEffectUsage =
-        createContent.includes('Effect.gen') ||
+      const createContent = tree.read(`${projectRoot}/src/lib/repository/operations/create.ts`, 'utf-8') || ''
+      const hasEffectUsage = createContent.includes('Effect.gen') ||
         createContent.includes('Effect.succeed') ||
         createContent.includes('Effect.fail')
       expect(hasEffectUsage).toBe(true)
 
       // Verify proper Option usage in read operations
-      const readContent =
-        tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || ''
+      const readContent = tree.read(`${projectRoot}/src/lib/repository/operations/read.ts`, 'utf-8') || ''
       expect(readContent).toContain('Option')
     })
 
@@ -588,8 +570,7 @@ describe('Data Access Library Generator', () => {
       await dataAccessGenerator(tree, schema)
 
       // Repository has Live layer - testing uses infrastructure composition
-      const repositoryContent =
-        tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
+      const repositoryContent = tree.read(`${projectRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
       expect(repositoryContent).toContain('static readonly Live')
       expect(repositoryContent).toContain('Layer.succeed')
 
@@ -643,7 +624,7 @@ describe('Data Access Library Generator', () => {
       // Should use Data.TaggedError pattern for infrastructure errors
       expect(errorContent).toContain('extends Data.TaggedError(')
       // Should import Data from effect
-      expect(errorContent).toContain("import { Data } from 'effect'")
+      expect(errorContent).toContain('import { Data } from \'effect\'')
       // Should have static factory methods for error creation
       expect(errorContent).toContain('static create(')
       // Should export infrastructure error type union
@@ -668,8 +649,7 @@ describe('Data Access Library Generator', () => {
       expect(projectJson.name).toBe('data-access-payment-method')
 
       // Check repository uses PascalCase
-      const repositoryContent =
-        tree.read(`${paymentRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
+      const repositoryContent = tree.read(`${paymentRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
       expect(repositoryContent).toContain('PaymentMethod')
     })
 
@@ -681,8 +661,7 @@ describe('Data Access Library Generator', () => {
       const userRoot = 'libs/data-access/user-profile'
 
       // Repository should use PascalCase
-      const repositoryContent =
-        tree.read(`${userRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
+      const repositoryContent = tree.read(`${userRoot}/src/lib/repository/repository.ts`, 'utf-8') || ''
       expect(repositoryContent).toContain('UserProfileRepository')
 
       // Infrastructure errors should use PascalCase (domain errors are in contract)

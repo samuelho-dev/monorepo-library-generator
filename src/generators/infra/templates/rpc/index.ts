@@ -13,8 +13,8 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-export { generateRpcClientFile } from './client.template'
 export { generateRpcClientHooksFile } from './client-hook.template'
+export { generateRpcClientFile } from './client.template'
 export { generateRpcCoreFile } from './core.template'
 export { generateRpcErrorsFile } from './errors.template'
 // Middleware module (Contract-First architecture)

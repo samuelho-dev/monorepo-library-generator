@@ -11,8 +11,8 @@
  * @module cli/generators/types-database
  */
 
-import { execSync } from 'node:child_process'
 import { Console, Effect } from 'effect'
+import { execSync } from 'node:child_process'
 import { createEffectFsAdapter } from '../../utils/filesystem'
 import { WORKSPACE_CONFIG } from '../../utils/workspace-config'
 
@@ -39,7 +39,7 @@ export interface TypesDatabaseOptions {
  * Then runs prisma generate to populate src/lib/types.ts and src/lib/enums.ts
  */
 export function generateTypesDatabase(options: TypesDatabaseOptions = {}) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const scope = WORKSPACE_CONFIG.getScope()
     const packageName = `${scope}/types-database`
     const projectRoot = 'libs/types/database'

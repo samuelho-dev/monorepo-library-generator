@@ -25,7 +25,7 @@ interface PanelLayoutProps {
 /**
  * Main panel layout with keyboard navigation
  */
-export function PanelLayout({ state, dispatch, children }: PanelLayoutProps) {
+export function PanelLayout({ children, dispatch, state }: PanelLayoutProps) {
   const { exit } = useApp()
 
   // Global keyboard shortcuts
@@ -74,14 +74,14 @@ export function PanelLayout({ state, dispatch, children }: PanelLayoutProps) {
   })
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection='column'>
       {/* Header */}
       <Header workspace={state.workspace} />
 
       {/* Main panels - two column flex grid */}
-      <Box flexDirection="row" flexGrow={1}>
+      <Box flexDirection='row' flexGrow={1}>
         {/* Left column: Types + Options stacked */}
-        <Box width={28} flexDirection="column">
+        <Box width={28} flexDirection='column'>
           <Box flexGrow={1}>{children.types}</Box>
           <Box flexGrow={1}>{children.options}</Box>
         </Box>

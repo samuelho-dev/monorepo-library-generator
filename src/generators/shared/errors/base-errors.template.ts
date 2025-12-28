@@ -35,7 +35,7 @@ export interface ErrorGeneratorConfig {
 function schemaError(
   className: string,
   tagName: string,
-  fields: ReadonlyArray<{ name: string; schema: string; optional?: boolean }>
+  fields: readonly { name: string; schema: string; optional?: boolean }[]
 ) {
   // Build field definitions without trailing comma on last item
   const fieldLines = fields.map((f, i) => {
@@ -59,7 +59,7 @@ ${fieldDefs}
 function dataError(
   className: string,
   tagName: string,
-  fields: ReadonlyArray<{ name: string; type: string; optional?: boolean; jsdoc?: string }>,
+  fields: readonly { name: string; type: string; optional?: boolean; jsdoc?: string }[],
   staticCreate?: string
 ) {
   const fieldDefs = fields

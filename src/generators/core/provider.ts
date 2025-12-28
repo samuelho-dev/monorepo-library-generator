@@ -122,7 +122,7 @@ export interface GeneratorResult {
  * @returns Effect that succeeds with GeneratorResult or fails with file system errors
  */
 export function generateProviderCore(adapter: FileSystemAdapter, options: ProviderCoreOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Map PlatformType to Platform for template options (internal mapping)
     const platformMapping: Record<PlatformType, Platform> = {
       node: 'server',
@@ -162,8 +162,7 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
     const isKyselyProvider = options.name === 'kysely' || options.externalService === 'Kysely'
     const isSupabaseProvider = options.name === 'supabase' || options.externalService === 'Supabase'
     const isRedisProvider = options.name === 'redis' || options.externalService === 'Redis'
-    const isOpenTelemetryProvider =
-      options.name === 'opentelemetry' || options.externalService === 'OpenTelemetry'
+    const isOpenTelemetryProvider = options.name === 'opentelemetry' || options.externalService === 'OpenTelemetry'
 
     // Generate barrel exports - special providers use specialized templates
     yield* adapter.writeFile(
@@ -171,12 +170,12 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
       isKyselyProvider
         ? generateKyselyIndexFile(templateOptions)
         : isSupabaseProvider
-          ? generateSupabaseIndexFile(templateOptions)
-          : isRedisProvider
-            ? generateRedisIndexFile(templateOptions)
-            : isOpenTelemetryProvider
-              ? generateOtelIndexFile(templateOptions)
-              : generateIndexFile(templateOptions)
+        ? generateSupabaseIndexFile(templateOptions)
+        : isRedisProvider
+        ? generateRedisIndexFile(templateOptions)
+        : isOpenTelemetryProvider
+        ? generateOtelIndexFile(templateOptions)
+        : generateIndexFile(templateOptions)
     )
     filesGenerated.push(`${options.sourceRoot}/index.ts`)
 
@@ -201,12 +200,11 @@ export function generateProviderCore(adapter: FileSystemAdapter, options: Provid
         className: options.className,
         fileName: options.fileName,
         packageName: options.packageName,
-        platform:
-          options.platform === 'node'
-            ? 'server'
-            : options.platform === 'browser'
-              ? 'client'
-              : 'universal'
+        platform: options.platform === 'node'
+          ? 'server'
+          : options.platform === 'browser'
+          ? 'client'
+          : 'universal'
       }
       const typesOnlyContent = generateTypesOnlyFile(typesOnlyOptions)
       yield* adapter.writeFile(`${workspaceRoot}/${options.sourceRoot}/types.ts`, typesOnlyContent)
@@ -617,12 +615,12 @@ The baseline implementation remains useful for unit tests and demonstrations.
       isKyselyProvider
         ? generateKyselyErrorsFile(templateOptions)
         : isSupabaseProvider
-          ? generateSupabaseErrorsFile(templateOptions)
-          : isRedisProvider
-            ? generateRedisErrorsFile(templateOptions)
-            : isOpenTelemetryProvider
-              ? generateOtelErrorsFile(templateOptions)
-              : generateErrorsFile(templateOptions)
+        ? generateSupabaseErrorsFile(templateOptions)
+        : isRedisProvider
+        ? generateRedisErrorsFile(templateOptions)
+        : isOpenTelemetryProvider
+        ? generateOtelErrorsFile(templateOptions)
+        : generateErrorsFile(templateOptions)
     )
     filesGenerated.push(`${sourceLibPath}/errors.ts`)
 
@@ -640,10 +638,10 @@ The baseline implementation remains useful for unit tests and demonstrations.
       isSupabaseProvider
         ? generateSupabaseTypesFile(templateOptions)
         : isRedisProvider
-          ? generateRedisTypesFile(templateOptions)
-          : isOpenTelemetryProvider
-            ? generateOtelTypesFile(templateOptions)
-            : generateTypesFile(templateOptions)
+        ? generateRedisTypesFile(templateOptions)
+        : isOpenTelemetryProvider
+        ? generateOtelTypesFile(templateOptions)
+        : generateTypesFile(templateOptions)
     )
     filesGenerated.push(`${sourceLibPath}/types.ts`)
 
@@ -741,8 +739,8 @@ The baseline implementation remains useful for unit tests and demonstrations.
         isSupabaseProvider
           ? generateSupabaseSpecFile(templateOptions)
           : isRedisProvider
-            ? generateRedisSpecFile()
-            : generateServiceSpecFile(templateOptions)
+          ? generateRedisSpecFile()
+          : generateServiceSpecFile(templateOptions)
       )
       filesGenerated.push(`${sourceLibPath}/service.spec.ts`)
     }

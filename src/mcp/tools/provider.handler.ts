@@ -37,7 +37,7 @@ const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
  * Handle provider generation with unified infrastructure
  */
 export const handleGenerateProvider = (input: unknown) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // 1. Validate input using proper error channel
     const validated = yield* decodeProviderInput(input).pipe(
       Effect.mapError(
@@ -75,9 +75,7 @@ export const handleGenerateProvider = (input: unknown) =>
       })
       .pipe(
         Effect.map((result) => formatOutput(result, 'mcp')),
-        Effect.catchTag('GeneratorExecutionError', (error) =>
-          Effect.succeed(formatErrorResponse(error))
-        )
+        Effect.catchTag('GeneratorExecutionError', (error) => Effect.succeed(formatErrorResponse(error)))
       )
   }).pipe(
     // Handle validation errors at top level
@@ -85,6 +83,5 @@ export const handleGenerateProvider = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      })
-    )
+      }))
   )

@@ -27,15 +27,15 @@ export function generateProviderServiceFile(options: ProviderTemplateOptions) {
 External Service: ${externalService}
 
 ${
-  providerType === 'sdk'
-    ? `Operations are split into separate files for optimal tree-shaking.
+      providerType === 'sdk'
+        ? `Operations are split into separate files for optimal tree-shaking.
 Import only the operations you need for smallest bundle size.
 
 Bundle optimization:
   - Granular import: import { createOperations } from './operations/create'
   - Full service: import { ${className} } from './service'`
-    : `Provider Type: ${providerType}`
-}`,
+        : `Provider Type: ${providerType}`
+    }`,
     module: `${scope}/provider-${fileName}/service`
   })
   builder.addBlankLine()

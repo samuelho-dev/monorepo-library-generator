@@ -6,16 +6,8 @@
  */
 
 import { Console, Effect, ParseResult } from 'effect'
-import {
-  type DataAccessCoreOptions,
-  generateDataAccessCore
-} from '../../generators/core/data-access'
-import {
-  createExecutor,
-  type DataAccessInput,
-  decodeDataAccessInput,
-  formatOutput
-} from '../../infrastructure'
+import { type DataAccessCoreOptions, generateDataAccessCore } from '../../generators/core/data-access'
+import { createExecutor, type DataAccessInput, decodeDataAccessInput, formatOutput } from '../../infrastructure'
 
 /**
  * Data-Access Generator Options - imported from validation registry
@@ -35,7 +27,7 @@ const dataAccessExecutor = createExecutor<DataAccessInput, DataAccessCoreOptions
 )
 
 export function generateDataAccess(options: DataAccessGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeDataAccessInput(options).pipe(
       Effect.mapError(

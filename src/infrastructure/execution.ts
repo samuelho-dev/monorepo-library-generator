@@ -17,11 +17,7 @@ import type { Tree } from '@nx/devkit'
 import { addProjectConfiguration } from '@nx/devkit'
 import { Data, Effect, Metric } from 'effect'
 import { TemplateCompiler } from '../templates/core/compiler'
-import {
-  createAdapterFromContext,
-  type FileSystemAdapter,
-  type FileSystemErrors
-} from '../utils/filesystem'
+import { createAdapterFromContext, type FileSystemAdapter, type FileSystemErrors } from '../utils/filesystem'
 import { generateLibraryInfrastructure, type InfrastructureOptions } from '../utils/infrastructure'
 import type { LibraryMetadata, LibraryType } from './metadata'
 import { computeMetadata } from './metadata'
@@ -210,7 +206,7 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
 ) {
   return {
     execute: (validated: ExtendedInput<TInput>) =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const interfaceType = validated.__interfaceType ?? 'cli'
         const startTime = Date.now()
 
@@ -331,9 +327,8 @@ export function createExecutor<TInput extends BaseValidatedInput, TCoreOptions>(
         }),
         // Handle errors with metrics
         Effect.tapError((error) =>
-          Effect.gen(function* () {
-            const errorType =
-              error instanceof GeneratorExecutionError ? 'execution_error' : 'unknown_error'
+          Effect.gen(function*() {
+            const errorType = error instanceof GeneratorExecutionError ? 'execution_error' : 'unknown_error'
             yield* Metric.increment(taggedGeneratorError(errorType, libraryType))
           })
         )
@@ -358,7 +353,7 @@ export function executeGenerator<TOptions>(
   coreOptions: TOptions,
   infrastructureOptions?: Partial<InfrastructureOptions>
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Generate infrastructure files
     const infraOptions: InfrastructureOptions = {
       projectRoot: metadata.projectRoot,

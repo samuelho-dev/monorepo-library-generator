@@ -19,11 +19,6 @@ export type {
   WorkspaceType
 } from './library'
 
-export type {
-  GeneratorOptions,
-  InputComponentType,
-  OptionFieldConfig,
-  ValidationResult
-} from './options'
+export type { GeneratorOptions, InputComponentType, OptionFieldConfig, ValidationResult } from './options'
 
 export { getEffectiveTags } from './options'

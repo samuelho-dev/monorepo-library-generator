@@ -1,8 +1,12 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.9/schema.json",
   "extends": ["/Users/samuelho/.config/biome/biome.json"],
   "files": {
     "includes": ["src/**/*.ts", "src/**/*.tsx", "libs/**/*.ts", "libs/**/*.tsx", "*.json"]
+  },
+  "assist": { "actions": { "source": { "organizeImports": "off" } } },
+  "formatter": {
+    "enabled": false
   },
   "linter": {
     "rules": {

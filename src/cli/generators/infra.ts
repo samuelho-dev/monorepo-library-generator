@@ -7,12 +7,7 @@
 
 import { Console, Effect, ParseResult } from 'effect'
 import { generateInfraCore, type InfraCoreOptions } from '../../generators/core/infra'
-import {
-  createExecutor,
-  decodeInfraInput,
-  formatOutput,
-  type InfraInput
-} from '../../infrastructure'
+import { createExecutor, decodeInfraInput, formatOutput, type InfraInput } from '../../infrastructure'
 
 /**
  * Infra Generator Options - imported from validation registry
@@ -38,7 +33,7 @@ const infraExecutor = createExecutor<InfraInput, InfraCoreOptions>(
 )
 
 export function generateInfra(options: InfraGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeInfraInput(options).pipe(
       Effect.mapError(

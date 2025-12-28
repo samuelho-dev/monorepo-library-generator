@@ -24,7 +24,7 @@ interface OptionsPanelProps {
 /**
  * Options panel with name input and configuration options
  */
-export function OptionsPanel({ state, dispatch }: OptionsPanelProps) {
+export function OptionsPanel({ dispatch, state }: OptionsPanelProps) {
   const isActive = state.activePanel === 'options'
   const [editingField, setEditingField] = useState<string | null>(null)
   const [localNameValue, setLocalNameValue] = useState(state.libraryName)
@@ -40,7 +40,7 @@ export function OptionsPanel({ state, dispatch }: OptionsPanelProps) {
 
   // Build list of all editable fields
   const allFields = useMemo(() => {
-    const fields: Array<{ key: string; type: 'name' | 'option'; config?: OptionFieldConfig }> = [
+    const fields: { key: string; type: 'name' | 'option'; config?: OptionFieldConfig }[] = [
       { key: 'name', type: 'name' }
     ]
     for (const opt of visibleOptions) {
@@ -139,39 +139,42 @@ export function OptionsPanel({ state, dispatch }: OptionsPanelProps) {
 
   if (!state.selectedType) {
     return (
-      <Panel id="options" isActive={isActive}>
+      <Panel id='options' isActive={isActive}>
         <Text color={colors.muted}>Select a type first</Text>
       </Panel>
     )
   }
 
   return (
-    <Panel id="options" isActive={isActive}>
-      <Box flexDirection="column">
+    <Panel id='options' isActive={isActive}>
+      <Box flexDirection='column'>
         {allFields.map((field, index) => {
           const isSelected = index === state.optionsSelectedIndex
           const isEditing = editingField === field.key
 
           if (field.type === 'name') {
             return (
-              <Box key="name" flexDirection="column">
+              <Box key='name' flexDirection='column'>
                 <Box>
                   <Text color={isSelected ? colors.primary : colors.muted}>
-                    {isSelected ? icons.selected : icons.unselected}{' '}
+                    {isSelected ? icons.selected : icons.unselected}
+                    {' '}
                   </Text>
-                  <Text color={colors.secondary}>Name: </Text>
-                  {isEditing ? (
-                    <TextInput
-                      value={localNameValue}
-                      onChange={setLocalNameValue}
-                      onSubmit={(value) => handleTextSubmit('name', value)}
-                      placeholder="my-library"
-                    />
-                  ) : (
-                    <Text color={state.libraryName ? colors.libraryName : colors.placeholder}>
-                      {state.libraryName || '<enter name>'}
-                    </Text>
-                  )}
+                  <Text color={colors.secondary}>Name:</Text>
+                  {isEditing ?
+                    (
+                      <TextInput
+                        value={localNameValue}
+                        onChange={setLocalNameValue}
+                        onSubmit={(value) => handleTextSubmit('name', value)}
+                        placeholder='my-library'
+                      />
+                    ) :
+                    (
+                      <Text color={state.libraryName ? colors.libraryName : colors.placeholder}>
+                        {state.libraryName || '<enter name>'}
+                      </Text>
+                    )}
                 </Box>
                 {!nameValidation.isValid && state.libraryName && (
                   <Box marginLeft={3}>
@@ -190,7 +193,8 @@ export function OptionsPanel({ state, dispatch }: OptionsPanelProps) {
               return (
                 <Box key={config.key}>
                   <Text color={isSelected ? colors.primary : colors.muted}>
-                    {isSelected ? icons.selected : icons.unselected}{' '}
+                    {isSelected ? icons.selected : icons.unselected}
+                    {' '}
                   </Text>
                   <Text color={colors.secondary}>
                     {value ? icons.checked : icons.unchecked} {config.label}
@@ -203,9 +207,10 @@ export function OptionsPanel({ state, dispatch }: OptionsPanelProps) {
               return (
                 <Box key={config.key}>
                   <Text color={isSelected ? colors.primary : colors.muted}>
-                    {isSelected ? icons.selected : icons.unselected}{' '}
+                    {isSelected ? icons.selected : icons.unselected}
+                    {' '}
                   </Text>
-                  <Text color={colors.secondary}>{config.label}: </Text>
+                  <Text color={colors.secondary}>{config.label}:</Text>
                   <Text color={colors.highlight}>{(value as string) ?? config.options[0]}</Text>
                 </Box>
               )
@@ -215,23 +220,24 @@ export function OptionsPanel({ state, dispatch }: OptionsPanelProps) {
               return (
                 <Box key={config.key}>
                   <Text color={isSelected ? colors.primary : colors.muted}>
-                    {isSelected ? icons.selected : icons.unselected}{' '}
+                    {isSelected ? icons.selected : icons.unselected}
+                    {' '}
                   </Text>
-                  <Text color={colors.secondary}>{config.label}: </Text>
-                  {isEditing ? (
-                    <TextInput
-                      value={(value as string) ?? ''}
-                      onChange={(v) =>
-                        dispatch({ type: 'SET_OPTION', payload: { key: config.key, value: v } })
-                      }
-                      onSubmit={(v) => handleTextSubmit(config.key, v)}
-                      placeholder={config.placeholder}
-                    />
-                  ) : (
-                    <Text color={value ? colors.secondary : colors.placeholder}>
-                      {(value as string) || config.placeholder || '<empty>'}
-                    </Text>
-                  )}
+                  <Text color={colors.secondary}>{config.label}:</Text>
+                  {isEditing ?
+                    (
+                      <TextInput
+                        value={(value as string) ?? ''}
+                        onChange={(v) => dispatch({ type: 'SET_OPTION', payload: { key: config.key, value: v } })}
+                        onSubmit={(v) => handleTextSubmit(config.key, v)}
+                        placeholder={config.placeholder}
+                      />
+                    ) :
+                    (
+                      <Text color={value ? colors.secondary : colors.placeholder}>
+                        {(value as string) || config.placeholder || '<empty>'}
+                      </Text>
+                    )}
                 </Box>
               )
             }

@@ -13,7 +13,7 @@ import type { TemplateContext, TemplateDefinition } from '../core/types'
  * Compile a template using the Effect service pattern
  */
 const compile = (template: TemplateDefinition, ctx: TemplateContext) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const compiler = yield* TemplateCompiler
     return yield* compiler.compile(template, ctx)
   }).pipe(Effect.provide(TemplateCompiler.Test))

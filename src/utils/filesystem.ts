@@ -10,12 +10,12 @@
  * @module monorepo-library-generator/filesystem
  */
 
-import * as nodeFs from 'node:fs'
-import * as nodePath from 'node:path'
 import { FileSystem, Path } from '@effect/platform'
 import { NodeFileSystem, NodePath } from '@effect/platform-node'
 import type { Tree } from '@nx/devkit'
 import { Context, Data, Effect } from 'effect'
+import * as nodeFs from 'node:fs'
+import * as nodePath from 'node:path'
 import type { WorkspaceContext } from '../infrastructure'
 
 // ============================================================================
@@ -213,7 +213,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
       )
     )
 
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       yield* createDir
       yield* writeFile
     })
@@ -332,7 +332,7 @@ class EffectFsAdapterImpl implements FileSystemAdapter {
  * @returns Effect that provides FileSystemAdapter
  */
 export function createEffectFsAdapter(workspaceRoot: string) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
     const pathService = yield* Path.Path
 
@@ -348,7 +348,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   constructor(private readonly workspaceRoot: string) {}
 
   writeFile(path: string, content: string) {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const fs = yield* FileSystem.FileSystem
       const dir = nodePath.dirname(path)
 
@@ -378,7 +378,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   readFile(path: string) {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const fs = yield* FileSystem.FileSystem
       return yield* fs.readFileString(path).pipe(
         Effect.catchAll((error) =>
@@ -394,7 +394,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   exists(path: string) {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const fs = yield* FileSystem.FileSystem
       return yield* fs.exists(path).pipe(
         Effect.catchAll((error) =>
@@ -411,7 +411,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   makeDirectory(path: string) {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const fs = yield* FileSystem.FileSystem
       yield* fs.makeDirectory(path, { recursive: true }).pipe(
         Effect.catchAll((error) =>
@@ -427,7 +427,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   listDirectory(path: string) {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const fs = yield* FileSystem.FileSystem
       return yield* fs.readDirectory(path).pipe(
         Effect.catchAll((error) =>
@@ -444,7 +444,7 @@ class MCPFileSystemAdapter implements FileSystemAdapter {
   }
 
   remove(path: string, options?: { recursive?: boolean }) {
-    return Effect.gen(function* () {
+    return Effect.gen(function*() {
       const fs = yield* FileSystem.FileSystem
       yield* fs.remove(path, options).pipe(
         Effect.catchAll((error) =>
@@ -678,7 +678,7 @@ export interface AdapterOptions {
 export function createAdapter(options: AdapterOptions) {
   const { context, nxTree } = options
 
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     switch (context.interfaceType) {
       case 'nx': {
         if (!nxTree) {
@@ -741,7 +741,7 @@ export interface EnvVarToInject {
  * @returns Effect that succeeds with void or fails with file system errors
  */
 export function injectEnvVars(adapter: FileSystemAdapter, vars: readonly EnvVarToInject[]) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const workspaceRoot = adapter.getWorkspaceRoot()
     const envFilePath = `${workspaceRoot}/libs/env/src/env.ts`
 

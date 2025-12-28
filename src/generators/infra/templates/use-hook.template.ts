@@ -26,7 +26,8 @@ export function generateUseHookFile(options: InfraTemplateOptions) {
   // File header
   builder.addFileHeader({
     title: `use${className} React Hook`,
-    description: `React hook for using ${className} service in components.\nProvides client-safe interface without exposing server secrets.\n\nTODO: Customize this hook for your service:\n1. Define hook return type and state\n2. Add effect logic for data fetching/updates\n3. Add error handling and loading states\n4. Document hook usage and examples\n5. Add TypeScript generics if needed`,
+    description:
+      `React hook for using ${className} service in components.\nProvides client-safe interface without exposing server secrets.\n\nTODO: Customize this hook for your service:\n1. Define hook return type and state\n2. Add effect logic for data fetching/updates\n3. Add error handling and loading states\n4. Document hook usage and examples\n5. Add TypeScript generics if needed`,
     module: `${scope}/infra-${fileName}/client`
   })
 
@@ -128,7 +129,8 @@ return {
   isLoading,
   refetch,
 }`,
-    jsdoc: `use${className} Hook\n\nTODO: Implement hook logic\n\n@returns Hook state with data, error, loading, and refetch\n\n@example\n\`\`\`typescript\nfunction MyComponent() {\n  const { data, isLoading, error, refetch } = use${className}()\n\n  if (isLoading) return <div>Loading...</div>\n  if (error) return <div>Error: {error.message}</div>\n\n  return (\n    <div>\n      <p>{JSON.stringify(data)}</p>\n      <button onClick={refetch}>Refresh</button>\n    </div>\n  )\n}\n\`\`\``
+    jsdoc:
+      `use${className} Hook\n\nTODO: Implement hook logic\n\n@returns Hook state with data, error, loading, and refetch\n\n@example\n\`\`\`typescript\nfunction MyComponent() {\n  const { data, isLoading, error, refetch } = use${className}()\n\n  if (isLoading) return <div>Loading...</div>\n  if (error) return <div>Error: {error.message}</div>\n\n  return (\n    <div>\n      <p>{JSON.stringify(data)}</p>\n      <button onClick={refetch}>Refresh</button>\n    </div>\n  )\n}\n\`\`\``
   })
 
   builder.addRaw(`// TODO: Add additional hooks as needed

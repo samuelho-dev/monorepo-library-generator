@@ -26,7 +26,8 @@ export function generateClientLayersFile(options: InfraTemplateOptions) {
   // File header
   builder.addFileHeader({
     title: `${className} Client Layers`,
-    description: `Layer compositions for client-side dependency injection using Effect.\nBrowser-safe implementations without Node.js APIs or server secrets.\n\nTODO: Customize this file for your service:\n1. Implement client-side service logic\n2. Use browser-safe APIs only (no Node.js modules)\n3. Handle browser storage (localStorage, IndexedDB)\n4. Implement offline support if needed\n5. Add client-specific configuration`,
+    description:
+      `Layer compositions for client-side dependency injection using Effect.\nBrowser-safe implementations without Node.js APIs or server secrets.\n\nTODO: Customize this file for your service:\n1. Implement client-side service logic\n2. Use browser-safe APIs only (no Node.js modules)\n3. Handle browser storage (localStorage, IndexedDB)\n4. Implement offline support if needed\n5. Add client-specific configuration`,
     module: `${scope}/infra-${fileName}/client`,
     see: ['https://effect.website/docs/guides/context-management for layer patterns']
   })

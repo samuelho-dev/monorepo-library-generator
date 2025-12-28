@@ -8,12 +8,7 @@
 
 export { tuiReducer } from './reducer'
 
-export type {
-  GenerationStatus,
-  TUIAction,
-  TUIMode,
-  TUIState
-} from './types'
+export type { GenerationStatus, TUIAction, TUIMode, TUIState } from './types'
 export {
   canGenerate,
   canNavigateToOptions,

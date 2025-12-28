@@ -10,11 +10,7 @@
 import { TypeScriptBuilder } from '../../../utils/code-builder'
 import type { InfraTemplateOptions } from '../../../utils/types'
 import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
-import {
-  type ErrorGeneratorConfig,
-  generateCommonErrors,
-  generateErrorUnion
-} from '../../shared/errors'
+import { type ErrorGeneratorConfig, generateCommonErrors, generateErrorUnion } from '../../shared/errors'
 
 /**
  * Generate errors file for infrastructure service

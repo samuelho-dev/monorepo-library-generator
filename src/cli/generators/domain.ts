@@ -15,9 +15,9 @@
  * @module monorepo-library-generator/cli/generators/domain
  */
 
+import { Console, Effect } from 'effect'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { Console, Effect } from 'effect'
 import { getPackageName } from '../../utils/workspace-config'
 import { generateContract } from './contract'
 import { generateDataAccess } from './data-access'
@@ -49,7 +49,7 @@ function libraryExists(libraryPath: string) {
  * This function generates these dependencies if they don't exist.
  */
 function ensureInfrastructureDependencies() {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Provider dependencies
     const providerKyselyPath = 'libs/provider/kysely'
     const providerRedisPath = 'libs/provider/redis'
@@ -101,8 +101,7 @@ function ensureInfrastructureDependencies() {
 
       yield* generateInfra({
         name: 'database',
-        description:
-          'Database orchestration infrastructure (coordinates database providers like Kysely)',
+        description: 'Database orchestration infrastructure (coordinates database providers like Kysely)',
         tags: 'infra,database,orchestration',
         platform: 'node',
         includeClientServer: true
@@ -225,7 +224,7 @@ export interface DomainGeneratorOptions {
  * ```
  */
 export function generateDomain(options: DomainGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const {
       description,
       includeCQRS,

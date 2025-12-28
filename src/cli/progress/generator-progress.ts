@@ -52,7 +52,7 @@ export function withGeneratorProgress<A, E, R>(
   generator: Effect.Effect<A, E, R>,
   verbosity: Verbosity
 ) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const startTime = Date.now()
 
     // Get workspace context to display paths

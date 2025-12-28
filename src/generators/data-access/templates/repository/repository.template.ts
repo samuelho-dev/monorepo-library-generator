@@ -108,12 +108,14 @@ export class ${className}Repository extends Context.Tag("${className}Repository"
   ${className}Repository,
   ${className}RepositoryInterface
 >() {
-${generateStaticLayers({
-  className: `${className}Repository`,
-  layerType: 'succeed',
-  liveImpl: 'repositoryImpl',
-  testViaDependencies: true
-})}
+${
+    generateStaticLayers({
+      className: `${className}Repository`,
+      layerType: 'succeed',
+      liveImpl: 'repositoryImpl',
+      testViaDependencies: true
+    })
+  }
 }
 `)
 

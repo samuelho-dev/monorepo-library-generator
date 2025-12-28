@@ -41,7 +41,8 @@ export function generateValidationFile(options: ProviderTemplateOptions) {
   builder.addFunction({
     name: `validate${className}Config`,
     exported: true,
-    jsdoc: `Validate ${className} configuration\n\n@param config - Configuration to validate\n@returns true if configuration is valid`,
+    jsdoc:
+      `Validate ${className} configuration\n\n@param config - Configuration to validate\n@returns true if configuration is valid`,
     params: [{ name: 'config', type: 'unknown' }],
     returnType: `config is ${className}Config`,
     body: `if (!config || typeof config !== "object") {
@@ -81,7 +82,8 @@ return true;`
   builder.addFunction({
     name: `validate${className}Input`,
     exported: true,
-    jsdoc: `Validate ${className} input\n\nGeneric input validation for API calls.\n\n@param input - Input to validate\n@returns true if input is valid`,
+    jsdoc:
+      `Validate ${className} input\n\nGeneric input validation for API calls.\n\n@param input - Input to validate\n@returns true if input is valid`,
     params: [{ name: 'input', type: 'unknown' }],
     returnType: 'boolean',
     body: `if (!input || typeof input !== "object") {

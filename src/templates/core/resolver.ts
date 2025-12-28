@@ -53,7 +53,7 @@ const VARIABLE_PATTERN = /(?<!\$)\{([a-zA-Z_][a-zA-Z0-9_.]*)\}/g
  * ```
  */
 export function interpolate(template: string, context: TemplateContext) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const errors: string[] = []
 
     const result = template.replace(VARIABLE_PATTERN, (match, variable: string) => {
@@ -176,7 +176,7 @@ function resolveVariable(variable: string, context: TemplateContext) {
  * Returns unknown - callers should use type-specific wrappers.
  */
 function interpolateDeepInternal(value: unknown, context: TemplateContext) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     if (typeof value === 'string') {
       return yield* interpolate(value, context)
     }

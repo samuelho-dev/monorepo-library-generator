@@ -16,7 +16,7 @@ export interface TsConfigBaseOptions {
 
 export interface TsConfigLibOptions {
   readonly projectRoot: string
-  readonly references?: ReadonlyArray<{ path: string }>
+  readonly references?: readonly { path: string }[]
 }
 
 export interface TsConfigSpecOptions {

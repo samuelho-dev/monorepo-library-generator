@@ -7,12 +7,7 @@
 
 import { Console, Effect, ParseResult } from 'effect'
 import { type ContractCoreOptions, generateContractCore } from '../../generators/core/contract'
-import {
-  type ContractInput,
-  createExecutor,
-  decodeContractInput,
-  formatOutput
-} from '../../infrastructure'
+import { type ContractInput, createExecutor, decodeContractInput, formatOutput } from '../../infrastructure'
 
 /**
  * Contract Generator Options - imported from validation registry
@@ -46,7 +41,7 @@ const contractExecutor = createExecutor<ContractInput, ContractCoreOptions>(
  * After: ~50 lines using unified executor
  */
 export function generateContract(options: ContractGeneratorOptions) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     // Validate input with Effect Schema (like MCP does)
     const validated = yield* decodeContractInput(options).pipe(
       Effect.mapError(

@@ -24,7 +24,7 @@ export class ProviderArgsSchema extends Schema.Class<ProviderArgsSchema>('Provid
     Schema.pattern(/^[a-z][a-z0-9-]*[a-z0-9]$/),
     Schema.annotations({
       title: 'Library Name',
-      description: "Provider name (e.g., 'stripe', 'supabase', 'redis')",
+      description: 'Provider name (e.g., \'stripe\', \'supabase\', \'redis\')',
       examples: ['stripe', 'supabase', 'redis', 'sentry']
     })
   ),
@@ -41,7 +41,7 @@ export class ProviderArgsSchema extends Schema.Class<ProviderArgsSchema>('Provid
     Schema.minLength(1),
     Schema.annotations({
       title: 'External Service',
-      description: "External service name being wrapped (e.g., 'Stripe', 'Supabase', 'Redis')",
+      description: 'External service name being wrapped (e.g., \'Stripe\', \'Supabase\', \'Redis\')',
       examples: ['Stripe', 'Supabase', 'Redis']
     })
   ),

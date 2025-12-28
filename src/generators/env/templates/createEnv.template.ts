@@ -24,8 +24,7 @@ export function generateCreateEnvFile() {
   // File header
   builder.addFileHeader({
     title: 'Environment Configuration Runtime',
-    description:
-      't3-env inspired environment management using Effect Config.\n\n' +
+    description: 't3-env inspired environment management using Effect Config.\n\n' +
       'Provides a single `createEnv` function to define all environment variables\n' +
       'with automatic type inference and runtime client/server protection.\n\n' +
       'Features:\n' +
@@ -53,7 +52,7 @@ export function generateCreateEnvFile() {
   builder.addRaw(' *')
   builder.addRaw(' * @example')
   builder.addRaw(' * ```typescript')
-  builder.addRaw(" * import { createEnv, Config } from './createEnv'")
+  builder.addRaw(' * import { createEnv, Config } from \'./createEnv\'')
   builder.addRaw(' *')
   builder.addRaw(' * export const env = createEnv({')
   builder.addRaw(' *   server: {')
@@ -88,7 +87,7 @@ export function generateCreateEnvFile() {
     '  /** Shared environment variables (available in both contexts, e.g., NODE_ENV) */'
   )
   builder.addRaw('  shared: TShared')
-  builder.addRaw("  /** Required prefix for client variables (e.g., 'PUBLIC_') */")
+  builder.addRaw('  /** Required prefix for client variables (e.g., \'PUBLIC_\') */')
   builder.addRaw('  clientPrefix: string')
   builder.addRaw('  /** Custom runtime env source (defaults to process.env) */')
   builder.addRaw('  runtimeEnv?: Record<string, string | undefined>')
@@ -159,7 +158,7 @@ export function generateCreateEnvFile() {
   builder.addRaw('        envMap.set(key, value)')
   builder.addRaw('      }')
   builder.addRaw('    } catch {')
-  builder.addRaw("      // .env file doesn't exist or can't be read - that's OK")
+  builder.addRaw('      // .env file doesn\'t exist or can\'t be read - that\'s OK')
   builder.addRaw('    }')
   builder.addRaw('  }')
   builder.addRaw('  return envMap')

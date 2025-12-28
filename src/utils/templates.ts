@@ -12,9 +12,9 @@
  * @module monorepo-library-generator/templates
  */
 
-import * as path from 'node:path'
 import type { Tree } from '@nx/devkit'
 import { generateFiles } from '@nx/devkit'
+import * as path from 'node:path'
 import type { TypeScriptBuilder } from './code-builder'
 import { createNamingVariants } from './naming'
 import type { LibraryType, NamingVariants } from './types'
@@ -107,10 +107,9 @@ export function getConditionalFilesToRemove(options: {
   const filesToRemove = []
 
   // Only remove server.ts if not needed based on platform
-  const shouldGenerateServer =
-    options.includeClientServer || options.platform === 'node' || options.platform === 'universal'
-  const shouldGenerateClient =
-    options.includeClientServer ||
+  const shouldGenerateServer = options.includeClientServer || options.platform === 'node' ||
+    options.platform === 'universal'
+  const shouldGenerateClient = options.includeClientServer ||
     options.platform === 'browser' ||
     options.platform === 'universal'
 
@@ -718,13 +717,13 @@ export function addPaginatedResponse(
 ) {
   const { includeHasMore = true, includeNextCursor = false, itemsFieldName = 'items' } = config
 
-  const properties: Array<{
+  const properties: {
     name: string
     type: string
     readonly: boolean
     optional?: boolean
     jsdoc: string
-  }> = [
+  }[] = [
     {
       name: itemsFieldName,
       type: 'readonly T[]',
@@ -1056,9 +1055,12 @@ export interface PlatformExportConfig {
  */
 export function addPlatformExportHeader(builder: TypeScriptBuilder, config: PlatformExportConfig) {
   const descriptions = {
-    server: `Server-side exports for ${config.packageName}.\nContains service implementations, layers, and server-specific functionality.`,
-    client: `Client-side exports for ${config.packageName}.\nContains React hooks, client-specific layers, and browser-safe functionality.`,
-    edge: `Edge runtime exports for ${config.packageName}.\nContains edge-specific layers and functionality for edge runtime environments.`,
+    server:
+      `Server-side exports for ${config.packageName}.\nContains service implementations, layers, and server-specific functionality.`,
+    client:
+      `Client-side exports for ${config.packageName}.\nContains React hooks, client-specific layers, and browser-safe functionality.`,
+    edge:
+      `Edge runtime exports for ${config.packageName}.\nContains edge-specific layers and functionality for edge runtime environments.`,
     main: `Main entry point for ${config.packageName}.`
   }
 
@@ -1166,8 +1168,8 @@ export type * from "./lib/shared/types"
 
 export type * from "./lib/shared/errors"
 ${
-  hasServer
-    ? `
+    hasServer
+      ? `
 // ============================================================================
 // Server Types
 // ============================================================================
@@ -1175,8 +1177,8 @@ ${
 // Service interface types
 export type * from "./lib/server/services/service"
 `
-    : ''
-}
+      : ''
+  }
 // ============================================================================
 // RPC Types (Always Prewired)
 // ============================================================================
@@ -1184,8 +1186,8 @@ export type * from "./lib/server/services/service"
 export type * from "./lib/rpc"
 export type * from "./lib/rpc/errors"
 ${
-  hasClient
-    ? `
+    hasClient
+      ? `
 // ============================================================================
 // Client Types
 // ============================================================================
@@ -1196,8 +1198,8 @@ export type * from "./lib/client/hooks/index"
 // Atom types (state shapes)
 export type * from "./lib/client/atoms/index"
 `
-    : ''
-}
+      : ''
+  }
 `
 }
 

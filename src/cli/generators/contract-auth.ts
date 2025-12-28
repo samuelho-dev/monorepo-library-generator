@@ -10,8 +10,8 @@
  * @module cli/generators/contract-auth
  */
 
-import { execSync } from 'node:child_process'
 import { Console, Effect } from 'effect'
+import { execSync } from 'node:child_process'
 import {
   generateAuthErrorsFile,
   generateAuthIndexFile,
@@ -42,7 +42,7 @@ export interface ContractAuthOptions {
  * - types.ts (type-only exports)
  */
 export function generateContractAuth(options: ContractAuthOptions = {}) {
-  return Effect.gen(function* () {
+  return Effect.gen(function*() {
     const scope = WORKSPACE_CONFIG.getScope()
     const packageName = `${scope}/contract-auth`
     const projectRoot = 'libs/contract/auth'

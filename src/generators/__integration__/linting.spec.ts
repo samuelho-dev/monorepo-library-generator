@@ -206,7 +206,7 @@ describe('Specific Lint Rules', () => {
   })
 
   describe('No Type Assertions', () => {
-    it("should not use 'as Type' in generated code", async () => {
+    it('should not use \'as Type\' in generated code', async () => {
       // Generate all types of libraries (prewired defaults)
       await contractGenerator(tree, { name: 'test1', includeCQRS: true })
       await dataAccessGenerator(tree, { name: 'test2', includeCQRS: true })

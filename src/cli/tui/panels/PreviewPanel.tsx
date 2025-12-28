@@ -101,7 +101,9 @@ function flattenTree(node: TreeNode, prefix = ''): TreeLine[] {
     })
 
     if (child.isDirectory && child.children.size > 0) {
-      lines.push(...flattenTree(child, childPrefix))
+      for (const line of flattenTree(child, childPrefix)) {
+        lines.push(line)
+      }
     }
   })
 
@@ -111,7 +113,7 @@ function flattenTree(node: TreeNode, prefix = ''): TreeLine[] {
 /**
  * Preview panel showing files to be generated
  */
-export function PreviewPanel({ state, dispatch }: PreviewPanelProps) {
+export function PreviewPanel({ dispatch, state }: PreviewPanelProps) {
   const isActive = state.activePanel === 'preview'
   const [scrollOffset, setScrollOffset] = useState(0)
 
@@ -127,23 +129,31 @@ export function PreviewPanel({ state, dispatch }: PreviewPanelProps) {
       const allFiles: FilePreview[] = []
       for (const name of ['kysely', 'supabase']) {
         const providerFiles = getFilePreview('provider', name, {}, isNx)
-        allFiles.push(...providerFiles.map((f) => ({ ...f, path: `provider/${name}/${f.path}` })))
+        for (const f of providerFiles) {
+          allFiles.push({ ...f, path: `provider/${name}/${f.path}` })
+        }
       }
       const envFiles = getFilePreview('infra', 'env', {}, isNx)
-      allFiles.push(...envFiles.map((f) => ({ ...f, path: `env/${f.path}` })))
-      for (const name of [
-        'cache',
-        'database',
-        'logging',
-        'metrics',
-        'queue',
-        'pubsub',
-        'auth',
-        'storage',
-        'rpc'
-      ]) {
+      for (const f of envFiles) {
+        allFiles.push({ ...f, path: `env/${f.path}` })
+      }
+      for (
+        const name of [
+          'cache',
+          'database',
+          'logging',
+          'metrics',
+          'queue',
+          'pubsub',
+          'auth',
+          'storage',
+          'rpc'
+        ]
+      ) {
         const infraFiles = getFilePreview('infra', name, {}, isNx)
-        allFiles.push(...infraFiles.map((f) => ({ ...f, path: `infra/${name}/${f.path}` })))
+        for (const f of infraFiles) {
+          allFiles.push({ ...f, path: `infra/${name}/${f.path}` })
+        }
       }
       return allFiles
     }
@@ -200,7 +210,7 @@ export function PreviewPanel({ state, dispatch }: PreviewPanelProps) {
 
   if (!previewType) {
     return (
-      <Panel id="preview" isActive={isActive}>
+      <Panel id='preview' isActive={isActive}>
         <Text color={colors.muted}>Select a type to preview</Text>
       </Panel>
     )
@@ -209,23 +219,21 @@ export function PreviewPanel({ state, dispatch }: PreviewPanelProps) {
   const visibleLines = treeLines.slice(scrollOffset, scrollOffset + 15)
 
   return (
-    <Panel id="preview" isActive={isActive}>
-      <Box flexDirection="column">
+    <Panel id='preview' isActive={isActive}>
+      <Box flexDirection='column'>
         <Text color={colors.root}>{targetDir}/</Text>
 
         {scrollOffset > 0 && <Text color={colors.muted}>↑ {scrollOffset} more</Text>}
 
         {visibleLines.map((line, index) => (
           <Box key={`${line.name}-${index}`}>
-            <Text color={colors.muted}>{line.prefix} </Text>
+            <Text color={colors.muted}>{line.prefix}</Text>
             <Text
-              color={
-                line.isDirectory ? colors.root : line.isOptional ? colors.muted : colors.secondary
-              }
+              color={line.isDirectory ? colors.root : line.isOptional ? colors.muted : colors.secondary}
             >
               {line.name}
             </Text>
-            {line.isOptional && <Text color={colors.muted}> (opt)</Text>}
+            {line.isOptional && <Text color={colors.muted}>(opt)</Text>}
           </Box>
         ))}
 

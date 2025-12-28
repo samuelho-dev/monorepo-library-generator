@@ -110,7 +110,7 @@ Usage:
   builder.addComment('Usage Example')
   builder.addComment('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   builder.addComment('')
-  builder.addComment("import { Effect } from 'effect';")
+  builder.addComment('import { Effect } from \'effect\';')
   builder.addComment(`import { ${className} } from '${packageName}';`)
   builder.addComment('')
   builder.addComment('const program = Effect.gen(function*() {')

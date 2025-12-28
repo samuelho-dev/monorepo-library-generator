@@ -22,7 +22,7 @@ const BaseGeneratorFields = {
     Schema.annotations({
       title: 'Library Name',
       description:
-        "Domain name (e.g., 'product', 'user', 'product-review'). Must be lowercase alphanumeric with hyphens.",
+        'Domain name (e.g., \'product\', \'user\', \'product-review\'). Must be lowercase alphanumeric with hyphens.',
       examples: ['product', 'user', 'order-item']
     })
   ),
@@ -227,7 +227,7 @@ export class ProviderInputSchema extends Schema.Class<ProviderInputSchema>('Prov
 
   externalService: Schema.String.annotations({
     title: 'External Service',
-    description: "Name of external service being integrated (e.g., 'stripe', 'auth0')"
+    description: 'Name of external service being integrated (e.g., \'stripe\', \'auth0\')'
   }),
 
   platform: Schema.optional(

@@ -41,7 +41,7 @@ const contractExecutor = createExecutor<ContractInput, ContractCoreOptions>(
  * After: ~40 lines with direct core generator invocation using proper Effect patterns
  */
 export const handleGenerateContract = (input: unknown) =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     // 1. Validate input with Effect Schema using proper error channel
     const validated = yield* decodeContractInput(input).pipe(
       Effect.mapError(
@@ -80,9 +80,7 @@ export const handleGenerateContract = (input: unknown) =>
       })
       .pipe(
         Effect.map((result) => formatOutput(result, 'mcp')),
-        Effect.catchTag('GeneratorExecutionError', (error) =>
-          Effect.succeed(formatErrorResponse(error))
-        )
+        Effect.catchTag('GeneratorExecutionError', (error) => Effect.succeed(formatErrorResponse(error)))
       )
   }).pipe(
     // Handle validation errors at top level
@@ -90,6 +88,5 @@ export const handleGenerateContract = (input: unknown) =>
       Effect.succeed({
         success: false,
         message: formatValidationError(error.message)
-      })
-    )
+      }))
   )

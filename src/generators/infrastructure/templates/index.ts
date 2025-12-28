@@ -12,11 +12,7 @@
  */
 
 export { generatePackageJson, type PackageJsonOptions } from './package-json.template'
-export {
-  generateProjectJson,
-  getDefaultTags,
-  type ProjectJsonOptions
-} from './project-json.template'
+export { generateProjectJson, getDefaultTags, type ProjectJsonOptions } from './project-json.template'
 export { generateReadme, type ReadmeOptions } from './readme.template'
 export {
   generateBaseTsConfig,

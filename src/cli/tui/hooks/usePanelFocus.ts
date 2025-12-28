@@ -27,14 +27,14 @@ interface UsePanelFocusOptions {
  * Hook for panel-specific keyboard handling
  */
 export function usePanelFocus({
-  panelId,
-  isActive,
+  disabled = false,
   dispatch,
+  isActive,
+  onEdit,
   onNavigate,
   onSelect,
   onToggle,
-  onEdit,
-  disabled = false
+  panelId
 }: UsePanelFocusOptions) {
   // Handle keyboard input for this panel
   useInput(

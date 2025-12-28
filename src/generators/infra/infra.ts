@@ -32,8 +32,7 @@ const infraExecutor = createExecutor<NxInfraInput, InfraCoreOptions>(
   generateInfraCore,
   (validated, metadata) => {
     // Support both old (includeClient+includeServer) and new (includeClientServer) patterns
-    const includeClientServer =
-      validated.includeClientServer ??
+    const includeClientServer = validated.includeClientServer ??
       (validated.includeClient && validated.includeServer ? true : undefined)
     return {
       ...metadata,

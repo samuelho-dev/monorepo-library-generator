@@ -6,11 +6,7 @@
  */
 
 import { Context, Effect, Layer } from 'effect'
-import {
-  createWorkspaceContext,
-  type WorkspaceContext,
-  type WorkspaceDetectionError
-} from '../../infrastructure'
+import { createWorkspaceContext, type WorkspaceContext, type WorkspaceDetectionError } from '../../infrastructure'
 
 export interface WorkspaceServiceImpl {
   readonly detect: (root: string) => Effect.Effect<WorkspaceContext, WorkspaceDetectionError>

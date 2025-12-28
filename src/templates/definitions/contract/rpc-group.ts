@@ -66,7 +66,8 @@ export const {className}Handlers = {className}Rpcs.toLayer({
       title: 'Re-export Route System',
       content: {
         type: 'raw',
-        value: `// biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system
+        value:
+          `// biome-ignore lint/performance/noBarrelFile: Contract-First Architecture requires re-exporting route system
 export { RouteTag, type RouteType } from "./rpc-definitions"`
       }
     },

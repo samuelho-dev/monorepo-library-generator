@@ -21,14 +21,13 @@ export function generateEnvScaffoldFile(vars: ParsedEnvVar[]) {
   // File header
   builder.addFileHeader({
     title: 'Environment Configuration',
-    description:
-      'Type-safe environment variables using Effect Config.\n\n' +
+    description: 'Type-safe environment variables using Effect Config.\n\n' +
       'This file defines all environment variables for your application.\n' +
       'Edit this file to add, remove, or modify environment variables.\n' +
       'Types are automatically inferred from the Config definitions.\n\n' +
       'Usage:\n' +
       '```typescript\n' +
-      "import { env } from '@workspace/env'\n\n" +
+      'import { env } from \'@workspace/env\'\n\n' +
       'env.DATABASE_URL  // Redacted<string>\n' +
       'env.PORT          // number\n' +
       'env.PUBLIC_API_URL // string\n' +

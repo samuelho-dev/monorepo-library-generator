@@ -17,7 +17,7 @@ export class ContractArgsSchema extends Schema.Class<ContractArgsSchema>('Contra
     Schema.annotations({
       title: 'Library Name',
       description:
-        "Domain name (e.g., 'product', 'user', 'product-review'). Must be lowercase alphanumeric with hyphens.",
+        'Domain name (e.g., \'product\', \'user\', \'product-review\'). Must be lowercase alphanumeric with hyphens.',
       examples: ['product', 'user', 'order-item']
     })
   ),
@@ -45,8 +45,7 @@ export class ContractArgsSchema extends Schema.Class<ContractArgsSchema>('Contra
       Schema.minItems(1),
       Schema.annotations({
         title: 'Entity Names',
-        description:
-          "Entity names for bundle optimization (e.g., ['Product', 'Category', 'Review'])",
+        description: 'Entity names for bundle optimization (e.g., [\'Product\', \'Category\', \'Review\'])',
         examples: [['Product', 'ProductCategory', 'ProductReview']]
       })
     ),

@@ -14,7 +14,7 @@ import type { LibraryType } from '../core'
 import { detectWorkspaceSync, executeGeneration, getTargetDirectory } from '../core'
 import { PanelLayout } from './layouts'
 import { OptionsPanel, PreviewPanel, TypesPanel } from './panels'
-import { initialState, type TUIState, tuiReducer } from './state'
+import { initialState, tuiReducer, type TUIState } from './state'
 import { colors } from './theme/colors'
 
 /**
@@ -62,10 +62,9 @@ export function App() {
       )
 
       // For provider libraries, the library name IS the service name
-      const externalService =
-        libraryType === 'provider'
-          ? currentState.libraryName
-          : currentState.externalService || undefined
+      const externalService = libraryType === 'provider'
+        ? currentState.libraryName
+        : currentState.externalService || undefined
 
       const input = {
         libraryType,
@@ -95,7 +94,7 @@ export function App() {
 
   if (!isInitialized) {
     return (
-      <Box flexDirection="column" alignItems="center" justifyContent="center" height={10}>
+      <Box flexDirection='column' alignItems='center' justifyContent='center' height={10}>
         <Text color={colors.info}>Detecting workspace...</Text>
       </Box>
     )

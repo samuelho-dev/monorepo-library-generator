@@ -74,11 +74,11 @@ export interface StaticMethodDef {
   readonly name: string
 
   /** Method parameters */
-  readonly params: ReadonlyArray<{
+  readonly params: readonly {
     name: string
     type: string
     optional?: boolean
-  }>
+  }[]
 
   /** Method body (the code inside the function) */
   readonly body: string
@@ -351,12 +351,12 @@ export interface ServiceMethodDef {
   readonly name: string
 
   /** Method parameters */
-  readonly params: ReadonlyArray<{
+  readonly params: readonly {
     name: string
     type: string
     optional?: boolean
     description?: string
-  }>
+  }[]
 
   /** Return type (inside Effect.Effect) */
   readonly returnType: string

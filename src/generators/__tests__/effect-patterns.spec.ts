@@ -23,7 +23,7 @@ describe('Effect Architecture Pattern Validation', () => {
   })
 
   describe('Provider Templates - Effect.gen Patterns', () => {
-    it("should NOT use 'return yield* Effect.succeed' inside Effect.gen", async () => {
+    it('should NOT use \'return yield* Effect.succeed\' inside Effect.gen', async () => {
       await providerGenerator(tree, {
         name: 'test-provider',
         externalService: 'Test Service',
@@ -71,10 +71,9 @@ describe('Effect Architecture Pattern Validation', () => {
       // NOT: (resource) => Effect.gen(function*() { return Effect.tryPromise(...) })
 
       // Check for correct pattern: arrow function with direct Effect.tryPromise
-      const hasCorrectFinalizer =
-        /\(resource\) =>\s*\/\/ Release phase[\s\S]*?Effect\.tryPromise\(\{/m.test(
-          serviceContent ?? ''
-        )
+      const hasCorrectFinalizer = /\(resource\) =>\s*\/\/ Release phase[\s\S]*?Effect\.tryPromise\(\{/m.test(
+        serviceContent ?? ''
+      )
       expect(hasCorrectFinalizer).toBe(true)
     })
 
@@ -88,8 +87,8 @@ describe('Effect Architecture Pattern Validation', () => {
 
       // Anti-pattern: Effect.gen inside finalizer that just returns an Effect
       // This causes the Effect to not be executed - it's returned unevaluated
-      const hasBrokenFinalizer =
-        /\(resource\) => Effect\.gen\(function\* \(\) \{[\s\S]*?return Effect\.tryPromise/m.test(
+      const hasBrokenFinalizer = /\(resource\) => Effect\.gen\(function\* \(\) \{[\s\S]*?return Effect\.tryPromise/m
+        .test(
           serviceContent ?? ''
         )
       expect(hasBrokenFinalizer).toBe(false)

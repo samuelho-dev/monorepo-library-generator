@@ -129,9 +129,7 @@ export function createInfrastructureLayers(config: InfrastructureLayerConfig) {
     builder.addBlankLine()
 
     // Generate Live layer (no trailing comma on last service)
-    const liveServicesList = services.map((s, i) =>
-      i < services.length - 1 ? `${s}.Live,` : `${s}.Live`
-    )
+    const liveServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Live,` : `${s}.Live`)
     const liveServices = liveServicesList.join('\n  ')
     builder.addRaw(`/**
  * Live Infrastructure Layer
@@ -144,9 +142,7 @@ export const InfrastructureLive = Layer.mergeAll(
     builder.addBlankLine()
 
     // Generate Test layer (no trailing comma on last service)
-    const testServicesList = services.map((s, i) =>
-      i < services.length - 1 ? `${s}.Test,` : `${s}.Test`
-    )
+    const testServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Test,` : `${s}.Test`)
     const testServices = testServicesList.join('\n  ')
     builder.addRaw(`/**
  * Test Infrastructure Layer
@@ -160,9 +156,7 @@ export const InfrastructureTest = Layer.mergeAll(
 
     // Generate Dev layer if requested (no trailing comma on last service)
     if (includeDev) {
-      const devServicesList = services.map((s, i) =>
-        i < services.length - 1 ? `${s}.Dev,` : `${s}.Dev`
-      )
+      const devServicesList = services.map((s, i) => i < services.length - 1 ? `${s}.Dev,` : `${s}.Dev`)
       const devServices = devServicesList.join('\n  ')
       builder.addRaw(`/**
  * Dev Infrastructure Layer
@@ -398,7 +392,7 @@ export interface LayerImportsConfig {
   /** Library type */
   readonly libraryType: 'data-access' | 'feature'
   /** Additional local imports */
-  readonly localImports?: ReadonlyArray<{ path: string; imports: readonly string[] }>
+  readonly localImports?: readonly { path: string; imports: readonly string[] }[]
 }
 
 /**
