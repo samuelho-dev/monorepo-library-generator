@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/feature/cqrs/projections-builder-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate server/cqrs/projections/builder.ts file
@@ -40,10 +40,12 @@ Usage:
   })
   builder.addBlankLine()
 
-  builder.addImports([{ from: "effect", imports: ["Context", "Effect", "Layer", "Queue", "Schema"] }])
+  builder.addImports([
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Queue', 'Schema'] }
+  ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Domain Events")
+  builder.addSectionComment('Domain Events')
   builder.addImports([
     {
       from: `${scope}/contract-${fileName}`,
@@ -57,14 +59,14 @@ Usage:
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Infrastructure Services")
+  builder.addSectionComment('Infrastructure Services')
   builder.addImports([
-    { from: `${scope}/infra-pubsub`, imports: ["PubsubService"] },
-    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] }
+    { from: `${scope}/infra-pubsub`, imports: ['PubsubService'] },
+    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Projection Types")
+  builder.addSectionComment('Projection Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -102,7 +104,7 @@ export interface ReadModelStore<T> {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Projection Builder Interface")
+  builder.addSectionComment('Projection Builder Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -133,7 +135,7 @@ export interface ProjectionBuilderInterface<TModel> {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Default Read Model")
+  builder.addSectionComment('Default Read Model')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -150,7 +152,7 @@ export interface ${className}ReadModel {
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Projection Builder Implementation")
+  builder.addSectionComment('Projection Builder Implementation')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -265,7 +267,7 @@ const createProjectionBuilderImpl = (
 };`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Projection Builder Context.Tag")
+  builder.addSectionComment('Projection Builder Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -338,7 +340,7 @@ export function generateProjectionsIndexFile(options: FeatureTemplateOptions) {
 
   builder.addFileHeader({
     title: `${className} CQRS Projections Index`,
-    description: "Barrel export for CQRS projections.",
+    description: 'Barrel export for CQRS projections.',
     module: `${options.packageName}/server/cqrs/projections`
   })
   builder.addBlankLine()

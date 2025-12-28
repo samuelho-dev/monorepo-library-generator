@@ -1,7 +1,9 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
   "extends": ["/Users/samuelho/.config/biome/biome.json"],
-  "files": {},
+  "files": {
+    "includes": ["src/**/*.ts", "src/**/*.tsx", "libs/**/*.ts", "libs/**/*.tsx", "*.json"]
+  },
   "linter": {
     "rules": {
       "recommended": false,

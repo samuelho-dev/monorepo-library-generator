@@ -13,9 +13,9 @@
  * @module monorepo-library-generator/infra-templates
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate database service file that delegates to Kysely provider
@@ -43,26 +43,26 @@ Usage:
     db.selectFrom("users").selectAll().execute()
   )`,
     module: `${scope}/infra-${fileName}/service`,
-    see: ["EFFECT_PATTERNS.md for database patterns"]
+    see: ['EFFECT_PATTERNS.md for database patterns']
   })
 
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] },
-    { from: "kysely", imports: ["Kysely", "Transaction"], isTypeOnly: true },
-    { from: `${scope}/provider-kysely`, imports: ["KyselyService", "makeTestKyselyService"] },
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer'] },
+    { from: 'kysely', imports: ['Kysely', 'Transaction'], isTypeOnly: true },
+    { from: `${scope}/provider-kysely`, imports: ['KyselyService', 'makeTestKyselyService'] },
     {
       from: `${scope}/provider-kysely`,
       imports: [
-        { name: "DatabaseConnectionError", alias: "ProviderConnectionError" },
-        { name: "DatabaseQueryError", alias: "ProviderQueryError" }
+        { name: 'DatabaseConnectionError', alias: 'ProviderConnectionError' },
+        { name: 'DatabaseQueryError', alias: 'ProviderQueryError' }
       ],
       isTypeOnly: true
     },
-    { from: `${scope}/types-database`, imports: ["DB"], isTypeOnly: true },
-    { from: "./errors", imports: [`${className}ConnectionError`, `${className}InternalError`] }
+    { from: `${scope}/types-database`, imports: ['DB'], isTypeOnly: true },
+    { from: './errors', imports: [`${className}ConnectionError`, `${className}InternalError`] }
   ])
 
-  builder.addSectionComment("Re-export Database Types from types-database")
+  builder.addSectionComment('Re-export Database Types from types-database')
 
   builder.addRaw(`/**
  * Re-export Database type from types-database for convenience
@@ -83,7 +83,7 @@ Usage:
 export type { DB as Database } from "${scope}/types-database"
 `)
 
-  builder.addSectionComment("Service Context.Tag Definition")
+  builder.addSectionComment('Service Context.Tag Definition')
 
   builder.addRaw(`/**
  * ${className} Service

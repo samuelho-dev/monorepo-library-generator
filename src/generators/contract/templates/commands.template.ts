@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/commands-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate commands.ts file for contract library
@@ -31,10 +31,10 @@ export function generateCommandsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
 
   // Import ID type from rpc-definitions (single source of truth for ID schema)
-  builder.addImports([{ from: "./rpc-definitions", imports: [`${className}Id`] }])
+  builder.addImports([{ from: './rpc-definitions', imports: [`${className}Id`] }])
 
   builder.addBlankLine()
 
@@ -42,7 +42,7 @@ export function generateCommandsFile(options: ContractTemplateOptions) {
   // SECTION 1: CRUD Commands
   // ============================================================================
 
-  builder.addSectionComment("CRUD Commands")
+  builder.addSectionComment('CRUD Commands')
   builder.addBlankLine()
 
   // Create command
@@ -58,25 +58,25 @@ export function generateCommandsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // TODO comment for custom commands
-  builder.addComment("TODO: Add domain-specific commands here")
-  builder.addComment("Example - Status change command (if domain has state machine):")
-  builder.addComment("")
+  builder.addComment('TODO: Add domain-specific commands here')
+  builder.addComment('Example - Status change command (if domain has state machine):')
+  builder.addComment('')
   builder.addComment(
     `export class Change${className}StatusCommand extends Schema.Class<Change${className}StatusCommand>("Change${className}StatusCommand")({`
   )
   builder.addComment(`  ${propertyName}Id: ${className}Id, // Branded ID type`)
-  builder.addComment("  newStatus: Schema.String,")
-  builder.addComment("  reason: Schema.optional(Schema.String),")
-  builder.addComment("}) {")
-  builder.addComment("  static create(params: { ... }) { ... }")
-  builder.addComment("}")
+  builder.addComment('  newStatus: Schema.String,')
+  builder.addComment('  reason: Schema.optional(Schema.String),')
+  builder.addComment('}) {')
+  builder.addComment('  static create(params: { ... }) { ... }')
+  builder.addComment('}')
   builder.addBlankLine()
 
   // ============================================================================
   // SECTION 2: Command Union Type
   // ============================================================================
 
-  builder.addSectionComment("Command Union Type")
+  builder.addSectionComment('Command Union Type')
   builder.addBlankLine()
 
   builder.addTypeAlias({
@@ -89,7 +89,7 @@ export function generateCommandsFile(options: ContractTemplateOptions) {
     jsdoc: `Union of all ${domainName} commands`
   })
 
-  builder.addComment("TODO: Add custom commands to this union")
+  builder.addComment('TODO: Add custom commands to this union')
   builder.addBlankLine()
 
   // Command schema union

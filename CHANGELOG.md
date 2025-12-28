@@ -1,5 +1,22 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.10.0
+
+### Minor Changes
+
+- Refactored TUI with panel-based architecture and updated documentation
+  - Replaced wizard-based interactive mode with new panel-based TUI
+  - Three-panel layout: Types (1), Options (2), Preview (3)
+  - Keyboard navigation: number keys for panels, j/k for scrolling, G to generate
+  - Simplified provider library generation (library name = service name)
+  - Fixed Data-Access icon rendering issue (emoji variation selector)
+  - Updated all CLAUDE.md files with proper frontmatter and current dates
+  - Added missing README.md files for contract-auth and types-database
+  - Added CLAUDE.md for src/cli and libs/env
+  - Updated docs/INDEX.md with new documentation entries
+  - Applied biome lint fixes across all generators (Array<T> → T[] syntax)
+  - Updated biome.json to properly include src/ and libs/ files
+
 ## 1.9.1
 
 ### Patch Changes

@@ -13,7 +13,7 @@ Central catalog of all documentation in the Monorepo Library Generator.
 
 | Library | README | CLAUDE | Description |
 |---------|--------|--------|-------------|
-| contract-auth | - | [CLAUDE](../libs/contract/auth/CLAUDE.md) | Auth contract - single source of truth |
+| contract-auth | [README](../libs/contract/auth/README.md) | [CLAUDE](../libs/contract/auth/CLAUDE.md) | Auth contract - single source of truth |
 | contract-user | [README](../libs/contract/user/README.md) | [CLAUDE](../libs/contract/user/CLAUDE.md) | User domain contract |
 | data-access-user | [README](../libs/data-access/user/README.md) | [CLAUDE](../libs/data-access/user/CLAUDE.md) | User repository implementation |
 | feature-user | [README](../libs/feature/user/README.md) | [CLAUDE](../libs/feature/user/CLAUDE.md) | User feature service |
@@ -29,8 +29,14 @@ Central catalog of all documentation in the Monorepo Library Generator.
 | provider-opentelemetry | [README](../libs/provider/opentelemetry/README.md) | [CLAUDE](../libs/provider/opentelemetry/CLAUDE.md) | OpenTelemetry provider |
 | provider-redis | [README](../libs/provider/redis/README.md) | [CLAUDE](../libs/provider/redis/CLAUDE.md) | Redis provider |
 | provider-supabase | [README](../libs/provider/supabase/README.md) | [CLAUDE](../libs/provider/supabase/CLAUDE.md) | Supabase provider |
-| types-database | - | [CLAUDE](../libs/types/database/CLAUDE.md) | Generated database types |
-| env | [README](../libs/env/README.md) | - | Environment configuration |
+| types-database | [README](../libs/types/database/README.md) | [CLAUDE](../libs/types/database/CLAUDE.md) | Generated database types |
+| env | [README](../libs/env/README.md) | [CLAUDE](../libs/env/CLAUDE.md) | Environment configuration |
+
+### CLI (src/cli/)
+
+| Component | README | CLAUDE | Description |
+|-----------|--------|--------|-------------|
+| cli | - | [CLAUDE](../src/cli/CLAUDE.md) | CLI commands and TUI |
 
 ### Generators (src/generators/)
 
@@ -75,11 +81,11 @@ Central catalog of all documentation in the Monorepo Library Generator.
 
 | Metric | Count |
 |--------|-------|
-| Total README.md files | 23 |
-| Total CLAUDE.md files | 18 |
-| Libraries with full docs | 17 |
+| Total README.md files | 25 |
+| Total CLAUDE.md files | 20 |
+| Libraries with full docs | 18 |
 | Generator docs | 5 |
 
 ---
 
-*Last updated: 2025-12-27*
+*Last updated: 2025-12-28*

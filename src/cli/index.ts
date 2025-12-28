@@ -19,7 +19,7 @@ import { generateFeature } from "./generators/feature"
 import { generateInfra } from "./generators/infra"
 import { generateProvider } from "./generators/provider"
 import { getCommandHelp } from "./help/commands"
-import { runInkTUI } from "./ink"
+import { launchTUI } from "./tui"
 
 /**
  * Common arguments used across all generate commands
@@ -426,7 +426,7 @@ const tuiOption = Options.boolean("tui").pipe(
  */
 const mainCommand = Command.make("mlg", { tui: tuiOption }, ({ tui }) => {
   if (tui) {
-    return runInkTUI()
+    return Effect.promise(() => launchTUI())
   }
   // If no --tui flag and no subcommand, show help
   return Console.log(

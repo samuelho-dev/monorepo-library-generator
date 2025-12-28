@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra/service-spec-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate service.spec.ts file for infra library
@@ -38,8 +38,8 @@ Testing Guidelines:
   })
 
   builder.addImports([
-    { from: "@effect/vitest", imports: ["describe", "expect", "it"] },
-    { from: "effect", imports: ["Context", "Effect", "Layer"] }
+    { from: '@effect/vitest', imports: ['describe', 'expect', 'it'] },
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer'] }
   ])
 
   builder.addRaw(`

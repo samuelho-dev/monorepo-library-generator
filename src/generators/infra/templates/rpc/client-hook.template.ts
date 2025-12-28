@@ -13,8 +13,8 @@
  * @module monorepo-library-generator/infra-templates/rpc/client-hook
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate client hooks file for infra-rpc
@@ -26,7 +26,7 @@ export function generateRpcClientHooksFile(options: InfraTemplateOptions) {
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "RPC Client Hooks",
+    title: 'RPC Client Hooks',
     description: `Effect-native React hooks for making RPC calls from client components.
 
 Provides:
@@ -50,15 +50,18 @@ Usage:
   })
 
   builder.addImports([
-    { from: "@effect-atom/atom", imports: ["Atom"] },
-    { from: "@effect-atom/atom-react", imports: ["useAtom"] },
-    { from: "@effect/platform", imports: ["FetchHttpClient", "HttpClient", "HttpClientRequest", "HttpClientResponse"] },
-    { from: "effect", imports: ["Cause", "Effect", "Option", "Schema"] },
-    { from: "react", imports: ["useMemo"] }
+    { from: '@effect-atom/atom', imports: ['Atom'] },
+    { from: '@effect-atom/atom-react', imports: ['useAtom'] },
+    {
+      from: '@effect/platform',
+      imports: ['FetchHttpClient', 'HttpClient', 'HttpClientRequest', 'HttpClientResponse']
+    },
+    { from: 'effect', imports: ['Cause', 'Effect', 'Option', 'Schema'] },
+    { from: 'react', imports: ['useMemo'] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Types")
+  builder.addSectionComment('Types')
 
   builder.addRaw(`/**
  * RPC Error - typed error for RPC operations
@@ -112,7 +115,7 @@ function failureState<A, E>(error: E): RpcState<A, E> {
   return { _tag: "Failure", error }
 }`)
 
-  builder.addSectionComment("RPC Configuration")
+  builder.addSectionComment('RPC Configuration')
 
   builder.addRaw(`/**
  * RPC endpoint URL - configured via environment
@@ -129,7 +132,7 @@ const RPC_ENDPOINT = process.env.PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_U
 const DEFAULT_TIMEOUT = 30000
 `)
 
-  builder.addSectionComment("RPC Call Effect")
+  builder.addSectionComment('RPC Call Effect')
 
   builder.addRaw(`/**
  * Make an RPC call as an Effect
@@ -265,7 +268,7 @@ export function rpcCallWithLayer<I, O>(
 }
 `)
 
-  builder.addSectionComment("Mutation Hook")
+  builder.addSectionComment('Mutation Hook')
 
   builder.addRaw(`/**
  * Hook for RPC mutations with Effect-native error handling
@@ -352,7 +355,7 @@ export function useRpcMutation<I, O>(
 }
 `)
 
-  builder.addSectionComment("Query Hook")
+  builder.addSectionComment('Query Hook')
 
   builder.addRaw(`/**
  * Hook for RPC queries with automatic fetching using Effect + Atom
@@ -448,7 +451,7 @@ export function useRpcQuery<I, O>(
 }
 `)
 
-  builder.addSectionComment("Lazy Query Hook")
+  builder.addSectionComment('Lazy Query Hook')
 
   builder.addRaw(`/**
  * Hook for RPC queries that are triggered manually using Effect + Atom

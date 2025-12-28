@@ -1,15 +1,16 @@
 ---
 scope: libs/data-access/user/
-updated: 2025-12-27
+updated: 2025-12-28
 relates_to:
   - ../../CLAUDE.md
   - ../../../docs/DATA-ACCESS.md
   - ../../../docs/EFFECT_PATTERNS.md
+  - ../contract/user/CLAUDE.md
 ---
 
 # @samuelho-dev/data-access-user
 
-User
+User data access - repository implementation with Kysely.
 
 ## AI Agent Reference
 
@@ -89,11 +90,3 @@ import { UserCache } from '@samuelho-dev/data-access-user'Effect.gen(function*()
 2. **Use Dev layer** - debug logging for development
 3. **Use Live layer** - production implementation
 4. **Use Auto layer** - NODE_ENV-based automatic selection
-
-## For Future Claude Code Instances
-
-- [ ] Repository implements contract interfaces (ports)
-- [ ] Uses Kysely for type-safe SQL queries
-- [ ] Static layers: Live, Test, Dev, Auto on repository class
-- [ ] Cache layer provides read-through caching
-- [ ] Uses `yield*` in Effect.gen (not `yield`)

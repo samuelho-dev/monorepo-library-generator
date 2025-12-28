@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/provider/templates/opentelemetry
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate OpenTelemetry index file with barrel exports
@@ -43,10 +43,10 @@ const AppLayer = Layer.mergeAll(
 )
 \`\`\``,
     module: options.packageName,
-    see: ["https://effect.website/docs/observability/otel-tracing"]
+    see: ['https://effect.website/docs/observability/otel-tracing']
   })
 
-  builder.addSectionComment("Provider Service")
+  builder.addSectionComment('Provider Service')
 
   builder.addRaw(`// OpenTelemetry provider with static layers
 export {
@@ -56,7 +56,7 @@ export {
 } from "./lib/otel"
 `)
 
-  builder.addSectionComment("Types")
+  builder.addSectionComment('Types')
 
   builder.addRaw(`// Configuration types
 export {
@@ -69,7 +69,7 @@ export {
 } from "./lib/types"
 `)
 
-  builder.addSectionComment("Errors")
+  builder.addSectionComment('Errors')
 
   builder.addRaw(`// Error types
 export {

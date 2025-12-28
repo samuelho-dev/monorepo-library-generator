@@ -6,10 +6,14 @@
  * @module monorepo-library-generator/data-access/types-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import { addPaginatedResponse, addPaginationOptions, addSortDirection } from "../../../utils/templates"
-import type { DataAccessTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import {
+  addPaginatedResponse,
+  addPaginationOptions,
+  addSortDirection
+} from '../../../utils/templates'
+import type { DataAccessTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate types.ts file for data-access library
@@ -34,7 +38,7 @@ Re-exports entity types from contract library and provides query-specific types.
   })
 
   // Re-export from contract library
-  builder.addSectionComment("Entity Types (from Contract Library)")
+  builder.addSectionComment('Entity Types (from Contract Library)')
   builder.addBlankLine()
 
   builder.addRaw(`// Re-export entity types from contract library
@@ -49,7 +53,7 @@ export type {
   builder.addBlankLine()
 
   // Filter & Query Types
-  builder.addSectionComment("Filter & Query Types")
+  builder.addSectionComment('Filter & Query Types')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -91,16 +95,16 @@ export interface ${className}Filter {
   builder.addBlankLine()
 
   builder.addComment(`${className} Sort Options`)
-  builder.addComment("TODO: Add domain-specific sortable fields")
-  builder.addComment("Examples: createdAt, updatedAt, name, price")
+  builder.addComment('TODO: Add domain-specific sortable fields')
+  builder.addComment('Examples: createdAt, updatedAt, name, price')
   builder.addRaw(`export interface ${className}Sort {
   readonly field: string // TODO: Use union of sortable fields
   readonly direction: SortDirection
 }`)
   builder.addBlankLine()
 
-  builder.addComment("Pagination Options")
-  builder.addComment("Standard pagination parameters for list queries.")
+  builder.addComment('Pagination Options')
+  builder.addComment('Standard pagination parameters for list queries.')
   addPaginationOptions(builder)
   builder.addBlankLine()
 
@@ -127,11 +131,11 @@ export interface QueryOptions {
   builder.addBlankLine()
 
   // Response Types
-  builder.addSectionComment("Response Types")
+  builder.addSectionComment('Response Types')
   builder.addBlankLine()
 
-  builder.addComment("Paginated List Response")
-  builder.addComment("Standard paginated response format for list queries.")
+  builder.addComment('Paginated List Response')
+  builder.addComment('Standard paginated response format for list queries.')
   addPaginatedResponse(builder)
   builder.addBlankLine()
 

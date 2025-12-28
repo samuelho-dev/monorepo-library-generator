@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/feature/events/events-publisher-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate server/events/publisher.ts file
@@ -42,12 +42,12 @@ Usage:
   builder.addBlankLine()
 
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer", "Schema"] },
-    { from: "effect", imports: ["ParseResult"], isTypeOnly: true }
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer', 'Schema'] },
+    { from: 'effect', imports: ['ParseResult'], isTypeOnly: true }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Domain Events")
+  builder.addSectionComment('Domain Events')
   builder.addImports([
     {
       from: `${scope}/contract-${fileName}`,
@@ -61,7 +61,7 @@ Usage:
   ])
   builder.addBlankLine()
 
-  builder.addComment("Create Schema.Union for PubSub topic registration")
+  builder.addComment('Create Schema.Union for PubSub topic registration')
   builder.addRaw(`const ${className}EventSchema = Schema.Union(
   ${className}CreatedEvent,
   ${className}UpdatedEvent,
@@ -70,14 +70,14 @@ Usage:
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Infrastructure Services")
+  builder.addSectionComment('Infrastructure Services')
   builder.addImports([
-    { from: `${scope}/infra-pubsub`, imports: ["PubsubService", "type TopicHandle"] },
-    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] }
+    { from: `${scope}/infra-pubsub`, imports: ['PubsubService', 'type TopicHandle'] },
+    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] }
   ])
   builder.addBlankLine()
 
-  builder.addSectionComment("Publisher Configuration")
+  builder.addSectionComment('Publisher Configuration')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -98,7 +98,7 @@ export const ${className}EventTopics = {
 } as const`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Publisher Interface")
+  builder.addSectionComment('Publisher Interface')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -139,7 +139,7 @@ export interface ${className}EventPublisherInterface {
 `)
   builder.addBlankLine()
 
-  builder.addSectionComment("Publisher Implementation")
+  builder.addSectionComment('Publisher Implementation')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -231,7 +231,7 @@ const createPublisherImpl = (
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -300,7 +300,7 @@ export class ${className}EventPublisher extends Context.Tag("${className}EventPu
 }`)
   builder.addBlankLine()
 
-  builder.addSectionComment("Event Subscriber Helpers")
+  builder.addSectionComment('Event Subscriber Helpers')
   builder.addBlankLine()
 
   builder.addRaw(`/**

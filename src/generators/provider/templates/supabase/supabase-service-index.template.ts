@@ -6,8 +6,8 @@
  * @module monorepo-library-generator/provider/templates/supabase/service-index
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Supabase provider service/index.ts file
@@ -17,7 +17,7 @@ export function generateSupabaseServiceIndexFile(options: ProviderTemplateOption
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "Supabase Services Barrel Export",
+    title: 'Supabase Services Barrel Export',
     description: `Re-exports all Supabase service implementations.
 
 This module provides:

@@ -1,6 +1,6 @@
 ---
 scope: libs/infra/pubsub/
-updated: 2025-12-27
+updated: 2025-12-28
 relates_to:
   - ../../CLAUDE.md
   - ../../../docs/INFRA.md

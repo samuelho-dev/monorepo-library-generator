@@ -2,12 +2,12 @@
  * Feature Library Generator (Nx Wrapper - Refactored)
  */
 
-import type { Tree } from "@nx/devkit"
-import { formatFiles } from "@nx/devkit"
-import { Effect } from "effect"
-import { createExecutor, formatOutput } from "../../infrastructure"
-import { type FeatureCoreOptions, generateFeatureCore } from "../core/feature"
-import type { FeatureGeneratorSchema } from "./schema"
+import type { Tree } from '@nx/devkit'
+import { formatFiles } from '@nx/devkit'
+import { Effect } from 'effect'
+import { createExecutor, formatOutput } from '../../infrastructure'
+import { type FeatureCoreOptions, generateFeatureCore } from '../core/feature'
+import type { FeatureGeneratorSchema } from './schema'
 
 /**
  * Nx-specific input type for the executor
@@ -18,7 +18,7 @@ interface NxFeatureInput {
   readonly tags?: string
   readonly dataAccessLibrary?: string
   readonly includeClientState?: boolean
-  readonly platform?: "node" | "universal" | "browser" | "edge"
+  readonly platform?: 'node' | 'universal' | 'browser' | 'edge'
   readonly includeClientServer?: boolean
   readonly includeCQRS?: boolean
   readonly scope?: string
@@ -30,7 +30,7 @@ interface NxFeatureInput {
  * Create feature executor with explicit type parameters
  */
 const featureExecutor = createExecutor<NxFeatureInput, FeatureCoreOptions>(
-  "feature",
+  'feature',
   generateFeatureCore,
   (validated, metadata) => ({
     ...metadata,
@@ -46,15 +46,15 @@ const featureExecutor = createExecutor<NxFeatureInput, FeatureCoreOptions>(
 )
 
 export async function featureGenerator(tree: Tree, schema: FeatureGeneratorSchema) {
-  if (!schema.name || schema.name.trim() === "") {
-    throw new Error("Feature name is required and cannot be empty")
+  if (!schema.name || schema.name.trim() === '') {
+    throw new Error('Feature name is required and cannot be empty')
   }
 
   // Build tags string with platform and scope tags included
   const buildTags = () => {
-    const tagList: Array<string> = []
+    const tagList: string[] = []
     if (schema.tags) {
-      for (const tag of schema.tags.split(",").map((t) => t.trim())) {
+      for (const tag of schema.tags.split(',').map((t) => t.trim())) {
         tagList.push(tag)
       }
     }
@@ -65,13 +65,13 @@ export async function featureGenerator(tree: Tree, schema: FeatureGeneratorSchem
     if (schema.scope) {
       tagList.push(`scope:${schema.scope}`)
     }
-    return tagList.length > 0 ? tagList.join(",") : undefined
+    return tagList.length > 0 ? tagList.join(',') : undefined
   }
   const tagsString = buildTags()
 
   const executorInput: Parameters<typeof featureExecutor.execute>[0] = {
     name: schema.name,
-    __interfaceType: "nx",
+    __interfaceType: 'nx',
     __nxTree: tree,
     description: schema.description,
     tags: tagsString,
@@ -89,5 +89,5 @@ export async function featureGenerator(tree: Tree, schema: FeatureGeneratorSchem
 
   await formatFiles(tree)
 
-  return formatOutput(result, "nx")
+  return formatOutput(result, 'nx')
 }

@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/queries-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate queries.ts file for contract library
@@ -31,10 +31,10 @@ export function generateQueriesFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
 
   // Import ID type from rpc-definitions (single source of truth for ID schema)
-  builder.addImports([{ from: "./rpc-definitions", imports: [`${className}Id`] }])
+  builder.addImports([{ from: './rpc-definitions', imports: [`${className}Id`] }])
 
   builder.addBlankLine()
 
@@ -42,7 +42,7 @@ export function generateQueriesFile(options: ContractTemplateOptions) {
   // SECTION 1: CRUD Queries
   // ============================================================================
 
-  builder.addSectionComment("CRUD Queries")
+  builder.addSectionComment('CRUD Queries')
   builder.addBlankLine()
 
   // Get query
@@ -58,23 +58,23 @@ export function generateQueriesFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // TODO comment for custom queries
-  builder.addComment("TODO: Add domain-specific queries here")
-  builder.addComment("Example - Get by slug query:")
-  builder.addComment("")
+  builder.addComment('TODO: Add domain-specific queries here')
+  builder.addComment('Example - Get by slug query:')
+  builder.addComment('')
   builder.addComment(
     `export class Get${className}BySlugQuery extends Schema.Class<Get${className}BySlugQuery>("Get${className}BySlugQuery")({`
   )
-  builder.addComment("  slug: Schema.String,")
-  builder.addComment("}) {")
-  builder.addComment("  static create(slug: string) { ... }")
-  builder.addComment("}")
+  builder.addComment('  slug: Schema.String,')
+  builder.addComment('}) {')
+  builder.addComment('  static create(slug: string) { ... }')
+  builder.addComment('}')
   builder.addBlankLine()
 
   // ============================================================================
   // SECTION 2: Query Union Type
   // ============================================================================
 
-  builder.addSectionComment("Query Union Type")
+  builder.addSectionComment('Query Union Type')
   builder.addBlankLine()
 
   builder.addTypeAlias({
@@ -87,7 +87,7 @@ export function generateQueriesFile(options: ContractTemplateOptions) {
     jsdoc: `Union of all ${domainName} queries`
   })
 
-  builder.addComment("TODO: Add custom queries to this union")
+  builder.addComment('TODO: Add custom queries to this union')
   builder.addBlankLine()
 
   // Query schema union

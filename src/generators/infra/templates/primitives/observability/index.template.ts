@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/infra-templates/primitives/observability
  */
 
-import { TypeScriptBuilder } from "../../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../../utils/workspace-config'
 
 /**
  * Generate observability index file with barrel exports
@@ -36,10 +36,10 @@ Key exports:
 - withFiberTracking: Optional Supervisor layer for fiber tracking
 - Presets: OtlpPreset, JaegerPreset, ConsolePreset, etc.`,
     module: `${scope}/infra-${fileName}`,
-    see: ["https://effect.website/docs/observability/otel-tracing"]
+    see: ['https://effect.website/docs/observability/otel-tracing']
   })
 
-  builder.addSectionComment("Fiber Tracking Supervisor")
+  builder.addSectionComment('Fiber Tracking Supervisor')
 
   builder.addRaw(`// Optional fiber lifecycle tracking
 export {
@@ -52,7 +52,7 @@ export {
 } from "./lib/supervisor"
 `)
 
-  builder.addSectionComment("Configuration")
+  builder.addSectionComment('Configuration')
 
   builder.addRaw(`// Configuration schema and types
 export {
@@ -70,7 +70,7 @@ export {
 } from "./lib/config"
 `)
 
-  builder.addSectionComment("Presets")
+  builder.addSectionComment('Presets')
 
   builder.addRaw(`// Pre-configured OTEL SDK layers for common backends
 export {
@@ -86,7 +86,7 @@ export {
 } from "./lib/presets"
 `)
 
-  builder.addSectionComment("Error Types")
+  builder.addSectionComment('Error Types')
 
   builder.addRaw(`// Error types for observability operations
 export {
@@ -99,7 +99,7 @@ export {
 } from "./lib/errors"
 `)
 
-  builder.addSectionComment("Constants")
+  builder.addSectionComment('Constants')
 
   builder.addRaw(`// Common constants for metrics, logging, and tracing
 export {
@@ -111,7 +111,7 @@ export {
 } from "./lib/constants"
 `)
 
-  builder.addSectionComment("Logging Service")
+  builder.addSectionComment('Logging Service')
 
   builder.addRaw(`// Effect Logger wrapper with structured logging
 export {
@@ -121,7 +121,7 @@ export {
 } from "./lib/logging"
 `)
 
-  builder.addSectionComment("Metrics Service")
+  builder.addSectionComment('Metrics Service')
 
   builder.addRaw(`// Effect.Metric wrapper with counters, gauges, histograms
 export {

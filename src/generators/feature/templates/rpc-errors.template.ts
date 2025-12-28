@@ -11,9 +11,9 @@
  * @module monorepo-library-generator/feature/rpc-errors-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate rpc/errors.ts file for feature library
@@ -41,20 +41,20 @@ This file provides:
 Error Flow:
   Domain Error (Data.TaggedError) → with${className}RpcBoundary → RPC Error (Schema.TaggedError)`,
     module: `${scope}/feature-${options.fileName}/rpc/errors`,
-    see: ["infra-rpc for RPC error types", "shared/errors for domain errors"]
+    see: ['infra-rpc for RPC error types', 'shared/errors for domain errors']
   })
 
   // Import only what's used in the boundary wrapper
   builder.addImports([
-    { from: "effect", imports: ["Effect"] },
+    { from: 'effect', imports: ['Effect'] },
     {
       from: `${scope}/infra-rpc`,
       imports: [
-        "RpcConflictError",
-        "RpcForbiddenError",
-        "RpcInternalError",
-        "RpcNotFoundError",
-        "RpcValidationError"
+        'RpcConflictError',
+        'RpcForbiddenError',
+        'RpcInternalError',
+        'RpcNotFoundError',
+        'RpcValidationError'
       ]
     },
     // Import the feature error type for use in withRpcBoundary function
@@ -65,7 +65,7 @@ Error Flow:
     }
   ])
 
-  builder.addSectionComment("Import Notes")
+  builder.addSectionComment('Import Notes')
 
   builder.addRaw(`// NOTE: For RPC errors (Schema.TaggedError), import directly from ${scope}/infra-rpc:
 // import { RpcNotFoundError, RpcValidationError, ... } from "${scope}/infra-rpc"
@@ -73,7 +73,7 @@ Error Flow:
 // For domain errors (Data.TaggedError), import directly from ../shared/errors:
 // import { ${className}NotFoundError, ... } from "../shared/errors"`)
 
-  builder.addSectionComment("Domain-Specific RPC Boundary")
+  builder.addSectionComment('Domain-Specific RPC Boundary')
 
   // Generate the domain-specific RPC boundary wrapper
   builder.addRaw(`/**

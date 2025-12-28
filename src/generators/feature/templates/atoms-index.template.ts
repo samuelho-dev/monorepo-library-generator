@@ -6,9 +6,9 @@
  * @module monorepo-library-generator/feature/atoms-index-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { FeatureTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { FeatureTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate client/atoms/index.ts file for feature library
@@ -22,8 +22,8 @@ export function generateAtomsIndexFile(options: FeatureTemplateOptions) {
 
   // Add file header
   builder.addFileHeader({
-    title: "Client Atoms Barrel Export",
-    description: "Barrel export for client-side state atoms",
+    title: 'Client Atoms Barrel Export',
+    description: 'Barrel export for client-side state atoms',
     module: `${scope}/feature-${fileName}/client/atoms`
   })
 

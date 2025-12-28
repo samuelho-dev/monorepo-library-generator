@@ -9,9 +9,9 @@
  * @module monorepo-library-generator/infra-templates/rpc
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { InfraTemplateOptions } from "../../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { InfraTemplateOptions } from '../../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 /**
  * Generate RPC transport file
@@ -33,22 +33,22 @@ Architecture:
 
 All transports share the same handler definitions - only the transport layer differs.`,
     module: `${scope}/infra-${fileName}/transport`,
-    see: ["@effect/rpc documentation for transport details"]
+    see: ['@effect/rpc documentation for transport details']
   })
 
   builder.addImports([
     {
-      from: "effect",
-      imports: ["Effect", "Layer", "Context", "Option", "Cause", "Exit", "Schema"]
+      from: 'effect',
+      imports: ['Effect', 'Layer', 'Context', 'Option', 'Cause', 'Exit', 'Schema']
     },
     {
-      from: "@effect/platform",
-      imports: ["HttpClient", "HttpClientRequest"]
+      from: '@effect/platform',
+      imports: ['HttpClient', 'HttpClientRequest']
     },
-    { from: "./errors", imports: ["RpcInfraError"] }
+    { from: './errors', imports: ['RpcInfraError'] }
   ])
 
-  builder.addSectionComment("Transport Types")
+  builder.addSectionComment('Transport Types')
 
   builder.addRaw(`/**
  * Transport mode determines how RPC calls are executed
@@ -83,7 +83,7 @@ export interface HttpTransportConfig extends TransportConfig {
 export type RpcTransportConfig = HttpTransportConfig
 `)
 
-  builder.addSectionComment("HTTP Transport")
+  builder.addSectionComment('HTTP Transport')
 
   builder.addRaw(`/**
  * HTTP transport options
@@ -303,7 +303,7 @@ export class HttpRpcClient extends Context.Tag("HttpRpcClient")<
 }
 `)
 
-  builder.addSectionComment("Next.js Handler Factory")
+  builder.addSectionComment('Next.js Handler Factory')
 
   builder.addRaw(`/**
  * Next.js App Router handler factory
@@ -444,7 +444,7 @@ export function createNextHandler<R>(
 }
 `)
 
-  builder.addSectionComment("Transport Utilities")
+  builder.addSectionComment('Transport Utilities')
 
   builder.addRaw(`/**
  * Extract headers from HTTP request for middleware context
@@ -485,7 +485,7 @@ export const errorResponse = (error: RpcInfraError): Response =>
   )
 `)
 
-  builder.addSectionComment("Transport Helpers")
+  builder.addSectionComment('Transport Helpers')
 
   builder.addRaw(`// Schema for RPC error response validation
 const TransportRpcErrorSchema = Schema.Struct({
@@ -509,7 +509,7 @@ const checkTransportError = (body: unknown) => {
 }
 `)
 
-  builder.addSectionComment("Unified RPC Client")
+  builder.addSectionComment('Unified RPC Client')
 
   builder.addRaw(`/**
  * RPC Client

@@ -20,6 +20,10 @@ export {
   generateTimeoutError,
   generateValidationError,
   getCommonErrorNames
-} from "./base-errors.template"
+} from './base-errors.template'
 
-export { generateTraceErrorUtility, generateTracingConfig, generateTracingModule } from "./tracing.template"
+export {
+  generateTraceErrorUtility,
+  generateTracingConfig,
+  generateTracingModule
+} from './tracing.template'

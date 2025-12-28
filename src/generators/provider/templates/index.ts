@@ -8,8 +8,8 @@
  */
 
 // Core provider templates
-export { generateErrorsFile } from "./errors.template"
-export { generateIndexFile } from "./index.template"
+export { generateErrorsFile } from './errors.template'
+export { generateIndexFile } from './index.template'
 // Kysely provider templates
 export {
   generateKyselyErrorsFile,
@@ -17,7 +17,7 @@ export {
   generateKyselyInterfaceFile,
   generateKyselyProviderServiceFile,
   generateKyselyProviderServiceIndexFile
-} from "./kysely/index"
+} from './kysely/index'
 // OpenTelemetry provider templates
 export {
   generateOtelErrorsFile,
@@ -26,7 +26,7 @@ export {
   generateOtelSpecFile,
   generateOtelTypesFile,
   generateOtelTypesOnlyFile
-} from "./opentelemetry/index"
+} from './opentelemetry/index'
 // Redis provider templates
 export {
   generateRedisCacheServiceFile,
@@ -38,11 +38,10 @@ export {
   generateRedisServiceIndexFile,
   generateRedisSpecFile,
   generateRedisTypesFile
-} from "./redis/index"
-
+} from './redis/index'
+export { generateProviderServiceFile, generateProviderServiceIndexFile } from './service/index'
 // Service templates
-export { generateServiceSpecFile } from "./service-spec.template"
-export { generateProviderServiceFile, generateProviderServiceIndexFile } from "./service/index"
+export { generateServiceSpecFile } from './service-spec.template'
 // Supabase provider templates
 export {
   generateSupabaseAuthServiceFile,
@@ -53,6 +52,6 @@ export {
   generateSupabaseSpecFile,
   generateSupabaseStorageServiceFile,
   generateSupabaseTypesFile
-} from "./supabase/index"
-export { generateTypesFile } from "./types.template"
-export { generateValidationFile } from "./validation.template"
+} from './supabase/index'
+export { generateTypesFile } from './types.template'
+export { generateValidationFile } from './validation.template'

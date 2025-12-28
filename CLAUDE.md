@@ -1,10 +1,11 @@
 ---
 scope: /
-updated: 2025-12-27
+updated: 2025-12-28
 relates_to:
   - docs/ARCHITECTURE_OVERVIEW.md
   - docs/EFFECT_PATTERNS.md
   - docs/NX_STANDARDS.md
+  - src/cli/CLAUDE.md
 ---
 
 # Monorepo Library Generator
@@ -79,7 +80,10 @@ mlg contract <name> [--includeCQRS] [--includeRPC]
 mlg data-access <name>
 mlg feature <name> [--platform universal] [--includeRPC] [--includeCQRS]
 mlg infra <name> [--platform node]
-mlg provider <name> --externalService <service>
+mlg provider <name>
+
+# Interactive TUI
+mlg                           # Launch interactive mode
 
 # Development
 pnpm test                     # Run tests

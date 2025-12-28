@@ -1,6 +1,6 @@
 # @samuelho-dev/contract-user
 
-User
+user domain contracts
 
 ## Overview
 

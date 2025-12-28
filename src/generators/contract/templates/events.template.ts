@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/contract/events-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
 
 /**
  * Generate events.ts file for contract library
@@ -30,13 +30,13 @@ export function generateEventsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Brand", "Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Brand', 'Schema'] }])
 
   // ============================================================================
   // SECTION 1: Base Event Metadata
   // ============================================================================
 
-  builder.addSectionComment("Base Event Metadata")
+  builder.addSectionComment('Base Event Metadata')
 
   // EventMetadata schema
   builder.addRaw(`/**
@@ -86,7 +86,7 @@ export type EventMetadata = typeof EventMetadata.Type`)
   // SECTION 2: Aggregate Metadata
   // ============================================================================
 
-  builder.addSectionComment("Aggregate Metadata")
+  builder.addSectionComment('Aggregate Metadata')
 
   // AggregateMetadata schema (prefixed with className)
   builder.addRaw(`/**
@@ -118,7 +118,7 @@ export type ${className}AggregateMetadata = typeof ${className}AggregateMetadata
   // SECTION 3: CRUD Domain Events
   // ============================================================================
 
-  builder.addSectionComment("${className} Domain Events")
+  builder.addSectionComment('${className} Domain Events')
 
   // CreatedEvent with nested metadata/aggregate structure
   builder.addRaw(`/**
@@ -175,7 +175,7 @@ export class ${className}DeletedEvent extends Schema.Class<${className}DeletedEv
   // SECTION 4: Event Union Types
   // ============================================================================
 
-  builder.addSectionComment("Event Union Types")
+  builder.addSectionComment('Event Union Types')
 
   builder.addRaw(`/**
  * Union of all ${className} domain events
@@ -198,7 +198,7 @@ export const ${className}EventSchema = Schema.Union(
   // SECTION 5: Event Factory Helpers
   // ============================================================================
 
-  builder.addSectionComment("Event Factory Helpers")
+  builder.addSectionComment('Event Factory Helpers')
 
   builder.addRaw(`/**
  * Create event metadata with defaults

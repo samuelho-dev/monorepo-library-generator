@@ -7,9 +7,9 @@
  * @module monorepo-library-generator/contract/projections-template
  */
 
-import { TypeScriptBuilder } from "../../../utils/code-builder"
-import type { ContractTemplateOptions } from "../../../utils/types"
-import { WORKSPACE_CONFIG } from "../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../utils/code-builder'
+import type { ContractTemplateOptions } from '../../../utils/types'
+import { WORKSPACE_CONFIG } from '../../../utils/workspace-config'
 
 /**
  * Generate projections.ts file for contract library
@@ -30,10 +30,10 @@ export function generateProjectionsFile(options: ContractTemplateOptions) {
   builder.addBlankLine()
 
   // Add imports
-  builder.addImports([{ from: "effect", imports: ["Schema"] }])
+  builder.addImports([{ from: 'effect', imports: ['Schema'] }])
 
   // Import ID type from rpc-definitions (single source of truth for ID schema)
-  builder.addImports([{ from: "./rpc-definitions", imports: [`${className}Id`] }])
+  builder.addImports([{ from: './rpc-definitions', imports: [`${className}Id`] }])
 
   builder.addBlankLine()
 
@@ -41,7 +41,7 @@ export function generateProjectionsFile(options: ContractTemplateOptions) {
   // SECTION 1: Projection Schemas
   // ============================================================================
 
-  builder.addSectionComment("Projection Schemas")
+  builder.addSectionComment('Projection Schemas')
   builder.addBlankLine()
 
   // List projection
@@ -56,7 +56,7 @@ export function generateProjectionsFile(options: ContractTemplateOptions) {
   // SECTION 2: Implementation Notes
   // ============================================================================
 
-  builder.addSectionComment("How Projections Work in This System")
+  builder.addSectionComment('How Projections Work in This System')
   builder.addBlankLine()
 
   builder.addRaw(createImplementationNotes(className))

@@ -9,8 +9,8 @@
  * @module monorepo-library-generator/feature/sub-module/layer-template
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import { WORKSPACE_CONFIG } from "../../../../utils/workspace-config"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import { WORKSPACE_CONFIG } from '../../../../utils/workspace-config'
 
 export interface SubModuleLayerOptions {
   /** Parent domain name (e.g., 'order') */
@@ -45,28 +45,28 @@ All infrastructure dependencies are properly wired.`,
   })
 
   // Fix Gap #5: Include Layer import (Effect is only used in JSDoc examples)
-  builder.addImports([{ from: "effect", imports: ["Layer"] }])
+  builder.addImports([{ from: 'effect', imports: ['Layer'] }])
 
-  builder.addSectionComment("Service Import")
+  builder.addSectionComment('Service Import')
   builder.addRaw(
     `import { ${subModuleClassName}ServiceLive } from "./service"
 `
   )
 
-  builder.addSectionComment("Data Access Import")
+  builder.addSectionComment('Data Access Import')
   // Data-access libraries don't have sub-modules - use parent repository
   builder.addRaw(
     `import { ${parentClassName}Repository } from "${scope}/data-access-${parentFileName}"
 `
   )
 
-  builder.addSectionComment("Infrastructure Imports")
+  builder.addSectionComment('Infrastructure Imports')
   builder.addImports([
-    { from: `${scope}/infra-observability`, imports: ["LoggingService", "MetricsService"] },
-    { from: `${scope}/infra-database`, imports: ["DatabaseService"] }
+    { from: `${scope}/infra-observability`, imports: ['LoggingService', 'MetricsService'] },
+    { from: `${scope}/infra-database`, imports: ['DatabaseService'] }
   ])
 
-  builder.addSectionComment("Live Layer Composition")
+  builder.addSectionComment('Live Layer Composition')
 
   builder.addRaw(`/**
  * ${subModuleClassName}Live Layer
@@ -99,7 +99,7 @@ export const ${subModuleClassName}Live = ${subModuleClassName}ServiceLive.pipe(
   Layer.provide(DatabaseService.Live)
 )`)
 
-  builder.addSectionComment("Test Layer Composition")
+  builder.addSectionComment('Test Layer Composition')
 
   builder.addRaw(`/**
  * ${subModuleClassName}Test Layer
@@ -130,7 +130,7 @@ export const ${subModuleClassName}Test = ${subModuleClassName}ServiceLive.pipe(
   Layer.provide(MetricsService.Test)
 )`)
 
-  builder.addSectionComment("Dependencies Layer (for parent composition)")
+  builder.addSectionComment('Dependencies Layer (for parent composition)')
 
   builder.addRaw(`/**
  * ${subModuleClassName}Dependencies Layer

@@ -7,8 +7,8 @@
  * @module monorepo-library-generator/provider/templates/redis/queue
  */
 
-import { TypeScriptBuilder } from "../../../../utils/code-builder"
-import type { ProviderTemplateOptions } from "../../../../utils/types"
+import { TypeScriptBuilder } from '../../../../utils/code-builder'
+import type { ProviderTemplateOptions } from '../../../../utils/types'
 
 /**
  * Generate Redis queue sub-service file
@@ -18,7 +18,7 @@ export function generateRedisQueueServiceFile(options: ProviderTemplateOptions) 
   const { packageName } = options
 
   builder.addFileHeader({
-    title: "Redis Queue Sub-Service",
+    title: 'Redis Queue Sub-Service',
     description: `Queue operations sub-service for the Redis provider.
 
 Uses Redis Lists for queue operations (FIFO pattern):
@@ -38,14 +38,14 @@ Used by infra-queue's Redis layer.`,
 
   // Imports
   builder.addImports([
-    { from: "effect", imports: ["Context", "Effect", "Layer"] },
-    { from: "ioredis", imports: [{ name: "Redis", alias: "IORedis" }], isTypeOnly: true },
-    { from: "./errors", imports: ["RedisCommandError"] },
-    { from: "./types", imports: ["RedisQueueClient"], isTypeOnly: true }
+    { from: 'effect', imports: ['Context', 'Effect', 'Layer'] },
+    { from: 'ioredis', imports: [{ name: 'Redis', alias: 'IORedis' }], isTypeOnly: true },
+    { from: './errors', imports: ['RedisCommandError'] },
+    { from: './types', imports: ['RedisQueueClient'], isTypeOnly: true }
   ])
 
   // Factory function
-  builder.addSectionComment("Queue Sub-Service Factory")
+  builder.addSectionComment('Queue Sub-Service Factory')
   builder.addBlankLine()
 
   builder.addRaw(`/**
@@ -164,7 +164,7 @@ export function makeQueueClient(client: IORedis) {
   builder.addBlankLine()
 
   // Context.Tag
-  builder.addSectionComment("Context.Tag")
+  builder.addSectionComment('Context.Tag')
   builder.addBlankLine()
 
   builder.addRaw(`/**

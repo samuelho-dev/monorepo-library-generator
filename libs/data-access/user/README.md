@@ -1,6 +1,6 @@
 # @samuelho-dev/data-access-user
 
-User
+user data access
 
 ## Overview
 
