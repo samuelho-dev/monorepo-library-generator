@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.libs.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "vitest"]
+  },
+  "include": [
+    "libs/contract/auth/src/**/*.ts",
+    "libs/contract/database/src/**/*.ts",
+    "libs/env/src/**/*.ts",
+    "libs/provider/kysely/src/**/*.ts",
+    "libs/provider/supabase/src/**/*.ts",
+    "libs/infra/auth/src/**/*.ts",
+    "libs/infra/database/src/**/*.ts",
+    "libs/infra/storage/src/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "libs/**/node_modules"]
+}

@@ -176,9 +176,7 @@ const isWorkspaceRoot = (fs: FileSystem.FileSystem, dirPath: string) =>
 const detectWorkspaceType = (fs: FileSystem.FileSystem, rootPath: string) =>
   Effect.gen(function*() {
     // Check for Nx
-    const nxExists = yield* fs
-      .exists(`${rootPath}/nx.json`)
-      .pipe(Effect.orElseSucceed(() => false))
+    const nxExists = yield* fs.exists(`${rootPath}/nx.json`).pipe(Effect.orElseSucceed(() => false))
 
     if (nxExists) {
       return "nx" as const

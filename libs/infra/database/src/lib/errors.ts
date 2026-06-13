@@ -1,112 +1,85 @@
-import { Data } from "effect"
+import { Schema } from 'effect'
 
 /**
- * Database Errors
- *
- * Error types for Database infrastructure service.
-
-Uses Data.TaggedError for internal infrastructure errors:
-- Discriminated union types (pattern matching with Effect.catchTag)
-- Non-serializable (stays within service boundaries)
-- Transformed to RPC errors at handler boundaries
- *
- * @module @samuelho-dev/infra-database/errors
- * @see Effect documentation for Data.TaggedError patterns
+ * Connection error raised by the health-check path.
  */
-// ============================================================================
-// Error Types
-// ============================================================================
-/**
- * Base Database error
- *
- * All service errors extend this base error.
- * Use domain-specific error types (NotFound, Validation, etc.) for precise handling.
- */
-export class DatabaseError extends Data.TaggedError(
-  "DatabaseError"
-)<{
-  /** Human-readable error message */
-  readonly message: string
-  /** Optional underlying cause */
-  readonly cause?: unknown
-}> {}
+export class DatabaseConnectionError extends Schema.TaggedErrorClass<DatabaseConnectionError>()(
+  'DatabaseConnectionError',
+  {
+    message: Schema.String,
+    target: Schema.String,
+    cause: Schema.Defect
+  }
+) {}
 
 /**
- * Internal error
- *
- * Raised when unexpected internal error occurs.
+ * Configuration error — service is misconfigured.
  */
-export class DatabaseInternalError extends Data.TaggedError(
-  "DatabaseInternalError"
-)<{
-  /** Human-readable error message */
-  readonly message: string
-  /** Underlying error cause */
-  readonly cause: unknown
-}> {}
-
-/**
- * Configuration error
- *
- * Raised when service is misconfigured.
- */
-export class DatabaseConfigError extends Data.TaggedError(
-  "DatabaseConfigError"
-)<{
-  /** Human-readable error message */
-  readonly message: string
-  /** Configuration property that is invalid */
-  readonly property: string
-}> {}
-
-/**
- * Connection error
- *
- * Raised when connection to external service fails.
- */
-export class DatabaseConnectionError extends Data.TaggedError(
-  "DatabaseConnectionError"
-)<{
-  /** Human-readable error message */
-  readonly message: string
-  /** Connection target (service name, host, etc.) */
-  readonly target: string
-  /** Underlying connection error */
-  readonly cause: unknown
-}> {}
-
-/**
- * Timeout error
- *
- * Raised when operation exceeds timeout.
- */
-export class DatabaseTimeoutError extends Data.TaggedError(
-  "DatabaseTimeoutError"
-)<{
-  /** Human-readable error message */
-  readonly message: string
-  /** Timeout duration in milliseconds */
-  readonly timeoutMs: number
-  /** Operation that timed out */
-  readonly operation: string
-}> {}
+export class DatabaseConfigError extends Schema.TaggedErrorClass<DatabaseConfigError>()(
+  'DatabaseConfigError',
+  {
+    message: Schema.String,
+    property: Schema.String
+  }
+) {}
 
 // ============================================================================
-// Error Type Union
+// Data Access Infrastructure Errors
 // ============================================================================
-/**
- * Union of all Database error types
- *
- * Use for comprehensive error handling:
- * @example
- * ```typescript
- * Effect.catchTag("DatabaseInternalError", (err) => ...)
- * Effect.catchTag("DatabaseTimeoutError", (err) => ...)
- * ```
- */
-export type DatabaseServiceError =
-  | DatabaseError
-  | DatabaseInternalError
-  | DatabaseConfigError
-  | DatabaseConnectionError
-  | DatabaseTimeoutError
+
+export class DataAccessConnectionError extends Schema.TaggedErrorClass<DataAccessConnectionError>()(
+  'DataAccessConnectionError',
+  {
+    message: Schema.String,
+    target: Schema.String,
+    cause: Schema.optional(Schema.Defect)
+  }
+) {
+  static create(target: string, cause?: unknown) {
+    return new DataAccessConnectionError({
+      message: `Failed to connect to ${target}`,
+      target,
+      cause
+    })
+  }
+}
+
+export class DataAccessTimeoutError extends Schema.TaggedErrorClass<DataAccessTimeoutError>()(
+  'DataAccessTimeoutError',
+  {
+    message: Schema.String,
+    operation: Schema.String,
+    timeoutMs: Schema.Number
+  }
+) {
+  static create(operation: string, timeoutMs: number) {
+    return new DataAccessTimeoutError({
+      message: `Operation "${operation}" timed out after ${timeoutMs}ms`,
+      operation,
+      timeoutMs
+    })
+  }
+}
+
+export class DataAccessTransactionError extends Schema.TaggedErrorClass<DataAccessTransactionError>()(
+  'DataAccessTransactionError',
+  {
+    message: Schema.String,
+    operation: Schema.String,
+    phase: Schema.Union([
+      Schema.Literal('begin'),
+      Schema.Literal('commit'),
+      Schema.Literal('rollback')
+    ]),
+    cause: Schema.optional(Schema.Defect)
+  }
+) {
+  static create(operation: string, phase: 'begin' | 'commit' | 'rollback', cause?: unknown) {
+    return new DataAccessTransactionError({
+      message: `Transaction ${phase} failed during ${operation}`,
+      operation,
+      phase,
+      cause
+    })
+  }
+}

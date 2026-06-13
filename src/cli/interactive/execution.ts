@@ -60,44 +60,41 @@ export function executeWizardResult(result: WizardResult) {
     const baseArgs = {
       name: result.libraryName,
       description: result.options.description,
-      tags: result.options.tags ?? ""
+      tags: result.options.selectedTags ?? result.options.tags,
+      modules: result.options.modules,
+      dependencies: result.options.dependencies,
+      entrypoints: result.options.entrypoints,
+      testMode: result.options.testMode
     }
 
     switch (result.libraryType) {
       case "contract":
         yield* generateContract({
           ...baseArgs,
-          includeCQRS: result.options.includeCQRS ?? false
+          capabilities: result.options.capabilities
         })
         break
 
       case "data-access":
-        yield* generateDataAccess(baseArgs)
+        yield* generateDataAccess({ ...baseArgs, contract: result.options.contract })
         break
 
       case "feature":
         yield* generateFeature({
           ...baseArgs,
-          scope: result.options.scope,
-          platform: result.options.platform,
-          includeClientServer: result.options.includeClientServer,
-          includeCQRS: result.options.includeCQRS
+          contract: result.options.contract,
+          dataAccess: result.options.dataAccess
         })
         break
 
       case "infra":
-        yield* generateInfra({
-          ...baseArgs,
-          platform: result.options.platform,
-          includeClientServer: result.options.includeClientServer
-        })
+        yield* generateInfra(baseArgs)
         break
 
       case "provider":
         yield* generateProvider({
           ...baseArgs,
-          externalService: result.externalService ?? result.libraryName,
-          platform: result.options.platform
+          externalService: result.externalService ?? result.libraryName
         })
         break
 
@@ -105,14 +102,11 @@ export function executeWizardResult(result: WizardResult) {
         yield* generateDomain({
           name: result.libraryName,
           ...(result.options.description && { description: result.options.description }),
-          tags: result.options.tags ?? "",
-          ...(result.options.scope !== undefined && { scope: result.options.scope }),
-          ...(result.options.includeClientServer !== undefined && {
-            includeClientServer: result.options.includeClientServer
-          }),
-          ...(result.options.includeCQRS !== undefined && {
-            includeCQRS: result.options.includeCQRS
-          })
+          tags: result.options.selectedTags ?? result.options.tags,
+          modules: result.options.modules,
+          featureEntrypoints: result.options.entrypoints,
+          dependencies: result.options.dependencies,
+          testMode: result.options.testMode
         })
         break
     }

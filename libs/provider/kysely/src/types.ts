@@ -5,16 +5,21 @@
  * Use these imports when you only need types for TypeScript checking:
  *
  * @example
- * import type { ServiceConfig } from '@samuelho-dev/provider-kysely/types';
+ * import type { KyselyConfig, DatabaseError } from '@samuelho-dev/provider-kysely/types';
  *
  * These imports are completely erased at compile time and add
  * zero bytes to your JavaScript bundle.
  */
 
 // ============================================================================
-// Service Internals (types, errors)
+// Error Types
 // ============================================================================
 
-// Types and errors are in lib/ directory (flat structure)
-export type * from "./lib/types"
-export type * from "./lib/errors"
+export type * from './lib/errors'
+
+// ============================================================================
+// Service Types
+// ============================================================================
+
+export type { KyselyServiceInterface } from './lib/interface'
+export type { KyselyConfig, MockServiceOptions } from './lib/service'

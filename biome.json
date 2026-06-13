@@ -1,7 +1,25 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
-  "extends": ["/Users/samuelho/.config/biome/biome.json"],
-  "files": {},
+  "$schema": "https://biomejs.dev/schemas/2.5.0/schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.nx",
+      "!**/coverage",
+      "!**/docs",
+      "!**/*.md"
+    ],
+    "ignoreUnknown": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
   "linter": {
     "rules": {
       "recommended": false,
@@ -78,6 +96,25 @@
       "!**/node_modules"
     ]
   },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "semicolons": "asNeeded",
+      "trailingCommas": "none",
+      "arrowParentheses": "always",
+      "bracketSpacing": true
+    }
+  },
+  "json": {
+    "parser": {
+      "allowComments": true,
+      "allowTrailingCommas": true
+    },
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
   "overrides": [
     {
       "includes": ["src/**/*.ts", "libs/**/*.ts"],
@@ -90,7 +127,7 @@
             "noNamespace": "off",
             "noNonNullAssertion": "off",
             "useArrayLiterals": "off",
-            "useConsistentArrayType": { "level": "warn", "options": { "syntax": "generic" } }
+            "useConsistentArrayType": { "level": "warn", "options": { "syntax": "shorthand" } }
           },
           "suspicious": {
             "noExplicitAny": "off",
@@ -100,6 +137,11 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts"],
+      "formatter": { "enabled": false },
+      "assist": { "enabled": false }
     },
     {
       "includes": ["**/*.spec.ts", "**/*.test.ts", "**/__tests__/**/*.ts"],

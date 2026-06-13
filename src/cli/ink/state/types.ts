@@ -85,11 +85,11 @@ const STEP_TRANSITIONS: Record<WizardStep, WizardStep> = {
   "enter-name": "configure-options",
   "enter-external-service": "configure-options",
   "configure-options": "preview",
-  "preview": "confirm",
-  "confirm": "generating",
-  "generating": "complete",
-  "complete": "complete",
-  "error": "error"
+  preview: "confirm",
+  confirm: "generating",
+  generating: "complete",
+  complete: "complete",
+  error: "error"
 }
 
 const STEP_BACK_TRANSITIONS: Record<WizardStep, WizardStep> = {
@@ -97,11 +97,11 @@ const STEP_BACK_TRANSITIONS: Record<WizardStep, WizardStep> = {
   "enter-name": "select-type",
   "enter-external-service": "enter-name",
   "configure-options": "enter-name",
-  "preview": "configure-options",
-  "confirm": "preview",
-  "generating": "generating",
-  "complete": "complete",
-  "error": "error"
+  preview: "configure-options",
+  confirm: "preview",
+  generating: "generating",
+  complete: "complete",
+  error: "error"
 }
 
 /**

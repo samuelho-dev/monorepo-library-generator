@@ -1,49 +1,31 @@
 {
   "$schema": "https://json-schema.org/schema",
-  "$id": "Contract",
-  "title": "Contract Library Generator",
+  "title": "Standard Contract Library",
   "type": "object",
-  "cli": "nx",
-  "description": "Generate a contract library following Effect-based architecture patterns",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Domain name (e.g., 'product', 'user', 'product-review')",
       "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      },
-      "x-prompt": "What is the domain name for this contract?"
+      "description": "Kebab-case library name",
+      "$default": { "$source": "argv", "index": 0 }
     },
-    "directory": {
+    "directory": { "type": "string", "description": "Parent directory override" },
+    "description": { "type": "string" },
+    "tags": { "type": "string", "description": "Comma-separated Nx tags" },
+    "modules": {
       "type": "string",
-      "description": "Directory where the contract library will be created",
-      "default": "libs/contract"
+      "description": "Comma-separated module paths, for example form-state,marketing/campaign"
     },
-    "description": {
+    "capabilities": {
       "type": "string",
-      "description": "Human-readable description of the domain",
-      "x-prompt": "Provide a description for this domain"
+      "description": "Comma-separated entities,errors,events,ports,rpc,types roles"
     },
-    "dependencies": {
-      "type": "array",
-      "description": "Contract dependencies (e.g., ['common', 'messaging'])",
-      "items": {
-        "type": "string"
-      },
-      "default": []
-    },
-    "entities": {
+    "dependencies": { "type": "string", "description": "Comma-separated package dependencies" },
+    "entrypoints": {
       "type": "string",
-      "description": "Comma-separated list of entity names for bundle optimization (e.g., 'Product,ProductCategory,ProductReview')"
+      "description": "Comma-separated root,client,server,edge entrypoints"
     },
-    "includeCQRS": {
-      "type": "boolean",
-      "description": "Include CQRS pattern files (commands, queries, projections)",
-      "default": false,
-      "x-prompt": "Include CQRS pattern files (commands, queries, projections)?"
-    }
+    "testMode": { "type": "string", "enum": ["none", "unit", "integration"] }
   },
   "required": ["name"]
 }

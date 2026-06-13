@@ -1,170 +1,94 @@
-import { describe, expect, it } from "@effect/vitest"
-import { Context, Effect, Layer } from "effect"
+import { describe, expect, it } from '@effect/vitest'
+import { AuthVerifier } from '@samuelho-dev/contract-auth'
+import { Effect, Layer, Option } from 'effect'
+import { Headers } from 'effect/unstable/http'
+import { AuthService, AuthVerifierTest } from './service'
 
 /**
- * Auth Service Tests
+ * AuthService / AuthVerifier — Test-layer behavior.
  *
- * Tests verify Effect service interface and layer composition.
-Uses @effect/vitest with it.scoped for resource management.
-
-Testing Guidelines:
-- Test service interface (can we access the service?)
-- Test layer composition (do layers provide the service correctly?)
-- Use it.scoped for layer tests (they need Scope)
-- Focus on service mechanics, not implementation details
+ * The Test layer is deliberately permissive: it accepts ALL tokens and ignores
+ * headers (so consumers can unit-test their own logic without auth blocking
+ * them). Real JWT validation, header-priority parsing, and rejection paths live
+ * in the Live layer (Supabase-backed) and are covered by integration tests, not
+ * here. These specs pin the ONE behavior the Test layer actually decides on its
+ * own — `verifyOptional`'s falsy-token → None branch — plus the canned-identity
+ * contract every consumer relies on. Redundant restatements of "the stub returns
+ * the same user" are intentionally collapsed to a single assertion each.
  *
  * @module @samuelho-dev/infra-auth
  */
 
+const TEST_USER_ID = '00000000-0000-4000-8000-000000000001'
 
-/**
- * Test service tag for layer composition tests
- */
-class AuthTestService extends Context.Tag("AuthTestService")<
-  AuthTestService,
-  {
-    readonly getName: () => Effect.Effect<string>
-    readonly getConfig: () => Effect.Effect<Record<string, unknown>>
-  }
->() {}
+describe('AuthService.Test', () => {
+  it.effect('verifyToken resolves the canned authenticated user', () =>
+    Effect.gen(function* () {
+      const service = yield* AuthService
+      const user = yield* service.verifyToken('any-token')
 
-/**
- * Creates a test layer with configurable behavior
- */
-function createAuthTestLayer(config: Record<string, unknown> = {}) {
-  return Layer.succeed(AuthTestService, {
-    getName: () => Effect.succeed("auth"),
-    getConfig: () => Effect.succeed(config)
-  })
-}
+      expect(user.id).toBe(TEST_USER_ID)
+      expect(user.email).toBe('test@example.com')
+      expect(user.name).toBe('Test User')
+      expect(user.role).toBe('authenticated')
+    }).pipe(Effect.provide(Layer.fresh(AuthService.Test)))
+  )
 
-describe("Auth Service", () => {
-  describe("Service Interface", () => {
-    it.scoped("should provide service through layer", () =>
-      Effect.gen(function*() {
-        const service = yield* AuthTestService
-        const name = yield* service.getName()
-        expect(name).toBe("auth")
-      }).pipe(Effect.provide(Layer.fresh(createAuthTestLayer()))))
+  it.effect('getCurrentUser returns Some with the canned user', () =>
+    Effect.gen(function* () {
+      const service = yield* AuthService
+      const result = yield* service.getCurrentUser()
 
-    it.scoped("should provide configuration", () =>
-      Effect.gen(function*() {
-        const service = yield* AuthTestService
-        const config = yield* service.getConfig()
-        expect(config).toEqual({ timeout: 5000 })
-      }).pipe(Effect.provide(Layer.fresh(createAuthTestLayer({ timeout: 5000 })))))
-  })
+      expect(Option.isSome(result)).toBe(true)
+      if (Option.isSome(result)) {
+        expect(result.value.id).toBe(TEST_USER_ID)
+      }
+    }).pipe(Effect.provide(Layer.fresh(AuthService.Test)))
+  )
 
-  describe("Layer Composition", () => {
-    it.scoped("should compose with other layers", () =>
-      Effect.gen(function*() {
-        const service = yield* AuthTestService
-        const name = yield* service.getName()
-        expect(name).toBe("auth")
-      }).pipe(
-        Effect.provide(
-          Layer.fresh(
-            Layer.merge(
-              createAuthTestLayer(),
-              Layer.succeed(Context.GenericTag<{ version: string }>("Version"), {
-                version: "1.0.0"
-              })
-            )
-          )
-        )
-      ))
-
-    it.scoped("should allow layer override", () => {
-      const overrideLayer = Layer.succeed(AuthTestService, {
-        getName: () => Effect.succeed("overridden"),
-        getConfig: () => Effect.succeed({ custom: true })
-      })
-
-      return Effect.gen(function*() {
-        const service = yield* AuthTestService
-        const name = yield* service.getName()
-        expect(name).toBe("overridden")
-      }).pipe(Effect.provide(Layer.fresh(overrideLayer)))
-    })
-  })
-
-  describe("Layer Types", () => {
-    it.scoped("should work with Layer.succeed for synchronous initialization", () => {
-      const syncLayer = Layer.succeed(AuthTestService, {
-        getName: () => Effect.succeed("sync-auth"),
-        getConfig: () => Effect.succeed({})
-      })
-
-      return Effect.gen(function*() {
-        const service = yield* AuthTestService
-        const name = yield* service.getName()
-        expect(name).toBe("sync-auth")
-      }).pipe(Effect.provide(Layer.fresh(syncLayer)))
-    })
-
-    it.scoped("should work with Layer.effect for async initialization", () => {
-      const asyncLayer = Layer.effect(
-        AuthTestService,
-        Effect.sync(() => ({
-          getName: () => Effect.succeed("async-auth"),
-          getConfig: () => Effect.succeed({ async: true })
-        }))
+  it.effect('buildAuthContext yields a session-method context with no session token', () =>
+    Effect.gen(function* () {
+      const service = yield* AuthService
+      const context = yield* service.buildAuthContext(
+        Headers.fromInput({ authorization: 'Bearer real-token' })
       )
 
-      return Effect.gen(function*() {
-        const service = yield* AuthTestService
-        const name = yield* service.getName()
-        expect(name).toBe("async-auth")
-      }).pipe(Effect.provide(Layer.fresh(asyncLayer)))
-    })
+      expect(Option.isSome(context)).toBe(true)
+      if (Option.isSome(context)) {
+        expect(context.value.authMethod).toBe('session')
+        // Test layer skips header parsing, so it never sets a session token
+        // (Live sets it when auth comes from a Bearer header).
+        expect(context.value.sessionToken).toBeUndefined()
+      }
+    }).pipe(Effect.provide(Layer.fresh(AuthService.Test)))
+  )
+})
 
-    it.scoped("should work with Layer.scoped for resource management", () => {
-      let initialized = false
+describe('AuthVerifier.Test', () => {
+  it.effect('verify resolves the canned user', () =>
+    Effect.gen(function* () {
+      const verifier = yield* AuthVerifier
+      const userData = yield* verifier.verify('any-token')
 
-      const scopedLayer = Layer.scoped(
-        AuthTestService,
-        Effect.acquireRelease(
-          Effect.sync(() => {
-            initialized = true
-            return {
-              getName: () => Effect.succeed("scoped-auth"),
-              getConfig: () => Effect.succeed({ scoped: true })
-            }
-          }),
-          () => Effect.void
-        )
-      )
+      expect(userData.id).toBe(TEST_USER_ID)
+      expect(userData.email).toBe('test@example.com')
+    }).pipe(Effect.provide(Layer.fresh(AuthVerifierTest)))
+  )
 
-      return Effect.gen(function*() {
-        const service = yield* AuthTestService
-        const name = yield* service.getName()
-        expect(name).toBe("scoped-auth")
-        expect(initialized).toBe(true)
-      }).pipe(Effect.provide(Layer.fresh(scopedLayer)))
-    })
-  })
+  it.effect('verifyOptional returns Some for a non-empty token, None for falsy', () =>
+    // This is the only branch the Test layer decides itself: a falsy token
+    // (undefined or '' ) → None; any non-empty token → Some(user).
+    Effect.gen(function* () {
+      const verifier = yield* AuthVerifier
 
-  describe("Layer Isolation", () => {
-    it.scoped("should isolate state between tests with Layer.fresh", () => {
-      let callCount = 0
+      expect(Option.isNone(yield* verifier.verifyOptional(undefined))).toBe(true)
+      expect(Option.isNone(yield* verifier.verifyOptional(''))).toBe(true)
 
-      const countingLayer = Layer.effect(
-        AuthTestService,
-        Effect.sync(() => {
-          callCount++
-          return {
-            getName: () => Effect.succeed(`call-${callCount}`),
-            getConfig: () => Effect.succeed({ count: callCount })
-          }
-        })
-      )
-
-      return Effect.gen(function*() {
-        const service = yield* AuthTestService
-        const name = yield* service.getName()
-        expect(name).toBe("call-1")
-        expect(callCount).toBe(1)
-      }).pipe(Effect.provide(Layer.fresh(countingLayer)))
-    })
-  })
+      const some = yield* verifier.verifyOptional('garbage-token')
+      expect(Option.isSome(some)).toBe(true)
+      if (Option.isSome(some)) {
+        expect(some.value.id).toBe(TEST_USER_ID)
+      }
+    }).pipe(Effect.provide(Layer.fresh(AuthVerifierTest)))
+  )
 })

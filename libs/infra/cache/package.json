@@ -3,30 +3,17 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Cache orchestration infrastructure (coordinates cache providers)",
+  "description": "cache infra library",
   "exports": {
     ".": {
       "import": "./src/index.ts",
       "types": "./src/index.ts"
-    },
-    "./types": {
-      "import": "./src/types.ts",
-      "types": "./src/types.ts"
-    },
-    "./service": {
-      "import": "./src/lib/service/index.ts",
-      "types": "./src/lib/service/index.ts"
-    },
-    "./providers/*": {
-      "import": "./src/lib/providers/*.ts",
-      "types": "./src/lib/providers/*.ts"
-    },
-    "./layers/*": {
-      "import": "./src/lib/layers/*.ts",
-      "types": "./src/lib/layers/*.ts"
     }
   },
+  "devDependencies": {
+    "@effect/vitest": "catalog:"
+  },
   "peerDependencies": {
-    "effect": "*"
+    "effect": "catalog:"
   }
 }

@@ -1,100 +1,37 @@
-import { Context } from "effect"
-import type { AuthMethod, CurrentUserData, ServiceIdentity } from "./schemas"
+import { Context } from 'effect'
+import type { ServiceIdentity } from './entities'
+
+export type RouteType = 'public' | 'protected' | 'admin' | 'service'
+
+/** Metadata key attached to RPC definitions that declares their auth policy. */
+export const RouteTag = Symbol.for('@samuelho-dev/contract-auth/RouteTag')
+
+export type RpcWithRouteTag = {
+  readonly [RouteTag]: RouteType
+}
 
 /**
  * Auth Contract Middleware
  *
  * Middleware context tags and route types for RPC.
-
-Contract-First Architecture:
-- RPC definitions use RouteTag to specify auth requirements
-- Middleware reads RouteTag and applies appropriate auth
-- Handlers access user/service context via Context Tags
-
-Route Types:
-- "public": No authentication required
-- "protected": User authentication required (CurrentUser available)
-- "service": Service-to-service auth (ServiceContext available)
  *
- * @module @samuelho-dev/contract-auth/middleware
+ * Contract-First Architecture:
+ * - RPC definitions use RouteTag to specify auth requirements
+ * - Middleware reads RouteTag and applies appropriate auth
+ * - Handlers access context via tags defined in respective contracts
+ *
+ * NOTE: User context (with app-specific fields like seller_id, role)
+ * is defined in @samuelho-dev/contract-user as UserContextTag.
+ * This keeps auth concerns separate from app user data.
+ *
+ * Route Types:
+ * - "public": No authentication required
+ * - "protected": User authentication required (UserContextTag)
+ * - "admin": User auth + admin_user table check (AdminContext)
+ * - "service": Service authentication required (ServiceContext)
+ *
+ * @module @samuelho-dev/contract-auth
  */
-
-// ============================================================================
-// Route Types (Contract-First)
-// ============================================================================
-
-/**
- * Route type for RPC endpoints
- *
- * Determines what middleware is applied:
- * - "public": No authentication middleware
- * - "protected": User authentication middleware (CurrentUser)
- * - "service": Service authentication middleware (ServiceContext)
- */
-export type RouteType = "public" | "protected" | "service"
-
-/**
- * Symbol for marking RPC route types
- *
- * Used in contract RPC definitions to specify auth requirements.
- *
- * @example
- * ```typescript
- * export class GetUser extends Rpc.make("GetUser", { ... }) {
- *   static readonly [RouteTag]: RouteType = "protected"
- * }
- * ```
- */
-export const RouteTag: unique symbol = Symbol.for("@samuelho-dev/contract-auth/RouteTag")
-
-/**
- * Type helper for RPC classes with RouteTag
- */
-export interface RpcWithRouteTag {
-  readonly [RouteTag]?: RouteType
-}
-
-// ============================================================================
-// User Authentication Context
-// ============================================================================
-
-/**
- * Current User Context Tag
- *
- * Provides access to authenticated user data in handlers.
- * Only available on "protected" routes.
- *
- * @example
- * ```typescript
- * const handler = Effect.gen(function*() {
- *   const user = yield* CurrentUser
- *   console.log(user.id, user.email)
- * })
- * ```
- */
-export class CurrentUser extends Context.Tag("CurrentUser")<
-  CurrentUser,
-  CurrentUserData
->() {}
-
-/**
- * Auth Method Context Tag
- *
- * Provides access to the authentication method used.
- * Available on "protected" routes alongside CurrentUser.
- *
- * @example
- * ```typescript
- * const handler = Effect.gen(function*() {
- *   const authMethod = yield* AuthMethodContext
- *   console.log(authMethod.type, authMethod.token)
- * })
- * ```
- */
-export class AuthMethodContext extends Context.Tag("AuthMethodContext")<
-  AuthMethodContext,
-  { readonly type: AuthMethod; readonly token: string }
->() {}
 
 // ============================================================================
 // Service Authentication Context
@@ -114,10 +51,9 @@ export class AuthMethodContext extends Context.Tag("AuthMethodContext")<
  * })
  * ```
  */
-export class ServiceContext extends Context.Tag("ServiceContext")<
-  ServiceContext,
-  ServiceIdentity
->() {}
+export class ServiceContext extends Context.Service<ServiceContext, ServiceIdentity>()(
+  '@samuelho-dev/contract-auth/ServiceContext'
+) {}
 
 // ============================================================================
 // Request Metadata Context
@@ -155,22 +91,13 @@ export interface RequestMetadata {
  * })
  * ```
  */
-export class RequestMeta extends Context.Tag("RequestMeta")<
-  RequestMeta,
-  RequestMetadata
->() {}
+export class RequestMeta extends Context.Service<RequestMeta, RequestMetadata>()(
+  '@samuelho-dev/contract-auth/RequestMeta'
+) {}
 
 // ============================================================================
-// Handler Context Helpers
+// Handler Context Helpers (Optional - for convenience)
 // ============================================================================
-
-/**
- * Combined handler context for protected routes
- */
-export interface HandlerContext {
-  readonly user: CurrentUserData
-  readonly meta: RequestMetadata
-}
 
 /**
  * Combined handler context for service routes
