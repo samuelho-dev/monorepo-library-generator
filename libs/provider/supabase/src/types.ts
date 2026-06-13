@@ -15,6 +15,6 @@
 // Service Internals (types, errors)
 // ============================================================================
 
+export type * from './lib/errors'
 // Types and errors are in lib/ directory (flat structure)
-export type * from "./lib/types"
-export type * from "./lib/errors"
+export type * from './lib/types'

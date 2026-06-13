@@ -1,47 +1,36 @@
 {
   "name": "provider-redis",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/provider/redis/src",
-  "tags": [
-    "type:provider",
-    "scope:redis",
-    "provider",
-    "effect",
-    "builtin"
-  ],
+  "tags": ["type:provider", "scope:redis"],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+    "lint": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/provider/redis",
-        "tsConfig": "libs/provider/redis/tsconfig.lib.json",
-        "main": "libs/provider/redis/src/index.ts",
-        "batch": true
+        "command": "pnpm exec biome check libs/provider/redis"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+    "format": {
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": [
-          "libs/provider/redis/src/**/*.ts"
-        ]
+        "command": "pnpm exec biome check --write libs/provider/redis"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsgo --build libs/provider/redis/tsconfig.lib.json"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/dist"]
     },
     "test": {
-      "executor": "@nx/vite:test",
-      "outputs": [
-        "{options.reportsDirectory}"
-      ],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "reportsDirectory": "coverage/libs/provider/redis",
-        "config": "libs/provider/redis/vitest.config.ts"
+        "command": "pnpm exec vitest run --config libs/provider/redis/vitest.config.ts --pool=forks --passWithNoTests",
+        "cwd": "{workspaceRoot}"
       }
     }
   }

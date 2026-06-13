@@ -82,7 +82,9 @@ export function runInkTUI() {
     }
   }).pipe(
     Effect.catchAll((error) =>
-      Console.error(`Error in TUI: ${error instanceof InkRenderError ? String(error.cause) : error}`)
+      Console.error(
+        `Error in TUI: ${error instanceof InkRenderError ? String(error.cause) : error}`
+      )
     )
   )
 }

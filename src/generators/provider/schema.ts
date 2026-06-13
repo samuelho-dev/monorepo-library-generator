@@ -1,31 +1,10 @@
-/**
- * Provider Generator Schema Interface
- *
- * Defines the options interface for the provider generator
- * based on the JSON schema definition.
- */
-
 export interface ProviderGeneratorSchema {
-  name: string
-  directory?: string
-  externalService: string
-  description?: string
-  platform?: "node" | "browser" | "universal" | "edge"
-  includeClientServer?: boolean
-
-  // Provider type configuration
-  providerType?: "sdk" | "cli" | "http" | "graphql"
-  cliCommand?: string
-  baseUrl?: string
-  authType?: "bearer" | "apikey" | "oauth" | "basic" | "none"
-
-  // Operations to generate
-  operations?: ReadonlyArray<"create" | "read" | "update" | "delete" | "query">
-
-  tags?: string
-
-  // Dotfile generation options (Effect.ts code quality enforcement)
-  // Only library-specific dotfiles (eslint.config.mjs, tsconfig.json) are added
-  addDotfiles?: boolean // Default: true
-  overwriteDotfiles?: boolean // Default: false
+  readonly name: string
+  readonly directory?: string
+  readonly externalService?: string
+  readonly description?: string
+  readonly tags?: string
+  readonly dependencies?: ReadonlyArray<string> | string
+  readonly entrypoints?: ReadonlyArray<string> | string
+  readonly testMode?: "none" | "unit" | "integration"
 }

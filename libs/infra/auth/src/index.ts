@@ -1,82 +1,24 @@
 /**
- * Auth Infrastructure Library
- *
- * Authentication infrastructure with session/token verification.
-
-Contract-First Architecture:
-- Consumes SupabaseAuth from provider-supabase
-- Provides AuthService for auth operations
-- Provides AuthVerifierLive layer for infra-rpc middleware
-
-Integration with infra-rpc:
-  import { AuthMiddlewareLive } from '@samuelho-dev/infra-rpc';
-  import { AuthVerifierLive } from '@samuelho-dev/infra-auth'  // Compose layers
-  const middleware = AuthMiddlewareLive.pipe(
-    Layer.provide(AuthVerifierLive)
-  )
- *
+ * Auth Infrastructure
+ * @module @samuelho-dev/infra-auth
  */
 
-// ============================================================================
-// Errors
-// ============================================================================
-
+export { AdminAuth, type AdminAuthShape } from './lib/admin-auth'
 export {
   AuthError,
-  UnauthorizedError,
+  type AuthServiceError,
   ForbiddenError,
+  InvalidApiKeyError,
   InvalidTokenError,
   SessionExpiredError,
-  InvalidApiKeyError,
-  type AuthServiceError
-} from "./lib/errors"
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export type {
-  AuthContext
-} from "./lib/types"
-
+  UnauthorizedError
+} from './lib/errors'
 export {
-  AuthContextSchema
-} from "./lib/types"
-
-// Re-export from provider for convenience
-export type { AuthUser, AuthMethod } from "@samuelho-dev/provider-supabase"
-export { AuthUserSchema } from "@samuelho-dev/provider-supabase"
-
-// ============================================================================
-// Service
-// ============================================================================
-
-export { AuthService, type AuthServiceInterface } from "./lib/service"
-
-// ============================================================================
-// AuthVerifier Implementation (for infra-rpc)
-// ============================================================================
-
-export { AuthVerifierLive } from "./lib/service"
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Integration Example
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 
-// import { Layer } from 'effect';
-// import { AuthMiddlewareLive, AllMiddlewareLive } from '@samuelho-dev/infra-rpc';
-// import { AuthVerifierLive, AuthService } from '@samuelho-dev/infra-auth';
-// import { SupabaseAuth } from '@samuelho-dev/provider-supabase';
-// 
-// // Compose auth layers for RPC middleware
-// const RpcAuthLayer = AuthMiddlewareLive.pipe(
-//   Layer.provide(AuthVerifierLive),
-//   Layer.provide(AuthService.Live),
-//   Layer.provide(SupabaseAuth.Live),
-// )
-// 
-// // Use with RPC router
-// const router = MyRpcGroup.toRouter(handlers).pipe(
-//   Effect.provide(RpcAuthLayer),
-// )
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  AuthService,
+  type AuthServiceInterface,
+  type AuthUserData,
+  AuthVerifier,
+  AuthVerifierLive,
+  AuthVerifierTest
+} from './lib/service'
+export type { AuthContext } from './lib/types'

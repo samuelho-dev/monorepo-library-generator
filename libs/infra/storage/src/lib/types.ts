@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * Storage Infrastructure Types
@@ -10,7 +10,6 @@ Re-exports types from provider-supabase and adds storage-specific types.
  * @module @samuelho-dev/infra-storage/types
  */
 
-
 // ============================================================================
 // Provider Types
 // ============================================================================
@@ -18,7 +17,7 @@ Re-exports types from provider-supabase and adds storage-specific types.
 // NOTE: For provider-specific types (StorageBucket, StorageFile, etc.),
 // import directly from @samuelho-dev/provider-supabase:
 // import type { StorageBucket, StorageFile, UploadOptions } from "@samuelho-dev/provider-supabase"
-// import { StorageBucketSchema, StorageFileSchema } from "@samuelho-dev/provider-supabase"
+// import { StorageBucket, StorageFileSchema } from "@samuelho-dev/provider-supabase"
 
 // ============================================================================
 // Storage Configuration
@@ -41,7 +40,7 @@ export interface StorageConfig {
   /**
    * Allowed MIME types
    */
-  readonly allowedMimeTypes?: ReadonlyArray<string>
+  readonly allowedMimeTypes?: readonly string[]
 
   /**
    * Default signed URL expiration in seconds
@@ -110,7 +109,7 @@ export interface StorageFileInfo {
  * List files result
  */
 export interface ListFilesResult {
-  readonly files: ReadonlyArray<StorageFileInfo>
+  readonly files: readonly StorageFileInfo[]
   readonly hasMore: boolean
   readonly nextOffset?: number
 }

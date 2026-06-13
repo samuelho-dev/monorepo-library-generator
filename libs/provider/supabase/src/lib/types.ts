@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * Supabase Provider Types
@@ -10,7 +10,6 @@ All schemas are composable and can be extended for domain-specific needs.
  *
  * @module @samuelho-dev/provider-supabase/types
  */
-
 
 // ============================================================================
 // Configuration
@@ -31,9 +30,9 @@ export interface SupabaseConfig {
  * Supabase configuration schema for validation
  */
 export const SupabaseConfigSchema = Schema.Struct({
-  url: Schema.String.pipe(Schema.nonEmptyString()),
-  anonKey: Schema.String.pipe(Schema.nonEmptyString()),
-  serviceRoleKey: Schema.optional(Schema.String.pipe(Schema.nonEmptyString()))
+  url: Schema.NonEmptyString,
+  anonKey: Schema.NonEmptyString,
+  serviceRoleKey: Schema.optional(Schema.NonEmptyString)
 })
 
 // ============================================================================
@@ -43,11 +42,16 @@ export const SupabaseConfigSchema = Schema.Struct({
 /**
  * Supabase user metadata
  */
-export const UserMetadataSchema = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  avatar_url: Schema.optional(Schema.String),
-  email_verified: Schema.optional(Schema.Boolean)
-}).pipe(Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })))
+// v4: Struct.pipe(Schema.extend(Record)) → Schema.StructWithRest(struct, [record]).
+// Adds an index signature (string → unknown) to the declared fields.
+export const UserMetadataSchema = Schema.StructWithRest(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    avatar_url: Schema.optional(Schema.String),
+    email_verified: Schema.optional(Schema.Boolean)
+  }),
+  [Schema.Record(Schema.String, Schema.Unknown)]
+)
 
 export type UserMetadata = Schema.Schema.Type<typeof UserMetadataSchema>
 
@@ -58,12 +62,16 @@ export const SupabaseUserSchema = Schema.Struct({
   id: Schema.String,
   email: Schema.optional(Schema.String),
   phone: Schema.optional(Schema.String),
-  created_at: Schema.String,
-  updated_at: Schema.optional(Schema.String),
-  last_sign_in_at: Schema.optional(Schema.String),
+  // Timestamps decode at the boundary: the Supabase SDK delivers ISO strings on
+  // the wire; Schema.DateFromString decodes them to `Date` in the domain type.
+  // Consumers (and mocks) work with `Date`, not strings. (Effect v4: bare
+  // Schema.Date is `instanceOf(Date)` and REJECTS strings — must use DateFromString.)
+  created_at: Schema.DateFromString,
+  updated_at: Schema.optional(Schema.DateFromString),
+  last_sign_in_at: Schema.optional(Schema.DateFromString),
   role: Schema.optional(Schema.String),
   user_metadata: Schema.optional(UserMetadataSchema),
-  app_metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+  app_metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown))
 })
 
 export type SupabaseUser = Schema.Schema.Type<typeof SupabaseUserSchema>
@@ -78,7 +86,7 @@ export const AuthUserSchema = Schema.Struct({
   email: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
   role: Schema.optional(Schema.String),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown))
 })
 
 export type AuthUser = Schema.Schema.Type<typeof AuthUserSchema>
@@ -104,12 +112,12 @@ export type SupabaseSession = Schema.Schema.Type<typeof SupabaseSessionSchema>
 /**
  * Auth result from sign in operations
  */
-export const AuthResultSchema = Schema.Struct({
+export const AuthResult = Schema.Struct({
   user: SupabaseUserSchema,
   session: Schema.NullOr(SupabaseSessionSchema)
 })
 
-export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>
+export type AuthResult = Schema.Schema.Type<typeof AuthResult>
 
 // ============================================================================
 // Storage Types
@@ -119,8 +127,15 @@ export type AuthResult = Schema.Schema.Type<typeof AuthResultSchema>
  * Storage types are re-exported from the native @supabase/storage-js SDK
  * with aliases for consistent naming across the provider.
  */
-export type { Bucket, FileObject, FileOptions, SearchOptions, TransformOptions } from "@supabase/storage-js"
-import type { Bucket, FileObject, FileOptions, TransformOptions } from "@supabase/storage-js"
+export type {
+  Bucket,
+  FileObject,
+  FileOptions,
+  SearchOptions,
+  TransformOptions
+} from '@supabase/storage-js'
+
+import type { Bucket, FileObject, FileOptions, TransformOptions } from '@supabase/storage-js'
 
 /**
  * Type alias for storage bucket (matches Bucket from SDK)
@@ -156,7 +171,7 @@ export interface SignedUrlOptions {
 /**
  * Storage bucket schema for runtime validation
  */
-export const StorageBucketSchema = Schema.Struct({
+export const StorageBucket = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   public: Schema.Boolean,
@@ -177,7 +192,7 @@ export const StorageFileSchema = Schema.Struct({
   created_at: Schema.optional(Schema.String),
   updated_at: Schema.optional(Schema.String),
   last_accessed_at: Schema.optional(Schema.String),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown }))
+  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown))
 })
 
 // ============================================================================
@@ -189,7 +204,7 @@ export const StorageFileSchema = Schema.Struct({
  *
  * Used by RPC middleware to identify how the user was authenticated.
  */
-export type AuthMethod = "session" | "api-key" | "service-role"
+export type AuthMethod = 'session' | 'api-key' | 'service-role'
 
 /**
  * Sign in credentials
@@ -215,20 +230,20 @@ export interface SignUpCredentials {
  * OAuth provider
  */
 export type OAuthProvider =
-  | "google"
-  | "github"
-  | "gitlab"
-  | "bitbucket"
-  | "azure"
-  | "facebook"
-  | "twitter"
-  | "discord"
-  | "slack"
-  | "spotify"
-  | "notion"
-  | "zoom"
-  | "linkedin"
-  | "linkedin_oidc"
-  | "apple"
-  | "keycloak"
-  | "workos"
+  | 'google'
+  | 'github'
+  | 'gitlab'
+  | 'bitbucket'
+  | 'azure'
+  | 'facebook'
+  | 'twitter'
+  | 'discord'
+  | 'slack'
+  | 'spotify'
+  | 'notion'
+  | 'zoom'
+  | 'linkedin'
+  | 'linkedin_oidc'
+  | 'apple'
+  | 'keycloak'
+  | 'workos'

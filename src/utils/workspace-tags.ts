@@ -99,10 +99,7 @@ export function scanWorkspaceTags(workspaceRoot: string) {
 /**
  * Check if a tag already exists (case-insensitive comparison)
  */
-export function tagExists(
-  tag: string,
-  existingTags: ReadonlyArray<string>
-) {
+export function tagExists(tag: string, existingTags: ReadonlyArray<string>) {
   const normalized = normalizeTag(tag)
   return existingTags.some((t) => normalizeTag(t) === normalized)
 }

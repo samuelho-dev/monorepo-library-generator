@@ -3,27 +3,27 @@
     "contract": {
       "factory": "./generators/contract/contract#contractGenerator",
       "schema": "./generators/contract/schema.json",
-      "description": "Generate a contract library with entities, events, ports, and errors following Effect-based architecture"
+      "description": "Generate a capability-driven Effect v4 contract library"
     },
     "provider": {
       "factory": "./generators/provider/provider#providerGenerator",
       "schema": "./generators/provider/schema.json",
-      "description": "Generate a provider library with Effect-based architecture for external service integration"
+      "description": "Generate an Effect v4 provider with Live, Test, and Auto layers"
     },
     "data-access": {
       "factory": "./generators/data-access/data-access#dataAccessGenerator",
       "schema": "./generators/data-access/schema.json",
-      "description": "Generate a repository-oriented data access library with Effect patterns"
+      "description": "Generate a contract-backed data-access service with Live, Test, Auto, and a test harness"
     },
     "feature": {
       "factory": "./generators/feature/feature#featureGenerator",
       "schema": "./generators/feature/schema.json",
-      "description": "Generate a feature library with Effect-based architecture"
+      "description": "Generate Pattern A feature services with router-owned composition"
     },
     "infra": {
       "factory": "./generators/infra/infra#infraGenerator",
       "schema": "./generators/infra/schema.json",
-      "description": "Generate an infrastructure library with Effect-based architecture"
+      "description": "Generate an Effect v4 infrastructure service with Live, Test, and Auto layers"
     }
   }
 }

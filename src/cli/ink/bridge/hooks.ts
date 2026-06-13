@@ -54,9 +54,7 @@ export interface UseEffectOperationResult<A, E> extends EffectOperationState<A, 
  * }
  * ```
  */
-export function useEffectOperation<A, E>(
-  effectFn: () => Effect.Effect<A, E>
-) {
+export function useEffectOperation<A, E>(effectFn: () => Effect.Effect<A, E>) {
   const runtime = useRuntime()
 
   const [state, setState] = useState<EffectOperationState<A, E>>({
@@ -135,9 +133,7 @@ export function useEffectOperation<A, E>(
  * }
  * ```
  */
-export function useEffectOnMount<A, E>(
-  effectFn: () => Effect.Effect<A, E>
-) {
+export function useEffectOnMount<A, E>(effectFn: () => Effect.Effect<A, E>) {
   const { execute, ...rest } = useEffectOperation(effectFn)
 
   // Execute on mount

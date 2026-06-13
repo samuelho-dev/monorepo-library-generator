@@ -1,95 +1,29 @@
 {
-  "$schema": "http://json-schema.org/schema",
-  "cli": "nx",
-  "$id": "Feature",
-  "title": "Create Feature Library",
+  "$schema": "https://json-schema.org/schema",
+  "title": "Standard Feature Library",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Library name (e.g., 'auth', 'payment', 'search')",
-      "$default": { "$source": "argv", "index": 0 },
-      "x-prompt": "What name would you like to use for the feature library?",
-      "pattern": "^[a-z][a-z0-9-]*$"
+      "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+      "description": "Kebab-case library name",
+      "$default": { "$source": "argv", "index": 0 }
     },
-    "directory": {
+    "directory": { "type": "string", "description": "Parent directory override" },
+    "description": { "type": "string" },
+    "tags": { "type": "string", "description": "Comma-separated Nx tags" },
+    "modules": { "type": "string", "description": "Comma-separated module paths" },
+    "dependencies": { "type": "string", "description": "Comma-separated package dependencies" },
+    "entrypoints": {
       "type": "string",
-      "description": "Directory where the library is placed",
-      "default": "libs/feature",
-      "x-prompt": "Which directory should the library be created in?"
+      "description": "Comma-separated root,client,server,edge entrypoints"
     },
-    "description": {
+    "contract": {
       "type": "string",
-      "description": "Human-readable feature description",
-      "x-prompt": "Brief description of the feature (optional):"
+      "description": "Contract domain or full package name used by the client RPC entrypoint"
     },
-    "scope": {
-      "type": "string",
-      "description": "Domain scope (e.g., 'shared', 'payments', 'auth')",
-      "x-prompt": "What is the domain scope?"
-    },
-    "platform": {
-      "type": "string",
-      "description": "Target platform (explicit, not derived)",
-      "enum": ["node", "universal", "browser", "edge"],
-      "default": "universal",
-      "x-prompt": {
-        "message": "What platform does this feature target?",
-        "type": "list",
-        "items": [
-          {
-            "value": "node",
-            "label": "Node.js (server-side)"
-          },
-          {
-            "value": "universal",
-            "label": "Universal (both client and server)"
-          },
-          {
-            "value": "browser",
-            "label": "Browser (client-side only)"
-          },
-          {
-            "value": "edge",
-            "label": "Edge Runtime"
-          }
-        ]
-      }
-    },
-    "includeClientServer": {
-      "type": "boolean",
-      "description": "Generate client.ts and server.ts with React hooks + Atom state",
-      "default": false,
-      "x-prompt": "Does this feature need React hooks or browser-specific code?"
-    },
-    "includeCQRS": {
-      "type": "boolean",
-      "description": "Generate CQRS structure (commands/queries/projections)",
-      "default": false,
-      "x-prompt": "Does this feature use CQRS patterns?"
-    },
-    "testRunner": {
-      "type": "string",
-      "enum": ["vitest"],
-      "default": "vitest",
-      "description": "Test runner to use (vitest recommended for new projects)"
-    },
-    "tags": {
-      "type": "string",
-      "description": "Additional tags for module boundary rules (comma-separated)",
-      "x-prompt": "Any additional tags? (comma-separated, optional)"
-    },
-    "includeSubModules": {
-      "type": "boolean",
-      "description": "Generate services/ subdirectory for modular feature organization",
-      "default": false,
-      "x-prompt": "Does this feature need sub-module organization?"
-    },
-    "subModules": {
-      "type": "string",
-      "description": "Comma-separated list of sub-modules to generate (e.g., cart,checkout,management)",
-      "x-prompt": "Which sub-modules should be generated? (comma-separated, leave empty to skip)"
-    }
+    "dataAccess": { "type": "string", "description": "Comma-separated data-access domains" },
+    "testMode": { "type": "string", "enum": ["none", "unit", "integration"] }
   },
   "required": ["name"]
 }

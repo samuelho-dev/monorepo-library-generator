@@ -1,5 +1,9 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
   "targetDefaults": {
     "build": {
       "cache": true,
@@ -23,7 +27,21 @@
       "cache": true,
       "inputs": [
         "default",
-        "{workspaceRoot}/eslint.config.mjs"
+        "{workspaceRoot}/biome.json"
+      ]
+    },
+    "format": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/biome.json"
+      ]
+    },
+    "format:check": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/biome.json"
       ]
     },
     "typecheck": {
@@ -44,15 +62,16 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": [
+      "{workspaceRoot}/biome.json",
+      "{workspaceRoot}/tsconfig.base.json"
+    ]
   },
-  "plugins": [
-    {
-      "plugin": "@nx/vite/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "testTargetName": "test"
-      }
-    }
-  ]
+  "cli": {
+    "packageManager": "pnpm"
+  },
+  "installation": {
+    "version": "22.3.3"
+  },
+  "analytics": false
 }

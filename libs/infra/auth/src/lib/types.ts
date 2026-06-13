@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from 'effect'
 
 /**
  * Auth Infrastructure Types
@@ -11,14 +11,13 @@ for middleware and RPC integration.
  * @module @samuelho-dev/infra-auth/types
  */
 
-
 // ============================================================================
 // Provider Imports
 // ============================================================================
 
 // Import auth schemas from provider-supabase
 // NOTE: Consumers should import types directly from @samuelho-dev/provider-supabase
-import { AuthUserSchema as ProviderAuthUserSchema } from "@samuelho-dev/provider-supabase"
+import { AuthUserSchema as ProviderAuthUserSchema } from '@samuelho-dev/provider-supabase'
 
 // ============================================================================
 // RPC Auth Context Types
@@ -39,7 +38,7 @@ export interface AuthContext {
   /**
    * How the user was authenticated
    */
-  readonly authMethod: "session" | "api-key" | "service-role"
+  readonly authMethod: 'session' | 'api-key' | 'service-role'
 
   /**
    * Session token (for session auth)
@@ -55,9 +54,9 @@ export interface AuthContext {
 /**
  * Auth context schema for validation
  */
-export const AuthContextSchema = Schema.Struct({
+export const AuthContext = Schema.Struct({
   user: ProviderAuthUserSchema,
-  authMethod: Schema.Literal("session", "api-key", "service-role"),
+  authMethod: Schema.Literals(['session', 'api-key', 'service-role']),
   sessionToken: Schema.optional(Schema.String),
   apiKeyId: Schema.optional(Schema.String)
 })

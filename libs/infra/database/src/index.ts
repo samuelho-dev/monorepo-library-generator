@@ -1,32 +1,19 @@
-/**
- * @samuelho-dev/infra-database
- *
- * Database infrastructure service
-
-Provides Database functionality using Effect primitives.
-Layers are available as static members on the service class.
- *
- * @module @samuelho-dev/infra-database
- */
-// ============================================================================
-// Service and Types
-// ============================================================================
-// Service with static layers (Memory, Test, Live)
-export { DatabaseService } from "./lib/service"
-export type { Database } from "./lib/service"
-
-// ============================================================================
-// Error Types
-// ============================================================================
-// Error types for error handling
+/** Database infrastructure and generic Kysely repository helpers. */
+export { DatabaseError } from '@samuelho-dev/contract-database'
 export {
-  DatabaseInternalError,
+  type DatabaseClientConfig,
+  db,
+  makeDatabaseClient
+} from './lib/db-instance'
+export {
+  DataAccessConnectionError,
+  DataAccessTimeoutError,
+  DataAccessTransactionError,
   DatabaseConfigError,
-  DatabaseConnectionError,
-  DatabaseTimeoutError,
-} from "./lib/errors"
-export type { DatabaseError, DatabaseServiceError } from "./lib/errors"
-
-// ============================================================================
-// Additional Layers
-// ============================================================================
+  DatabaseConnectionError
+} from './lib/errors'
+export * from './lib/query-helpers'
+export { RealtimeService } from './lib/realtime'
+export { makeRepository, type Repository } from './lib/repository'
+export type { DB } from './lib/schema'
+export { DatabaseService } from './lib/service'

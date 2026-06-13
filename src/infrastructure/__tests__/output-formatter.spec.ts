@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest"
-import type { GeneratorResult } from "../execution"
+import type { GeneratorResult } from "../../core/types"
 import { formatErrorResponse, formatOutput, formatValidationError } from "../output"
 
 describe("Output Formatter", () => {
@@ -48,6 +48,14 @@ describe("Output Formatter", () => {
       expect(output).toContain("Next steps:")
     })
 
+    it("should distinguish a dry-run plan from written files", () => {
+      const output = formatOutput({ ...mockResult, dryRun: true }, "cli")
+
+      expect(output).toContain("Planned library: contract-user")
+      expect(output).toContain("Files planned:")
+      expect(output).not.toContain("Successfully generated library")
+    })
+
     it("should format for Nx interface", () => {
       const output = formatOutput(mockResult, "nx")
 
@@ -67,7 +75,7 @@ describe("Output Formatter", () => {
 
       expect(response).toEqual({
         success: false,
-        message: "❌ Generation failed: Test error message",
+        message: "Generation failed: Test error message",
         files: []
       })
     })
@@ -78,9 +86,8 @@ describe("Output Formatter", () => {
       const errorMessage = "name: Required field missing"
       const formatted = formatValidationError(errorMessage)
 
-      expect(formatted).toContain("❌ Validation Error:")
+      expect(formatted).toContain("Validation error:")
       expect(formatted).toContain(errorMessage)
-      expect(formatted).toContain("💡 Check your input parameters")
     })
   })
 
@@ -112,9 +119,20 @@ describe("Output Formatter", () => {
 
       if (typeof output === "string") {
         expect(output).toContain("pnpm install")
-        expect(output).toContain("nx build")
+        expect(output).toContain("nx typecheck")
         expect(output).toContain("nx test")
       }
+    })
+
+    it("should recognize the hyphenated data-access project kind", () => {
+      const output = formatOutput({
+        ...mockResult,
+        projectName: "data-access-form",
+        projectRoot: "libs/data-access/form",
+        packageName: "@test-scope/data-access-form"
+      }, "cli")
+
+      expect(output).toContain("Implement domain operations in the generated services under src/lib")
     })
   })
 })

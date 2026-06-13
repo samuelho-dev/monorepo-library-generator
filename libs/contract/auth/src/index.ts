@@ -1,18 +1,17 @@
 /**
  * Auth Contract Library
  *
- * Single source of truth for auth types across the monorepo.
-
-This library defines all auth-related types:
-- Schemas (CurrentUserData, AuthMethod, ServiceIdentity)
-- Errors (AuthError, ServiceAuthError)
-- Ports (AuthVerifier, AuthProvider, ServiceAuthVerifier)
-- Middleware (RouteTag, CurrentUser, ServiceContext, RequestMeta)
-
-Other libraries import from here:
-- infra-rpc: Uses middleware and errors
-- infra-auth: Implements ports
-- provider-supabase: Maps to schemas
+ * Single source of truth for auth SDK types across the monorepo.
+ *
+ * NOTE: This library contains ONLY SDK types - types that map directly
+ * to the authentication provider (Supabase). Application-specific user data
+ * (seller_id, role, etc.) lives in @samuelho-dev/contract-user.
+ *
+ * This library defines:
+ * - Schemas (AuthMethod, AuthSession, ServiceIdentity)
+ * - Errors (AuthError, ServiceAuthError)
+ * - Ports (AuthVerifier, ServiceAuthVerifier)
+ * - Middleware (RouteTag, ServiceContext, RequestMeta)
  *
  * @module @samuelho-dev/contract-auth
  */
@@ -22,21 +21,20 @@ Other libraries import from here:
 // ============================================================================
 
 export {
-  type AuthenticatedUserData,
-  AuthenticatedUserDataSchema,
-  type AuthMethod,
-  AuthMethodSchema,
-  type AuthSession,
-  AuthSessionSchema,
-  type CurrentUserData,
-  // User authentication
-  CurrentUserDataSchema,
+  // User authentication (SDK-level)
+  AuthMethod,
+  AuthSession,
+  // SDK-level user data from auth provider
+  AuthUserData,
   type KnownService,
-  KnownServicesSchema,
-  type ServiceIdentity,
+  KnownServices,
   // Service authentication
-  ServiceIdentitySchema
-} from "./lib/schemas"
+  ServiceIdentity,
+  ServiceTokenRequest,
+  // Service token request (for JWT generation)
+  type ServiceTokenRequestInput,
+  UserId
+} from './lib/entities'
 
 // ============================================================================
 // Errors
@@ -45,41 +43,26 @@ export {
 export {
   // Combined
   type AuthContractError,
+  type AuthDomainError,
   // User auth errors
   AuthError,
-  type AuthErrorCode,
-  AuthErrorCodeSchema,
+  AuthErrorCode,
   // Service auth errors
   ServiceAuthError,
-  type ServiceAuthErrorCode,
-  ServiceAuthErrorCodeSchema
-} from "./lib/errors"
+  ServiceAuthErrorCode
+} from './lib/errors'
 
 // ============================================================================
 // Ports (Service Interfaces)
 // ============================================================================
 
-export {
-  AuthProvider,
-  type AuthProviderInterface,
-  // User authentication
-  AuthVerifier,
-  type AuthVerifierInterface,
-  // Service authentication
-  ServiceAuthVerifier,
-  type ServiceAuthVerifierInterface
-} from "./lib/ports"
+export { AuthProvider, AuthVerifier, ServiceAuthVerifier } from './lib/ports'
 
 // ============================================================================
 // Middleware Context
 // ============================================================================
 
 export {
-  AuthMethodContext,
-  // User context
-  CurrentUser,
-  // Handler context helpers
-  type HandlerContext,
   // Request metadata
   RequestMeta,
   type RequestMetadata,
@@ -87,7 +70,8 @@ export {
   RouteTag,
   type RouteType,
   type RpcWithRouteTag,
-  // Service context
+  // Service context (service-to-service auth)
   ServiceContext,
+  // Handler context helpers
   type ServiceHandlerContext
-} from "./lib/middleware"
+} from './lib/middleware'

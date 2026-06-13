@@ -13,10 +13,10 @@
 import { FileSystem, Path } from "@effect/platform"
 import { NodeFileSystem, NodePath } from "@effect/platform-node"
 import type { Tree } from "@nx/devkit"
-import { Context, Data, Effect } from "effect"
+import { Data, Effect } from "effect"
 import * as nodeFs from "node:fs"
 import * as nodePath from "node:path"
-import type { WorkspaceContext } from "../infrastructure"
+import type { WorkspaceContext } from "../infrastructure/workspace"
 
 // ============================================================================
 // Error Types
@@ -154,14 +154,6 @@ export interface FileSystemAdapter {
    */
   getMode(): "nx" | "effect"
 }
-
-/**
- * FileSystemService context tag for dependency injection
- */
-export class FileSystemService extends Context.Tag("FileSystemService")<
-  FileSystemService,
-  FileSystemAdapter
->() {}
 
 // ============================================================================
 // Effect FileSystem Adapter Implementation
@@ -715,145 +707,4 @@ export function createAdapter(options: AdapterOptions) {
 
 export function createAdapterFromContext(context: WorkspaceContext, nxTree?: Tree) {
   return createAdapter({ context, nxTree })
-}
-
-// ============================================================================
-// Environment Variable Injection Utilities
-// ============================================================================
-
-/**
- * Environment variable to inject into libs/env/src/env.ts
- */
-export interface EnvVarToInject {
-  readonly name: string
-  readonly type: "string" | "number" | "redacted"
-  readonly context?: "server" | "client" | "shared"
-}
-
-/**
- * Inject environment variables into libs/env/src/env.ts
- *
- * This function modifies the env.ts file to add new environment variables
- * to the appropriate section (server, client, or shared).
- *
- * @param adapter - FileSystem adapter for Nx Tree or CLI
- * @param vars - Array of environment variables to inject
- * @returns Effect that succeeds with void or fails with file system errors
- */
-export function injectEnvVars(adapter: FileSystemAdapter, vars: ReadonlyArray<EnvVarToInject>) {
-  return Effect.gen(function*() {
-    const workspaceRoot = adapter.getWorkspaceRoot()
-    const envFilePath = `${workspaceRoot}/libs/env/src/env.ts`
-
-    // Check if env file exists
-    const envFileExists = yield* adapter.exists(envFilePath)
-    if (!envFileExists) {
-      yield* Effect.logWarning(
-        `libs/env/src/env.ts not found. Environment variables not injected: ${vars.map((v) => v.name).join(", ")}`
-      )
-      return
-    }
-
-    // Read current content
-    const content = yield* adapter.readFile(envFilePath)
-
-    // Group vars by context
-    const serverVars = vars.filter((v) => v.context === "server" || !v.context)
-    const clientVars = vars.filter((v) => v.context === "client")
-    const sharedVars = vars.filter((v) => v.context === "shared")
-
-    let updatedContent = content
-
-    // Helper to create config line
-    const makeConfigLine = (v: EnvVarToInject) => {
-      switch (v.type) {
-        case "redacted":
-          return `    ${v.name}: Config.redacted("${v.name}"),`
-        case "number":
-          return `    ${v.name}: Config.number("${v.name}"),`
-        default:
-          return `    ${v.name}: Config.string("${v.name}"),`
-      }
-    }
-
-    // Inject server vars
-    if (serverVars.length > 0) {
-      for (const v of serverVars) {
-        // Check if var already exists
-        if (updatedContent.includes(`${v.name}:`)) {
-          continue
-        }
-
-        // Find the closing brace of the server section
-        const serverMatch = updatedContent.match(/server:\s*\{([^}]*)\}/s)
-        if (serverMatch) {
-          const serverSection = serverMatch[0]
-          const closingBrace = serverSection.lastIndexOf("}")
-          const beforeBrace = serverSection.slice(0, closingBrace)
-          const afterBrace = serverSection.slice(closingBrace)
-
-          // Trim trailing whitespace and ensure no double comma
-          const trimmed = beforeBrace.trimEnd()
-          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
-          const newServerSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
-
-          updatedContent = updatedContent.replace(serverSection, newServerSection)
-        }
-      }
-    }
-
-    // Inject client vars
-    if (clientVars.length > 0) {
-      for (const v of clientVars) {
-        if (updatedContent.includes(`${v.name}:`)) {
-          continue
-        }
-
-        const clientMatch = updatedContent.match(/client:\s*\{([^}]*)\}/s)
-        if (clientMatch) {
-          const clientSection = clientMatch[0]
-          const closingBrace = clientSection.lastIndexOf("}")
-          const beforeBrace = clientSection.slice(0, closingBrace)
-          const afterBrace = clientSection.slice(closingBrace)
-
-          const trimmed = beforeBrace.trimEnd()
-          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
-          const newClientSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
-
-          updatedContent = updatedContent.replace(clientSection, newClientSection)
-        }
-      }
-    }
-
-    // Inject shared vars
-    if (sharedVars.length > 0) {
-      for (const v of sharedVars) {
-        if (updatedContent.includes(`${v.name}:`)) {
-          continue
-        }
-
-        const sharedMatch = updatedContent.match(/shared:\s*\{([^}]*)\}/s)
-        if (sharedMatch) {
-          const sharedSection = sharedMatch[0]
-          const closingBrace = sharedSection.lastIndexOf("}")
-          const beforeBrace = sharedSection.slice(0, closingBrace)
-          const afterBrace = sharedSection.slice(closingBrace)
-
-          const trimmed = beforeBrace.trimEnd()
-          const withComma = trimmed.endsWith(",") ? trimmed : `${trimmed},`
-          const newSharedSection = `${withComma}\n${makeConfigLine(v)}\n  ${afterBrace}`
-
-          updatedContent = updatedContent.replace(sharedSection, newSharedSection)
-        }
-      }
-    }
-
-    // Write updated content if changed
-    if (updatedContent !== content) {
-      yield* adapter.writeFile(envFilePath, updatedContent)
-      yield* Effect.logInfo(
-        `Injected environment variables into libs/env/src/env.ts: ${vars.map((v) => v.name).join(", ")}`
-      )
-    }
-  })
 }

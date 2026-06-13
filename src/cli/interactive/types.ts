@@ -85,31 +85,14 @@ export const WIZARD_ACTIONS: ReadonlyArray<WizardActionInfo> = Object.freeze([
   Object.freeze({
     type: "init",
     label: "Init",
-    description: "Generate all built-in provider and infra libraries",
-    generatesTo: [
-      "libs/provider/kysely/",
-      "libs/provider/supabase/",
-      "libs/env/",
-      "libs/infra/cache/",
-      "libs/infra/database/",
-      "libs/infra/logging/",
-      "libs/infra/metrics/",
-      "libs/infra/queue/",
-      "libs/infra/pubsub/",
-      "libs/infra/auth/",
-      "libs/infra/storage/",
-      "libs/infra/rpc/"
-    ]
+    description: "Create the workspace generator policy",
+    generatesTo: ["mlg.config.json"]
   }),
   Object.freeze({
     type: "domain",
     label: "Domain",
     description: "Complete domain with contract, data-access, and feature",
-    generatesTo: [
-      "libs/contract/<name>/",
-      "libs/data-access/<name>/",
-      "libs/feature/<name>/"
-    ]
+    generatesTo: ["libs/contract/<name>/", "libs/data-access/<name>/", "libs/feature/<name>/"]
   })
 ])
 
@@ -137,14 +120,6 @@ export interface WizardState {
 }
 
 /**
- * Boolean option keys in WizardOptions
- */
-export type WizardBooleanKey =
-  | "includeCQRS"
-  | "includeClientServer"
-  | "includeCache"
-
-/**
  * Configuration options gathered during wizard
  */
 export interface WizardOptions {
@@ -152,11 +127,13 @@ export interface WizardOptions {
   tags?: string
   /** Array-based tag selection (preferred over comma-separated tags string) */
   selectedTags?: ReadonlyArray<string>
-  scope?: string
-  platform?: "node" | "browser" | "universal" | "edge"
-  includeCQRS?: boolean
-  includeClientServer?: boolean
-  includeCache?: boolean
+  modules?: string
+  capabilities?: string
+  entrypoints?: string
+  dependencies?: string
+  contract?: string
+  dataAccess?: string
+  testMode?: "none" | "unit" | "integration"
 }
 
 /**

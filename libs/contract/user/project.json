@@ -1,39 +1,29 @@
 {
   "name": "contract-user",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/contract/user/src",
-  "tags": [
-    "type:contract",
-    "scope:user",
-    "contract",
-    "domain",
-    "user",
-    "builtin"
-  ],
+  "tags": ["type:contract", "scope:user"],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+    "lint": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/contract/user",
-        "tsConfig": "libs/contract/user/tsconfig.lib.json",
-        "main": "libs/contract/user/src/index.ts",
-        "batch": true
+        "command": "pnpm exec biome check libs/contract/user"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+    "format": {
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": [
-          "libs/contract/user/src/**/*.ts"
-        ]
+        "command": "pnpm exec biome check --write libs/contract/user"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsgo --build libs/contract/user/tsconfig.lib.json"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/dist"]
     }
   }
 }

@@ -4,8 +4,10 @@
   "description": "Effect-based CLI for generating libraries in Effect-native monorepos",
   "type": "module",
   "bin": {
-    "mlg": "./dist/bin/cli.mjs"
+    "mlg": "./dist/bin/cli.mjs",
+    "mlg-mcp": "./dist/bin/mcp-server.mjs"
   },
+  "generators": "./dist/generators.json",
   "files": [
     "dist/"
   ],
@@ -37,9 +39,9 @@
     "test:watch": "vitest --watch",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:libs": "tsc -p tsconfig.libs.json --noEmit",
-    "check": "tsc --noEmit",
+    "check": "tsc -p tsconfig.src.json --noEmit",
     "clean": "rm -rf dist build .tsbuildinfo",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -48,44 +50,32 @@
     "ci:publish": "npm publish --access public --provenance"
   },
   "dependencies": {
+    "@biomejs/js-api": "6.0.0",
+    "@biomejs/wasm-nodejs": "2.5.0",
     "@effect/cli": "^0.73.0",
-    "@effect/opentelemetry": "^0.60.0",
     "@effect/platform": "^0.94.0",
     "@effect/platform-node": "^0.104.0",
-    "@effect/vitest": "^0.27.0",
-    "@nx/devkit": "^22.3.1",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/exporter-metrics-otlp-http": "^0.208.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
-    "@opentelemetry/resources": "^2.2.0",
-    "@opentelemetry/sdk-metrics": "^2.2.0",
-    "@opentelemetry/sdk-node": "^0.208.0",
-    "@opentelemetry/sdk-trace-node": "^2.2.0",
-    "@opentelemetry/semantic-conventions": "^1.38.0",
-    "@prisma/client": "^5.22.0",
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@nx/devkit": "22.3.3",
     "effect": "^3.19.13",
     "ink": "^5.0.1",
     "ink-select-input": "^6.0.0",
     "ink-spinner": "^5.0.0",
     "ink-text-input": "^6.0.0",
-    "ioredis": "catalog:",
-    "ioredis-mock": "^8.13.1",
-    "nx": "^22.3.1",
-    "pg": "^8.12.0",
     "react": "^18.3.1",
     "ts-morph": "^27.0.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.0",
     "@changesets/cli": "^2.27.11",
     "@effect/eslint-plugin": "^0.3.2",
     "@eslint/compat": "^2.0.0",
     "@eslint/js": "^9.39.2",
-    "@modelcontextprotocol/sdk": "^1.25.1",
     "@types/node": "^22.10.2",
-    "@types/pg": "^8.11.8",
     "@types/react": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
+    "@typescript/native-preview": "7.0.0-dev.20260512.1",
     "@vitest/ui": "^4.0.15",
     "eslint": "^9.17.0",
     "eslint-plugin-codegen": "^0.34.1",
@@ -93,10 +83,10 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sort-destructure-keys": "^2.0.0",
     "globals": "^16.5.0",
+    "nx": "22.3.3",
     "prettier": "^3.4.2",
-    "prisma": "^5.22.0",
-    "prisma-effect-kysely": "^1.10.0",
     "typescript": "^5.7.2",
     "vitest": "^4.0.15"
-  }
+  },
+  "nx": {}
 }

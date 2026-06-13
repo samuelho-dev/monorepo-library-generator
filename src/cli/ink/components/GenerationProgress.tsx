@@ -6,18 +6,18 @@
  * @module monorepo-library-generator/cli/ink/components/GenerationProgress
  */
 
-import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner'
-import type { LibraryType } from '../../interactive/types';
-import { colors, statusIcons } from '../theme/colors'
+import { Box, Text } from "ink"
+import Spinner from "ink-spinner"
+import type { LibraryType } from "../../interactive/types"
+import { colors, statusIcons } from "../theme/colors"
 
 interface GenerationProgressProps {
-  readonly libraryType: LibraryType;
-  readonly libraryName: string;
-  readonly generatedFiles: readonly string[];
-  readonly status: 'idle' | 'running' | 'success' | 'error';
-  readonly error?: string | null;
-  readonly targetDirectory: string;
+  readonly libraryType: LibraryType
+  readonly libraryName: string
+  readonly generatedFiles: readonly string[]
+  readonly status: "idle" | "running" | "success" | "error"
+  readonly error?: string | null
+  readonly targetDirectory: string
 }
 
 export function GenerationProgress({
@@ -26,15 +26,13 @@ export function GenerationProgress({
   generatedFiles,
   status,
   error,
-  targetDirectory,
+  targetDirectory
 }: GenerationProgressProps) {
-  if (status === 'error') {
+  if (status === "error") {
     return (
       <Box flexDirection="column">
         <Box>
-          <Text color={colors.error}>
-            {statusIcons.error} Generation failed
-          </Text>
+          <Text color={colors.error}>{statusIcons.error} Generation failed</Text>
         </Box>
         {error && (
           <Box marginTop={1}>
@@ -45,7 +43,7 @@ export function GenerationProgress({
     )
   }
 
-  if (status === 'success') {
+  if (status === "success") {
     return (
       <Box flexDirection="column">
         <Box>
@@ -72,7 +70,7 @@ export function GenerationProgress({
           <Spinner type="dots" />
         </Text>
         <Text>
-          {' '}
+          {" "}
           Generating {libraryType} library: <Text color={colors.libraryName}>{libraryName}</Text>
         </Text>
       </Box>
