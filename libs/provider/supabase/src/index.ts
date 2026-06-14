@@ -1,21 +1,13 @@
 /**
  * Supabase Provider Library
  *
- * Supabase SDK provider with Effect integration.
-
-This library wraps the @supabase/supabase-js SDK in Effect types for:
-- Type-safe authentication (SupabaseAuth)
-- File storage operations (SupabaseStorage)
-- Core client management (SupabaseClient)
-
-Effect 3.0+ Pattern:
-  - Services extend Context.Tag
-  - Access layers via static members: Service.Test, Service.Live
-
-Usage:
-  import { SupabaseAuth, SupabaseStorage } from '@samuelho-dev/provider-supabase'  const authLayer = SupabaseAuth.Test;
-  const storageLayer = SupabaseStorage.Test;
+ * Thin SDK adapter wrapping @supabase/supabase-js in Effect types.
+ * Exposes Live layers only — Test/Dev implementations live in infra-storage.
  *
+ * Services:
+ * - SupabaseClient.Live — SDK client initialization
+ * - SupabaseAuth.Live — authentication operations
+ * - SupabaseStorage.Live — file storage operations (requires SupabaseClient.Live)
  */
 
 // ============================================================================
@@ -45,7 +37,6 @@ export {
 export type {
   // Auth types
   AuthMethod,
-  AuthResult,
   AuthUser,
   DownloadOptions,
   OAuthProvider,
@@ -53,7 +44,6 @@ export type {
   SignInCredentials,
   SignUpCredentials,
   // Storage types
-  StorageBucket,
   StorageFile,
   // Configuration
   SupabaseConfig,
@@ -67,9 +57,9 @@ export type {
 
 // Schema exports for runtime validation
 export {
-  AuthResultSchema,
+  AuthResult,
   AuthUserSchema,
-  StorageBucketSchema,
+  StorageBucket,
   StorageFileSchema,
   SupabaseConfigSchema,
   SupabaseSessionSchema,
@@ -86,10 +76,12 @@ export {
 // Effect 3.0+ Pattern: Context.Tag with static layer members
 //   - SupabaseClient.Live (lazy env loading)
 //   - SupabaseClient.Test (mock client)
-//   - SupabaseClient.Dev (debug logging)
 //   - SupabaseClient.make(config) (custom configuration)
 
-export { SupabaseClient, type SupabaseClientServiceInterface } from './lib/client'
+export {
+  SupabaseClient,
+  type SupabaseClientServiceInterface
+} from './lib/service'
 
 // SupabaseAuth - Authentication operations
 //
@@ -103,43 +95,7 @@ export { SupabaseAuth, type SupabaseAuthServiceInterface } from './lib/auth'
 // Provides: upload, download, remove, list, createSignedUrl, getPublicUrl
 // Used by: infra-storage for file operations
 
-export { SupabaseStorage, type SupabaseStorageServiceInterface } from './lib/storage'
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Usage Examples
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// import { Effect, Layer } from 'effect';
-// import { SupabaseAuth, SupabaseClient, SupabaseStorage } from '@samuelho-dev/provider-supabase';
-//
-// // Authentication example
-// const authProgram = Effect.gen(function*() {
-//   const auth = yield* SupabaseAuth;
-//   const result = yield* auth.signInWithPassword({
-//     email: 'user@example.com',
-//     password: 'password123',
-//   })
-//   return result.user;
-// })
-//
-// // Storage example
-// const storageProgram = Effect.gen(function*() {
-//   const storage = yield* SupabaseStorage;
-//   const files = yield* storage.list('my-bucket')
-//   return files;
-// })
-//
-// // Layer composition
-// const MainLayer = Layer.mergeAll(
-//   SupabaseClient.Live,
-//   SupabaseAuth.Live,
-//   SupabaseStorage.Live,
-// )
-//
-// // For testing
-// const TestLayer = Layer.mergeAll(
-//   SupabaseClient.Test,
-//   SupabaseAuth.Test,
-//   SupabaseStorage.Test,
-// )
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export {
+  SupabaseStorage,
+  type SupabaseStorageServiceInterface
+} from './lib/storage'

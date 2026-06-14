@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Kysely provider for type-safe database queries with migrations",
+  "description": "Effect-native Kysely provider backed by postgres.js",
   "exports": {
     ".": {
       "import": "./src/index.ts",
@@ -13,26 +13,20 @@
       "import": "./src/types.ts",
       "types": "./src/types.ts"
     },
-    "./service": {
-      "import": "./src/lib/service/index.ts",
-      "types": "./src/lib/service/index.ts"
-    },
-    "./service/*": {
-      "import": "./src/lib/service/operations/*.ts",
-      "types": "./src/lib/service/operations/*.ts"
-    },
     "./errors": {
       "import": "./src/lib/errors.ts",
       "types": "./src/lib/errors.ts"
-    },
-    "./validation": {
-      "import": "./src/lib/validation.ts",
-      "types": "./src/lib/validation.ts"
     }
   },
-  "peerDependencies": {
-    "effect": "*",
+  "dependencies": {
     "kysely": "*",
-    "pg": "*"
+    "kysely-postgres-js": "*",
+    "postgres": "*"
+  },
+  "devDependencies": {
+    "vitest": "*"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
   }
 }

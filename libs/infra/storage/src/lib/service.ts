@@ -1,3 +1,8 @@
+// Only reads `env.NODE_ENV` (shared) to pick Live vs Test transport.
+// Sourced from `env/client` so this infra lib stays runtime-agnostic
+// and doesn't drag `@t3-oss/env-nextjs` (Next.js-specific) into
+// non-Next consumers (Electron renderer, Node services, vitest).
+import { env } from '@samuelho-dev/env/client'
 import type {
   DownloadOptions,
   SignedUrlOptions,
@@ -5,7 +10,7 @@ import type {
   UploadOptions
 } from '@samuelho-dev/provider-supabase'
 import { SupabaseStorage } from '@samuelho-dev/provider-supabase'
-import { Context, Effect, Layer } from 'effect'
+import { Context, Effect, Layer, Option } from 'effect'
 import {
   BucketNotFoundError,
   FileNotFoundError,
@@ -112,6 +117,15 @@ export interface StorageServiceInterface {
   ) => Effect.Effect<string, FileNotFoundError | StorageError>
 
   /**
+   * Create a signed upload URL (token + path) for client-side uploads
+   */
+  readonly createPresignedUploadUrl: (
+    bucket: string,
+    path: string,
+    expiresIn?: number
+  ) => Effect.Effect<{ token: string; path: string }, StorageError>
+
+  /**
    * Get public URL for a file
    */
   readonly getPublicUrl: (bucket: string, path: string) => Effect.Effect<string, never>
@@ -126,14 +140,10 @@ export interface StorageServiceInterface {
 // Helper Functions
 // ============================================================================
 
-// ============================================================================
-// Helper Functions (extracted for complexity reduction)
-// ============================================================================
-
 /**
  * Get file size from various input types
  */
-const getFileSize = (file: Blob | File | ArrayBuffer | string): number => {
+const getFileSize = (file: Blob | File | ArrayBuffer | string) => {
   if (file instanceof Blob) return file.size
   if (file instanceof ArrayBuffer) return file.byteLength
   if (typeof file === 'string') return new Blob([file]).size
@@ -143,18 +153,13 @@ const getFileSize = (file: Blob | File | ArrayBuffer | string): number => {
 /**
  * Get content type from file or options
  */
-const getContentType = (
-  file: Blob | File | ArrayBuffer | string,
-  options?: UploadOptions
-): string | undefined => options?.contentType || (file instanceof File ? file.type : undefined)
+const getContentType = (file: Blob | File | ArrayBuffer | string, options?: UploadOptions) =>
+  options?.contentType || (file instanceof File ? file.type : undefined)
 
 /**
  * Validate file size against config
  */
-const validateFileSize = (
-  size: number,
-  config: StorageConfig
-): Effect.Effect<void, FileSizeExceededError> => {
+const validateFileSize = (size: number, config: StorageConfig) => {
   if (config.maxFileSize && size > config.maxFileSize) {
     return Effect.fail(
       new FileSizeExceededError({
@@ -170,10 +175,7 @@ const validateFileSize = (
 /**
  * Validate file MIME type against config
  */
-const validateMimeType = (
-  contentType: string | undefined,
-  config: StorageConfig
-): Effect.Effect<void, InvalidFileTypeError> => {
+const validateMimeType = (contentType: string | undefined, config: StorageConfig) => {
   if (config.allowedMimeTypes && contentType) {
     if (!config.allowedMimeTypes.includes(contentType)) {
       return Effect.fail(
@@ -188,72 +190,6 @@ const validateMimeType = (
   return Effect.void
 }
 
-/**
- * Map bucket not found error
- */
-const mapBucketNotFoundError = (error: { message: string; bucket: string }) =>
-  Effect.fail(
-    new BucketNotFoundError({
-      message: error.message,
-      bucket: error.bucket,
-      cause: error
-    })
-  )
-
-/**
- * Map file not found error
- */
-const mapFileNotFoundError = (error: { message: string; bucket: string; path: string }) =>
-  Effect.fail(
-    new FileNotFoundError({
-      message: error.message,
-      bucket: error.bucket,
-      path: error.path,
-      cause: error
-    })
-  )
-
-/**
- * Map generic storage error
- */
-const mapStorageError = (error: { message: string }) =>
-  Effect.fail(
-    new StorageError({
-      message: error.message,
-      cause: error
-    })
-  )
-
-/**
- * Build list options from input options
- */
-const buildListOptions = (options?: ListFilesOptions) => ({
-  ...(options?.limit !== undefined && { limit: options.limit }),
-  ...(options?.offset !== undefined && { offset: options.offset }),
-  ...(options?.sortBy !== undefined && { sortBy: options.sortBy })
-})
-
-/**
- * Transform storage files to list result
- */
-const buildListResult = (
-  files: readonly StorageFile[],
-  options?: ListFilesOptions
-): ListFilesResult => {
-  const limit = options?.limit ?? 100
-  const hasMore = files.length === limit
-  return {
-    files: files.map((f) => ({
-      name: f.name,
-      ...(f.id && { id: f.id }),
-      ...(f.created_at && { created_at: f.created_at }),
-      ...(f.updated_at && { updated_at: f.updated_at })
-    })),
-    hasMore,
-    ...(hasMore && { nextOffset: (options?.offset ?? 0) + limit })
-  }
-}
-
 // ============================================================================
 // Service Definition
 // ============================================================================
@@ -265,10 +201,9 @@ const buildListResult = (
  *
  * Requires: SupabaseStorage (from provider-supabase)
  */
-export class StorageService extends Context.Tag('StorageService')<
-  StorageService,
-  StorageServiceInterface
->() {
+export class StorageService extends Context.Service<StorageService, StorageServiceInterface>()(
+  '@samuelho-dev/infra-storage/StorageService'
+) {
   /**
    * Live layer - requires SupabaseStorage
    */
@@ -295,13 +230,20 @@ export class StorageService extends Context.Tag('StorageService')<
       return {
         config,
 
-        upload: (bucket, path, file, options) =>
-          Effect.gen(function* () {
-            yield* validateFile(file, options)
+        upload: Effect.fn('StorageService.upload')(function* (bucket, path, file, options) {
+          yield* validateFile(file, options)
 
-            const result = yield* storage.upload(bucket, path, file, options).pipe(
-              Effect.catchTag('SupabaseBucketNotFoundError', mapBucketNotFoundError),
-              Effect.catchAll((error) =>
+          const result = yield* storage.upload(bucket, path, file, options).pipe(
+            Effect.catchTags({
+              SupabaseBucketNotFoundError: (error) =>
+                Effect.fail(
+                  new BucketNotFoundError({
+                    message: error.message,
+                    bucket: error.bucket,
+                    cause: error
+                  })
+                ),
+              SupabaseStorageError: (error) =>
                 Effect.fail(
                   new UploadFailedError({
                     message: error.message,
@@ -310,26 +252,40 @@ export class StorageService extends Context.Tag('StorageService')<
                     cause: error
                   })
                 )
-              )
-            )
+            })
+          )
 
-            const publicUrl = yield* storage.getPublicUrl(bucket, path)
+          const publicUrl = yield* storage.getPublicUrl(bucket, path)
 
-            return {
-              path: result.name,
-              bucket,
-              publicUrl
-            }
-          }).pipe(Effect.withSpan('StorageService.upload')),
+          return {
+            path: result.name,
+            bucket,
+            publicUrl
+          }
+        }, Effect.withSpan('StorageService.upload')),
 
         download: (bucket, path, options) =>
-          storage
-            .download(bucket, path, options)
-            .pipe(
-              Effect.catchTag('SupabaseFileNotFoundError', mapFileNotFoundError),
-              Effect.catchAll(mapStorageError),
-              Effect.withSpan('StorageService.download')
-            ),
+          storage.download(bucket, path, options).pipe(
+            Effect.catchTags({
+              SupabaseFileNotFoundError: (error) =>
+                Effect.fail(
+                  new FileNotFoundError({
+                    message: error.message,
+                    bucket: error.bucket,
+                    path: error.path,
+                    cause: error
+                  })
+                ),
+              SupabaseStorageError: (error) =>
+                Effect.fail(
+                  new StorageError({
+                    message: error.message,
+                    cause: error
+                  })
+                )
+            }),
+            Effect.withSpan('StorageService.download')
+          ),
 
         remove: (bucket, paths) =>
           storage.remove(bucket, [...paths]).pipe(
@@ -343,173 +299,279 @@ export class StorageService extends Context.Tag('StorageService')<
             Effect.withSpan('StorageService.remove')
           ),
 
-        list: (bucket, options) =>
-          Effect.gen(function* () {
-            const listOptions = buildListOptions(options)
+        list: Effect.fn('StorageService.list')(function* (bucket, options) {
+          const listOptions = {
+            ...(options?.limit && { limit: options.limit }),
+            ...(options?.offset && { offset: options.offset }),
+            ...(options?.sortBy && { sortBy: options.sortBy })
+          }
 
-            const files = yield* storage
-              .list(bucket, options?.prefix, listOptions)
-              .pipe(
-                Effect.catchTag('SupabaseBucketNotFoundError', mapBucketNotFoundError),
-                Effect.catchAll(mapStorageError)
-              )
+          const files = yield* storage.list(bucket, options?.prefix, listOptions).pipe(
+            Effect.catchTags({
+              SupabaseBucketNotFoundError: (error) =>
+                Effect.fail(
+                  new BucketNotFoundError({
+                    message: error.message,
+                    bucket: error.bucket,
+                    cause: error
+                  })
+                ),
+              SupabaseStorageError: (error) =>
+                Effect.fail(
+                  new StorageError({
+                    message: error.message,
+                    cause: error
+                  })
+                )
+            })
+          )
 
-            return buildListResult(files, options)
-          }).pipe(Effect.withSpan('StorageService.list')),
+          const limit = options?.limit ?? 100
+          const hasMore = files.length === limit
+          return {
+            files: files.map((f) => ({
+              name: f.name,
+              ...(f.id && { id: f.id }),
+              ...(f.created_at && { created_at: f.created_at }),
+              ...(f.updated_at && { updated_at: f.updated_at })
+            })),
+            hasMore,
+            ...(hasMore && { nextOffset: (options?.offset ?? 0) + limit })
+          }
+        }, Effect.withSpan('StorageService.list')),
 
         move: (bucket, fromPath, toPath) =>
-          storage
-            .move(bucket, fromPath, toPath)
-            .pipe(
-              Effect.catchTag('SupabaseFileNotFoundError', mapFileNotFoundError),
-              Effect.catchAll(mapStorageError),
-              Effect.withSpan('StorageService.move')
-            ),
+          storage.move(bucket, fromPath, toPath).pipe(
+            Effect.catchTags({
+              SupabaseFileNotFoundError: (error) =>
+                Effect.fail(
+                  new FileNotFoundError({
+                    message: error.message,
+                    bucket: error.bucket,
+                    path: error.path,
+                    cause: error
+                  })
+                ),
+              SupabaseStorageError: (error) =>
+                Effect.fail(
+                  new StorageError({
+                    message: error.message,
+                    cause: error
+                  })
+                )
+            }),
+            Effect.withSpan('StorageService.move')
+          ),
 
         copy: (bucket, fromPath, toPath) =>
-          storage
-            .copy(bucket, fromPath, toPath)
-            .pipe(
-              Effect.catchTag('SupabaseFileNotFoundError', mapFileNotFoundError),
-              Effect.catchAll(mapStorageError),
-              Effect.withSpan('StorageService.copy')
+          storage.copy(bucket, fromPath, toPath).pipe(
+            Effect.catchTags({
+              SupabaseFileNotFoundError: (error) =>
+                Effect.fail(
+                  new FileNotFoundError({
+                    message: error.message,
+                    bucket: error.bucket,
+                    path: error.path,
+                    cause: error
+                  })
+                ),
+              SupabaseStorageError: (error) =>
+                Effect.fail(
+                  new StorageError({
+                    message: error.message,
+                    cause: error
+                  })
+                )
+            }),
+            Effect.withSpan('StorageService.copy')
+          ),
+
+        createPresignedUploadUrl: (bucket, path) =>
+          storage.createSignedUploadUrl(bucket, path).pipe(
+            Effect.mapError(
+              (error) =>
+                new StorageError({
+                  message: error.message,
+                  cause: error
+                })
             ),
+            Effect.withSpan('StorageService.createPresignedUploadUrl')
+          ),
 
         createSignedUrl: (bucket, path, options) => {
           // Extract expiresIn as separate parameter for Supabase API
           const expiresIn = options?.expiresIn ?? config.signedUrlExpiresIn ?? 3600
           const signedUrlOptions = {
-            ...(options?.download !== undefined && { download: options.download }),
-            ...(options?.transform !== undefined && { transform: options.transform })
+            ...(options?.download && { download: options.download }),
+            ...(options?.transform && { transform: options.transform })
           }
-          return storage
-            .createSignedUrl(bucket, path, expiresIn, signedUrlOptions)
-            .pipe(
-              Effect.catchTag('SupabaseFileNotFoundError', mapFileNotFoundError),
-              Effect.catchAll(mapStorageError),
-              Effect.withSpan('StorageService.createSignedUrl')
-            )
+          return storage.createSignedUrl(bucket, path, expiresIn, signedUrlOptions).pipe(
+            Effect.catchTags({
+              SupabaseFileNotFoundError: (error) =>
+                Effect.fail(
+                  new FileNotFoundError({
+                    message: error.message,
+                    bucket: error.bucket,
+                    path: error.path,
+                    cause: error
+                  })
+                ),
+              SupabaseStorageError: (error) =>
+                Effect.fail(
+                  new StorageError({
+                    message: error.message,
+                    cause: error
+                  })
+                )
+            }),
+            Effect.withSpan('StorageService.createSignedUrl')
+          )
         },
 
         getPublicUrl: (bucket, path) =>
           storage.getPublicUrl(bucket, path).pipe(Effect.withSpan('StorageService.getPublicUrl')),
 
-        exists: (bucket, path) =>
-          Effect.gen(function* () {
-            const emptyFiles: readonly StorageFile[] = []
-            const files = yield* storage
-              .list(bucket, path)
-              .pipe(Effect.catchAll(() => Effect.succeed(emptyFiles)))
-            return files.some((f) => f.name === path.split('/').pop())
-          }).pipe(Effect.withSpan('StorageService.exists'))
+        exists: Effect.fn('StorageService.exists')(function* (bucket, path) {
+          const emptyFiles: readonly StorageFile[] = []
+          const files = yield* storage
+            .list(bucket, path)
+            .pipe(Effect.option, Effect.map(Option.getOrElse(() => emptyFiles)))
+          return files.some((f) => f.name === path.split('/').pop())
+        }, Effect.withSpan('StorageService.exists'))
       }
     })
   )
 
   /**
-   * Test layer with in-memory storage
+   * Test layer with in-memory storage. Each `Layer.fresh(StorageService.Test)`
+   * gets its own isolated store so tests don't leak state.
    */
-  static readonly Test = Layer.succeed(StorageService, {
-    config: {
-      signedUrlExpiresIn: 3600
-    },
-
-    upload: (bucket, path) =>
-      Effect.succeed({
-        path,
-        bucket,
-        publicUrl: `https://test.storage.co/${bucket}/${path}`
-      }),
-
-    download: () => Effect.succeed(new Blob(['test content'])),
-
-    remove: () => Effect.void,
-
-    list: () =>
-      Effect.succeed({
-        files: [{ name: 'test-file.txt' }],
-        hasMore: false
-      }),
-
-    move: () => Effect.void,
-
-    copy: () => Effect.void,
-
-    createSignedUrl: (bucket, path) =>
-      Effect.succeed(`https://test.storage.co/signed/${bucket}/${path}`),
-
-    getPublicUrl: (bucket, path) =>
-      Effect.succeed(`https://test.storage.co/public/${bucket}/${path}`),
-
-    exists: () => Effect.succeed(true)
-  })
-
-  /**
-   * Dev layer with logging
-   */
-  static readonly Dev = Layer.effect(
+  static readonly Test = Layer.effect(
     StorageService,
-    Effect.gen(function* () {
-      yield* Effect.logDebug('[StorageService] Initializing dev storage service...')
+    Effect.sync(() => {
+      /** bucket -> path -> Blob */
+      const store = new Map<string, Map<string, Blob>>()
+
+      const bucketStore = (bucket: string): Map<string, Blob> => {
+        let m = store.get(bucket)
+        if (!m) {
+          m = new Map()
+          store.set(bucket, m)
+        }
+        return m
+      }
+
+      const toBlob = (file: Blob | File | ArrayBuffer | string): Blob => {
+        if (file instanceof Blob) return file
+        if (file instanceof ArrayBuffer) return new Blob([file])
+        if (typeof file === 'string') return new Blob([file])
+        return new Blob([])
+      }
+
+      const requireBlob = (bucket: string, path: string): Effect.Effect<Blob, FileNotFoundError> =>
+        Effect.suspend(() => {
+          const blob = bucketStore(bucket).get(path)
+          if (!blob) {
+            return Effect.fail(
+              new FileNotFoundError({
+                message: `File not found: ${bucket}/${path}`,
+                bucket,
+                path
+              })
+            )
+          }
+          return Effect.succeed(blob)
+        })
 
       return {
-        config: { signedUrlExpiresIn: 3600 },
+        config: {
+          signedUrlExpiresIn: 3600
+        },
 
-        upload: (bucket, path) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] upload', { bucket, path })
+        upload: (bucket, path, file) =>
+          Effect.sync(() => {
+            bucketStore(bucket).set(path, toBlob(file))
             return {
               path,
               bucket,
-              publicUrl: `https://dev.storage.co/${bucket}/${path}`
+              publicUrl: `https://test.storage.co/${bucket}/${path}`
             }
           }),
 
-        download: (bucket, path) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] download', { bucket, path })
-            return new Blob(['dev content'])
-          }),
+        download: (bucket, path) => requireBlob(bucket, path),
 
         remove: (bucket, paths) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] remove', { bucket, paths })
+          Effect.sync(() => {
+            const m = bucketStore(bucket)
+            for (const p of paths) {
+              m.delete(p)
+            }
           }),
 
         list: (bucket, options) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] list', { bucket, options })
-            return { files: [], hasMore: false }
+          Effect.sync(() => {
+            const m = bucketStore(bucket)
+            const prefix = options?.prefix ?? ''
+            const limit = options?.limit ?? 100
+            const offset = options?.offset ?? 0
+
+            const filtered = [...m.keys()].filter((k) => k.startsWith(prefix)).sort()
+            const matched = filtered.slice(offset, offset + limit)
+            const hasMore = filtered.length > offset + limit
+
+            return {
+              files: matched.map((name) => ({ name })),
+              hasMore,
+              ...(hasMore ? { nextOffset: offset + limit } : {})
+            }
           }),
 
         move: (bucket, fromPath, toPath) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] move', { bucket, fromPath, toPath })
-          }),
+          requireBlob(bucket, fromPath).pipe(
+            Effect.tap((blob) =>
+              Effect.sync(() => {
+                const m = bucketStore(bucket)
+                m.set(toPath, blob)
+                m.delete(fromPath)
+              })
+            ),
+            Effect.asVoid
+          ),
 
         copy: (bucket, fromPath, toPath) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] copy', { bucket, fromPath, toPath })
-          }),
+          requireBlob(bucket, fromPath).pipe(
+            Effect.tap((blob) => Effect.sync(() => bucketStore(bucket).set(toPath, blob))),
+            Effect.asVoid
+          ),
 
         createSignedUrl: (bucket, path) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] createSignedUrl', { bucket, path })
-            return `https://dev.storage.co/signed/${bucket}/${path}`
+          Effect.succeed(`https://test.storage.co/signed/${bucket}/${path}`),
+
+        createPresignedUploadUrl: (bucket, path) =>
+          Effect.succeed({
+            token: `test-upload-token:${bucket}`,
+            path
           }),
 
         getPublicUrl: (bucket, path) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] getPublicUrl', { bucket, path })
-            return `https://dev.storage.co/public/${bucket}/${path}`
-          }),
+          Effect.succeed(`https://test.storage.co/public/${bucket}/${path}`),
 
-        exists: (bucket, path) =>
-          Effect.gen(function* () {
-            yield* Effect.logDebug('[StorageService] exists', { bucket, path })
-            return true
-          })
+        exists: (bucket, path) => Effect.sync(() => bucketStore(bucket).has(path))
       }
     })
   )
+
+  /**
+   * Auto Layer - Environment-aware layer selection
+   *
+   * Selects appropriate layer based on NODE_ENV:
+   * - "test" → Test (in-memory mock)
+   * - else → Live (requires SupabaseStorage)
+   */
+  static readonly Auto = Layer.suspend(() =>
+    env.NODE_ENV === 'test' ? StorageService.Test : StorageService.Live
+  )
 }
+
+// Re-export getPublicUrl utility for convenience
+export { getPublicUrl } from './validation'

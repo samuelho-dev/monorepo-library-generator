@@ -3,33 +3,55 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Database orchestration infrastructure (coordinates database providers like Kysely)",
+  "description": "Database orchestration and schema-agnostic Kysely repository helpers",
   "exports": {
     ".": {
       "import": "./src/index.ts",
       "types": "./src/index.ts"
     },
-    "./types": {
-      "import": "./src/types.ts",
-      "types": "./src/types.ts"
+    "./errors": {
+      "import": "./src/lib/errors.ts",
+      "types": "./src/lib/errors.ts"
     },
-    "./service": {
-      "import": "./src/lib/service/index.ts",
-      "types": "./src/lib/service/index.ts"
+    "./query-helpers": {
+      "import": "./src/lib/query-helpers.ts",
+      "types": "./src/lib/query-helpers.ts"
     },
-    "./providers/*": {
-      "import": "./src/lib/providers/*.ts",
-      "types": "./src/lib/providers/*.ts"
+    "./realtime": {
+      "import": "./src/lib/realtime.ts",
+      "types": "./src/lib/realtime.ts"
     },
-    "./layers/*": {
-      "import": "./src/lib/layers/*.ts",
-      "types": "./src/lib/layers/*.ts"
+    "./testing": {
+      "import": "./src/testing.ts",
+      "types": "./src/testing.ts"
+    },
+    "./testing/in-memory-store": {
+      "import": "./src/lib/testing/in-memory-store.ts",
+      "types": "./src/lib/testing/in-memory-store.ts"
+    },
+    "./testing/repository-factory": {
+      "import": "./src/lib/testing/repository-factory.ts",
+      "types": "./src/lib/testing/repository-factory.ts"
+    },
+    "./testing/error-matchers": {
+      "import": "./src/lib/testing/error-matchers.ts",
+      "types": "./src/lib/testing/error-matchers.ts"
     }
   },
   "dependencies": {
-    "@samuelho-dev/provider-kysely": "workspace:*"
+    "@samuelho-dev/contract-database": "workspace:*",
+    "@samuelho-dev/env": "workspace:*",
+    "@samuelho-dev/provider-kysely": "workspace:*",
+    "@samuelho-dev/provider-supabase": "workspace:*",
+    "kysely": "*",
+    "kysely-postgres-js": "*",
+    "postgres": "*"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "vitest": "*"
   },
   "peerDependencies": {
-    "effect": "*"
+    "effect": "catalog:"
   }
 }

@@ -1,11 +1,11 @@
-import { Data } from 'effect'
+import { Schema } from 'effect'
 
 /**
  * Storage Infrastructure Errors
  *
- * Data.TaggedError-based error types for storage operations.
+ * Schema.TaggedError-based error types for storage operations.
 
-All errors extend Data.TaggedError for structural equality and pattern matching.
+All errors extend Schema.TaggedError for structural equality and pattern matching.
  *
  * @module @samuelho-dev/infra-storage/errors
  */
@@ -17,69 +17,74 @@ All errors extend Data.TaggedError for structural equality and pattern matching.
 /**
  * Base storage error
  */
-export class StorageError extends Data.TaggedError('StorageError')<{
-  readonly message: string
-  readonly cause?: unknown
-}> {}
+export class StorageError extends Schema.TaggedErrorClass<StorageError>()('StorageError', {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Defect)
+}) {}
 
 /**
  * File not found error
  */
-export class FileNotFoundError extends Data.TaggedError('FileNotFoundError')<{
-  readonly message: string
-  readonly bucket: string
-  readonly path: string
-  readonly cause?: unknown
-}> {}
+export class FileNotFoundError extends Schema.TaggedErrorClass<FileNotFoundError>()(
+  'FileNotFoundError',
+  {
+    message: Schema.String,
+    bucket: Schema.String,
+    path: Schema.String,
+    cause: Schema.optional(Schema.Defect)
+  }
+) {}
 
 /**
  * Bucket not found error
  */
-export class BucketNotFoundError extends Data.TaggedError('BucketNotFoundError')<{
-  readonly message: string
-  readonly bucket: string
-  readonly cause?: unknown
-}> {}
+export class BucketNotFoundError extends Schema.TaggedErrorClass<BucketNotFoundError>()(
+  'BucketNotFoundError',
+  {
+    message: Schema.String,
+    bucket: Schema.String,
+    cause: Schema.optional(Schema.Defect)
+  }
+) {}
 
 /**
  * Upload failed error
  */
-export class UploadFailedError extends Data.TaggedError('UploadFailedError')<{
-  readonly message: string
-  readonly bucket: string
-  readonly path: string
-  readonly cause?: unknown
-}> {}
-
-/**
- * Download failed error
- */
-export class DownloadFailedError extends Data.TaggedError('DownloadFailedError')<{
-  readonly message: string
-  readonly bucket: string
-  readonly path: string
-  readonly cause?: unknown
-}> {}
+export class UploadFailedError extends Schema.TaggedErrorClass<UploadFailedError>()(
+  'UploadFailedError',
+  {
+    message: Schema.String,
+    bucket: Schema.String,
+    path: Schema.String,
+    cause: Schema.optional(Schema.Defect)
+  }
+) {}
 
 /**
  * File size exceeded error
  */
-export class FileSizeExceededError extends Data.TaggedError('FileSizeExceededError')<{
-  readonly message: string
-  readonly maxSize: number
-  readonly actualSize: number
-  readonly cause?: unknown
-}> {}
+export class FileSizeExceededError extends Schema.TaggedErrorClass<FileSizeExceededError>()(
+  'FileSizeExceededError',
+  {
+    message: Schema.String,
+    maxSize: Schema.Number,
+    actualSize: Schema.Number,
+    cause: Schema.optional(Schema.Defect)
+  }
+) {}
 
 /**
  * Invalid file type error
  */
-export class InvalidFileTypeError extends Data.TaggedError('InvalidFileTypeError')<{
-  readonly message: string
-  readonly allowedTypes: readonly string[]
-  readonly actualType: string
-  readonly cause?: unknown
-}> {}
+export class InvalidFileTypeError extends Schema.TaggedErrorClass<InvalidFileTypeError>()(
+  'InvalidFileTypeError',
+  {
+    message: Schema.String,
+    allowedTypes: Schema.Array(Schema.String),
+    actualType: Schema.String,
+    cause: Schema.optional(Schema.Defect)
+  }
+) {}
 
 // ============================================================================
 // Error Union Type
@@ -93,7 +98,6 @@ export type StorageServiceError =
   | FileNotFoundError
   | BucketNotFoundError
   | UploadFailedError
-  | DownloadFailedError
   | FileSizeExceededError
   | InvalidFileTypeError
 

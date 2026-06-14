@@ -1,12 +1,24 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.9/schema.json",
-  "extends": ["/Users/samuelho/.config/biome/biome.json"],
+  "$schema": "https://biomejs.dev/schemas/2.5.0/schema.json",
   "files": {
-    "includes": ["src/**/*.ts", "src/**/*.tsx", "libs/**/*.ts", "libs/**/*.tsx", "*.json"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.nx",
+      "!**/coverage",
+      "!**/docs",
+      "!**/*.md"
+    ],
+    "ignoreUnknown": true
   },
-  "assist": { "actions": { "source": { "organizeImports": "off" } } },
   "formatter": {
-    "enabled": false
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
   },
   "linter": {
     "rules": {
@@ -84,49 +96,26 @@
       "!**/node_modules"
     ]
   },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "semicolons": "asNeeded",
+      "trailingCommas": "none",
+      "arrowParentheses": "always",
+      "bracketSpacing": true
+    }
+  },
+  "json": {
+    "parser": {
+      "allowComments": true,
+      "allowTrailingCommas": true
+    },
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
   "overrides": [
-    {
-      "includes": ["**/templates.ts"],
-      "linter": {
-        "rules": {
-          "performance": { "noBarrelFile": "off" }
-        }
-      }
-    },
-    {
-      "includes": ["src/templates/definitions/**/*.ts"],
-      "linter": {
-        "rules": {
-          "style": { "noDefaultExport": "off" }
-        }
-      }
-    },
-    {
-      "includes": [
-        "src/cli/**",
-        "src/generators/**",
-        "src/utils/**",
-        "src/infrastructure/**",
-        "src/templates/**"
-      ],
-      "linter": {
-        "rules": {
-          "complexity": {
-            "noExcessiveCognitiveComplexity": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["**/utils/index.ts", "**/shared/index.ts", "**/generators/shared/index.ts"],
-      "linter": {
-        "rules": {
-          "performance": {
-            "noReExportAll": "off"
-          }
-        }
-      }
-    },
     {
       "includes": ["src/**/*.ts", "libs/**/*.ts"],
       "javascript": { "globals": ["exports"] },
@@ -148,6 +137,11 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts"],
+      "formatter": { "enabled": false },
+      "assist": { "enabled": false }
     },
     {
       "includes": ["**/*.spec.ts", "**/*.test.ts", "**/__tests__/**/*.ts"],

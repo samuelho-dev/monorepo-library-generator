@@ -17,7 +17,7 @@ Re-exports types from provider-supabase and adds storage-specific types.
 // NOTE: For provider-specific types (StorageBucket, StorageFile, etc.),
 // import directly from @samuelho-dev/provider-supabase:
 // import type { StorageBucket, StorageFile, UploadOptions } from "@samuelho-dev/provider-supabase"
-// import { StorageBucketSchema, StorageFileSchema } from "@samuelho-dev/provider-supabase"
+// import { StorageBucket, StorageFileSchema } from "@samuelho-dev/provider-supabase"
 
 // ============================================================================
 // Storage Configuration

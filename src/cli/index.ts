@@ -1,463 +1,327 @@
-/**
- * Monorepo Library Generator CLI
- *
- * Effect-based CLI for generating libraries in Effect-native monorepos.
- * Uses @effect/cli for command-line interface and @effect/platform for file operations.
- *
- * @module monorepo-library-generator/cli
- */
+import { Args, Command, Options } from "@effect/cli"
+import { NodeContext, NodeRuntime } from "@effect/platform-node"
+import { Console, Effect, Option } from "effect"
+import * as fs from "node:fs"
+import * as path from "node:path"
+import { decodeLibraryBlueprint, executeBlueprint } from "../core"
+import { formatOutput } from "../infrastructure"
+import { standardizeProject } from "../standardize"
+import { VERSION } from "../version"
+import { init } from "./commands/init"
+import { generateContract } from "./generators/contract"
+import { generateDataAccess } from "./generators/data-access"
+import { generateDomain } from "./generators/domain"
+import { generateFeature } from "./generators/feature"
+import { generateInfra } from "./generators/infra"
+import { generateProvider } from "./generators/provider"
+import { runInkTUI } from "./ink"
 
-import { Args, Command, Options } from '@effect/cli'
-import { NodeContext, NodeRuntime } from '@effect/platform-node'
-import { Console, Effect, Option } from 'effect'
-import { VERSION } from '../version'
-import { init } from './commands/init'
-import { generateContract } from './generators/contract'
-import { generateDataAccess } from './generators/data-access'
-import { generateDomain } from './generators/domain'
-import { generateFeature } from './generators/feature'
-import { generateInfra } from './generators/infra'
-import { generateProvider } from './generators/provider'
-import { getCommandHelp } from './help/commands'
-import { launchTUI } from './tui'
-
-/**
- * Common arguments used across all generate commands
- */
-const nameArg = Args.text({ name: 'name' }).pipe(
-  Args.withDescription('The name of the library to generate')
-)
-
-/**
- * Verbosity options for all generate commands
- */
-const verboseOption = Options.boolean('verbose').pipe(
-  Options.withAlias('v'),
-  Options.withDescription('Show detailed output for each file'),
-  Options.withDefault(false)
-)
-
-const quietOption = Options.boolean('quiet').pipe(
-  Options.withAlias('q'),
-  Options.withDescription('Minimal output (success/failure only)'),
-  Options.withDefault(false)
-)
-
-/**
- * Common options for library generation
- */
-const descriptionOption = Options.text('description').pipe(
-  Options.withDescription('Description of the library'),
+const nameArg = Args.text({ name: "name" }).pipe(Args.withDescription("Kebab-case library name"))
+const descriptionOption = Options.text("description").pipe(
+  Options.withDescription("Library description"),
   Options.optional
 )
-
-const tagsOption = Options.text('tags').pipe(
-  Options.withDescription('Comma-separated list of tags'),
-  Options.withDefault('')
+const tagsOption = Options.text("tags").pipe(
+  Options.withDescription("Comma-separated Nx tags"),
+  Options.optional
 )
-
-/**
- * Contract Generator Command
- *
- * Generates a contract library with entities, errors, events, and ports.
- */
-const includeCQRSOption = Options.boolean('includeCQRS').pipe(
-  Options.withDescription('Include CQRS patterns (commands, queries, projections)'),
+const modulesOption = Options.text("modules").pipe(
+  Options.withDescription("Comma-separated module paths, such as form-state,marketing/campaign"),
+  Options.optional
+)
+const entrypointsOption = Options.text("entrypoints").pipe(
+  Options.withDescription("Comma-separated root,client,server,edge entrypoints"),
+  Options.optional
+)
+const dependenciesOption = Options.text("dependencies").pipe(
+  Options.withDescription("Comma-separated package dependencies"),
+  Options.optional
+)
+const workspaceRootOption = Options.text("workspace-root").pipe(
+  Options.withDescription("Workspace root; defaults to auto-detection"),
+  Options.optional
+)
+const testModeOption = Options.choice("test-mode", ["none", "unit", "integration"]).pipe(
+  Options.withDescription("Generated test support"),
+  Options.optional
+)
+const dryRunOption = Options.boolean("dry-run").pipe(
+  Options.withDescription("Create and print the plan without writing files"),
   Options.withDefault(false)
 )
 
-const typesDatabasePackageOption = Options.text('types-database-package').pipe(
-  Options.withDescription(
-    'Package name for prisma-effect-kysely generated types (e.g., @scope/types-database)'
-  ),
-  Options.optional
-)
+function value<A>(option: Option.Option<A>) {
+  return Option.getOrUndefined(option)
+}
+
+function common(input: {
+  readonly description: Option.Option<string>
+  readonly tags: Option.Option<string>
+  readonly modules: Option.Option<string>
+  readonly entrypoints: Option.Option<string>
+  readonly dependencies: Option.Option<string>
+  readonly workspaceRoot: Option.Option<string>
+  readonly testMode: Option.Option<"none" | "unit" | "integration">
+  readonly dryRun: boolean
+}) {
+  return {
+    description: value(input.description),
+    tags: value(input.tags),
+    modules: value(input.modules),
+    entrypoints: value(input.entrypoints),
+    dependencies: value(input.dependencies),
+    workspaceRoot: value(input.workspaceRoot),
+    testMode: value(input.testMode),
+    dryRun: input.dryRun
+  }
+}
+
+const commonOptions = {
+  description: descriptionOption,
+  tags: tagsOption,
+  modules: modulesOption,
+  entrypoints: entrypointsOption,
+  dependencies: dependenciesOption,
+  workspaceRoot: workspaceRootOption,
+  testMode: testModeOption,
+  dryRun: dryRunOption
+}
+
+const providerOptions = {
+  description: descriptionOption,
+  tags: tagsOption,
+  entrypoints: entrypointsOption,
+  dependencies: dependenciesOption,
+  workspaceRoot: workspaceRootOption,
+  testMode: testModeOption,
+  dryRun: dryRunOption
+}
 
 const contractCommand = Command.make(
-  'contract',
+  "contract",
   {
     name: nameArg,
-    description: descriptionOption,
-    tags: tagsOption,
-    includeCQRS: includeCQRSOption,
-    typesDatabasePackage: typesDatabasePackageOption,
-    verbose: verboseOption,
-    quiet: quietOption
-  },
-  ({ description, includeCQRS, name, tags, typesDatabasePackage }) => {
-    const desc = Option.getOrUndefined(description)
-    const typesPkg = Option.getOrUndefined(typesDatabasePackage)
-    return generateContract({
-      name,
-      ...(desc && { description: desc }),
-      tags,
-      includeCQRS,
-      ...(typesPkg && { typesDatabasePackage: typesPkg })
-    }).pipe(
-      Effect.catchAll((error) =>
-        Console.error(`Error generating contract: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
+    ...commonOptions,
+    capabilities: Options.text("capabilities").pipe(
+      Options.withDescription("Comma-separated entities,errors,events,ports,rpc,types roles"),
+      Options.optional
     )
-  }
-).pipe(Command.withDescription(getCommandHelp('contract')))
+  },
+  (input) =>
+    generateContract({
+      name: input.name,
+      ...common(input),
+      capabilities: value(input.capabilities)
+    })
+).pipe(Command.withDescription("Generate a capability-driven contract library"))
 
-/**
- * Data Access Generator Command
- *
- * Generates a data-access library with repositories and database operations.
- */
 const dataAccessCommand = Command.make(
-  'data-access',
+  "data-access",
   {
     name: nameArg,
-    description: descriptionOption,
-    tags: tagsOption,
-    verbose: verboseOption,
-    quiet: quietOption
-  },
-  ({ description, name, tags }) => {
-    const desc = Option.getOrUndefined(description)
-    return generateDataAccess({
-      name,
-      ...(desc && { description: desc }),
-      tags
-    }).pipe(
-      Effect.catchAll((error) =>
-        Console.error(`Error generating data-access: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
+    ...commonOptions,
+    contract: Options.text("contract").pipe(
+      Options.withDescription("Contract domain or full package name"),
+      Options.optional
     )
-  }
-).pipe(Command.withDescription(getCommandHelp('data-access')))
-
-/**
- * Feature Generator Command
- *
- * Generates a feature library with server, client, and edge implementations.
- */
-const scopeOption = Options.text('scope').pipe(
-  Options.withDescription('Scope tag for the feature'),
-  Options.optional
-)
-
-const platformOption = Options.choice('platform', ['node', 'browser', 'universal', 'edge']).pipe(
-  Options.withDescription('Target platform for the library'),
-  Options.optional
-)
-
-const includeClientServerOption = Options.boolean('includeClientServer').pipe(
-  Options.withDescription('Generate client and server exports (overrides platform defaults)'),
-  Options.optional
-)
-
-const includeCQRSFeatureOption = Options.boolean('includeCQRS').pipe(
-  Options.withDescription('Include CQRS patterns (commands, queries, projections)'),
-  Options.withDefault(false)
-)
-
-const includeSubModulesOption = Options.boolean('includeSubModules').pipe(
-  Options.withDescription('Include modular sub-modules within the feature'),
-  Options.withDefault(false)
-)
-
-const subModulesOption = Options.text('subModules').pipe(
-  Options.withDescription(
-    'Comma-separated list of sub-module names (e.g., \'cart,checkout,management\')'
-  ),
-  Options.optional
+  },
+  (input) => generateDataAccess({ name: input.name, ...common(input), contract: value(input.contract) })
+).pipe(
+  Command.withDescription(
+    "Generate data access services with Live, Test, Auto, and test harness layers"
+  )
 )
 
 const featureCommand = Command.make(
-  'feature',
+  "feature",
   {
     name: nameArg,
-    description: descriptionOption,
-    tags: tagsOption,
-    scope: scopeOption,
-    platform: platformOption,
-    includeClientServer: includeClientServerOption,
-    includeCQRS: includeCQRSFeatureOption,
-    includeSubModules: includeSubModulesOption,
-    subModules: subModulesOption,
-    verbose: verboseOption,
-    quiet: quietOption
-  },
-  ({
-    description,
-    includeCQRS,
-    includeClientServer,
-    includeSubModules,
-    name,
-    platform,
-    scope,
-    subModules,
-    tags
-  }) => {
-    const desc = Option.getOrUndefined(description)
-    const scopeValue = Option.getOrUndefined(scope)
-    const platformValue = Option.getOrUndefined(platform)
-    const includeCS = Option.getOrUndefined(includeClientServer)
-    const subModulesVal = Option.getOrUndefined(subModules)
-
-    return generateFeature({
-      name,
-      ...(desc && { description: desc }),
-      tags,
-      ...(scopeValue && { scope: scopeValue }),
-      ...(platformValue && { platform: platformValue }),
-      ...(includeCS === true && { includeClientServer: includeCS }),
-      ...(includeCQRS && { includeCQRS }),
-      ...(includeSubModules && { includeSubModules }),
-      ...(subModulesVal && { subModules: subModulesVal })
-    }).pipe(
-      Effect.catchAll((error) =>
-        Console.error(`Error generating feature: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
+    ...commonOptions,
+    contract: Options.text("contract").pipe(
+      Options.withDescription("Contract domain or full package name used by the client RPC entrypoint"),
+      Options.optional
+    ),
+    dataAccess: Options.text("data-access").pipe(
+      Options.withDescription("Comma-separated data-access domains consumed by this feature"),
+      Options.optional
     )
-  }
-).pipe(Command.withDescription(getCommandHelp('feature')))
-
-/**
- * Infrastructure Generator Command
- *
- * Generates an infrastructure library with services and implementations.
- */
-const infraCommand = Command.make(
-  'infra',
-  {
-    name: nameArg,
-    description: descriptionOption,
-    tags: tagsOption,
-    platform: platformOption,
-    includeClientServer: includeClientServerOption,
-    verbose: verboseOption,
-    quiet: quietOption
   },
-  ({ description, includeClientServer, name, platform, tags }) => {
-    const desc = Option.getOrUndefined(description)
-    const platformValue = Option.getOrUndefined(platform)
-    const includeCS = Option.getOrUndefined(includeClientServer)
-
-    return generateInfra({
-      name,
-      ...(desc && { description: desc }),
-      tags,
-      ...(platformValue && { platform: platformValue }),
-      // Only include boolean flags if they are explicitly true (flag was provided)
-      ...(includeCS === true && { includeClientServer: includeCS })
-    }).pipe(
-      Effect.catchAll((error) =>
-        Console.error(`Error generating infra: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-  }
-).pipe(Command.withDescription(getCommandHelp('infra')))
-
-/**
- * Provider Generator Command
- *
- * Generates a provider library for external service integration.
- */
-const externalServiceArg = Args.text({ name: 'externalService' }).pipe(
-  Args.withDescription('Name of the external service to integrate')
-)
+  (input) =>
+    generateFeature({
+      name: input.name,
+      ...common(input),
+      contract: value(input.contract),
+      dataAccess: value(input.dataAccess)
+    })
+).pipe(Command.withDescription("Generate Pattern A feature services and router-owned composition"))
 
 const providerCommand = Command.make(
-  'provider',
+  "provider",
   {
     name: nameArg,
-    externalService: externalServiceArg,
-    description: descriptionOption,
-    tags: tagsOption,
-    platform: platformOption,
-    verbose: verboseOption,
-    quiet: quietOption
-  },
-  ({ description, externalService, name, platform, tags }) => {
-    const desc = Option.getOrUndefined(description)
-    const platformValue = Option.getOrUndefined(platform)
-
-    return generateProvider({
-      name,
-      externalService,
-      ...(desc && { description: desc }),
-      tags,
-      ...(platformValue && { platform: platformValue })
-    }).pipe(
-      Effect.catchAll((error) =>
-        Console.error(`Error generating provider: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
+    ...providerOptions,
+    externalService: Options.text("external-service").pipe(
+      Options.withDescription("External service represented by the provider"),
+      Options.optional
     )
-  }
-).pipe(Command.withDescription(getCommandHelp('provider')))
+  },
+  (input) =>
+    generateProvider({
+      name: input.name,
+      description: value(input.description),
+      tags: value(input.tags),
+      entrypoints: value(input.entrypoints),
+      dependencies: value(input.dependencies),
+      workspaceRoot: value(input.workspaceRoot),
+      testMode: value(input.testMode),
+      dryRun: input.dryRun,
+      externalService: value(input.externalService)
+    })
+).pipe(Command.withDescription("Generate a Pattern B provider with Live, Test, and Auto layers"))
 
-/**
- * Domain Generator Command
- *
- * Generates a complete domain with pre-wired dependencies:
- * - Contract library (types/schemas)
- * - Data-Access library (repository)
- * - Feature library (business logic)
- */
+const infraCommand = Command.make(
+  "infra",
+  { name: nameArg, ...commonOptions },
+  (input) => generateInfra({ name: input.name, ...common(input) })
+).pipe(Command.withDescription("Generate a capability-driven infrastructure service"))
+
 const domainCommand = Command.make(
-  'domain',
+  "domain",
   {
     name: nameArg,
-    description: descriptionOption,
-    tags: tagsOption,
-    scope: scopeOption,
-    includeClientServer: includeClientServerOption,
-    includeCQRS: includeCQRSFeatureOption,
-    includeSubModules: includeSubModulesOption,
-    subModules: subModulesOption,
-    verbose: verboseOption,
-    quiet: quietOption
+    ...commonOptions,
+    contractCapabilities: Options.text("contract-capabilities").pipe(Options.optional)
   },
-  ({
-    description,
-    includeCQRS,
-    includeClientServer,
-    includeSubModules,
-    name,
-    scope,
-    subModules,
-    tags
-  }) => {
-    const desc = Option.getOrUndefined(description)
-    const scopeValue = Option.getOrUndefined(scope)
-    const includeCS = Option.getOrUndefined(includeClientServer)
-    const subModulesVal = Option.getOrUndefined(subModules)
+  (input) =>
+    generateDomain({
+      name: input.name,
+      ...common(input),
+      contractCapabilities: value(input.contractCapabilities),
+      featureEntrypoints: value(input.entrypoints),
+      dependencies: value(input.dependencies),
+      testMode: value(input.testMode)
+    })
+).pipe(
+  Command.withDescription(
+    "Generate a contract, data-access, and feature slice without implicit infrastructure"
+  )
+)
 
-    return generateDomain({
-      name,
-      ...(desc && { description: desc }),
-      tags,
-      ...(scopeValue && { scope: scopeValue }),
-      ...(includeCS === true && { includeClientServer: includeCS }),
-      ...(includeCQRS && { includeCQRS }),
-      ...(includeSubModules && { includeSubModules }),
-      ...(subModulesVal && { subModules: subModulesVal })
-    }).pipe(
-      Effect.catchAll((error) =>
-        Console.error(`Error generating domain: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-  }
-).pipe(Command.withDescription(getCommandHelp('domain')))
+const specArg = Args.text({ name: "spec" }).pipe(
+  Args.withDescription("Path to a LibraryBlueprint JSON file")
+)
+const blueprintCommand = Command.make(
+  "blueprint",
+  { spec: specArg, workspaceRoot: workspaceRootOption, dryRun: dryRunOption },
+  ({ dryRun, spec, workspaceRoot }) =>
+    Effect.gen(function*() {
+      const absolute = path.resolve(spec)
+      const blueprint = yield* Effect.try({
+        try: () => decodeLibraryBlueprint(JSON.parse(fs.readFileSync(absolute, "utf8"))),
+        catch: (cause) => new Error(`Failed to read blueprint ${absolute}: ${String(cause)}`)
+      })
+      const result = yield* executeBlueprint({
+        blueprint,
+        workspaceRoot: value(workspaceRoot),
+        interfaceType: "cli",
+        dryRun
+      })
+      yield* Console.log(formatOutput(result, "cli"))
+      yield* Console.log(`Plan hash: ${result.planHash}`)
+      return result
+    })
+).pipe(Command.withDescription("Generate exactly the library described by a versioned blueprint"))
 
-/**
- * Generate Command (parent command with subcommands)
- */
-const generateCommand = Command.make('generate').pipe(
-  Command.withDescription('Generate a new library'),
+const generateCommand = Command.make("generate").pipe(
+  Command.withDescription("Generate standardized libraries"),
   Command.withSubcommands([
     contractCommand,
     dataAccessCommand,
-    domainCommand,
     featureCommand,
+    providerCommand,
     infraCommand,
-    providerCommand
+    domainCommand,
+    blueprintCommand
   ])
 )
 
-/**
- * Init Command
- *
- * Initializes libs/ directory architecture with built-in libraries
- */
-const skipProvidersOption = Options.boolean('skip-providers').pipe(
-  Options.withDescription('Skip generating built-in provider libraries'),
-  Options.withDefault(false)
-)
-
-const skipInfraOption = Options.boolean('skip-infra').pipe(
-  Options.withDescription('Skip generating built-in infrastructure libraries'),
-  Options.withDefault(false)
-)
-
-const skipPrismaOption = Options.boolean('skip-prisma').pipe(
-  Options.withDescription('Skip running prisma generate'),
-  Options.withDefault(false)
-)
-
 const initCommand = Command.make(
-  'init',
-  {
-    skipProviders: skipProvidersOption,
-    skipInfra: skipInfraOption,
-    skipPrisma: skipPrismaOption
-  },
-  ({ skipInfra, skipPrisma, skipProviders }) =>
-    init({
-      includeProviders: !skipProviders,
-      includeInfra: !skipInfra,
-      skipPrisma
-    }).pipe(
-      Effect.catchAll((error) =>
-        Console.error(`Error initializing libs/: ${error}`).pipe(
-          Effect.flatMap(() => Effect.fail(error))
-        )
-      )
-    )
-).pipe(Command.withDescription(getCommandHelp('init')))
+  "init",
+  { workspaceRoot: workspaceRootOption },
+  ({ workspaceRoot }) => init({ workspaceRoot: value(workspaceRoot) })
+).pipe(Command.withDescription("Create mlg.config.json without generating libraries"))
 
-/**
- * TUI (Text User Interface) Option
- *
- * Launches the interactive wizard mode for guided library generation
- */
-const tuiOption = Options.boolean('tui').pipe(
-  Options.withAlias('i'),
-  Options.withDescription('Launch interactive wizard mode (React Ink TUI)'),
+const projectArg = Args.text({ name: "project" }).pipe(
+  Args.withDescription("Library project root, for example libs/feature/order")
+)
+const standardizeCommand = Command.make(
+  "standardize",
+  {
+    project: projectArg,
+    workspaceRoot: workspaceRootOption,
+    check: Options.boolean("check").pipe(
+      Options.withDescription("Report drift without writing managed files"),
+      Options.withDefault(false)
+    )
+  },
+  ({ check, project, workspaceRoot }) =>
+    Effect.gen(function*() {
+      const result = yield* standardizeProject({
+        project,
+        workspaceRoot: value(workspaceRoot),
+        check
+      })
+      if (result.changedFiles.length > 0) {
+        yield* Console.log(
+          `${check ? "Drift" : "Updated"}:\n${result.changedFiles.map((file) => `  - ${file}`).join("\n")}`
+        )
+      } else {
+        yield* Console.log(`${result.projectRoot} is standardized`)
+      }
+      if (result.diagnostics.length > 0) {
+        yield* Console.log(
+          `Source diagnostics:\n${result.diagnostics.map((item) => `  - ${item.path}: ${item.message}`).join("\n")}`
+        )
+      }
+      if (check && result.changedFiles.length > 0) {
+        return yield* Effect.fail(new Error("Standardization drift detected"))
+      }
+      return result
+    })
+).pipe(Command.withDescription("Normalize managed library files and audit architecture policy"))
+
+const tuiOption = Options.boolean("tui").pipe(
+  Options.withAlias("i"),
+  Options.withDescription("Launch the Ink wizard"),
   Options.withDefault(false)
 )
-
-/**
- * Main CLI Application
- */
-const mainCommand = Command.make('mlg', { tui: tuiOption }, ({ tui }) => {
-  if (tui) {
-    return Effect.promise(() => launchTUI())
-  }
-  // If no --tui flag and no subcommand, show help
-  return Console.log(
-    `Use 'mlg --help' for usage information, or 'mlg --tui' (or 'mlg -i') for interactive mode.`
+const mainCommand = Command.make("mlg", { tui: tuiOption }, ({ tui }) =>
+  tui
+    ? runInkTUI()
+    : Console.log("Use 'mlg --help', 'mlg generate --help', or 'mlg standardize --help'.")).pipe(
+    Command.withSubcommands([generateCommand, initCommand, standardizeCommand])
   )
-}).pipe(Command.withSubcommands([generateCommand, initCommand]))
 
 const cli = Command.run(mainCommand, {
-  name: 'Monorepo Library Generator',
+  name: "Monorepo Library Generator",
   version: `v${VERSION}`
 })
 
-/**
- * CLI Entry Point
- *
- * Processes command-line arguments and executes the CLI application
- * with the necessary Effect platform context.
- */
-export function main(args: readonly string[]) {
+export function main(args: ReadonlyArray<string>) {
   return cli(args)
 }
 
-/**
- * Run CLI - always execute when this module is the entry point
- *
- * Note: We unconditionally run the CLI here because:
- * 1. This file is only used as a bin entry point (via package.json "bin" field)
- * 2. The import.meta.url check fails with npm/npx symlinks
- * 3. When bundled, this becomes the sole purpose of the file
- */
-const program = main(process.argv).pipe(Effect.provide(NodeContext.layer))
-NodeRuntime.runMain(program)
+export function libraryKind(value: string) {
+  if (
+    value === "contract" ||
+    value === "data-access" ||
+    value === "feature" ||
+    value === "provider" ||
+    value === "infra"
+  ) {
+    return value
+  }
+  throw new Error(`Unsupported library kind: ${value}`)
+}
+
+NodeRuntime.runMain(main(process.argv).pipe(Effect.provide(NodeContext.layer)))
