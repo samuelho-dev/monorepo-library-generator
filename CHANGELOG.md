@@ -1,5 +1,75 @@
 # @samuelho-dev/monorepo-library-generator
 
+## 1.11.0
+
+### Minor Changes
+
+- feat: add job processor infrastructure to infra-queue
+  - Add shared job schemas (UUID, JobMetadata, JobOperationType, JobDataRecord) to infra-queue
+  - Add shared job errors (JobValidationError, JobExecutionError, JobTimeoutError)
+  - Add in-memory priority queue using TPriorityQueue (Effect STM)
+  - Add Redis priority queue using Sorted Sets (ZADD/BZPOPMAX)
+  - Add sorted set operations to provider-redis (zadd, bzpopmax, zpopmax, zcard, zrange)
+  - Fix Effect.succeed → Effect.sync bug in Redis Test layer for llen/zcard
+  - Update feature generator template to use shared infrastructure
+  - Fix Schema.UUID (doesn't exist) → use branded UUID with pattern validation
+  - Fix Schedule.compose → Schedule.intersect for retry policies
+  - Add 48 unit and integration tests for priority queues
+
+## 1.10.0
+
+### Minor Changes
+
+- Refactored TUI with panel-based architecture and updated documentation
+  - Replaced wizard-based interactive mode with new panel-based TUI
+  - Three-panel layout: Types (1), Options (2), Preview (3)
+  - Keyboard navigation: number keys for panels, j/k for scrolling, G to generate
+  - Simplified provider library generation (library name = service name)
+  - Fixed Data-Access icon rendering issue (emoji variation selector)
+  - Updated all CLAUDE.md files with proper frontmatter and current dates
+  - Added missing README.md files for contract-auth and types-database
+  - Added CLAUDE.md for src/cli and libs/env
+  - Updated docs/INDEX.md with new documentation entries
+  - Applied biome lint fixes across all generators (Array<T> → T[] syntax)
+  - Updated biome.json to properly include src/ and libs/ files
+
+## 1.9.1
+
+### Patch Changes
+
+- 602f951: Fix Schema patterns and add resilient npm publish script
+  - Remove redundant parseX/encodeX helpers from contract entity templates
+  - Fix client-hook template to use @effect-atom/atom instead of @effect-rx
+  - Add typed SDK patterns for Supabase and Redis providers
+  - Add publish script that skips already-published versions
+  - Update EFFECT_PATTERNS.md with Schema pattern selection guide
+
+## 1.9.0
+
+### Minor Changes
+
+- ## Documentation & Architecture Improvements
+
+  ### Documentation Updates
+  - Add root `CLAUDE.md` with comprehensive AI agent guidance
+  - Add `docs/INDEX.md` documentation catalog with 42 entries
+  - Add YAML frontmatter to all 17 library CLAUDE.md files
+  - Add "For Future Claude Code Instances" checklist sections
+  - Improve documentation coverage from 72% to 95%
+
+  ### Template & Generator Improvements
+  - Migrate to Context.Tag service pattern across all templates
+  - Centralize naming conventions in `src/utils/naming.ts`
+  - Fix linter false positives for Effect patterns
+  - Improve type safety with zero type assertions
+  - Reduce codebase by ~7,000 lines through consolidation
+
+  ### Generated Library Improvements
+  - All generated libraries now pass typecheck and biome linting
+  - Proper Effect.gen yield\* patterns throughout
+  - Correct Schema.TaggedError usage for RPC errors
+  - Consistent static layer naming (Live, Test, Dev, Auto)
+
 ## 1.8.1
 
 ### Patch Changes
