@@ -44,6 +44,8 @@ jobs:
 
       - name: Version packages
         if: steps.changesets.outputs.has_changesets == 'true'
+        env:
+          HUSKY: "0"
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
