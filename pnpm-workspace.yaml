@@ -3,6 +3,13 @@ packages:
   - libs/**
   - apps/**
 
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  msgpackr-extract: true
+  nx: true
+  sharp: true
+
 catalog:
   '@effect/platform': ^0.72.5
   '@effect/platform-node': ^0.66.5
