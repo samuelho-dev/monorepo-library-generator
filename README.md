@@ -82,11 +82,6 @@ pnpm nx g @samuelho-dev/monorepo-library-generator:contract order \
   --capabilities=entities,errors,events,ports
 ```
 
-## Documentation
-
-- [CreativeToolkits patterns](./docs/CREATIVETOOLKITS_PATTERNS.md)
-- [Generator architecture](./docs/GENERATOR_ARCHITECTURE_V2.md)
-
 ## Development
 
 ```bash
