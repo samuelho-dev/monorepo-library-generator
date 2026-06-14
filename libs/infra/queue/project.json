@@ -1,45 +1,36 @@
 {
   "name": "infra-queue",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/infra/queue/src",
-  "tags": [
-    "type:infra",
-    "scope:queue",
-    ""
-  ],
+  "tags": ["type:infra", "scope:queue"],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+    "lint": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/infra/queue",
-        "tsConfig": "libs/infra/queue/tsconfig.lib.json",
-        "main": "libs/infra/queue/src/index.ts",
-        "batch": true
+        "command": "pnpm exec biome check libs/infra/queue"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+    "format": {
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": [
-          "libs/infra/queue/src/**/*.ts"
-        ]
+        "command": "pnpm exec biome check --write libs/infra/queue"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsgo --build libs/infra/queue/tsconfig.lib.json"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/dist"]
     },
     "test": {
-      "executor": "@nx/vite:test",
-      "outputs": [
-        "{options.reportsDirectory}"
-      ],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "reportsDirectory": "coverage/libs/infra/queue",
-        "config": "libs/infra/queue/vitest.config.ts"
+        "command": "pnpm exec vitest run --config libs/infra/queue/vitest.config.ts --pool=forks --passWithNoTests",
+        "cwd": "{workspaceRoot}"
       }
     }
   }

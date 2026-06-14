@@ -1,0 +1,29 @@
+{
+  "name": "contract-auth",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/contract/auth/src",
+  "tags": ["type:contract", "scope:auth"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec biome check libs/contract/auth"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec biome check --write libs/contract/auth"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsgo --build libs/contract/auth/tsconfig.lib.json"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/dist"]
+    }
+  }
+}

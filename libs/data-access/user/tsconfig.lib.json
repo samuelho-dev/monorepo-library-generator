@@ -1,17 +1,20 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/libs/data-access/user",
+    "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,
-    "noEmit": false
+    "noEmit": false,
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "src",
+    "tsBuildInfoFile": "./dist/tsconfig.lib.tsbuildinfo"
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-    "**/*.spec.ts"
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "src/**/*.spec.tsx", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../../contract/user/tsconfig.lib.json"
+    }
   ]
 }

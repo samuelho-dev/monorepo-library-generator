@@ -54,9 +54,9 @@ export interface AuthContext {
 /**
  * Auth context schema for validation
  */
-export const AuthContextSchema = Schema.Struct({
+export const AuthContext = Schema.Struct({
   user: ProviderAuthUserSchema,
-  authMethod: Schema.Literal('session', 'api-key', 'service-role'),
+  authMethod: Schema.Literals(['session', 'api-key', 'service-role']),
   sessionToken: Schema.optional(Schema.String),
   apiKeyId: Schema.optional(Schema.String)
 })

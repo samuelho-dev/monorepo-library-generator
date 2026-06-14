@@ -1,45 +1,36 @@
 {
   "name": "data-access-user",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/data-access/user/src",
-  "tags": [
-    "type:data-access",
-    "scope:user",
-    ""
-  ],
+  "tags": ["type:data-access", "scope:user"],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+    "lint": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/data-access/user",
-        "tsConfig": "libs/data-access/user/tsconfig.lib.json",
-        "main": "libs/data-access/user/src/index.ts",
-        "batch": true
+        "command": "pnpm exec biome check libs/data-access/user"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+    "format": {
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": [
-          "libs/data-access/user/src/**/*.ts"
-        ]
+        "command": "pnpm exec biome check --write libs/data-access/user"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsgo --build libs/data-access/user/tsconfig.lib.json"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/dist"]
     },
     "test": {
-      "executor": "@nx/vite:test",
-      "outputs": [
-        "{options.reportsDirectory}"
-      ],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "reportsDirectory": "coverage/libs/data-access/user",
-        "config": "libs/data-access/user/vitest.config.ts"
+        "command": "pnpm exec vitest run --config libs/data-access/user/vitest.config.ts --pool=forks --passWithNoTests",
+        "cwd": "{workspaceRoot}"
       }
     }
   }

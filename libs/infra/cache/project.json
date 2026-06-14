@@ -1,47 +1,36 @@
 {
   "name": "infra-cache",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/infra/cache/src",
-  "tags": [
-    "type:infra",
-    "scope:cache",
-    "infra",
-    "orchestration",
-    "builtin"
-  ],
+  "tags": ["type:infra", "scope:cache"],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+    "lint": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/infra/cache",
-        "tsConfig": "libs/infra/cache/tsconfig.lib.json",
-        "main": "libs/infra/cache/src/index.ts",
-        "batch": true
+        "command": "pnpm exec biome check libs/infra/cache"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+    "format": {
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": [
-          "libs/infra/cache/src/**/*.ts"
-        ]
+        "command": "pnpm exec biome check --write libs/infra/cache"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsgo --build libs/infra/cache/tsconfig.lib.json"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/dist"]
     },
     "test": {
-      "executor": "@nx/vite:test",
-      "outputs": [
-        "{options.reportsDirectory}"
-      ],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "reportsDirectory": "coverage/libs/infra/cache",
-        "config": "libs/infra/cache/vitest.config.ts"
+        "command": "pnpm exec vitest run --config libs/infra/cache/vitest.config.ts --pool=forks --passWithNoTests",
+        "cwd": "{workspaceRoot}"
       }
     }
   }

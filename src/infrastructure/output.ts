@@ -6,8 +6,10 @@
  * @module monorepo-library-generator/infrastructure/output
  */
 
-import type { GeneratorResult } from './execution'
-import type { InterfaceType } from './workspace'
+import type { GeneratorResult } from "../core/types"
+import type { InterfaceType } from "./workspace"
+
+type OutputResult = GeneratorResult & { readonly dryRun?: boolean }
 
 // ============================================================================
 // Types
@@ -21,8 +23,8 @@ import type { InterfaceType } from './workspace'
 export interface McpResponse {
   readonly success: boolean
   readonly message: string
-  readonly files?: readonly string[]
-  readonly nextSteps?: readonly string[]
+  readonly files?: ReadonlyArray<string>
+  readonly nextSteps?: ReadonlyArray<string>
 }
 
 /**
@@ -41,13 +43,15 @@ export type NxGeneratorCallback = () => void
  *
  * Generates a concise summary of what was created
  */
-function createSummary(result: GeneratorResult) {
+function createSummary(result: OutputResult) {
   const fileCount = result.filesGenerated.length
-  return `✅ Successfully generated library: ${result.projectName}
+  const action = result.dryRun ? "Planned library" : "Successfully generated library"
+  const filesLabel = result.dryRun ? "Files planned" : "Files created"
+  return `${action}: ${result.projectName}
 
-📦 Package: ${result.packageName}
-📂 Location: ${result.projectRoot}
-📄 Files created: ${fileCount}`
+Package: ${result.packageName}
+Location: ${result.projectRoot}
+${filesLabel}: ${fileCount}`
 }
 
 /**
@@ -55,9 +59,9 @@ function createSummary(result: GeneratorResult) {
  *
  * Creates formatted list of generated files
  */
-function formatFilesList(files: readonly string[]) {
-  const header = 'Files created:'
-  const filesList = files.map((f) => `  - ${f}`).join('\n')
+function formatFilesList(files: ReadonlyArray<string>, dryRun: boolean) {
+  const header = dryRun ? "Files planned:" : "Files created:"
+  const filesList = files.map((f) => `  - ${f}`).join("\n")
 
   return `${header}\n${filesList}`
 }
@@ -67,51 +71,47 @@ function formatFilesList(files: readonly string[]) {
  *
  * Generates actionable next steps based on what was generated
  */
-function createNextSteps(result: GeneratorResult) {
-  const steps: string[] = []
+function createNextSteps(result: OutputResult) {
+  const steps: Array<string> = []
 
   // Determine library type from project name
-  const libraryType = result.projectName.split('-')[0]
+  const libraryType = result.projectName.startsWith("data-access-")
+    ? "data-access"
+    : result.projectName.split("-")[0]
 
   switch (libraryType) {
-    case 'contract':
-      steps.push('Update entity schemas in lib/entities.ts')
-      steps.push('Define repository interfaces in lib/ports.ts')
-      steps.push('Add domain-specific error types in lib/errors.ts')
+    case "contract":
+      steps.push("Implement the declared contract roles under src/lib")
       break
 
-    case 'data-access':
-      steps.push('Implement repository operations in lib/repository/operations/')
-      steps.push('Configure database connection in lib/server/layers.ts')
-      steps.push('Add Kysely query builders in lib/queries.ts')
+    case "data-access":
+      steps.push("Implement domain operations in the generated services under src/lib")
+      steps.push("Extend the colocated test harness with realistic state")
       break
 
-    case 'feature':
-      steps.push('Implement business logic in lib/service/')
-      steps.push('Add client-side state management if needed')
-      steps.push('Wire up dependencies in lib/layers.ts')
+    case "feature":
+      steps.push("Implement each capability service under src/lib/server/services")
+      steps.push("Compose library layers in src/lib/server/router.ts")
       break
 
-    case 'provider':
-      steps.push('Implement service operations in lib/service/operations/')
-      steps.push('Configure external API client')
-      steps.push('Add error handling and retry logic')
+    case "provider":
+      steps.push("Implement external clients in the generated services under src/lib")
+      steps.push("Replace the baseline Test layer with a domain-specific fake")
       break
 
-    case 'infra':
-      steps.push('Implement client interface')
-      steps.push('Add server-side implementation')
-      steps.push('Configure infrastructure-specific options')
+    case "infra":
+      steps.push("Implement infrastructure capabilities in the generated services under src/lib")
+      steps.push("Configure production resources in the Live layer")
       break
 
     default:
-      steps.push('Review generated files')
-      steps.push('Customize to your needs')
+      steps.push("Review generated files")
+      steps.push("Customize to your needs")
   }
 
   // Common steps for all library types
-  steps.push(`Run: pnpm install`)
-  steps.push(`Build: nx build ${result.projectName}`)
+  steps.push("Run: pnpm install")
+  steps.push(`Typecheck: pnpm nx typecheck ${result.projectName}`)
   steps.push(`Test: nx test ${result.projectName}`)
 
   return steps
@@ -122,9 +122,9 @@ function createNextSteps(result: GeneratorResult) {
  *
  * Creates formatted next steps list
  */
-function formatNextSteps(steps: readonly string[]) {
-  const header = 'Next steps:'
-  const stepsList = steps.map((step, i) => `  ${i + 1}. ${step}`).join('\n')
+function formatNextSteps(steps: ReadonlyArray<string>) {
+  const header = "Next steps:"
+  const stepsList = steps.map((step, i) => `  ${i + 1}. ${step}`).join("\n")
 
   return `${header}\n${stepsList}`
 }
@@ -134,7 +134,7 @@ function formatNextSteps(steps: readonly string[]) {
  *
  * Creates structured response for MCP clients
  */
-function formatMcpResponse(result: GeneratorResult) {
+function formatMcpResponse(result: OutputResult) {
   const summary = createSummary(result)
   const nextSteps = createNextSteps(result)
 
@@ -151,9 +151,9 @@ function formatMcpResponse(result: GeneratorResult) {
  *
  * Creates human-readable output for command-line interface
  */
-function formatCliOutput(result: GeneratorResult) {
+function formatCliOutput(result: OutputResult) {
   const summary = createSummary(result)
-  const filesList = formatFilesList(result.filesGenerated)
+  const filesList = formatFilesList(result.filesGenerated, result.dryRun ?? false)
   const nextSteps = formatNextSteps(createNextSteps(result))
 
   return `
@@ -207,15 +207,15 @@ function formatNxCallback() {
  * // => () => console.log("...")
  * ```
  */
-export function formatOutput(result: GeneratorResult, interfaceType: InterfaceType) {
+export function formatOutput(result: OutputResult, interfaceType: InterfaceType) {
   switch (interfaceType) {
-    case 'mcp':
+    case "mcp":
       return formatMcpResponse(result)
 
-    case 'cli':
+    case "cli":
       return formatCliOutput(result)
 
-    case 'nx':
+    case "nx":
       return formatNxCallback()
 
     default: {
@@ -234,7 +234,7 @@ export function formatOutput(result: GeneratorResult, interfaceType: InterfaceTy
 export function formatErrorResponse(error: Error) {
   return {
     success: false,
-    message: `❌ Generation failed: ${error.message}`,
+    message: `Generation failed: ${error.message}`,
     files: []
   }
 }
@@ -245,5 +245,5 @@ export function formatErrorResponse(error: Error) {
  * Creates formatted validation error message
  */
 export function formatValidationError(errorMessage: string) {
-  return `❌ Validation Error:\n\n${errorMessage}\n\n💡 Check your input parameters and try again.`
+  return `Validation error:\n\n${errorMessage}`
 }

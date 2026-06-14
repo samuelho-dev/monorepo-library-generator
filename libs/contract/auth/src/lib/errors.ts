@@ -1,4 +1,4 @@
-import { Schema } from 'effect'
+import { Effect, Schema } from 'effect'
 
 /**
  * Auth Contract Errors
@@ -12,7 +12,7 @@ Error Categories:
 - AuthError: User authentication failures (invalid token, expired, etc.)
 - ServiceAuthError: Service-to-service authentication failures
  *
- * @module @samuelho-dev/contract-auth/errors
+ * @module @samuelho-dev/contract-auth
  */
 
 // ============================================================================
@@ -22,7 +22,7 @@ Error Categories:
 /**
  * Authentication error codes
  */
-export const AuthErrorCodeSchema = Schema.Union(
+export const AuthErrorCode = Schema.Union([
   Schema.Literal('UNAUTHENTICATED'),
   Schema.Literal('TOKEN_EXPIRED'),
   Schema.Literal('TOKEN_INVALID'),
@@ -31,8 +31,8 @@ export const AuthErrorCodeSchema = Schema.Union(
   Schema.Literal('INSUFFICIENT_PERMISSIONS'),
   Schema.Literal('ACCOUNT_DISABLED'),
   Schema.Literal('ACCOUNT_LOCKED')
-)
-export type AuthErrorCode = Schema.Schema.Type<typeof AuthErrorCodeSchema>
+])
+export type AuthErrorCode = Schema.Schema.Type<typeof AuthErrorCode>
 
 /**
  * User authentication error
@@ -40,13 +40,13 @@ export type AuthErrorCode = Schema.Schema.Type<typeof AuthErrorCodeSchema>
  * Schema.TaggedError for RPC serialization.
  * Thrown when user authentication fails.
  */
-export class AuthError extends Schema.TaggedError<AuthError>()('AuthError', {
+export class AuthError extends Schema.TaggedErrorClass<AuthError>()('AuthError', {
   /** Error message */
   message: Schema.String,
   /** Error code for programmatic handling */
-  code: AuthErrorCodeSchema,
+  code: AuthErrorCode,
   /** HTTP status code hint */
-  statusCode: Schema.optionalWith(Schema.Number, { default: () => 401 })
+  statusCode: Schema.Number.pipe(Schema.withDecodingDefaultType(Effect.succeed(401)))
 }) {
   static unauthenticated(message = 'Authentication required') {
     return new AuthError({
@@ -87,6 +87,10 @@ export class AuthError extends Schema.TaggedError<AuthError>()('AuthError', {
       statusCode: 403
     })
   }
+
+  static create(message: string, code: AuthErrorCode, statusCode = 401) {
+    return new AuthError({ message, code, statusCode })
+  }
 }
 
 // ============================================================================
@@ -96,14 +100,14 @@ export class AuthError extends Schema.TaggedError<AuthError>()('AuthError', {
 /**
  * Service authentication error codes
  */
-export const ServiceAuthErrorCodeSchema = Schema.Union(
+export const ServiceAuthErrorCode = Schema.Union([
   Schema.Literal('SERVICE_UNAUTHENTICATED'),
   Schema.Literal('SERVICE_TOKEN_INVALID'),
   Schema.Literal('SERVICE_TOKEN_EXPIRED'),
   Schema.Literal('SERVICE_UNKNOWN'),
   Schema.Literal('SERVICE_PERMISSION_DENIED')
-)
-export type ServiceAuthErrorCode = Schema.Schema.Type<typeof ServiceAuthErrorCodeSchema>
+])
+export type ServiceAuthErrorCode = Schema.Schema.Type<typeof ServiceAuthErrorCode>
 
 /**
  * Service-to-service authentication error
@@ -111,23 +115,26 @@ export type ServiceAuthErrorCode = Schema.Schema.Type<typeof ServiceAuthErrorCod
  * Schema.TaggedError for RPC serialization.
  * Thrown when service authentication fails.
  */
-export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()('ServiceAuthError', {
-  /** Error message */
-  message: Schema.String,
-  /** Error code for programmatic handling */
-  code: ServiceAuthErrorCodeSchema,
-  /** Service that attempted authentication */
-  serviceName: Schema.optional(Schema.String),
-  /** HTTP status code hint */
-  statusCode: Schema.optionalWith(Schema.Number, { default: () => 401 })
-}) {
+export class ServiceAuthError extends Schema.TaggedErrorClass<ServiceAuthError>()(
+  'ServiceAuthError',
+  {
+    /** Error message */
+    message: Schema.String,
+    /** Error code for programmatic handling */
+    code: ServiceAuthErrorCode,
+    /** Service that attempted authentication */
+    serviceName: Schema.optional(Schema.String),
+    /** HTTP status code hint */
+    statusCode: Schema.Number.pipe(Schema.withDecodingDefaultType(Effect.succeed(401)))
+  }
+) {
   static unauthenticated(serviceName?: string) {
     return new ServiceAuthError({
       message: serviceName
         ? `Service '${serviceName}' authentication required`
         : 'Service authentication required',
       code: 'SERVICE_UNAUTHENTICATED',
-      ...(serviceName && { serviceName }),
+      serviceName,
       statusCode: 401
     })
   }
@@ -136,7 +143,7 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()('Se
     return new ServiceAuthError({
       message: 'Invalid service token',
       code: 'SERVICE_TOKEN_INVALID',
-      ...(serviceName && { serviceName }),
+      serviceName,
       statusCode: 401
     })
   }
@@ -158,6 +165,20 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()('Se
       statusCode: 403
     })
   }
+
+  static create(
+    message: string,
+    code: ServiceAuthErrorCode,
+    serviceName?: string,
+    statusCode = 401
+  ) {
+    return new ServiceAuthError({
+      message,
+      code,
+      ...(serviceName !== undefined ? { serviceName } : {}),
+      statusCode
+    })
+  }
 }
 
 // ============================================================================
@@ -168,3 +189,9 @@ export class ServiceAuthError extends Schema.TaggedError<ServiceAuthError>()('Se
  * All auth-related errors
  */
 export type AuthContractError = AuthError | ServiceAuthError
+
+/**
+ * Discriminated union of all auth domain errors.
+ * Alias for AuthContractError for naming consistency across domains.
+ */
+export type AuthDomainError = AuthContractError

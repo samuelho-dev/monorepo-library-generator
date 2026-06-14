@@ -1,10 +1,6 @@
 import type { Effect } from 'effect'
 import type { CompiledQuery, Kysely, RawBuilder, Transaction } from 'kysely'
-import type {
-  DatabaseConnectionError,
-  DatabaseQueryError,
-  DatabaseTransactionError
-} from './errors'
+import type { DatabaseQueryError, DatabaseTransactionError, KyselyConnectionError } from './errors'
 
 /**
  * Kysely Service Interface
@@ -66,7 +62,7 @@ export interface KyselyServiceInterface<DB> {
    * Execute a compiled query
    *
    * @param query - Compiled query from Kysely
-   * @returns Effect that succeeds with rows as unknown[]
+   * @returns Effect that succeeds with rows
    */
   readonly execute: (query: CompiledQuery) => Effect.Effect<readonly unknown[], DatabaseQueryError>
 
@@ -98,7 +94,7 @@ export interface KyselyServiceInterface<DB> {
    * Execute raw SQL query
    *
    * @param query - SQL template literal result from kysely.sql
-   * @returns Effect that succeeds with rows as unknown[]
+   * @returns Effect that succeeds with rows
    */
   readonly sql: (
     query: RawBuilder<unknown>
@@ -109,7 +105,7 @@ export interface KyselyServiceInterface<DB> {
    *
    * @returns Effect that succeeds with void if connected
    */
-  readonly ping: () => Effect.Effect<void, DatabaseConnectionError>
+  readonly ping: () => Effect.Effect<void, KyselyConnectionError>
 
   /**
    * Get database introspection info

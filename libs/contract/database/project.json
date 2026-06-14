@@ -1,0 +1,37 @@
+{
+  "name": "contract-database",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/contract/database/src",
+  "tags": ["type:contract", "scope:database"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec biome check libs/contract/database"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec biome check --write libs/contract/database"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsgo --build libs/contract/database/tsconfig.lib.json"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "command": "pnpm exec vitest run --config libs/contract/database/vitest.config.ts --pool=forks --passWithNoTests",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

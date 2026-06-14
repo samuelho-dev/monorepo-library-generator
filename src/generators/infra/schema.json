@@ -1,50 +1,24 @@
 {
-  "$schema": "http://json-schema.org/schema",
-  "cli": "nx",
-  "$id": "Infra",
-  "title": "Create Infrastructure Library",
+  "$schema": "https://json-schema.org/schema",
+  "title": "Standard Infrastructure Library",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Library name (e.g., 'cache', 'storage', 'webhooks')",
-      "$default": { "$source": "argv", "index": 0 },
-      "x-prompt": "What name would you like to use for the infrastructure library?",
-      "pattern": "^[a-z][a-z0-9-]*$"
+      "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+      "description": "Kebab-case library name",
+      "$default": { "$source": "argv", "index": 0 }
     },
-    "directory": {
+    "directory": { "type": "string", "description": "Parent directory override" },
+    "description": { "type": "string" },
+    "tags": { "type": "string", "description": "Comma-separated Nx tags" },
+    "modules": { "type": "string", "description": "Comma-separated module paths" },
+    "dependencies": { "type": "string", "description": "Comma-separated package dependencies" },
+    "entrypoints": {
       "type": "string",
-      "description": "A directory where the library is placed",
-      "default": "libs/infra",
-      "x-prompt": "Which directory should the library be created in?"
+      "description": "Comma-separated root,client,server,edge entrypoints"
     },
-    "description": {
-      "type": "string",
-      "description": "Human-readable service description",
-      "x-prompt": "Brief description of the service (optional):"
-    },
-    "includeClientServer": {
-      "type": "boolean",
-      "description": "Generate client and server platform variants (creates both client.ts and server.ts with separate layers)",
-      "default": false,
-      "x-prompt": "Does this service need React hooks or browser-specific code?"
-    },
-    "skipTests": {
-      "type": "boolean",
-      "description": "Skip generating test files",
-      "default": false
-    },
-    "consolidatesProviders": {
-      "type": "boolean",
-      "description": "Generate provider consolidation structure (aggregates multiple provider libraries)",
-      "default": false,
-      "x-prompt": "Does this infrastructure library consolidate multiple providers?"
-    },
-    "providers": {
-      "type": "string",
-      "description": "Comma-separated list of provider libraries to consolidate (e.g., 'kubectl,talos,terraform')",
-      "x-prompt": "Which providers should be consolidated? (comma-separated, leave empty to skip)"
-    }
+    "testMode": { "type": "string", "enum": ["none", "unit", "integration"] }
   },
   "required": ["name"]
 }

@@ -1,47 +1,36 @@
 {
   "name": "infra-auth",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/infra/auth/src",
-  "tags": [
-    "type:infra",
-    "scope:auth",
-    "infra",
-    "orchestration",
-    "builtin"
-  ],
+  "tags": ["type:infra", "scope:auth"],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+    "lint": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/infra/auth",
-        "tsConfig": "libs/infra/auth/tsconfig.lib.json",
-        "main": "libs/infra/auth/src/index.ts",
-        "batch": true
+        "command": "pnpm exec biome check libs/infra/auth"
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+    "format": {
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": [
-          "libs/infra/auth/src/**/*.ts"
-        ]
+        "command": "pnpm exec biome check --write libs/infra/auth"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsgo --build libs/infra/auth/tsconfig.lib.json"
+      },
+      "cache": true,
+      "outputs": ["{projectRoot}/dist"]
     },
     "test": {
-      "executor": "@nx/vite:test",
-      "outputs": [
-        "{options.reportsDirectory}"
-      ],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "reportsDirectory": "coverage/libs/infra/auth",
-        "config": "libs/infra/auth/vitest.config.ts"
+        "command": "pnpm exec vitest run --config libs/infra/auth/vitest.config.ts --pool=forks --passWithNoTests",
+        "cwd": "{workspaceRoot}"
       }
     }
   }

@@ -1,56 +1,56 @@
-/**
- * Provider Generator for CLI (Refactored)
- *
- * Uses unified infrastructure for consistent generation.
- * Validates inputs using Effect Schema (same as MCP).
- */
+import { Console, Effect } from "effect"
+import { createBlueprint, executeBlueprint } from "../../core"
+import { formatOutput } from "../../infrastructure"
 
-import { Console, Effect, ParseResult } from 'effect'
-import { generateProviderCore, type ProviderCoreOptions } from '../../generators/core/provider'
-import { createExecutor, decodeProviderInput, formatOutput, type ProviderInput } from '../../infrastructure'
+export interface ProviderGeneratorOptions {
+  readonly name: string
+  readonly workspaceRoot?: string
+  readonly externalService?: string
+  readonly description?: string
+  readonly directory?: string
+  readonly tags?: string | ReadonlyArray<string>
+  readonly dependencies?: string | ReadonlyArray<string>
+  readonly entrypoints?: string | ReadonlyArray<string>
+  readonly testMode?: "none" | "unit" | "integration"
+  readonly dryRun?: boolean
+  readonly platform?: "node" | "browser" | "universal" | "edge"
+  readonly operations?: ReadonlyArray<"create" | "read" | "update" | "delete" | "query">
+}
 
-/**
- * Provider Generator Options - imported from validation registry
- * for single source of truth
- */
-export type ProviderGeneratorOptions = ProviderInput
-
-/**
- * Provider executor with properly typed generics
- *
- * No type assertions needed - the executor preserves the ProviderInput type
- * throughout the flow, allowing TypeScript to verify all field access.
- */
-const providerExecutor = createExecutor<ProviderInput, ProviderCoreOptions>(
-  'provider',
-  generateProviderCore,
-  (validated, metadata) => ({
-    ...metadata,
-    externalService: validated.externalService,
-    platform: validated.platform ?? 'node',
-    operations: validated.operations ?? ['create', 'read', 'update', 'delete', 'query']
-  })
-)
+function rejectLegacyOptions(options: ProviderGeneratorOptions) {
+  const legacy = [
+    options.platform !== undefined && "platform",
+    options.operations !== undefined && "operations"
+  ].filter((value): value is string => typeof value === "string")
+  if (legacy.length > 0) {
+    throw new Error(
+      `Unsupported legacy options: ${legacy.join(", ")}. Use dependencies and entrypoints.`
+    )
+  }
+}
 
 export function generateProvider(options: ProviderGeneratorOptions) {
   return Effect.gen(function*() {
-    // Validate input with Effect Schema (like MCP does)
-    const validated = yield* decodeProviderInput(options).pipe(
-      Effect.mapError(
-        (parseError) => new Error(ParseResult.TreeFormatter.formatErrorSync(parseError))
-      )
-    )
-
-    yield* Console.log(`Creating provider library: ${validated.name}...`)
-
-    const result = yield* providerExecutor.execute({
-      ...validated,
-      __interfaceType: 'cli'
+    yield* Effect.sync(() => rejectLegacyOptions(options))
+    const blueprint = createBlueprint({
+      kind: "provider",
+      name: options.name,
+      externalService: options.externalService,
+      description: options.description,
+      directory: options.directory,
+      tags: options.tags,
+      dependencies: options.dependencies,
+      entrypoints: options.entrypoints,
+      testMode: options.testMode
     })
-
-    const output = formatOutput(result, 'cli')
-    yield* Console.log(output)
-
+    yield* Console.log(`Creating provider library: ${blueprint.name}...`)
+    const result = yield* executeBlueprint({
+      blueprint,
+      workspaceRoot: options.workspaceRoot,
+      interfaceType: "cli",
+      dryRun: options.dryRun
+    })
+    yield* Console.log(formatOutput(result, "cli"))
     return result
   })
 }

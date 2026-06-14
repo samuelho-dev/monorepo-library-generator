@@ -3,30 +3,26 @@
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
-  "description": "Rpc",
+  "description": "rpc infra library",
   "exports": {
     ".": {
       "import": "./src/index.ts",
       "types": "./src/index.ts"
     },
-    "./types": {
-      "import": "./src/types.ts",
-      "types": "./src/types.ts"
-    },
-    "./service": {
-      "import": "./src/lib/service/index.ts",
-      "types": "./src/lib/service/index.ts"
-    },
-    "./providers/*": {
-      "import": "./src/lib/providers/*.ts",
-      "types": "./src/lib/providers/*.ts"
-    },
-    "./layers/*": {
-      "import": "./src/lib/layers/*.ts",
-      "types": "./src/lib/layers/*.ts"
+    "./client": {
+      "import": "./src/client.ts",
+      "types": "./src/client.ts"
     }
   },
+  "devDependencies": {
+    "@effect/atom-react": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@types/react": "19.2.17",
+    "react": "19.2.7"
+  },
   "peerDependencies": {
-    "effect": "*"
+    "@effect/atom-react": "catalog:",
+    "effect": "catalog:",
+    "react": "*"
   }
 }

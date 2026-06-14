@@ -1,39 +1,71 @@
-import { Context, Effect, Runtime } from 'effect'
+import { type Cause, Context, Effect, Exit } from 'effect'
 import {
   DummyDriver,
   Kysely,
   PostgresAdapter,
-  PostgresDialect,
   PostgresIntrospector,
   PostgresQueryCompiler,
-  sql
+  sql,
+  type Transaction
 } from 'kysely'
-import type { PoolConfig } from 'pg'
-import { DatabaseConnectionError, DatabaseQueryError, DatabaseTransactionError } from './errors'
+import { PostgresJSDialect } from 'kysely-postgres-js'
+import postgres from 'postgres'
+import { DatabaseQueryError, DatabaseTransactionError, KyselyConnectionError } from './errors'
 import type { KyselyServiceInterface } from './interface'
 
 /**
  * Kysely Provider Service
  *
  * Kysely query builder provider with Effect integration.
-
-Generic over DB type - specify your database schema when creating the service:
-  const service = yield* makeKyselyService<DB>(config)
-
-Architecture:
-  prisma-effect-kysely → generates DB types
-  provider-kysely → wraps Kysely SDK (this library)
-  infra-database → uses this provider, exposes DatabaseService
+ * Uses postgres.js for Bun-optimized database connections.
+ *
+ * Generic over DB type - specify your database schema when creating the service:
+ *   const service = yield* makeKyselyService<DB>(config)
+ *
+ * Architecture:
+ *   prisma-effect-kysely → generates DB types
+ *   provider-kysely → wraps Kysely SDK (this library)
+ *   infra-database → uses this provider, exposes DatabaseService
  *
  * @module @samuelho-dev/provider-kysely/service
  * @see https://kysely.dev for Kysely documentation
+ * @see https://github.com/porsager/postgres for postgres.js
  */
 
-// Dynamic import of pg to avoid bundling issues
-const createPool = async (config: PoolConfig) => {
-  const { Pool } = await import('pg')
-  return new Pool(config)
+type PostgresConnection = ReturnType<typeof postgres>
+
+/**
+ * Extract the pg driver's SQLSTATE code and constraint name from a raw
+ * error. `pg` surfaces these as top-level fields on every raised error; if
+ * the error isn't from pg (e.g. a plain JS exception), both come back
+ * undefined.
+ */
+const extractPgFields = (error: unknown): { pgCode?: string; pgConstraint?: string } => {
+  if (error === null || typeof error !== 'object') return {}
+  const out: { pgCode?: string; pgConstraint?: string } = {}
+  if ('code' in error && typeof error.code === 'string') out.pgCode = error.code
+  if ('constraint' in error && typeof error.constraint === 'string') {
+    out.pgConstraint = error.constraint
+  }
+  return out
 }
+
+/**
+ * Wrap a raw Kysely/pg error into a `DatabaseQueryError` with pg metadata
+ * promoted into typed fields. Single wrap site so downstream layers
+ * (infra-database, data-access) never walk `.cause` chains — the DA layer
+ * calls `error.isUniqueViolation(name)` on the `DatabaseError` it
+ * receives and the method inspects `cause instanceof DatabaseQueryError`
+ * under the hood.
+ */
+const wrapKyselyError = (operation: string, error: unknown, query?: string): DatabaseQueryError =>
+  new DatabaseQueryError({
+    operation,
+    message: error instanceof Error ? error.message : `${operation} failed: ${String(error)}`,
+    ...(query !== undefined ? { query } : {}),
+    cause: error,
+    ...extractPgFields(error)
+  })
 
 // ============================================================================
 // Configuration
@@ -55,16 +87,36 @@ export interface KyselyConfig {
 }
 
 /**
+ * Build connection string from config
+ * postgres.js accepts a connection string
+ */
+const buildConnectionString = (config: KyselyConfig) => {
+  if (config.connectionString) {
+    return config.connectionString
+  }
+
+  const user = config.username ?? ''
+  const password = config.password ?? ''
+  const auth = user ? (password ? `${user}:${password}@` : `${user}@`) : ''
+  const host = config.host ?? 'localhost'
+  const port = config.port ?? 5432
+  const database = config.database ?? 'postgres'
+
+  return `postgres://${auth}${host}:${port}/${database}`
+}
+
+/**
  * Validate database connection configuration
  *
  * Returns Effect for Effect-idiomatic error handling (no try-catch)
  */
 const validateConnectionConfig = (config: KyselyConfig) =>
   Effect.gen(function* () {
-    if (config.connectionString) {
+    const configString = config.connectionString
+    if (configString) {
       yield* Effect.try({
         try: () => {
-          const url = new URL(config.connectionString!)
+          const url = new URL(configString)
           if (!['postgres:', 'postgresql:'].includes(url.protocol)) {
             throw new Error(
               `Invalid database protocol: ${url.protocol}. Expected postgres: or postgresql:`
@@ -72,20 +124,52 @@ const validateConnectionConfig = (config: KyselyConfig) =>
           }
         },
         catch: (error) =>
-          new DatabaseConnectionError({
+          new KyselyConnectionError({
             message: `Invalid connection string: ${String(error)}`,
             cause: error
           })
       })
     } else if (!(config.host && config.database)) {
-      return yield* Effect.fail(
-        new DatabaseConnectionError({
-          message: 'Database configuration requires either connectionString or host + database',
-          cause: undefined
-        })
-      )
+      return yield* new KyselyConnectionError({
+        message: 'Database configuration requires either connectionString or host + database',
+        cause: undefined
+      })
     }
   })
+
+// ============================================================================
+// SSL Configuration
+// ============================================================================
+
+/**
+ * Parse sslmode from connection string query params.
+ * postgres.js doesn't handle sslmode=no-verify from the URL automatically.
+ */
+const parseSslMode = (
+  connectionString: string
+): { ssl?: 'require' | 'prefer' | { rejectUnauthorized: boolean } } => {
+  try {
+    const url = new URL(connectionString)
+    const sslmode = url.searchParams.get('sslmode')
+    switch (sslmode) {
+      case 'no-verify':
+      case 'require':
+        return { ssl: { rejectUnauthorized: false } }
+      case 'verify-ca':
+      case 'verify-full':
+        return { ssl: 'require' }
+      case 'prefer':
+        return { ssl: 'prefer' }
+      case 'disable':
+      case null:
+        return {}
+      default:
+        return {}
+    }
+  } catch {
+    return {}
+  }
+}
 
 // ============================================================================
 // Service Factory
@@ -100,7 +184,7 @@ const validateConnectionConfig = (config: KyselyConfig) =>
  *
  * @example
  * ```typescript
- * import type { DB } from "@samuelho-dev/types-database";
+ * import type { DB } from "@samuelho-dev/infra-database";
  *
  * const program = Effect.gen(function*() {
  *   const kysely = yield* makeKyselyService<DB>({
@@ -113,46 +197,124 @@ const validateConnectionConfig = (config: KyselyConfig) =>
  * })
  * ```
  */
+/**
+ * Sentinel thrown inside `db.transaction().execute(...)` to trigger
+ * kysely rollback. The typed `Cause<E>` is captured in the per-call
+ * closure (not on this object) so the outer `.catch` can resume via
+ * `Effect.failCause(cause)` without an `as` cast.
+ */
+class TransactionRollbackSentinel extends Error {
+  readonly _tag = 'TransactionRollbackSentinel' as const
+  constructor() {
+    super('TransactionRollbackSentinel')
+  }
+}
+
+/**
+ * Run an Effect inside a kysely transaction, preserving typed errors
+ * from the callback AND rolling back the underlying SQL transaction on
+ * failure.
+ *
+ * Mechanics: `runPromiseExit` turns the callback's `Effect<A, E>` into
+ * an `Exit<A, E>` value, the cause is captured in a per-call closure,
+ * and a payload-less `TransactionRollbackSentinel` is thrown to signal
+ * kysely to roll back. The outer `.catch` lifts the captured Cause
+ * back onto the Effect channel via `Effect.failCause`, so typed errors
+ * flow through unwrapped. Non-Effect failures (driver crashes,
+ * connection loss) fall through to `DatabaseTransactionError`.
+ *
+ * Both the Live (`makeKyselyService`) and Test
+ * (`makeTestKyselyService`) paths call this helper so specs exercise
+ * the same rollback contract as production.
+ */
+const runKyselyTransaction = <DB, A, E>(
+  db: Kysely<DB>,
+  // v4: Runtime.Runtime<never> removed → capture the current services
+  // (Context.Context<never>) via Effect.context and run the callback with
+  // Effect.runPromiseExitWith(services). Effect.async → Effect.callback.
+  services: Context.Context<never>,
+  fn: (tx: Transaction<DB>) => Effect.Effect<A, E>
+): Effect.Effect<A, DatabaseTransactionError | E> =>
+  Effect.callback<A, DatabaseTransactionError | E>((resume) => {
+    let capturedCause: Cause.Cause<E> | undefined
+    db.transaction()
+      .execute(async (tx): Promise<A> => {
+        const exit = await Effect.runPromiseExitWith(services)(fn(tx))
+        if (Exit.isFailure(exit)) {
+          capturedCause = exit.cause
+          throw new TransactionRollbackSentinel()
+        }
+        return exit.value
+      })
+      .then((value) => {
+        resume(Effect.succeed(value))
+      })
+      .catch((error: unknown) => {
+        if (capturedCause !== undefined) {
+          // Typed Effect failure from the callback. Preserves defects,
+          // interrupts, and multi-error causes — the original Cause<E>
+          // flows through unchanged.
+          resume(Effect.failCause(capturedCause))
+          return
+        }
+        // Driver, connection, or constraint error raised outside of
+        // `fn(tx)` — wrap as DatabaseTransactionError.
+        resume(
+          Effect.fail(
+            new DatabaseTransactionError({
+              message: `Transaction failed: ${error}`,
+              cause: error
+            })
+          )
+        )
+      })
+  })
+
 export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
   Effect.gen(function* () {
     // Validate configuration (Effect-idiomatic - no try-catch)
     yield* validateConnectionConfig(config)
 
-    // Build pool config - only include defined properties (exactOptionalPropertyTypes)
-    const poolConfig: PoolConfig = {
-      max: config.max ?? 20,
-      idleTimeoutMillis: config.idleTimeoutMillis ?? 30000,
-      connectionTimeoutMillis: config.connectionTimeoutMillis ?? 5000
-    }
+    // Build connection string from config
+    const connectionString = buildConnectionString(config)
 
-    // Only add optional properties if defined
-    if (config.connectionString !== undefined) {
-      poolConfig.connectionString = config.connectionString
-    }
-    if (config.host !== undefined) {
-      poolConfig.host = config.host
-    }
-    if (config.port !== undefined) {
-      poolConfig.port = config.port
-    } else {
-      poolConfig.port = 5432
-    }
-    if (config.database !== undefined) {
-      poolConfig.database = config.database
-    }
-    if (config.username !== undefined) {
-      poolConfig.user = config.username
-    }
-    if (config.password !== undefined) {
-      poolConfig.password = config.password
-    }
+    // Parse sslmode from connection string since postgres.js doesn't handle it
+    const sslOptions = parseSslMode(connectionString)
 
-    // Create database connection pool (async import)
-    const pool = yield* Effect.tryPromise({
-      try: () => createPool(poolConfig),
+    // Create database connection using postgres.js
+    //
+    // `types` overrides parse postgres int8 (oid 20) and numeric (oid 1700, 1231)
+    // as JS number instead of the default string. Without this, every
+    // `fn.count<number>()` and aggregate sum returns a string at runtime even
+    // though Kysely's type generic claims `number`. Per-callsite `Number(...)`
+    // wraps drift across the codebase; fixing it once here removes 60+ wrappers.
+    // Values >Number.MAX_SAFE_INTEGER lose precision — acceptable for counts
+    // and money-in-cents, the only int8/numeric usages in this codebase.
+    const connection: PostgresConnection = yield* Effect.try({
+      try: () =>
+        postgres(connectionString, {
+          max: config.max ?? 10,
+          idle_timeout: Math.floor((config.idleTimeoutMillis ?? 30000) / 1000),
+          connect_timeout: Math.floor((config.connectionTimeoutMillis ?? 5000) / 1000),
+          ...sslOptions,
+          types: {
+            int8: {
+              to: 20,
+              from: [20],
+              serialize: (value: number | string | bigint) => String(value),
+              parse: (value: string) => Number(value)
+            },
+            numeric: {
+              to: 1700,
+              from: [1700, 1231],
+              serialize: (value: number | string) => String(value),
+              parse: (value: string) => Number(value)
+            }
+          }
+        }),
       catch: (error) =>
-        new DatabaseConnectionError({
-          message: `Failed to create connection pool: ${error}`,
+        new KyselyConnectionError({
+          message: `Failed to create database connection: ${error}`,
           cause: error
         })
     })
@@ -160,13 +322,13 @@ export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
     // Register cleanup
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
-        await pool.end()
+        await connection.end()
       })
     )
 
-    // Create Kysely instance with DB type
+    // Create Kysely instance with DB type using PostgresJSDialect
     const db = new Kysely<DB>({
-      dialect: new PostgresDialect({ pool })
+      dialect: new PostgresJSDialect({ postgres: connection })
     })
 
     // Service implementation - types inferred from interface
@@ -176,12 +338,7 @@ export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
       query: (fn) =>
         Effect.tryPromise({
           try: () => fn(db),
-          catch: (error) =>
-            new DatabaseQueryError({
-              operation: 'query',
-              message: `Query failed: ${error}`,
-              cause: error
-            })
+          catch: (error) => wrapKyselyError('query', error)
         }),
 
       execute: (query) =>
@@ -193,27 +350,15 @@ export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
             }
             return result.rows
           },
-          catch: (error) =>
-            new DatabaseQueryError({
-              operation: 'execute',
-              message: `Query execution failed: ${error}`,
-              query: query.sql,
-              cause: error
-            })
+          catch: (error) => wrapKyselyError('execute', error, query.sql)
         }),
 
-      transaction: (fn) =>
+      // See `runKyselyTransaction` for the rollback + cause-preservation
+      // contract — both Live and Test call the same helper.
+      transaction: <A, E>(fn: (tx: Transaction<DB>) => Effect.Effect<A, E>) =>
         Effect.gen(function* () {
-          // Get runtime to preserve fiber context inside transaction
-          const runtime = yield* Effect.runtime()
-          return yield* Effect.tryPromise({
-            try: () => db.transaction().execute((tx) => Runtime.runPromise(runtime)(fn(tx))),
-            catch: (error) =>
-              new DatabaseTransactionError({
-                message: `Transaction failed: ${error}`,
-                cause: error
-              })
-          })
+          const services = yield* Effect.context<never>()
+          return yield* runKyselyTransaction(db, services, fn)
         }),
 
       sql: (query) =>
@@ -225,12 +370,7 @@ export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
             }
             return result.rows
           },
-          catch: (error) =>
-            new DatabaseQueryError({
-              operation: 'sql',
-              message: `SQL query failed: ${error}`,
-              cause: error
-            })
+          catch: (error) => wrapKyselyError('sql', error)
         }),
 
       ping: () =>
@@ -259,7 +399,7 @@ export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
             if (config.database !== undefined) {
               errorProps.database = config.database
             }
-            return new DatabaseConnectionError(errorProps)
+            return new KyselyConnectionError(errorProps)
           }
         }),
 
@@ -273,20 +413,15 @@ export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
             `.execute(db)
 
             const tables = result.rows.map((row) => {
-              if (row && typeof row === 'object' && 'table_name' in row) {
-                return String(row.table_name)
+              if (!row || typeof row !== 'object' || !('table_name' in row)) {
+                throw new Error(`Unexpected introspection row shape: ${JSON.stringify(row)}`)
               }
-              return 'unknown_table'
+              return String(row.table_name)
             })
 
             return { tables, dialect: 'postgresql' }
           },
-          catch: (error) =>
-            new DatabaseQueryError({
-              operation: 'introspection',
-              message: `Introspection failed: ${error}`,
-              cause: error
-            })
+          catch: (error) => wrapKyselyError('introspection', error)
         }),
 
       destroy: () =>
@@ -306,7 +441,15 @@ export const makeKyselyService = <DB = unknown>(config: KyselyConfig = {}) =>
  * Mock service configuration options
  */
 export interface MockServiceOptions {
-  /** Simulate errors for testing error paths */
+  /**
+   * Simulate errors for testing error paths.
+   *
+   * When `true`, EVERY operation fails deterministically with its
+   * corresponding tagged error — there is no random gate. A test double must
+   * fail on a flag, not a dice roll: a probabilistic trigger makes error-path
+   * specs flaky (a run where the die never trips spuriously fails) and forces
+   * brittle retry-loops at the call site.
+   */
   simulateErrors?: boolean
   /** Add artificial latency in milliseconds */
   latency?: number
@@ -341,7 +484,7 @@ export interface MockServiceOptions {
  * ```
  */
 export const makeTestKyselyService = <DB = unknown>(options: MockServiceOptions = {}) => {
-  const { latency = 0, mockData = {}, mockTables = [], simulateErrors = false } = options
+  const { simulateErrors = false, latency = 0, mockData = {}, mockTables = [] } = options
 
   // Create Kysely with DummyDriver - Kysely's native testing approach
   // This provides a real Kysely instance that compiles queries without a database
@@ -365,7 +508,7 @@ export const makeTestKyselyService = <DB = unknown>(options: MockServiceOptions 
     // DummyDriver returns empty results, which is expected for testing
     query: <T>(fn: (db: Kysely<DB>) => Promise<T>) =>
       withLatency(
-        simulateErrors && Math.random() > 0.5
+        simulateErrors
           ? Effect.fail(
               new DatabaseQueryError({
                 operation: 'query',
@@ -375,18 +518,13 @@ export const makeTestKyselyService = <DB = unknown>(options: MockServiceOptions 
             )
           : Effect.tryPromise({
               try: () => fn(db),
-              catch: (error) =>
-                new DatabaseQueryError({
-                  operation: 'query',
-                  message: `Mock query execution failed: ${error}`,
-                  cause: error
-                })
+              catch: (error) => wrapKyselyError('query', error)
             })
       ),
 
     execute: (query) =>
       withLatency(
-        simulateErrors && Math.random() > 0.5
+        simulateErrors
           ? Effect.fail(
               new DatabaseQueryError({
                 operation: 'execute',
@@ -395,13 +533,21 @@ export const makeTestKyselyService = <DB = unknown>(options: MockServiceOptions 
                 cause: new Error('Simulated execution failure')
               })
             )
-          : Effect.succeed(mockData[query.sql] ?? mockData.execute ?? [])
+          : Effect.succeed(
+              query.sql in mockData
+                ? (mockData[query.sql] ?? [])
+                : 'execute' in mockData
+                  ? (mockData['execute'] ?? [])
+                  : []
+            )
       ),
 
-    // Transaction uses DummyDriver's transaction support
-    transaction: (fn) =>
+    // Transaction: mirrors the Live implementation via the shared
+    // `runKyselyTransaction` helper so specs exercise the same typed-
+    // error rollback contract as production.
+    transaction: <A, E>(fn: (tx: Transaction<DB>) => Effect.Effect<A, E>) =>
       withLatency(
-        simulateErrors && Math.random() > 0.7
+        simulateErrors
           ? Effect.fail(
               new DatabaseTransactionError({
                 message: 'Mock transaction error for testing',
@@ -409,21 +555,14 @@ export const makeTestKyselyService = <DB = unknown>(options: MockServiceOptions 
               })
             )
           : Effect.gen(function* () {
-              const runtime = yield* Effect.runtime()
-              return yield* Effect.tryPromise({
-                try: () => db.transaction().execute((tx) => Runtime.runPromise(runtime)(fn(tx))),
-                catch: (error) =>
-                  new DatabaseTransactionError({
-                    message: `Transaction failed: ${error}`,
-                    cause: error
-                  })
-              })
+              const services = yield* Effect.context<never>()
+              return yield* runKyselyTransaction(db, services, fn)
             })
       ),
 
     sql: (sqlQuery) =>
       withLatency(
-        simulateErrors && Math.random() > 0.5
+        simulateErrors
           ? Effect.fail(
               new DatabaseQueryError({
                 operation: 'sql',
@@ -436,30 +575,25 @@ export const makeTestKyselyService = <DB = unknown>(options: MockServiceOptions 
                 const result = await sqlQuery.execute(db)
                 return result.rows
               },
-              catch: (error) =>
-                new DatabaseQueryError({
-                  operation: 'sql',
-                  message: `Mock SQL failed: ${error}`,
-                  cause: error
-                })
+              catch: (error) => wrapKyselyError('sql', error)
             })
       ),
 
     ping: () =>
       withLatency(
-        simulateErrors && Math.random() > 0.8
+        simulateErrors
           ? Effect.fail(
-              new DatabaseConnectionError({
+              new KyselyConnectionError({
                 message: 'Mock connection error for testing',
                 cause: new Error('Simulated connection failure')
               })
             )
-          : Effect.succeed(undefined)
+          : Effect.void
       ),
 
     introspection: () =>
       withLatency(
-        simulateErrors && Math.random() > 0.9
+        simulateErrors
           ? Effect.fail(
               new DatabaseQueryError({
                 operation: 'introspection',
@@ -483,21 +617,14 @@ export const makeTestKyselyService = <DB = unknown>(options: MockServiceOptions 
 /**
  * Kysely Service Tag
  *
- * Used for dependency injection via Effect's Context system.
+ * Returns a `Context.GenericTag` (not a class-based `Context.Tag`) because the
+ * DB type parameter must be supplied at each call site — a class cannot carry a
+ * free type variable. Live/Test/Auto layers are intentionally absent here;
+ * `infra-database` owns that boundary and provides `DatabaseLive`, `DatabaseTest`,
+ * and `DatabaseAuto` layers that wrap this tag with the concrete DB schema and
+ * connection management. Consumers depend on `infra-database`, not this provider.
  *
- * @typeParam DB - Database schema type
- *
- * @example
- * ```typescript
- * import type { DB } from "@samuelho-dev/types-database"
- *
- * const KyselyTag = KyselyService<DB>()
- *
- * const program = Effect.gen(function*() {
- *   const kysely = yield* KyselyTag
- *   // Use kysely service...
- * })
- * ```
+ * @typeParam DB - Database schema type (supply at call site via `KyselyService<DB>()`)
  */
 export const KyselyService = <DB = unknown>() =>
-  Context.GenericTag<KyselyServiceInterface<DB>>('KyselyService')
+  Context.Service<KyselyServiceInterface<DB>>('@samuelho-dev/provider-kysely/KyselyService')

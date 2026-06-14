@@ -1,33 +1,28 @@
 {
-  "$schema": "http://json-schema.org/schema",
-  "$id": "NxDataAccessGeneratorSchema",
-  "description": "Data Access Library Generator Schema",
+  "$schema": "https://json-schema.org/schema",
+  "title": "Standard Data Access Library",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Domain name for the data-access library (e.g., 'product', 'seller')",
-      "pattern": "^[a-z0-9]([a-z0-9]*(-[a-z0-9]+)*)?$",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      }
+      "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+      "description": "Kebab-case library name",
+      "$default": { "$source": "argv", "index": 0 }
     },
-    "directory": {
+    "directory": { "type": "string", "description": "Parent directory override" },
+    "description": { "type": "string" },
+    "tags": { "type": "string", "description": "Comma-separated Nx tags" },
+    "modules": {
       "type": "string",
-      "description": "Directory where the library will be created",
-      "default": "libs/data-access"
+      "description": "Comma-separated module paths, for example form-state,marketing/campaign"
     },
-    "description": {
+    "contract": { "type": "string", "description": "Contract domain or full package name" },
+    "dependencies": { "type": "string", "description": "Comma-separated package dependencies" },
+    "entrypoints": {
       "type": "string",
-      "description": "Description of the data-access library"
+      "description": "Comma-separated root,client,server,edge entrypoints"
     },
-    "skipTests": {
-      "type": "boolean",
-      "description": "Skip generating test files",
-      "default": false
-    }
+    "testMode": { "type": "string", "enum": ["none", "unit", "integration"] }
   },
-  "required": ["name"],
-  "examplesFile": "../../../docs/generator-examples/data-access-examples.md"
+  "required": ["name"]
 }
