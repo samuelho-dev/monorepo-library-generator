@@ -1,6 +1,6 @@
 {
   "name": "@samuelho-dev/monorepo-library-generator",
-  "version": "1.8.1",
+  "version": "1.11.0",
   "description": "Effect-based CLI for generating libraries in Effect-native monorepos",
   "type": "module",
   "bin": {
@@ -47,7 +47,8 @@
     "format:check": "prettier --check .",
     "prepublishOnly": "bun run build",
     "ci:version": "changeset version",
-    "ci:publish": "npm publish --access public --provenance"
+    "ci:publish": "bun scripts/publish.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@biomejs/js-api": "6.0.0",
@@ -83,10 +84,21 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sort-destructure-keys": "^2.0.0",
     "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "nx": "22.3.3",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
     "vitest": "^4.0.15"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "biome check --write",
+      "eslint --fix"
+    ],
+    "libs/**/*.{ts,tsx}": [
+      "biome check --write"
+    ]
   },
   "nx": {}
 }
