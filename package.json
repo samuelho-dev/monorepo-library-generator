@@ -45,7 +45,7 @@
     "clean": "rm -rf dist build .tsbuildinfo",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepublishOnly": "bun run build",
+    "prepublishOnly": "node -e \"throw new Error('Use the Release workflow to publish')\"",
     "ci:version": "changeset version",
     "ci:publish": "bun scripts/publish.ts",
     "prepare": "husky"

@@ -14,53 +14,32 @@ jobs:
     if: github.repository_owner == 'samuelho-dev'
     name: Release
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     permissions:
       contents: write
+      pull-requests: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-
-      - uses: oven-sh/setup-bun@v2
-
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24.x"
-          registry-url: "https://registry.npmjs.org"
-
-      - run: bun install --frozen-lockfile
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 11.4.0
+      - run: npm install --global npm@11.21.0
+      - run: pnpm install --frozen-lockfile
+      - run: bun run check
+      - run: bun run lint
+      - run: bun run test:ci
       - run: bun run build
-
-      - name: Check for changesets
-        id: changesets
-        run: |
-          if ls .changeset/*.md 1> /dev/null 2>&1 && [ "$(ls .changeset/*.md 2>/dev/null | grep -v README.md | wc -l)" -gt 0 ]; then
-            echo "has_changesets=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_changesets=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Version packages
-        if: steps.changesets.outputs.has_changesets == 'true'
-        env:
-          HUSKY: "0"
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          bun run ci:version
-          git add .
-          git commit -m "chore: release"
-          git push
-
-      - name: Publish to npm
-        run: bun run ci:publish
-
-      - name: Create GitHub Release
-        if: steps.changesets.outputs.has_changesets == 'true'
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          gh release create "v${VERSION}" --generate-notes --latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create version PR or publish
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1; CLI v2
+        with:
+          version: bun run ci:version
+          publish: bun run ci:publish
+          createGithubReleases: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
