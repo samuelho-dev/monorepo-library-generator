@@ -4,6 +4,7 @@ import { createHash } from "node:crypto"
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { setTimeout as delay } from "node:timers/promises"
 import packageJson from "../package.json"
 
 const dryRun = process.argv.slice(2).length === 1 && process.argv[2] === "--dry-run"
@@ -74,8 +75,14 @@ try {
     console.log(`Validated ${name}@${version}: ${integrity}`)
   } else {
     execFileSync("npm", ["publish", tarball, "--ignore-scripts", "--access", "public", "--provenance"], { stdio: "inherit", env })
-    const published = JSON.parse(run("npm", ["view", `${name}@${version}`, "--json"])) as { name: string; version: string; dist: { integrity: string } }
-    if (published.name !== name || published.version !== version || published.dist.integrity !== integrity) {
+    let published: { name: string; version: string; dist: { integrity: string } } | undefined
+    for (let attempt = 0; attempt < 120; attempt++) {
+      const response = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}/${version}`, { signal: AbortSignal.timeout(15000) })
+      if (response.ok) { published = await response.json(); break }
+      if (response.status !== 404) throw new Error(`Registry verification failed: HTTP ${response.status}`)
+      await delay(10000)
+    }
+    if (!published || published.name !== name || published.version !== version || published.dist.integrity !== integrity) {
       throw new Error("Registry identity or integrity does not match the published artifact")
     }
     console.log(`New tag: ${name}@${version}`)

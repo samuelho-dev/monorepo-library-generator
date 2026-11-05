@@ -95,3 +95,5 @@ pnpm build
 Changesets on `main` open a version pull request. After it merges, the Release workflow checks types, lint, tests, and build, then publishes the built tarball to npm with trusted publishing and provenance. It checks the exact published version and SHA-512 integrity against that tarball. Existing versions are skipped; manual `npm publish` is not supported.
 
 The npm trusted publisher must be configured for `samuelho-dev/monorepo-library-generator`, workflow `release.yml`, and no environment. Publishing uses GitHub-hosted runners with Node 24 and npm 11.21.0, without an npm token. The separate Snapshot workflow uses pkg.pr.new, not npm, and retains its existing policy.
+
+Registry verification allows up to 120 checks, ten seconds apart, for npm processing. Publishing is not retried; an integrity mismatch still fails the release.
